@@ -86,7 +86,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
 
         def checkresult(_):
-            self.assertEqual(self.get_updates(), [ { 'stdout' : 'yay' } ], "updates processed")
+            self.assertUpdates([ { 'stdout' : 'yay' } ], "updates processed")
         d.addCallback(checkresult)
         return d
 
@@ -105,7 +105,7 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
         d.addErrback(check)
 
         def checkresult(_):
-            self.assertEqual(self.get_updates(), [ {} ], "updates processed")
+            self.assertUpdates([ {} ], "updates processed")
         d.addCallback(checkresult)
         return d
 

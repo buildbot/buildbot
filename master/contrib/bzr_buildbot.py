@@ -2,7 +2,7 @@
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
+# the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -50,6 +50,10 @@ with these keys:
   to which you will connect (as of this writing, the same server and port to
   which slaves connect)
 
+- buildbot_auth: (optional, defaults to change:changepw) the credentials
+  expected by the change source configuration in the master. Takes the
+  "user:password" form.
+
 - buildbot_pqm: (optional, defaults to not pqm) Normally, the user that
   commits the revision is the user that is responsible for the change.  When
   run in a pqm (Patch Queue Manager, see https://launchpad.net/pqm)
@@ -82,27 +86,7 @@ option here as well.
 Poller
 ------
 
-Put this file somewhere that your buildbot configuration can import it.  Even
-in the same directory as the master.cfg should work.  Install the poller in
-the buildbot configuration as with any other change source.  Minimally,
-provide a URL that you want to poll (bzr://, bzr+ssh://, or lp:), though make
-sure the buildbot user has necessary privileges.  You may also want to specify
-these optional values.
-
-poll_interval: the number of seconds to wait between polls.  Defaults to 10
-               minutes.
-
-branch_name: any value to be used as the branch name.  Defaults to None, or
-             specify a string, or specify the constants from this file SHORT
-             or FULL to get the short branch name or full branch address.
-
-blame_merge_author: normally, the user that commits the revision is the user
-                    that is responsible for the change. When run in a pqm
-                    (Patch Queue Manager, see https://launchpad.net/pqm)
-                    environment, the user that commits is the Patch Queue
-                    Manager, and the user that committed the merged, *parent*
-                    revision is responsible for the change. set this value to
-                    True if this is pointed against a PQM-managed branch.
+See the Buildbot manual.
 
 -------------------
 Contact Information
@@ -172,9 +156,9 @@ def generate_change(branch,
     if blame_merge_author:
         # this is a pqm commit or something like it
         change['who'] = repository.get_revision(
-            new_rev.parent_ids[-1]).get_apparent_author()
+            new_rev.parent_ids[-1]).get_apparent_authors()[0]
     else:
-        change['who'] = new_rev.get_apparent_author()
+        change['who'] = new_rev.get_apparent_authors()[0]
     # maybe useful to know:
     # name, email = bzrtools.config.parse_username(change['who'])
     change['comments'] = new_rev.message
@@ -319,7 +303,7 @@ if DEFINE_POLLER:
             d = twisted.internet.defer.Deferred()
             def _add_change():
                 d.callback(
-                    self.parent.addChange(change))
+                    self.parent.addChange(change, src='bzr'))
             twisted.internet.reactor.callLater(0, _add_change)
             return d
 
@@ -329,6 +313,7 @@ if DEFINE_POLLER:
 HOOK_KEY = 'buildbot_on'
 SERVER_KEY = 'buildbot_server'
 PORT_KEY = 'buildbot_port'
+AUTH_KEY = 'buildbot_auth'
 DRYRUN_KEY = 'buildbot_dry_run'
 PQM_KEY = 'buildbot_pqm'
 SEND_BRANCHNAME_KEY = 'buildbot_send_branch_name'
@@ -433,12 +418,18 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     reactor.resolver = ThreadedResolver(reactor)
     pbcf = twisted.spread.pb.PBClientFactory()
     reactor.connectTCP(server, port, pbcf)
+    auth = config.get_user_option(AUTH_KEY)
+    if auth:
+        user, passwd = [s.strip() for s in auth.split(':', 1)]
+    else:
+        user, passwd = ('change', 'changepw')
     deferred = pbcf.login(
-        twisted.cred.credentials.UsernamePassword('change', 'changepw'))
+        twisted.cred.credentials.UsernamePassword(user, passwd))
 
     def sendChanges(remote):
         """Send changes to buildbot."""
         bzrlib.trace.mutter("bzrbuildout sending changes: %s", change)
+        change['src'] = 'bzr'
         return remote.callRemote('addChange', change)
 
     deferred.addCallback(sendChanges)

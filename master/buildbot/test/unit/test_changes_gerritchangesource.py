@@ -47,6 +47,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             change=dict(
                 branch="br",
                 project="pr",
+                number="4321",
                 owner=dict(name="Dustin", email="dustin@mozilla.com"),
                 url="http://buildbot.net",
                 subject="fix 1234"
@@ -59,9 +60,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             c = self.changes_added[0]
             self.assertEqual(c['author'], "Dustin <dustin@mozilla.com>")
             self.assertEqual(c['project'], "pr")
-            self.assertEqual(c['branch'], "br")
+            self.assertEqual(c['branch'], "br/4321")
             self.assertEqual(c['revision'], "abcdef")
             self.assertEqual(c['revlink'], "http://buildbot.net")
+            self.assertEqual(c['repository'], "ssh://someuser@somehost:29418/pr")
             self.assertEqual(c['comments'], "fix 1234")
             self.assertEqual(c['files'], [ 'unknown' ])
             self.assertEqual(c['properties']['event.change.subject'], 'fix 1234')

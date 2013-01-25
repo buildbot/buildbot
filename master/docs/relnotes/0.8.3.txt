@@ -1,0 +1,57 @@
+Buildbot 0.8.3 was released 19 Dec 2010
+
+** Deprecations and Removals
+
+*** Change sources can no longer call change-related methods on self.parent.
+Instead, use self.master methods, e.g., self.master.addChange.
+
+** PBChangeSource now supports authentication
+
+PBChangeSource now supports the `user` and `passwd` arguments.  Users with a
+publicly exposed PB port should use these parameters to limit sendchange
+access.
+
+Previous versions of Buildbot should never be configured with a PBChangeSource
+and a publicly accessible slave port, as that arrangement  allows anyone to
+connect and inject a change into the Buildmaster without any authentication at
+all, aside from the hard-coded 'change'/'changepw' credentials.  In many cases,
+this can lead to arbitrary code injection on slaves.
+
+** Experiemental Gerrit and Repo support
+
+A new ChangeSource (GerritChangeSource), status listener (GerritStatusPush),
+and source step (Repo) are available in this version.  These are not fully
+documented and still have a number of known bugs outstanding (see
+http://buildbot.net/trac/wiki/RepoProject), and as such are considered
+experimental in this release.
+
+** WithProperties now supports lambda substitutions
+
+WithProperties now has the option to pass callable functions as keyword
+arguments to substitute in the results of more complex Python code at
+evaluation-time.
+
+** New 'SetPropertiesFromEnv' step
+
+This step uses the slave environment to set build properties.
+
+** Deprecations and Removals
+
+*** The console view previously had an undocumented feature that would strip
+leading digits off the category name.  This was undocumented and apparently
+non-functional, and has been removed. (#1059)
+
+*** contrib/hg_buildbot.py was removed in favor of buildbot.changes.hgbuildbot.
+
+*** The misnamed sendchange option 'username' has been renamed to 'who'; the old
+option continues to work, but is deprecated and will be removed. (#1711)
+
+* Slave Changes
+
+** Slave-initiated Graceful Shutdown
+
+If the allow_shutdown parameter in buildbot.tac is set, then the slave can be
+gracefully shut down locally by the slave admin.  The shutdown operates by the
+slave informing the master that it would like to shut down; the master then
+finishes any active builds on the slave, and instructs the slave to shut down.
+See the documentation for more information.

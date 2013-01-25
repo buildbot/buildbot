@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
+
+from __future__ import with_statement
 # Portions Copyright Canonical Ltd. 2009
 
 """A LatentSlave that uses EC2 to instantiate the slaves on demand.
@@ -24,6 +26,7 @@ import re
 import time
 
 import boto
+import boto.ec2
 import boto.exception
 from twisted.internet import defer, threads
 from twisted.python import log
@@ -44,11 +47,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
     def __init__(self, name, password, instance_type, ami=None,
                  valid_ami_owners=None, valid_ami_location_regex=None,
                  elastic_ip=None, identifier=None, secret_identifier=None,
-                 aws_id_file_path=None, user_data=None,
+                 aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None):
+
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties, locks)
@@ -93,20 +97,36 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     "access key identifier either when instantiating this %s "
                     "or in the %s file (on two lines).\n" %
                     (self.__class__.__name__, aws_id_file_path))
-            aws_file = open(aws_id_file_path, 'r')
-            try:
+            with open(aws_id_file_path, 'r') as aws_file:
                 identifier = aws_file.readline().strip()
                 secret_identifier = aws_file.readline().strip()
-            finally:
-                aws_file.close()
         else:
             assert aws_id_file_path is None, \
                     'if you supply the identifier and secret_identifier, ' \
                     'do not specify the aws_id_file_path'
             assert secret_identifier is not None, \
                     'supply both or neither of identifier, secret_identifier'
+
+        region_found = None
+
         # Make the EC2 connection.
-        self.conn = boto.connect_ec2(identifier, secret_identifier)
+        if region is not None:
+            for r in boto.ec2.regions(aws_access_key_id=identifier,
+                                      aws_secret_access_key=secret_identifier):
+
+                if r.name == region:
+                    region_found = r
+
+            
+            if region_found is not None:
+                self.conn = boto.ec2.connect_to_region(region,
+                                     aws_access_key_id=identifier,
+                                     aws_secret_access_key=secret_identifier)
+            else:
+                raise ValueError('The specified region does not exist: {0}'.format(region))
+
+        else:
+            self.conn = boto.connect_ec2(identifier, secret_identifier)
 
         # Make a keypair
         #
@@ -274,7 +294,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             self.conn.disassociate_address(self.elastic_ip.public_ip)
         instance.update()
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
-            instance.stop()
+            instance.terminate()
             log.msg('%s %s terminating instance %s' %
                     (self.__class__.__name__, self.slavename, instance.id))
         duration = 0

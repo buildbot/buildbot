@@ -33,13 +33,6 @@ class BuildSlaveTooOldError(Exception):
 class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
-# other exceptions
-class BuildbotNotRunningError(Exception):
-    pass
-
-class ParameterError(Exception):
-    pass
-
 class IChangeSource(Interface):
     """
     Service which feeds Change objects to the changemaster. When files or
@@ -227,10 +220,6 @@ class IBuildSetStatus(Interface):
         @returns: list of names via Deferred"""
     def isFinished():
         pass
-    def waitUntilSuccess():
-        """Return a Deferred that fires (with this IBuildSetStatus object)
-        when the outcome of the BuildSet is known, i.e., upon the first
-        failure, or after all builds complete successfully."""
     def waitUntilFinished():
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
@@ -310,6 +299,9 @@ class IBuilderStatus(Interface):
 
     def getCategory():
         """Return the category of this builder (a string)."""
+
+    def getDescription():
+        """Return the description of this builder (a string)."""
 
     def getState():
         # TODO: this isn't nearly as meaningful as it used to be
@@ -457,17 +449,13 @@ class IBuildStatus(Interface):
         build has already finished, this deferred will fire right away. The
         callback is given this IBuildStatus instance as an argument."""
 
-    def getProperty(propname):
-        """Return the value of the build property with the given name. Raises
-        KeyError if there is no such property on this build."""
-
     def getReason():
         """Return a string that indicates why the build was run. 'changes',
         'forced', and 'periodic' are the most likely values. 'try' will be
         added in the future."""
 
-    def getSourceStamp():
-        """Return a SourceStamp object which can be used to re-create
+    def getSourceStamps():
+        """Return a list of SourceStamp objects which can be used to re-create
         the source tree that this build used.
 
         This method will return None if the source information is no longer
@@ -479,6 +467,10 @@ class IBuildStatus(Interface):
         """Return a list of Change objects which represent which source
         changes went into the build."""
 
+    def getRevisions():
+        """Returns a string representing the list of revisions that led to
+        the build, rendered from each Change.revision"""
+
     def getResponsibleUsers():
         """Return a list of Users who are to blame for the changes that went
         into this build. If anything breaks (at least anything that wasn't
@@ -489,10 +481,8 @@ class IBuildStatus(Interface):
 
     def getInterestedUsers():
         """Return a list of Users who will want to know about the results of
-        this build. This is a superset of getResponsibleUsers(): it adds
-        people who are interested in this build but who did not actually
-        make the Changes that went into it (build sheriffs, code-domain
-        owners)."""
+        this build but who did not actually make the Changes that went into it
+        (build sheriffs, code-domain owners)."""
 
     def getNumber():
         """Within each builder, each Build has a number. Return it."""
@@ -986,6 +976,15 @@ class IStatusReceiver(Interface):
     def slaveDisconnected(slaveName):
         """The slave has disconnected."""
 
+    def checkConfig(otherStatusReceivers):
+        """Verify that there are no other status receivers which conflict with
+        the current one.
+
+        @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
+        will contain self.
+        """
+
+
 class IControl(Interface):
     def addChange(change):
         """Add a change to the change queue, for analysis by schedulers."""
@@ -1113,4 +1112,105 @@ class ILatentBuildSlave(IBuildSlave):
 
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
+        """
+
+class IRenderable(Interface):
+    """An object that can be interpolated with properties from a build.
+    """
+
+    def getRenderingFor(iprops):
+        """Return a deferred that fires with interpolation with the given properties
+
+        @param iprops: the L{IProperties} provider supplying the properties.
+        """
+class IProperties(Interface):
+    """
+    An object providing access to build properties
+    """
+
+    def getProperty(name, default=None):
+        """Get the named property, returning the default if the property does
+        not exist.
+
+        @param name: property name
+        @type name: string
+
+        @param default: default value (default: @code{None})
+
+        @returns: property value
+        """
+
+    def hasProperty(name):
+        """Return true if the named property exists.
+
+        @param name: property name
+        @type name: string
+        @returns: boolean
+        """
+
+    def has_key(name):
+        """Deprecated name for L{hasProperty}."""
+
+    def setProperty(name, value, source, runtime=False):
+        """Set the given property, overwriting any existing value.  The source
+        describes the source of the value for human interpretation.
+
+        @param name: property name
+        @type name: string
+
+        @param value: property value
+        @type value: JSON-able value
+
+        @param source: property source
+        @type source: string
+
+        @param runtime: (optional) whether this property was set during the
+        build's runtime: usually left at its default value
+        @type runtime: boolean
+        """
+
+    def getProperties():
+        """Get the L{buildbot.process.properties.Properties} instance storing
+        these properties.  Note that the interface for this class is not
+        stable, so where possible the other methods of this interface should be
+        used.
+
+        @returns: L{buildbot.process.properties.Properties} instance
+        """
+
+    def getBuild():
+        """Get the L{buildbot.process.build.Build} instance for the current
+        build.  Note that this object is not available after the build is
+        complete, at which point this method will return None.
+
+        Try to avoid using this method, as the API of L{Build} instances is not
+        well-defined.
+
+        @returns L{buildbot.process.build.Build} instance
+        """
+
+    def render(value):
+        """Render @code{value} as an L{IRenderable}.  This essentially coerces
+        @code{value} to an L{IRenderable} and calls its @L{getRenderingFor}
+        method.
+
+        @name value: value to render
+        @returns: rendered value
+        """
+
+class IScheduler(Interface):
+    pass
+
+class ITriggerableScheduler(Interface):
+    """
+    A scheduler that can be triggered by buildsteps.
+    """
+
+    def trigger(sourcestamps, set_props=None):
+        """Trigger a build with the given source stamp and properties.
+        """
+
+class IBuildStepFactory(Interface):
+    def buildStep():
+        """
         """

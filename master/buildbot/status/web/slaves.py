@@ -17,11 +17,53 @@
 import time, urllib
 from twisted.web import html
 from twisted.web.util import Redirect
-from twisted.web.error import NoResource
+from twisted.web.resource import NoResource
+from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, path_to_slave, path_to_authfail
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail
 from buildbot import util
+
+class ShutdownActionResource(ActionResource):
+
+    def __init__(self, slave):
+        self.slave = slave
+        self.action = "gracefulShutdown"
+
+    @defer.inlineCallbacks
+    def performAction(self, request):
+        res = yield self.getAuthz(request).actionAllowed(self.action,
+                                                        request,
+                                                        self.slave)
+
+        url = None
+        if res:
+            self.slave.setGraceful(True)
+            url = path_to_slave(request, self.slave)
+        else:
+            url = path_to_authzfail(request)
+        defer.returnValue(url)
+
+class PauseActionResource(ActionResource):
+
+    def __init__(self, slave, state):
+        self.slave = slave
+        self.action = "pauseSlave"
+        self.state = state
+
+    @defer.inlineCallbacks
+    def performAction(self, request):
+        res = yield self.getAuthz(request).actionAllowed(self.action,
+                                                        request,
+                                                        self.slave)
+
+        url = None
+        if res:
+            slave.setPaused(self.state)
+            url = path_to_slave(request, self.slave)
+        else:
+            url = path_to_authzfail(request)
+        defer.returnValue(url)
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
@@ -37,15 +79,9 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         s = self.getStatus(req)
         slave = s.getSlave(self.slavename)
         if path == "shutdown":
-            if self.getAuthz(req).actionAllowed("gracefulShutdown", req, slave):
-                slave.setGraceful(True)
-            else:
-                return Redirect(path_to_authfail(req))
+            return ShutdownActionResource(slave)
         if path == "pause" or path == "unpause":
-            if self.getAuthz(req).actionAllowed("pauseSlave", req, slave):
-                slave.setPaused(path == "pause")
-            else:
-                return Redirect(path_to_authfail(req))
+            return PauseActionResource(slave, path == "pause")
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):        

@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>Users</h1>
+
+<table class="info">
+
+<tr>
+  <th>Uid</th>
+  <th>Identifier</th>
+</tr>
+
+{% for user in users %}
+  <tr class="{{ loop.cycle('alt','') }}">
+
+  <td><b><a href="{{ user.user_link }}">{{ user.uid }}</a></b></td>
+  <td>{{ user.identifier|e }}</td>
+
+  </tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

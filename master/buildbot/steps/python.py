@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+import re
 from buildbot.status.results import SUCCESS, FAILURE, WARNINGS
 from buildbot.steps.shell import ShellCommand
-import re
+from buildbot import config
 
 try:
     import cStringIO
@@ -57,7 +58,7 @@ class BuildEPYDoc(ShellCommand):
         self.errors = errors
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings or self.errors:
             return WARNINGS
@@ -73,6 +74,13 @@ class PyFlakes(ShellCommand):
     flunkingIssues = ["undefined"] # any pyflakes lines like this cause FAILURE
 
     MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
+
+    def __init__(self, *args, **kwargs):
+        # PyFlakes return 1 for both warnings and errors. We
+        # categorize this initially as WARNINGS so that
+        # evaluateCommand below can inspect the results more closely.
+        kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
+        ShellCommand.__init__(self, *args, **kwargs)
 
     def createSummary(self, log):
         counts = {}
@@ -117,7 +125,7 @@ class PyFlakes(ShellCommand):
 
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
@@ -128,12 +136,23 @@ class PyFlakes(ShellCommand):
 
 class PyLint(ShellCommand):
     '''A command that knows about pylint output.
-    It's a good idea to add --output-format=parseable to your
+    It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
     '''
     name = "pylint"
     description = ["running", "pylint"]
     descriptionDone = ["pylint"]
+
+    # pylint's return codes (see pylint(1) for details)
+    # 1 - 16 will be bit-ORed
+
+    RC_OK = 0
+    RC_FATAL = 1
+    RC_ERROR = 2
+    RC_WARNING = 4
+    RC_REFACTOR = 8
+    RC_CONVENTION = 16
+    RC_USAGE = 32
 
     # Using the default text output, the message format is :
     # MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE
@@ -155,8 +174,8 @@ class PyLint(ShellCommand):
 
     _re_groupname = 'errtype'
     _msgtypes_re_str = '(?P<%s>[%s])' % (_re_groupname, ''.join(MESSAGES.keys()))
-    _default_line_re = re.compile(r'^%s: *\d+:.+' % _msgtypes_re_str)
-    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s[,\]] .+' % _msgtypes_re_str)
+    _default_line_re = re.compile(r'^%s(\d{4})?: *\d+(,\d+)?:.+' % _msgtypes_re_str)
+    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s(\d{4})?[,\]] .+' % _msgtypes_re_str)
 
     def createSummary(self, log):
         counts = {}
@@ -191,7 +210,7 @@ class PyLint(ShellCommand):
         self.setProperty("pylint-total", sum(counts.values()))
 
     def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
+        if cmd.rc & (self.RC_FATAL|self.RC_ERROR|self.RC_USAGE):
             return FAILURE
         for msg in self.flunkingIssues:
             if self.getProperty("pylint-%s" % self.MESSAGES[msg]):
@@ -200,3 +219,86 @@ class PyLint(ShellCommand):
             return WARNINGS
         return SUCCESS
 
+class Sphinx(ShellCommand):
+    ''' A Step to build sphinx documentation '''
+
+    name = "sphinx"
+    description = ["running", "sphinx"]
+    descriptionDone = ["sphinx"]
+
+    haltOnFailure = True
+
+    def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
+                 sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
+                 defines = {}, mode='incremental', **kwargs):
+
+        if sphinx_builddir is None:
+            # Who the heck is not interested in the built doc ?
+            config.error("Sphinx argument sphinx_builddir is required")
+
+        if mode not in ('incremental', 'full'):
+            config.error("Sphinx argument mode has to be 'incremental' or" +
+                          "'full' is required")
+
+        self.warnings = 0
+        self.success = False
+        ShellCommand.__init__(self, **kwargs)
+
+        # build the command
+        command = [sphinx]
+        if sphinx_builder is not None:
+            command.extend(['-b', sphinx_builder])
+
+        for tag in tags:
+            command.extend(['-t', tag])
+
+        for key in sorted(defines):
+            if defines[key] is None:
+                command.extend(['-D', key])
+            elif isinstance(defines[key], bool):
+                command.extend(['-D',
+                               '%s=%d' % (key, defines[key] and 1 or 0)])
+            else:
+                command.extend(['-D', '%s=%s' % (key, defines[key])])
+
+        if mode == 'full':
+            command.extend(['-E']) # Don't use a saved environment
+
+        command.extend([sphinx_sourcedir, sphinx_builddir])
+        self.setCommand(command)
+
+    def createSummary(self, log):
+
+        msgs = ['WARNING', 'ERROR', 'SEVERE']
+
+        warnings = []
+        for line in log.getText().split('\n'):
+            if (line.startswith('build succeeded') 
+                or line.startswith('no targets are out of date.')):
+                self.success = True
+            else:
+                for msg in msgs:
+                    if msg in line:
+                        warnings.append(line)
+                        self.warnings += 1
+        if self.warnings > 0:
+            self.addCompleteLog('warnings', "\n".join(warnings))
+
+        self.step_status.setStatistic('warnings', self.warnings)
+
+    def evaluateCommand(self, cmd):
+        if self.success:
+            if self.warnings == 0:
+                return SUCCESS
+            else:
+                return WARNINGS
+        else:
+            return FAILURE
+
+    def describe(self, done=False):
+        if not done:
+            return ["building"]
+
+        description = [self.name]
+        description.append('%d warnings' % self.warnings)
+        return description

@@ -1,0 +1,29 @@
+Buildbot-0.4.2 was released 08 Jan 2004
+
+** test suite updated
+
+The test suite has been completely moved over to Twisted's "Trial"
+framework, and all tests now pass. To run the test suite (consisting of 64
+tests, probably covering about 30% of BuildBot's logic), do this:
+
+ PYTHONPATH=. trial -v buildbot.test
+
+** Mail parsers updated
+
+Several bugs in the mail-parsing code were fixed, allowing a buildmaster to
+be triggered by mail sent out by a CVS repository. (The Twisted Buildbot is
+now using this to trigger builds, as their CVS server machine is having some
+difficulties with FreshCVS). The FreshCVS mail format for directory
+additions appears to have changed recently: the new parser should handle
+both old and new-style messages.
+
+A parser for Bonsai commit messages (buildbot.changes.mail.parseBonsaiMail)
+was contributed by Stephen Davis. Thanks Stephen!
+
+** CVS "global options" now available
+
+The CVS build step can now accept a list of "global options" to give to the
+cvs command. These go before the "update"/"checkout" word, and are described
+fully by "cvs --help-options". Two useful ones might be "-r", which causes
+checked-out files to be read-only, and "-R", which assumes the repository is
+read-only (perhaps by not attempting to write to lock files).

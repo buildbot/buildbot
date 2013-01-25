@@ -49,7 +49,8 @@ class Darcs(SourceBaseCommand):
         command = [darcs, 'pull', '--all', '--verbose']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         return c.start()
 
@@ -57,7 +58,7 @@ class Darcs(SourceBaseCommand):
         darcs = self.getCommand('darcs')
         # checkout or export
         d = self.builder.basedir
-        command = [darcs, 'get', '--verbose', '--partial',
+        command = [darcs, 'get', '--verbose', '--lazy',
                    '--repo-name', self.srcdir]
         if self.revision:
             # write the context to a file
@@ -72,7 +73,8 @@ class Darcs(SourceBaseCommand):
 
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         d = c.start()
         if self.revision:
@@ -92,7 +94,8 @@ class Darcs(SourceBaseCommand):
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, logEnviron=self.logEnviron,
+                         usePTY=False)
         d = c.start()
         d.addCallback(lambda res: c.stdout)
         return d

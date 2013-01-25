@@ -1,0 +1,84 @@
+Buildbot 0.7.1 was released 26 Nov 2005
+
+** new features
+
+*** scheduler.Nightly
+
+Dobes Vandermeer contributed a cron-style 'Nightly' scheduler. Unlike the
+more-primitive Periodic class (which only lets you specify the duration
+between build attempts), Nightly lets you schedule builds for specific times
+of day, week, month, or year. The interface is very much like the crontab(5)
+file. See the buildbot.scheduler.Nightly docstring for complete details.
+
+** minor new features
+
+*** step.Trial can work with Trial from Twisted >2.1.0
+
+The 'Trial' step now accepts the trialMode= argument, which should be a list
+of strings to be added to trial's argv array. This defaults to ["-to"], which
+is appropriate for the Trial that ships in Twisted-2.1.0 and earlier, and
+tells Trial to emit non-colorized verbose output. To use this step with
+trials from later versions of Twisted, this should be changed to
+["--reporter=bwverbose"].
+
+In addition, you can now set other Trial command-line parameters through the
+trialArgs= argument. This is a list of strings, and defaults to an empty list.
+
+*** Added a 'resubmit this build' button to the web page
+
+*** Make the VC-checkout step's description more useful
+
+Added the word "[branch]" to the VC step's description (used in the Step's
+box on the Waterfall page, among others) when we're checking out a
+non-default branch. Also add "rNNN" where appropriate to indicate which
+revision is being checked out. Thanks to Brad Hards and Nathaniel Smith for
+the suggestion.
+
+** bugs fixed
+
+Several patches from Dobes Vandermeer: Escape the URLs in email, in case they
+have spaces and such. Fill otherwise-empty <td> elements, as a workaround for
+buggy browsers that might optimize them away. Also use binary mode when
+opening status pickle files, to make windows work better. The
+AnyBranchScheduler now works even when you don't provide a fileIsImportant=
+argument.
+
+Stringify the base revision before stuffing it into a 'try' jobfile, helping
+SVN and Arch implement 'try' builds better. Thanks to Steven Walter for the
+patch.
+
+Fix the compare_attrs list in PBChangeSource, FreshCVSSource, and Waterfall.
+Before this, certain changes to these objects in the master.cfg file were
+ignored, such that you would have to stop and re-start the buildmaster to
+make them take effect.
+
+The config file is now loaded serially, shutting down old (or replaced)
+Status/ChangeSource plugins before starting new ones. This fixes a bug in
+which changing an aspect of, say, the Waterfall display would cause an
+exception as both old and new instances fight over the same TCP port. This
+should also fix a bug whereby new Periodic Schedulers could fire a build
+before the Builders have finished being added.
+
+There was a bug in the way Locks were handled when the config file was
+reloaded: changing one Builder (but not the others) and reloading master.cfg
+would result in multiple instances of the same Lock object, so the Locks
+would fail to prevent simultaneous execution of Builds or Steps. This has
+been fixed.
+
+** other changes
+
+For a long time, certain StatusReceiver methods (like buildStarted and
+stepStarted) have been able to return another StatusReceiver instance
+(usually 'self') to indicate that they wish to subscribe to events within the
+new object. For example, if the buildStarted() method returns 'self', the
+status receiver will also receive events for the new build, like
+stepStarted() and buildETAUpdate(). Returning a 'self' from buildStarted() is
+equivalent to calling build.subscribe(self).
+
+Starting with buildbot-0.7.1, this auto-subscribe convenience will also
+register to automatically unsubscribe the target when the build or step has
+finished, just as if build.unsubscribe(self) had been called. Also, the
+unsubscribe() method has been changed to not explode if the same receiver is
+unsubscribed multiple times. (note that it will still explode is the same
+receiver is *subscribed* multiple times, so please continue to refrain from
+doing that).

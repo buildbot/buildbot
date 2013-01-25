@@ -37,10 +37,12 @@ change_4_log = \
 
 	short desc truncated because this is a long description.
 """
+
 change_3_log = \
-"""Change 3 by bob@testclient on 2006/04/13 21:51:39
+u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
 
 	short desc truncated because this is a long description.
+    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
 """
 
 change_2_log = \
@@ -81,32 +83,11 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         return self.setUpChangeSource()
 
     def tearDown(self):
-        self.tearDownGetProcessOutput()
         return self.tearDownChangeSource()
 
-    def add_p4_changes_result(self, result):
-        self.addGetProcessOutputResult(
-                self.gpoSubcommandPattern('p4', 'changes'),
-                result)
-
     def add_p4_describe_result(self, number, result):
-        def match(bin, args, **kwargs):
-            if not bin.endswith('p4'):
-                return False
-            if 'describe' not in args:
-                return False
-            s_idx = args.index('-s')
-            if s_idx < 0:
-                return False
-            got_num = int(args[s_idx+1])
-            if got_num != number:
-                return False
-            return True
-        self.addGetProcessOutputResult(match, result)
-
-    def update_p4_describe_results(self, dict):
-        for number, result in dict.items():
-            self.add_p4_describe_result(number, result)
+        self.expectCommands(
+                gpo.Expect('p4', 'describe', '-s', str(number)).stdout(result))
 
     def makeTime(self, timestring):
         datefmt = '%Y/%m/%d %H:%M:%S'
@@ -122,14 +103,21 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                          split_file=lambda x: x.split('/', 1)))
         self.assertSubstring("p4source", self.changesource.describe())
 
-    def test_poll_successful(self):
+    def do_test_poll_successful(self, **kwargs):
+        encoding = kwargs.get('encoding', 'utf8')
         self.attachChangeSource(
                 P4Source(p4port=None, p4user=None,
                          p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1)))
-        self.add_p4_changes_result(first_p4changes)
-        self.add_p4_changes_result(second_p4changes)
-        self.update_p4_describe_results(p4change)
+                         split_file=lambda x: x.split('/', 1),
+                         **kwargs))
+        self.expectCommands(
+                gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes),
+                gpo.Expect('p4', 'changes', '//depot/myproject/...@2,now').stdout(second_p4changes),
+                )
+        encoded_p4change = p4change.copy()
+        encoded_p4change[3] = encoded_p4change[3].encode(encoding)
+        self.add_p4_describe_result(2, encoded_p4change[2])
+        self.add_p4_describe_result(3, encoded_p4change[3])
 
         # The first time, it just learns the change to start at.
         self.assert_(self.changesource.last_change is None)
@@ -149,6 +137,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertEquals(self.changes_added[0],
                 dict(author='slamb',
                      files=['whatbranch'],
+                     project='',
                      comments=change_2_log,
                      revision='2',
                      when_timestamp=self.makeTime("2006/04/13 21:46:23"),
@@ -163,56 +152,62 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 dict(author='bob',
                      files=['branch_b_file',
                             'whatbranch'],
-                     comments=change_3_log,
+                     project='',
+                     comments=change_3_log, # converted to unicode correctly
                      revision='3',
                      when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_b'))
             self.assertEquals(self.changes_added[2],
                 dict(author='bob',
                      files=['whatbranch'],
-                     comments=change_3_log,
+                     project='',
+                     comments=change_3_log, # converted to unicode correctly
                      revision='3',
                      when_timestamp=self.makeTime("2006/04/13 21:51:39"),
                      branch='branch_c'))
+            self.assertAllCommandsRan()
         d.addCallback(check_second_check)
         return d
+
+    def test_poll_successful_default_encoding(self):
+        return self.do_test_poll_successful()
+
+    def test_poll_successful_macroman_encoding(self):
+        return self.do_test_poll_successful(encoding='macroman')
 
     def test_poll_failed_changes(self):
         self.attachChangeSource(
                 P4Source(p4port=None, p4user=None,
                          p4base='//depot/myproject/',
                          split_file=lambda x: x.split('/', 1)))
-        self.add_p4_changes_result('Perforce client error:\n...')
+        self.expectCommands(
+                gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout('Perforce client error:\n...'))
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
-        def cb(_):
-            self.fail("_poll should have failed")
-        def eb(f):
-            f.trap(P4PollerError)
-            self.assertEquals(self.changesource.last_change, None)
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, P4PollerError)
 
     def test_poll_failed_describe(self):
         self.attachChangeSource(
                 P4Source(p4port=None, p4user=None,
                          p4base='//depot/myproject/',
                          split_file=lambda x: x.split('/', 1)))
-        self.add_p4_changes_result(second_p4changes)
+        self.expectCommands(
+                gpo.Expect('p4', 'changes', '//depot/myproject/...@3,now').stdout(second_p4changes),
+                )
+        self.add_p4_describe_result(2, p4change[2])
         self.add_p4_describe_result(3, 'Perforce client error:\n...')
-        self.update_p4_describe_results(p4change) # note change 3 is overridden by prev line
 
         self.changesource.last_change = 2 # tell poll() that it's already been called once
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
-        def cb(_):
-            self.fail("_poll should have failed")
-        def eb(f):
-            f.trap(P4PollerError)
-            self.assertEquals(self.changesource.last_change, 2) # 2 was processed OK
-        d.addCallbacks(cb, eb)
+        self.assertFailure(d, P4PollerError)
+        @d.addCallback
+        def check(_):
+            # check that 2 was processed OK
+            self.assertEquals(self.changesource.last_change, 2)
+            self.assertAllCommandsRan()
         return d
 
     def test_poll_split_file(self):
@@ -221,14 +216,17 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 P4Source(p4port=None, p4user=None,
                          p4base='//depot/myproject/',
                          split_file=get_simple_split))
-        self.add_p4_changes_result(third_p4changes)
-        self.update_p4_describe_results(p4change)
+        self.expectCommands(
+                gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
+                )
+        self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
         d = self.changesource.poll()
         def check(res):
             self.assertEquals(len(self.changes_added), 2)
             self.assertEquals(self.changesource.last_change, 5)
+            self.assertAllCommandsRan()
         d.addCallback(check)
         return d
 

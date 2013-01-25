@@ -20,7 +20,7 @@
 # relative to the top of the maildir (so it will look like "new/blahblah").
 
 import os
-from twisted.python import log
+from twisted.python import log, runtime
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 dnotify = None
@@ -33,27 +33,12 @@ class NoSuchMaildir(Exception):
     pass
 
 class MaildirService(service.MultiService):
-    """I watch a maildir for new messages. I should be placed as the service
-    child of some MultiService instance. When running, I use the linux
-    dirwatcher API (if available) or poll for new files in the 'new'
-    subdirectory of my maildir path. When I discover a new message, I invoke
-    my .messageReceived() method with the short filename of the new message,
-    so the full name of the new file can be obtained with
-    os.path.join(maildir, 'new', filename). messageReceived() should be
-    overridden by a subclass to do something useful. I will not move or
-    delete the file on my own: the subclass's messageReceived() should
-    probably do that.
-    """
     pollinterval = 10  # only used if we don't have DNotify
 
     def __init__(self, basedir=None):
-        """Create the Maildir watcher. BASEDIR is the maildir directory (the
-        one which contains new/ and tmp/)
-        """
         service.MultiService.__init__(self)
-        self.basedir = basedir
-        "base of the maildir"
-        self.newdir = None
+        if basedir:
+            self.setBasedir(basedir)
         self.files = []
         self.dnotify = None
 
@@ -63,11 +48,12 @@ class MaildirService(service.MultiService):
         # relative to the buildmaster's basedir. So let them set it late. We
         # don't actually need it until our own startService.
         self.basedir = basedir
+        self.newdir = os.path.join(self.basedir, "new")
+        self.curdir = os.path.join(self.basedir, "cur")
 
     def startService(self):
         service.MultiService.startService(self)
-        self.newdir = os.path.join(self.basedir, "new")
-        if not os.path.isdir(self.basedir) or not os.path.isdir(self.newdir):
+        if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir("invalid maildir '%s'" % self.basedir)
         try:
             if dnotify:
@@ -107,7 +93,7 @@ class MaildirService(service.MultiService):
             self.dnotify = None
         return service.MultiService.stopService(self)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def poll(self):
         assert self.basedir
         # see what's new
@@ -121,14 +107,29 @@ class MaildirService(service.MultiService):
         self.files.extend(newfiles)
         for n in newfiles:
             try:
-                wfd = defer.waitForDeferred(self.messageReceived(n))
-                yield wfd
-                wfd.getResult()
+                yield self.messageReceived(n)
             except:
                 log.msg("while reading '%s' from maildir '%s':" % (n, self.basedir))
                 log.err()
 
+    def moveToCurDir(self, filename):
+        if runtime.platformType == "posix":
+            # open the file before moving it, because I'm afraid that once
+            # it's in cur/, someone might delete it at any moment
+            path = os.path.join(self.newdir, filename)
+            f = open(path, "r")
+            os.rename(os.path.join(self.newdir, filename),
+                      os.path.join(self.curdir, filename))
+        elif runtime.platformType == "win32":
+            # do this backwards under windows, because you can't move a file
+            # that somebody is holding open. This was causing a Permission
+            # Denied error on bear's win32-twisted1.3 buildslave.
+            os.rename(os.path.join(self.newdir, filename),
+                      os.path.join(self.curdir, filename))
+            path = os.path.join(self.curdir, filename)
+            f = open(path, "r")
+
+        return f
+
     def messageReceived(self, filename):
-        """Process a received message.  The filename is relative to self.newdir.
-        Returns a Deferred."""
         raise NotImplementedError

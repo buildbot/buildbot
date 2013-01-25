@@ -43,7 +43,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
         # note that SlaveShellCommand does not add any extra updates of it own
         def check(_):
-            self.assertEqual(self.get_updates(),
+            self.assertUpdates(
                     [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
                     self.builder.show())
         d.addCallback(check)

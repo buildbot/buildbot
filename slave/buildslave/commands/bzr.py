@@ -66,7 +66,8 @@ class Bzr(SourceBaseCommand):
         command = [bzr, 'update']
         c = runprocess.RunProcess(self.builder, command, srcdir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         return c.start()
 
@@ -97,7 +98,8 @@ class Bzr(SourceBaseCommand):
 
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         d = c.start()
         return d
@@ -114,14 +116,16 @@ class Bzr(SourceBaseCommand):
         command.append(tmpdir)
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         d = c.start()
         def _export(res):
             command = [bzr, 'export', srcdir]
             c = runprocess.RunProcess(self.builder, command, tmpdir,
                              sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, usePTY=False)
+                             maxTime=self.maxTime, logEnviron=self.logEnviron,
+                             usePTY=False)
             self.command = c
             return c.start()
         d.addCallback(_export)
@@ -135,7 +139,8 @@ class Bzr(SourceBaseCommand):
         # repo is not an error, just an indication that we need to make one.
         c = runprocess.RunProcess(self.builder, [bzr, 'info', '.'],
                          self.builder.basedir,
-                         sendStderr=False, sendRC=False, usePTY=False)
+                         sendStderr=False, sendRC=False,
+                         logEnviron=self.logEnviron,usePTY=False)
         d = c.start()
         def afterCheckSharedRepo(res):
             if type(res) is int and res != 0:
@@ -143,7 +148,8 @@ class Bzr(SourceBaseCommand):
                 # bzr info fails, try to create shared repo.
                 c = runprocess.RunProcess(self.builder, [bzr, 'init-repo', '.'],
                                  self.builder.basedir,
-                                 sendRC=False, usePTY=False)
+                                 sendRC=False, logEnviron=self.logEnviron,
+                                 usePTY=False)
                 self.command = c
                 return c.start()
             else:
@@ -170,7 +176,8 @@ class Bzr(SourceBaseCommand):
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, logEnviron=self.logEnviron,
+                         usePTY=False)
         d = c.start()
         def _parse(res):
             try:

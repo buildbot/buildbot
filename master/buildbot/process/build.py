@@ -17,18 +17,20 @@
 import types
 
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, components
 from twisted.python.failure import Failure
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
+from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
 
 
-class Build:
+class Build(properties.PropertiesMixin):
     """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
@@ -59,13 +61,13 @@ class Build:
     finished = False
     results = None
     stopped = False
+    set_runtime_properties = True
 
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
-
         # build a source stamp
-        self.source = requests[0].mergeWith(requests[1:])
+        self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self.progress = None
@@ -90,23 +92,19 @@ class Build:
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def getSourceStamp(self):
-        return self.source
+    def getSourceStamp(self, codebase=''):
+        for source in self.sources:
+            if source.codebase == codebase:
+                return source
+        return None
 
-    def setProperty(self, propname, value, source, runtime=True):
-        """Set a property on this build. This may only be called after the
-        build has started, so that it has a BuildStatus object where the
-        properties can live."""
-        self.build_status.setProperty(propname, value, source, runtime=True)
-
-    def getProperties(self):
-        return self.build_status.getProperties()
-
-    def getProperty(self, propname):
-        return self.build_status.getProperty(propname)
+    def getAllSourceStamps(self):
+        return list(self.sources)
 
     def allChanges(self):
-        return self.source.changes
+        for s in self.sources:
+            for c in s.changes:
+                yield c
 
     def allFiles(self):
         # return a list of all source files that were changed
@@ -124,6 +122,9 @@ class Build:
         for c in self.allChanges():
             if c.who not in blamelist:
                 blamelist.append(c.who)
+        for source in self.sources:
+            if source.patch_info: #Add patch author to blamelist
+                blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
 
@@ -143,8 +144,6 @@ class Build:
         build.allFiles() ."""
         self.stepFactories = list(step_factories)
 
-
-
     useProgress = True
 
     def getSlaveCommandVersion(self, command, oldversion=None):
@@ -153,14 +152,17 @@ class Build:
         return self.slavebuilder.slave.slavename
 
     def setupProperties(self):
-        props = self.getProperties()
+        props = interfaces.IProperties(self)
+
+        # give the properties a reference back to this build
+        props.build = self
 
         # start with global properties from the configuration
         buildmaster = self.builder.botmaster.parent
-        props.updateFromProperties(buildmaster.properties)
+        props.updateFromProperties(buildmaster.config.properties)
 
-        # from the SourceStamp, which has properties via Change
-        for change in self.source.changes:
+        # from the SourceStamps, which have properties via Change
+        for change in self.allChanges():
             props.updateFromProperties(change.properties)
 
         # and finally, get any properties from requests (this is the path
@@ -171,21 +173,33 @@ class Build:
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        props.setProperty("branch", self.source.branch, "Build")
-        props.setProperty("revision", self.source.revision, "Build")
-        props.setProperty("repository", self.source.repository, "Build")
-        props.setProperty("project", self.source.project, "Build")
+        
+        if self.sources and len(self.sources) == 1:
+            # old interface for backwards compatibility
+            source = self.sources[0]
+            props.setProperty("branch", source.branch, "Build")
+            props.setProperty("revision", source.revision, "Build")
+            props.setProperty("repository", source.repository, "Build")
+            props.setProperty("codebase", source.codebase, "Build")
+            props.setProperty("project", source.project, "Build")
+
         self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
+
+        self.path_module = slavebuilder.slave.path_module
 
         # navigate our way back to the L{buildbot.buildslave.BuildSlave}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir", slavebuilder.slave.path_module.join(slavebuilder.slave.slave_basedir, self.builder.slavebuilddir), "slave")
+            self.setProperty("builddir",
+                    self.path_module.join(
+                        slavebuilder.slave.slave_basedir,
+                        self.builder.config.slavebuilddir),
+                    "Slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
@@ -217,12 +231,19 @@ class Build:
             lock_list.append((lock, access))
         self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder), la)
+        self.locks = [(l.getLock(self.slavebuilder.slave), la)
                        for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 
+        metrics.MetricCountEvent.log('active_builds', 1)
+
         d = self.deferred = defer.Deferred()
+        def _uncount_build(res):
+            metrics.MetricCountEvent.log('active_builds', -1)
+            return res
+        d.addBoth(_uncount_build)
+
         def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()
             slave.updateSlaveStatus(buildFinished=bs)
@@ -243,7 +264,7 @@ class Build:
             self.builder.builder_status.addPointEvent(["setupBuild",
                                                        "exception"])
             self.finished = True
-            self.results = FAILURE
+            self.results = EXCEPTION
             self.deferred = None
             d.callback(self)
             return d
@@ -260,7 +281,7 @@ class Build:
             return defer.succeed(None)
         log.msg("acquireLocks(build %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
-            if not lock.isAvailable(access):
+            if not lock.isAvailable(self, access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
@@ -282,18 +303,12 @@ class Build:
         stepnames = {}
         sps = []
 
-        for factory, args in self.stepFactories:
-            args = args.copy()
-            try:
-                step = factory(**args)
-            except:
-                log.msg("error while creating step, factory=%s, args=%s"
-                        % (factory, args))
-                raise
+        for factory in self.stepFactories:
+            step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             if callable (self.workdir):
-                step.setDefaultWorkdir (self.workdir (self.source))
+                step.setDefaultWorkdir (self.workdir (self.sources))
             else:
                 step.setDefaultWorkdir (self.workdir)
             name = step.name
@@ -334,7 +349,8 @@ class Build:
                 self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
-        self.build_status.setSourceStamp(self.source)
+        # pass all sourcestamps to the buildstatus
+        self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
@@ -441,6 +457,14 @@ class Build:
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
+        else:
+            self.result = RETRY
+            self.text = ["lost", "remote"]
+            self.stopped = True
+            if self._acquiringLock:
+                lock, access, d = self._acquiringLock
+                lock.stopWaitingUntilAvailable(self, access, d)
+                d.callback(None)
 
     def stopBuild(self, reason="<no reason given>"):
         # the idea here is to let the user cancel a build because, e.g.,
@@ -473,6 +497,8 @@ class Build:
             text = ["warnings"]
         elif self.result == EXCEPTION:
             text = ["exception"]
+        elif self.result == RETRY:
+            text = ["retry"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
@@ -481,7 +507,12 @@ class Build:
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], EXCEPTION)
+        # try to finish the build, but since we've already faced an exception,
+        # this may not work well.
+        try:
+            self.buildFinished(["build", "exception"], EXCEPTION)
+        except:
+            log.err(Failure(), 'while finishing a build with an exception')
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
@@ -498,6 +529,7 @@ class Build:
         self.finished = True
         if self.remote:
             self.remote.dontNotifyOnDisconnect(self.lostRemote)
+            self.remote = None
         self.results = results
 
         log.msg(" %s: build finished" % self)
@@ -508,7 +540,7 @@ class Build:
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
-        reactor.callLater(0, self.releaseLocks)
+        eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None
 
@@ -529,4 +561,6 @@ class Build:
 
     # stopBuild is defined earlier
 
-
+components.registerAdapter(
+        lambda build : interfaces.IProperties(build.build_status),
+        Build, interfaces.IProperties)

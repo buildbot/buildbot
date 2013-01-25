@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.pbutil import NewCredPerspective
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
+from buildbot import config
 
 class ChangePerspective(NewCredPerspective):
 
@@ -56,8 +57,23 @@ class ChangePerspective(NewCredPerspective):
             changedict['author'] = changedict['who']
             del changedict['who']
         if 'when' in changedict:
-            changedict['when_timestamp'] = epoch2datetime(changedict['when'])
+            when = None
+            if changedict['when'] is not None:
+                when = epoch2datetime(changedict['when'])
+            changedict['when_timestamp'] = when
             del changedict['when']
+
+        # turn any bytestring keys into unicode, assuming utf8 but just
+        # replacing unknown characters.  Ideally client would send us unicode
+        # in the first place, but older clients do not, so this fallback is
+        # useful.
+        for key in changedict:
+            if type(changedict[key]) == str:
+                changedict[key] = changedict[key].decode('utf8', 'replace')
+        changedict['files'] = list(changedict['files'])
+        for i, file in enumerate(changedict.get('files', [])):
+            if type(file) == str:
+                changedict['files'][i] = file.decode('utf8', 'replace')
 
         files = []
         for path in changedict['files']:
@@ -71,9 +87,18 @@ class ChangePerspective(NewCredPerspective):
 
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
-        return self.master.addChange(**changedict)
 
-class PBChangeSource(base.ChangeSource):
+        if changedict.has_key('links'):
+            log.msg("Found links: "+repr(changedict['links']))
+            del changedict['links']
+
+        d = self.master.addChange(**changedict)
+        # since this is a remote method, we can't return a Change instance, so
+        # this just sets the return value to None:
+        d.addCallback(lambda _ : None)
+        return d
+
+class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
 
     def __init__(self, user="change", passwd="changepw", port=None,
@@ -84,34 +109,52 @@ class PBChangeSource(base.ChangeSource):
         self.port = port
         self.prefix = prefix
         self.registration = None
+        self.registered_port = None
 
     def describe(self):
-        # TODO: when the dispatcher is fixed, report the specific port
-        if self.port is not None:
-            portname = self.port
-        else:
-            portname = "all-purpose slaveport"
+        portname = self.registered_port
         d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
         return d
 
-    def startService(self):
-        base.ChangeSource.startService(self)
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        # calculate the new port
         port = self.port
         if port is None:
-            port = self.master.slavePortnum
+            port = new_config.slavePortnum
+
+        # and, if it's changed, re-register
+        if port != self.registered_port:
+            yield self._unregister()
+            self._register(port)
+
+        yield config.ReconfigurableServiceMixin.reconfigService(
+                self, new_config)
+
+    def stopService(self):
+        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
+        d.addCallback(lambda _ : self._unregister())
+        return d
+
+    def _register(self, port):
+        if not port:
+            log.msg("PBChangeSource has no port to listen on")
+            return
+        self.registered_port = port
         self.registration = self.master.pbmanager.register(
                 port, self.user, self.passwd,
                 self.getPerspective)
 
-    def stopService(self):
-        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
-        def unreg(_):
-            if self.registration:
-                return self.registration.unregister()
-        d.addCallback(unreg)
-        return d
+    def _unregister(self):
+        self.registered_port = None
+        if self.registration:
+            reg = self.registration
+            self.registration = None
+            return reg.unregister()
+        else:
+            return defer.succeed(None)
 
     def getPerspective(self, mind, username):
         assert username == self.user

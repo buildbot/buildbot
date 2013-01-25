@@ -15,8 +15,12 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.status import master
+from twisted.internet import defer
+from buildbot.status import master, base
 from buildbot.test.fake import fakedb
+
+class FakeStatusReceiver(base.StatusReceiver):
+    pass
 
 class TestStatus(unittest.TestCase):
 
@@ -30,10 +34,10 @@ class TestStatus(unittest.TestCase):
     def test_getBuildSets(self):
         s = self.makeStatus()
         self.db.insertTestData([
-            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+            fakedb.Buildset(id=91, sourcestampsetid=234, complete=0,
                     complete_at=298297875, results=-1, submitted_at=266761875,
                     external_idstring='extid', reason='rsn1'),
-            fakedb.Buildset(id=92, sourcestampid=234, complete=1,
+            fakedb.Buildset(id=92, sourcestampsetid=234, complete=1,
                     complete_at=298297876, results=7, submitted_at=266761876,
                     external_idstring='extid', reason='rsn2'),
         ])
@@ -43,3 +47,49 @@ class TestStatus(unittest.TestCase):
             self.assertEqual([ bs.id for bs in bslist ], [ 91 ])
         d.addCallback(check)
         return d
+
+    @defer.inlineCallbacks
+    def test_reconfigService(self):
+        m = mock.Mock(name='master')
+        status = master.Status(m)
+        status.startService()
+
+        config = mock.Mock()
+
+        # add a status reciever
+        sr0 = FakeStatusReceiver()
+        config.status = [ sr0 ]
+
+        yield status.reconfigService(config)
+
+        self.assertTrue(sr0.running)
+        self.assertIdentical(sr0.master, m)
+
+        # add a status reciever
+        sr1 = FakeStatusReceiver()
+        sr2 = FakeStatusReceiver()
+        config.status = [ sr1, sr2 ]
+
+        yield status.reconfigService(config)
+
+        self.assertFalse(sr0.running)
+        self.assertIdentical(sr0.master, None)
+        self.assertTrue(sr1.running)
+        self.assertIdentical(sr1.master, m)
+        self.assertTrue(sr2.running)
+        self.assertIdentical(sr2.master, m)
+
+        # reconfig with those two (a regression check)
+        sr1 = FakeStatusReceiver()
+        sr2 = FakeStatusReceiver()
+        config.status = [ sr1, sr2 ]
+
+        yield status.reconfigService(config)
+
+        # and back to nothing
+        config.status = [ ]
+        yield status.reconfigService(config)
+
+        self.assertIdentical(sr0.master, None)
+        self.assertIdentical(sr1.master, None)
+        self.assertIdentical(sr2.master, None)

@@ -57,7 +57,8 @@ class BK(SourceBaseCommand):
         command = [bk, 'pull']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         return c.start()
 
@@ -74,7 +75,7 @@ class BK(SourceBaseCommand):
                    [self.bkurl, self.srcdir]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         return c.start()
 
@@ -94,7 +95,8 @@ class BK(SourceBaseCommand):
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         keepStdout=True, logEnviron=self.logEnviron,
+                         usePTY=False)
         d = c.start()
         def _parse(res):
             r_raw = c.stdout.strip()

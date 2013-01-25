@@ -15,14 +15,18 @@
 
 import os
 import mock
-from twisted.internet import defer
+import signal
+from twisted.internet import defer, reactor, task
 from twisted.trial import unittest
-from buildbot import master
+from twisted.python import log
+from buildbot import master, monkeypatches, config
 from buildbot.util import subscription
-from buildbot.test.util import dirs
+from buildbot.db import connector
+from buildbot.test.util import dirs, compat, misc, logging
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
+from buildbot.process.users import users
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
@@ -31,13 +35,13 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         d = self.setUpDirs(basedir)
         def set_master(_):
             self.master = master.BuildMaster(basedir)
-            self.master.db_poll_interval = None
+            self.master.config.db['db_poll_interval'] = None
         d.addCallback(set_master)
         return d
 
     def tearDown(self):
         return self.tearDownDirs()
-
+        
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -48,7 +52,6 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             'comments': u'fix whitespace',
             'files': [u'master/buildbot/__init__.py'],
             'is_dir': 0,
-            'links': [],
             'project': u'Buildbot',
             'properties': {},
             'repository': u'git://warner',
@@ -77,10 +80,9 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
             # master called the right thing in the db component, including with
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
-                    files=None, comments=None, is_dir=0, links=None,
-                    revision=None, when_timestamp=None, branch=None,
-                    category=None, revlink='', properties={}, repository='',
-                    project='')
+                    files=None, comments=None, is_dir=0,
+                    revision=None, when_timestamp=None, branch=None, codebase='',
+                    category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
@@ -93,9 +95,9 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, links=None, revision=None, when_timestamp=None,
+                is_dir=0, revision=None, when_timestamp=None,
                 branch=None, category=None, revlink='', properties={},
-                repository='', project='')
+                repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
@@ -154,7 +156,30 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
+                
+    def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
+        got = []
+        def fake_createUserObject(*args, **kwargs):
+            got[:] = args, kwargs
+            # use an exception as a quick way to bail out of the remainder
+            # of the createUserObject method
+            return defer.fail(RuntimeError)
 
+        self.patch(users, 'createUserObject', fake_createUserObject)
+
+        d = self.master.addChange(*args, **kwargs)
+        d.addCallback(lambda _ : self.fail("should not succeed"))
+        def check(f):
+            self.assertEqual(got, [exp_args, {}])
+        d.addErrback(check)
+        return d
+
+    def test_addChange_createUserObject_args(self):
+        # who should come through as author
+        return self.do_test_createUserObjects_args(
+                kwargs=dict(who='me', src='git'),
+                exp_args=(self.master, 'me', 'git'))
+               
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \
@@ -186,7 +211,175 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 
-class Polling(dirs.DirsMixin, unittest.TestCase):
+class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpLogging()
+        self.basedir = os.path.abspath('basedir')
+        d = self.setUpDirs(self.basedir)
+        @d.addCallback
+        def make_master(_):
+            # don't create child services
+            self.patch(master.BuildMaster, 'create_child_services',
+                    lambda self : None)
+
+            # patch out a few other annoying things the master likes to do
+            self.patch(monkeypatches, 'patch_all', lambda : None)
+            self.patch(signal, 'signal', lambda sig, hdlr : None)
+            self.patch(master, 'Status', lambda master : mock.Mock()) # XXX temporary
+            self.patch(config.MasterConfig, 'loadConfig',
+                    classmethod(lambda cls, b, f : cls()))
+
+            self.master = master.BuildMaster(self.basedir)
+            self.db = self.master.db = fakedb.FakeDBConnector(self)
+
+        return d
+
+    def tearDown(self):
+        return self.tearDownDirs()
+
+    def make_reactor(self):
+        r = mock.Mock()
+        r.callWhenRunning = reactor.callWhenRunning
+        return r
+
+    def patch_loadConfig_fail(self):
+        @classmethod
+        def loadConfig(cls, b, f):
+            config.error('oh noes')
+        self.patch(config.MasterConfig, 'loadConfig', loadConfig)
+
+
+    # tests
+
+    def test_startup_bad_config(self):
+        reactor = self.make_reactor()
+        self.patch_loadConfig_fail()
+
+        d = self.master.startService(_reactor=reactor)
+
+        @d.addCallback
+        def check(_):
+            reactor.stop.assert_called()
+            self.assertLogged("oh noes")
+        return d
+
+    def test_startup_db_not_ready(self):
+        reactor = self.make_reactor()
+        def db_setup():
+            log.msg("GOT HERE")
+            raise connector.DatabaseNotReadyError()
+        self.db.setup = db_setup
+
+        d = self.master.startService(_reactor=reactor)
+
+        @d.addCallback
+        def check(_):
+            reactor.stop.assert_called()
+            self.assertLogged("GOT HERE")
+        return d
+
+    @compat.usesFlushLoggedErrors
+    def test_startup_error(self):
+        reactor = self.make_reactor()
+        def db_setup():
+            raise RuntimeError("oh noes")
+        self.db.setup = db_setup
+
+        d = self.master.startService(_reactor=reactor)
+
+        @d.addCallback
+        def check(_):
+            reactor.stop.assert_called()
+            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        return d
+
+    def test_startup_ok(self):
+        reactor = self.make_reactor()
+
+        d = self.master.startService(_reactor=reactor)
+        d.addCallback(lambda _ : self.master.stopService())
+
+        @d.addCallback
+        def check(_):
+            self.failIf(reactor.stop.called)
+            self.assertLogged("BuildMaster is running")
+        return d
+
+    def test_reconfig(self):
+        reactor = self.make_reactor()
+        self.master.reconfigService = mock.Mock(
+                side_effect=lambda n : defer.succeed(None))
+
+        d = self.master.startService(_reactor=reactor)
+        d.addCallback(lambda _ : self.master.reconfig())
+        d.addCallback(lambda _ : self.master.stopService())
+
+        @d.addCallback
+        def check(_):
+            self.master.reconfigService.assert_called()
+        return d
+
+    @defer.inlineCallbacks
+    def test_reconfig_bad_config(self):
+        reactor = self.make_reactor()
+        self.master.reconfigService = mock.Mock(
+                side_effect=lambda n : defer.succeed(None))
+
+        yield self.master.startService(_reactor=reactor)
+
+        # reset, since startService called reconfigService
+        self.master.reconfigService.reset_mock()
+
+        # reconfig, with a failure
+        self.patch_loadConfig_fail()
+        yield self.master.reconfig()
+
+        self.master.stopService()
+
+        self.assertLogged("reconfig aborted without")
+        self.failIf(self.master.reconfigService.called)
+
+    def test_reconfigService_db_url_changed(self):
+        old = self.master.config = config.MasterConfig()
+        old.db['db_url'] = 'aaaa'
+        new = config.MasterConfig()
+        new.db['db_url'] = 'bbbb'
+
+        self.assertRaises(config.ConfigErrors, lambda :
+            self.master.reconfigService(new))
+
+    def test_reconfigService_start_polling(self):
+        loopingcall = mock.Mock()
+        self.patch(task, 'LoopingCall', lambda fn : loopingcall)
+
+        self.master.config = config.MasterConfig()
+        new = config.MasterConfig()
+        new.db['db_poll_interval'] = 120
+
+        d = self.master.reconfigService(new)
+        @d.addCallback
+        def check(_):
+            loopingcall.start.assert_called_with(120, now=False)
+        return d
+
+    def test_reconfigService_stop_polling(self):
+        db_loop = self.master.db_loop = mock.Mock()
+
+        old = self.master.config = config.MasterConfig()
+        old.db['db_poll_interval'] = 120
+        new = config.MasterConfig()
+        new.db['db_poll_interval'] = None
+
+        d = self.master.reconfigService(new)
+        @d.addCallback
+        def check(_):
+            db_loop.stop.assert_called()
+            self.assertEqual(self.master.db_loop, None)
+        return d
+
+
+class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.gotten_changes = []
@@ -194,14 +387,20 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         self.gotten_buildset_completions = []
         self.gotten_buildrequest_additions = []
 
+
         basedir = os.path.abspath('basedir')
+
+        # patch out os.uname so that we get a consistent hostname
+        self.patch_os_uname(lambda : [ 0, 'testhost.localdomain' ])
+        self.master_name = "testhost.localdomain:%s" % (basedir,)
+
         d = self.setUpDirs(basedir)
         def set_master(_):
             self.master = master.BuildMaster(basedir)
 
             self.db = self.master.db = fakedb.FakeDBConnector(self)
 
-            self.master.db_poll_interval = 10
+            self.master.config.db['db_poll_interval'] = 10
 
             # overridesubscription callbacks
             self.master._change_subs = sub = mock.Mock()
@@ -235,7 +434,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_empty(self):
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
+            fakedb.Object(id=22, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
         ])
         d = self.master.pollDatabaseChanges()
@@ -251,7 +450,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         # with no existing state, it should catch up to the most recent change,
         # but not process anything
         self.db.insertTestData([
-            fakedb.Object(id=22, name='master',
+            fakedb.Object(id=22, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
             fakedb.Change(changeid=10),
             fakedb.Change(changeid=11),
@@ -267,7 +466,7 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseChanges_multiple(self):
         self.db.insertTestData([
-            fakedb.Object(id=53, name='master',
+            fakedb.Object(id=53, name=self.master_name,
                           class_name='buildbot.master.BuildMaster'),
             fakedb.ObjectState(objectid=53, name='last_processed_change',
                                value_json='10'),
@@ -311,8 +510,9 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
 
     def test_pollDatabaseBuildRequests_new(self):
         self.db.insertTestData([
-            fakedb.SourceStamp(id=127),
-            fakedb.Buildset(bsid=99, sourcestampid=127),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
             fakedb.BuildRequest(id=19, buildsetid=99, buildername='9teen'),
             fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
         ])
@@ -328,10 +528,10 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
         d = defer.succeed(None)
         def insert1(_):
             self.db.insertTestData([
-                fakedb.SourceStamp(id=127),
-                fakedb.Buildset(bsid=99, sourcestampid=127),
-                fakedb.BuildRequest(id=11, buildsetid=9,
-                                        buildername='eleventy'),
+            fakedb.SourceStampSet(id=127),
+            fakedb.SourceStamp(id=127, sourcestampsetid=127),
+            fakedb.Buildset(id=99, sourcestampsetid=127),
+            fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
             ])
         d.addCallback(insert1)
         d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())

@@ -1,0 +1,104 @@
+Buildbot 0.7.9 was released 15 Sep 2008
+
+** New Features
+
+*** Configurable public_html directory (#162)
+
+The public_html/ directory, which provides static content for the WebStatus()
+HTTP server, is now configurable. The default location is still the
+public_html/ subdirectory of the buildmaster's base directory, but you can
+change this by passing a suitable argument when creating the WebStatus()
+instance in your master.cfg file:
+
+  c['status'].append( WebStatus(8080, public_html="/var/www/buildbot") )
+
+*** Lock access modes (#313)
+
+Albert Hofkamp added code to provide two distinct access modes to Locks:
+"counting" and "exclusive". Locks can accept a configurable number of
+"counting"-mode users, or a single "exclusive"-mode. For example, a Lock is
+defined with maxCount=3, and then a 'compile' BuildStep uses this lock in
+counting mode, while a 'cleanup' BuildStep uses this lock in exclusive mode.
+Then, there can be one, two, or three simultaneous Builds in the compile step
+(as long as there are no builds in the cleanup step). Only one build can be
+in the cleanup step at a time, and if there is such a build in the cleanup
+step, then the compile steps in other builds will wait for it to finish.
+Please see the "Interlocks" section of the user's manual for more details.
+
+** Bugs Fixed
+
+*** Buildslave missing_timeout= fired too quickly (#211)
+
+By providing a missing_timeout= argument when creating the BuildSlave
+instance, you can ask the buildmaster to send email if a buildslave is
+disconnected for too long. A bug in the previous version caused this
+notification to be sent too soon, rather than waiting until the timeout
+period expired. This should be fixed now.
+
+*** Test command display fixed (#332)
+
+In the previous version, a steps.shell.Test step would display the parsed
+test results (in the step's box on the waterfall display) in lieu of any
+other descriptive text the step might provide. In this release, these two
+pieces of information are combined.
+
+** Minor Changes
+
+The buildmaster's version is logged to its twistd.log file at startup. The
+buildslave does the same, to its own logfile.
+
+Remote commands now record how long each command took. The "elapsedTime="
+message will appear in the step's main logfile.
+
+The "buildbot restart" command no longer fails if the buildbot wasn't already
+running.
+
+The FileUpload and FileDownload steps now create their target directories
+(and any missing intermediate directories) before writing to the destination
+file.
+
+The per-build and per-step web pages now show the start, finish, and elapsed
+time of their build or step.
+
+If a Subversion-based build is started with a mixture of Changes that specify
+particular numeric revisions and "HEAD" Changes (which indicate that a trunk
+checkout is desired), the build will use a trunk checkout. Previously this
+would probably cause an error. It is not clear how this situation might
+arise.
+
+** Compability With Other Tools
+
+The mercurial commit hook (buildbot.changes.hgbuildbot) in the previous
+version doesn't work with hg-1.0 or later (it uses an API function that was
+present in the hg-0.9.5 release, but was removed from hg-1.0). This
+incompability has been fixed: the new version of buildbot should be
+compatible with hg-1.0 and newer (and it probably retains compability with
+hg-0.9.5 and earlier too). (#328)
+
+The Git tool has traditionally provided two ways to run each command, either
+as subcommands of /usr/bin/git (like "git checkout"), or as individual tools
+(like /usr/bin/git-checkout). The latter form is being removed in the
+upcoming 1.6 Git release. Previous versions of Buildbot have used the
+git-checkout form, and will break when Git is upgraded to 1.6 or beyond. The
+new Buildbot release switches to the subcommand form. Note that this is a
+change on the buildslave side.
+
+The Git checkout command will now use the default branch (as set in the
+steps.source.Git() step definition) if the changes that it is building do not
+specify some other branch to build. (#340)
+
+** Deprecation Schedule
+
+No features have been deprecated in this release, and no deprecated features
+have been removed. As a reminder, the following deprecated features are
+scheduled for removal in an upcoming release:
+
+c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
+and will be removed by 0.8.0.
+
+c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
+0.8.0 . c['bots'] only accepts BuildSlave instances, not name/passwd tuples.
+
+The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
+will be removed by 0.8.0.
+

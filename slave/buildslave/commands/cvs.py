@@ -66,7 +66,8 @@ class CVS(SourceBaseCommand):
             c = runprocess.RunProcess(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime,
-                             initialStdin=self.login+"\n", usePTY=False)
+                             initialStdin=self.login+"\n",
+                             logEnviron=self.logEnviron,usePTY=False)
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
@@ -89,7 +90,8 @@ class CVS(SourceBaseCommand):
             command += ['-D', self.revision]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         return c.start()
 
@@ -118,7 +120,8 @@ class CVS(SourceBaseCommand):
 
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         return c.start()
 

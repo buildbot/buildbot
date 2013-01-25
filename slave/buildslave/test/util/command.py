@@ -98,6 +98,20 @@ class CommandTestMixin:
         """
         return self.builder.updates
 
+    def assertUpdates(self, updates, msg=None):
+        """
+        Asserts that self.get_updates() matches updates, ignoring elapsed time data
+        """
+        my_updates = []
+        for update in self.get_updates():
+            try:
+                if update.has_key('elapsed'):
+                    continue
+            except:
+                pass
+            my_updates.append(update)
+        self.assertEqual(my_updates, updates, msg)
+
     def add_update(self, upd):
         self.builder.updates.append(upd)
 

@@ -1,0 +1,67 @@
+Buildbot 0.7.11p was released July 16, 2009
+
+Fixes a few test failures in 0.7.11, and gives a default value for branchType
+if it is not specified by the master.
+
+
+Buildbot 0.7.11 was released July 5, 2009
+
+Developers too numerous to mention contributed to this release.  Buildbot has
+truly become a community-maintained application.  Much hard work is not
+mentioned here, so please consult the git logs for the detailed changes in this
+release.
+
+** Better Memory Performance, Disk Cleanup
+
+Buildbot handles its memory usage a bit better, and can automatically purge old
+history to keep memory and disk usage low.  Look for eventHorizon,
+buildHorizon, logHorizon, and changeHorizon.
+
+** Password Protection for Force Build and Stop actions
+
+It is now possible to require authentication to force build and stop via the
+WebStatus interface. To use this, set the 'auth' field of WebStatus to a valid
+IAuth implementation. Current implementations are:
+	BasicAuth with a list of user/passwords
+	HTPasswdAuth with an .htpasswd file
+By default, the unauthenticated behavior will occur.
+
+** Web Status changes
+
+The "Graceful Shutdown" feature, as a kind of "force", now obeys allowForce.
+
+The waterfall and other pages are more deeply interlinked.
+
+Pending builds can be individually cancelled, or cancelled in bulk.
+
+** Fixed Transfer Steps
+
+Transfer step classes are more reliable; DirectoryUpload and DirectoryDownload
+use tarfile instead of manually framing files.  The DirectoryUpload step also
+now supports compression.
+
+** Conditional Steps
+
+Steps now take a doStepIf parameter which can be used to implement simple
+conditional execution of a step.
+
+** Colorized Steps
+
+Steps are now hilighted with a color in the build view to indicate their
+success or failure.
+
+** Improved build prioritization
+
+Bugfixes and fairer scheduling
+
+** Transposed Grid
+
+Similar to the grid view, but with the axes reversed and showing different
+info.  Located at /tgrid.
+
+** Trigger steps improvements
+
+Trigger now supports copy_properties, to send selected properties to the
+triggered build.
+
+

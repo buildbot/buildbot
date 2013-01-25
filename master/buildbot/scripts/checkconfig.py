@@ -15,41 +15,36 @@
 
 import sys
 import os
-from shutil import copy, rmtree
-from tempfile import mkdtemp
-from twisted.internet import defer
-from buildbot import master
+from buildbot import config
 
 class ConfigLoader(object):
     def __init__(self, basedir=os.getcwd(), configFileName="master.cfg"):
         self.basedir = os.path.abspath(basedir)
-        self.configFileName = os.path.abspath(os.path.join(basedir, configFileName))
+        self.configFileName = os.path.abspath(
+                                os.path.join(basedir, configFileName))
 
-    def load(self):
-        dir = os.getcwd()
+    def load(self, quiet=False):
+        try:
+            config.MasterConfig.loadConfig(
+                    self.basedir, self.configFileName)
+        except config.ConfigErrors, e:
+            if not quiet:
+                print >> sys.stderr, "Configuration Errors:"
+                for e in e.errors:
+                    print >> sys.stderr, "  " + e
+            return 1
 
-        d = defer.succeed(None)
+        if not quiet:
+            print "Config file is good!"
+        return 0
 
-        def loadcfg(_):
-            # Use a temporary directory since loadConfig() creates a bunch of
-            # builder directories
-            self.tempdir = mkdtemp()
-            copy(self.configFileName, self.tempdir)
+def checkconfig(config):
+    quiet = config.get('quiet')
+    configFileName = config.get('configFile')
 
-            os.chdir(self.tempdir)
-            # Add the original directory to the library path so local module
-            # imports work
-            sys.path.append(self.basedir)
+    if os.path.isdir(configFileName):
+        cl = ConfigLoader(basedir=configFileName)
+    else:
+        cl = ConfigLoader(configFileName=configFileName)
 
-            bmaster = master.BuildMaster(self.basedir, self.configFileName)
-            return bmaster.loadConfig(open(self.configFileName, "r"), checkOnly=True)
-        d.addCallback(loadcfg)
-
-        def cleanup(v):
-            # clean up before passing on the exception
-            os.chdir(dir)
-            if os.path.exists(self.tempdir):
-                rmtree(self.tempdir)
-            return v # pass up the exception *or* result
-        d.addBoth(cleanup)
-        return d
+    return cl.load(quiet=quiet)

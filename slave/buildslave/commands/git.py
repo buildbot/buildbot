@@ -63,15 +63,17 @@ class Git(SourceBaseCommand):
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
-    def _dovccmd(self, command, cb=None, **kwargs):
+    def _dovccmd(self, command, cb=None, stopOnFail=True, **kwargs):
         git = self.getCommand("git")
         c = runprocess.RunProcess(self.builder, [git] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False, **kwargs)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False, **kwargs)
         self.command = c
         d = c.start()
         if cb:
-            d.addCallback(self._abandonOnFailure)
+            if stopOnFail:
+                d.addCallback(self._abandonOnFailure)
             d.addCallback(cb)
         return d
 
@@ -106,7 +108,7 @@ class Git(SourceBaseCommand):
         # Rename branch, so that the repo will have the expected branch name
         # For further information about this, see the commit message
         command = ['branch', '-M', self.branch]
-        return self._dovccmd(command, self._initSubmodules)
+        return self._dovccmd(command, self._initSubmodules, False)
         
     def _didFetch(self, res):
         if self.revision:
@@ -136,7 +138,7 @@ class Git(SourceBaseCommand):
             diffbranch = self.sourcedata != self.readSourcedata()
         except IOError:
             diffbranch = False
-        if diffbranch:
+        if diffbranch or self.sourcedirIsPatched():
             command = ['clean', '-f', '-d']
             if self.ignore_ignores:
                 command.append('-x')
@@ -195,7 +197,8 @@ class Git(SourceBaseCommand):
             cmd.extend([self.repourl, self._fullSrcdir()])
             c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
                              sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, usePTY=False)
+                             maxTime=self.maxTime, logEnviron=self.logEnviron,
+                             usePTY=False)
             self.command = c
             cmdexec = c.start()
             cmdexec.addCallback(self._didInit)

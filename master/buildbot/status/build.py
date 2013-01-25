@@ -13,23 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os, shutil, re
 from cPickle import dump
 from zope.interface import implements
-from twisted.python import log, runtime
+from twisted.python import log, runtime, components
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
-from buildbot.process.properties import Properties
+from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 
-class BuildStatus(styles.Versioned):
+class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
-    persistenceVersion = 3
+    persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
-    source = None
+    sources = None
     reason = None
     changes = []
     blamelist = []
@@ -41,6 +43,8 @@ class BuildStatus(styles.Versioned):
     results = None
     slavename = "???"
 
+    set_runtime_properties = True
+
     # these lists/dicts are defined here so that unserialized instances have
     # (empty) values. They are set in __init__ to new objects to make sure
     # each instance gets its own copy.
@@ -49,20 +53,21 @@ class BuildStatus(styles.Versioned):
     finishedWatchers = []
     testResults = {}
 
-    def __init__(self, parent, number):
+    def __init__(self, parent, master, number):
         """
         @type  parent: L{BuilderStatus}
         @type  number: int
         """
         assert interfaces.IBuilderStatus(parent)
         self.builder = parent
+        self.master = master
         self.number = number
         self.watchers = []
         self.updates = {}
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
-        self.properties = Properties()
+        self.properties = properties.Properties()
 
     def __repr__(self):
         return "<%s #%s>" % (self.__class__.__name__, self.number)
@@ -75,12 +80,6 @@ class BuildStatus(styles.Versioned):
         """
         return self.builder
 
-    def getProperty(self, propname):
-        return self.properties[propname]
-
-    def getProperties(self):
-        return self.properties
-
     def getNumber(self):
         return self.number
 
@@ -89,10 +88,31 @@ class BuildStatus(styles.Versioned):
             return None
         return self.builder.getBuild(self.number-1)
 
-    def getSourceStamp(self, absolute=False):
-        if not absolute or not self.properties.has_key('got_revision'):
-            return self.source
-        return self.source.getAbsoluteSourceStamp(self.properties['got_revision'])
+    def getAllGotRevisions(self):
+        all_got_revisions = self.properties.getProperty('got_revision', {})
+        # For backwards compatibility all_got_revisions is a string if codebases
+        # are not used. Convert to the default internal type (dict)
+        if not isinstance(all_got_revisions, dict):
+            all_got_revisions = {'': all_got_revisions}
+        return all_got_revisions
+
+    def getSourceStamps(self, absolute=False):
+        sourcestamps = []
+        if not absolute:
+            sourcestamps.extend(self.sources)
+        else:
+            all_got_revisions = self.getAllGotRevisions() or {}
+            # always make a new instance
+            for ss in self.sources:
+                if ss.codebase in all_got_revisions:
+                    got_revision = all_got_revisions[ss.codebase]
+                    sourcestamps.append(ss.getAbsoluteSourceStamp(got_revision))
+                else:
+                    # No absolute revision information available
+                    # Probably build has been stopped before ending all sourcesteps
+                    # Return a clone with original revision
+                    sourcestamps.append(ss.clone())
+        return sourcestamps
 
     def getReason(self):
         return self.reason
@@ -100,12 +120,21 @@ class BuildStatus(styles.Versioned):
     def getChanges(self):
         return self.changes
 
+    def getRevisions(self):
+        revs = []
+        for c in self.changes:
+            rev = str(c.revision)
+            if rev > 7:  # for long hashes
+                rev = rev[:7]
+            revs.append(rev)
+        return ", ".join(revs)
+
     def getResponsibleUsers(self):
         return self.blamelist
 
     def getInterestedUsers(self):
         # TODO: the Builder should add others: sheriffs, domain-owners
-        return self.blamelist + self.properties.getProperty('owners', [])
+        return self.properties.getProperty('owners', [])
 
     def getSteps(self):
         """Return a list of IBuildStepStatus objects. For invariant builds
@@ -181,16 +210,7 @@ class BuildStatus(styles.Versioned):
     def getTestResults(self):
         return self.testResults
 
-    def getTestResultsOrd(self):
-        trs = self.testResults.keys()
-        trs.sort()
-        ret = [ self.testResults[t] for t in trs]
-        return ret
-
     def getLogs(self):
-        # TODO: steps should contribute significant logs instead of this
-        # hack, which returns every log from every step. The logs should get
-        # names like "compile" and "test" instead of "compile.output"
         logs = []
         for s in self.steps:
             for loog in s.getLogs():
@@ -233,20 +253,19 @@ class BuildStatus(styles.Versioned):
         list. Create a BuildStepStatus object to which it can send status
         updates."""
 
-        s = BuildStepStatus(self, len(self.steps))
+        s = BuildStepStatus(self, self.master, len(self.steps))
         s.setName(name)
         self.steps.append(s)
         return s
 
-    def setProperty(self, propname, value, source, runtime=True):
-        self.properties.setProperty(propname, value, source, runtime)
-
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
 
-    def setSourceStamp(self, sourceStamp):
-        self.source = sourceStamp
-        self.changes = self.source.changes
+    def setSourceStamps(self, sourceStamps):
+        self.sources = sourceStamps
+        self.changes = []
+        for source in self.sources:
+            self.changes.extend(source.changes)
 
     def setReason(self, reason):
         self.reason = reason
@@ -353,19 +372,22 @@ class BuildStatus(styles.Versioned):
             # was interrupted. The builder will have a 'shutdown' event, but
             # someone looking at just this build will be confused as to why
             # the last log is truncated.
-        for k in 'builder', 'watchers', 'updates', 'finishedWatchers':
+        for k in [ 'builder', 'watchers', 'updates', 'finishedWatchers',
+                   'master' ]:
             if k in d: del d[k]
         return d
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        # self.builder must be filled in by our parent when loading
-        for step in self.steps:
-            step.build = self
         self.watchers = []
         self.updates = {}
         self.finishedWatchers = []
 
+    def setProcessObjects(self, builder, master):
+        self.builder = builder
+        self.master = master
+        for step in self.steps:
+            step.setProcessObjects(self, master)
     def upgradeToVersion1(self):
         if hasattr(self, "sourceStamp"):
             # the old .sourceStamp attribute wasn't actually very useful
@@ -387,25 +409,17 @@ class BuildStatus(styles.Versioned):
     def upgradeToVersion3(self):
         # in version 3, self.properties became a Properties object
         propdict = self.properties
-        self.properties = Properties()
+        self.properties = properties.Properties()
         self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
-    def upgradeLogfiles(self):
-        # upgrade any LogFiles that need it. This must occur after we've been
-        # attached to our Builder, and after we know about all LogFiles of
-        # all Steps (to get the filenames right).
-        assert self.builder
-        for s in self.steps:
-            for l in s.getLogs():
-                if l.filename:
-                    pass # new-style, log contents are on disk
-                else:
-                    logfilename = self.generateLogfileName(s.name, l.name)
-                    # let the logfile update its .filename pointer,
-                    # transferring its contents onto disk if necessary
-                    l.upgrade(logfilename)
-
+    def upgradeToVersion4(self):
+        # buildstatus contains list of sourcestamps, convert single to list
+        if hasattr(self, "source"):
+            self.sources = [self.source]
+            del self.source
+        self.wasUpgraded = True
+        
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())
@@ -419,7 +433,8 @@ class BuildStatus(styles.Versioned):
             shutil.rmtree(filename, ignore_errors=True)
         tmpfilename = filename + ".tmp"
         try:
-            dump(self, open(tmpfilename, "wb"), -1)
+            with open(tmpfilename, "wb") as f:
+                dump(self, f, -1)
             if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and
@@ -438,7 +453,7 @@ class BuildStatus(styles.Versioned):
         # Constant
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
-        result['sourceStamp'] = self.getSourceStamp().asDict()
+        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
 
@@ -460,5 +475,5 @@ class BuildStatus(styles.Versioned):
             result['currentStep'] = None
         return result
 
-
-
+components.registerAdapter(lambda build_status : build_status.properties,
+        BuildStatus, interfaces.IProperties)

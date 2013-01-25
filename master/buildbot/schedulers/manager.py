@@ -15,79 +15,81 @@
 
 from twisted.internet import defer
 from twisted.application import service
-from twisted.python import log
-from buildbot.util import bbcollections, deferredLocked
+from twisted.python import log, reflect
+from buildbot.process import metrics
+from buildbot import config, util
 
-class SchedulerManager(service.MultiService):
+class SchedulerManager(config.ReconfigurableServiceMixin,
+                       service.MultiService):
     def __init__(self, master):
         service.MultiService.__init__(self)
+        self.setName('scheduler_manager')
         self.master = master
-        self.upstream_subscribers = bbcollections.defaultdict(list)
-        self._updateLock = defer.DeferredLock()
 
-    @deferredLocked('_updateLock')
-    def updateSchedulers(self, newschedulers):
-        """Add and start any Scheduler that isn't already a child of ours.
-        Stop and remove any that are no longer in the list. Make sure each
-        one has a schedulerid in the database."""
-        # compute differences
-        old = dict((s.name,s) for s in self)
-        old_names = set(old)
-        new = dict((s.name,s) for s in newschedulers)
-        new_names = set(new)
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        timer = metrics.Timer("SchedulerManager.reconfigService")
+        timer.start()
 
-        added_names = new_names - old_names
-        removed_names = old_names - new_names
+        old_by_name = dict((sch.name, sch) for sch in self)
+        old_set = set(old_by_name.iterkeys())
+        new_by_name = new_config.schedulers
+        new_set = set(new_by_name.iterkeys())
 
-        # find any existing schedulers that need to be updated
-        updated_names = set(name for name in (new_names & old_names)
-                            if old[name] != new[name])
+        removed_names, added_names = util.diffSets(old_set, new_set)
 
-        log.msg("removing %d old schedulers, updating %d, and adding %d"
-                % (len(removed_names), len(updated_names), len(added_names)))
+        # find any schedulers that don't know how to reconfig, and, if they
+        # have changed, add them to both removed and added, so that we
+        # run the new version.  While we're at it, find any schedulers whose
+        # fully qualified class name has changed, and consider those a removal
+        # and re-add as well.
+        for n in old_set & new_set:
+            old = old_by_name[n]
+            new = new_by_name[n]
+            # detect changed class name
+            if reflect.qual(old.__class__) != reflect.qual(new.__class__):
+                removed_names.add(n)
+                added_names.add(n)
 
-        # treat updates as an add and a remove, for simplicity
-        added_names |= updated_names
-        removed_names |= updated_names
+            # compare using ComparableMixin if they don't support reconfig
+            elif not hasattr(old, 'reconfigService'):
+                if old != new:
+                    removed_names.add(n)
+                    added_names.add(n)
 
-        # build a deferred chain that stops all of the removed schedulers,
-        # *then* starts all of the added schedulers.  note that _setUpScheduler
-        # is called before the service starts, and _shutDownSchedler is called
-        # after the service is stopped.  Also note that this shuts down all
-        # relevant schedulers before starting any schedulers - there's unlikely
-        # to be any payoff to more parallelism
-        d = defer.succeed(None)
+        # removals first
 
-        def stopScheduler(sch):
-            d = defer.maybeDeferred(lambda : sch.disownServiceParent())
-            d.addCallback(lambda _ : sch._shutDownScheduler())
-            return d
-        d.addCallback(lambda _ :
-            defer.gatherResults([stopScheduler(old[n]) for n in removed_names]))
+        for sch_name in removed_names:
+            log.msg("removing scheduler '%s'" % (sch_name,))
+            sch = old_by_name[sch_name]
+            yield defer.maybeDeferred(lambda :
+                        sch.disownServiceParent())
+            sch.master = None
 
-        # account for some renamed classes in buildbot - classes that have
-        # changed their module import path, but should still access the same
-        # state
+        # .. then additions
 
-        new_class_names = {
-            # new : old
-            'buildbot.schedulers.dependent.Dependent' :
-                            'buildbot.schedulers.basic.Dependent',
-            'buildbot.schedulers.basic.SingleBranchScheduler' :
-                            'buildbot.schedulers.basic.Scheduler',
-        }
-        def startScheduler(sch):
+        for sch_name in added_names:
+            log.msg("adding scheduler '%s'" % (sch_name,))
+            sch = new_by_name[sch_name]
+
+            # get the scheduler's objectid
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
-            class_name = new_class_names.get(class_name, class_name)
-            d = self.master.db.schedulers.getSchedulerId(sch.name, class_name)
-            d.addCallback(lambda schedulerid :
-                    sch._setUpScheduler(schedulerid, self.master, self))
-            d.addCallback(lambda _ :
-                    sch.setServiceParent(self))
-            return d
-        d.addCallback(lambda _ :
-            defer.gatherResults([startScheduler(new[n]) for n in added_names]))
+            objectid = yield self.master.db.state.getObjectId(
+                                    sch.name, class_name)
 
-        d.addErrback(log.err)
-        return d
+            # set up the scheduler
+            sch.objectid = objectid
+            sch.master = self.master
+
+            # *then* attacah and start it
+            sch.setServiceParent(self)
+
+        metrics.MetricCountEvent.log("num_schedulers", len(list(self)),
+                                    absolute=True)
+
+        # reconfig any newly-added schedulers, as well as existing
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                        new_config)
+
+        timer.stop()

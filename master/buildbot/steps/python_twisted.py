@@ -19,7 +19,6 @@ from twisted.python import log
 from buildbot.status import testresult
 from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
-from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.steps.shell import ShellCommand
 
 try:
@@ -48,7 +47,6 @@ class HLint(ShellCommand):
 
     def __init__(self, python=None, **kwargs):
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(python=python)
         self.python = python
 
     def start(self):
@@ -88,14 +86,14 @@ class HLint(ShellCommand):
 
     def evaluateCommand(self, cmd):
         # warnings are in stdout, rc is always 0, unless the tools break
-        if cmd.rc != 0:
+        if cmd.didFail():
             return FAILURE
         if self.warnings:
             return WARNINGS
         return SUCCESS
 
     def getText2(self, cmd, results):
-        if cmd.rc != 0:
+        if cmd.didFail():
             return ["hlint"]
         return ["%d hlin%s" % (self.warnings,
                                self.warnings == 1 and 't' or 'ts')]
@@ -193,12 +191,14 @@ class Trial(ShellCommand):
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 
+    renderables = ['tests', 'jobs']
     flunkOnFailure = True
     python = None
     trial = "trial"
     trialMode = ["--reporter=bwverbose"] # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs = []
+    jobs = None
     testpath = UNSPECIFIED # required (but can be None)
     testChanges = False # TODO: needs better name
     recurse = False
@@ -210,7 +210,7 @@ class Trial(ShellCommand):
                  testpath=UNSPECIFIED,
                  tests=None, testChanges=None,
                  recurse=None, randomly=None,
-                 trialMode=None, trialArgs=None,
+                 trialMode=None, trialArgs=None, jobs=None,
                  **kwargs):
         """
         @type  testpath: string
@@ -245,6 +245,11 @@ class Trial(ShellCommand):
         @type trialArgs: list of strings
         @param trialArgs: a list of arguments to pass to trial, available to
                           turn on any extra flags you like. Defaults to [].
+
+        @type jobs: integer
+        @param jobs: integer to be used as trial -j/--jobs option (for
+                     running tests on several workers).  Only supported
+                     since Twisted-12.3.0.
 
         @type  tests: list of strings
         @param tests: a list of test modules to run, like
@@ -287,17 +292,6 @@ class Trial(ShellCommand):
                        timeout.
         """
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(reactor=reactor,
-                                 python=python,
-                                 trial=trial,
-                                 testpath=testpath,
-                                 tests=tests,
-                                 testChanges=testChanges,
-                                 recurse=recurse,
-                                 randomly=randomly,
-                                 trialMode=trialMode,
-                                 trialArgs=trialArgs,
-                                 )
 
         if python:
             self.python = python
@@ -322,6 +316,8 @@ class Trial(ShellCommand):
             self.trialMode = trialMode
         if trialArgs is not None:
             self.trialArgs = trialArgs
+        if jobs is not None:
+            self.jobs = jobs
 
         if testpath is not UNSPECIFIED:
             self.testpath = testpath
@@ -373,8 +369,6 @@ class Trial(ShellCommand):
 
         # this counter will feed Progress along the 'test cases' metric
         self.addLogObserver('stdio', TrialTestCaseCounter())
-        # this one just measures bytes of output in _trial_temp/test.log
-        self.addLogObserver('test.log', OutputProgressObserver('test.log'))
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
@@ -383,24 +377,35 @@ class Trial(ShellCommand):
             if e is None:
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
-                # TODO: somehow, each build causes another copy of
-                # self.testpath to get prepended
-                if e.get('PYTHONPATH', "") == "":
-                    e['PYTHONPATH'] = self.testpath
-                else:
-                    e['PYTHONPATH'] = self.testpath + ":" + e['PYTHONPATH']
-        try:
-            p = cmd.args['env']['PYTHONPATH']
-            if type(p) is not str:
-                log.msg("hey, not a string:", p)
-                assert False
-        except (KeyError, TypeError):
-            # KeyError if args doesn't have ['env']
-            # KeyError if args['env'] doesn't have ['PYTHONPATH']
-            # TypeError if args is None
-            pass
+                #this bit produces a list, which can be used
+                #by buildslave.runprocess.RunProcess
+                ppath = e.get('PYTHONPATH', self.testpath)
+                if isinstance(ppath, str):
+                    ppath = [ppath]
+                if self.testpath not in ppath:
+                    ppath.insert(0, self.testpath)
+                e['PYTHONPATH'] = ppath
 
     def start(self):
+        # choose progressMetrics and logfiles based on whether trial is being
+        # run with multiple workers or not.
+        output_observer = OutputProgressObserver('test.log')
+        
+        if self.jobs is not None:
+            self.jobs = int(self.jobs)
+            self.command.append("--jobs=%d" % self.jobs)
+
+            # using -j/--jobs flag produces more than one test log.
+            self.logfiles = {}
+            for i in xrange(self.jobs):
+                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
+                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
+                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
+                self.addLogObserver('test.%d.log' % i, output_observer)
+        else:
+            # this one just measures bytes of output in _trial_temp/test.log
+            self.addLogObserver('test.log', output_observer)
+
         # now that self.build.allFiles() is nailed down, finish building the
         # command
         if self.testChanges:
@@ -411,41 +416,10 @@ class Trial(ShellCommand):
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
 
-        # if our slave is too old to understand logfiles=, fetch them
-        # manually. This is a fallback for the Twisted buildbot and some old
-        # buildslaves.
-        self._needToPullTestDotLog = False
-        if self.slaveVersionIsOlderThan("shell", "2.1"):
-            log.msg("Trial: buildslave %s is too old to accept logfiles=" %
-                    self.getSlaveName())
-            log.msg(" falling back to 'cat _trial_temp/test.log' instead")
-            self.logfiles = {}
-            self._needToPullTestDotLog = True
-
         ShellCommand.start(self)
 
 
     def commandComplete(self, cmd):
-        if not self._needToPullTestDotLog:
-            return self._gotTestDotLog(cmd)
-
-        # if the buildslave was too old, pull test.log now
-        catcmd = ["cat", "_trial_temp/test.log"]
-        c2 = RemoteShellCommand(command=catcmd, workdir=self.workdir)
-        loog = self.addLog("test.log")
-        c2.useLog(loog, True, logfileName="stdio")
-        self.cmd = c2 # to allow interrupts
-        d = c2.run(self, self.remote)
-        d.addCallback(lambda res: self._gotTestDotLog(cmd))
-        return d
-
-    def rtext(self, fmt='%s'):
-        if self.reactor:
-            rtext = fmt % self.reactor
-            return rtext.replace("reactor", "")
-        return ""
-
-    def _gotTestDotLog(self, cmd):
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
@@ -460,7 +434,7 @@ class Trial(ShellCommand):
         text = []
         text2 = ""
 
-        if cmd.rc == 0:
+        if not cmd.didFail():
             if parsed:
                 results = SUCCESS
                 if total:
@@ -524,6 +498,13 @@ class Trial(ShellCommand):
         self.results = results
         self.text = text
         self.text2 = [text2]
+
+
+    def rtext(self, fmt='%s'):
+        if self.reactor:
+            rtext = fmt % self.reactor
+            return rtext.replace("reactor", "")
+        return ""
 
     def addTestResult(self, testname, results, text, tlog):
         if self.reactor is not None:

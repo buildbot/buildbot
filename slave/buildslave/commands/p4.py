@@ -55,7 +55,7 @@ class P4Base(SourceBaseCommand):
                          environ=self.env, timeout=self.timeout,
                          maxTime=self.maxTime, sendStdout=True,
                          sendRC=False, keepStdout=True,
-                         usePTY=False)
+                         usePTY=False, logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
 
@@ -93,7 +93,15 @@ class P4(P4Base):
         self.p4mode = args['mode']
         self.p4branch = args['branch']
 
+        # sourcedata is encoded to utf-8, since otherwise unicode strings
+        # appear with a leading "u", causing comparisons to fail.  In
+        # retrospect, comparing str() output is not the best technique!
+        def enc(x):
+            if isinstance(x, unicode):
+                return x.encode('utf8')
+            return x
         self.sourcedata = str([
+            enc(x) for x in [
             # Perforce server.
             self.p4port,
 
@@ -110,7 +118,7 @@ class P4(P4Base):
             self.builder.basedir,
             self.mode,
             self.workdir
-        ])
+        ]])
 
 
     def sourcedirIsUpdateable(self):
@@ -143,7 +151,8 @@ class P4(P4Base):
         env = {}
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, usePTY=False,
+                         logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -197,7 +206,7 @@ class P4(P4Base):
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=client_spec,
-                         usePTY=False)
+                         usePTY=False, logEnviron=self.logEnviron)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -210,57 +219,3 @@ class P4(P4Base):
         else:
             return P4Base.parseGotRevision(self)
 
-
-class P4Sync(P4Base):
-    """A partial P4 source-updater. Requires manual setup of a per-slave P4
-    environment. The only thing which comes from the master is P4PORT.
-    'mode' is required to be 'copy'.
-
-    ['p4port'] (required): host:port for server to access
-    ['p4user'] (optional): user to use for access
-    ['p4passwd'] (optional): passwd to try for the user
-    ['p4client'] (optional): client spec to use
-    """
-
-    header = "p4 sync"
-
-    def setup(self, args):
-        P4Base.setup(self, args)
-
-    def sourcedirIsUpdateable(self):
-        return True
-
-    def _doVC(self, force):
-        d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.getCommand('p4')]
-        if self.p4port:
-            command.extend(['-p', self.p4port])
-        if self.p4user:
-            command.extend(['-u', self.p4user])
-        if self.p4passwd:
-            command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
-        if self.p4client:
-            command.extend(['-c', self.p4client])
-        command.extend(['sync'])
-        if force:
-            command.extend(['-f'])
-        if self.revision:
-            command.extend(['@' + self.revision])
-        env = {}
-        c = runprocess.RunProcess(self.builder, command, d, environ=env,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        return c.start()
-
-    def doVCUpdate(self):
-        return self._doVC(force=False)
-
-    def doVCFull(self):
-        return self._doVC(force=True)
-
-    def parseGotRevision(self):
-        if self.revision:
-            return str(self.revision)
-        else:
-            return P4Base.parseGotRevision(self)

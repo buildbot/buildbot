@@ -89,8 +89,8 @@ class BitBucketBuildBot(resource.Resource):
                 'comments': commit['message'],
                 'who': commit['author'],
                 'files': files,
-                'links': [revlink],
-                'properties': dict(repository=repo_url),
+                'repository': repo_url,
+                'properties': dict(),
                 }
             changes.append(change)
         # Submit the changes, if any
@@ -102,6 +102,7 @@ class BitBucketBuildBot(resource.Resource):
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
+        logging.debug('Trying to connect to: %s:%d'%(host,port))
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
@@ -114,7 +115,7 @@ class BitBucketBuildBot(resource.Resource):
                 % error.getErrorMessage())
         return error
 
-    def addChange(self, dummy, remote, changei):
+    def addChange(self, dummy, remote, changei, src='hg'):
         """
         Sends changes from the commit to the buildmaster.
         """
@@ -129,8 +130,9 @@ class BitBucketBuildBot(resource.Resource):
         for key, value in change.iteritems():
             logging.debug("  %s: %s" % (key, value))
 
+        change['src'] = src
         deferred = remote.callRemote('addChange', change)
-        deferred.addCallback(self.addChange, remote, changei)
+        deferred.addCallback(self.addChange, remote, changei, src)
         return deferred
 
     def connected(self, remote, changes):

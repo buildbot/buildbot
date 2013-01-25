@@ -46,6 +46,11 @@ class StatusResourceBuildStep(HtmlResource):
                          'name': l.getName(),
                          'link': req.childLink("logs/%s" % urllib.quote(l.getName())) })
 
+        stepStatistics = s.getStatistics()
+        statistics = cxt['statistics'] = []
+        for stat in stepStatistics:
+            statistics.append({'name': stat, 'value': stepStatistics[stat]})
+
         start, end = s.getTimes()
         
         if start:

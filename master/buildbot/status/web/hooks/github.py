@@ -24,10 +24,7 @@ repository for the user who initiated the build on the buildslave.
 
 """
 
-import logging
 import re
-import sys
-import traceback
 import datetime
 from twisted.python import log
 import calendar
@@ -85,25 +82,20 @@ def getChanges(request, options = None):
             request
                 the http request object
         """
-        try:
-            payload = json.loads(request.args['payload'][0])
-            user = payload['repository']['owner']['name']
-            repo = payload['repository']['name']
-            repo_url = payload['repository']['url']
-            project = request.args.get('project', None)
-            if project:
-                project = project[0]
-            elif project is None:
-                project = ''
-            # This field is unused:
-            #private = payload['repository']['private']
-            changes = process_change(payload, user, repo, repo_url, project)
-            log.msg("Received %s changes from github" % len(changes))
-            return changes
-        except Exception:
-            logging.error("Encountered an exception:")
-            for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
+        payload = json.loads(request.args['payload'][0])
+        user = payload['repository']['owner']['name']
+        repo = payload['repository']['name']
+        repo_url = payload['repository']['url']
+        project = request.args.get('project', None)
+        if project:
+            project = project[0]
+        elif project is None:
+            project = ''
+        # This field is unused:
+        #private = payload['repository']['private']
+        changes = process_change(payload, user, repo, repo_url, project)
+        log.msg("Received %s changes from github" % len(changes))
+        return (changes, 'git')
 
 def process_change(payload, user, repo, repo_url, project):
         """
@@ -117,11 +109,12 @@ def process_change(payload, user, repo, repo_url, project):
         changes = []
         newrev = payload['after']
         refname = payload['ref']
-        log.msg( "in process_change" )
+
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
-            logging.info("Ignoring refname `%s': Not a branch" % refname)
+            log.msg("Ignoring refname `%s': Not a branch" % refname)
+            return []
 
         branch = match.group(1)
         if re.match(r"^0*$", newrev):
@@ -143,7 +136,6 @@ def process_change(payload, user, repo, repo_url, project):
                                 + " <" + commit['author']['email'] + ">",
                     files    = files,
                     comments = commit['message'], 
-                    links    = [commit['url']],
                     revision = commit['id'],
                     when     = when,
                     branch   = branch,

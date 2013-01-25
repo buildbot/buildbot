@@ -62,11 +62,14 @@ css_classes = {SUCCESS: "success",
 
 def getAndCheckProperties(req):
     """
-Fetch custom build properties from the HTTP request of a "Force build" or
-"Resubmit build" HTML form.
-Check the names for valid strings, and return None if a problem is found.
-Return a new Properties object containing each property found in req.
-"""
+    Fetch custom build properties from the HTTP request of a "Force build" or
+    "Resubmit build" HTML form.
+    Check the names for valid strings, and return None if a problem is found.
+    Return a new Properties object containing each property found in req.
+    """
+    master = req.site.buildbot_service.master
+    pname_validate = master.config.validation['property_name']
+    pval_validate = master.config.validation['property_value']
     properties = Properties()
     i = 1
     while True:
@@ -74,8 +77,8 @@ Return a new Properties object containing each property found in req.
         pvalue = req.args.get("property%dvalue" % i, [""])[0]
         if not pname:
             break
-        if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
-                or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+        if not pname_validate.match(pname) \
+                or not pval_validate.match(pvalue):
             log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
             return None
         properties.setProperty(pname, pvalue, "Force Build Form")
@@ -119,6 +122,9 @@ def path_to_root(request):
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
+
+def path_to_authzfail(request):
+    return path_to_root(request) + "authzfail"
 
 def path_to_builder(request, builderstatus):
     return (path_to_root(request) +
@@ -168,13 +174,13 @@ class Box:
             text = ["[idle]"]
         props['class'] = self.class_
         props['text'] = text;
-        return props    
-    
-    
+        return props
+
+
 class AccessorMixin(object):
     def getStatus(self, request):
-        return request.site.buildbot_service.getStatus()    
-        
+        return request.site.buildbot_service.getStatus()
+
     def getPageTitle(self, request):
         return self.pageTitle
 
@@ -206,6 +212,8 @@ class ContextMixin(AccessorMixin):
                     pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
                     authz = self.getAuthz(request),
+                    request = request,
+                    alert_msg = request.args.get("alert_msg", [""])[0],
                     )
 
 
@@ -223,14 +231,25 @@ class ActionResource(resource.Resource, AccessorMixin):
 
         @param request: the web request
         @returns: URL via Deferred
+		  can also return (URL, alert_msg) to display simple
+		  feedback to user in case of failure
         """
 
     def render(self, request):
         d = defer.maybeDeferred(lambda : self.performAction(request))
         def redirect(url):
+            if isinstance(url, tuple):
+                url, alert_msg = url
+                if alert_msg:
+                    url += "?alert_msg="+urllib.quote(alert_msg, safe='')
             request.redirect(url)
             request.write("see <a href='%s'>%s</a>" % (url,url))
-            request.finish()
+            try:
+                request.finish()
+            except RuntimeError:
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
         d.addCallback(redirect)
 
         def fail(f):
@@ -316,7 +335,12 @@ class HtmlResource(resource.Resource, ContextMixin):
         d.addCallback(handle)
         def ok(data):
             request.write(data)
-            request.finish()
+            try:
+                request.finish()
+            except RuntimeError:
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
         def fail(f):
             request.processingFailed(f)
             return None # processingFailed will log this for us
@@ -334,53 +358,43 @@ class StaticHTML(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
-# DirectoryLister isn't available in Twisted-2.5.0, and isn't compatible with what
-# we need until 9.0.0, so we just skip this particular feature.
-have_DirectoryLister = False
-if hasattr(static, 'DirectoryLister'):
-    have_DirectoryLister = True
-    class DirectoryLister(static.DirectoryLister, ContextMixin):
-        """This variant of the static.DirectoryLister uses a template
-        for rendering."""
+class DirectoryLister(static.DirectoryLister, ContextMixin):
+    """This variant of the static.DirectoryLister uses a template
+    for rendering."""
 
-        pageTitle = 'BuildBot'
+    pageTitle = 'BuildBot'
 
-        def render(self, request):
-            cxt = self.getContext(request)
+    def render(self, request):
+        cxt = self.getContext(request)
 
-            if self.dirs is None:
-                directory = os.listdir(self.path)
-                directory.sort()
-            else:
-                directory = self.dirs
+        if self.dirs is None:
+            directory = os.listdir(self.path)
+            directory.sort()
+        else:
+            directory = self.dirs
 
-            dirs, files = self._getFilesAndDirectories(directory)
+        dirs, files = self._getFilesAndDirectories(directory)
 
-            cxt['path'] = cgi.escape(urllib.unquote(request.uri))
-            cxt['directories'] = dirs
-            cxt['files'] = files
-            template = request.site.buildbot_service.templates.get_template("directory.html")
-            data = template.render(**cxt)
-            if isinstance(data, unicode):
-                data = data.encode("utf-8")
-            return data
+        cxt['path'] = cgi.escape(urllib.unquote(request.uri))
+        cxt['directories'] = dirs
+        cxt['files'] = files
+        template = request.site.buildbot_service.templates.get_template("directory.html")
+        data = template.render(**cxt)
+        if isinstance(data, unicode):
+            data = data.encode("utf-8")
+        return data
 
 class StaticFile(static.File):
     """This class adds support for templated directory
     views."""
 
     def directoryListing(self):
-        if have_DirectoryLister:
-            return DirectoryLister(self.path,
-                                   self.listNames(),
-                                   self.contentTypes,
-                                   self.contentEncodings,
-                                   self.defaultType)
-        else:
-            return static.Data("""
-   Directory Listings require Twisted-9.0.0 or later
-                """, "text/plain")
-        
+        return DirectoryLister(self.path,
+                                self.listNames(),
+                                self.contentTypes,
+                                self.contentEncodings,
+                                self.defaultType)
+
 
 MINUTE = 60
 HOUR = 60*MINUTE
@@ -418,18 +432,24 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
-        try:
-            rev = build.getProperty("got_revision")
-            if rev is None:
-                rev = "??"
-        except KeyError:
-            rev = "??"
-        rev = str(rev)
+        all_got_revision = build.getAllGotRevisions()
         css_class = css_classes.get(results, "")
-        repo = build.getSourceStamp().repository
+        ss_list = build.getSourceStamps()
+        if ss_list:
+            repo = ss_list[0].repository
+            if all_got_revision:
+                if len(ss_list) == 1:
+                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                else:
+                    rev = "multiple rev."
+            else:
+                rev = "??"
+        else:
+            repo = 'unknown, no information in build'
+            rev = 'unknown'
 
         if type(text) == list:
-            text = " ".join(text)            
+            text = " ".join(text)
 
         values = {'class': css_class,
                   'builder_name': builder_name,
@@ -458,19 +478,19 @@ def map_branches(branches):
     return branches
 
 
-# jinja utilities 
+# jinja utilities
 
 def createJinjaEnv(revlink=None, changecommentlink=None,
-                     repositories=None, projects=None):
+                     repositories=None, projects=None, jinja_loaders=None):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
-    
+
         @type changecommentlink: C{None}, tuple (2 or 3 strings), dict (string -> 2- or 3-tuple) or callable
         @param changecommentlink: see changelinkfilter()
 
         @type revlink: C{None}, format-string, dict (repository -> format string) or callable
         @param revlink: see revlinkfilter()
-        
+
         @type repositories: C{None} or dict (string -> url)
         @param repositories: an (optinal) mapping from repository identifiers
              (as given by Change sources) to URLs. Is used to create a link
@@ -479,69 +499,73 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
         @type projects: C{None} or dict (string -> url)
         @param projects: similar to repositories, but for projects.
     '''
-    
+
     # See http://buildbot.net/trac/ticket/658
     assert not hasattr(sys, "frozen"), 'Frozen config not supported with jinja (yet)'
 
-    default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-    root = os.path.join(os.getcwd(), 'templates')
-    loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
-                                  default_loader])
+    all_loaders = [jinja2.FileSystemLoader(os.path.join(os.getcwd(), 'templates'))]
+    if jinja_loaders:
+        all_loaders.extend(jinja_loaders)
+    all_loaders.append(jinja2.PackageLoader('buildbot.status.web', 'templates'))
+    loader = jinja2.ChoiceLoader(all_loaders)
+
     env = jinja2.Environment(loader=loader,
                              extensions=['jinja2.ext.i18n'],
                              trim_blocks=True,
                              undefined=AlmostStrictUndefined)
-    
+
     env.install_null_translations() # needed until we have a proper i18n backend
-    
+
+    env.tests['mapping'] = lambda obj : isinstance(obj, dict)
+
     env.filters.update(dict(
         urlencode = urllib.quote,
         email = emailfilter,
         user = userfilter,
         shortrev = shortrevfilter(revlink, env),
         revlink = revlinkfilter(revlink, env),
-        changecomment = changelinkfilter(changecommentlink), 
+        changecomment = changelinkfilter(changecommentlink),
         repolink = dictlinkfilter(repositories),
         projectlink = dictlinkfilter(projects)
         ))
-    
-    return env    
+
+    return env
 
 def emailfilter(value):
     ''' Escape & obfuscate e-mail addresses
-    
+
         replacing @ with <span style="display:none> reportedly works well against web-spiders
-        and the next level is to use rot-13 (or something) and decode in javascript '''    
-    
+        and the next level is to use rot-13 (or something) and decode in javascript '''
+
     user = jinja2.escape(value)
     obfuscator = jinja2.Markup('<span style="display:none">ohnoyoudont</span>@')
     output = user.replace('@', obfuscator)
     return output
- 
- 
+
+
 def userfilter(value):
     ''' Hide e-mail address from user name when viewing changes
-    
+
         We still include the (obfuscated) e-mail so that we can show
-        it on mouse-over or similar etc 
+        it on mouse-over or similar etc
     '''
     r = re.compile('(.*) +<(.*)>')
     m = r.search(value)
     if m:
         user = jinja2.escape(m.group(1))
-        email = emailfilter(m.group(2))        
+        email = emailfilter(m.group(2))
         return jinja2.Markup('<div class="user">%s<div class="email">%s</div></div>' % (user, email))
     else:
         return emailfilter(value) # filter for emails here for safety
-        
+
 def _revlinkcfg(replace, templates):
     '''Helper function that returns suitable macros and functions
        for building revision links depending on replacement mechanism
 '''
-   
+
     assert not replace or callable(replace) or isinstance(replace, dict) or \
            isinstance(replace, str) or isinstance(replace, unicode)
-    
+
     if not replace:
         return lambda rev, repo: None
     else:
@@ -554,56 +578,56 @@ def _revlinkcfg(replace, templates):
                     return url % urllib.quote(rev)
                 else:
                     return None
-                
+
             return filter
         else:
-            return lambda rev, repo: replace % urllib.quote(rev)            
-    
+            return lambda rev, repo: replace % urllib.quote(rev)
+
     assert False, '_replace has a bad type, but we should never get here'
 
 
-def _revlinkmacros(replace, templates): 
-    '''return macros for use with revision links, depending 
+def _revlinkmacros(replace, templates):
+    '''return macros for use with revision links, depending
         on whether revlinks are configured or not'''
 
     macros = templates.get_template("revmacros.html").module
 
     if not replace:
         id = macros.id
-        short = macros.shorten        
+        short = macros.shorten
     else:
         id = macros.id_replace
-        short = macros.shorten_replace            
+        short = macros.shorten_replace
 
     return (id, short)
-        
+
 
 def shortrevfilter(replace, templates):
-    ''' Returns a function which shortens the revisison string 
-        to 12-chars (chosen as this is the Mercurial short-id length) 
-        and add link if replacement string is set. 
-        
+    ''' Returns a function which shortens the revisison string
+        to 12-chars (chosen as this is the Mercurial short-id length)
+        and add link if replacement string is set.
+
         (The full id is still visible in HTML, for mouse-over events etc.)
 
         @param replace: see revlinkfilter()
         @param templates: a jinja2 environment
-    ''' 
-    
-    url_f = _revlinkcfg(replace, templates)  
-        
+    '''
+
+    url_f = _revlinkcfg(replace, templates)
+
     def filter(rev, repo):
         if not rev:
             return u''
-            
+
         id_html, short_html = _revlinkmacros(replace, templates)
         rev = unicode(rev)
         url = url_f(rev, repo)
         rev = jinja2.escape(rev)
         shortrev = rev[:12] # TODO: customize this depending on vc type
-        
+
         if shortrev == rev:
             if url:
-                return id_html(rev=rev, url=url) 
+                return id_html(rev=rev, url=url)
             else:
                 return rev
         else:
@@ -611,32 +635,32 @@ def shortrevfilter(replace, templates):
                 return short_html(short=shortrev, rev=rev, url=url)
             else:
                 return shortrev + '...'
-        
+
     return filter
 
 
 def revlinkfilter(replace, templates):
-    ''' Returns a function which adds an url link to a 
+    ''' Returns a function which adds an url link to a
         revision identifiers.
-   
+
         Takes same params as shortrevfilter()
-        
+
         @param replace: either a python format string with an %s,
                         or a dict mapping repositories to format strings,
                         or a callable taking (revision, repository) arguments
                           and return an URL (or None, if no URL is available),
-                        or None, in which case revisions do not get decorated 
+                        or None, in which case revisions do not get decorated
                           with links
-   
+
         @param templates: a jinja2 environment
-    ''' 
+    '''
 
     url_f = _revlinkcfg(replace, templates)
-  
+
     def filter(rev, repo):
         if not rev:
             return u''
-        
+
         rev = unicode(rev)
         url = url_f(rev, repo)
         if url:
@@ -644,39 +668,39 @@ def revlinkfilter(replace, templates):
             return id_html(rev=rev, url=url)
         else:
             return jinja2.escape(rev)
-    
+
     return filter
-     
+
 
 def changelinkfilter(changelink):
-    ''' Returns function that does regex search/replace in 
+    ''' Returns function that does regex search/replace in
         comments to add links to bug ids and similar.
-        
-        @param changelink: 
+
+        @param changelink:
             Either C{None}
-            or: a tuple (2 or 3 elements) 
-                1. a regex to match what we look for 
+            or: a tuple (2 or 3 elements)
+                1. a regex to match what we look for
                 2. an url with regex refs (\g<0>, \1, \2, etc) that becomes the 'href' attribute
-                3. (optional) an title string with regex ref regex 
+                3. (optional) an title string with regex ref regex
             or: a dict mapping projects to above tuples
                 (no links will be added if the project isn't found)
-            or: a callable taking (changehtml, project) args 
-                (where the changetext is HTML escaped in the 
+            or: a callable taking (changehtml, project) args
+                (where the changetext is HTML escaped in the
                 form of a jinja2.Markup instance) and
-                returning another jinja2.Markup instance with 
-                the same change text plus any HTML tags added to it.            
+                returning another jinja2.Markup instance with
+                the same change text plus any HTML tags added to it.
     '''
 
     assert not changelink or isinstance(changelink, dict) or \
         isinstance(changelink, tuple) or callable(changelink)
-    
+
     def replace_from_tuple(t):
         search, url_replace = t[:2]
         if len(t) == 3:
             title_replace = t[2]
         else:
             title_replace = ''
-        
+
         search_re = re.compile(search)
 
         def replacement_unmatched(text):
@@ -706,7 +730,7 @@ def changelinkfilter(changelink):
             return jinja2.Markup(''.join(html))
 
         return filter
-    
+
     if not changelink:
         return lambda text, project: jinja2.escape(text)
 
@@ -714,25 +738,25 @@ def changelinkfilter(changelink):
         def dict_filter(text, project):
             # TODO: Optimize and cache return value from replace_from_tuple so
             #       we only compile regex once per project, not per view
-            
+
             t = changelink.get(project)
             if t:
                 return replace_from_tuple(t)(text, project)
             else:
                 return cgi.escape(text)
-            
+
         return dict_filter
-        
+
     elif isinstance(changelink, tuple):
         return replace_from_tuple(changelink)
-            
+
     elif callable(changelink):
         def callable_filter(text, project):
             text = jinja2.escape(text)
             return changelink(text, project)
-        
+
         return callable_filter
-        
+
     assert False, 'changelink has unsupported type, but that is checked before'
 
 
@@ -741,30 +765,41 @@ def dictlinkfilter(links):
        given that the value exists in the dictionary'''
 
     assert not links or callable(links) or isinstance(links, dict)
-       
+
     if not links:
         return jinja2.escape
 
     def filter(key):
         if callable(links):
-            url = links(key)            
+            url = links(key)
         else:
             url = links.get(key)
 
         safe_key = jinja2.escape(key)
-            
+
         if url:
-            return jinja2.Markup(r'<a href="%s">%s</a>' % (url, safe_key)) 
+            return jinja2.Markup(r'<a href="%s">%s</a>' % (url, safe_key))
         else:
             return safe_key
-        
+
     return filter
 
 class AlmostStrictUndefined(jinja2.StrictUndefined):
-    ''' An undefined that allows boolean testing but 
+    ''' An undefined that allows boolean testing but
         fails properly on every other use.
-        
+
         Much better than the default Undefined, but not
         fully as strict as StrictUndefined '''
     def __nonzero__(self):
         return False
+
+_charsetRe = re.compile('charset=([^;]*)', re.I)
+def getRequestCharset(req):
+    """Get the charset for an x-www-form-urlencoded request"""
+    # per http://stackoverflow.com/questions/708915/detecting-the-character-encoding-of-an-http-post-request
+    hdr = req.getHeader('Content-Type')
+    if hdr:
+        mo = _charsetRe.search(hdr)
+        if mo:
+            return mo.group(1).strip()
+    return 'utf-8' # reasonable guess, works for ascii

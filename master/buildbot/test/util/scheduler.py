@@ -25,6 +25,8 @@ class FakeMaster(object):
         self.changes_subscr_cb = None
         self.bset_subscr_cb = None
         self.bset_completion_subscr_cb = None
+        self.caches = mock.Mock(name="caches")
+        self.caches.get_cache = self.get_cache
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
@@ -53,6 +55,13 @@ class FakeMaster(object):
         assert not self.bset_completion_subscr_cb
         self.bset_completion_subscr_cb = callback
         return self._makeSubscription('bset_completion_subscr_cb')
+
+    # caches
+
+    def get_cache(self, cache_name, miss_fn):
+        c = mock.Mock(name=cache_name)
+        c.get = miss_fn
+        return c
 
     # useful assertions
 
@@ -85,27 +94,46 @@ class SchedulerMixin(object):
         pass
 
     def tearDownScheduler(self):
-        # TODO: break some reference cycles
         pass
 
-    def attachScheduler(self, scheduler, schedulerid):
+    def attachScheduler(self, scheduler, objectid):
         """Set up a scheduler with a fake master and db; sets self.sched, and
         sets the master's basedir to the absolute path of 'basedir' in the test
         directory.
 
         @returns: scheduler
         """
-        scheduler.schedulerid = schedulerid
+        scheduler.objectid = objectid
 
         # set up a fake master
         db = self.db = fakedb.FakeDBConnector(self)
         self.master = FakeMaster(os.path.abspath('basedir'), db)
         scheduler.master = self.master
 
+        db.insertTestData([
+            fakedb.Object(id=objectid, name=scheduler.name,
+                class_name='SomeScheduler'),
+        ])
+
         self.sched = scheduler
         return scheduler
 
-    class FakeChange: pass
+    class FakeChange:
+        who = ''
+        files = []
+        comments = ''
+        isdir=0
+        links=None
+        revision=None
+        when=None
+        branch=None
+        category=None
+        revlink=''
+        properties={}
+        repository=''
+        project=''
+        codebase=''
+
     def makeFakeChange(self, **kwargs):
         """Utility method to make a fake Change object with the given
         attributes"""

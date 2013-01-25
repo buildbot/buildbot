@@ -19,30 +19,37 @@
 ."""
 
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.builder import Results
+from buildbot.status.builder import Results, SUCCESS, RETRY
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 
-def defaultReviewCB(builderName, build, result, arg):
+def defaultReviewCB(builderName, build, result, status, arg):
+    if result == RETRY:
+        return None, 0, 0
+
     message =  "Buildbot finished compiling your patchset\n"
     message += "on configuration: %s\n" % builderName
     message += "The result is: %s\n" % Results[result].upper()
 
     # message, verified, reviewed
-    return message, (result == 0 or -1), 0
+    return message, (result == SUCCESS or -1), 0
 
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418, reviewArg=None,
-                 **kwargs):
+    def __init__(self, server, username, reviewCB=defaultReviewCB,
+                startCB=None, port=29418, reviewArg=None,
+                startArg=None, **kwargs):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
         @param username:  Gerrit SSH server's username.
         @param reviewCB:  Callback that is called each time a build is finished, and that is used
                           to define the message and review approvals depending on the build result.
+        @param startCB:   Callback that is called each time a build is started.
+                          Used to define the message sent to Gerrit.
         @param port:      Gerrit SSH server's port.
-        @param reviewArg: Optional argument that is passed to the callback.
+        @param reviewArg: Optional argument passed to the review callback.
+        @param startArg:  Optional argument passed to the start callback.
         """
         StatusReceiverMultiService.__init__(self)
         # Parameters.
@@ -51,6 +58,8 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.gerrit_port = port
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
+        self.startCB = startCB
+        self.startArg = startArg
 
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
@@ -68,30 +77,35 @@ class GerritStatusPush(StatusReceiverMultiService):
             else:
                 print "gerrit status: OK"
 
-    def setServiceParent(self, parent):
+    def startService(self):
         print """Starting up."""
-        StatusReceiverMultiService.setServiceParent(self, parent)
+        StatusReceiverMultiService.startService(self)
         self.status = self.parent.getStatus()
         self.status.subscribe(self)
 
     def builderAdded(self, name, builder):
         return self # subscribe to this builder
 
+    def buildStarted(self, builderName, build):
+        if self.startCB is not None:
+            message = self.startCB(builderName, build, self.startArg)
+            self.sendCodeReviews(build, message)
+
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
-        repo, git = False, False
+        message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
+        self.sendCodeReviews(build, message, verified, reviewed)
+
+    def sendCodeReviews(self, build, message, verified=0, reviewed=0):
+        if message is None:
+            return
 
         # Gerrit + Repo
-        try:
-            downloads = build.getProperty("repo_downloads")
-            downloaded = build.getProperty("repo_downloaded").split(" ")
-            repo = True
-        except KeyError:
-            pass
-
-        if repo:
+        downloads = build.getProperty("repo_downloads")
+        downloaded = build.getProperty("repo_downloaded")
+        if downloads is not None and downloaded is not None:
+            downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
-                message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
                 for i in range(0, len(downloads)):
                     try:
                         project, change1 = downloads[i].split(" ")
@@ -106,24 +120,24 @@ class GerritStatusPush(StatusReceiverMultiService):
             return
 
         # Gerrit + Git
-        try:
-            build.getProperty("gerrit_branch") # used only to verify Gerrit source
+        if build.getProperty("gerrit_branch") is not None: # used only to verify Gerrit source
             project = build.getProperty("project")
             revision = build.getProperty("got_revision")
-            git = True
-        except KeyError:
-            pass
 
-        if git:
-            message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
-            self.sendCodeReview(project, revision, message, verified, reviewed)
-            return
+            # review doesn't really work with multiple revisions, so let's
+            # just assume it's None there
+            if isinstance(revision, dict):
+                revision = None
+
+            if project is not None and revision is not None:
+                self.sendCodeReview(project, revision, message, verified, reviewed)
+                return
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
         command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
                    "gerrit", "review", "--project %s" % str(project)]
         if message:
-            command.append("--message '%s'" % message)
+            command.append("--message '%s'" % message.replace("'","\""))
         if verified:
             command.extend(["--verified %d" % int(verified)])
         if reviewed:

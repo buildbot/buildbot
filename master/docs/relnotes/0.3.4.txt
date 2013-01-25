@@ -1,0 +1,35 @@
+Buildbot 0.3.4 was released 28 Jul 2003
+
+** IRC client
+
+The buildmaster can now join a set of IRC channels and respond to simple
+queries about builder status.
+
+** slave information
+
+The build slaves can now report information from a set of info/* files in
+the slave base directory to the buildmaster. This will be used by the slave
+administrator to announce details about the system hosting the slave,
+contact information, etc. For now, info/admin should contain the name/email
+of the person who is responsible for the buildslave, and info/host should
+describe the system hosting the build slave (OS version, CPU speed, memory,
+etc). The contents of these files are made available through the waterfall
+display.
+
+** change notification email parsers
+
+A parser for Syncmail (syncmail.sourceforge.net) was added. SourceForge
+provides examples of setting up syncmail to deliver CVS commit messages to
+mailing lists, so hopefully this will make it easier for sourceforge-hosted
+projects to set up a buildbot.
+
+email processors were moved into buildbot.changes.mail . FCMaildirSource was
+moved, and the compatibility location (buildbot.changes.freshcvsmail) will
+go away in the next release.
+
+** w32 buildslave ought to work
+
+Some non-portable code was changed to make it more likely that the
+buildslave will run under windows. The Twisted buildbot now has a
+(more-or-less) working w32 buildslave.
+

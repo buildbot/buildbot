@@ -15,7 +15,7 @@
 
 from twisted.internet import defer
 from twisted.python import log
-from buildbot import util
+from buildbot import util, interfaces, config
 from buildbot.status.results import SUCCESS, WARNINGS
 from buildbot.schedulers import base
 
@@ -23,13 +23,16 @@ class Dependent(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs + ('upstream_name',)
 
-    def __init__(self, name, upstream, builderNames, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
-        assert base.isScheduler(upstream), \
-                "upstream must be another Scheduler instance"
+    def __init__(self, name, upstream, builderNames, properties={}, **kwargs):
+        base.BaseScheduler.__init__(self, name, builderNames, properties,
+                                    **kwargs)
+        if not interfaces.IScheduler.providedBy(upstream):
+            config.error(
+                "upstream must be another Scheduler instance")
         self.upstream_name = upstream.name
         self._buildset_addition_subscr = None
         self._buildset_completion_subscr = None
+        self._cached_upstream_bsids = None
 
         # the subscription lock makes sure that we're done inserting a
         # subcription into the DB before registering that the buildset is
@@ -41,6 +44,7 @@ class Dependent(base.BaseScheduler):
                 self.master.subscribeToBuildsets(self._buildsetAdded)
         self._buildset_completion_subscr = \
                 self.master.subscribeToBuildsetCompletions(self._buildsetCompleted)
+
         # check for any buildsets completed before we started
         d = self._checkCompletedBuildsets(None, None)
         d.addErrback(log.err, 'while checking for completed buildsets in start')
@@ -50,6 +54,7 @@ class Dependent(base.BaseScheduler):
             self._buildset_addition_subscr.unsubscribe()
         if self._buildset_completion_subscr:
             self._buildset_completion_subscr.unsubscribe()
+        self._cached_upstream_bsids = None
         return defer.succeed(None)
 
     @util.deferredLocked('_subscription_lock')
@@ -60,10 +65,8 @@ class Dependent(base.BaseScheduler):
         if submitter != self.upstream_name:
             return
 
-        # record our interest in this buildset, both locally and in the
-        # database
-        d = self.master.db.buildsets.subscribeToBuildset(
-                                        self.schedulerid, bsid)
+        # record our interest in this buildset
+        d = self._addUpstreamBuildset(bsid)
         d.addErrback(log.err, 'while subscribing to buildset %d' % bsid)
 
     def _buildsetCompleted(self, bsid, result):
@@ -71,14 +74,12 @@ class Dependent(base.BaseScheduler):
         d.addErrback(log.err, 'while checking for completed buildsets')
 
     @util.deferredLocked('_subscription_lock')
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _checkCompletedBuildsets(self, bsid, result):
-        wfd = defer.waitForDeferred(
-            self.master.db.buildsets.getSubscribedBuildsets(self.schedulerid))
-        yield wfd
-        subs = wfd.getResult()
+        subs = yield self._getUpstreamBuildsets()
 
-        for (sub_bsid, sub_ssid, sub_complete, sub_results) in subs:
+        sub_bsids = []
+        for (sub_bsid, sub_sssetid, sub_complete, sub_results) in subs:
             # skip incomplete builds, handling the case where the 'complete'
             # column has not been updated yet
             if not sub_complete and sub_bsid != bsid:
@@ -86,15 +87,62 @@ class Dependent(base.BaseScheduler):
 
             # build a dependent build if the status is appropriate
             if sub_results in (SUCCESS, WARNINGS):
-                wfd = defer.waitForDeferred(
-                    self.addBuildsetForSourceStamp(ssid=sub_ssid,
-                                               reason='downstream'))
-                yield wfd
-                wfd.getResult()
+                yield self.addBuildsetForSourceStamp(setid=sub_sssetid,
+                                               reason='downstream')
 
-            # and regardless of status, remove the subscription
-            wfd = defer.waitForDeferred(
-                self.master.db.buildsets.unsubscribeFromBuildset(
-                                          self.schedulerid, sub_bsid))
-            yield wfd
-            wfd.getResult()
+            sub_bsids.append(sub_bsid)
+
+        # and regardless of status, remove the subscriptions
+        yield self._removeUpstreamBuildsets(sub_bsids)
+
+    @defer.inlineCallbacks
+    def _updateCachedUpstreamBuilds(self):
+        if self._cached_upstream_bsids is None:
+            bsids = yield self.master.db.state.getState(self.objectid,
+                                        'upstream_bsids', [])
+            self._cached_upstream_bsids = bsids
+
+    @defer.inlineCallbacks
+    def _getUpstreamBuildsets(self):
+        # get a list of (bsid, sssid, complete, results) for all
+        # upstream buildsets
+        yield self._updateCachedUpstreamBuilds()
+
+        changed = False
+        rv = []
+        for bsid in self._cached_upstream_bsids[:]:
+            bsdict = yield self.master.db.buildsets.getBuildset(bsid)
+            if not bsdict:
+                self._cached_upstream_bsids.remove(bsid)
+                changed = True
+                continue
+
+            rv.append((bsid, bsdict['sourcestampsetid'], bsdict['complete'],
+                bsdict['results']))
+
+        if changed:
+            yield self.master.db.state.setState(self.objectid,
+                                'upstream_bsids', self._cached_upstream_bsids)
+
+        defer.returnValue(rv)
+
+    @defer.inlineCallbacks
+    def _addUpstreamBuildset(self, bsid):
+        yield self._updateCachedUpstreamBuilds()
+
+        if bsid not in self._cached_upstream_bsids:
+            self._cached_upstream_bsids.append(bsid)
+
+            yield self.master.db.state.setState(self.objectid,
+                                'upstream_bsids', self._cached_upstream_bsids)
+
+    @defer.inlineCallbacks
+    def _removeUpstreamBuildsets(self, bsids):
+        yield self._updateCachedUpstreamBuilds()
+
+        old = set(self._cached_upstream_bsids)
+        self._cached_upstream_bsids = list(old - set(bsids))
+
+        yield self.master.db.state.setState(self.objectid,
+                            'upstream_bsids', self._cached_upstream_bsids)
+

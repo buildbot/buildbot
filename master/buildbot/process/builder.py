@@ -21,7 +21,7 @@ from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
 
-from buildbot import interfaces
+from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.status.buildrequest import BuildRequestStatus
@@ -30,84 +30,19 @@ from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
 
-class Builder(pb.Referenceable, service.MultiService):
-    """I manage all Builds of a given type.
+class Builder(config.ReconfigurableServiceMixin,
+              pb.Referenceable,
+              service.MultiService):
 
-    Each Builder is created by an entry in the config file (the c['builders']
-    list), with a number of parameters.
+    # reconfigure builders before slaves
+    reconfig_priority = 196
 
-    One of these parameters is the L{buildbot.process.factory.BuildFactory}
-    object that is associated with this Builder. The factory is responsible
-    for creating new L{Build<buildbot.process.build.Build>} objects. Each
-    Build object defines when and how the build is performed, so a new
-    Factory or Builder should be defined to control this behavior.
-
-    The Builder holds on to a number of L{BuildRequest} objects in a
-    list named C{.buildable}. Incoming BuildRequest objects will be added to
-    this list, or (if possible) merged into an existing request. When a slave
-    becomes available, I will use my C{BuildFactory} to turn the request into
-    a new C{Build} object. The C{BuildRequest} is forgotten, the C{Build}
-    goes into C{.building} while it runs. Once the build finishes, I will
-    discard it.
-
-    I maintain a list of available SlaveBuilders, one for each connected
-    slave that the C{slavenames} parameter says we can use. Some of these
-    will be idle, some of them will be busy running builds for me. If there
-    are multiple slaves, I can run multiple builds at once.
-
-    I also manage forced builds, progress expectation (ETA) management, and
-    some status delivery chores.
-
-    @type buildable: list of L{buildbot.process.buildrequest.BuildRequest}
-    @ivar buildable: BuildRequests that are ready to build, but which are
-                     waiting for a buildslave to be available.
-
-    @type building: list of L{buildbot.process.build.Build}
-    @ivar building: Builds that are actively running
-
-    @type slaves: list of L{buildbot.buildslave.BuildSlave} objects
-    @ivar slaves: the slaves currently available for building
-    """
-
-    expectations = None # this is created the first time we get a good build
-
-    def __init__(self, setup, builder_status):
-        """
-        @type  setup: dict
-        @param setup: builder setup data, as stored in
-                      BuildmasterConfig['builders'].  Contains name,
-                      slavename(s), builddir, slavebuilddir, factory, locks.
-        @type  builder_status: L{buildbot.status.builder.BuilderStatus}
-        """
+    def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
-        self.name = setup['name']
-        self.slavenames = []
-        if setup.has_key('slavename'):
-            self.slavenames.append(setup['slavename'])
-        if setup.has_key('slavenames'):
-            self.slavenames.extend(setup['slavenames'])
-        self.builddir = setup['builddir']
-        self.slavebuilddir = setup['slavebuilddir']
-        self.buildFactory = setup['factory']
-        self.nextSlave = setup.get('nextSlave')
-        if self.nextSlave is not None and not callable(self.nextSlave):
-            raise ValueError("nextSlave must be callable")
-        self.locks = setup.get("locks", [])
-        self.env = setup.get('env', {})
-        assert isinstance(self.env, dict)
-        if setup.has_key('periodicBuildTime'):
-            raise ValueError("periodicBuildTime can no longer be defined as"
-                             " part of the Builder: use scheduler.Periodic"
-                             " instead")
-        self.nextBuild = setup.get('nextBuild')
-        if self.nextBuild is not None and not callable(self.nextBuild):
-            raise ValueError("nextBuild must be callable")
-        self.buildHorizon = setup.get('buildHorizon')
-        self.logHorizon = setup.get('logHorizon')
-        self.eventHorizon = setup.get('eventHorizon')
-        self.mergeRequests = setup.get('mergeRequests', True)
-        self.properties = setup.get('properties', {})
-        self.category = setup.get('category', None)
+        self.name = name
+
+        # this is created the first time we get a good build
+        self.expectations = None
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -123,76 +58,60 @@ class Builder(pb.Referenceable, service.MultiService):
         # Build is about to start, to make sure that they're still alive.
         self.slaves = []
 
-        self.builder_status = builder_status
-        self.builder_status.setSlavenames(self.slavenames)
-        self.builder_status.buildHorizon = self.buildHorizon
-        self.builder_status.logHorizon = self.logHorizon
-        self.builder_status.eventHorizon = self.eventHorizon
+        self.config = None
+        self.builder_status = None
 
-        self.reclaim_svc = internet.TimerService(10*60, self.reclaimAllBuilds)
-        self.reclaim_svc.setServiceParent(self)
+        if _addServices:
+            self.reclaim_svc = internet.TimerService(10*60,
+                                            self.reclaimAllBuilds)
+            self.reclaim_svc.setServiceParent(self)
 
-        # for testing, to help synchronize tests
-        self.run_count = 0
+            # update big status every 30 minutes, working around #1980
+            self.updateStatusService = internet.TimerService(30*60,
+                                            self.updateBigStatus)
+            self.updateStatusService.setServiceParent(self)
+
+    def reconfigService(self, new_config):
+        # find this builder in the config
+        for builder_config in new_config.builders:
+            if builder_config.name == self.name:
+                break
+        else:
+            assert 0, "no config found for builder '%s'" % self.name
+
+        # set up a builder status object on the first reconfig
+        if not self.builder_status:
+            self.builder_status = self.master.status.builderAdded(
+                    builder_config.name,
+                    builder_config.builddir,
+                    builder_config.category,
+                    builder_config.description)
+
+        self.config = builder_config
+
+        self.builder_status.setDescription(builder_config.description)
+        self.builder_status.setCategory(builder_config.category)
+        self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setCacheSize(new_config.caches['Builds'])
+
+        return defer.succeed(None)
 
     def stopService(self):
         d = defer.maybeDeferred(lambda :
                 service.MultiService.stopService(self))
         def flushMaybeStartBuilds(_):
-            # at this point, self.running = False, so another maybeStartBuilds
+            # at this point, self.running = False, so another maybeStartBuild
             # invocation won't hurt anything, but it also will not complete
-            # until any currently-running invocations are done.
+            # until any currently-running invocations are done, so we know that
+            # the builder is quiescent at that time.
             return self.maybeStartBuild()
         d.addCallback(flushMaybeStartBuilds)
         return d
 
-    def setBotmaster(self, botmaster):
-        self.botmaster = botmaster
-        self.master = botmaster.master
-        self.db = self.master.db
-        self.master_name = self.master.master_name
-        self.master_incarnation = self.master.master_incarnation
-
-    def compareToSetup(self, setup):
-        diffs = []
-        setup_slavenames = []
-        if setup.has_key('slavename'):
-            setup_slavenames.append(setup['slavename'])
-        setup_slavenames.extend(setup.get('slavenames', []))
-        if setup_slavenames != self.slavenames:
-            diffs.append('slavenames changed from %s to %s' \
-                         % (self.slavenames, setup_slavenames))
-        if setup['builddir'] != self.builddir:
-            diffs.append('builddir changed from %s to %s' \
-                         % (self.builddir, setup['builddir']))
-        if setup['slavebuilddir'] != self.slavebuilddir:
-            diffs.append('slavebuilddir changed from %s to %s' \
-                         % (self.slavebuilddir, setup['slavebuilddir']))
-        if setup['factory'] != self.buildFactory: # compare objects
-            diffs.append('factory changed')
-        if setup.get('locks', []) != self.locks:
-            diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
-        if setup.get('env', {}) != self.env:
-            diffs.append('env changed from %s to %s' % (self.env, setup.get('env', {})))
-        if setup.get('nextSlave') != self.nextSlave:
-            diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
-        if setup.get('nextBuild') != self.nextBuild:
-            diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup.get('nextBuild')))
-        if setup.get('buildHorizon', None) != self.buildHorizon:
-            diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
-        if setup.get('logHorizon', None) != self.logHorizon:
-            diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
-        if setup.get('eventHorizon', None) != self.eventHorizon:
-            diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
-        if setup.get('category', None) != self.category:
-            diffs.append('category changed from %r to %r' % (self.category, setup.get('category', None)))
-
-        return diffs
-
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getOldestRequestTime(self):
 
         """Returns the submitted_at of the oldest unclaimed build request for
@@ -200,85 +119,15 @@ class Builder(pb.Referenceable, service.MultiService):
 
         @returns: datetime instance or None, via Deferred
         """
-        wfd = defer.waitForDeferred(
-            self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False))
-        yield wfd
-        unclaimed = wfd.getResult()
+        unclaimed = yield self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.name, claimed=False)
 
         if unclaimed:
             unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
             unclaimed.sort()
-            yield unclaimed[0]
+            defer.returnValue(unclaimed[0])
         else:
-            yield None
-
-    def consumeTheSoulOfYourPredecessor(self, old):
-        """Suck the brain out of an old Builder.
-
-        This takes all the runtime state from an existing Builder and moves
-        it into ourselves. This is used when a Builder is changed in the
-        master.cfg file: the new Builder has a different factory, but we want
-        all the builds that were queued for the old one to get processed by
-        the new one. Any builds which are already running will keep running.
-        The new Builder will get as many of the old SlaveBuilder objects as
-        it wants."""
-
-        log.msg("consumeTheSoulOfYourPredecessor: %s feeding upon %s" %
-                (self, old))
-        # all pending builds are stored in the DB, so we don't have to do
-        # anything to claim them. The old builder will be stopService'd,
-        # which should make sure they don't start any new work
-
-        # this is kind of silly, but the builder status doesn't get updated
-        # when the config changes, yet it stores the category.  So:
-        self.builder_status.category = self.category
-
-        # old.building (i.e. builds which are still running) is not migrated
-        # directly: it keeps track of builds which were in progress in the
-        # old Builder. When those builds finish, the old Builder will be
-        # notified, not us. However, since the old SlaveBuilder will point to
-        # us, it is our maybeStartBuild() that will be triggered.
-        if old.building:
-            self.builder_status.setBigState("building")
-        # however, we do grab a weakref to the active builds, so that our
-        # BuilderControl can see them and stop them. We use a weakref because
-        # we aren't the one to get notified, so there isn't a convenient
-        # place to remove it from self.building .
-        for b in old.building:
-            self.old_building[b] = None
-        for b in old.old_building:
-            self.old_building[b] = None
-
-        # Our set of slavenames may be different. Steal any of the old
-        # buildslaves that we want to keep using.
-        for sb in old.slaves[:]:
-            if sb.slave.slavename in self.slavenames:
-                log.msg(" stealing buildslave %s" % sb)
-                self.slaves.append(sb)
-                old.slaves.remove(sb)
-                sb.setBuilder(self)
-
-        # old.attaching_slaves:
-        #  these SlaveBuilders are waiting on a sequence of calls:
-        #  remote.setMaster and remote.print . When these two complete,
-        #  old._attached will be fired, which will add a 'connect' event to
-        #  the builder_status and try to start a build. However, we've pulled
-        #  everything out of the old builder's queue, so it will have no work
-        #  to do. The outstanding remote.setMaster/print call will be holding
-        #  the last reference to the old builder, so it will disappear just
-        #  after that response comes back.
-        #
-        #  The BotMaster will ask the slave to re-set their list of Builders
-        #  shortly after this function returns, which will cause our
-        #  attached() method to be fired with a bunch of references to remote
-        #  SlaveBuilders, some of which we already have (by stealing them
-        #  from the old Builder), some of which will be new. The new ones
-        #  will be re-attached.
-
-        #  Therefore, we don't need to do anything about old.attaching_slaves
-
-        return # all done
+            defer.returnValue(None)
 
     def reclaimAllBuilds(self):
         brids = set()
@@ -290,7 +139,7 @@ class Builder(pb.Referenceable, service.MultiService):
         if not brids:
             return defer.succeed(None)
 
-        d = self.master.db.buildrequests.claimBuildRequests(brids)
+        d = self.master.db.buildrequests.reclaimBuildRequests(brids)
         d.addErrback(log.err, 'while re-claiming running BuildRequests')
         return d
 
@@ -358,6 +207,8 @@ class Builder(pb.Referenceable, service.MultiService):
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
 
+        self.updateBigStatus()
+
         return self
 
     def _not_attached(self, why, slave):
@@ -397,58 +248,72 @@ class Builder(pb.Referenceable, service.MultiService):
         self.updateBigStatus()
 
     def updateBigStatus(self):
+        if not self.builder_status:
+            return
         if not self.slaves:
             self.builder_status.setBigState("offline")
-        elif self.building:
+        elif self.building or self.old_building:
             self.builder_status.setBigState("building")
         else:
             self.builder_status.setBigState("idle")
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
         @param sb: the L{SlaveBuilder} which will host this build
 
-        @return: a Deferred which fires with a
-        L{buildbot.interfaces.IBuildControl} that can be used to stop the
-        Build, or to access a L{buildbot.interfaces.IBuildStatus} which will
-        watch the Build as it runs. """
+        @return: (via Deferred) boolean indicating that the build was
+        succesfully started.
+        """
 
-        build = self.buildFactory.newBuild(buildrequests)
+        # as of the Python versions supported now, try/finally can't be used
+        # with a generator expression.  So instead, we push cleanup functions
+        # into a list so that, at any point, we can abort this operation.
+        cleanups = []
+        def run_cleanups():
+            try:
+                while cleanups:
+                    fn = cleanups.pop()
+                    fn()
+            except:
+                log.err(failure.Failure(), "while running %r" % (run_cleanups,))
+
+        # the last cleanup we want to perform is to update the big
+        # status based on any other cleanup
+        cleanups.append(lambda : self.updateBigStatus())
+
+        build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
-        build.setLocks(self.locks)
-        if len(self.env) > 0:
-            build.setSlaveEnvironment(self.env)
-
-        self.building.append(build)
-        self.updateBigStatus()
         log.msg("starting build %s using slave %s" % (build, slavebuilder))
 
-        wfd = defer.waitForDeferred(
-                slavebuilder.prepare(self.builder_status, build))
-        yield wfd
-        ready = wfd.getResult()
+        # set up locks
+        build.setLocks(self.config.locks)
+        cleanups.append(lambda : slavebuilder.slave.releaseLocks())
+
+        if len(self.config.env) > 0:
+            build.setSlaveEnvironment(self.config.env)
+
+        # append the build to self.building
+        self.building.append(build)
+        cleanups.append(lambda : self.building.remove(build))
+
+        # update the big status accordingly
+        self.updateBigStatus()
+
+        try:
+            ready = yield slavebuilder.prepare(self.builder_status, build)
+        except:
+            log.err(failure.Failure(), 'while preparing slavebuilder:')
+            ready = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns false then we don't start a new build.
         if not ready:
             log.msg("slave %s can't build %s after all; re-queueing the "
                     "request" % (build, slavebuilder))
-
-            self.building.remove(build)
-            slavebuilder.slave.releaseLocks()
-
-            # release the buildrequest claims
-            wfd = defer.waitForDeferred(
-                self._resubmit_buildreqs(build))
-            yield wfd
-            wfd.getResult()
-
-            # and try starting builds again.  If we still have a working slave,
-            # then this may re-claim the same buildrequests
-            self.botmaster.maybeStartBuildsForBuilder(self.name)
-
+            run_cleanups()
+            defer.returnValue(False)
             return
 
         # ping the slave to make sure they're still there. If they've
@@ -461,78 +326,90 @@ class Builder(pb.Referenceable, service.MultiService):
         # us in a build.
         log.msg("starting build %s.. pinging the slave %s"
                 % (build, slavebuilder))
-        wfd = defer.waitForDeferred(
-                slavebuilder.ping())
-        yield wfd
-        ping_success = wfd.getResult()
+        try:
+            ping_success = yield slavebuilder.ping()
+        except:
+            log.err(failure.Failure(), 'while pinging slave before build:')
+            ping_success = False
 
         if not ping_success:
-            self._startBuildFailed("slave ping failed", build, slavebuilder)
+            log.msg("slave ping failed; re-queueing the request")
+            run_cleanups()
+            defer.returnValue(False)
             return
 
         # The buildslave is ready to go. slavebuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         slavebuilder.buildStarted()
+        cleanups.append(lambda : slavebuilder.buildFinished())
+
+        # tell the remote that it's starting a build, too
         try:
-            wfd = defer.waitForDeferred(
-                    slavebuilder.remote.callRemote("startBuild"))
-            yield wfd
-            wfd.getResult()
+            yield slavebuilder.remote.callRemote("startBuild")
         except:
-            self._startBuildFailed(failure.Failure(), build, slavebuilder)
+            log.err(failure.Failure(), 'while calling remote startBuild:')
+            run_cleanups()
+            defer.returnValue(False)
             return
 
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
-        # record in the db - one per buildrequest
-        bids = []
-        for req in build.requests:
-            wfd = defer.waitForDeferred(
-                self.master.db.builds.addBuild(req.id, bs.number))
-            yield wfd
-            bids.append(wfd.getResult())
+        # record the build in the db - one row per buildrequest
+        try:
+            bids = []
+            for req in build.requests:
+                bid = yield self.master.db.builds.addBuild(req.id, bs.number)
+                bids.append(bid)
+        except:
+            log.err(failure.Failure(), 'while adding rows to build table:')
+            run_cleanups()
+            defer.returnValue(False)
+            return
+
+        # IMPORTANT: no yielding is allowed from here to the startBuild call!
+
+        # it's possible that we lost the slave remote between the ping above
+        # and now.  If so, bail out.  The build.startBuild call below transfers
+        # responsibility for monitoring this connection to the Build instance,
+        # so this check ensures we hand off a working connection.
+        if not slavebuilder.remote:
+            log.msg("slave disappeared before build could start")
+            run_cleanups()
+            defer.returnValue(False)
+            return
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs.number)
+        self.master.status.build_started(req.id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
         # (through our BuilderStatus object, which is its parent).  Finally it
         # will start the actual build process.  This is done with a fresh
         # Deferred since _startBuildFor should not wait until the build is
-        # finished.
-        d = build.startBuild(bs, self.expectations, slavebuilder)
+        # finished.  This uses `maybeDeferred` to ensure that any exceptions
+        # raised by startBuild are treated as deferred errbacks (see
+        # http://trac.buildbot.net/ticket/2428).
+        d = defer.maybeDeferred(build.startBuild,
+                bs, self.expectations, slavebuilder)
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
-        d.addErrback(log.err)
+        d.addErrback(log.err, 'from a running build; this is a '
+            'serious error - please file a bug at http://buildbot.net')
 
         # make sure the builder's status is represented correctly
         self.updateBigStatus()
 
-        # yield the IBuildControl, in case anyone needs it
-        yield build
-
-    def _startBuildFailed(self, why, build, slavebuilder):
-        # put the build back on the buildable list
-        log.msg("I tried to tell the slave that the build %s started, but "
-                "remote_startBuild failed: %s" % (build, why))
-        # release the slave. This will queue a call to maybeStartBuild, which
-        # will fire after other notifyOnDisconnect handlers have marked the
-        # slave as disconnected (so we don't try to use it again).
-        slavebuilder.buildFinished()
-
-        log.msg("re-queueing the BuildRequest")
-        self.building.remove(build)
-        self._resubmit_buildreqs(build).addErrback(log.err)
+        defer.returnValue(True)
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
-        if len(self.properties) > 0:
-            for propertyname in self.properties:
-                props.setProperty(propertyname, self.properties[propertyname],
-                                  "Builder")
+        if len(self.config.properties) > 0:
+            for propertyname in self.config.properties:
+                props.setProperty(propertyname,
+                        self.config.properties[propertyname],
+                        "Builder")
 
     def buildFinished(self, build, sb, bids):
         """This is called when the Build has finished (either success or
@@ -545,8 +422,8 @@ class Builder(pb.Referenceable, service.MultiService):
 
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
-        d = self.db.builds.finishBuilds(bids)
-        d.addErrback(log.err, 'while markign builds as finished (ignored)')
+        d = self.master.db.builds.finishBuilds(bids)
+        d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         results = build.build_status.getResults()
         self.building.remove(build)
@@ -565,18 +442,17 @@ class Builder(pb.Referenceable, service.MultiService):
         if sb.slave:
             sb.slave.releaseLocks()
 
-    @defer.deferredGenerator
+        self.updateBigStatus()
+
+    @defer.inlineCallbacks
     def _maybeBuildsetsComplete(self, requests):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
-            wfd = defer.waitForDeferred(
-                self.master.maybeBuildsetComplete(br.bsid))
-            yield wfd
-            wfd.getResult()
+            yield self.master.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        return self.db.buildrequests.unclaimBuildRequests(brids)
+        return self.master.db.buildrequests.unclaimBuildRequests(brids)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -596,7 +472,7 @@ class Builder(pb.Referenceable, service.MultiService):
 
     # Build Creation
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def maybeStartBuild(self):
         # This method is called by the botmaster whenever this builder should
         # check for and potentially start new builds.  Do not call this method
@@ -618,11 +494,13 @@ class Builder(pb.Referenceable, service.MultiService):
             return
 
         # now, get the available build requests
-        wfd = defer.waitForDeferred(
-                self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False))
-        yield wfd
-        unclaimed_requests = wfd.getResult()
+        unclaimed_requests = \
+            yield self.master.db.buildrequests.getBuildRequests(
+                    buildername=self.name, claimed=False)
+
+        if not unclaimed_requests:
+            self.updateBigStatus()
+            return
 
         # sort by submitted_at, so the first is the oldest
         unclaimed_requests.sort(key=lambda brd : brd['submitted_at'])
@@ -633,10 +511,7 @@ class Builder(pb.Referenceable, service.MultiService):
         # match them up until we're out of options
         while available_slavebuilders and unclaimed_requests:
             # first, choose a slave (using nextSlave)
-            wfd = defer.waitForDeferred(
-                self._chooseSlave(available_slavebuilders))
-            yield wfd
-            slavebuilder = wfd.getResult()
+            slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:
                 break
@@ -647,10 +522,7 @@ class Builder(pb.Referenceable, service.MultiService):
                 break
 
             # then choose a request (using nextBuild)
-            wfd = defer.waitForDeferred(
-                self._chooseBuild(unclaimed_requests))
-            yield wfd
-            brdict = wfd.getResult()
+            brdict = yield self._chooseBuild(unclaimed_requests)
 
             if not brdict:
                 break
@@ -662,29 +534,21 @@ class Builder(pb.Referenceable, service.MultiService):
 
             # merge the chosen request with any compatible requests in the
             # queue
-            wfd = defer.waitForDeferred(
-                self._mergeRequests(brdict, unclaimed_requests,
-                                    mergeRequests_fn))
-            yield wfd
-            brdicts = wfd.getResult()
+            brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
+                                    mergeRequests_fn)
 
             # try to claim the build requests
+            brids = [ brdict['brid'] for brdict in brdicts ]
             try:
-                wfd = defer.waitForDeferred(
-                        self.master.db.buildrequests.claimBuildRequests(
-                            [ brdict['brid'] for brdict in brdicts ]))
-                yield wfd
-                wfd.getResult()
+                yield self.master.db.buildrequests.claimBuildRequests(brids)
             except buildrequests.AlreadyClaimedError:
                 # one or more of the build requests was already claimed;
                 # re-fetch the now-partially-claimed build requests and keep
                 # trying to match them
                 self._breakBrdictRefloops(unclaimed_requests)
-                wfd = defer.waitForDeferred(
-                        self.master.db.buildrequests.getBuildRequests(
-                                buildername=self.name, claimed=False))
-                yield wfd
-                unclaimed_requests = wfd.getResult()
+                unclaimed_requests = \
+                    yield self.master.db.buildrequests.getBuildRequests(
+                            buildername=self.name, claimed=False)
 
                 # go around the loop again
                 continue
@@ -695,14 +559,21 @@ class Builder(pb.Referenceable, service.MultiService):
             # loop. TODO: test that!
 
             # _startBuildFor expects BuildRequest objects, so cook some up
-            wfd = defer.waitForDeferred(
-                    defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                          for brdict in brdicts ]))
-            yield wfd
-            breqs = wfd.getResult()
-            self._startBuildFor(slavebuilder, breqs)
+            breqs = yield defer.gatherResults(
+                    [ self._brdictToBuildRequest(brdict)
+                      for brdict in brdicts ])
 
-            # and finally remove the buildrequests and slavebuilder from the
+            build_started = yield self._startBuildFor(slavebuilder, breqs)
+
+            if not build_started:
+                # build was not started, so unclaim the build requests
+                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+
+                # and try starting builds again.  If we still have a working slave,
+                # then this may re-claim the same buildrequests
+                self.botmaster.maybeStartBuildsForBuilder(self.name)
+
+            # finally, remove the buildrequests and slavebuilder from the
             # respective queues
             self._breakBrdictRefloops(brdicts)
             for brdict in brdicts:
@@ -724,9 +595,9 @@ class Builder(pb.Referenceable, service.MultiService):
         @param available_slavebuilders: list of slavebuilders to choose from
         @returns: SlaveBuilder or None via Deferred
         """
-        if self.nextSlave:
+        if self.config.nextSlave:
             return defer.maybeDeferred(lambda :
-                    self.nextSlave(self, available_slavebuilders))
+                    self.config.nextSlave(self, available_slavebuilders))
         else:
             return defer.succeed(random.choice(available_slavebuilders))
 
@@ -739,13 +610,13 @@ class Builder(pb.Referenceable, service.MultiService):
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        if self.nextBuild:
+        if self.config.nextBuild:
             # nextBuild expects BuildRequest objects, so instantiate them here
             # and cache them in the dictionaries
             d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
                                       for brdict in buildrequests ])
             d.addCallback(lambda requestobjects :
-                    self.nextBuild(self, requestobjects))
+                    self.config.nextBuild(self, requestobjects))
             def to_brdict(brobj):
                 # get the brdict for this object back
                 return brobj.brdict
@@ -758,9 +629,9 @@ class Builder(pb.Referenceable, service.MultiService):
         """Helper function to determine which mergeRequests function to use
         from L{_mergeRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
-        mergeRequests_fn = self.mergeRequests
+        mergeRequests_fn = self.config.mergeRequests
         if mergeRequests_fn is None:
-            mergeRequests_fn = self.master.mergeRequests
+            mergeRequests_fn = self.master.config.mergeRequests
         if mergeRequests_fn is None:
             mergeRequests_fn = True
 
@@ -768,42 +639,40 @@ class Builder(pb.Referenceable, service.MultiService):
         if mergeRequests_fn is False:
             mergeRequests_fn = None
         elif mergeRequests_fn is True:
-            mergeRequests_fn = buildrequest.BuildRequest.canBeMergedWith
+            mergeRequests_fn = Builder._defaultMergeRequestFn
 
         return mergeRequests_fn
 
-    @defer.deferredGenerator
+    def _defaultMergeRequestFn(self, req1, req2):
+        return req1.canBeMergedWith(req2)
+
+    @defer.inlineCallbacks
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
         """Use C{mergeRequests_fn} to merge C{breq} against
         C{unclaimed_requests}, where both are build request dictionaries"""
         # short circuit if there is no merging to do
         if not mergeRequests_fn or len(unclaimed_requests) == 1:
-            yield [ breq ]
+            defer.returnValue([ breq ])
             return
 
         # we'll need BuildRequest objects, so get those first
-        wfd = defer.waitForDeferred(
-            defer.gatherResults(
+        unclaimed_request_objects = yield defer.gatherResults(
                 [ self._brdictToBuildRequest(brdict)
-                  for brdict in unclaimed_requests ]))
-        yield wfd
-        unclaimed_request_objects = wfd.getResult()
-        breq_object = unclaimed_request_objects.pop(
-                unclaimed_requests.index(breq))
+                  for brdict in unclaimed_requests ])
+
+        breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
 
         # gather the mergeable requests
-        merged_request_objects = [breq_object]
+        merged_request_objects = []
         for other_breq_object in unclaimed_request_objects:
-            wfd = defer.waitForDeferred(
-                defer.maybeDeferred(lambda :
-                    mergeRequests_fn(breq_object, other_breq_object)))
-            yield wfd
-            if wfd.getResult():
+            if (yield defer.maybeDeferred(
+                        lambda : mergeRequests_fn(self, breq_object,
+                                                  other_breq_object))):
                 merged_request_objects.append(other_breq_object)
 
         # convert them back to brdicts and return
         merged_requests = [ br.brdict for br in merged_request_objects ]
-        yield merged_requests
+        defer.returnValue(merged_requests)
 
     def _brdictToBuildRequest(self, brdict):
         """
@@ -841,25 +710,26 @@ class Builder(pb.Referenceable, service.MultiService):
 class BuilderControl:
     implements(interfaces.IBuilderControl)
 
-    def __init__(self, builder, master):
+    def __init__(self, builder, control):
         self.original = builder
-        self.master = master
+        self.control = control
 
     def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampId(self.master.master)
-        def add_buildset(ssid):
-            return self.master.master.addBuildset(
+        d = ss.getSourceStampSetId(self.control.master)
+        def add_buildset(sourcestampsetid):
+            return self.control.master.addBuildset(
                     builderNames=[self.original.name],
-                    ssid=ssid, reason=reason, properties=props)
+                    sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs((bsid,brids)):
             brs = BuildRequestStatus(self.original.name,
                                      brids[self.original.name],
-                                     self.master.master.status)
+                                     self.control.master.status)
             return brs
         d.addCallback(get_brs)
         return d
 
+    @defer.inlineCallbacks
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
@@ -872,37 +742,43 @@ class BuilderControl:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
-        ss = bs.getSourceStamp(absolute=True)
-        d = ss.getSourceStampId(self.master.master)
-        def add_buildset(ssid):
-            return self.master.master.addBuildset(
-                    builderNames=[self.original.name],
-                    ssid=ssid, reason=reason, properties=properties_dict)
-        d.addCallback(add_buildset)
-        return d
+        ssList = bs.getSourceStamps(absolute=True)
+        
+        if ssList:
+            sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
+            dl = []
+            for ss in ssList[1:]:
+                # add defered to the list
+                dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
+            yield defer.gatherResults(dl)
 
-    @defer.deferredGenerator
+            bsid, brids = yield self.control.master.addBuildset(
+                    builderNames=[self.original.name],
+                    sourcestampsetid=sourcestampsetid, 
+                    reason=reason, 
+                    properties=properties_dict)
+            defer.returnValue((bsid, brids))
+        else:
+            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
+            defer.returnValue(None)
+
+    @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
         master = self.original.master
-        wfd = defer.waitForDeferred(
-            master.db.buildrequests.getBuildRequests(
+        brdicts = yield master.db.buildrequests.getBuildRequests(
                 buildername=self.original.name,
-                claimed=False))
-        yield wfd
-        brdicts = wfd.getResult()
+                claimed=False)
 
         # convert those into BuildRequest objects
         buildrequests = [ ]
         for brdict in brdicts:
-            wfd = defer.waitForDeferred(
-                buildrequest.BuildRequest.fromBrdict(self.master.master,
-                                                     brdict))
-            yield wfd
-            buildrequests.append(wfd.getResult())
+            br = yield buildrequest.BuildRequest.fromBrdict(
+                    self.control.master, brdict)
+            buildrequests.append(br)
 
         # and return the corresponding control objects
-        yield [ buildrequest.BuildRequestControl(self.original, r)
-                 for r in buildrequests ]
+        defer.returnValue([ buildrequest.BuildRequestControl(self.original, r)
+                            for r in buildrequests ])
 
     def getBuild(self, number):
         return self.original.getBuild(number)
@@ -923,4 +799,3 @@ class BuilderControl:
             if not success:
                 return False
         return True
-

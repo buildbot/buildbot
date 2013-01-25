@@ -1,0 +1,20 @@
+Buildbot 0.3.1 was released 29 Apr 2003
+
+** First release.
+
+** Features implemented:
+
+ change notification from FreshCVS server or parsed maildir contents
+
+ timed builds
+
+ basic builds, configure/compile/test
+
+ some Twisted-specific build steps: docs, unit tests, debuild
+
+ status reporting via web page
+
+** Features still experimental/unpolished
+
+ status reporting via PB client
+

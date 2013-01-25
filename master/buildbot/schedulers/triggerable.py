@@ -13,24 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
+
 from twisted.python import failure
 from twisted.internet import defer
+from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
 
 class Triggerable(base.BaseScheduler):
+    implements(ITriggerableScheduler)
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+    def __init__(self, name, builderNames, properties={}, **kwargs):
+        base.BaseScheduler.__init__(self, name, builderNames, properties,
+                                    **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
 
-    def trigger(self, ssid, set_props=None):
-        """Trigger this scheduler with the given sourcestamp ID. Returns a
-        deferred that will fire when the buildset is finished."""
+    def trigger(self, sourcestamps = None, set_props=None):
+        """Trigger this scheduler with the optional given list of sourcestamps
+        Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
         props = Properties()
@@ -41,13 +46,11 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        if ssid:
-            d = self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
-                    properties=props)
-        else:
-            d = self.addBuildsetForLatest(reason=self.reason, properties=props)
+        d = self.addBuildsetForSourceStampSetDetails(self.reason,
+                                                sourcestamps, props)
         def setup_waiter((bsid,brids)):
-            self._waiters[bsid] = d = defer.Deferred()
+            d = defer.Deferred()
+            self._waiters[bsid] = (d, brids)
             self._updateWaiters()
             return d
         d.addCallback(setup_waiter)
@@ -62,11 +65,12 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d in self.waiters:
+            for d, brids in self._waiters.values():
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
         return base.BaseScheduler.stopService(self)
+
 
     def _updateWaiters(self):
         if self._waiters and not self._bsc_subscription:
@@ -83,8 +87,8 @@ class Triggerable(base.BaseScheduler):
 
         # pop this bsid from the waiters list, and potentially unsubscribe
         # from completion notifications
-        d = self._waiters.pop(bsid)
+        d, brids = self._waiters.pop(bsid)
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
-        d.callback(result)
+        d.callback((result, brids))

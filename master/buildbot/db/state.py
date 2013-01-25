@@ -21,30 +21,25 @@ from buildbot.db import base
 class _IdNotFoundError(Exception):
     pass # used internally
 
-class StateConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle maintaining arbitrary key/value state for
-    Buildbot objects.  Objects are identified by their (user-visible) name and
-    their class.  This allows e.g., a 'nightly_smoketest' object of class
-    NightlyScheduler to maintain its state even if it moves between masters,
-    but avoids cross-contaminating state between different classes.
+class ObjDict(dict):
+    pass
 
-    Note that the class is not interpreted literally, and can be any string
-    that will uniquely identify the class for the object; if classes are
-    renamed, they can continue to use the old names.
-    """
+class StateConnectorComponent(base.DBConnectorComponent):
+    # Documentation is in developer/database.rst
 
     def getObjectId(self, name, class_name):
-        """
-        Get the object ID for this combination of a name and a class.  This
-        will add a row to the 'objects' table if none exists already.
+        # defer to a cached method that only takes one parameter (a tuple)
+        return self._getObjectId((name, class_name)
+                ).addCallback(lambda objdict : objdict['id'])
 
-        @param name: name of the object
-        @param class_name: object class name
-        @returns: the objectid, via a Deferred.
-        """
+    @base.cached('objectids')
+    def _getObjectId(self, name_class_name_tuple):
+        name, class_name = name_class_name_tuple
         def thd(conn):
             objects_tbl = self.db.model.objects
+
+            self.check_length(objects_tbl.c.name, name)
+            self.check_length(objects_tbl.c.class_name, class_name)
 
             def select():
                 q = sa.select([ objects_tbl.c.id ],
@@ -67,36 +62,27 @@ class StateConnectorComponent(base.DBConnectorComponent):
             # then try selecting again.  We include an invocation of a hook
             # method to allow tests to exercise this particular behavior
             try:
-                return select()
+                return ObjDict(id=select())
             except _IdNotFoundError:
                 pass
 
             self._test_timing_hook(conn)
 
             try:
-                return insert()
-            except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
+                return ObjDict(id=insert())
+            except (sqlalchemy.exc.IntegrityError,
+                    sqlalchemy.exc.ProgrammingError):
                 pass
 
-            return select()
+            return ObjDict(id=select())
 
         return self.db.pool.do(thd)
 
     class Thunk: pass
     def getState(self, objectid, name, default=Thunk):
-        """
-        Get the state value for C{name} for the object with id C{objectid}.
-
-        @param objectid: objectid on which the state should be checked
-        @param name: name of the value to retrieve
-        @param default: (optional) value to return if C{name} is not present
-        @returns: state value via a Deferred
-        @raises KeyError: if C{name} is not present and no default is given
-        @raises TypeError: if JSON parsing fails
-        """
-
         def thd(conn):
             object_state_tbl = self.db.model.object_state
+
             q = sa.select([ object_state_tbl.c.value_json ],
                     whereclause=((object_state_tbl.c.objectid == objectid)
                                & (object_state_tbl.c.name == name)))
@@ -117,16 +103,6 @@ class StateConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def setState(self, objectid, name, value):
-        """
-        Set the state value for C{name} for the object with id C{objectid},
-        overwriting any existing value.
-
-        @param objectid: the objectid for which the state should be changed
-        @param name: the name of the value to change
-        @param value: the value to set - must be a JSONable object
-        @param returns: Deferred
-        @raises TypeError: if JSONification fails
-        """
         def thd(conn):
             object_state_tbl = self.db.model.object_state
 
@@ -134,6 +110,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 value_json = json.dumps(value)
             except:
                 raise TypeError("Error encoding JSON for %r" % (value,))
+
+            self.check_length(object_state_tbl.c.name, name)
 
             def update():
                 q = object_state_tbl.update(

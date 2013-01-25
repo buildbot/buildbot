@@ -20,7 +20,7 @@ Build #{{ b.getNumber() }}
 
   {{ current_step }}
   
-  {% if authz.advertiseAction('stopBuild') %}
+  {% if authz.advertiseAction('stopBuild', request) %}
     <h2>Stop Build</h2>
     {{ forms.stop_build(build_url+"/stop", authz, on_all=False, short=False, label='This Build') }}
   {% endif %}
@@ -36,44 +36,52 @@ Build #{{ b.getNumber() }}
   {% endif %}
 {% endif %}
 
-<h2>SourceStamp:</h2>
-
-<table class="info" width="100%">
-{% set ss_class = cycler('alt','') %}
-
-{% if ss.project %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|projectlink }}</td></tr>
+<h2>
+{% if sourcestamps|count == 1 %}
+SourceStamp:
+{% else %}
+SourceStamps:
 {% endif %}
+</h2>
 
-{% if ss.repository %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|repolink }}</td></tr>
-{% endif %}
+{% for ss in sourcestamps %}
+<h3>{{ ss.codebase }}</h3>
+    <table class="info" width="100%">
+    {% set ss_class = cycler('alt','') %}
 
-{% if ss.branch %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Branch</td><td>{{ ss.branch|e }}</td></tr>
-{% endif %}
+    {% if ss.project %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|projectlink }}</td></tr>
+    {% endif %}
 
-{% if ss.revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
-{% endif %}
+    {% if ss.repository %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|repolink }}</td></tr>
+    {% endif %}
 
-{% if got_revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision|revlink(ss.repository) }}</td></tr>
-{% endif %}
+    {% if ss.branch %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Branch</td><td>{{ ss.branch|e }}</td></tr>
+    {% endif %}
 
-{% if ss.patch %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Patch</td><td>YES</td></tr>
-{% endif %}
+    {% if ss.revision %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
+    {% endif %}
 
-{% if ss.changes %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Changes</td><td>see below</td></tr>
-{% endif %}
+    {% if got_revisions[ss.codebase] %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revisions[ss.codebase]|revlink(ss.repository) }}</td></tr>
+    {% endif %}
 
-{% if most_recent_rev_build %}
-  <tr class="{{ ss_class.next() }}"><td class="left" colspan="2">Build of most recent revision</td></tr>
-{% endif %}
+    {% if ss.patch %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Patch</td><td>YES</td></tr>
+    {% endif %}
 
-</table>
+    {% if ss.changes %}
+      <tr class="{{ ss_class.next() }}"><td class="left">Changes</td><td><a href="#changes-{{ ss.codebase }}">{{ ss.changes|count }} change{{ 's' if ss.changes|count > 1 else '' }}</a></td></tr>
+    {% endif %}
+
+    {% if not ss.branch and not ss.revision and not ss.patch and not ss.changes %}
+      <tr class="{{ ss_class.next() }}"><td class="left" colspan="2">Build of most recent revision</td></tr>
+    {% endif %}
+    </table>
+{% endfor %}
 
 {#
  # TODO: turn this into a table, or some other sort of definition-list
@@ -137,20 +145,53 @@ Build #{{ b.getNumber() }}
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
+{% if p.source != "Force Build Form" %}
   <tr class="{{ loop.cycle('alt', '') }}">
     <td class="left">{{ p.name|e }}</td>
-  {% if p.short_value %}
-    <td>{{ p.short_value|e }} .. [property value too long]</td>
-  {% else %}
-    <td>{{ p.value|e }}</td>
-  {% endif %}
+    {% if p.short_value %}
+        <td>{{ p.short_value|e }} .. [property value too long]</td>
+    {% else %}
+        {% if p.value is not mapping %}
+            <td>{{ p.value|e }}</td>
+        {% else %}
+            <td>
+                <table class="info" width="100%">
+                    {%- for key, value in p.value.items() recursive %}
+                        <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
+                    {% endfor %}
+                </table>
+            </td>
+        {% endif %}
+    {% endif %}
     <td>{{ p.source|e }}</td>
   </tr>
+{% endif %}
 {% endfor %}
+</table>
+<h2>Forced Build Properties:</h2>
+<table class="info" width="100%">
+<tr><th>Name</th><th>Label</th><th>Value</th></tr>
 
+{% for p in properties %}
+    {% if p.source == "Force Build Form" %}
+  <tr class="{{ loop.cycle('alt', '') }}">
+    <td class="left">{{ p.name|e }}</td>
+    <td class="left">
+    {% if p.label %}
+    {{ p.label }}
+    {% endif %}    
+    </td>
+    {% if p.text %}
+    <td><textarea readonly cols="{{p.cols}}" rows="{{p.rows}}">{{ p.text|e }}</textarea></td>
+    {% else %}
+    <td>{{ p.value|e }}</td>
+    {% endif %}
+  </tr>
+  {% endif %}    
+{% endfor %}
 </table>
 
-<h2>Blamelist:</h2>
+<h2>Responsible Users:</h2>
 
 {% if responsible_users %}
   <ol>
@@ -172,28 +213,31 @@ Build #{{ b.getNumber() }}
   <tr {{ 'class="alt"' if end else '' }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
-  {% if authz.advertiseAction('forceBuild') %}
+  {% if authz.advertiseAction('forceBuild', request) %}
     <h3>Resubmit Build:</h3>
-    {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, ss) }}
+    {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, sourcestamps[0]) }}
   {% endif %}
 
 </div>
 
 <br style="clear:both"/>
   
-{% if ss.changes %}
-<div class="column">
-  <h2>All Changes:</h2>
-  <ol>
-  {% for c in ss.changes %}
-    <li><h3>Change #{{ c.number }}</h3>
-      {{ change(c.asDict()) }}
-    </li>
-  {% else %}
-    <li>no changes</li>
-  {% endfor %}  
-  </ol>
-</div> 
+{% if has_changes %}
+    <div class="column">
+      <h2>All Changes:</h2>
+        {% for ss in sourcestamps %}
+            {% if ss.changes %}
+            <h3 id="changes-{{ ss.codebase }}"> {{ ss.codebase }}:</h3>
+            <ol>
+                  {% for c in ss.changes %}
+                    <li><h3>Change #{{ c.number }}</h3>
+                      {{ change(c.asDict()) }}
+                    </li>
+                  {% endfor %}
+            </ol>
+            {% endif %}
+        {% endfor %}
+    </div>
 {% endif %}
 
 {% endblock %}

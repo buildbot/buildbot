@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import time
 import sqlalchemy as sa
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from buildbot.db import pool
 from buildbot.test.util import db
 
@@ -46,24 +48,13 @@ class Basic(unittest.TestCase):
             rp = conn.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do(fail)
-        def eb(f):
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, sa.exc.OperationalError)
 
     def test_do_exception(self):
         def raise_something(conn):
             raise RuntimeError("oh noes")
         d = self.pool.do(raise_something)
-        def eb(f):
-            f.trap(RuntimeError) # make sure it gets the *right* exception
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, RuntimeError)
 
     def test_do_with_engine(self):
         def add(engine, addend1, addend2):
@@ -80,12 +71,7 @@ class Basic(unittest.TestCase):
             rp = engine.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do_with_engine(fail)
-        def eb(f):
-            pass
-        def cb(r):
-            self.fail("no exception propagated")
-        d.addCallbacks(cb, eb)
-        return d
+        return self.assertFailure(d, sa.exc.OperationalError)
 
     def test_persistence_across_invocations(self):
         # NOTE: this assumes that both methods are called with the same
@@ -103,6 +89,59 @@ class Basic(unittest.TestCase):
         d.addCallback( lambda r : self.pool.do_with_engine(insert_into_table))
         return d
 
+
+class Stress(unittest.TestCase):
+
+    def setUp(self):
+        setup_engine = sa.create_engine('sqlite:///test.sqlite')
+        setup_engine.execute("pragma journal_mode = wal")
+        setup_engine.execute("CREATE TABLE test (a integer, b integer)")
+
+        self.engine = sa.create_engine('sqlite:///test.sqlite')
+        self.engine.optimal_thread_pool_size = 2
+        self.pool = pool.DBThreadPool(self.engine)
+
+    def tearDown(self):
+        self.pool.shutdown()
+        os.unlink("test.sqlite")
+
+    @defer.inlineCallbacks
+    def test_inserts(self):
+        def write(conn):
+            trans = conn.begin()
+            conn.execute("INSERT INTO test VALUES (1, 1)")
+            time.sleep(31)
+            trans.commit()
+        d1 = self.pool.do(write)
+
+        def write2(conn):
+            trans = conn.begin()
+            conn.execute("INSERT INTO test VALUES (1, 1)")
+            trans.commit()
+        d2 = defer.Deferred()
+        d2.addCallback(lambda _ :
+            self.pool.do(write2))
+        reactor.callLater(0.1, d2.callback, None)
+
+        yield defer.DeferredList([ d1, d2 ])
+
+    # don't run this test, since it takes 30s
+    del test_inserts
+
+
+class BasicWithDebug(Basic):
+
+    # same thing, but with debug=True
+
+    def setUp(self):
+        pool.debug = True
+        return Basic.setUp(self)
+
+    def tearDown(self):
+        pool.debug = False
+        return Basic.tearDown(self)
+
+
 class Native(unittest.TestCase, db.RealDatabaseMixin):
 
     # similar tests, but using the BUILDBOT_TEST_DB_URL
@@ -118,9 +157,12 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         # try to delete the 'native_tests' table
         meta = sa.MetaData()
         native_tests = sa.Table("native_tests", meta)
-        native_tests.drop(bind=self.db_engine, checkfirst=True)
-        self.pool.shutdown()
-        return self.tearDownRealDatabase()
+        def thd(conn):
+            native_tests.drop(bind=self.db_engine, checkfirst=True)
+        d = self.pool.do(thd)
+        d.addCallback(lambda _ : self.pool.shutdown())
+        d.addCallback(lambda _ : self.tearDownRealDatabase())
+        return d
 
     def test_ddl_and_queries(self):
         meta = sa.MetaData()

@@ -24,11 +24,7 @@ class FakeTransport:
 
 class BuildmasterTimeoutError(Exception):
     pass
-class BuildslaveTimeoutError(Exception):
-    pass
 class ReconfigError(Exception):
-    pass
-class BuildSlaveDetectedError(Exception):
     pass
 
 class TailProcess(protocol.ProcessProtocol):
@@ -49,7 +45,6 @@ class LogWatcher(LineOnlyReceiver):
         self.transport = FakeTransport()
         self.pp = TailProcess()
         self.pp.lw = self
-        self.processtype = "buildmaster"
         self.timer = None
 
     def start(self):
@@ -77,10 +72,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def timeout(self):
         self.timer = None
-        if self.processtype == "buildmaster":
-            e = BuildmasterTimeoutError()
-        else:
-            e = BuildslaveTimeoutError()
+        e = BuildmasterTimeoutError()
         self.finished(Failure(e))
 
     def finished(self, results):
@@ -100,17 +92,19 @@ class LogWatcher(LineOnlyReceiver):
             return
         if "Log opened." in line:
             self.in_reconfig = True
-        if "loading configuration from" in line:
+        if "beginning configuration update" in line:
             self.in_reconfig = True
-        if "Creating BuildSlave" in line:
-            self.processtype = "buildslave"
 
         if self.in_reconfig:
             print line
 
         if "message from master: attached" in line:
             return self.finished("buildslave")
-        if "I will keep using the previous config file" in line:
+        if "reconfig aborted" in line or 'reconfig partially applied' in line:
+            return self.finished(Failure(ReconfigError()))
+        if "Server Shut Down" in line:
             return self.finished(Failure(ReconfigError()))
         if "configuration update complete" in line:
+            return self.finished("buildmaster")
+        if "BuildMaster is running" in line:
             return self.finished("buildmaster")

@@ -1,0 +1,203 @@
+Buildbot 0.7.6 was released 30 Sep 2007
+
+** Things You Need To Know
+
+*** 'buildbot upgrade-master'
+
+Each time you install a new version of Buildbot, you should run the new
+'buildbot upgrade-master' command on each of your pre-existing buildmasters.
+This will add files and fix (or at least detect) incompatibilities between
+your old config and the new code.
+
+*** new WebStatus page
+
+The Waterfall has been replaced by the more general WebStatus display,
+described below. WebStatus serves static files from a new public_html/
+directory that lives in the buildmaster's basedir. Files like index.html,
+buildbot.css, and robots.txt are served directly from that directory, so any
+modifications you wish to make should be made to those files. In particular,
+any custom CSS you've written should be copied into public_html/buildbot.css.
+The 'upgrade-master' command will populate this directory for you.
+
+The old Waterfall page is deprecated, but it should continue to work for
+another few releases. It is now a subclass of WebStatus which just replaces
+the default root URL with another copy of the /waterfall resource.
+
+*** Compatibility: Python-2.3 or newer, Twisted-2.0 or newer
+
+No compatiblity losses here, buildbot-0.7.6 is compatible with the same
+versions of python and twisted that 0.7.5 was.
+
+Buildbot is tested on a regular basis (http://buildbot.buildbot.net) against
+nearly a full matrix of Python-(2.3,2.4,2.5) * Twisted-(2.0,2.1,2.2,2.4,2.5).
+
+*** New Buildbot Home Page
+
+Buildbot has moved to a new Trac instance at http://buildbot.net/ , and all
+new bugs and tickets should be filed there. The old sourceforge bugs at
+http://buildbot.sf.net/ will slowly be migrated over. Mailing lists are still
+managed at sourceforge, and downloads are still available there.
+
+*** Changed/Deprecated master.cfg Keys and Classes
+
+c['sources'] (plural) has been replaced by c['change_source'] (singular).
+
+c['bots'] has been replaced by c['buildslaves'], and it expects a list of
+BuildSlave instances instead of tuples. See below for more details.
+
+The 'freshcvsmail' change source has been deprecated, and will be removed in
+the next release.
+
+The html.Waterfall status target has been deprecated, and replaced by
+html.WebStatus .
+
+** New Features
+
+*** WebStatus
+
+The new WebStatus display is a superset of the old Waterfall. It contains a
+waterfall as a sub-page, but it also contains pages with more compact
+representations of recent build status. The "one_line_per_build" page
+contains just that, and "one_box_per_builder" shows just the information from
+the top of the waterfall page (last-finished-build and current-activity).
+
+The initial page (when you hit the root of the web site) is served from
+index.html, and provides links to the Waterfall as well as the other pages.
+
+Most of these pages can be filtered by adding query arguments to the URL.
+Adding "?builder=XYZ" will cause the page to only show results for the given
+builder. Adding "?builder=XYZ&builder=ABC" will show results for either
+builder. "?branch=trunk" will limit the results to builds that involved code
+from the trunk.
+
+The /waterfall page has arguments to hide those annoying "buildslave
+connected" messages, to start and and at arbitrary times, and to auto-refresh
+at a chosen interval (with a hardcoded minimum of 15 seconds). It also has a
+"help" page with forms that will help you add all of these nifty filtering
+arguments.
+
+The recommended practice is to modify the index.html file to include links to
+the filtered pages that you find most useful.
+
+Note that WebStatus defaults to allowForce=False, meaning that the display
+will not offer or accept "Force Build" or "Stop Build" controls. (The old
+Waterfall defaults to allowForce=True).
+
+The new WebStatus pages try very hard to use only relative links, making life
+better when the Buildbot sits behind an HTTP reverse proxy.
+
+In addition, there is a rudimentary XMLRPC server run by the WebStatus
+object. It only has two methods so far, but it will acquire more in the
+future. The first customer of this is a project to add a buildbot plugin to
+Trac.
+
+*** BuildFactory.addStep(Step(args))
+
+BuildFactories can be set up either with a complete list of steps, or by
+calling the .addStep() method repeatedly. The preferred way to provide a step
+is by instantiating it, rather than giving a class/kwargs pair. This gives
+the BuildStep class a chance to examine the arguments (and complain about
+anything it doesn't like) while the config file is being read and problems
+are being logged. For example, the old-style:
+
+ from buildbot.process.factory import BuildFactory, s
+ steps = [s(CVS, cvsroot="blah", mode="copy"),
+          s(Compile, command=["make", "all"]),
+          s(Test, command=["make", "test"]),
+         ]
+ f = BuildFactory(steps)
+
+is now:
+
+ f = BuildFactory()
+ f.addStep( CVS(cvsroot="blah", mode="copy") )
+ f.addStep( Compile(command=["make", "all"]) )
+ f.addStep( Test(command=["make", "test"]) )
+
+Authors of BuildStep subclasses which override __init__ to add new arguments
+must register them with self.addFactoryArguments(**newargs) to make sure that
+those classes will work with this new style, otherwise the new arguments will
+be lost.
+
+Using class/kwargs pairs is deprecated, and will be removed in a future
+release.
+
+
+*** BuildSlave instances, max_builds=, notify_on_missing=
+
+Buildslave specification has changed a lot in this release. The old config:
+
+ c['bots'] = [ ("bot1name", "bot1passwd"),
+               ("bot2name", "bot2passwd") ]
+
+is now:
+
+ from buildbot.buildslave import BuildSlave
+ c['slaves'] = [ BuildSlave("bot1name", "bot1passwd"),
+                 BuildSlave("bot2name", "bot2passwd") ]
+
+This new form gives us the ability to add new controls. The first is
+"max_builds=", which imposes a concurrency limit that is like the usual
+SlaveLock, but gives the buildmaster the opportunity to find a different
+slave to run the build. (the buildslave is chosen before the SlaveLock is
+claimed, so pure SlaveLocks don't let you take full advantage of build
+farms).
+
+The other addition is "notify_on_missing=", which accepts an email address
+(or list of addresses), and sends a message when the buildslave has been
+disconnected for more than an hour (configurable with missing_timeout=). This
+may be useful when you expect that the buildslave hosts should be available
+most of the time, and want to investigate the reasons that it went offline.
+
+
+** Other Improvements
+
+The IRC bot has been refactored to make it easier to add instant-messaging
+status delivery in the future. The IM plugins are not yet written, though.
+
+When multiple buildslaves are available for a given build, one of them will
+be picked at random. In previous releases, the first one on the list was
+always picked. This helps to add a certain measure of load-balancing. More
+improvements will be made in the future.
+
+When the buildslave does a VC checkout step that requires clobbering the
+build directory (i.e. in all modes except for 'update'), the buildslave will
+first set the permissions on all build files to allow their deletion, before
+it attempts to delete them. This should fix some problems in which a build
+process left non-user-writable files lying around (frequently a result of
+enthusiastic unit tests).
+
+The BuildStep's workdir= argument can now accept a WithProperties()
+specification, allowing greater control over the workdir.
+
+Support for the 'Bazaar' version control system (/usr/bin/bzr) has been
+added, using the buildbot.steps.source.Bzr class. This is a replacement for
+the old 'Arch' (/usr/bin/tla and /usr/bin/baz) systems, which are still
+supported by Buildbot with the source.Arch and source.Bazaar classes,
+respectively. Unfortunately the old baz system claimed the 'Bazaar' classname
+early, so the new system must use source.Bzr instead of the desired
+source.Bazaar . A future release might change this.
+
+A rudimentary Gnome Panel applet is provided in contrib/bb_applet.py, which
+provides 'buildbot statusgui' -like colored status boxes inside the panel.
+Installing it is a bit tricky, though.
+
+The 'buildbot try' command now accepts a '--diff=foo.patch' argument, to let
+you provide a pre-computed patch. This makes it easier to test out patches
+that you've looked over for safety, without first applying them to your local
+source tree.
+
+A new Mercurial change source was added, hg_buildbot.py, which runs as an
+in-process post-commit hook. This gives us access to much more information
+about the change, as well as being much faster.
+
+The email-based changesource have been refactored, to make it easier to write
+new mail parsers. A parser for the SVN "commit-email.pl" script has been
+added.
+
+** Bugs Fixed
+
+Far too many to count. Please see
+http://buildbot.net/trac/query?status=closed&milestone=0.7.6 for a partial
+list of tickets closed for this release, and the ChangeLog for a complete
+list of all changes since 0.7.5 .

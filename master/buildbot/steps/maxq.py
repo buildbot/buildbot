@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.event import Event
 from buildbot.status.results import SUCCESS, FAILURE
+from buildbot import config
 
 class MaxQ(ShellCommand):
     flunkOnFailure = True
@@ -23,38 +23,24 @@ class MaxQ(ShellCommand):
 
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
-            raise TypeError("please pass testdir")
+            config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
-        self.addFactoryArguments(testdir=testdir)
 
-    def startStatus(self):
-        evt = Event("yellow", ['running', 'maxq', 'tests'],
-                    files={'log': self.log})
-        self.setCurrentActivity(evt)
+    def commandComplete(self, cmd):
+        output = cmd.logs['stdio'].getText()
+        self.failures = output.count('\nTEST FAILURE:')
 
-
-    def finished(self, rc):
-        self.failures = 0
-        if rc:
+    def evaluateCommand(self, cmd):
+        # treat a nonzero exit status as a failure, if no other failures are
+        # detected
+        if not self.failures and cmd.didFail():
             self.failures = 1
-        output = self.log.getAll()
-        self.failures += output.count('\nTEST FAILURE:')
-
-        result = (SUCCESS, ['maxq'])
-
         if self.failures:
-            result = (FAILURE, [str(self.failures), 'maxq', 'failures'])
+            return FAILURE
+        return SUCCESS
 
-        return self.stepComplete(result)
-
-    def finishStatus(self, result):
+    def getText(self, cmd, results):
         if self.failures:
-            text = ["maxq", "failed"]
-        else:
-            text = ['maxq', 'tests']
-        self.updateCurrentActivity(text=text)
-        self.finishStatusSummary()
-        self.finishCurrentActivity()
-
-
+            return [ str(self.failures), 'maxq', 'failures' ]
+        return ['maxq', 'tests']

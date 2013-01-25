@@ -83,6 +83,7 @@ def poll_changes(remote):
     changes = poller.get_changes()
     for change in changes:
         print change["who"], "\n *", "\n * ".join(change["files"])
+        change['src'] = 'cvs'
         remote.callRemote('addChange', change).addErrback(error)
     print
     reactor.callLater(60, poll_changes, remote)

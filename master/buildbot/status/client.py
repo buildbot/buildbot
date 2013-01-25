@@ -16,7 +16,6 @@
 
 from twisted.spread import pb
 from twisted.python import components, log as twlog
-from twisted.internet import reactor
 from twisted.application import strports
 from twisted.cred import portal, checkers
 
@@ -24,6 +23,7 @@ from buildbot import interfaces
 from zope.interface import Interface, implements
 from buildbot.status import logfile, base
 from buildbot.changes import changes
+from buildbot.util.eventual import eventually
 
 class IRemote(Interface):
     pass
@@ -58,7 +58,7 @@ class RemoteBuildSet(pb.Referenceable):
         def add_remote(buildrequests):
             for k,v in buildrequests.iteritems():
                 buildrequests[k] = IRemote(v)
-            return buildrequests
+            return buildrequests.items()
         d.addCallback(add_remote)
         return d
 
@@ -67,7 +67,7 @@ class RemoteBuildSet(pb.Referenceable):
 
     def remote_waitUntilFinished(self):
         d = self.b.waitUntilFinished()
-        d.addCallback(lambda res: self)
+        d.addCallback(makeRemote)
         return d
 
     def remote_getResults(self):
@@ -115,6 +115,8 @@ components.registerAdapter(RemoteBuilder,
 class RemoteBuildRequest(pb.Referenceable):
     def __init__(self, buildreq):
         self.b = buildreq
+        # mapping of observers (RemoteReference instances) to local callable
+        # objects that have been passed to BuildRequestStatus.subscribe
         self.observers = []
 
     def remote_getSourceStamp(self):
@@ -128,22 +130,20 @@ class RemoteBuildRequest(pb.Referenceable):
         """The observer's remote_newbuild method will be called (with two
         arguments: the RemoteBuild object, and our builderName) for each new
         Build that is created to handle this BuildRequest."""
-        self.observers.append(observer)
         def send(bs):
             d = observer.callRemote("newbuild",
                                     IRemote(bs), self.b.getBuilderName())
-            d.addErrback(lambda err: None)
-        reactor.callLater(0, self.b.subscribe, send)
+            d.addErrback(twlog.err,
+                    "while calling client-side remote_newbuild")
+        self.observers.append((observer, send))
+        self.b.subscribe(send)
 
     def remote_unsubscribe(self, observer):
-        # PB (well, at least oldpb) doesn't re-use RemoteReference instances,
-        # so sending the same object across the wire twice will result in two
-        # separate objects that compare as equal ('a is not b' and 'a == b').
-        # That means we can't use a simple 'self.observers.remove(observer)'
-        # here.
-        for o in self.observers:
-            if o == observer:
-                self.observers.remove(o)
+        for i, (obs, send) in enumerate(self.observers):
+            if obs == observer:
+                del self.observers[i]
+                self.b.unsubscribe(send)
+                break
 
 components.registerAdapter(RemoteBuildRequest,
                            interfaces.IBuildRequestStatus, IRemote)    
@@ -164,6 +164,9 @@ class RemoteBuild(pb.Referenceable):
 
     def remote_getChanges(self):
         return [IRemote(c) for c in self.b.getChanges()]
+
+    def remote_getRevisions(self):
+        return self.b.getRevisions()
 
     def remote_getResponsibleUsers(self):
         return self.b.getResponsibleUsers()
@@ -415,7 +418,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         self.subscribed_to.append(self.status)
         # wait a moment before subscribing, so the new-builder messages
         # won't appear before this remote method finishes
-        reactor.callLater(0, self.status.subscribe, self)
+        eventually(self.status.subscribe, self)
         return None
 
     def perspective_unsubscribe(self):
@@ -573,10 +576,7 @@ class PBListener(base.StatusReceiverMultiService):
 
     def setServiceParent(self, parent):
         base.StatusReceiverMultiService.setServiceParent(self, parent)
-        self.setup()
-
-    def setup(self):
-        self.status = self.parent.getStatus()
+        self.status = parent
 
     def requestAvatar(self, avatarID, mind, interface):
         assert interface == pb.IPerspective

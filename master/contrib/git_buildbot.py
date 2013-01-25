@@ -35,25 +35,36 @@ from twisted.internet import reactor, defer
 
 from optparse import OptionParser
 
-# Modify this to fit your setup, or pass in --master server:host on the
+# Modify this to fit your setup, or pass in --master server:port on the
 # command line
 
 master = "localhost:9989"
 
-# When sending the notification, send this category iff
+# When sending the notification, send this category if (and only if)
 # it's set (via --category)
 
 category = None
 
-# When sending the notification, send this repository iff
+# When sending the notification, send this repository if (and only if)
 # it's set (via --repository)
 
 repository = None
 
-# When sending the notification, send this project iff
+# When sending the notification, send this project if (and only if)
 # it's set (via --project)
 
 project = None
+
+# When sending the notification, send this codebase.  If this is None, no
+# codebase will be sent.  This can also be set via --project
+
+codebase = None
+
+# Username portion of PB login credentials to send the changes to the master
+username = "change"
+
+# Password portion of PB login credentials to send the changes to the master
+auth = "changepw"
 
 # When converting strings to unicode, assume this encoding. 
 # (set with --encoding)
@@ -72,13 +83,14 @@ def connectFailed(error):
     return error
 
 
-def addChanges(remote, changei):
+def addChanges(remote, changei, src='git'):
     logging.debug("addChanges %s, %s" % (repr(remote), repr(changei)))
     def addChange(c):
         logging.info("New revision: %s" % c['revision'][:8])
         for key, value in c.iteritems():
             logging.debug("  %s: %s" % (key, value))
 
+        c['src'] = src
         d = remote.callRemote('addChange', c)
         return d
 
@@ -111,11 +123,15 @@ def grab_commit_info(c, rev):
     f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
 
     files = []
+    comments = []
 
     while True:
         line = f.readline()
         if not line:
             break
+
+        if line.startswith(4*' '):
+            comments.append(line[4:])
 
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
@@ -131,6 +147,7 @@ def grab_commit_info(c, rev):
         if re.match(r"^Merge: .*$", line):
             files.append('merge')
 
+    c['comments'] = ''.join(comments)
     c['files'] = files
     status = f.close()
     if status:
@@ -147,7 +164,6 @@ def gen_changes(input, branch):
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
-             'comments': unicode(m.group(2), encoding=encoding),
              'branch': unicode(branch, encoding=encoding),
         }
 
@@ -159,6 +175,9 @@ def gen_changes(input, branch):
 
         if project:
             c['project'] = unicode(project, encoding=encoding)
+
+        if codebase:
+            c['codebase'] = unicode(codebase, encoding=encoding)
 
         grab_commit_info(c, m.group(1))
         changes.append(c)
@@ -231,6 +250,9 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         if project:
             c['project'] = unicode(project, encoding=encoding)
 
+        if codebase:
+            c['codebase'] = unicode(codebase, encoding=encoding)
+
         if files:
             c['files'] = files
             changes.append(c)
@@ -286,7 +308,7 @@ def process_changes():
     port = int(port)
 
     f = pb.PBClientFactory()
-    d = f.login(credentials.UsernamePassword("change", "changepw"))
+    d = f.login(credentials.UsernamePassword(username, auth))
     reactor.connectTCP(host, port, f)
 
     d.addErrback(connectFailed)
@@ -312,11 +334,22 @@ def parse_options():
                       type="string", help="Git repository URL to send.")
     parser.add_option("-p", "--project", action="store",
                       type="string", help="Project to send.")
+    parser.add_option("--codebase", action="store",
+                      type="string", help="Codebase to send.")
     encoding_help = ("Encoding to use when converting strings to "
                      "unicode. Default is %(encoding)s." % 
                      { "encoding" : encoding })
     parser.add_option("-e", "--encoding", action="store", type="string", 
                       help=encoding_help)
+    username_help = ("Username used in PB connection auth, defaults to "
+                     "%(username)s." % { "username" : username })
+    parser.add_option("-u", "--username", action="store", type="string",
+                      help=username_help)
+    auth_help = ("Password used in PB connection auth, defaults to "
+                     "%(auth)s." % { "auth" : auth })
+    # 'a' instead of 'p' due to collisions with the project short option
+    parser.add_option("-a", "--auth", action="store", type="string",
+                      help=auth_help)
     options, args = parser.parse_args()
     return options
 
@@ -356,6 +389,15 @@ try:
 
     if options.project:
         project = options.project
+
+    if options.codebase:
+        codebase = options.codebase
+
+    if options.username:
+        username = options.username
+
+    if options.auth:
+        auth = options.auth
 
     if options.encoding:
         encoding = options.encoding

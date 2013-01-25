@@ -46,7 +46,7 @@ class BuildStepStatus(styles.Versioned):
     # corresponding BuildStep has started.
     implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
 
-    persistenceVersion = 3
+    persistenceVersion = 4
     persistenceForgets = ( 'wasUpgraded', )
 
     started = None
@@ -60,11 +60,13 @@ class BuildStepStatus(styles.Versioned):
     finishedWatchers = []
     statistics = {}
     step_number = None
+    hidden = False
 
-    def __init__(self, parent, step_number):
+    def __init__(self, parent, master, step_number):
         assert interfaces.IBuildStatus(parent)
         self.build = parent
         self.step_number = step_number
+        self.hidden = False
         self.logs = []
         self.urls = {}
         self.watchers = []
@@ -72,6 +74,8 @@ class BuildStepStatus(styles.Versioned):
         self.finishedWatchers = []
         self.statistics = {}
         self.skipped = False
+
+        self.master = master
 
         self.waitingForLocks = False
 
@@ -112,6 +116,9 @@ class BuildStepStatus(styles.Versioned):
 
     def isFinished(self):
         return (self.finished is not None)
+
+    def isHidden(self):
+        return self.hidden
 
     def waitUntilFinished(self):
         if self.finished:
@@ -168,6 +175,9 @@ class BuildStepStatus(styles.Versioned):
         """
         return self.statistics.get(name, default)
 
+    def getStatistics(self):
+        return self.statistics.copy()
+
     # subscription interface
 
     def subscribe(self, receiver, updateInterval=10):
@@ -207,6 +217,9 @@ class BuildStepStatus(styles.Versioned):
     def setProgress(self, stepprogress):
         self.progress = stepprogress
 
+    def setHidden(self, hidden):
+        self.hidden = hidden
+
     def stepStarted(self):
         self.started = util.now()
         if self.build:
@@ -216,9 +229,6 @@ class BuildStepStatus(styles.Versioned):
         assert self.started # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = LogFile(self, name, logfilename)
-        log.logMaxSize = self.build.builder.logMaxSize
-        log.logMaxTailSize = self.build.builder.logMaxTailSize
-        log.compressMethod = self.build.builder.logCompressionMethod
         self.logs.append(log)
         for w in self.watchers:
             receiver = w.logStarted(self.build, self, log)
@@ -267,7 +277,7 @@ class BuildStepStatus(styles.Versioned):
         self.finished = util.now()
         self.results = results
         cld = [] # deferreds for log compression
-        logCompressionLimit = self.build.builder.logCompressionLimit
+        logCompressionLimit = self.master.config.logCompressionLimit
         for loog in self.logs:
             if not loog.isFinished():
                 loog.finish()
@@ -312,6 +322,7 @@ class BuildStepStatus(styles.Versioned):
         del d['watchers']
         del d['finishedWatchers']
         del d['updates']
+        del d['master']
         return d
 
     def __setstate__(self, d):
@@ -319,11 +330,16 @@ class BuildStepStatus(styles.Versioned):
         # self.build must be filled in by our parent
 
         # point the logs to this object
-        for loog in self.logs:
-            loog.step = self
         self.watchers = []
         self.finishedWatchers = []
         self.updates = {}
+
+    def setProcessObjects(self, build, master):
+        self.build = build
+        self.master = master
+        for loog in self.logs:
+            loog.step = self
+            loog.master = master
 
     def upgradeToVersion1(self):
         if not hasattr(self, "urls"):
@@ -338,6 +354,11 @@ class BuildStepStatus(styles.Versioned):
     def upgradeToVersion3(self):
         if not hasattr(self, "step_number"):
             self.step_number = 0
+        self.wasUpgraded = True
+
+    def upgradeToVersion4(self):
+        if not hasattr(self, "hidden"):
+            self.hidden = False
         self.wasUpgraded = True
 
     def asDict(self):
@@ -356,6 +377,7 @@ class BuildStepStatus(styles.Versioned):
         result['eta'] = self.getETA()
         result['urls'] = self.getURLs()
         result['step_number'] = self.step_number
+        result['hidden'] = self.hidden
         result['logs'] = [[l.getName(),
             self.build.builder.status.getURLForThing(l)]
                 for l in self.getLogs()]

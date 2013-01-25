@@ -20,18 +20,19 @@ import sys
 import shutil
 
 from zope.interface import implements
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, threads, defer
 from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand
 from buildslave import runprocess
 from buildslave.exceptions import AbandonChain
 from buildslave.commands import utils
+from buildslave import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.12"
+command_version = "2.15"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -60,6 +61,9 @@ command_version = "2.12"
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
 #  >= 2.11: Arch, Bazaar, and Monotone removed
 #  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
+#  >= 2.13: SlaveFileUploadCommand supports option 'keepstamp'
+#  >= 2.14: RemoveDirectory can delete multiple directories
+#  >= 2.15: 'interruptSignal' option is added to SlaveShellCommand
 
 class Command:
     implements(ISlaveCommand)
@@ -129,6 +133,7 @@ class Command:
         self.builder = builder
         self.stepId = stepId # just for logging
         self.args = args
+        self.startTime = None
         self.setup(args)
 
     def setup(self, args):
@@ -137,8 +142,10 @@ class Command:
 
     def doStart(self):
         self.running = True
+        self.startTime = util.now(self._reactor)
         d = defer.maybeDeferred(self.start)
         def commandComplete(res):
+            self.sendStatus({"elapsed": util.now(self._reactor) - self.startTime})
             self.running = False
             return res
         d.addBoth(commandComplete)
@@ -246,6 +253,7 @@ class SourceBaseCommand(Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
+        self.logEnviron = args.get('logEnviron',True)
         self._commandPaths = {}
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
@@ -468,34 +476,20 @@ class SourceBaseCommand(Command):
         return res
 
     def doClobber(self, dummy, dirname, chmodDone=False):
-        # TODO: remove the old tree in the background
-##         workdir = os.path.join(self.builder.basedir, self.workdir)
-##         deaddir = self.workdir + ".deleting"
-##         if os.path.isdir(workdir):
-##             try:
-##                 os.rename(workdir, deaddir)
-##                 # might fail if deaddir already exists: previous deletion
-##                 # hasn't finished yet
-##                 # start the deletion in the background
-##                 # TODO: there was a solaris/NetApp/NFS problem where a
-##                 # process that was still running out of the directory we're
-##                 # trying to delete could prevent the rm-rf from working. I
-##                 # think it stalled the rm, but maybe it just died with
-##                 # permission issues. Try to detect this.
-##                 os.commands("rm -rf %s &" % deaddir)
-##             except:
-##                 # fall back to sequential delete-then-checkout
-##                 pass
         d = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
-            # if we're running on w32, use rmtree instead. It will block,
-            # but hopefully it won't take too long.
-            utils.rmdirRecursive(d)
-            return defer.succeed(0)
+            d = threads.deferToThread(utils.rmdirRecursive, d)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            return d
         command = ["rm", "-rf", d]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -526,7 +520,7 @@ class SourceBaseCommand(Command):
                                 '-exec', 'chmod', 'u+rwx', '{}', ';' ]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         d = c.start()
@@ -539,12 +533,14 @@ class SourceBaseCommand(Command):
         fromdir = os.path.join(self.builder.basedir, self.srcdir)
         todir = os.path.join(self.builder.basedir, self.workdir)
         if runtime.platformType != "posix":
-            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
-            "we're not going to try to execute cp in a subprocess, but instead "
-            "use shutil.copytree(), which will block until it is complete.  "
-            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
-            shutil.copytree(fromdir, todir)
-            return defer.succeed(0)
+            d = threads.deferToThread(shutil.copytree, fromdir, todir)
+            def cb(_):
+                return 0 # rc=0
+            def eb(f):
+                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
+                return -1 # rc=-1
+            d.addCallbacks(cb, eb)
+            return d
 
         if not os.path.exists(os.path.dirname(todir)):
             os.makedirs(os.path.dirname(todir))
@@ -555,7 +551,7 @@ class SourceBaseCommand(Command):
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
+                         logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -593,7 +589,8 @@ class SourceBaseCommand(Command):
         # now apply the patch
         c = runprocess.RunProcess(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
+                         maxTime=self.maxTime, logEnviron=self.logEnviron,
+                         usePTY=False)
         self.command = c
         d = c.start()
         

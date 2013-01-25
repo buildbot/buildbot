@@ -1,0 +1,83 @@
+Buildbot 0.3.3 was released 21 May 2003
+
+** packaging changes
+
+*** include doc/examples in the release. Oops again.
+
+** network changes
+
+*** add keepalives to deal with NAT boxes
+
+Some NAT boxes drop port mappings if the TCP connection looks idle for too
+long (maybe 30 minutes?). Add application-level keepalives (dummy commands
+sent from slave to master every 10 minutes) to appease the NAT box and keep
+our connection alive. Enable this with --keepalive in the slave mktap
+command line. Check the README for more details.
+
+** UI changes
+
+*** allow slaves to trigger any build that they host
+
+Added an internal function to ask the buildmaster to start one of their
+builds. Must be triggered with a debugger or manhole on the slave side for
+now, will add a better UI later.
+
+*** allow web page viewers to trigger any build
+
+Added a button to the per-build page (linked by the build names on the third
+row of the waterfall page) to allow viewers to manually trigger builds.
+There is a field for them to indicate who they are and why they are
+triggering the build. It is possible to abuse this, but for now the benefits
+outweigh the damage that could be done (worst case, someone can make your
+machine run builds continuously).
+
+** generic buildprocess changes
+
+*** don't queue multiple builds for offline slaves
+
+If a slave is not online when a build is ready to run, that build is queued
+so the slave will run it when it next connects. However, the buildmaster
+used to queue every such build, so the poor slave machine would be subject
+to tens or hundreds of builds in a row when they finally did come online.
+The buildmaster has been changed to merge these multiple builds into a
+single one.
+
+*** bump ShellCommand default timeout to 20 minutes
+
+Used for testing out the win32 twisted builder. I will probably revert this
+in the next relese.
+
+*** split args in ShellCommand ourselves instead of using /bin/sh
+
+This should remove the need for /bin/sh on the slave side, improving the
+chances that the buildslave can run on win32.
+
+*** add configureEnv argument to Configure step, pass env dict to slave
+
+Allows build processes to do things like 'CFLAGS=-O0 ./configure' without
+using /bin/sh to set the environment variable
+
+** Twisted buildprocess changes
+
+*** warn instead of flunk the build when cReactor or qtreactor tests fail
+
+These two always fail. For now, downgrade those failures to a warning
+(orange box instead of red).
+
+*** don't use 'clobber' on remote builds
+
+Builds that run on remote machines (freebsd, OS-X) now use 'cvs update'
+instead of clobbering their trees and doing a fresh checkout. The multiple
+simultaneous CVS checkouts were causing a strain on Glyph's upstream
+bandwidth.
+
+*** use trial --testmodule instead of our own test-case-name grepper
+
+The Twisted coding/testing convention has developers put 'test-case-name'
+tags (emacs local variables, actually) in source files to indicate which
+test cases should be run to exercise that code. Twisted's unit-test
+framework just acquired an argument to look for these tags itself. Use that
+instead of the extra FindUnitTestsForFiles build step we were doing before.
+Removes a good bit of code from buildbot and into Twisted where it really
+belongs.
+

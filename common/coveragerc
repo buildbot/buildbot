@@ -32,3 +32,4 @@ omit =
     */test/*
     # templates cause coverage errors
     */templates/*
+    master/buildbot/scripts/buildbot_tac.tmpl

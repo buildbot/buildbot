@@ -1,0 +1,93 @@
+Buildbot 0.6.5 was released 18 May 2005
+
+** deprecated config keys removed
+
+The 'webPortnum', 'webPathname', 'irc', and 'manholePort' config-file keys,
+which were deprecated in the previous release, have now been removed. In
+addition, Builders must now always be configured with dictionaries: the
+support for configuring them with tuples has been removed.
+
+** master/slave creation and startup changed
+
+The buildbot no longer uses .tap files to store serialized representations of
+the buildmaster/buildslave applications. Instead, this release now uses .tac
+files, which are human-readable scripts that create new instances (rather
+than .tap files, which were pickles of pre-created instances). 'mktap
+buildbot' is gone.
+
+You will need to update your buildbot directories to handle this. The
+procedure is the same as creating a new buildmaster or buildslave: use
+'buildbot master BASEDIR' or 'buildbot slave BASEDIR ARGS..'. This will
+create a 'buildbot.tac' file in the target directory. The 'buildbot start
+BASEDIR' will use twistd to start the application.
+
+The 'buildbot start' command now looks for a Makefile.buildbot, and if it
+finds one (and /usr/bin/make exists), it will use it to start the application
+instead of calling twistd directly. This allows you to customize startup,
+perhaps by adding environment variables. The setup commands create a sample
+file in Makefile.sample, but you must copy this to Makefile.buildbot to
+actually use it. The previous release looked for a bare 'Makefile', and also
+installed a 'Makefile', so you were always using the customized approach,
+even if you didn't ask for it. That old Makefile launched the .tap file, so
+changing names was also necessary to make sure that the new 'buildbot start'
+doesn't try to run the old .tap file.
+
+'buildbot stop' now uses os.kill instead of spawning an external process,
+making it more likely to work under windows. It waits up to 5 seconds for the
+daemon to go away, so you can now do 'buildbot stop BASEDIR; buildbot start
+BASEDIR' with less risk of launching the new daemon before the old one has
+fully shut down. Likewise, 'buildbot start' imports twistd's internals
+directly instead of spawning an external copy, so it should work better under
+windows.
+
+** new documentation
+
+All of the old Lore-based documents were converted into a new Texinfo-format
+manual, and considerable new text was added to describe the installation
+process. The docs are not yet complete, but they're slowly shaping up to form
+a proper user's manual.
+
+** new features
+
+Arch checkouts can now use precise revision stamps instead of always using
+the latest revision. A separate Source step for using Bazaar (an alternative
+Arch client) instead of 'tla' was added. A Source step for Cogito (the new
+linux kernel VC system) was contributed by Brandon Philips. All Source steps
+now accept a retry= argument to indicate that failing VC checkouts should be
+retried a few times (SF#1200395), note that this requires an updated
+buildslave.
+
+The 'buildbot sendchange' command was added, to be used in VC hook scripts to
+send changes at a pb.PBChangeSource . contrib/arch_buildbot.py was added to
+use this tool; it should be installed using the 'Arch meta hook' scheme.
+
+Changes can now accept a branch= parameter, and Builders have an
+isBranchImportant() test that acts like isFileImportant(). Thanks to Thomas
+Vander Stichele. Note: I renamed his tag= to branch=, in anticipation of an
+upcoming feature to build specific branches. "tag" seemed too CVS-centric.
+
+LogFiles have been rewritten to stream the incoming data directly to disk
+rather than keeping a copy in memory all the time (SF#1200392). This
+drastically reduces the buildmaster's memory requirements and makes 100MB+
+log files feasible. The log files are stored next to the serialized Builds,
+in files like BASEDIR/builder-dir/12-log-compile-output, so you'll want a
+cron job to delete old ones just like you do with old Builds. Old-style
+Builds from 0.6.4 and earlier are converted when they are first read, so the
+first load of the Waterfall display after updating to this release may take
+quite some time.
+
+** build process updates
+
+BuildSteps can now return a status of EXCEPTION, which terminates the build
+right away. This allows exceptions to be caught right away, but still make
+sure the build stops quickly.
+
+** bug fixes
+
+Some more windows incompatibilities were fixed. The test suite now has two
+failing tests remaining, both of which appear to be Twisted issues that
+should not affect normal operation.
+
+The test suite no longer raises any deprecation warnings when run against
+twisted-2.0 (except for the ones which come from Twisted itself).
+

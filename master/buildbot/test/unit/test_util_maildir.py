@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 from twisted.trial import unittest
 from twisted.internet import defer
@@ -30,7 +32,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         self.svc = None
 
     def tearDown(self):
-        if self.svc:
+        if self.svc and self.svc.running:
             self.svc.stopService()
         self.tearDownDirs()
 
@@ -52,7 +54,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         def add_msg(_):
             tmpfile = os.path.join(self.tmpdir, "newmsg")
             newfile = os.path.join(self.newdir, "newmsg")
-            open(tmpfile, "w")
+            open(tmpfile, "w").close()
             os.rename(tmpfile, newfile)
         d.addCallback(add_msg)
         def trigger(_):
@@ -63,3 +65,14 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             self.assertEqual(messagesReceived, [ 'newmsg' ])
         d.addCallback(check_nonempty)
         return d
+
+    def test_moveToCurDir(self):
+        self.svc = maildir.MaildirService(self.maildir)
+        tmpfile = os.path.join(self.tmpdir, "newmsg")
+        newfile = os.path.join(self.newdir, "newmsg")
+        open(tmpfile, "w").close()
+        os.rename(tmpfile, newfile)
+        self.svc.moveToCurDir("newmsg")
+        self.assertEqual([ os.path.exists(os.path.join(d, "newmsg"))
+                           for d in (self.newdir, self.curdir, self.tmpdir) ],
+                         [ False, True, False ])

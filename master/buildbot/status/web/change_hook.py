@@ -19,7 +19,7 @@
 # but "the rest" is pretty minimal
 
 import re
-from twisted.web import resource
+from twisted.web import resource, server
 from twisted.python.reflect import namedModule
 from twisted.python import log
 from twisted.internet import defer
@@ -36,6 +36,7 @@ class ChangeHookResource(resource.Resource):
         configuration options to the dialect.
         """
         self.dialects = dialects
+        self.request_dialect = None
     
     def getChild(self, name, request):
         return self
@@ -58,19 +59,31 @@ class ChangeHookResource(resource.Resource):
         """
 
         try:
-            changes = self.getChanges( request )
+            changes, src = self.getChanges( request )
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
-            return defer.succeed(err.args[0])
+            return err.args[0]
+        except Exception, e:
+            log.err(e, "processing changes from web hook")
+            msg = "Error processing changes."
+            request.setResponseCode(500, msg)
+            return msg
 
         log.msg("Payload: " + str(request.args))
         
         if not changes:
             log.msg("No changes found")
-            return defer.succeed("no changes found")
-        d = self.submitChanges( changes, request )
-        d.addCallback(lambda _ : "OK")
-        return d
+            return "no changes found"
+        d = self.submitChanges( changes, request, src )
+        def ok(_):
+            request.setResponseCode(202)
+            request.finish()
+        def err(why):
+            log.err(why, "adding changes from web hook")
+            request.setResponseCode(500)
+            request.finish()
+        d.addCallbacks(ok, err)
+        return server.NOT_DONE_YET
 
     
     def getChanges(self, request):
@@ -93,6 +106,7 @@ class ChangeHookResource(resource.Resource):
             raise ValueError("URI doesn't match change_hook regex: %s" % request.uri)
         
         changes = []
+        src = None
         
         # Was there a dialect provided?
         if uriRE.group(1):
@@ -103,22 +117,20 @@ class ChangeHookResource(resource.Resource):
         if dialect in self.dialects.keys():
             log.msg("Attempting to load module buildbot.status.web.hooks." + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
-            changes = tempModule.getChanges(request,self.dialects[dialect])
+            changes, src = tempModule.getChanges(request,self.dialects[dialect])
             log.msg("Got the following changes %s" % changes)
-
+            self.request_dialect = dialect
         else:
             m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
             log.msg(m)
             log.msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
             raise ValueError(m)
 
-        return changes
+        return (changes, src)
                 
-    @defer.deferredGenerator
-    def submitChanges(self, changes, request):
+    @defer.inlineCallbacks
+    def submitChanges(self, changes, request, src):
         master = request.site.buildbot_service.master
         for chdict in changes:
-            wfd = defer.waitForDeferred(master.addChange(**chdict))
-            yield wfd
-            change = wfd.getResult()
+            change = yield master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

@@ -19,19 +19,20 @@ import os, weakref
 from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
+from twisted.internet import defer
 from twisted.web import server, distrib, static
 from twisted.spread import pb
 from twisted.web.util import Redirect
-
+from buildbot import config
 from buildbot.interfaces import IStatusReceiver
-
 from buildbot.status.web.base import StaticFile, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.olpb import OneLinePerBuild
-from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
+from buildbot.status.web.grid import GridStatusResource
+from buildbot.status.web.grid import TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
@@ -39,8 +40,9 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
-from buildbot.status.web.auth import AuthFailResource
+from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginResource, LogoutResource
 from buildbot.status.web.root import RootPage
+from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
@@ -147,7 +149,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook_dialects = {}, provide_feeds=None):
+                 change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -265,6 +267,10 @@ class WebStatus(service.MultiService):
                               Otherwise, a dictionary of strings of
                               the type of feeds provided.  Current
                               possibilities are "atom", "json", and "rss"
+
+        @type  jinja_loaders: None or list
+        @param jinja_loaders: If not empty, a list of additional Jinja2 loader
+                              objects to search for templates.
         """
 
         service.MultiService.__init__(self)
@@ -279,17 +285,21 @@ class WebStatus(service.MultiService):
         self.distrib_port = distrib_port
         self.num_events = num_events
         if num_events_max:
-            assert num_events_max >= num_events
+            if num_events_max < num_events:
+                config.error(
+                    "num_events_max must be greater than num_events")
             self.num_events_max = num_events_max
         self.public_html = public_html
 
         # make up an authz if allowForce was given
         if authz:
             if allowForce is not None:
-                raise ValueError("cannot use both allowForce and authz parameters")
+                config.error(
+                    "cannot use both allowForce and authz parameters")
             if auth:
-                raise ValueError("cannot use both auth and authz parameters (pass "
-                                 "auth as an Authz parameter)")
+                config.error(
+                    "cannot use both auth and authz parameters (pass " +
+                    "auth as an Authz parameter)")
         else:
             # invent an authz
             if allowForce and auth:
@@ -309,6 +319,10 @@ class WebStatus(service.MultiService):
         # If we were given a site object, go ahead and use it. (if not, we add one later)
         self.site = site
 
+        # keep track of our child services
+        self.http_svc = None
+        self.distrib_svc = None
+
         # store the log settings until we create the site object
         self.logRotateLength = logRotateLength
         self.maxRotatedFiles = maxRotatedFiles        
@@ -318,9 +332,10 @@ class WebStatus(service.MultiService):
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
                              num_events_max=num_events_max)
 
-        # Set up the jinja templating engine.
-        self.templates = createJinjaEnv(revlink, changecommentlink,
-                                        repositories, projects)
+        self.revlink = revlink
+        self.changecommentlink = changecommentlink
+        self.repositories = repositories
+        self.projects = projects
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
@@ -338,6 +353,8 @@ class WebStatus(service.MultiService):
         else:
             self.provide_feeds = provide_feeds
 
+        self.jinja_loaders = jinja_loaders
+
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
@@ -346,7 +363,7 @@ class WebStatus(service.MultiService):
         self.putChild("console", ConsoleStatusResource(
                 orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
-        self.putChild("builders", BuildersResource()) # has builds/steps/logs
+        self.putChild("builders", BuildersResource(numbuilds=numbuilds)) # has builds/steps/logs
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
@@ -355,7 +372,10 @@ class WebStatus(service.MultiService):
                       OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
-
+        self.putChild("authzfail", AuthzFailResource())
+        self.putChild("users", UsersResource())
+        self.putChild("login", LoginResource())
+        self.putChild("logout", LogoutResource())
 
     def __repr__(self):
         if self.http_port is None:
@@ -368,14 +388,16 @@ class WebStatus(service.MultiService):
                 (self.http_port, self.distrib_port, hex(id(self))))
 
     def setServiceParent(self, parent):
-        service.MultiService.setServiceParent(self, parent)
-
         # this class keeps a *separate* link to the buildmaster, rather than
         # just using self.parent, so that when we are "disowned" (and thus
         # parent=None), any remaining HTTP clients of this WebStatus will still
         # be able to get reasonable results.
-        self.master = parent
-        
+        self.master = parent.master
+
+        # set master in IAuth instance
+        if self.authz.auth:
+            self.authz.auth.master = self.master
+
         def either(a,b): # a if a else b for py2.4
             if a:
                 return a
@@ -384,6 +406,14 @@ class WebStatus(service.MultiService):
         
         rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
+
+        # Set up the jinja templating engine.
+        if self.revlink:
+            revlink = self.revlink
+        else:
+            revlink = self.master.config.revlink
+        self.templates = createJinjaEnv(revlink, self.changecommentlink,
+                                        self.repositories, self.projects, self.jinja_loaders)
 
         if not self.site:
             
@@ -414,14 +444,16 @@ class WebStatus(service.MultiService):
         self.site.buildbot_service = self
 
         if self.http_port is not None:
-            s = strports.service(self.http_port, self.site)
+            self.http_svc = s = strports.service(self.http_port, self.site)
             s.setServiceParent(self)
         if self.distrib_port is not None:
             f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            s = strports.service(self.distrib_port, f)
+            self.distrib_svc = s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
         self.setupSite()
+
+        service.MultiService.setServiceParent(self, parent)
 
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
@@ -463,6 +495,7 @@ class WebStatus(service.MultiService):
     def registerChannel(self, channel):
         self.channels[channel] = 1 # weakrefs
 
+    @defer.inlineCallbacks
     def stopService(self):
         for channel in self.channels:
             try:
@@ -471,7 +504,16 @@ class WebStatus(service.MultiService):
                 log.msg("WebStatus.stopService: error while disconnecting"
                         " leftover clients")
                 log.err()
-        return service.MultiService.stopService(self)
+        yield service.MultiService.stopService(self)
+
+        # having shut them down, now remove our child services so they don't
+        # start up again if we're re-started
+        if self.http_svc:
+            yield self.http_svc.disownServiceParent()
+            self.http_svc = None
+        if self.distrib_svc:
+            yield self.distrib_svc.disownServiceParent()
+            self.distrib_svc = None
 
     def getStatus(self):
         return self.master.getStatus()
@@ -491,6 +533,25 @@ class WebStatus(service.MultiService):
     # find the requisite object manually, starting at the buildmaster.
     # This is in preparation for removal of the IControl hierarchy
     # entirely.
+
+    def checkConfig(self, otherStatusReceivers):
+        duplicate_webstatus=0
+        for osr in otherStatusReceivers:
+            if isinstance(osr,WebStatus):
+                if osr is self:
+                    continue
+                # compare against myself and complain if the settings conflict
+                if self.http_port == osr.http_port:
+                    if duplicate_webstatus == 0:
+                        duplicate_webstatus = 2
+                    else:
+                        duplicate_webstatus += 1
+
+        if duplicate_webstatus:
+            config.error(
+                "%d Webstatus objects have same port: %s"
+                    % (duplicate_webstatus, self.http_port),
+            )
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()

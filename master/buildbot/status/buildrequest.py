@@ -17,7 +17,6 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
-from buildbot.process import buildrequest
 from buildbot.util.eventual import eventually
 
 class BuildRequestStatus:
@@ -32,7 +31,7 @@ class BuildRequestStatus:
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _getBuildRequest(self):
         """
         Get the underlying BuildRequest object for this status.  This is a slow
@@ -40,68 +39,64 @@ class BuildRequestStatus:
 
         @returns: BuildRequest instance or None, via Deferred
         """
+        # late binding to avoid an import cycle
+        from buildbot.process import buildrequest
+
         # this is only set once, so no need to lock if we already have it
         if self._buildrequest:
-            yield self._buildrequest
+            defer.returnValue(self._buildrequest)
+            return
 
-        wfd = defer.waitForDeferred(
-                self._buildrequest_lock.acquire())
-        yield wfd
-        wfd.getResult()
+        yield self._buildrequest_lock.acquire()
 
         try:
             if not self._buildrequest:
-                wfd = defer.waitForDeferred(
-                    self.master.db.buildrequests.getBuildRequest(self.brid))
-                yield wfd
-                brd = wfd.getResult()
+                brd = yield self.master.db.buildrequests.getBuildRequest(
+                                                                    self.brid)
 
-                wfd = defer.waitForDeferred(
-                    buildrequest.BuildRequest.fromBrdict(self.master, brd))
-                yield wfd
-                self._buildrequest = wfd.getResult()
+                br = yield buildrequest.BuildRequest.fromBrdict(self.master,
+                                                                    brd)
+                self._buildrequest = br
         except: # try/finally isn't allowed in generators in older Pythons
             self._buildrequest_lock.release()
             raise
 
         self._buildrequest_lock.release()
 
-        yield self._buildrequest
+        defer.returnValue(self._buildrequest)
 
     def buildStarted(self, build):
         self.status._buildrequest_buildStarted(build.status)
         self.builds.append(build.status)
 
     # methods called by our clients
-    @defer.deferredGenerator
-    def getSourceStamp(self):
-        wfd = defer.waitForDeferred(
-                self._getBuildRequest())
-        yield wfd
-        br = wfd.getResult()
+    @defer.inlineCallbacks
+    def getBsid(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.bsid)
 
-        yield br.source
+    @defer.inlineCallbacks
+    def getSourceStamp(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.source)
 
     def getBuilderName(self):
         return self.buildername
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getBuilds(self):
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
 
-        wfd = defer.waitForDeferred(
-                self.master.db.builds.getBuildsForRequest(self.brid))
-        yield wfd
-        buildnums = wfd.getResult()
+        bdicts = yield self.master.db.builds.getBuildsForRequest(self.brid)
 
-        buildnums.sort()
+        buildnums = sorted([ bdict['number'] for bdict in bdicts ])
 
         for buildnum in buildnums:
             bs = builder.getBuild(buildnum)
             if bs:
                 builds.append(bs)
-        yield builds
+        defer.returnValue(builds)
 
     def subscribe(self, observer):
         d = self.getBuilds()
@@ -116,14 +111,10 @@ class BuildRequestStatus:
     def unsubscribe(self, observer):
         self.status._buildrequest_unsubscribe(self.brid, observer)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def getSubmitTime(self):
-        wfd = defer.waitForDeferred(
-                self._getBuildRequest())
-        yield wfd
-        br = wfd.getResult()
-
-        yield br.submittedAt
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.submittedAt)
 
     def asDict(self):
         result = {}
@@ -136,29 +127,16 @@ class BuildRequestStatus:
         result['builds'] = [] # not available async, sorry
         return result
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def asDict_async(self):
         result = {}
 
-        wfd = defer.waitForDeferred(
-                self.getSourceStamp())
-        yield wfd
-        ss = wfd.getResult()
+        ss = yield self.getSourceStamp()
         result['source'] = ss.asDict()
-
         result['builderName'] = self.getBuilderName()
+        result['submittedAt'] = yield self.getSubmitTime()
 
-        wfd = defer.waitForDeferred(
-                self.getSubmitTime())
-        yield wfd
-        submittedAt = wfd.getResult()
-        result['submittedAt'] = submittedAt
-
-        wfd = defer.waitForDeferred(
-            self.getBuilds())
-        yield wfd
-        builds = wfd.getResult()
-
+        builds = yield self.getBuilds()
         result['builds'] = [ build.asDict() for build in builds ]
 
-        yield result
+        defer.returnValue(result)

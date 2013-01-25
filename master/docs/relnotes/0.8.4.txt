@@ -1,0 +1,113 @@
+Buildbot 0.8.4 was released 12 Jun 2010
+
+** Buildmaster Metrics
+
+The buildmaster now actively measures a number of quantities that can be useful
+in debugging and tuning its performance.  See the documentation for more
+information.
+
+** Monotone support
+
+Monotone support has returned to Buildbot, thanks to Richard Levitte.
+
+** `Blocker` step
+
+A "beta" version of the Blocker step has been added; this step allows multiple
+concurrent builds to be synchronized.  It is "beta" in the sense that it may
+contain significant bugs, is only documented in the source code, and has an
+interface that is subject to non-compatible change in later versions of
+Buildbot.  See `contrib/blockertest` for a test and demonstration of the new
+step's functionality.
+
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** Init script now uses /etc/default/buildmaster for instance configuration.
+Also MASTER_ENABLED used in /etc/default/buildmaster now accepts 'true|yes|1'
+to enable instance and 'false|no|0' to disable(not case sensitive). Other
+values will be considered as syntax error.
+
+*** 'buildbot.status.words.IRC' now defaults to `AllowForce=False` to prevent
+IRC bots from being allowed to force builds by default.
+
+*** MasterShellCommand and all of the transfer steps now default to
+haltOnFailure=True and flunkOnFailure=True
+
+*** GitPoller's 'workdir' parameter should always be supplied; using the
+default (/tmp/gitpoller_work) is deprecated and will not be supported in future
+versions.
+
+*** ChangeFilter should now be imported from `buildbot.changes.filter'; the old
+import path will still work.
+
+*** What used to be called simply 'Scheduler' should now be instantiated as
+'SingleBranchScheduler', and its branch argument is mandatory.
+
+*** The Dependent scheduler is now in its own module,
+'buildbot.schedulers.dependent', although the old name will continue to work.
+
+*** The mergeRequests parameters are now more flexible, but an incompatible
+change was made: if the BuilderConfig mergeRequests argument is explicitly set
+to True, then the default merge method will be used.  In earlier versions, this
+configuration fell back to the global c['mergeRequests'] parameter's value.  To
+avoid this, remove `mergeRequests=True` from any BuilderConfig constructor
+invocations.
+
+*** The `Status.getBuildSets` method now returns its result via Deferred.
+
+*** The `BuilderControl.getPendingBuilds` method has been renamed to
+`getPendingBuildRequestControls`; `BuilderStatus.getPendingBuilds` has been
+renamed to `getPendingBuildStatuses`.  Both now return their results via
+Deferred.
+
+*** The utility method `Builder.getOldesetRequestTime` now returns its result
+via a Deferred, and that result is now a DateTime object.
+
+*** The remote BuildSetStatus method `waitForSuccess` is no longer available.
+
+*** The BuildRequestStatus methods `getSubmitTime` and `getSourceStamp` now
+return their results via a Deferred.  The `asDict` method omits these values,
+as it retuns synchronously.
+
+*** Buildbot now uses temporary tables, which can cause problems with
+replication in MySQL.  See "Database Specification" in the manual for more
+details.
+
+** Scheduler Improvements
+
+*** Nightly scheduler now accepts a change_filter argument
+
+** SQLAlchemy & SQLAlchemy-Migrate
+
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This gives
+greater inter-database compatibility and a more stable and reliable basis for
+this core component of the framework.  SQLAlchemy-Migrate is used to manage
+changes to the database schema from version to version.
+
+*** Postgres support
+
+Buildbot should now work with a Postgres backend just as well as it does with
+MySQL or SQLite.  Buildbot is actively tested against all three backends.
+
+** Less garish color scheme
+
+The default color scheme for Buildbot has been modified to make it slightly
+less, well, neon. Note: This will not affect already-created masters, as
+their default.css file has already been created. If you currently use the
+default and want to get the new version, just overwrite public_html/default.css
+with the copy in this version.
+
+* Slave Changes
+
+** Monotone support
+
+Monotone support has returned to Buildbot, thanks to Richard Levitte.
+
+** Buildslave now places all spawned commands into process groups on POSIX
+systems.  This means that in most cases child processes are cleaned up
+properly, and removes the most common use for usePTY.  As of this version,
+usePTY should be set to False for almost all users of Buildbot.
+
+** Init script now uses /etc/default/buildslave for instance configuration.
+Also SLAVE_ENABLED used in /etc/default/buildslave now accepts 'true|yes|1'
+to enable instance and 'false|no|0' to disable(not case sensitive). Other
+values will be considered as syntax error.

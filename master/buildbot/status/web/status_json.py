@@ -42,6 +42,9 @@ FLAGS = """\
     - By default, most children data is listed. You can do a random selection
       of data by using select=<sub-url> multiple times to coagulate data.
       "select=" includes the actual url otherwise it is skipped.
+  - numbuilds
+    - By default, only in memory cached builds are listed. You can as for more data
+      by using numbuilds=<number>.
   - filter
     - Filters out null, false, and empty string, list and dict. This reduce the
       amount of useless data sent.
@@ -131,17 +134,18 @@ class JsonResource(resource.Resource):
         resource.Resource.__init__(self)
         # buildbot.status.builder.Status
         self.status = status
-        if self.help:
-            pageTitle = ''
-            if self.pageTitle:
-                pageTitle = self.pageTitle + ' help'
-            self.putChild('help',
-                          HelpResource(self.help, pageTitle=pageTitle, parent_node=self))
 
     def getChildWithDefault(self, path, request):
         """Adds transparent support for url ending with /"""
         if path == "" and len(request.postpath) == 0:
             return self
+        if path == 'help' and self.help:
+            pageTitle = ''
+            if self.pageTitle:
+                pageTitle = self.pageTitle + ' help'
+            return HelpResource(self.help,
+                                pageTitle=pageTitle,
+                                parent_node=self)
         # Equivalent to resource.Resource.getChildWithDefault()
         if self.children.has_key(path):
             return self.children[path]
@@ -189,7 +193,7 @@ class JsonResource(resource.Resource):
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def content(self, request):
         """Renders the json dictionaries."""
         # Supported flags.
@@ -227,11 +231,8 @@ class JsonResource(resource.Resource):
                 # some asDict methods return a Deferred, so handle that
                 # properly
                 if hasattr(child, 'asDict'):
-                    wfd = defer.waitForDeferred(
-                            defer.maybeDeferred(lambda :
-                                child.asDict(request)))
-                    yield wfd
-                    child_dict = wfd.getResult()
+                    child_dict = yield defer.maybeDeferred(lambda :
+                                                child.asDict(request))
                 else:
                     child_dict = {
                         'error' : 'Not available',
@@ -241,11 +242,7 @@ class JsonResource(resource.Resource):
                 request.prepath = prepath
                 request.postpath = postpath
         else:
-            wfd = defer.waitForDeferred(
-                    defer.maybeDeferred(lambda :
-                        self.asDict(request)))
-            yield wfd
-            data = wfd.getResult()
+            data = yield defer.maybeDeferred(lambda : self.asDict(request))
 
         if filter_out:
             data = FilterOut(data)
@@ -258,9 +255,9 @@ class JsonResource(resource.Resource):
             callback = callback[0]
             if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
                 data = '%s(%s);' % (callback, data)
-        yield data
+        defer.returnValue(data)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def asDict(self, request):
         """Generates the json dictionary.
 
@@ -270,13 +267,10 @@ class JsonResource(resource.Resource):
             for name in self.children:
                 child = self.getChildWithDefault(name, request)
                 if isinstance(child, JsonResource):
-                    wfd = defer.waitForDeferred(
-                            defer.maybeDeferred(lambda :
-                                child.asDict(request)))
-                    yield wfd
-                    data[name] = wfd.getResult()
+                    data[name] = yield defer.maybeDeferred(lambda :
+                                            child.asDict(request))
                 # else silently pass over non-json resources.
-            yield data
+            defer.returnValue(data)
         else:
             raise NotImplementedError()
 
@@ -340,16 +334,17 @@ class HelpResource(HtmlResource):
         HtmlResource.__init__(self)
         self.text = text
         self.pageTitle = pageTitle
-        self.parent_node = parent_node
+        self.parent_level = parent_node.level
+        self.parent_children = parent_node.children.keys()
 
     def content(self, request, cxt):
-        cxt['level'] = self.parent_node.level
+        cxt['level'] = self.parent_level
         cxt['text'] = ToHtml(self.text)
-        cxt['children'] = [ n for n in self.parent_node.children.keys() if n != 'help' ]
+        cxt['children'] = [ n for n in self.parent_children if n != 'help' ]
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
-                'href="%sjson' % (self.level * '../'))
+                'href="../%sjson' % (self.parent_level * '../'))
 
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
@@ -428,9 +423,10 @@ class BuildJsonResource(JsonResource):
     def __init__(self, status, build_status):
         JsonResource.__init__(self, status)
         self.build_status = build_status
+        # TODO: support multiple sourcestamps
+        sourcestamp = build_status.getSourceStamps()[0]
         self.putChild('source_stamp',
-                      SourceStampJsonResource(status,
-                                              build_status.getSourceStamp()))
+                      SourceStampJsonResource(status, sourcestamp))
         self.putChild('steps', BuildStepsJsonResource(status, build_status))
 
     def asDict(self, request):
@@ -451,24 +447,14 @@ class AllBuildsJsonResource(JsonResource):
         if isinstance(path, int) or _IS_INT.match(path):
             build_status = self.builder_status.getBuild(int(path))
             if build_status:
-                build_status_number = str(build_status.getNumber())
-                # Happens with negative numbers.
-                child = self.children.get(build_status_number)
-                if child:
-                    return child
-                # Create it on-demand.
-                child = BuildJsonResource(self.status, build_status)
-                # Cache it. Never cache negative numbers.
-                # TODO(maruel): Cleanup the cache once it's too heavy!
-                self.putChild(build_status_number, child)
-                return child
+                return BuildJsonResource(self.status, build_status)
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
         results = {}
         # If max > buildCacheSize, it'll trash the cache...
-        max = int(RequestArg(request, 'max',
-                             self.builder_status.buildCacheSize))
+        cache_size = self.builder_status.master.config.caches['Builds']
+        max = int(RequestArg(request, 'max', cache_size))
         for i in range(0, max):
             child = self.getChildWithDefault(-i, request)
             if not isinstance(child, BuildJsonResource):
@@ -648,7 +634,9 @@ class SlaveJsonResource(JsonResource):
         for builderName in self.getBuilders():
             builds = []
             builder_status = self.status.getBuilder(builderName)
-            for i in range(1, builder_status.buildCacheSize - 1):
+            cache_size = builder_status.master.config.caches['Builds']
+            numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
+            for i in range(1, numbuilds):
                 build_status = builder_status.getBuild(-i)
                 if not build_status or not build_status.isFinished():
                     # If not finished, it will appear in runningBuilds.
@@ -690,6 +678,20 @@ class SourceStampJsonResource(JsonResource):
     def asDict(self, request):
         return self.source_stamp.asDict()
 
+class MetricsJsonResource(JsonResource):
+    help = """Master metrics.
+"""
+    title = "Metrics"
+
+    def asDict(self, request):
+        metrics = self.status.getMetrics()
+        if metrics:
+            return metrics.asDict()
+        else:
+            # Metrics are disabled
+            return None
+
+
 
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""
@@ -709,6 +711,7 @@ For help on any sub directory, use url /child/help
         self.putChild('change_sources', ChangeSourcesJsonResource(status))
         self.putChild('project', ProjectJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
+        self.putChild('metrics', MetricsJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 

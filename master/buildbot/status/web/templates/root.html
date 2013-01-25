@@ -22,7 +22,7 @@
   {% set item_class=cycler('alt', '') %}
   
   <li class="{{ item_class.next() }}">The <a href="waterfall">Waterfall Display</a> will give you a
-  time-oriented summary of recent buildbot activity.</li>
+  time-oriented summary of recent buildbot activity. <a href="waterfall/help">Waterfall Help.</a></li>
 
   <li class="{{ item_class.next() }}">The <a href="grid">Grid Display</a> will give you a
   developer-oriented summary of recent buildbot activity.</li>
@@ -45,7 +45,7 @@
   <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
 
-{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
 Master is shutting down<br/>
 {{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}

@@ -1,0 +1,90 @@
+Buildbot 0.8.0 was released 25 May 2010
+
+** (NOTE!) Scheduler requires keyword arguments
+
+If you are creating your Scheduler like this:
+
+  Scheduler("mysched", "mybranch", 0, ["foo", "bar"])
+
+then it's time to change that to specify each of the arguments with a keyword:
+
+  Scheduler(name="mysched", branch="mybranch",
+        treeStableTimer=0, builderNames=["foo", "bar"])
+
+** Database Backend
+
+Scheduler, change, and build request information is now stored in a database -
+by default, in SQLite, although MySQL is also supported.  With this change,
+scheduled builds will persist over buildmaster restarts, as will
+interrelationships between schedulers (e.g., Triggerable and Dependent).
+
+Upgrading to the new database backend is easy, although it brings additional
+requirements on the buildmaster.  See the Buildbot documentation for more
+information.
+
+** Visual Studio / VC++ Compile Steps
+
+** New Change/SourceStamp attributes 'project' and 'repository'
+
+These attributes can be used to further refine matching by schedulers.
+Repository completes the SourceStamp: the tuple of (repository, branch,
+revision) completely specifies a source code tree.  Likewise, the project
+attribute can be used to support building several distinct projects within one
+buildmaster, replacing the use of category for this purpose.  Matching can be
+done using regular expressions, so it's even possible to support nested
+projects!
+
+** ShellCommands expand environment variables
+
+If you pass to a shell command an environment variable like this:
+
+ShellCommand(..., env={"FOO": "${BAR}"})
+
+then, on the slave side the variable FOO will have the same value as
+the alread existing BAR variable on the slave. This is mostly used to
+expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
+will have "/my/directory" prepended to it.
+
+** Builders can setup properties
+
+There is a new parameter to the builders to setup properties on a
+per-builder basis.
+
+** New /json web status
+
+This view has lots of useful information perfectly formed for serving as input
+to JavaScript status displays.  See /json/help for details.
+
+** Jinja
+
+All web status is now generated using the Jinja templating engine, which gives
+buildbot a much more attractive and maintainable appearance.  Buildbot's output
+is also now XHTML-compliant!
+
+** Authorization Framework
+
+The web-based status displays now provide fine-grained control over who can
+do what - force builds, stop builds, cancel builds, etc.  See the manual for
+configuration details.
+
+** Mercurial uses full revisions
+
+Mercurial now sets got_revision to the full 40-character revision id instead of
+the short IDs.
+
+** Cleanup, Bug Fixes, and Test Fixes
+
+Thanks to help from a number of devoted contributors, this version of Buildbot
+has seen a lot of house-cleaning, and even passes all of its own unit tests!  
+
+** Removals
+
+*** Removed buildbot.status.html.Waterfall (deprecated in 0.7.6)
+
+Note that this does not remove the waterfall -- just an old version of it which
+did not include the rest of the WebStatus pages.
+
+*** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
+(deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
+
+

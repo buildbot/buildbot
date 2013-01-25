@@ -23,90 +23,16 @@ from twisted.internet import defer, reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
 
+class ChDict(dict):
+    pass
+
 class ChangesConnectorComponent(base.DBConnectorComponent):
-    """
-    A DBConnectorComponent to handle getting changes into and out of the
-    database.  An instance is available at C{master.db.changes}.
-
-    Changes are represented as dictionaries with the following keys:
-
-    - changeid: the ID of this change
-    - author: the author of the change (unicode string)
-    - files: list of source-code filenames changed (unicode strings)
-    - comments: user comments (unicode string)
-    - is_dir: deprecated
-    - links: list of links for this change, e.g., to web views, review
-      (unicode strings)
-    - revision: revision for this change (unicode string), or None if unknown
-    - when_timestamp: time of the commit (datetime instance)
-    - branch: branch on which the change took place (unicode string), or None
-      for the "default branch", whatever that might mean
-    - category: user-defined category of this change (unicode string or None)
-    - revlink: link to a web view of this change (unicode string or None)
-    - properties: user-specified properties for this change, represented as a
-      dictionary mapping keys to (value, source)
-    - repository: repository where this change occurred (unicode string)
-    - project: user-defined project to which this change corresponds (unicode
-      string)
-    """
-
-    changeHorizon = 0
-    "maximum number of changes to keep on hand, or 0 to keep all changes forever"
+    # Documentation is in developer/database.rst
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
-            links=None, revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='',
-            project='', _reactor=reactor):
-        """Add the a Change with the given attributes to the database; returns
-        a Change instance via a deferred.  All arguments are keyword arguments.
-
-        @param author: the author of this change
-        @type author: unicode string
-
-        @param files: a list of filenames that were changed
-        @type branch: list of unicode strings
-
-        @param comments: user comments on the change
-        @type branch: unicode string
-
-        @param is_dir: deprecated
-
-        @param links: a list of links related to this change, e.g., to web
-        viewers or review pages
-        @type links: list of unicode strings
-
-        @param revision: the revision identifier for this change
-        @type revision: unicode string
-
-        @param when_timestamp: when this change occurred, or the current time
-          if None
-        @type when_timestamp: datetime instance or None
-
-        @param branch: the branch on which this change took place
-        @type branch: unicode string
-
-        @param category: category for this change (arbitrary use by Buildbot
-        users)
-        @type category: unicode string
-
-        @param revlink: link to a web view of this revision
-        @type revlink: unicode string
-
-        @param properties: properties to set on this change
-        @type properties: dictionary, where values are tuples of (value,
-        source).  At the moment, the source must be C{'Change'}, although
-        this may be relaxed in later versions.
-
-        @param repository: the repository in which this change took place
-        @type repository: unicode string
-
-        @param project: the project this change is a part of
-        @type project: unicode string
-
-        @param _reactor: for testing
-
-        @returns: new change's ID via Deferred
-        """
+            revision=None, when_timestamp=None, branch=None,
+            category=None, revlink='', properties={}, repository='', codebase='',
+            project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -121,14 +47,24 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicitiy - other database users may
-            # still come across a change without its links, files, properties,
+            # still come across a change without its files, properties,
             # etc.  That's OK, since we don't announce the change until it's
             # all in the database, but beware.
 
             transaction = conn.begin()
 
-            ins = self.db.model.changes.insert()
-            r = conn.execute(ins, dict(
+            ch_tbl = self.db.model.changes
+
+            self.check_length(ch_tbl.c.author, author)
+            self.check_length(ch_tbl.c.comments, comments)
+            self.check_length(ch_tbl.c.branch, branch)
+            self.check_length(ch_tbl.c.revision, revision)
+            self.check_length(ch_tbl.c.revlink, revlink)
+            self.check_length(ch_tbl.c.category, category)
+            self.check_length(ch_tbl.c.repository, repository)
+            self.check_length(ch_tbl.c.project, project)
+
+            r = conn.execute(ch_tbl.insert(), dict(
                 author=author,
                 comments=comments,
                 is_dir=is_dir,
@@ -138,28 +74,35 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 when_timestamp=datetime2epoch(when_timestamp),
                 category=category,
                 repository=repository,
+                codebase=codebase,
                 project=project))
             changeid = r.inserted_primary_key[0]
-            if links:
-                ins = self.db.model.change_links.insert()
-                conn.execute(ins, [
-                    dict(changeid=changeid, link=l)
-                        for l in links
-                    ])
             if files:
-                ins = self.db.model.change_files.insert()
-                conn.execute(ins, [
+                tbl = self.db.model.change_files
+                for f in files:
+                    self.check_length(tbl.c.filename, f)
+                conn.execute(tbl.insert(), [
                     dict(changeid=changeid, filename=f)
                         for f in files
                     ])
             if properties:
-                ins = self.db.model.change_properties.insert()
-                conn.execute(ins, [
+                tbl = self.db.model.change_properties
+                inserts = [
                     dict(changeid=changeid,
                         property_name=k,
                         property_value=json.dumps(v))
                     for k,v in properties.iteritems()
-                ])
+                ]
+                for i in inserts:
+                    self.check_length(tbl.c.property_name,
+                            i['property_name'])
+                    self.check_length(tbl.c.property_value,
+                            i['property_value'])
+
+                conn.execute(tbl.insert(), inserts)
+            if uid:
+                ins = self.db.model.change_users.insert()
+                conn.execute(ins, dict(changeid=changeid, uid=uid))
 
             transaction.commit()
 
@@ -167,15 +110,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    @base.cached("chdicts")
     def getChange(self, changeid):
-        """
-        Get a change dictionary for the given changeid, or None if no such
-        change exists.
-
-        @param changeid: the id of the change instance to fetch
-
-        @returns: Change dictionary via Deferred
-        """
         assert changeid >= 0
         def thd(conn):
             # get the row from the 'changes' table
@@ -185,43 +121,44 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             row = rp.fetchone()
             if not row:
                 return None
-            # and fetch the ancillary data (links, files, properties)
+            # and fetch the ancillary data (files, properties)
             return self._chdict_from_change_row_thd(conn, row)
         d = self.db.pool.do(thd)
         return d
 
-    def getRecentChanges(self, count):
-        """
-        Get a list of the C{count} most recent changes, represented as
-        dictionaies; returns fewer if that many do not exist.
-
-        @param count: maximum number of instances to return
-
-        @returns: list of dictionaries via Deferred, ordered by changeid
-        """
+    def getChangeUids(self, changeid):
+        assert changeid >= 0
         def thd(conn):
-            # get the row from the 'changes' table
-            changes_tbl = self.db.model.changes
-            q = changes_tbl.select(
-                    order_by=[sa.desc(changes_tbl.c.changeid)],
-                    limit=count)
-            rp = conn.execute(q)
-            changes = []
-            for row in rp:
-                # note that this does *three* extra queries per row!
-                changes.append(self._chdict_from_change_row_thd(conn, row))
-            rp.close()
-            return list(reversed(changes))
+            cu_tbl = self.db.model.change_users
+            q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
+            res = conn.execute(q)
+            rows = res.fetchall()
+            row_uids = [ row.uid for row in rows ]
+            return row_uids
         d = self.db.pool.do(thd)
         return d
 
-    def getLatestChangeid(self):
-        """
-        Get the most-recently-assigned changeid, or None if there are no
-        changes at all.
+    def getRecentChanges(self, count):
+        def thd(conn):
+            # get the changeids from the 'changes' table
+            changes_tbl = self.db.model.changes
+            q = sa.select([changes_tbl.c.changeid],
+                    order_by=[sa.desc(changes_tbl.c.changeid)],
+                    limit=count)
+            rp = conn.execute(q)
+            changeids = [ row.changeid for row in rp ]
+            rp.close()
+            return list(reversed(changeids))
+        d = self.db.pool.do(thd)
 
-        @returns: changeid via Deferred
-        """
+        # then turn those into changes, using the cache
+        def get_changes(changeids):
+            return defer.gatherResults([ self.getChange(changeid)
+                                         for changeid in changeids ])
+        d.addCallback(get_changes)
+        return d
+
+    def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
             q = sa.select([ changes_tbl.c.changeid ],
@@ -231,13 +168,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
-    def setChangeHorizon(self, changeHorizon): # TODO: remove
-        "this method should go away"
-        self.changeHorizon = changeHorizon
-
     # utility methods
 
     def pruneChanges(self, changeHorizon):
+        """
+        Called periodically by DBConnector, this method deletes changes older
+        than C{changeHorizon}.
+        """
+
         if not changeHorizon:
             return defer.succeed(None)
         def thd(conn):
@@ -256,45 +194,37 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_links',
-                               'change_properties', 'changes'):
-                table = self.db.model.metadata.tables[table_name]
-                conn.execute(
-                    table.delete(table.c.changeid.in_(ids_to_delete)))
+                               'change_files', 'change_properties', 'changes',
+                               'change_users'):
+                remaining = ids_to_delete[:]
+                while remaining:
+                    batch, remaining = remaining[:100], remaining[100:]
+                    table = self.db.model.metadata.tables[table_name]
+                    conn.execute(
+                        table.delete(table.c.changeid.in_(batch)))
         return self.db.pool.do(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict
         # given a row from the 'changes' table
-        change_links_tbl = self.db.model.change_links
         change_files_tbl = self.db.model.change_files
         change_properties_tbl = self.db.model.change_properties
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
-
-        chdict = dict(
+        chdict = ChDict(
                 changeid=ch_row.changeid,
                 author=ch_row.author,
                 files=[], # see below
                 comments=ch_row.comments,
                 is_dir=ch_row.is_dir,
-                links=[], # see below
                 revision=ch_row.revision,
-                when_timestamp=mkdt(ch_row.when_timestamp),
+                when_timestamp=epoch2datetime(ch_row.when_timestamp),
                 branch=ch_row.branch,
                 category=ch_row.category,
                 revlink=ch_row.revlink,
                 properties={}, # see below
                 repository=ch_row.repository,
+                codebase=ch_row.codebase,
                 project=ch_row.project)
-
-        query = change_links_tbl.select(
-                whereclause=(change_links_tbl.c.changeid == ch_row.changeid))
-        rows = conn.execute(query)
-        for r in rows:
-            chdict['links'].append(r.link)
 
         query = change_files_tbl.select(
                 whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
@@ -318,7 +248,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
-            v, s = split_vs(json.loads(r.property_value))
-            chdict['properties'][r.property_name] = (v,s)
+            try:
+                v, s = split_vs(json.loads(r.property_value))
+                chdict['properties'][r.property_name] = (v,s)
+            except ValueError:
+                pass
 
         return chdict

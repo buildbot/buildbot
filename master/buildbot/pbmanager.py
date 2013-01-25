@@ -31,6 +31,7 @@ class PBManager(service.MultiService):
     """
     def __init__(self):
         service.MultiService.__init__(self)
+        self.setName('pbmanager')
         self.dispatchers = {}
 
     def register(self, portstr, username, password, pfactory):
@@ -65,7 +66,6 @@ class PBManager(service.MultiService):
             return disp.disownServiceParent()
         return defer.succeed(None)
 
-
 class Registration(object):
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr
@@ -75,6 +75,10 @@ class Registration(object):
 
         self.pbmanager = pbmanager
 
+    def __repr__(self):
+        return "<pbmanager.Registration for %s on %s>" % \
+                            (self.username, self.portstr)
+
     def unregister(self):
         """
         Unregister this registration, removing the username from the port, and
@@ -82,15 +86,23 @@ class Registration(object):
         """
         return self.pbmanager._unregister(self)
 
+    def getPort(self):
+        """
+        Helper method for testing; returns the TCP port used for this
+        registration, even if it was specified as 0 and thus allocated by the
+        OS.
+        """
+        disp = self.pbmanager.dispatchers[self.portstr]
+        return disp.port.getHost().port
 
-class Dispatcher(service.MultiService):
+
+class Dispatcher(service.Service):
     implements(portal.IRealm, checkers.ICredentialsChecker)
 
     credentialInterfaces = [ credentials.IUsernamePassword,
                              credentials.IUsernameHashedPassword ]
 
     def __init__(self, portstr):
-        service.MultiService.__init__(self)
         self.portstr = portstr
         self.users = {}
 
@@ -98,19 +110,18 @@ class Dispatcher(service.MultiService):
         self.portal = portal.Portal(self)
         self.portal.registerChecker(self)
         self.serverFactory = pb.PBServerFactory(self.portal)
-        self.serverFactory.unsafeTraceback = True
-        self.serverPort = strports.service(portstr, self.serverFactory)
-        self.serverPort.setServiceParent(self)
+        self.serverFactory.unsafeTracebacks = True
+        self.port = strports.listen(portstr, self.serverFactory)
 
-    def getPort(self):
-        # helper method for testing
-        return self.serverPort.getHost().port
-
-    def startService(self):
-        return service.MultiService.startService(self)
+    def __repr__(self):
+        return "<pbmanager.Dispatcher for %s on %s>" % \
+                            (", ".join(self.users.keys()), self.portstr)
 
     def stopService(self):
-        return service.MultiService.stopService(self)
+        # stop listening on the port when shut down
+        d = defer.maybeDeferred(self.port.stopListening)
+        d.addCallback(lambda _ : service.Service.stopService(self))
+        return d
 
     def register(self, username, password, pfactory):
         if debug:
@@ -172,4 +183,5 @@ class Dispatcher(service.MultiService):
             d.addCallback(check)
             return d
         else:
+            log.msg("invalid login from unknown user '%s'" % creds.username)
             return defer.fail(error.UnauthorizedLogin())

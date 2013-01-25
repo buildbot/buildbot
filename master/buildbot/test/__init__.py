@@ -13,5 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import monkeypatches
-monkeypatches.add_debugging_monkeypatches()
+# apply the same patches the buildmaster does when it starts
+from buildbot import monkeypatches
+monkeypatches.patch_all(for_tests=True)
+
+# import mock so we bail out early if it's not installed
+try:
+    import mock
+    mock = mock
+except ImportError:
+    raise ImportError("Buildbot tests require the 'mock' module; "
+            "try 'pip install mock'")

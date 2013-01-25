@@ -176,6 +176,9 @@ class FakeStep(object):
         return self.finished_d
 
     def remote_update(self, updates):
+        for update in updates:
+            if 'elapsed' in update[0]:
+                update[0]['elapsed'] = 1
         self.actions.append(["update", updates])
 
     def remote_complete(self, f):
@@ -184,6 +187,7 @@ class FakeStep(object):
 
 class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
+    @defer.deferredGenerator
     def setUp(self):
         self.basedir = os.path.abspath("basedir")
         if os.path.exists(self.basedir):
@@ -194,7 +198,10 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot.startService()
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
-        builders = self.bot.remote_setBuilderList([('sb', 'sb')])
+        wfd = defer.waitForDeferred(
+                self.bot.remote_setBuilderList([('sb', 'sb')]))
+        yield wfd
+        builders = wfd.getResult()
         self.sb = FakeRemote(builders['sb'])
 
         self.setUpCommand()
@@ -255,6 +262,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
                          ['update', [[{'hdr': 'headers'}, 0]]],
                          ['update', [[{'stdout': 'hello\n'}, 0]]],
                          ['update', [[{'rc': 0}, 0]]],
+                         ['update', [[{'elapsed': 1}, 0]]],
                          ['complete', None],
                     ])
         d.addCallback(check)
@@ -323,8 +331,8 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         d.addCallback(do_start)
         d.addCallback(lambda _ : st.wait_for_finish())
         def check(_):
-            self.assertEqual(st.actions[0][0], 'complete')
-            self.assertTrue(isinstance(st.actions[0][1], failure.Failure))
+            self.assertEqual(st.actions[1][0], 'complete')
+            self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
         d.addCallback(check)
         return d
 

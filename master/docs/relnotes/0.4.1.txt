@@ -1,0 +1,23 @@
+Buildbot-0.4.1 was released 09 Dec 2003
+
+** MaildirSources fixed
+
+Several bugs in MaildirSource made them unusable. These have been fixed (for
+real this time). The Twisted buildbot is using an FCMaildirSource while they
+fix some FreshCVS daemon problems, which provided the encouragement for
+getting these bugs fixed.
+
+In addition, the use of DNotify (only available under linux) was somehow
+broken, possibly by changes in some recent version of Python. It appears to
+be working again now (against both python-2.3.3c1 and python-2.2.1).
+
+** master.cfg can use 'basedir' variable
+
+As documented in the sample configuration file (but not actually implemented
+until now), a variable named 'basedir' is inserted into the namespace used
+by master.cfg . This can be used with something like:
+
+  os.path.join(basedir, "maildir")
+
+to obtain a master-basedir-relative location.
+

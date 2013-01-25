@@ -36,3 +36,20 @@ class BasedirMixin(object):
     def tearDownBasedir(self):
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
+
+class PatcherMixin(object):
+    """
+    Mix this in to get a few special-cased patching methods
+    """
+
+    def patch_os_uname(self, replacement):
+        # twisted's 'patch' doesn't handle the case where an attribute
+        # doesn't exist..
+        if hasattr(os, 'uname'):
+            self.patch(os, 'uname', replacement)
+        else:
+            def cleanup():
+                del os.uname
+            self.addCleanup(cleanup)
+            os.uname = replacement
+

@@ -208,13 +208,15 @@ class BonsaiPoller(base.PollingChangeSource):
 
     def __init__(self, bonsaiURL, module, branch, tree="default",
                  cvsroot="/cvsroot", pollInterval=30, project=''):
+
+        base.PollingChangeSource.__init__(self, name=bonsaiURL, pollInterval=pollInterval)
+
         self.bonsaiURL = bonsaiURL
         self.module = module
         self.branch = branch
         self.tree = tree
         self.cvsroot = cvsroot
         self.repository = module != 'all' and module or ''
-        self.pollInterval = pollInterval
         self.lastChange = time.time()
         self.lastPoll = time.time()
 
@@ -253,7 +255,7 @@ class BonsaiPoller(base.PollingChangeSource):
         # get the page, in XML format
         return client.getPage(url, timeout=self.pollInterval)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def _process_changes(self, query):
         try:
             bp = BonsaiParser(query)
@@ -268,11 +270,8 @@ class BonsaiPoller(base.PollingChangeSource):
             files = [file.filename + ' (revision '+file.revision+')'
                      for file in cinode.files]
             self.lastChange = self.lastPoll
-            w = defer.waitForDeferred(
-                    self.master.addChange(author = cinode.who,
+            yield self.master.addChange(author = cinode.who,
                                files = files,
                                comments = cinode.log,
                                when_timestamp = epoch2datetime(cinode.date),
-                               branch = self.branch))
-            yield w
-            w.getResult()
+                               branch = self.branch)

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
@@ -30,19 +32,35 @@ import os, urllib
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 def split_file_alwaystrunk(path):
-    return (None, path)
+    return dict(path=path)
 
 def split_file_branches(path):
-    # turn trunk/subdir/file.c into (None, "subdir/file.c")
-    # and branches/1.5.x/subdir/file.c into ("branches/1.5.x", "subdir/file.c")
+    # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
+    # and "trunk/subdir/" into (None, "subdir/")
+    # and "trunk/" into (None, "")
+    # and "branches/1.5.x/subdir/file.c" into ("branches/1.5.x", "subdir/file.c")
+    # and "branches/1.5.x/subdir/" into ("branches/1.5.x", "subdir/")
+    # and "branches/1.5.x/" into ("branches/1.5.x", "")
     pieces = path.split('/')
-    if pieces[0] == 'trunk':
+    if len(pieces) > 1 and pieces[0] == 'trunk':
         return (None, '/'.join(pieces[1:]))
-    elif pieces[0] == 'branches':
+    elif len(pieces) > 2 and pieces[0] == 'branches':
         return ('/'.join(pieces[0:2]), '/'.join(pieces[2:]))
     else:
         return None
 
+def split_file_projects_branches(path):
+    # turn projectname/trunk/subdir/file.c into dict(project=projectname, branch=trunk, path=subdir/file.c)
+    if not "/" in path:
+        return None
+    project, path = path.split("/", 1)
+    f = split_file_branches(path)
+    if f:
+        info = dict(project=project, path=f[1])
+        if f[0]:
+            info['branch'] = f[0]
+        return info
+    return f
 
 class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
@@ -51,7 +69,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     """
 
     compare_attrs = ["svnurl", "split_file",
-                     "svnuser", "svnpasswd",
+                     "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath"]
 
@@ -63,14 +81,19 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  svnuser=None, svnpasswd=None,
                  pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
-                 project='', cachepath=None, pollinterval=-2):
+                 project='', cachepath=None, pollinterval=-2,
+                 extra_args=None):
+
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
+        base.PollingChangeSource.__init__(self, name=svnurl, pollInterval=pollInterval)
+
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
         self.svnurl = svnurl
+        self.extra_args = extra_args
         self.split_file = split_file or split_file_alwaystrunk
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
@@ -81,7 +104,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                                          # required for ssh-agent auth
 
         self.svnbin = svnbin
-        self.pollInterval = pollInterval
         self.histmax = histmax
         self._prefix = None
         self.category = category
@@ -90,22 +112,20 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
             try:
-                f = open(self.cachepath, "r")
-                self.last_change = int(f.read().strip())
-                log.msg("SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
-                f.close()
+                with open(self.cachepath, "r") as f:
+                    self.last_change = int(f.read().strip())
+                    log.msg("SVNPoller: SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
                 # try writing it, too
-                f = open(self.cachepath, "w")
-                f.write(str(self.last_change))
-                f.close()
+                with open(self.cachepath, "w") as f:
+                    f.write(str(self.last_change))
             except:
                 self.cachepath = None
-                log.msg(("SVNPoller(%s) cache file corrupt or unwriteable; " +
+                log.msg(("SVNPoller: SVNPoller(%s) cache file corrupt or unwriteable; " +
                         "skipping and not using") % self.svnurl)
                 log.err()
 
     def describe(self):
-        return "SVNPoller watching %s" % self.svnurl
+        return "SVNPoller: watching %s" % self.svnurl
 
     def poll(self):
         # Our return value is only used for unit testing.
@@ -140,9 +160,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         # whew.
 
         if self.project:
-            log.msg("SVNPoller polling " + self.project)
+            log.msg("SVNPoller: polling " + self.project)
         else:
-            log.msg("SVNPoller polling")
+            log.msg("SVNPoller: polling")
 
         d = defer.succeed(None)
         if not self._prefix:
@@ -157,7 +177,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         d.addCallback(self.create_changes)
         d.addCallback(self.submit_changes)
         d.addCallback(self.finished_ok)
-        d.addErrback(log.err, 'error in SVNPoller while polling') # eat errors
+        d.addErrback(log.err, 'SVNPoller: Error in  while polling') # eat errors
         return d
 
     def getProcessOutput(self, args):
@@ -171,12 +191,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(["--username=%s" % self.svnuser])
         if self.svnpasswd:
             args.extend(["--password=%s" % self.svnpasswd])
+        if self.extra_args:
+            args.extend(self.extra_args)
         d = self.getProcessOutput(args)
         def determine_prefix(output):
             try:
                 doc = xml.dom.minidom.parseString(output)
             except xml.parsers.expat.ExpatError:
-                log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
+                log.msg("SVNPoller: SVNPoller._determine_prefix_2: ExpatError in '%s'"
                         % output)
                 raise
             rootnodes = doc.getElementsByTagName("root")
@@ -207,6 +229,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(["--username=%s" % self.svnuser])
         if self.svnpasswd:
             args.extend(["--password=%s" % self.svnpasswd])
+        if self.extra_args:
+            args.extend(self.extra_args)
         args.extend(["--limit=%d" % (self.histmax), self.svnurl])
         d = self.getProcessOutput(args)
         return d
@@ -216,7 +240,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         try:
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
-            log.msg("SVNPoller.parse_logs: ExpatError in '%s'" % output)
+            log.msg("SVNPoller: SVNPoller.parse_logs: ExpatError in '%s'" % output)
             raise
         logentries = doc.getElementsByTagName("logentry")
         return logentries
@@ -238,10 +262,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # if this is the first time we've been run, ignore any changes
                 # that occurred before now. This prevents a build at every
                 # startup.
-                log.msg('svnPoller: starting at change %s' % new_last_change)
+                log.msg('SVNPoller: starting at change %s' % new_last_change)
             elif last_change == new_last_change:
                 # an unmodified repository will hit this case
-                log.msg('svnPoller: no changes')
+                log.msg('SVNPoller: no changes')
             else:
                 for el in logentries:
                     if last_change == int(el.getAttribute("revision")):
@@ -250,7 +274,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 new_logentries.reverse() # return oldest first
 
         self.last_change = new_last_change
-        log.msg('svnPoller: _process_changes %s .. %s' %
+        log.msg('SVNPoller: _process_changes %s .. %s' %
                 (old_last_change, new_last_change))
         return new_logentries
 
@@ -271,7 +295,11 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if relative_path.startswith("/"):
             relative_path = relative_path[1:]
         where = self.split_file(relative_path)
-        # 'where' is either None or (branch, final_path)
+        # 'where' is either None, (branch, final_path) or a dict
+        if not where:
+            return
+        if isinstance(where, tuple):
+            where = dict(branch=where[0], path=where[1])
         return where
 
     def create_changes(self, new_logentries):
@@ -302,6 +330,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 continue
 
             for p in pathlist.getElementsByTagName("path"):
+                kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
                 # the rest of buildbot is certaily not yet ready to handle
@@ -311,53 +340,69 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 path = path.encode("ascii")
                 if path.startswith("/"):
                     path = path[1:]
+                if kind == "dir" and not path.endswith("/"):
+                    path += "/"
                 where = self._transform_path(path)
 
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
-                    branch, filename = where
+                    branch = where.get("branch", None)
+                    filename = where["path"]
                     if not branch in branches:
-                        branches[branch] = { 'files': []}
-                    branches[branch]['files'].append(filename)
+                        branches[branch] = { 'files': [], 'number_of_directories': 0}
+                    if filename == "":
+                        # root directory of branch
+                        branches[branch]['files'].append(filename)
+                        branches[branch]['number_of_directories'] += 1
+                    elif filename.endswith("/"):
+                        # subdirectory of branch
+                        branches[branch]['files'].append(filename[:-1])
+                        branches[branch]['number_of_directories'] += 1
+                    else:
+                        branches[branch]['files'].append(filename)
 
                     if not branches[branch].has_key('action'):
                         branches[branch]['action'] = action
 
+                    for key in ("repository", "project", "codebase"):
+                        if key in where:
+                            branches[branch][key] = where[key]
+
             for branch in branches.keys():
                 action = branches[branch]['action']
                 files  = branches[branch]['files']
+
+                number_of_directories_changed = branches[branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
-                if action == u'D' and number_of_files_changed == 1 and files[0] == '':
+                if action == u'D' and number_of_directories_changed == 1 and number_of_files_changed == 1 and files[0] == '':
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
                     chdict = dict(
-                            who=author,
+                            author=author,
                             files=files,
                             comments=comments,
                             revision=revision,
                             branch=branch,
                             revlink=revlink,
                             category=self.category,
-                            repository=self.svnurl,
-                            project = self.project)
+                            repository=branches[branch].get('repository', self.svnurl),
+                            project=branches[branch].get('project', self.project),
+                            codebase=branches[branch].get('codebase', None))
                     changes.append(chdict)
 
         return changes
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            wfd = defer.waitForDeferred(self.master.addChange(**chdict))
-            yield wfd
-            wfd.getResult()
+            yield self.master.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:
-            f = open(self.cachepath, "w")
-            f.write(str(self.last_change))
-            f.close()
+            with open(self.cachepath, "w") as f:
+                f.write(str(self.last_change))
 
-        log.msg("SVNPoller finished polling %s" % res)
+        log.msg("SVNPoller: finished polling %s" % res)
         return res

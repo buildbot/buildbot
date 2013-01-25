@@ -20,7 +20,7 @@
   <a title="Reason: {{ reason|e }}" href="{{ url }}">Build {{ number }}</a>
 {%- endmacro %}
 
-{% macro step_box(text, logs, urls) -%}
+{% macro step_box(text, logs, urls, stepinfo) -%}
   {%- if text is string -%}
     {{ text }}
   {%- else -%}

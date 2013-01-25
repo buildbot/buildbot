@@ -1,0 +1,63 @@
+Buildbot 0.6.2 was released 13 Dec 2004
+
+** new features
+
+It is now possible to interrupt a running build. Both the web page and the
+IRC bot feature 'stop build' commands, which can be used to interrupt the
+current BuildStep and accelerate the termination of the overall Build. The
+status reporting for these still leaves something to be desired (an
+'interrupt' event is pushed into the column, and the reason for the interrupt
+is added to a pseudo-logfile for the step that was stopped, but if you only
+look at the top-level status it appears that the build failed on its own).
+
+Builds are also halted if the connection to the buildslave is lost. On the
+slave side, any active commands are halted if the connection to the
+buildmaster is lost.
+
+** minor new features
+
+The IRC log bot now reports ETA times in a MMSS format like "2m45s" instead
+of the clunky "165 seconds".
+
+** bug fixes
+
+*** Slave Disconnect
+
+Slave disconnects should be handled better now: the current build should be
+abandoned properly. Earlier versions could get into weird states where the
+build failed to finish, clogging the builder forever (or at least until the
+buildmaster was restarted).
+
+In addition, there are weird network conditions which could cause a
+buildslave to attempt to connect twice to the same buildmaster. This can
+happen when the slave is sending large logfiles over a slow link, while using
+short keepalive timeouts. The buildmaster has been fixed to allow the second
+connection attempt to take precedence over the first, so that the older
+connection is jettisoned to make way for the newer one.
+
+In addition, the buildslave has been fixed to be less twitchy about timeouts.
+There are now two parameters: keepaliveInterval (which is controlled by the
+mktap 'keepalive' argument), and keepaliveTimeout (which requires editing the
+.py source to change from the default of 30 seconds). The slave expects to
+see *something* from the master at least once every keepaliveInterval
+seconds, and will try to provoke a response (by sending a keepalive request)
+'keepaliveTimeout' seconds before the end of this interval just in case there
+was no regular traffic. Any kind of traffic will qualify, including
+acknowledgements of normal build-status updates.
+
+The net result is that, as long as any given PB message can be sent over the
+wire in less than 'keepaliveTimeout' seconds, the slave should not mistakenly
+disconnect because of a timeout. There will be traffic on the wire at least
+every 'keepaliveInterval' seconds, which is what you want to pay attention to
+if you're trying to keep an intervening NAT box from dropping what it thinks
+is an abandoned connection. A quiet loss of connection will be detected
+within 'keepaliveInterval' seconds.
+
+*** Large Logfiles
+
+The web page rendering code has been fixed to deliver large logfiles in
+pieces, using a producer/consumer apparatus. This avoids the large spike in
+memory consumption when the log file body was linearized into a single string
+and then buffered in the socket's application-side transmit buffer. This
+should also avoid the 640k single-string limit for web.distrib servers that
+could be hit by large (>640k) logfiles.

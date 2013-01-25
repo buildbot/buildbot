@@ -3,7 +3,10 @@
 
 {% block content %}
 
-<h1>Waterfall</h1>
+<div>
+  <h1 style="display: inline;">Waterfall</h1>
+  <a style="float: right;" href="{{ help_url }}">waterfall help</a>
+</div>
 
 <table border="0" cellspacing="0">
 
@@ -59,7 +62,5 @@
 {% if no_reload_page %}
  <a href="{{ no_reload_page }}">Stop Reloading</a> 
 {% endif %}
-
-<a href="{{ help_url }}">waterfall help</a>
 
 {% endblock %}

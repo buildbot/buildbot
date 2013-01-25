@@ -44,12 +44,7 @@ findlabels() {
     echo $labels
 }
 
-i=0
 for file in {buildbot,buildbot-slave}-$VERSION.{tar.gz,zip}{,.asc}; do
-    if test $i = 0; then
-        i=1
-        continue
-    fi
     labels=`findlabels "$file"`
     file=`findfile "$file"`
     echo "Uploading $file with labels $labels"

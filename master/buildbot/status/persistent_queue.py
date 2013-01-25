@@ -13,28 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 
 from collections import deque
 import os
-import pickle
+import cPickle as pickle
 
 from zope.interface import implements, Interface
 
 
 def ReadFile(path):
-    f = open(path, 'rb')
-    try:
+    with open(path, 'rb') as f:
         return f.read()
-    finally:
-        f.close()
 
 
 def WriteFile(path, buf):
-    f = open(path, 'wb')
-    try:
+    with open(path, 'wb') as f:
         f.write(buf)
-    finally:
-        f.close()
 
 
 class IQueue(Interface):

@@ -103,3 +103,84 @@ View:
                % `self.basedir`)
         return d
 
+    def test_simple_unicode_args(self):
+        self.patch_getCommand('p4', 'path/to/p4')
+        self.clean_environ()
+        self.make_command(p4.P4, dict(
+            workdir='workdir',
+            mode='copy',
+            revision=None,
+            p4port=u'p4dserv:1666\N{SNOWMAN}',
+            p4client=u'buildbot_test_10\N{SNOWMAN}',
+            p4user='jimmy',
+            p4passwd='hushnow',
+            p4base=u'//mydepot/myproj/\N{SNOWMAN}',
+            branch=u'mytrunk\N{SNOWMAN}',
+            p4extra_views=[],
+        ))
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        # can't use textwrap.dedent here, because in 2.4 it converts \t to 8x' '
+        client_spec = """\
+Client: buildbot_test_10
+
+Owner: jimmy
+
+Description:
+\tCreated by jimmy
+
+Root:\t%s
+
+Options:\tallwrite rmdir
+
+LineEnd:\tlocal
+
+View:
+\t//mydepot/myproj/mytrunk/... //buildbot_test_10/source/...
+""" % self.basedir
+        expects = [
+            Expect([ 'clobber', 'workdir' ],
+                self.basedir)
+                + 0,
+            Expect([ 'clobber', 'source' ],
+                self.basedir)
+                + 0,
+            Expect(['p4', '-p', u'p4dserv:1666\N{SNOWMAN}', '-u', 'jimmy', '-P', 
+                    Obfuscated('hushnow', 'XXXXXXXX'), 'client', '-i'],
+                self.basedir,
+                                                # TODO: empty env?
+                sendRC=False, timeout=120, usePTY=False, environ={},
+                initialStdin=client_spec)
+                + 0,
+            Expect(['p4', '-p', u'p4dserv:1666\N{SNOWMAN}', '-u', 'jimmy', '-P',
+                    Obfuscated('hushnow', 'XXXXXXXX'), '-c',
+                    u'buildbot_test_10\N{SNOWMAN}', 'sync', '-f'],
+                self.basedir,
+                                                # TODO: empty env?
+                sendRC=False, timeout=120, usePTY=False, environ={})
+                + 0,
+            Expect(['p4', '-p', u'p4dserv:1666\N{SNOWMAN}', '-u', 'jimmy', '-P',
+                    Obfuscated('hushnow', 'XXXXXXXX'), '-c',
+                    u'buildbot_test_10\N{SNOWMAN}', 'changes',
+                    '-s', 'submitted', '-m', '1', '#have'],
+                self.basedir,
+                sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
+                keepStdout=True)
+                + { 'stdout' : 'Change 28147 on 2008/04/07 by p4user@hostname\n' }
+                + 0,
+            Expect([ 'copy', 'source', 'workdir'],
+                self.basedir)
+                + 0,
+        ]
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata,
+                "['p4dserv:1666\\xe2\\x98\\x83', "
+                "'buildbot_test_10\\xe2\\x98\\x83', "
+                "'//mydepot/myproj/\\xe2\\x98\\x83', "
+                "'mytrunk\\xe2\\x98\\x83', [], None, %s, 'copy', "
+                "'workdir']"
+               % `self.basedir`)
+        return d
+

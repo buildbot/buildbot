@@ -14,28 +14,39 @@
 # Copyright Buildbot Team Members
 
 from twisted.web.util import redirectTo
+from twisted.internet import defer
 
-from buildbot.status.web.base import HtmlResource, path_to_authfail
+from buildbot.status.web.base import HtmlResource, path_to_authzfail
 from buildbot.util.eventual import eventually
 
 class RootPage(HtmlResource):
     pageTitle = "Buildbot"
 
+    @defer.inlineCallbacks
     def content(self, request, cxt):
         status = self.getStatus(request)
 
+        res = yield self.getAuthz(request).actionAllowed("cleanShutdown",
+                                                            request)
+
         if request.path == '/shutdown':
-            if self.getAuthz(request).actionAllowed("cleanShutdown", request):
+            if res:
                 eventually(status.cleanShutdown)
-                return redirectTo("/", request)
+                defer.returnValue(redirectTo("/", request))
+                return
             else:
-                return redirectTo(path_to_authfail(request), request)
+                defer.returnValue(
+                        redirectTo(path_to_authzfail(request), request))
+                return
         elif request.path == '/cancel_shutdown':
-            if self.getAuthz(request).actionAllowed("cleanShutdown", request):
+            if res:
                 eventually(status.cancelCleanShutdown)
-                return redirectTo("/", request)
+                defer.returnValue(redirectTo("/", request))
+                return
             else:
-                return redirectTo(path_to_authfail(request), request)
+                defer.returnValue(
+                        redirectTo(path_to_authzfail(request), request))
+                return
 
         cxt.update(
                 shutting_down = status.shuttingDown,
@@ -43,4 +54,4 @@ class RootPage(HtmlResource):
                 cancel_shutdown_url = request.childLink("cancel_shutdown"),
                 )
         template = request.site.buildbot_service.templates.get_template("root.html")
-        return template.render(**cxt)
+        defer.returnValue(template.render(**cxt))

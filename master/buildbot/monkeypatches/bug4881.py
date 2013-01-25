@@ -16,8 +16,10 @@
 
 import os
 from twisted.internet import process
+from twisted.python import log
 
 def patch():
+    log.msg("Applying patch for http://twistedmatrix.com/trac/ticket/4881")
     process._listOpenFDs = _listOpenFDs
 
 #############################################################################
