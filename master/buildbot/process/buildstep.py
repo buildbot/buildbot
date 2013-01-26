@@ -471,10 +471,12 @@ class BuildStep(object, properties.PropertiesMixin):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
         if kwargs:
-            why = "%s.__init__ got unexpected keyword argument(s) %s" \
-                  % (self, kwargs.keys())
-            raise TypeError(why)
+            config.error("%s.__init__ got unexpected keyword argument(s) %s" \
+                  % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
+
+        if not isinstance(self.name, str):
+            config.error("BuildStep name must be a string: %r" % (self.name,))
 
         self._acquiringLock = None
         self.stopped = False
