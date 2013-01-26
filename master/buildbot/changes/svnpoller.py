@@ -213,7 +213,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             if not self.svnurl.startswith(root):
                 log.msg(format="svnurl='%(svnurl)s' doesn't start with <root>='%(root)s'",
                         svnurl=self.svnurl, root=root)
-                raise RuntimeError("Can't handle redirected svn connections!?"
+                raise RuntimeError("Can't handle redirected svn connections!? "
                         "This shouldn't happen.")
             prefix = self.svnurl[len(root):]
             if prefix.startswith("/"):
