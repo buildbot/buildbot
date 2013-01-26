@@ -23,6 +23,8 @@ Features
 
 * default.css now wraps preformatted text by default.
 
+* Slaves can now be paused through the web status.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
