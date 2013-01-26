@@ -175,8 +175,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             if change.codebase not in self.codebases:
                 log.msg(format='change contains codebase %(codebase)s that is'
                     'not processed by scheduler %(scheduler)s',
-                    codebase=change.codebase, name=self.name),
-                    logLevel=logging.DEBUG)
+                    codebase=change.codebase, name=self.name)
                 return
             if fileIsImportant:
                 try:
