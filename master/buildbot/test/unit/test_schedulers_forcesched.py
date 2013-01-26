@@ -22,9 +22,10 @@ from buildbot.schedulers.forcesched import BooleanParameter, UserNameParameter
 from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationError
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
 from buildbot.schedulers.forcesched import CodebaseParameter
-from buildbot.test.util import config, scheduler
+from buildbot.test.util import scheduler
+from buildbot.test.util.config import ConfigErrorsMixin
 
-class TestForceScheduler(scheduler.SchedulerMixin, config.ConfigErrorsMixin, unittest.TestCase):
+class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
 
     OBJECTID = 19
 
@@ -445,5 +446,5 @@ class TestForceScheduler(scheduler.SchedulerMixin, config.ConfigErrorsMixin, uni
 
     def test_bad_reason(self):
         self.assertRaisesConfigError("ForceScheduler reason must be a StringParameter",
-             lambda: forcesched.ForceScheduler(name='testsched', buildernames=[],
-             	                                 codebases=['bar'], reason="foo"))
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+             	                      codebases=['bar'], reason="foo"))
