@@ -447,4 +447,3 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors, ForceScheduler,
                           name='testsched', builderNames=[],
                           codebases=['bar'], reason="foo")
-

@@ -470,7 +470,8 @@ class ForceScheduler(base.BaseScheduler):
         if isinstance(reason, BaseParameter):
             self.reason = reason
         else:
-            config.error("ForceScheduler: reason must be a StringParameter") 
+            config.error("ForceScheduler reason must be a StringParameter: %r" %
+                         reason) 
 
         self.username = username
         
