@@ -210,6 +210,13 @@ on some set of Builders. The Scheduler accepts a :meth:`fileIsImportant`
 function which can be used to ignore some Changes if they do not
 affect any *important* files.
 
+If ``treeStableTimer`` is not set, then this scheduler starts a build for every Change that matches its ``change_filter`` and statsfies :meth:`fileIsImportant`.
+If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
+
+.. note:: The behavior of this scheduler is undefined, if ``treeStableTimer`` is set, and changes from multiple branches, repositories or codebases are accepted by the filter.
+
+.. note:: The ``codebases`` argument will filter out codebases not specified there, but *won't* filter based on the branches specified there.
+
 The arguments to this scheduler are:
 
 ``name``
@@ -291,6 +298,9 @@ AnyBranchScheduler
 
 This scheduler uses a tree-stable-timer like the default one, but
 uses a separate timer for each branch.
+
+If ``treeStableTimer`` is not set, then this scheduler is indistinguishable from bb:sched:``SingleBranchScheduler``.
+If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
 
 The arguments to this scheduler are:
 
