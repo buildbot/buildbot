@@ -58,11 +58,20 @@ class Periodic(unittest.TestCase):
     # tests
 
     def test_constructor_invalid(self):
+        """
+        When a L{timed.Periodic} is constructed with a negative timer, it
+        raises a L{config.ConfigError}.
+        """
         self.assertRaises(config.ConfigErrors,
                 lambda : timed.Periodic(name='test', builderNames=[ 'test' ],
                                         periodicBuildTimer=-2))
 
     def test_iterations_simple(self):
+        """
+        When L{timed.Periodic} is started without saved state, it runs a build
+        immediately and after every period, and the saves the time of the last
+        build.
+        """
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
 
@@ -145,6 +154,9 @@ class Periodic(unittest.TestCase):
         return d
 
     def test_getNextBuildTime_None(self):
+        """
+        When there is no previous build time, then a build is scheduled immediately.
+        """
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
         # given None, build right away
@@ -152,12 +164,50 @@ class Periodic(unittest.TestCase):
         d.addCallback(lambda t : self.assertEqual(t, 0))
         return d
 
+    def test_getNextBuildTime_None_runAtStartFalse(self):
+        """
+        When there is no previous build time and C{runAtStart} is L{False},
+        a build is scheduled one period from now.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+        # given None, build right away
+        d = sched.getNextBuildTime(None)
+        d.addCallback(lambda t : self.assertEqual(t, 13))
+        return d
+
     def test_getNextBuildTime_given(self):
+        """
+        When there is a previous build time, then the next scheduled build
+        is one period later.
+        """
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
-        # given a time, add the periodicBuildTimer to it
         d = sched.getNextBuildTime(20)
         d.addCallback(lambda t : self.assertEqual(t, 33))
+        return d
+
+    def test_getNextBuildTime_givenFuture_runAtStartFalse(self):
+        """
+        When there is a previous build time in the future and C{runAtStart} is
+        L{False}, then the next scheduled build is one period later.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+        d = sched.getNextBuildTime(20)
+        d.addCallback(lambda t : self.assertEqual(t, 33))
+        return d
+
+    def test_getNextBuildTime_givenPast_runAtStartFalse(self):
+        """
+        When there is a previous build time more than one period in the past
+        and C{runAtStart} is L{False}, then the next scheduled build is one
+        period from now.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+        d = sched.getNextBuildTime(-20)
+        d.addCallback(lambda t : self.assertEqual(t, 13))
         return d
 
     def test_getPendingBuildTimes(self):

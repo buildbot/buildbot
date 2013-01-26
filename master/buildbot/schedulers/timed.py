@@ -198,7 +198,8 @@ class Periodic(Timed):
     compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
-            branch=None, properties={}, onlyImportant=False):
+            branch=None, properties={}, onlyImportant=False,
+            runAtStart=True):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
         if periodicBuildTimer <= 0:
@@ -207,12 +208,16 @@ class Periodic(Timed):
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
+        self.runAtStart = runAtStart
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
-            return defer.succeed(self.now()) # meaning "ASAP"
+            nextTime = self.now() # meaning "ASAP"
         else:
-            return defer.succeed(lastActuated + self.periodicBuildTimer)
+            nextTime = lastActuated + self.periodicBuildTimer
+        if not self.runAtStart and nextTime <= self.now():
+            nextTime = self.now() + self.periodicBuildTimer
+        return defer.succeed(nextTime)
 
     def startBuild(self):
         return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
