@@ -29,7 +29,6 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics, botmaster
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.locks import LockAccess
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot import config
