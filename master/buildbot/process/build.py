@@ -21,7 +21,7 @@ from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.internet import defer, error
 
-from buildbot import interfaces, locks
+from buildbot import interfaces
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
