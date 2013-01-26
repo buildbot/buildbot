@@ -404,6 +404,10 @@ The arguments to this scheduler are:
 ``periodicBuildTimer``
     The time, in seconds, after which to start a build.
 
+``runAtStart``
+    A boolean, that, when ``False``, prevents the a build from being triggered when buildbot starts.
+    The default, ``True``, causes a build to start immediately, if there was no previous build, or if a build would have been triggered while buildbot wasn't running.
+
 Example::
 
     from buildbot.schedulers import timed

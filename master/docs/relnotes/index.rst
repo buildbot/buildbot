@@ -23,6 +23,9 @@ Features
 
 * default.css now wraps preformatted text by default.
 
+* :bb:sched:``Periodic`` now accepts a ``runAtStart`` argmument, which, when
+  ``False``, prevents a build from triggering immediately when buildbot starts.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
