@@ -448,3 +448,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertRaisesConfigError("ForceScheduler reason must be a StringParameter",
              lambda: ForceScheduler(name='testsched', builderNames=[],
              	                      codebases=['bar'], reason="foo"))
+
+    def test_bad_username(self):
+        self.assertRaisesConfigError("ForceScheduler username must be a StringParameter",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+             	                      codebases=['bar'], username="foo"))
