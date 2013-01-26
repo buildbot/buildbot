@@ -524,17 +524,13 @@ class BuildStep(object, properties.PropertiesMixin):
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        lock_list = []
-        for access in self.locks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.build.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        self.locks = lock_list
+        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access) 
+                        for access in self.locks ]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) for l, la in self.locks]
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) 
+                        for l, la in self.locks ]
+
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
