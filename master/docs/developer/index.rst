@@ -11,7 +11,6 @@ Buildbot.
 .. toctree::
     :maxdepth: 2
 
-    README
     general
     apis
     classes
