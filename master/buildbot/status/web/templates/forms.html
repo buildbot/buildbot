@@ -171,10 +171,6 @@
       push the 'Pause Slave' button</p>
   {% endif %}
 
-  {% if authz.needAuthForm('pauseSlave') %}
-    {{ auth() }}
-  {% endif %}
-
   {% if paused %}
       <input type="submit" value="Unpause Slave" />
   {% else %}

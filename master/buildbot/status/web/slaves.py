@@ -59,7 +59,7 @@ class PauseActionResource(ActionResource):
 
         url = None
         if res:
-            slave.setPaused(self.state)
+            self.slave.setPaused(self.state)
             url = path_to_slave(request, self.slave)
         else:
             url = path_to_authzfail(request)
