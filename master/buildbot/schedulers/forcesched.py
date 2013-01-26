@@ -456,7 +456,7 @@ class ForceScheduler(base.BaseScheduler):
         @type username: BaseParameter
 
         @param reason: the "reason" for a build
-        @type reason: BaseParameter or None (to disable this field)
+        @type reason: BaseParameter
 
         @param codebases: the codebases for a build
         @type codebases: list of string's or CodebaseParameter's;
