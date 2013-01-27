@@ -330,16 +330,17 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         self.brd.maybeStartBuildsOn(self.builderNames)
 
-class BuildChooserBase(object):
-    """The only required API for this object is:
-        * bc.chooseNextBuild() - get the next (slave, [breqs]) or (None, None)
 
-       The default implementation of this base class implements a default
-       chooseNextBuild() that delegates out to two other functions:
-        * bc.popNextBuild() - get the next (slave, breq) pair
-        * bc.mergeRequests(breq) - perform a merge for this breq and return
-            the list of breqs consumed by the merge (including breq itself)
-    """
+class BuildChooserBase(object):
+    # This internal object selects a new build+slave pair. Its entry 
+    # point is:
+    #    * bc.chooseNextBuild() - get the next (slave, [breqs]) or (None, None)
+    #
+    # The default implementation of this class implements a default
+    # chooseNextBuild() that delegates out to two other functions:
+    #   * bc.popNextBuild() - get the next (slave, breq) pair
+    #   * bc.mergeRequests(breq) - perform a merge for this breq and return
+    #       the list of breqs consumed by the merge (including breq itself)
 
     def __init__(self, bldr, master):
         self.bldr = bldr
@@ -349,7 +350,8 @@ class BuildChooserBase(object):
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
-        """Return a (slave, [breqs]) pair for the next build"""
+        # Return the next build, as a (slave, [breqs]) pair
+
         slave, breq = yield self.popNextBuild()
         if not slave or not breq:
             defer.returnValue((None, None))
@@ -364,13 +366,15 @@ class BuildChooserBase(object):
 
     # Must be implemented by subclass
     def popNextBuild(self):
-        """Return a (slave, breq) pair for the next build"""
+        # Pick the next (slave, breq) pair; note this is pre-merge, so
+        # it's just one breq
         raise NotImplementedError("Subclasses must implement this!")
     
     # Must be implemented by subclass
     def mergeRequests(self, breq):
-        """Return a list of all buildrequests compatible with the
-        given build (including the breq)."""
+        # Merge the chosen breq with any other breqs that are compatible
+        # Returns a list of the breqs chosen (and should include the
+        # original breq as well!)
         raise NotImplementedError("Subclasses must implement this!")
     
 
@@ -378,10 +382,11 @@ class BuildChooserBase(object):
     
     @defer.inlineCallbacks
     def _fetchUnclaimedBrdicts(self):
-        """Sets up the self.unclaimedBrdicts cache. If the cache already 
-        exists, this function does nothing. If a refetch is desired, set 
-        the self.unclaimedBrdicts to None before calling."""
-        # have a valid cache?
+        # Sets up a cache of all the unclaimed brdicts. The cache is
+        # saved at self.unclaimedBrdicts cache. If the cache already 
+        # exists, this function does nothing. If a refetch is desired, set 
+        # the self.unclaimedBrdicts to None before calling."""
+        
         if self.unclaimedBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
                         buildername=self.bldr.name, claimed=False)         
@@ -391,8 +396,9 @@ class BuildChooserBase(object):
         defer.returnValue(self.unclaimedBrdicts)
     
     def _getBrdictForBuildRequest(self, breq):
-        """Get the corresponding BuildRequest list for the unclaimed
-        brdicts. Returns the brdict found or None"""
+        # Turn a BuildRequest back into a brdict. This operates from the 
+        # cache, which must be set up once via _fetchUnclaimedBrdicts
+
         if breq is None:
             return None
         
@@ -403,8 +409,9 @@ class BuildChooserBase(object):
         return None
 
     def _removeBuildRequest(self, breq):
-        """Remove the corresponding brdict for a buildrequest
-        from the unclaimed cache."""
+        # Remove a BuildrRequest object (and its brdict)
+        # from the caches
+
         if breq is None:
             return
         
@@ -416,8 +423,8 @@ class BuildChooserBase(object):
             del self.breqCache[breq.id]
 
     def _getBuildRequestForBrdict(self, brdict):
-        """Get the corresponding BuildRequest for a brdict.
-        May return a deferred."""
+        # Turn a brdict into a BuildRequest into a brdict. This is useful 
+        # for API like 'nextBuild', which operate on BuildRequest objects.
         breq = self.breqCache.get(brdict['brid'])
         if not breq:
             breq = BuildRequest.fromBrdict(self.master, brdict)
@@ -426,8 +433,7 @@ class BuildChooserBase(object):
         return breq
 
     def _getUnclaimedBuildRequests(self):
-        """Get the corresponding BuildRequest list for the unclaimed
-        brdicts. Returns a deferred."""
+        # Retrieve the list of BuildRequest objects for all unclaimed builds
         return defer.gatherResults([
             self._getBuildRequestForBrdict(brdict)
               for brdict in self.unclaimedBrdicts ])
@@ -436,6 +442,7 @@ class BasicBuildChooser(BuildChooserBase):
 
     def __init__(self, bldr, master):
         BuildChooserBase.__init__(self, bldr, master)
+
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
             self.nextSlave = lambda _,slaves: slaves and random.choice(slaves) or None
@@ -471,7 +478,7 @@ class BasicBuildChooser(BuildChooserBase):
             # either satisfy this build or we leave it for another day
             self._removeBuildRequest(breq)
 
-            #  3. make sure slave+breq is usable
+            #  3. make sure slave+ is usable for the breq
             recycledSlaves = []
             while slave:
                 canStart = yield self.canStartBuild(slave, breq)
