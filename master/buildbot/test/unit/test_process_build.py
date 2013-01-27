@@ -206,7 +206,6 @@ class TestBuild(unittest.TestCase):
 
         l = SlaveLock('lock')
         counting_access = l.access('counting')
-        exclusive_access = l.access('exclusive')
         real_lock = b.builder.botmaster.getLockByID(l)
 
         # no locks, so both these pass (call twice to verify there's no state/memory)
