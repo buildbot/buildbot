@@ -395,6 +395,18 @@ class BuildChooserBase(object):
             self.unclaimedBrdicts = brdicts
         defer.returnValue(self.unclaimedBrdicts)
     
+    @defer.inlineCallbacks
+    def _getBuildRequestForBrdict(self, brdict):
+        # Turn a brdict into a BuildRequest into a brdict. This is useful 
+        # for API like 'nextBuild', which operate on BuildRequest objects.
+
+        breq = self.breqCache.get(brdict['brid'])
+        if not breq:
+            breq = yield BuildRequest.fromBrdict(self.master, brdict)
+            if breq:
+                self.breqCache[brdict['brid']] = breq
+        defer.returnValue(breq)
+
     def _getBrdictForBuildRequest(self, breq):
         # Turn a BuildRequest back into a brdict. This operates from the 
         # cache, which must be set up once via _fetchUnclaimedBrdicts
@@ -421,16 +433,6 @@ class BuildChooserBase(object):
 
         if breq.id in self.breqCache:
             del self.breqCache[breq.id]
-
-    def _getBuildRequestForBrdict(self, brdict):
-        # Turn a brdict into a BuildRequest into a brdict. This is useful 
-        # for API like 'nextBuild', which operate on BuildRequest objects.
-        breq = self.breqCache.get(brdict['brid'])
-        if not breq:
-            breq = BuildRequest.fromBrdict(self.master, brdict)
-            if breq:
-                self.breqCache[brdict['brid']] = breq
-        return breq
 
     def _getUnclaimedBuildRequests(self):
         # Retrieve the list of BuildRequest objects for all unclaimed builds
@@ -549,7 +551,8 @@ class BasicBuildChooser(BuildChooserBase):
     def _popNextSlave(self):
         # use 'preferred' slaves first, if we have some ready
         if self.preferredSlaves:
-            defer.returnValue(self.preferredSlaves.pop(0))
+            slave = self.preferredSlaves.pop(0)
+            defer.returnValue(slave)
             return
         
         while self.slavepool:
@@ -575,7 +578,8 @@ class BasicBuildChooser(BuildChooserBase):
 
         # if we chewed through them all, use as last resort:
         if self.lastResortSlaves:
-            defer.returnValue(self.lastResortSlaves.pop(0))
+            slave = self.lastResortSlaves.pop(0)
+            defer.returnValue(slave)
             return
         
         defer.returnValue(None)

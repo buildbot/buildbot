@@ -265,7 +265,7 @@ class Builder(config.ReconfigurableServiceMixin,
         ret = True
         if callable(self.config.canStartBuild):
             ret = self.config.canStartBuild(self, slavebuilder, breq)
-        return ret
+        return defer.maybeDefered(ret)
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
