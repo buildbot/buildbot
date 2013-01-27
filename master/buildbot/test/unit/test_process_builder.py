@@ -16,12 +16,10 @@
 import mock
 import random
 from twisted.trial import unittest
-from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder, factory
-from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
 
 class BuilderMixin(object):
@@ -224,24 +222,40 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         # by default, it returns True
-        startable = self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('slave', 100)
         self.assertEqual(startable, True)
         
-        startable = self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, True)
 
         # set a configurable one
         record = []
-        def canStart(bldr, slave, breq):
+        def canStartBuild(bldr, slave, breq):
             record.append((bldr, slave, breq))
             return (slave,breq)==('slave',100)
-        self.bldr.config.canStartBuild = canStart
+        self.bldr.config.canStartBuild = canStartBuild
         
-        startable = self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('slave', 100)
         self.assertEqual(startable, True)
         self.assertEqual(record, [(self.bldr, 'slave', 100)])
         
-        startable = self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('slave', 101)
+        self.assertEqual(startable, False)
+        self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
+
+        # set a configurable one to return Deferred
+        record = []
+        def canStartBuild_deferred(bldr, slave, breq):
+            record.append((bldr, slave, breq))
+            return (slave,breq)==('slave',100)
+            return defer.succeed((slave,breq)==('slave',100))
+        self.bldr.config.canStartBuild = canStartBuild_deferred
+        
+        startable = yield self.bldr.canStartBuild('slave', 100)
+        self.assertEqual(startable, True)
+        self.assertEqual(record, [(self.bldr, 'slave', 100)])
+        
+        startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, False)
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
     

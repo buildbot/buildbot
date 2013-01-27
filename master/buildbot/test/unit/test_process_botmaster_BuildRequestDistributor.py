@@ -21,11 +21,8 @@ from buildbot.test.util import compat
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import botmaster
 from buildbot.util import epoch2datetime
-from buildbot.util.eventual import eventually, fireEventually
+from buildbot.util.eventual import fireEventually
 from buildbot.db import buildrequests
-import buildbot
-
-import random
 
 def nth_slave(n):
     def pick_nth_by_name(lst):
@@ -390,8 +387,8 @@ class TestMaybeStartBuilds(unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into (slave, [brids])
         builds_started = [
-                (slave, [br.id for br in buildrequests])
-                for (slave, buildrequests) in self.startedBuilds ]
+                (slave, [br.id for br in breqs])
+                for (slave, breqs) in self.startedBuilds ]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     # _maybeStartBuildsOnBuilder

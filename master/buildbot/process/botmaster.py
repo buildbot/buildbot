@@ -447,7 +447,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
-            self.nextSlave = lambda _,slaves: slaves and random.choice(slaves) or None
+            self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
             
         self.slavepool = self.bldr.getAvailableSlaves()
 

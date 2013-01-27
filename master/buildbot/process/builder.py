@@ -27,6 +27,7 @@ from buildbot.status.builder import RETRY
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
+from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
 
 class Builder(config.ReconfigurableServiceMixin,
@@ -262,10 +263,9 @@ class Builder(config.ReconfigurableServiceMixin,
         return Build.canStartWithSlavebuilder(locks, slavebuilder)
 
     def canStartBuild(self, slavebuilder, breq):
-        ret = True
         if callable(self.config.canStartBuild):
-            ret = self.config.canStartBuild(self, slavebuilder, breq)
-        return defer.maybeDefered(ret)
+            return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
+        return defer.succeed(True)
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
@@ -496,14 +496,10 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
-        # Note that if the build fails from here on out (e.g.,
-        # because a slave has failed), it will be handled outside of this
-        # loop. TODO: test that!
+        # If the build fails from here on out (e.g., because a slave has failed),
+        # it will be handled outside of this function. TODO: test that!
 
-        build_started = yield self._startBuildFor(slavebuilder, breqs)
-
-        self.updateBigStatus()
-        
+        build_started = yield self._startBuildFor(slavebuilder, breqs)        
         defer.returnValue(build_started)
 
     # a few utility functions to make the maybeStartBuild a bit shorter and
