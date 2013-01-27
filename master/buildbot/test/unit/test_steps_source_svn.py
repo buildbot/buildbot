@@ -153,8 +153,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                 stdout=self.svn_info_xml_nonintegerrevision) 
             + 0,
         )
-        self.assertRaises(ValueError, 
-                          lambda: isinstance(step.revision, int))
+		self.runStep()
+        self.assertRaises(ValueError, lambda: int(step.revision))
 
     def test_mode_incremental(self):
         self.setupStep(
