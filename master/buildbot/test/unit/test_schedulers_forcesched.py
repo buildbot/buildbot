@@ -459,3 +459,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertRaisesConfigError("ForceScheduler name must be a unicode string:",
              lambda: ForceScheduler(name=1234, builderNames=[],
                                     codebases=['bar'], username="foo"))
+
+    def test_emptystring_name(self):
+        self.assertRaisesConfigError("ForceScheduler name must not be empty:",
+             lambda: ForceScheduler(name='', builderNames=[],
+                                    codebases=['bar'], username="foo"))
