@@ -423,6 +423,8 @@ class ForceScheduler(base.BaseScheduler):
                if not self.checkIfType(item, chkType):
                   isListOfType = False
                   break 
+        else:
+           isListOfType = False
  
         return isListOfType
 
