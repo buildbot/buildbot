@@ -202,35 +202,25 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_bad_codebases(self):
         # cant specify both codebases and branch/revision/project/repository:
         self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=['foo'],
-                                                            branch=StringParameter('name')))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], branch=StringParameter('name')))
         self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=['foo'],
-                                                            revision=StringParameter('name')))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], revision=StringParameter('name')))
         self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=['foo'],
-                                                            project=StringParameter('name')))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], project=StringParameter('name')))
         self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=['foo'],
-                                                            repository=StringParameter('name')))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], repository=StringParameter('name')))
         
         # codebases must be a list of either string or BaseParameter types
         self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=[123],))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=[123],))
         self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
-                                     lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
-                                                            codebases=[IntParameter('foo')],))
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=[IntParameter('foo')],))
         
         # codebases cannot be empty
         self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed:",
@@ -458,9 +448,14 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_bad_reason(self):
         self.assertRaisesConfigError("ForceScheduler reason must be a StringParameter",
              lambda: ForceScheduler(name='testsched', builderNames=[],
-             	                      codebases=['bar'], reason="foo"))
+                                    codebases=['bar'], reason="foo"))
 
     def test_bad_username(self):
         self.assertRaisesConfigError("ForceScheduler username must be a StringParameter",
              lambda: ForceScheduler(name='testsched', builderNames=[],
-             	                      codebases=['bar'], username="foo"))
+             	                    codebases=['bar'], username="foo"))
+
+    def test_notstring_name(self):
+        self.assertRaisesConfigError("ForceScheduler name must be a unicode string:",
+             lambda: ForceScheduler(name=1234, builderNames=[],
+                                    codebases=['bar'], username="foo"))

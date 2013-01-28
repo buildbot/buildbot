@@ -467,6 +467,10 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
+        if not isinstance(name, str):
+           config.error("ForceScheduler name must be a unicode string: %r" %
+                        name)
+
         if isinstance(reason, BaseParameter):
             self.reason = reason
         else:
