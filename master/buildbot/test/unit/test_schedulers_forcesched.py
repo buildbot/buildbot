@@ -464,3 +464,19 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertRaisesConfigError("ForceScheduler name must not be empty:",
              lambda: ForceScheduler(name='', builderNames=[],
                                     codebases=['bar'], username="foo"))
+
+    def test_integer_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched', builderNames=1234,
+                                    codebases=['bar'], username="foo"))
+
+    def test_listofints_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched', builderNames=[1234],
+                                    codebases=['bar'], username="foo"))
+
+    def test_listofmixed_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched',
+                                    builderNames=['test', 1234],
+                                    codebases=['bar'], username="foo")) 

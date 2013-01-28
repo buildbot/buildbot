@@ -475,6 +475,16 @@ class ForceScheduler(base.BaseScheduler):
            config.error("ForceScheduler name must not be empty: %r " %
                         name)
 
+        if isinstance(builderNames, list):
+           if builderNames:
+              for item in builderNames:
+                  if not isinstance(item, str):
+                     config.error("ForceScheduler builderNames must be a list of strings: %r" %
+                           builderNames)
+        else:
+           config.error("ForceScheduler builderNames must be a list of strings: %r" %
+                         builderNames)
+
         if isinstance(reason, BaseParameter):
             self.reason = reason
         else:
