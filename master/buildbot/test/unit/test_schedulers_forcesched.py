@@ -21,7 +21,7 @@ from buildbot.schedulers.forcesched import IntParameter, FixedParameter
 from buildbot.schedulers.forcesched import BooleanParameter, UserNameParameter
 from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationError
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
-from buildbot.schedulers.forcesched import CodebaseParameter
+from buildbot.schedulers.forcesched import CodebaseParameter, BaseParameter
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
 
@@ -480,3 +480,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
              lambda: ForceScheduler(name='testsched',
                                     builderNames=['test', 1234],
                                     codebases=['bar'], username="foo")) 
+
+    def test_integer_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of Base Parameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=1234))
+
+    def test_listofints_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=[1234, 2345]))
+
+    def test_listofmixed_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=[BaseParameter(name="test",),
+                                                4567]))

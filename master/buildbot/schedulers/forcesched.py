@@ -491,6 +491,17 @@ class ForceScheduler(base.BaseScheduler):
             config.error("ForceScheduler reason must be a StringParameter: %r" %
                          reason) 
 
+        if isinstance(properties, list):
+            if properties:
+               for item in properties:
+                   if not isinstance(item, BaseParameter):
+                      config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
+                                   properties)
+        else:
+            config.error("ForceScheduler properties must be a list of BaseParameter: %r" %
+                         properties)
+
+
         if isinstance(username, BaseParameter):
         	  self.username = username
         else:
