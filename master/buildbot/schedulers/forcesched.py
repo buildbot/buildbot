@@ -498,7 +498,7 @@ class ForceScheduler(base.BaseScheduler):
                       config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
                                    properties)
         else:
-            config.error("ForceScheduler properties must be a list of BaseParameter: %r" %
+            config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
                          properties)
 
 

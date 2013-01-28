@@ -482,7 +482,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                     codebases=['bar'], username="foo")) 
 
     def test_integer_properties(self):
-        self.assertRaisesConfigError("ForceScheduler properties must be a list of Base Parameters:",
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
              lambda: ForceScheduler(name='testsched', builderNames=[],
                                     codebases=['bar'], username="foo",
                                     properties=1234))
