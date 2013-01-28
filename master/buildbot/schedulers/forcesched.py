@@ -505,7 +505,7 @@ class ForceScheduler(base.BaseScheduler):
             if isinstance(codebase, basestring):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                raise ValidationError("'codebases' must be a list of strings or CodebaseParameter objects")
+                config.error("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (codebases,))
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(branch='',repository='',revision='')

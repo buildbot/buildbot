@@ -223,11 +223,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                             repository=StringParameter('name')))
         
         # codebases must be a list of either string or BaseParameter types
-        self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed:",
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=['bar'],
-                                                            codebases=[123]))
-        self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed:",
+                                                            codebases=[123],))
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=['bar'],
                                                             codebases=[IntParameter('foo')],))
