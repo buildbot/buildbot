@@ -483,7 +483,7 @@ class ForceScheduler(base.BaseScheduler):
         
         if any((branch, revision, repository, project)):
             if codebases:
-                raise ValidationError("Must either specify 'codebases' or the 'branch/revision/repository/project' parameters")
+                config.error("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters: %r " % (codebases,))
             
             codebases = [
                 CodebaseParameter(codebase='',
@@ -498,7 +498,7 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases =[CodebaseParameter(codebase='')]
         elif not codebases:
-            raise ValidationError("'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed")
+            config.error("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (codebases,))
         
         codebase_dict = {}
         for codebase in codebases:
