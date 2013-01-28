@@ -412,6 +412,20 @@ class ForceScheduler(base.BaseScheduler):
                      'reason', 'username',
                      'forcedProperties' )
 
+    def checkIfType(self, obj, chkType):
+        return isinstance(obj, chkType)
+
+    def checkIfListOfType(self, obj, chkType):
+        isListOfType = True 
+
+        if self.checkIfType(obj, list):
+           for item in obj:
+               if not self.checkIfType(item, chkType):
+                  isListOfType = False
+                  break 
+ 
+        return isListOfType
+
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
             reason=StringParameter(name="reason", default="force build", length=20),
@@ -467,7 +481,7 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
-        if not isinstance(name, str):
+        if not self.checkIfType(name, str):
            config.error("ForceScheduler name must be a unicode string: %r" %
                         name)
 
@@ -475,35 +489,22 @@ class ForceScheduler(base.BaseScheduler):
            config.error("ForceScheduler name must not be empty: %r " %
                         name)
 
-        if isinstance(builderNames, list):
-           if builderNames:
-              for item in builderNames:
-                  if not isinstance(item, str):
-                     config.error("ForceScheduler builderNames must be a list of strings: %r" %
-                           builderNames)
-        else:
+        if not self.checkIfListOfType(builderNames, str):
            config.error("ForceScheduler builderNames must be a list of strings: %r" %
                          builderNames)
 
-        if isinstance(reason, BaseParameter):
+        if self.checkIfType(reason, BaseParameter):
             self.reason = reason
         else:
             config.error("ForceScheduler reason must be a StringParameter: %r" %
                          reason) 
-
-        if isinstance(properties, list):
-            if properties:
-               for item in properties:
-                   if not isinstance(item, BaseParameter):
-                      config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
-                                   properties)
-        else:
+ 
+        if not self.checkIfListOfType(properties, BaseParameter):
             config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
                          properties)
 
-
-        if isinstance(username, BaseParameter):
-        	  self.username = username
+        if self.checkIfType(username, BaseParameter):
+            self.username = username
         else:
             config.error("ForceScheduler username must be a StringParameter: %r" %
                          username) 
