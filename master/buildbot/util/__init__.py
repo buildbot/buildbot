@@ -69,12 +69,12 @@ class ComparableMixin:
 
     compare_attrs = []
 
-    accumulateClassList(self._class_, 'compare_attrs', compare_attrs)
 
     class _None:
         pass
 
     def __hash__(self):
+        accumulateClassList(self.__class__, 'compare_attrs', self.compare_attrs)
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in self.compare_attrs]
         return hash(tuple(map(str, alist)))
