@@ -661,8 +661,7 @@ class FakeSchedulersComponent(FakeDBComponent):
     def setSchedulerMaster(self, schedulerid, masterid):
         current_masterid = self.scheduler_masters.get(schedulerid)
         if current_masterid and masterid is not None:
-            return defer.fail(failure.Failure(
-                schedulers.SchedulerAlreadyClaimedError()))
+            return defer.fail(schedulers.SchedulerAlreadyClaimedError())
         self.scheduler_masters[schedulerid] = masterid
         return defer.succeed(None)
 
