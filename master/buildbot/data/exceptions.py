@@ -16,8 +16,11 @@
 # copy some exceptions from the DB layer
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
-_hush_pyflakes = [
-    SchedulerAlreadyClaimedError
+__all__ = [
+    'SchedulerAlreadyClaimedError',
+    'InvalidPathError',
+    'InvalidOptionException',
+    'InvalidActionException',
 ]
 
 class DataException(Exception):
