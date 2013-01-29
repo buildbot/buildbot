@@ -102,12 +102,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             self._activityPollCall.clock = self.clock
         self._activityPollDeferred = d = self._activityPollCall.start(
                 self.POLL_INTERVAL, now=True)
-        @d.addErrback
-        def stopped(f):
-            # record that the call is stopped, or we'll try to stop it later
-            self._activityPollCall = None
-            self._activityPollCallDeferred = None
-            return f
+        # this should never happen, but just in case:
         d.addErrback(log.err, 'while polling for scheduler activity:')
 
     def _stopActivityPolling(self):
@@ -117,33 +112,38 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     @defer.inlineCallbacks
     def _activityPoll(self):
-        # just in case..
-        if self.active:
-            return
-
-        upd = self.master.data.updates
-        if self.schedulerid is None:
-            self.schedulerid = yield upd.findSchedulerId(self.name)
-
-        # try to claim the scheduler; if this fails, that's OK - it just means
-        # we try again next time.
         try:
-            yield upd.setSchedulerMaster(self.schedulerid,
-                                         self.master.masterid)
-        except exceptions.SchedulerAlreadyClaimedError:
-            return
+            # just in case..
+            if self.active:
+                return
 
-        self._stopActivityPolling()
-        self.active = True
-        try:
-            yield self.activate()
+            upd = self.master.data.updates
+            if self.schedulerid is None:
+                self.schedulerid = yield upd.findSchedulerId(self.name)
+
+            # try to claim the scheduler; if this fails, that's OK - it just
+            # means we try again next time.
+            try:
+                yield upd.setSchedulerMaster(self.schedulerid,
+                                            self.master.masterid)
+            except exceptions.SchedulerAlreadyClaimedError:
+                return
+
+            self._stopActivityPolling()
+            self.active = True
+            try:
+                yield self.activate()
+            except Exception:
+                # this scheduler is half-active, and noted as such in the db..
+                log.err(None, 'WARNING: scheduler is only partially active')
+
+            # Note that, in this implementation, the scheduler will never
+            # become inactive again.  This may change in later versions.
+
         except Exception:
-            # this scheduler is half-active, and noted as such in the db..
-            log.msg('WARNING: scheduler is in an unknown state')
-            raise
+            # don't pass exceptions into LoopingCall, which can cause it to fail
+            pass
 
-        # Note that, in this implementation, the scheduler will never become
-        # inactive again.  This may change in later versions.
 
     @defer.inlineCallbacks
     def stopService(self):
