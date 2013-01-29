@@ -147,11 +147,11 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield defer.maybeDeferred(service.MultiService.stopService, self)
+        yield service.MultiService.stopService(self)
         self._stopActivityPolling()
         # wait for the activity polling LoopingCall to complete
         yield self._activityPollDeferred
-        yield defer.maybeDeferred(self._stopConsumingChanges)
+        yield self._stopConsumingChanges()
         if self.active:
             self.active = False
             yield self.deactivate()
