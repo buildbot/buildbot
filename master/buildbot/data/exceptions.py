@@ -13,6 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+# copy some exceptions from the DB layer
+from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+
+_hush_pyflakes = [
+    SchedulerAlreadyClaimedError
+]
+
 class DataException(Exception):
     pass
 
@@ -23,6 +30,7 @@ class InvalidPathError(DataException):
 class InvalidOptionException(DataException):
     "An option was invalid"
     pass
+
 class InvalidActionException(DataException):
     "Action is not supported"
     pass

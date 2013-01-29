@@ -11,6 +11,7 @@ This section gives some general information about Buildbot development.
     style
     tests
     config
+    schedulers
     utils
     results
     formats

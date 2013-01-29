@@ -144,10 +144,15 @@ class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
-        # mock out builders' _masterDeactivated
+        # mock out builders' and schedulers' _masterDeactivated
         self.master.data.rtypes.builder = mock.Mock(
                                     spec=builders.BuildersResourceType)
         self.master.data.rtypes.builder._masterDeactivated.side_effect = \
+                            lambda masterid : defer.succeed(None)
+
+        self.master.data.rtypes.scheduler = mock.Mock(
+                                    spec=builders.BuildersResourceType)
+        self.master.data.rtypes.scheduler._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
         self.rtype = masters.MasterResourceType(self.master)
@@ -267,4 +272,6 @@ class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
              dict(masterid=14, name='other', active=False)),
         ])
         self.master.data.rtypes.builder._masterDeactivated. \
+                assert_called_with(masterid=14)
+        self.master.data.rtypes.scheduler._masterDeactivated. \
                 assert_called_with(masterid=14)

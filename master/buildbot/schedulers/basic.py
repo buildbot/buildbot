@@ -68,9 +68,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
 
-    def startService(self, _returnDeferred=False):
-        base.BaseScheduler.startService(self)
-
+    def activate(self):
         d = self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                        change_filter=self.change_filter,
                                        onlyImportant=self.onlyImportant)
@@ -89,24 +87,17 @@ class BaseBasicScheduler(base.BaseScheduler):
             d.addCallback(lambda _ :
                 self.scanExistingClassifiedChanges())
 
-        # handle Deferred errors, since startService does not return a Deferred
-        d.addErrback(log.err, "while starting SingleBranchScheduler '%s'"
-                              % self.name)
+        return d
 
-        if _returnDeferred:
-            return d # only used in tests
-
-    def stopService(self):
+    def deactivate(self):
         # the base stopService will unsubscribe from new changes
-        d = base.BaseScheduler.stopService(self)
         @util.deferredLocked(self._stable_timers_lock)
-        def cancel_timers(_):
+        def cancel_timers():
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
-        d.addCallback(cancel_timers)
-        return d
+        return cancel_timers()
 
     @util.deferredLocked('_stable_timers_lock')
     def gotChange(self, change, important):

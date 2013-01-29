@@ -25,16 +25,24 @@ package.
 
 .. py:class:: ComparableMixin
 
-    This mixin class adds comparability to a subclass.  Use it like this::
+    This mixin class adds comparability to a subclass.
+    Use it like this::
 
         class Widget(FactoryProduct, ComparableMixin):
             compare_attrs = [ 'radius', 'thickness' ]
             # ...
 
-    Any attributes not in ``compare_attrs`` will not be considered when
-    comparing objects.  This is particularly useful in implementing buildbot's
-    reconfig logic, where a simple comparison between the new and existing objects
-    can determine whether the new object should replace the existing object.
+    Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
+    This is used to implement buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
+    If the comparison shows the objects to be equivalent, then the old object is left in place.
+    If they differ, the old object is removed from the buildmaster and the new object added.
+
+    For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
+    Be sure to also include the superclass's list, e.g.::
+
+        class MyScheduler(base.BaseScheduler):
+            compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
+
 
 .. py:function:: safeTranslate(str)
 

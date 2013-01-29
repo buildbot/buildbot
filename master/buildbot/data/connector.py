@@ -44,6 +44,7 @@ class DataConnector(service.Service):
         'buildbot.data.changes',
         'buildbot.data.masters',
         'buildbot.data.sourcestamps',
+        'buildbot.data.schedulers',
     ]
 
     def __init__(self, master):
