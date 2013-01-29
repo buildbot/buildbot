@@ -17,6 +17,8 @@
 import time, re, string
 import datetime
 import calendar
+from twisted.python.reflect import accumulateClassList
+
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
 def naturalSort(l):
