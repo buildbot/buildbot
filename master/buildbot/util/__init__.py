@@ -69,6 +69,8 @@ class ComparableMixin:
 
     compare_attrs = []
 
+    accumulatedClassList(self._class_, 'compare_attrs', compare_attrs)
+
     class _None:
         pass
 
