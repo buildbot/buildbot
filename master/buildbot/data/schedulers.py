@@ -63,8 +63,10 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, options, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(
                                 masterid=kwargs.get('masterid'))
-        defer.returnValue(
-                [ (yield self.db2data(schdict)) for schdict in schedulers ])
+        schdicts = yield defer.gatherResults(
+                [ self.db2data(schdict) for schdict in schedulers ],
+                consumeErrors=True)
+        defer.returnValue(schdicts)
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
