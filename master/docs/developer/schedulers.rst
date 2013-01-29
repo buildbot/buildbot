@@ -60,18 +60,12 @@ Handling Reconfiguration
 ------------------------
 
 When the configuration for a scheduler changes, Buildbot deactivates, stops and removes the old scheduler, then adds, starts, and maybe activates the new scheduler.
-Buildbot determines whether a scheduler has changed using the ``compare_attrs`` attribute, which is a list of instance attributes that will be compared between the old and new schedulers.
-If any attributes are not equal, then the old scheduler will be replaced.
-Otherwise, it will be left alone.
-
-To add attributes to ``compare_attrs``, extend the list from the parent class as a class attribute::
-
-    class MyScheduler(base.BaseScheduler):
-        compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
+Buildbot determines whether a scheduler has changed by subclassing :py:class:`~buildbot.util.ComparableMixin`.
+See the documentation for class for an explanation of the ``compare_attrs`` attribute.
 
 .. note::
 
-    In a future version, schedulers will be converted to handle reconfiguration as reconfigurable services.
+    In a future version, schedulers will be converted to handle reconfiguration as reconfigurable services, and will no longer require ``compare_attrs`` to be set.
 
 Becoming Active and Inactive
 ----------------------------
