@@ -195,6 +195,8 @@ class Timed(base.BaseScheduler):
 
 
 class Periodic(Timed):
+    # `runAtStart isn't included here, since we shouldn't restart the
+    # scheduler only to update what to do at start.
     compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
