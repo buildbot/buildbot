@@ -123,7 +123,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             qref.callback('change.12934.new', msg)
             self.assertEqual(change_received[0], expected_result)
         d.addCallback(test)
-        #d.addCallback(lambda _ : sched.stopService())
         return d
 
     def test_change_consumption_defaults(self):
