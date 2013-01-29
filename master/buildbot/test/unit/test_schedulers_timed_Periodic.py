@@ -138,6 +138,22 @@ class Periodic(unittest.TestCase):
 
         return d
 
+    def test_missedBuildDoesntDoubleBuild(self):
+        """
+        When L{timed.Periodic} misses a build, it doesn't start two builds to compensate.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13)
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        self.clock.advance(26) # skip a build
+        self.assertEqual(self.events, [ 'B@0', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
+
+        d = sched.stopService()
+        return d
+
     def test_iterations_with_initial_state(self):
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
