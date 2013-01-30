@@ -156,6 +156,9 @@ Tasks:
   This information should be sufficient to reliably predict resource contents based on only on messages.
 * Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler
 * Add messages to the scheduler resource type, one for each possible change in scheduler status.
+* Add a call to enumerate builds *previous* to a given build, using flexible criteria.
+  Something like ``/build/1234/previous?lib:branch=foo&builder=bar&count=3`` to get the three builds before 1234 with branch ``foo`` in the ``lib`` codebase, on builder ``bar``.
+  This is to address http://trac.buildbot.net/ticket/2431.
 
 ## Status Rewrites ##
 
