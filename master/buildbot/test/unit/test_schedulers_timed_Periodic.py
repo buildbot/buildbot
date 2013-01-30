@@ -85,7 +85,30 @@ class Periodic(unittest.TestCase):
         d = sched.stopService()
         return d
 
+    def test_iterations_simple_runAtStartIsFalse(self):
+        """
+        When L{timed.Periodic} is started without saved state and runAtStart,
+        it runs a build after a period and after every period, and the saves the
+        time of the last build.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        while self.clock.seconds() < 30:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@13', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
+
+        d = sched.stopService()
+        return d
+
     def test_iterations_simple_branch(self):
+        """
+        When L{time.Periodic} is passed a C{branch} argument, this builds it
+        starts are on that branch.
+        """
         sched = self.makeScheduler(exp_branch='newfeature',
                 name='test', builderNames=[ 'test' ],
                 periodicBuildTimer=13, branch='newfeature')
@@ -100,7 +123,50 @@ class Periodic(unittest.TestCase):
         d = sched.stopService()
         return d
 
-    def test_iterations_long(self):
+    def test_iterations_scheduleAsLongAsPeriod(self):
+        """
+        When a scheduling a build takes as long as a period, the next
+        build is scheduled immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=10,
+                        firstBuildDuration=10) # takes a while to start a build
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first (longer) build
+        while self.clock.seconds() < 40:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@0', 'B@10', 'B@20', 'B@30', 'B@40' ])
+        self.assertEqual(self.state.get('last_build'), 40)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_scheduleAsLongAsPeriod_runAtStartIsFalse(self):
+        """
+        If C{runAtStart} is L{True},
+        when a scheduling a build takes as long as a period, the next
+        build is scheduled immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=10, runAtStart=False,
+                        firstBuildDuration=10) # takes a while to start a build
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first (longer) build
+        while self.clock.seconds() < 40:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@10', 'B@20', 'B@30', 'B@40' ])
+        self.assertEqual(self.state.get('last_build'), 40)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_scheduleAsLongerThanPeriod(self):
+        """
+        When a scheduling a build takes longer than a period, the next
+        build is scheduled immediately.
+        """
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=10,
                         firstBuildDuration=15) # takes a while to start a build
@@ -110,6 +176,26 @@ class Periodic(unittest.TestCase):
         while self.clock.seconds() < 40:
             self.clock.advance(1)
         self.assertEqual(self.events, [ 'B@0', 'B@15', 'B@25', 'B@35' ])
+        self.assertEqual(self.state.get('last_build'), 35)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_scheduleAsLongerThanPeriod_runAtStartIsFalse(self):
+        """
+        If C{runAtStart} is L{True},
+        when a scheduling a build takes longer than a period, the next
+        build is scheduled immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=10, runAtStart=False,
+                        firstBuildDuration=15) # takes a while to start a build
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first (longer) build
+        while self.clock.seconds() < 40:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@10', 'B@25', 'B@35' ])
         self.assertEqual(self.state.get('last_build'), 35)
 
         d = sched.stopService()
@@ -148,13 +234,19 @@ class Periodic(unittest.TestCase):
         sched.startService()
         self.clock.advance(0) # let it trigger the first build
         self.clock.advance(26) # skip a build
-        self.assertEqual(self.events, [ 'B@0', 'B@26' ])
+        while self.clock.seconds() < 40:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@0', 'B@26', 'B@39' ])
         self.assertEqual(self.state.get('last_build'), 26)
 
         d = sched.stopService()
         return d
 
     def test_iterations_with_initial_state(self):
+        """
+        When L{timed.Period} is started and the most recent build is less than one period
+        in the past, a build started at the appropriate time.
+        """
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
         self.state['last_build'] = self.clock.seconds() - 7 # so next build should start in 6s
@@ -165,6 +257,85 @@ class Periodic(unittest.TestCase):
             self.clock.advance(1)
         self.assertEqual(self.events, [ 'B@6', 'B@19' ])
         self.assertEqual(self.state.get('last_build'), 19)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_with_initial_state_old(self):
+        """
+        If the most recent build is more than one period in the past
+        when L{timed.Period} is started, a build is started immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13)
+        self.state['last_build'] = self.clock.seconds() - 30
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        while self.clock.seconds() < 30:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@0', 'B@13', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_with_initial_state_old_runAtAtStartIsFalse(self):
+        """
+        If the most recent build is more than one period in the past and
+        C{runAtStart} is L{False}, when L{timed.Period} is started, a build is
+        started after one period.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+        self.state['last_build'] = self.clock.seconds() - 30
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        while self.clock.seconds() < 30:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@13', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_withInitialState_exactlyOnePeriod(self):
+        """
+        If the most recent build is exactly one period in the past,
+        when L{timed.Period} is started, a build is
+        started immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13)
+        self.state['last_build'] = self.clock.seconds() - 13
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        while self.clock.seconds() < 30:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@0', 'B@13', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
+
+        d = sched.stopService()
+        return d
+
+    def test_iterations_withInitialState_exactlyOnePeriod_runAtAtStartIsFalse(self):
+        """
+        If the most recent build is exactly one period in the past and
+        C{runAtStart} is L{False}, when L{timed.Period} is started, a build is
+        started immediately.
+        """
+        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
+                        periodicBuildTimer=13, runAtStart=False)
+        self.state['last_build'] = self.clock.seconds() - 13
+
+        sched.startService()
+        self.clock.advance(0) # let it trigger the first build
+        while self.clock.seconds() < 30:
+            self.clock.advance(1)
+        self.assertEqual(self.events, [ 'B@13', 'B@26' ])
+        self.assertEqual(self.state.get('last_build'), 26)
 
         d = sched.stopService()
         return d
