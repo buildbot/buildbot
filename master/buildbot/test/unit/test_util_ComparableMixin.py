@@ -27,6 +27,9 @@ class ComparableMixin(unittest.TestCase):
 
     class Bar(Foo, util.ComparableMixin):
         compare_attrs = ["b", "c"]
+        def __init__(self, a, b, c):
+            self.a, self.b, self.c = a, b, c
+            self.accumulate()
 
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
@@ -70,3 +73,6 @@ class ComparableMixin(unittest.TestCase):
 
     def test_lt_differentClasses(self):
         assert self.b123 < self.f123
+
+    def test_inheritWithMoreAddedToList(self):
+        self.assertEqual(self.b123.compare_attrs, ["a", "b", "c"])

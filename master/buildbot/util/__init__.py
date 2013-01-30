@@ -71,6 +71,12 @@ class ComparableMixin:
 
     class _None:
         pass
+ 
+    def __init__(self):
+        if self.compare_attrs:
+           self.accumulate()
+        else:
+           self.compare_attrs = []
 
     def __hash__(self):
         alist = [self.__class__] + \
@@ -97,7 +103,13 @@ class ComparableMixin:
         return cmp(self_list, them_list)
 
     def accumulate(self):
-        accumulateClassList(self.__class__, 'compare_attrs', self.compare_attrs)
+        temp = []
+        backup = self.compare_attrs
+        seen = set()
+        seen_add = seen.add
+        accumulateClassList(self.__class__, 'compare_attrs', temp,
+                            backup)
+        self.compare_attrs = sorted([ x for x in (self.compare_attrs + temp) if x not in seen and not seen_add(x)]) 
 
 def diffSets(old, new):
     if not isinstance(old, set):
