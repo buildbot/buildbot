@@ -96,6 +96,9 @@ class ComparableMixin:
                      for name in self.compare_attrs]
         return cmp(self_list, them_list)
 
+    def accumulate(self):
+        accumulateClassList(self.__class__, 'compare_attrs', self.compare_attrs)
+
 def diffSets(old, new):
     if not isinstance(old, set):
         old = set(old)
