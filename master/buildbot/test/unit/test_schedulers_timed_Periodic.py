@@ -237,7 +237,7 @@ class Periodic(unittest.TestCase):
         while self.clock.seconds() < 40:
             self.clock.advance(1)
         self.assertEqual(self.events, [ 'B@0', 'B@26', 'B@39' ])
-        self.assertEqual(self.state.get('last_build'), 26)
+        self.assertEqual(self.state.get('last_build'), 39)
 
         d = sched.stopService()
         return d
