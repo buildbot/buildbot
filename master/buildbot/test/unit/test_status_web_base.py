@@ -80,3 +80,11 @@ class Functions(unittest.TestCase):
             'application/x-www-form-urlencoded ; charset=UTF-16 ; foo=bar',
             'UTF-16')
 
+    def test_plural_zero(self):
+        self.assertEqual(base.plural("car", "cars", 0), "0 cars")
+
+    def test_plural_one(self):
+        self.assertEqual(base.plural("car", "cars", 1), "1 car")
+
+    def test_plural_many(self):
+        self.assertEqual(base.plural("car", "cars", 34), "34 cars")
