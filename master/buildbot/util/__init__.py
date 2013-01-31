@@ -72,15 +72,13 @@ class ComparableMixin:
     class _None:
         pass
  
-    def __init__(self):
-        if self.compare_attrs:
-           self.accumulate()
-        else:
-           self.compare_attrs = []
-
     def __hash__(self):
+        backup = self.compare_attrs
+        tmp = []
+        accumulateClassList(self.__class__, 'compare_attrs', tmp, backup) 
+
         alist = [self.__class__] + \
-                [getattr(self, name, self._None) for name in self.compare_attrs]
+                [getattr(self, name, self._None) for name in tmp]
         return hash(tuple(map(str, alist)))
 
     def __cmp__(self, them):
@@ -92,24 +90,21 @@ class ComparableMixin:
         if result:
             return result
 
-        result = cmp(self.compare_attrs, them.compare_attrs)
+        acomp = []
+        bcomp = []
+        aback = self.compare_attrs
+        bback = them.compare_attrs 
+        accumulateClassList(self.__class__, 'compare_attrs', acomp, aback)
+        accumulateClassList(self.__class__, 'compare_attrs', bcomp, bback)
+        result = cmp(acomp, bcomp)
         if result:
             return result
 
         self_list = [getattr(self, name, self._None)
-                     for name in self.compare_attrs]
+                     for name in aback]
         them_list = [getattr(them, name, self._None)
-                     for name in self.compare_attrs]
+                     for name in aback]
         return cmp(self_list, them_list)
-
-    def accumulate(self):
-        temp = []
-        backup = self.compare_attrs
-        seen = set()
-        seen_add = seen.add
-        accumulateClassList(self.__class__, 'compare_attrs', temp,
-                            backup)
-        self.compare_attrs = sorted([ x for x in (self.compare_attrs + temp) if x not in seen and not seen_add(x)]) 
 
 def diffSets(old, new):
     if not isinstance(old, set):

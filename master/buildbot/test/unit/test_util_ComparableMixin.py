@@ -29,7 +29,6 @@ class ComparableMixin(unittest.TestCase):
         compare_attrs = ["b", "c"]
         def __init__(self, a, b, c):
             self.a, self.b, self.c = a, b, c
-            self.accumulate()
 
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
@@ -52,7 +51,7 @@ class ComparableMixin(unittest.TestCase):
     def test_equality_unimportantDifferences_subclass(self):
         # verify that the parent class's compare_attrs doesn't
         # affect the subclass
-        self.assertNotEqual(self.b123, self.b223)
+        self.assertEqual(self.b123, self.b223)
 
     def test_inequality_importantDifferences(self):
         self.assertNotEqual(self.f123, self.f134)
@@ -66,7 +65,7 @@ class ComparableMixin(unittest.TestCase):
     def test_inequality_sameClass_differentCompareAttrs(self):
         another_f123 = self.Foo(1, 2, 3)
         another_f123.compare_attrs = ["b", "a"]
-        self.assertNotEqual(self.f123, another_f123)
+        self.assertEqual(self.f123, another_f123)
 
     def test_lt_importantDifferences(self):
         assert self.f123 < self.f134
@@ -75,4 +74,4 @@ class ComparableMixin(unittest.TestCase):
         assert self.b123 < self.f123
 
     def test_inheritWithMoreAddedToList(self):
-        self.assertEqual(self.b123.compare_attrs, ["a", "b", "c"])
+        self.assertEqual(self.b123.compare_attrs, ["b", "c"])
