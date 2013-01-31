@@ -17,7 +17,7 @@
 import time, re, string
 import datetime
 import calendar
-from twisted.python.reflect import accumulateClassList
+from twisted.python import reflect 
 
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
@@ -75,7 +75,7 @@ class ComparableMixin:
     def __hash__(self):
         backup = self.compare_attrs
         tmp = []
-        accumulateClassList(self.__class__, 'compare_attrs', tmp, backup) 
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', tmp, backup) 
 
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in tmp]
@@ -94,8 +94,8 @@ class ComparableMixin:
         bcomp = []
         aback = self.compare_attrs
         bback = them.compare_attrs 
-        accumulateClassList(self.__class__, 'compare_attrs', acomp, aback)
-        accumulateClassList(self.__class__, 'compare_attrs', bcomp, bback)
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', acomp, aback)
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', bcomp, bback)
         result = cmp(acomp, bcomp)
         if result:
             return result
