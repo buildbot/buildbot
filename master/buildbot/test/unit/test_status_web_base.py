@@ -88,3 +88,51 @@ class Functions(unittest.TestCase):
 
     def test_plural_many(self):
         self.assertEqual(base.plural("car", "cars", 34), "34 cars")
+
+    def test_abbreviate_age_0_sec(self):
+        self.assertEqual(base.abbreviate_age(0), "0 seconds ago")
+
+    def test_abbreviate_age_1_sec(self):
+        self.assertEqual(base.abbreviate_age(1), "1 second ago")
+
+    def test_abbreviate_age_5_sec(self):
+        self.assertEqual(base.abbreviate_age(5), "5 seconds ago")
+
+    def test_abbreviate_age_89_sec(self):
+        self.assertEqual(base.abbreviate_age(89), "89 seconds ago")
+
+    def test_abbreviate_age_2_min(self):
+        self.assertEqual(base.abbreviate_age((base.MINUTE * 2) + 2),
+                         "about 2 minutes ago")
+
+    def test_abbreviate_age_10_min(self):
+        self.assertEqual(base.abbreviate_age((base.MINUTE * 10) + 7),
+                         "about 10 minutes ago")
+
+    def test_abbreviate_age_64_min(self):
+        self.assertEqual(base.abbreviate_age((base.HOUR + base.MINUTE * 4)),
+                         "about 64 minutes ago")
+
+    def test_abbreviate_age_2_hours(self):
+        self.assertEqual(base.abbreviate_age((base.HOUR * 2 + 25)),
+                         "about 2 hours ago")
+
+    def test_abbreviate_age_1_day(self):
+        self.assertEqual(base.abbreviate_age((base.DAY + base.MINUTE * 4)),
+                         "about 1 day ago")
+
+    def test_abbreviate_age_3_days(self):
+        self.assertEqual(base.abbreviate_age((base.DAY * 3 + base.MINUTE * 9)),
+                         "about 3 days ago")
+
+    def test_abbreviate_age_12_days(self):
+        self.assertEqual(base.abbreviate_age((base.DAY * 12 + base.HOUR * 9)),
+                         "about 12 days ago")
+
+    def test_abbreviate_age_3_weeks(self):
+        self.assertEqual(base.abbreviate_age((base.WEEK * 3 + base.DAY)),
+                         "about 3 weeks ago")
+
+    def test_abbreviate_age_long_time(self):
+        self.assertEqual(base.abbreviate_age((base.MONTH * 4 + base.WEEK)),
+                         "a long time ago")
