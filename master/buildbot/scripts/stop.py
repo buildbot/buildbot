@@ -25,6 +25,9 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
+    if config['clean']:
+      signame = 'USR1'
+
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
         return 1
