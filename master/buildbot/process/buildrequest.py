@@ -120,6 +120,7 @@ class BuildRequest(object):
                 ss.patch_info = (patch['author'], patch['comment'])
             else:
                 ss.patch = ss.patch_info = None
+            ss.changes = []
             # XXX: sourcestamps don't have changes anymore; this affects merging!!
 
         defer.returnValue(buildrequest)
