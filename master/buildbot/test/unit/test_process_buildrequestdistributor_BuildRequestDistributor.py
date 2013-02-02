@@ -19,7 +19,7 @@ from twisted.internet import defer, reactor
 from twisted.python import failure
 from buildbot.test.util import compat
 from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import botmaster
+from buildbot.process import buildrequestdistributor
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
 from buildbot.db import buildrequests
@@ -31,9 +31,9 @@ def nth_slave(n):
         return slaves[n]
     return pick_nth_by_name
 
-class SkipSlavesThatCantGetLock(botmaster.BasicBuildChooser):
+class SkipSlavesThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
     def __init__(self, *args, **kwargs):
-        botmaster.BasicBuildChooser.__init__(self, *args, **kwargs)
+        buildrequestdistributor.BasicBuildChooser.__init__(self, *args, **kwargs)
         self.lastResortSlaves = None  # disable this
 
 class Test(unittest.TestCase):
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.master.db = fakedb.FakeDBConnector(self)
-        self.brd = botmaster.BuildRequestDistributor(self.botmaster)
+        self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
         # TODO: this is a terrible way to detect the "end" of the test -
@@ -320,7 +320,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
             def get(self, name):
                 return 
         self.master.caches = fakemaster.FakeCaches()
-        self.brd = botmaster.BuildRequestDistributor(self.botmaster)
+        self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
         self.startedBuilds = []
@@ -528,7 +528,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
             ('test-slave2', 12)])
 
     @mock.patch('random.choice', nth_slave(-1))
-    @mock.patch('buildbot.process.botmaster.BuildRequestDistributor.BuildChooser', SkipSlavesThatCantGetLock)
+    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser', SkipSlavesThatCantGetLock)
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
         self.master.config.mergeRequests = False
