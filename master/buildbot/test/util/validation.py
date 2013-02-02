@@ -497,6 +497,57 @@ dbdict['schedulerdict'] = DictValidator(
     masterid=NoneOk(IntValidator()),
 )
 
+# builds
+
+_build = dict(
+    buildid=IntValidator(),
+    number=IntValidator(),
+    builderid=IntValidator(),
+    buildrequestid=IntValidator(),
+    slaveid=IntValidator(),
+    masterid=IntValidator(),
+    started_at=IntValidator(),
+    complete=BooleanValidator(),
+    complete_at=NoneOk(IntValidator()),
+    state_strings=ListValidator(StringValidator()),
+    results=NoneOk(IntValidator()),
+)
+_buildKeyFields = ['builderid', 'buildid']
+_buildEvents = ['new', 'complete']
+
+data['build'] = Selector()
+data['build'].add(None,
+    DictValidator(
+        builder_link=LinkValidator(),
+        buildrequest_link=LinkValidator(),
+        slave_link=LinkValidator(),
+        master_link=LinkValidator(),
+        link=LinkValidator(),
+        **_build
+))
+
+message['build'] = Selector()
+message['build'].add(None,
+    MessageValidator(
+        keyFields=_buildKeyFields,
+        events=_buildEvents,
+        messageValidator=DictValidator(
+            **_build
+)))
+
+dbdict['builddict'] = DictValidator(
+    id=IntValidator(),
+    number=IntValidator(),
+    builderid=IntValidator(),
+    buildrequestid=IntValidator(),
+    slaveid=IntValidator(),
+    masterid=IntValidator(),
+    started_at=DateTimeValidator(),
+    complete_at=NoneOk(DateTimeValidator()),
+    state_strings=ListValidator(StringValidator()),
+    results=NoneOk(IntValidator()),
+)
+
 # external functions
 
 def _verify(testcase, validator, name, object):

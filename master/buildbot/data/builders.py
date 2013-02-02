@@ -71,6 +71,10 @@ class BuildersResourceType(base.ResourceType):
         base.ResourceType.__init__(self, master)
 
     @base.updateMethod
+    def findBuilderId(self, name):
+        return self.master.db.builders.findBuilderId(name)
+
+    @base.updateMethod
     @defer.inlineCallbacks
     def updateBuilderList(self, masterid, builderNames):
         # get the "current" list of builders for this master, so we know what

@@ -271,7 +271,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
 
-            if source.changes:
+            if source and source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                      'who' : c.who,

@@ -134,6 +134,19 @@ class BuilderResourceType(interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Master(id=14),
         ])
 
+    def test_signature_findBuilderId(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.findBuilderId, # fake
+            self.rtype.findBuilderId) # real
+        def findBuilderId(self, name):
+            pass
+
+    def test_findBuilderId(self):
+        # this just passes through to the db method, so test that
+        rv = defer.succeed(None)
+        self.master.db.builders.findBuilderId = mock.Mock(return_value=rv)
+        self.assertIdentical(self.rtype.findBuilderId('foo'), rv)
+
     def test_signature_updateBuilderList(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.updateBuilderList, # fake
