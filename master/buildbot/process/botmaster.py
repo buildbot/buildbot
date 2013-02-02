@@ -332,8 +332,16 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
 class BuildChooserBase(object):
-    # This internal object selects a new build+slave pair. Its entry 
-    # point is:
+    #
+    # WARNING: This API is experimental and in active development. 
+    #
+    # This internal object selects a new build+slave pair. It acts as a 
+    # generator, initializing its state on creation and offering up new
+    # pairs until exhaustion. The object can be destroyed at any time
+    # (eg, before the list exhausts), and can be "restarted" by abandoning 
+    # an old instance and creating a new one.
+    #
+    # The entry point is:
     #    * bc.chooseNextBuild() - get the next (slave, [breqs]) or (None, None)
     #
     # The default implementation of this class implements a default
@@ -441,6 +449,27 @@ class BuildChooserBase(object):
               for brdict in self.unclaimedBrdicts ])
             
 class BasicBuildChooser(BuildChooserBase):
+    # BasicBuildChooser generates build pairs via the configuration points:
+    #   * config.nextSlave  (or random.choice if not set)
+    #   * config.nextBuild  (or "pop top" if not set)
+    #
+    # For N slaves, this will call nextSlave at most N times. If nextSlave
+    # returns a slave that cannot satisfy the build chosen by nextBuild,
+    # it will search for a slave that can satisfy the build. If one is found,
+    # the slaves that cannot be used are "recycled" back into a list
+    # to be tried, in order, for the next chosen build. 
+    #
+    # There are two tests performed on the slave:
+    #   * can the slave start a generic build for the Builder?
+    #   * if so, can the slave start the chosen build on the Builder?
+    # Slaves that cannot meet the first criterion are saved into the 
+    # self.rejectedSlaves list and will be used as a last resort. An example
+    # of this test is whether the slave can grab the Builder's locks. 
+    #
+    # If all slaves fail the first test, then the algorithm will assign the
+    # slaves in the order originally generated. By setting self.rejectedSlaves
+    # to None, the behavior will instead refuse to ever assign to a slave that
+    # fails the generic test.
 
     def __init__(self, bldr, master):
         BuildChooserBase.__init__(self, bldr, master)
@@ -454,9 +483,9 @@ class BasicBuildChooser(BuildChooserBase):
         # Pick slaves one at a time from the pool, and if the Builder says 
         # they're usable (eg, locks can be satisfied), then prefer those slaves; 
         # otherwise they go in the 'last resort' bucket, and we'll use them if 
-        # we need to. (Setting lastResortSlaves to None disables that feature)
+        # we need to. (Setting rejectedSlaves to None disables that feature)
         self.preferredSlaves = []
-        self.lastResortSlaves = []
+        self.rejectedSlaves = []
 
         self.nextBuild = self.bldr.config.nextBuild
         
@@ -573,12 +602,12 @@ class BasicBuildChooser(BuildChooserBase):
                 return
             
             # save as a last resort, just in case we need them later
-            if self.lastResortSlaves is not None:
-                self.lastResortSlaves.append(slave)
+            if self.rejectedSlaves is not None:
+                self.rejectedSlaves.append(slave)
 
         # if we chewed through them all, use as last resort:
-        if self.lastResortSlaves:
-            slave = self.lastResortSlaves.pop(0)
+        if self.rejectedSlaves:
+            slave = self.rejectedSlaves.pop(0)
             defer.returnValue(slave)
             return
         
@@ -785,6 +814,8 @@ class BuildRequestDistributor(service.Service):
     
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr):
+        # create a chooser to give us our next builds
+        # this object is temporary and will go away when we're done
         bc = self.createBuildChooser(bldr, self.master)
     
         while 1:
