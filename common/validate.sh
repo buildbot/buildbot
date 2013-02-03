@@ -46,6 +46,14 @@ check_long_lines() {
     $long_lines
 }
 
+check_yield_defer_returnValue() {
+    local yields=false
+    if git diff "$REVRANGE" | grep '+.*yield defer.returnValue'; then
+        yields=true
+    fi
+    $yields
+}
+
 if ! git diff --no-ext-diff --quiet --exit-code; then
     not_ok "changed files in working copy"
     exit 1
@@ -57,6 +65,7 @@ git log "$REVRANGE" --pretty=oneline || exit 1
 status "checking formatting"
 git diff "$REVRANGE" | grep -q $'+.*\t' && not_ok "$REVRANGE adds tabs"
 check_long_lines && not_ok "$REVRANGE adds long lines"
+check_yield_defer_returnValue && not_ok "$REVRANGE yields defer.returnValue"
 
 status "running tests"
 if [ -n "${TRIALTMP}" ]; then
