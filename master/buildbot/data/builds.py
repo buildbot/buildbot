@@ -61,7 +61,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         if 'builderid' in kwargs:
             if not dbdict or dbdict['builderid'] != kwargs['builderid']:
                 return
-        yield defer.returnValue((yield self.db2data(dbdict))
+        defer.returnValue((yield self.db2data(dbdict))
                                 if dbdict else None)
 
 
@@ -79,7 +79,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         builds = yield self.master.db.builds.getBuilds(
                                 builderid=kwargs.get('builderid'),
                                 buildrequestid=kwargs.get('buildrequestid'))
-        yield defer.returnValue(
+        defer.returnValue(
                 [ (yield self.db2data(schdict)) for schdict in builds ])
 
     def startConsuming(self, callback, options, kwargs):
