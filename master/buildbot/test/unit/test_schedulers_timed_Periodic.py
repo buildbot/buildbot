@@ -162,7 +162,7 @@ class Periodic(unittest.TestCase):
         d = sched.stopService()
         return d
 
-    def test_iterations_scheduleAsLongerThanPeriod(self):
+    def test_iterations_scheduleLongerThanPeriod(self):
         """
         When a scheduling a build takes longer than a period, the next
         build is scheduled immediately.
@@ -175,13 +175,13 @@ class Periodic(unittest.TestCase):
         self.clock.advance(0) # let it trigger the first (longer) build
         while self.clock.seconds() < 40:
             self.clock.advance(1)
-        self.assertEqual(self.events, [ 'B@0', 'B@15', 'B@25', 'B@35' ])
-        self.assertEqual(self.state.get('last_build'), 35)
+        self.assertEqual(self.events, [ 'B@0', 'B@15', 'B@20', 'B@30', 'B@40' ])
+        self.assertEqual(self.state.get('last_build'), 40)
 
         d = sched.stopService()
         return d
 
-    def test_iterations_scheduleAsLongerThanPeriod_runAtStartIsFalse(self):
+    def test_iterations_scheduleLongerThanPeriod_runAtStartIsFalse(self):
         """
         If C{runAtStart} is L{True},
         when a scheduling a build takes longer than a period, the next
@@ -195,8 +195,8 @@ class Periodic(unittest.TestCase):
         self.clock.advance(0) # let it trigger the first (longer) build
         while self.clock.seconds() < 40:
             self.clock.advance(1)
-        self.assertEqual(self.events, [ 'B@10', 'B@25', 'B@35' ])
-        self.assertEqual(self.state.get('last_build'), 35)
+        self.assertEqual(self.events, [ 'B@10', 'B@25', 'B@30', 'B@40' ])
+        self.assertEqual(self.state.get('last_build'), 40)
 
         d = sched.stopService()
         return d
@@ -351,18 +351,6 @@ class Periodic(unittest.TestCase):
         d.addCallback(lambda t : self.assertEqual(t, 0))
         return d
 
-    def test_getNextBuildTime_None_runAtStartFalse(self):
-        """
-        When there is no previous build time and C{runAtStart} is L{False},
-        a build is scheduled one period from now.
-        """
-        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
-                        periodicBuildTimer=13, runAtStart=False)
-        # given None, build right away
-        d = sched.getNextBuildTime(None)
-        d.addCallback(lambda t : self.assertEqual(t, 13))
-        return d
-
     def test_getNextBuildTime_given(self):
         """
         When there is a previous build time, then the next scheduled build
@@ -372,29 +360,6 @@ class Periodic(unittest.TestCase):
                         periodicBuildTimer=13)
         d = sched.getNextBuildTime(20)
         d.addCallback(lambda t : self.assertEqual(t, 33))
-        return d
-
-    def test_getNextBuildTime_givenFuture_runAtStartFalse(self):
-        """
-        When there is a previous build time in the future and C{runAtStart} is
-        L{False}, then the next scheduled build is one period later.
-        """
-        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
-                        periodicBuildTimer=13, runAtStart=False)
-        d = sched.getNextBuildTime(20)
-        d.addCallback(lambda t : self.assertEqual(t, 33))
-        return d
-
-    def test_getNextBuildTime_givenPast_runAtStartFalse(self):
-        """
-        When there is a previous build time more than one period in the past
-        and C{runAtStart} is L{False}, then the next scheduled build is one
-        period from now.
-        """
-        sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
-                        periodicBuildTimer=13, runAtStart=False)
-        d = sched.getNextBuildTime(-20)
-        d.addCallback(lambda t : self.assertEqual(t, 13))
         return d
 
     def test_getPendingBuildTimes(self):

@@ -40,9 +40,11 @@ class Timed(base.BaseScheduler):
     before the service stops.
     """
 
+    # `runAtStart isn't included here, since we shouldn't restart the
+    # scheduler only to update what to do at start.
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}, **kwargs):
+    def __init__(self, name, builderNames, properties={}, runAtStart=True, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
                                     **kwargs)
 
@@ -55,6 +57,7 @@ class Timed(base.BaseScheduler):
         self.actuateOk = False
         self.actuateAt = None
         self.actuateAtTimer = None
+        self.runAtStart = runAtStart
 
         self._reactor = reactor # patched by tests
 
@@ -71,7 +74,7 @@ class Timed(base.BaseScheduler):
         d.addCallback(set_last)
 
         # schedule the next build
-        d.addCallback(lambda _ : self.scheduleNextBuild())
+        d.addCallback(lambda _ : self.scheduleNextBuild(atStart=True))
 
         # give subclasses a chance to start up
         d.addCallback(lambda _ : self.startTimedSchedulerService())
@@ -127,7 +130,7 @@ class Timed(base.BaseScheduler):
         """
         raise NotImplementedError
 
-    def scheduleNextBuild(self):
+    def scheduleNextBuild(self, atStart=False):
         """
         Schedule the next build, re-invoking L{getNextBuildTime}.  This can be
         called at any time, and it will avoid contention with builds being
@@ -135,7 +138,7 @@ class Timed(base.BaseScheduler):
 
         @returns: Deferred
         """
-        return self.actuationLock.run(self._scheduleNextBuild_locked)
+        return self.actuationLock.run(self._scheduleNextBuild_locked, atStart=atStart)
 
     ## utilities
 
@@ -143,7 +146,7 @@ class Timed(base.BaseScheduler):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
 
-    def _scheduleNextBuild_locked(self):
+    def _scheduleNextBuild_locked(self, atStart=False):
         # clear out the existing timer
         if self.actuateAtTimer:
             self.actuateAtTimer.cancel()
@@ -159,8 +162,11 @@ class Timed(base.BaseScheduler):
             if actuateAt is not None:
                 untilNext = self.actuateAt - now
                 if untilNext == 0:
-                    log.msg(("%s: missed scheduled build time, so building "
-                             "immediately") % self.name)
+                    if atStart and self.runAtStart:
+                        log.msg(("%s: missed scheduled build time, so building "
+                                 "immediately") % self.name)
+                    else:
+                        return self.getNextBuildTime(now).addCallback(set_timer)
                 self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                               self._actuate)
         d.addCallback(set_timer)
@@ -182,11 +188,11 @@ class Timed(base.BaseScheduler):
             self.actuateAt = None
             yield self.setState('last_build', self.lastActuated)
 
-            # start the build
-            yield self.startBuild()
-
             # schedule the next build (noting the lock is already held)
             yield self._scheduleNextBuild_locked()
+
+            # start the build
+            yield self.startBuild()
         d = self.actuationLock.run(set_state_and_start)
 
         # this function can't return a deferred, so handle any failures via
@@ -195,30 +201,24 @@ class Timed(base.BaseScheduler):
 
 
 class Periodic(Timed):
-    # `runAtStart isn't included here, since we shouldn't restart the
-    # scheduler only to update what to do at start.
     compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
-            branch=None, properties={}, onlyImportant=False,
-            runAtStart=True):
+            branch=None, properties={}, onlyImportant=False, runAtStart=True):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                    properties=properties)
+                    properties=properties, runAtStart=runAtStart)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
-        self.runAtStart = runAtStart
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
             nextTime = self.now() # meaning "ASAP"
         else:
             nextTime = lastActuated + self.periodicBuildTimer
-        if not self.runAtStart and nextTime <= self.now():
-            nextTime = self.now() + self.periodicBuildTimer
         return defer.succeed(nextTime)
 
     def startBuild(self):
