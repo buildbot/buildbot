@@ -99,6 +99,20 @@ class ConfigErrors(unittest.TestCase):
         config.error("message")
         self.assertEqual(e.errors, ["message"])
 
+    def test_str(self):
+        ex = config.ConfigErrors()
+        self.assertEqual(str(ex), "")
+
+        ex = config.ConfigErrors(["a"])
+        self.assertEqual(str(ex), "a")
+
+        ex = config.ConfigErrors(["a", "b"])
+        self.assertEqual(str(ex), "a\nb")
+
+        ex = config.ConfigErrors(["a"])
+        ex.addError('c')
+        self.assertEqual(str(ex), "a\nc")
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
