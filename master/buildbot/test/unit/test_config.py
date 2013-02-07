@@ -202,6 +202,36 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             lambda : config.MasterConfig.loadConfig(
                 os.path.join(self.basedir, 'NO'), 'test.cfg'))
 
+    def test_loadConfig_open_error(self):
+        """
+        Check that loadConfig() raises correct ConfigError exception in cases
+        when configure file is found, but we fail to open it.
+        """
+
+        def raise_IOError(*args):
+            raise IOError("error_msg")
+
+        self.install_config_file('#dummy')
+
+        # override build-in open() function to always rise IOError
+        std_open = __builtins__["open"]
+        __builtins__["open"] = raise_IOError
+
+        # call loadConfig() and capture any raised exception
+        raised_exception = None
+        try:
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
+        except Exception as e:
+            raised_exception = e
+
+        # restore build-in open() function
+        __builtins__["open"] = std_open
+
+        # check that we got the expected ConfigError exception
+        self.assertIsInstance(raised_exception, config.ConfigErrors)
+        self.assertConfigError(raised_exception,
+                re.compile("unable to open configuration file .*: error_msg"))
+
     @compat.usesFlushLoggedErrors
     def test_loadConfig_parse_error(self):
         self.install_config_file('def x:\nbar')
