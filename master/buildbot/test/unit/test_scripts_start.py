@@ -16,12 +16,10 @@
 from __future__ import with_statement
 
 import os, sys
-import twisted
-from twisted.python import versions
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.trial import unittest
 from buildbot.scripts import start
-from buildbot.test.util import dirs, misc, compat
+from buildbot.test.util import dirs, misc
 
 def mkconfig(**kwargs):
     config = {
@@ -89,7 +87,6 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             print res
         return d
 
-    @compat.skipUnlessPlatformIs('posix')
     def test_start(self):
         d = self.runStart()
         @d.addCallback
@@ -97,9 +94,6 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             self.assertEqual((rc, err), (0, ''))
             self.assertSubstring('BuildMaster is running', out)
         return d
-
-    if twisted.version <= versions.Version('twisted', 9, 0, 0):
-        test_start = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks
