@@ -84,7 +84,7 @@ def launch(config):
     # windows.
     script = [ "from twisted.scripts import twistd", "twistd.run()"]
     if not config['quiet']:
-        script = [ "from buildbot._startupLogger import installLogger",
+        script = [ "from buildbot.util._startupLogger import installLogger",
                 "installLogger()" ] + script
 
     # see if we can launch the application without actually having to
