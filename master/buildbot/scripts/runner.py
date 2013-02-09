@@ -321,12 +321,6 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
-        if not self.get('who'):
-            raise usage.UsageError("you must provide a committer (--who)")
-        if not self.get('master'):
-            raise usage.UsageError("you must provide the master location")
-
-
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"
     optParameters = [
