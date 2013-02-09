@@ -221,7 +221,8 @@ class Git(Source):
 
     def copy(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
+                                                'logEnviron': self.logEnviron,
+                                                'timeout': self.timeout,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -231,7 +232,8 @@ class Git(Source):
             cmd = buildstep.RemoteCommand('cpdir',
                                           {'fromdir': 'source',
                                            'todir':'build',
-                                           'logEnviron': self.logEnviron,})
+                                           'logEnviron': self.logEnviron,
+                                           'timeout': self.timeout,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -411,7 +413,8 @@ class Git(Source):
     def _doClobber(self):
         """Remove the work directory"""
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
+                                                'logEnviron': self.logEnviron,
+                                                'timeout': self.timeout,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def checkRemoval(res):
