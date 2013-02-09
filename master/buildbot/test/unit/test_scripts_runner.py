@@ -766,6 +766,87 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('-op=foo'))
 
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse,'-m', 'foo')
+
+    def test_no_operation(self):
+        self.assertRaises(usage.UsageError, self.parse, '-m', 'a:1')
+
+    def test_bad_operation(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '-m', 'a:1', '--op=mayhem')
+
+    def test_no_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '-m', 'a:1', '--op=add')
+
+    def test_no_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '-m', 'a:1', '-u', 'tdurden')
+
+    def test_invalid_bb_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--bb_username=tdurden',
+                          *self.extra_args)
+
+    def test_invalid_bb_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--bb_password=marla',
+                          *self.extra_args)
+
+    def test_update_no_bb_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--bb_password=marla',
+                          *self.extra_args)
+
+    def test_update_no_bb_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--bb_username=tdurden',
+                          *self.extra_args)
+
+    def test_no_ids_info(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', *self.extra_args)
+
+    def test_ids_with_add(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--ids=id1', *self.extra_args)
+
+    def test_ids_with_update(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--ids=id1', *self.extra_args)
+
+    def test_no_ids_found_update(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--op=update", "--info=svn=x", *self.extra_args)
+
+    def test_id_with_add(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--op=add", "--info=id:x", *self.extra_args)
+
+    def test_info_with_remove(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=remove', '--info=x=v', *self.extra_args)
+
+
+    def test_info_with_get(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=get', '--info=x=v', *self.extra_args)
+
 
 class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
