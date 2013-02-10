@@ -145,6 +145,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
+        ["clean", "c", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"

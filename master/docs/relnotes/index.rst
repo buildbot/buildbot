@@ -25,7 +25,7 @@ Features
 
 * Slaves can now be paused through the web status.
 
-* ``buildbot stop`` now accepts ``--clean`` to stop the master cleanly (allowing all running builds to complete first).
+* ``buildbot stop`` and ``buildbot restart`` now accept ``--clean`` to stop or restart the master cleanly (allowing all running builds to complete first).
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
