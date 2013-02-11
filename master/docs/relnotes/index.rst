@@ -27,6 +27,9 @@ Features
 
 * ``buildbot stop`` now accepts ``--clean`` to stop the master cleanly (allowing all running builds to complete first).
 
+* buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests() can now filter by branch and repository
+
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
