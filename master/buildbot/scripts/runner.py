@@ -30,6 +30,24 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
+def validate_master_option(master):
+    """Validate master (-m, --master) command line option.
+
+    Checks that option is a string of the 'hostname:port' form, otherwise
+    raises an UsageError exception.
+
+    @type  master: string
+    @param master: master option
+
+    @raise usage.UsageError: on invalid master option
+    """
+    try:
+        hostname, port = master.split(":")
+        port = int(port)
+    except:
+        raise usage.UsageError("master must have the form 'hostname:port'")
+
+
 class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
@@ -571,12 +589,7 @@ class UserOptions(base.SubcommandOptions):
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
 
-        master = self.get('master')
-        try:
-            master, port = master.split(":")
-            port = int(port)
-        except:
-            raise usage.UsageError("master must have the form 'hostname:port'")
+        validate_master_option(self.get('master'))
 
         op = self.get('op')
         if not op:
