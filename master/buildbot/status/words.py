@@ -220,6 +220,14 @@ class IRCContact(base.StatusReceiver):
         # and return True, since this is a new one
         return True
 
+    def validate_shlex_args(self, args):
+        """Returns list of arguments parsed by shlex.split() or
+        raise UsageError if failed"""
+        try:
+            return shlex.split(args)
+        except ValueError as e:
+            raise UsageError(e)
+
     def command_HELLO(self, args, who):
         self.send("yes?")
 
@@ -227,10 +235,7 @@ class IRCContact(base.StatusReceiver):
         self.send("buildbot-%s at your service" % version)
 
     def command_LIST(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if len(args) == 0:
             raise UsageError, "try 'list builders'"
         if args[0] == 'builders':
@@ -248,10 +253,7 @@ class IRCContact(base.StatusReceiver):
     command_LIST.usage = "list builders - List configured builders"
 
     def command_STATUS(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if len(args) == 0:
             which = "all"
         elif len(args) == 1:
@@ -310,10 +312,7 @@ class IRCContact(base.StatusReceiver):
             self.unsubscribe_from_build_events()
 
     def command_NOTIFY(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
 
         if not args:
             raise UsageError("try 'notify on|off|list <EVENT>'")
@@ -344,10 +343,7 @@ class IRCContact(base.StatusReceiver):
     command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
     def command_WATCH(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if len(args) != 1:
             raise UsageError("try 'watch <builder>'")
         which = args[0]
@@ -507,7 +503,7 @@ class IRCContact(base.StatusReceiver):
     def command_FORCE(self, args, who):
         errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
         try:
-            args = shlex.split(args)
+            args = self.validate_shlex_args(args)
         except ValueError as e:
             raise UsageError(e)
         if not args:
@@ -577,10 +573,7 @@ class IRCContact(base.StatusReceiver):
     command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
 
     def command_STOP(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if len(args) < 3 or args[0] != 'build':
             raise UsageError, "try 'stop build WHICH <REASON>'"
         which = args[1]
@@ -641,10 +634,7 @@ class IRCContact(base.StatusReceiver):
         self.send(str)
 
     def command_LAST(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
 
         if len(args) == 0:
             which = "all"
@@ -702,10 +692,7 @@ class IRCContact(base.StatusReceiver):
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
     def command_HELP(self, args, who):
-        try:
-            args = shlex.split(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if len(args) == 0:
             self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
                       "or 'commands' for a command list)")
