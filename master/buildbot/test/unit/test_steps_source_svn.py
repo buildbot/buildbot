@@ -84,8 +84,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             </commit>
                             </entry>
                             </info>"""
-    svn_info_stdout_xml_nonintegerrevision
-                          = """<?xml version="1.0"?>
+    svn_info_stdout_xml_nonintegerrevision = """<?xml version="1.0"?>
                             <info>
                             <entry
                                kind="dir"
@@ -138,12 +137,12 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
-                stdout=self.svn_info_corrupt_xml)
+                stdout=self.svn_st_xml_corrupt)
             + 0,
         )
         self.assertRaises(buildstep.BuildStepFailed, self.runStep())
 
-	def test_revision_for_integer_value(self):
+    def test_revision_for_integer_value(self):
         step = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setupStep(step)
         self.expectCommands(
@@ -153,7 +152,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                 stdout=self.svn_info_xml_nonintegerrevision) 
             + 0,
         )
-		self.runStep()
+        self.runStep()
         self.assertRaises(ValueError, lambda: int(step.revision))
 
     def test_mode_incremental(self):
