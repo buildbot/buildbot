@@ -335,23 +335,24 @@ class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
         return self.opts
 
     def test_defaults(self):
-        opts = self.parse('--master', 'm')
-        exp = dict(master='m', username='statusClient', passwd='clientpw')
+        opts = self.parse('--master', 'm:20')
+        exp = dict(master='m:20', username='statusClient', passwd='clientpw')
         self.assertOptions(opts, exp)
 
     def test_short(self):
-        opts = self.parse('-m', 'm', '-u', 'u', '-p', 'p')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('-m', 'm:20', '-u', 'u', '-p', 'p')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_long(self):
-        opts = self.parse('--master', 'm', '--username', 'u', '--passwd', 'p')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('--master', 'm:20',
+                          '--username', 'u', '--passwd', 'p')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_positional_master(self):
-        opts = self.parse('--username', 'u', '--passwd', 'p', 'm')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('--username', 'u', '--passwd', 'p', 'm:20')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_positional_extra(self):
@@ -362,11 +363,14 @@ class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('--username', 'u', '--passwd', 'p'))
 
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse, "-m foo")
+
     def test_options_masterstatus(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['masterstatus'] = 'opt'
+        self.options_file['master'] = 'not_seen:2'
+        self.options_file['masterstatus'] = 'opt:3'
         opts = self.parse('-p', 'pass', '-u', 'user')
-        exp = dict(master='opt', username='user', passwd='pass')
+        exp = dict(master='opt:3', username='user', passwd='pass')
         self.assertOptions(opts, exp)
 
 
