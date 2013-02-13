@@ -339,6 +339,8 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
+        validate_master_option(self.get('master'))
+
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"
     optParameters = [

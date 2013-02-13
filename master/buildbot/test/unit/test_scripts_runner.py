@@ -519,7 +519,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
-    master_and_who = ['-m', 'm', '-W', 'w']
+    master_and_who = ['-m', 'm:1', '-W', 'w']
 
     def setUp(self):
         self.setUpOptions()
@@ -536,9 +536,9 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertIn('buildbot sendchange', opts.getSynopsis())
 
     def test_defaults(self):
-        opts = self.parse('-m', 'm', '-W', 'me')
-        exp = dict(master='m', auth=('change', 'changepw'), who='me', vc=None,
-                repository='', project='', branch=None, category=None,
+        opts = self.parse('-m', 'm:1', '-W', 'me')
+        exp = dict(master='m:1', auth=('change', 'changepw'), who='me',
+                vc=None, repository='', project='', branch=None, category=None,
                 revision=None, revision_file=None, property=None,
                 comments='', logfile=None, when=None, revlink='',
                 encoding='utf8', files=())
@@ -558,31 +558,31 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertEquals(opts['properties'], dict(x='http://foo'))
 
     def test_config_file(self):
-        self.options_file['master'] = 'MMM'
+        self.options_file['master'] = 'MMM:123'
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
         self.options_file['category'] = 'CCC'
         self.options_file['vc'] = 'svn'
         opts = self.parse()
-        exp = dict(master='MMM', who='WWW',
+        exp = dict(master='MMM:123', who='WWW',
                 branch='BBB', category='CCC', vc='svn')
         self.assertOptions(opts, exp)
 
     def test_short_args(self):
-        opts = self.parse(*('-m m -a a:b -W W -R r -P p -b b -s git ' +
+        opts = self.parse(*('-m m:1 -a a:b -W W -R r -P p -b b -s git ' +
             '-C c -r r -p pn:pv -c c -F f -w 123 -l l -e e').split())
-        exp = dict(master='m', auth=('a','b'), who='W', repository='r',
+        exp = dict(master='m:1', auth=('a','b'), who='W', repository='r',
                 project='p', branch='b', category='c', revision='r', vc='git',
                 properties=dict(pn='pv'), comments='c', logfile='f',
                 when=123.0, revlink='l', encoding='e')
         self.assertOptions(opts, exp)
 
     def test_long_args(self):
-        opts = self.parse(*('--master m --auth a:b --who w --repository r ' +
+        opts = self.parse(*('--master m:1 --auth a:b --who w --repository r ' +
             '--project p --branch b --category c --revision r --vc git ' +
             '--property pn:pv --comments c --logfile f ' +
             '--when 123 --revlink l --encoding e').split())
-        exp = dict(master='m', auth=('a', 'b'), who='w', repository='r',
+        exp = dict(master='m:1', auth=('a', 'b'), who='w', repository='r',
                 project='p', branch='b', category='c', revision='r', vc='git',
                 properties=dict(pn='pv'), comments='c', logfile='f',
                 when=123.0, revlink='l', encoding='e')
@@ -625,6 +625,11 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
     def test_invalid_vcs(self):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('--vc=foo', *self.master_and_who))
+
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--who=test", "-m foo")
 
 
 class TestTryServerOptions(OptionsMixin, unittest.TestCase):
