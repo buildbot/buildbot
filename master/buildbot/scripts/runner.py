@@ -212,6 +212,10 @@ class DebugClientOptions(base.SubcommandOptions):
         if len(args) > 2:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+        validate_master_option(self.get('master'))
+
 
 class BaseStatusClientOptions(base.SubcommandOptions):
     optFlags = [

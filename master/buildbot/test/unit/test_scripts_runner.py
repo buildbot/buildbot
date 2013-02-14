@@ -275,23 +275,23 @@ class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
                 lambda : self.parse('-m', 'mm'))
 
     def test_options_long(self):
-        opts = self.parse('--master', 'mm', '--passwd', 'pp')
-        exp = dict(master='mm', passwd='pp')
+        opts = self.parse('--master', 'mm:9989', '--passwd', 'pp')
+        exp = dict(master='mm:9989', passwd='pp')
         self.assertOptions(opts, exp)
 
     def test_positional_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('foo:9989', 'pass')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_positional_master(self):
-        opts = self.parse('-p', 'pass', 'foo')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('-p', 'pass', 'foo:9989')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_args_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('foo:9989', 'pass')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_missing_both(self):
@@ -306,21 +306,25 @@ class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda :self.parse('-p', 'pass'))
 
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse,
+                          "-m", "foo", "-p", "pass")
+
     def test_options_extra_positional(self):
         self.assertRaises(usage.UsageError,
                 lambda : self.parse('mm', 'pp', '??'))
 
     def test_options_master(self):
-        self.options_file['master'] = 'opt'
+        self.options_file['master'] = 'opt:9989'
         opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
+        exp = dict(master='opt:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_options_debugMaster(self):
         self.options_file['master'] = 'not seen'
-        self.options_file['debugMaster'] = 'opt'
+        self.options_file['debugMaster'] = 'opt:9989'
         opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
+        exp = dict(master='opt:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
 
