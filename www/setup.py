@@ -15,7 +15,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+import os, sys
 from setuptools import setup
 
 # this script executes in a few contexts:
@@ -38,19 +38,26 @@ else:
     context = 'SDIST'
 
 def make_data_files():
-    if context == 'SRC':
-        # no data files in SRC context
-        return []
-    else:
-        # use the list of data files build.sh created, and generate filenames
-        # to end up under "{sys.prefix}/share/buildbot"
-        by_dir = {}
-        for fn in open('built/file-list.txt'):
-            fn = fn.strip()
+    # hack to build the app automatically on setup.py develop
+    if src_exists:
+        if os.system("npm install"):
+            raise Exception("to setup this app, you need node and npm installed in your system")
+        grunt_target = "prod"
+        if "develop" in sys.argv:
+            grunt_target="default"
+        os.system("./node_modules/.bin/grunt "+grunt_target)
+
+# use the list of data files build.sh created, and generate filenames
+    # to end up under "{sys.prefix}/share/buildbot"
+    by_dir = {}
+    for root, dirs, files in os.walk('built'):
+        for name in files:
+            fn = os.path.join(root, name)
             dirname = os.path.join('share', 'buildbot', os.path.dirname(fn))
             dirlist = by_dir.setdefault(dirname, [])
             dirlist.append(fn)
-        return by_dir.items()
+    print by_dir
+    return by_dir.items()
 
 def get_version():
     if context in ('SRC', 'BUILT'):
