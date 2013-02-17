@@ -502,10 +502,7 @@ class IRCContact(base.StatusReceiver):
 
     def command_FORCE(self, args, who):
         errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
-        try:
-            args = self.validate_shlex_args(args)
-        except ValueError as e:
-            raise UsageError(e)
+        args = self.validate_shlex_args(args)
         if not args:
             raise UsageError(errReply)
         what = args.pop(0)
