@@ -225,7 +225,7 @@ class IRCContact(base.StatusReceiver):
         raise UsageError if failed"""
         try:
             return shlex.split(args)
-        except ValueError as e:
+        except ValueError, e:
             raise UsageError(e)
 
     def command_HELLO(self, args, who):
