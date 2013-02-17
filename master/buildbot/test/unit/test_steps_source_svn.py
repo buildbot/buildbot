@@ -131,29 +131,70 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         method='invalid'))
 
     def test_corrupt_xml(self):
-        self.setupStep(
-                svn.SVN(repourl='http://svn.local/app/trunk'))
+        self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
                 stdout=self.svn_st_xml_corrupt)
             + 0,
         )
-        self.assertRaises(buildstep.BuildStepFailed, self.runStep())
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+        #self.assertRaises(buildstep.BuildStepFailed, self.runStep())
 
-    def test_revision_for_integer_value(self):
-        step = svn.SVN(repourl='http://svn.local/app/trunk')
-        self.setupStep(step)
+    def test_revision_noninteger(self):
+        svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
+        self.setupStep(svnTestStep)
         self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
-                stdout=self.svn_info_xml_nonintegerrevision) 
+                stdout=self.svn_info_stdout_xml_nonintegerrevision) 
             + 0,
         )
-        self.runStep()
-        self.assertRaises(ValueError, lambda: int(step.revision))
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'a10', 'SVN')
+        d = self.runStep()
+        def checkType(_):
+            #TODO
+            #self.assertRaises(TypeError,
+  			#                  int(svnTestStep.getProperty('got_revision')))
+            pass
+        d.addCallback(lambda _: checkType(svnTestStep))
+        return d
 
     def test_mode_incremental(self):
         self.setupStep(
@@ -1115,7 +1156,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', 'pass', '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info'])
+                        command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
                 stdout='1x0y0')
             + 0,
