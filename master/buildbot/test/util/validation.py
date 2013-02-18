@@ -15,9 +15,10 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 
+import re
+import datetime
 from buildbot.util import json, UTC
 from buildbot.data import base
-import datetime
 
 # Base class
 
@@ -67,6 +68,26 @@ class DateTimeValidator(Validator):
             yield "%s - %r - is not a datetime" % (name, object)
         elif object.tzinfo != UTC:
             yield "%s is not a UTC datetime" % (name,)
+
+class IdentifierValidator(Validator):
+    types = (unicode,)
+    name = 'identifier'
+
+    ident_re = re.compile('^[a-zA-Z0-9_.-]*$')
+
+    def __init__(self, len):
+        self.len = len
+
+    def validate(self, name, object):
+        if not isinstance(object, unicode):
+            yield "%s - %r - is not a unicode string" % (name, object)
+        elif not self.ident_re.match(object):
+            yield "%s - %r - is not an identifier" % (name, object)
+        elif len(object) < 1:
+            yield "%s - identifiers cannot be an empty string" % (name,)
+        elif len(object) > self.len:
+            yield "%s - %r - is longer than %d characters" % (name, object,
+                                                                self.len)
 
 # Miscellaneous
 
