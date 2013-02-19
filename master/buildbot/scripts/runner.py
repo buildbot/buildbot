@@ -482,6 +482,12 @@ class TryOptions(base.SubcommandOptions):
         if not self['master']:
             self['master'] = opts.get('masterstatus', None)
 
+        if self['connect'] == 'pb':
+            if not self['master']:
+                raise usage.UsageError("master location must be specified" \
+                                       "for 'pb' connections")
+            validate_master_option(self['master'])
+
 
 class TryServerOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.tryserver.tryserver"

@@ -455,23 +455,23 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_options_short(self):
         opts = self.parse(
-                *'-n -q -c pb -u me -m mstr -w you -C comm -p 2 -b bb'.split())
+                *'-n -q -c pb -u me -m mr:7 -w you -C comm -p 2 -b bb'.split())
         exp = self.defaults_and(dryrun=True, quiet=True, connect='pb',
-                username='me', master='mstr', who='you', comment='comm',
+                username='me', master='mr:7', who='you', comment='comm',
                 patchlevel=2, builders=['bb'])
         self.assertOptions(opts, exp)
 
     def test_options_long(self):
         opts = self.parse(
                 *"""--wait --dryrun --get-builder-names --quiet --connect=pb
-                --host=h --jobdir=j --username=u --master=m --passwd=p
+                --host=h --jobdir=j --username=u --master=m:1234 --passwd=p
                 --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
                 --vc=cvs --branch=br --repository=rep --builder=bl
                 --properties=a=b --topfile=Makefile --topdir=.
                 --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
         exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
                 quiet=True, connect='pb', host='h', jobdir='j', username='u',
-                master='m', passwd='p', who='w', comment='comm', diff='d',
+                master='m:1234', passwd='p', who='w', comment='comm', diff='d',
                 patchlevel=7, baserev='br', vc='cvs', branch='br',
                 repository='rep', builders=['bl'], properties=dict(a='b'),
                 topfile='Makefile', topdir='.',
@@ -513,17 +513,23 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         self.options_file.update(dict(try_connect='pb', try_vc='cvs',
             try_branch='br', try_repository='rep', try_topdir='.',
             try_topfile='Makefile', try_host='h', try_username='u',
-            try_jobdir='j', try_password='p', try_master='m', try_who='w',
+            try_jobdir='j', try_password='p', try_master='m:8', try_who='w',
             try_comment='comm', try_quiet='y', try_wait='y',
             try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
-                jobdir='j', username='u', master='m', passwd='p', who='w',
+                jobdir='j', username='u', master='m:8', passwd='p', who='w',
                 comment='comm', vc='cvs', branch='br', repository='rep',
                 topfile='Makefile', topdir='.',
                 buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
+    def test_pb_no_master(self):
+        self.assertRaises(usage.UsageError, self.parse, '--connect=pb')
+
+    def test_master_inval(self):
+        self.assertRaises(usage.UsageError, self.parse,
+                          '--connect=pb', '--master=foo')
 
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
