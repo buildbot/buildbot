@@ -157,7 +157,6 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
-        #self.assertRaises(buildstep.BuildStepFailed, self.runStep())
 
     def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
@@ -188,12 +187,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'a10', 'SVN')
         d = self.runStep()
-        def checkType(_):
-            #TODO
-            #self.assertRaises(TypeError,
-  			#                  int(svnTestStep.getProperty('got_revision')))
-            pass
-        d.addCallback(lambda _: checkType(svnTestStep))
+        def _checkType():
+            revision = self.step.getProperty('got_revision')
+            self.assertRaises(ValueError, lambda: int(revision))
+        d.addCallback(lambda _: _checkType())
         return d
 
     def test_mode_incremental(self):
