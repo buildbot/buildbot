@@ -32,9 +32,10 @@ def nth_slave(n):
     return pick_nth_by_name
 
 class SkipSlavesThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
+    """This class disables the 'rejectedSlaves' feature"""
     def __init__(self, *args, **kwargs):
         buildrequestdistributor.BasicBuildChooser.__init__(self, *args, **kwargs)
-        self.lastResortSlaves = None  # disable this
+        self.rejectedSlaves = None  # disable this feature
 
 class Test(unittest.TestCase):
 
@@ -485,6 +486,9 @@ class TestMaybeStartBuilds(unittest.TestCase):
     @mock.patch('random.choice', nth_slave(-1))
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild(self):
+        """Set the 'canStartBuild' value in the config to something
+        that limits the possible options."""
+
         self.master.config.mergeRequests = False
         
         slaves_attempted = []
@@ -519,7 +523,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         self.assertEqual(slaves_attempted, ['test-slave3', 'test-slave2', 'test-slave1'])
 
         # we expect brids in order (10-11-12),
-        # with each searched in reverse order of slaves (3-2-1) available
+        # with each searched in reverse order of slaves (3-2-1) available (due to nth_slave(-1))
         self.assertEqual(pairs_tested, [
             ('test-slave3', 10),
             ('test-slave2', 10),
@@ -531,6 +535,11 @@ class TestMaybeStartBuilds(unittest.TestCase):
     @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser', SkipSlavesThatCantGetLock)
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
+        """Another variant that: 
+         * returns Defered types,
+         * use 'canStartWithSlavebuilder' to reject one of the slaves
+         * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
+
         self.master.config.mergeRequests = False
         
         slaves_attempted = []
