@@ -39,6 +39,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``workdir`` property has been renamed to ``builddir``.
 * The ``Blocker`` step has been removed.
 
+* Several polling ChangeSources are now documented to take a ``pollInterval`` argument, instead of ``pollinterval``.
+  The old name is still supported.
+
 * StatusReceivers' checkConfig method should no longer take an `errors` parameter.
   It should indicate errors by calling :py:func:`~buildbot.config.error`.
 
