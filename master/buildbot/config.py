@@ -603,7 +603,8 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None, description=None):
+            properties=None, mergeRequests=None, description=None,
+            canStartBuild=None):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -662,6 +663,10 @@ class BuilderConfig:
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
+        self.canStartBuild = canStartBuild
+        if canStartBuild and not callable(canStartBuild):
+            error('canStartBuild must be a callable')
+
         self.locks = locks or []
         self.env = env or {}
         if not isinstance(self.env, dict):
