@@ -49,10 +49,10 @@ check_long_lines() {
 }
 
 check_relnotes() {
-    if git diff --exit-code "$REVRANGE" >/dev/null 2>&1; then
-        return 0
-    else
+    if git diff --exit-code "$REVRANGE" master/docs/relnotes/index.rst >/dev/null 2>&1; then
         return 1
+    else
+        return 0
     fi
 }
 
