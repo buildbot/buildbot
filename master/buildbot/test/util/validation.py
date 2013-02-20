@@ -176,7 +176,7 @@ class MessageValidator(Validator):
     def validate(self, name, routingKey_message):
         try:
             routingKey, message = routingKey_message
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError), e:
             yield "%r: not a routing key and message: %s" % (routingKey_message, e)
         routingKeyBad = False
         for msg in self.routingKeyValidator.validate("routingKey", routingKey):
@@ -213,7 +213,7 @@ class Selector(Validator):
     def validate(self, name, arg_object):
         try:
             arg, object = arg_object
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError), e:
             yield "%r: not a not data options and data dict: %s" % (arg_object, e)
         for selector, validator in self.selectors:
             if selector is None or selector(arg):

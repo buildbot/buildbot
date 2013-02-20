@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import json
+from buildbot.util import json
 from twisted.web import static
 from twisted.python import util
 import buildbot

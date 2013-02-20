@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import json
+from buildbot.util import json
 import re
 import buildbot
 from buildbot.www import ui

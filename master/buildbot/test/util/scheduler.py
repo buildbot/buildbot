@@ -136,8 +136,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
             properties=None, builderNames=None):
         properties = properties.asDict()
-        self.assertIsInstance(sourcestamps, list,
-                "addBuildsetForSourceStamps requires a list")
+        self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
                                             locals()))
@@ -154,8 +153,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def fake_addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
             external_idstring=None, properties=None, builderNames=None):
         properties=properties.asDict() if properties is not None else None
-        self.assertIsInstance(sourcestamps, list,
-                "addBuildsetForSourceStamps requires a list")
+        self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
             dict(reason=reason, external_idstring=external_idstring,
