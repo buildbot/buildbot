@@ -1290,6 +1290,19 @@ class TestGetUnversionedFiles(unittest.TestCase):
         self.assertEquals([], unversioned_files)
 
     def test_getUnversionedFiles_corrupted_xml(self):
+        svn_st_xml_corrupt = """<?xml version="1.0"?>
+            <target path=".">
+                <entry path="svn_external_path">
+                    <wc-status props="none" item="external">
+                    </wc-status>
+                </entry>
+                <entry path="svn_external_path/unversioned_file">
+                    <wc-status props="none" item="unversioned">
+                    </wc-status>
+                </entry>
+            </target>
+        </status>
+        """
         self.assertRaises(buildstep.BuildStepFailed,
                           lambda : list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, [])))
 
