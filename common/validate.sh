@@ -34,13 +34,17 @@ not_ok() {
     problem_summary="$problem_summary"$'\n'"${RED}**${NORM} ${*}"
 }
 
+check_tabs() {
+    git diff "$REVRANGE" | grep -q $'+.*\t'
+}
+
 check_long_lines() {
     # only check python files
     local long_lines=false
     for f in $(git diff --name-only --stat "$REVRANGE" | grep '.py$'); do
         # don't try to check removed files
         [ ! -f "$f" ] && continue
-        if [ $(git diff "$REVRANGE" $f | grep -c '+.{80}') != 0 ]; then
+        if [ $(git diff "$REVRANGE" $f | grep -E -c '^\+.{80}') != 0 ]; then
             echo " $f"
             long_lines=true
         fi
@@ -56,6 +60,13 @@ check_relnotes() {
     fi
 }
 
+run_tests() {
+    if [ -n "${TRIALTMP}" ]; then
+        TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
+    fi
+    sandbox/bin/trial --reporter summary ${TEMP_DIRECTORY_OPT} ${TEST}
+}
+
 if ! git diff --no-ext-diff --quiet --exit-code; then
     not_ok "changed files in working copy"
     exit 1
@@ -65,14 +76,10 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 status "running tests"
-if [ -n "${TRIALTMP}" ]; then
-    TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
-fi
-sandbox/bin/trial --reporter summary ${TEMP_DIRECTORY_OPT} ${TEST} \
-    || not_ok "tests failed"
+run_tests || not_ok "tests failed"
 
 status "checking formatting"
-git diff "$REVRANGE" | grep -q $'+.*\t' && not_ok "$REVRANGE adds tabs"
+check_tabs && not_ok "$REVRANGE adds tabs"
 check_long_lines && not_ok "$REVRANGE adds long lines"
 
 status "checking for release notes"
