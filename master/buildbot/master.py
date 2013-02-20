@@ -81,6 +81,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # loop for polling the db
         self.db_loop = None
+        # db configured values
+        self.configured_url = None
+        self.configured_poll_interval = None        
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
@@ -169,6 +172,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
+                self.configured_url = self.config.db['db_url']
+                
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
                 for msg in e.errors:
@@ -294,21 +299,21 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def reconfigService(self, new_config):
-        if self.config.db['db_url'] != new_config.db['db_url']:
+        if self.configured_url != new_config.db['db_url']:
             config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
             )
 
         # adjust the db poller
-        if (self.config.db['db_poll_interval']
+        if (self.configured_poll_interval
                 != new_config.db['db_poll_interval']):
             if self.db_loop:
                 self.db_loop.stop()
                 self.db_loop = None
-            poll_interval = new_config.db['db_poll_interval']
-            if poll_interval:
+            self.configured_poll_interval = new_config.db['db_poll_interval']
+            if self.configured_poll_interval:
                 self.db_loop = task.LoopingCall(self.pollDatabase)
-                self.db_loop.start(poll_interval, now=False)
+                self.db_loop.start(self.configured_poll_interval, now=False)
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
