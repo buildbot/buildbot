@@ -22,6 +22,7 @@ from buildbot.schedulers.forcesched import BooleanParameter, UserNameParameter
 from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationError
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
 from buildbot.schedulers.forcesched import CodebaseParameter, BaseParameter
+from buildbot.schedulers.forcesched import DynamicChoiceStringParameter
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
 
@@ -379,6 +380,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 debug=False)
 
+    def test_ChoiceParameterError_notStrict(self):
+        self.do_ParameterTest(value='t1', expect='t1',
+                strict=False,
+                klass=ChoiceStringParameter, choices=['t1','t2'])
+
 
     def test_ChoiceParameterMultiple(self):
         self.do_ParameterTest(value=['t1','t2'], expect=['t1','t2'],
@@ -392,6 +398,26 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 multiple=True, debug=False)
 
+
+    def test_DynamicChoiceStringParameter(self):
+        self.do_ParameterTest(value='t1', expect='t1',
+                klass=DynamicChoiceStringParameter, dynamicChoices=lambda m,b: ['t1','t2'])
+
+    def test_DynamicChoiceStringParameter_notStrict(self):
+        # the 'dynamicChoices' parameter really doesnt get called, so it really doesnt apply here
+        self.do_ParameterTest(value='t3', expect='t3',
+                strict=False,
+                klass=DynamicChoiceStringParameter, dynamicChoices=lambda m,b: ['t1','t2'])
+
+    def test_DynamicChoiceStringParameter_strict(self):
+        # the 'dynamicChoices' value doesnt affect the validation, so even a "GOOD" value will
+        # fail for strict=True tests, unless programmer overrides and provides their own validation
+        self.do_ParameterTest(value='t1',
+                strict=True,
+                expect=ValidationError,
+                expectKind=Exception,
+                klass=DynamicChoiceStringParameter, dynamicChoices=lambda m,b: ['t1','t2'],
+                debug=False)
 
     def test_NestedParameter(self):
         fields = [

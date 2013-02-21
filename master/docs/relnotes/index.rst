@@ -27,6 +27,8 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
+* :bb:sched:`DynamicChoiceStringParameter` has been added.
+
 * default.css now wraps preformatted text by default.
 
 * Slaves can now be paused through the web status.
