@@ -747,7 +747,7 @@ class Repo(SlaveSource):
 
     def __init__(self,
                  manifest_url=None,
-                 manifest_branch="master",
+                 default_manifest_branch=None,
                  manifest_file="default.xml",
                  tarball=None,
                  jobs=None,
@@ -756,16 +756,23 @@ class Repo(SlaveSource):
         @type  manifest_url: string
         @param manifest_url: The URL which points at the repo manifests repository.
 
-        @type  manifest_branch: string
-        @param manifest_branch: The manifest branch to check out by default.
+        @type  default_manifest_branch: string
+        @param default_manifest_branch: The manifest branch to check out by default.
 
         @type  manifest_file: string
         @param manifest_file: The manifest to use for sync.
 
         """
+
+        ### NOTE: default_manifest_branch parameter is only used if there is no build property
+        ###       "branch" (e.g., from force build page, or from Gerrit ref-updated)
+        ###       or
+        ###       "event.change.branch" (e.g., from Gerrit patchset-created)
+
         SlaveSource.__init__(self, **kwargs)
         self.manifest_url = _ComputeRepositoryURL(self, manifest_url)
-        self.args.update({'manifest_branch': manifest_branch,
+        self.branch = default_manifest_branch
+        self.args.update({
                           'manifest_file': manifest_file,
                           'tarball': tarball,
                           'manifest_override_url': None,
@@ -809,12 +816,18 @@ class Repo(SlaveSource):
         downloads = self.build.getProperty("repo_downloads", [])
 
         # download patches based on GerritChangeSource events
+        found_event_change_branch = False
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
                 change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s"% (change.properties["event.change.project"],
                                                  change.properties["event.change.number"],
                                                  change.properties["event.patchSet.number"]))
+                if (change.properties.has_key("event.change.branch") and
+                    change.properties["event.change.branch"]):
+                    if not found_event_change_branch:
+                        self.args['manifest_branch'] = change.properties["event.change.branch"]
+                        found_event_change_branch = True
 
         # download patches based on web site forced build properties:
         # "repo_d", "repo_d0", .., "repo_d9"
@@ -832,6 +845,7 @@ class Repo(SlaveSource):
 
     def startVC(self, branch, revision, patch):
         self.args['manifest_url'] = self.manifest_url
+        self.args['manifest_branch'] = branch
 
         # manifest override
         self.args['manifest_override_url'] = None
