@@ -177,11 +177,11 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
     
     default = field.default
     
-    if "dynamic" in field.type:
-        choices = field.dynamicChoices(master.status, buildername)
-        default_props[pname+".choices"] = choices
+    if "list" in field.type:
+        choices = field.getChoices(master, sch, buildername)
         if choices:
             default = choices[0]
+        default_props[pname+".choices"] = choices
             
     default = req.args.get(pname, [default])[0]
     if "bool" in field.type:

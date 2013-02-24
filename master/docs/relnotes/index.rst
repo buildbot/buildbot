@@ -27,8 +27,6 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
-* :bb:sched:`DynamicChoiceStringParameter` has been added.
-
 * default.css now wraps preformatted text by default.
 
 * Slaves can now be paused through the web status.
@@ -64,6 +62,9 @@ Changes for Developers
 * An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
   to send a message back to the committer.
   See the linked documentation for details.
+
+* bb:sched:`ChoiceStringParameter` has a new method ``getChoices`` that can be used to generate
+  content dynamically for Force scheduler forms.
 
 Slave
 -----

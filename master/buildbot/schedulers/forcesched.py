@@ -209,41 +209,18 @@ class ChoiceStringParameter(BaseParameter):
             raise ValidationError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
 
+    def getChoices(self, master, scheduler, buildername):
+        return self.choices
 
-class DynamicChoiceStringParameter(ChoiceStringParameter):
-    """A list of strings, allowing the selection of one of the predefined values.
-       The 'strict' parameter controls whether values outside the predefined list
-       of choices are allowed"""
-    type = ChoiceStringParameter.type + ["dynamic"]
-
-    # Assume not strict. In general, there is no "session" to remember what each
-    # user was presented with, so there is no way to validate a user's selection.
-    # Custom validation can be implemented in a derived 'updateFromKwargs', if desired.
-    strict = False 
-
-    # A functor to return the choices available. This will be called for each
-    # form generation, and the first element will be presented as the default
-    # choice. 
-    dynamicChoices = lambda masterStatus, buildername: []
-
-
-class InheritBuildParameter(DynamicChoiceStringParameter):
+class InheritBuildParameter(ChoiceStringParameter):
     """A parameter that takes its values from another build"""
-    type = DynamicChoiceStringParameter.type + ["inherit"]
+    type = ChoiceStringParameter.type + ["inherit"]
     name = "inherit"
     compatible_builds = None
-    strict = True
 
-    def __init__(self, compatible_builds=None, **kw):
-        def dynamicChoices(masterStatus, buildername):
-            # cache the choices because that's what we've always done
-            self.choices = self.compatible_builds(masterStatus, buildername)
-            return self.choices
-            
-        DynamicChoiceStringParameter.__init__(self,
-                                              compatible_builds=compatible_builds,
-                                              dynamicChoices=dynamicChoices,
-                                              **kw)
+    def getChoices(self, master, scheduler, buildername):
+        return self.compatible_builds(master.status, buildername)
+
     def getFromKwargs(self, kwargs):
         raise ValidationError("InheritBuildParameter can only be used by properties")
 

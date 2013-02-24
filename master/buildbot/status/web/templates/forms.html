@@ -94,9 +94,8 @@
        <span class="label">{{f.label}}</span>
        <span class="select">
        <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
-         {% set choices = f.choices if 'dynamic' not in f.type else default_props[sch.name+"."+f.fullName+".choices"] %}
-         {% for c in choices %}
-         <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
+         {% for c in default_props[sch.name+"."+f.fullName+".choices"] %}
+           <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
          {% endfor %}
        </select>
        </span>
