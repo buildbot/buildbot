@@ -23,7 +23,7 @@ from twisted.internet import defer, reactor
 
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
-from buildbot.status.builder import RETRY, WARNINGS
+from buildbot.status.builder import RETRY
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
