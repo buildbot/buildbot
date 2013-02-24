@@ -27,6 +27,7 @@ from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests, schedulers
+from buildbot.test.util import validation
 
 # Fake DB Rows
 
@@ -359,11 +360,17 @@ class Build(Row):
     defaults = dict(
         id = None,
         number = 29,
-        brid = 39,
-        start_time = 1304262222,
-        finish_time = None)
+        buildrequestid = None,
+        builderid = None,
+        slaveid = -1,
+        masterid = None,
+        started_at = 1304262222,
+        complete_at = None,
+        state_strings_json = '["test"]',
+        results = None)
 
     id_column = 'id'
+    required_columns = ( 'buildrequestid', 'masterid' ) # slaveid omitted temporarily
 
 class Master(Row):
     table = "masters"
@@ -1168,7 +1175,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Build):
-                self.builds[row.id] = row
+                self.builds[row.id] = row.values.copy()
 
     # component methods
 
@@ -1178,43 +1185,74 @@ class FakeBuildsComponent(FakeDBComponent):
             id += 1
         return id
 
-    def getBuild(self, bid):
-        row = self.builds.get(bid)
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            number=row['number'],
+            buildrequestid=row['buildrequestid'],
+            builderid=row['builderid'],
+            masterid=row['masterid'],
+            slaveid=row['slaveid'],
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
+            state_strings=json.loads(row['state_strings_json']),
+            results=row['results'])
+
+    def getBuild(self, buildid):
+        row = self.builds.get(buildid)
         if not row:
             return defer.succeed(None)
 
-        return defer.succeed(dict(
-            bid=row.id,
-            brid=row.brid,
-            number=row.number,
-            start_time=epoch2datetime(row.start_time),
-            finish_time=epoch2datetime(row.finish_time)))
-    
-    def getBuildsForRequest(self, brid):
+        return defer.succeed(self._row2dict(row))
+
+    def getBuildByNumber(self, builderid, number):
+        for row in self.builds.itervalues():
+            if row['builderid'] == builderid and row['number'] == number:
+                return defer.succeed(self._row2dict(row))
+        return defer.succeed(None)
+
+    def getBuilds(self, builderid=None, buildrequestid=None):
         ret = []
- 
+
         for (id, row) in self.builds.items():
-            if row.brid == brid:
-                ret.append(dict(bid = row.id,
-                                brid=row.brid,
-                                number=row.number,
-                                start_time=epoch2datetime(row.start_time),
-                                finish_time=epoch2datetime(row.finish_time)))
-               
-        return defer.succeed(ret)            
+            if builderid and row['builderid'] != builderid:
+                continue
+            if buildrequestid and row['buildrequestid'] != buildrequestid:
+                continue
+            ret.append(self._row2dict(row))
 
-    def addBuild(self, brid, number, _reactor=reactor):
-        bid = self._newId()
-        self.builds[bid] = Build(id=bid, number=number, brid=brid,
-                start_time=_reactor.seconds, finish_time=None)
-        return bid
+        return defer.succeed(ret)
 
-    def finishBuilds(self, bids, _reactor=reactor):
+    def addBuild(self, builderid, buildrequestid, slaveid, masterid,
+            state_strings, _reactor=reactor):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        id = self._newId()
+        number = max([0] + [r['number'] for r in self.builds.itervalues()
+                            if r['builderid']==builderid]) + 1
+        self.builds[id] = dict(id=id, number=number,
+                buildrequestid=buildrequestid, builderid=builderid,
+                slaveid=slaveid, masterid=masterid,
+                state_strings_json=json.dumps(state_strings),
+                started_at=_reactor.seconds(), complete_at=None,
+                results=None)
+        return defer.succeed((id, number))
+
+    def setBuildStateStrings(self, buildid, state_strings):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        b = self.builds.get(buildid)
+        if b:
+            b['state_strings_json'] = json.dumps(state_strings)
+        return defer.succeed(None)
+
+    def finishBuild(self, buildid, results, _reactor=reactor):
         now = _reactor.seconds()
-        for bid in bids:
-            b = self.builds.get(bid)
-            if b:
-                b.finish_time = now
+        b = self.builds.get(buildid)
+        if b:
+            b['complete_at'] = now
+            b['results'] = results
+        return defer.succeed(None)
 
 class FakeUsersComponent(FakeDBComponent):
 

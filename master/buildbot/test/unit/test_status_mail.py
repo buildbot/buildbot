@@ -20,7 +20,7 @@ from twisted.trial import unittest
 from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, EXCEPTION
 from buildbot.status.mail import MailNotifier
 from twisted.internet import defer
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.process import properties
 
@@ -56,6 +56,10 @@ class FakeSource:
         self.patch = None
 
 class TestMailNotifier(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self,
+                wantData=True, wantDb=True, wantMq=True)
 
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         builds = [ FakeBuildStatus(name='build') ]
@@ -224,15 +228,16 @@ class TestMailNotifier(unittest.TestCase):
           return {"Builder1": builder1, "Builder2": builder2}[buildername]
 
 
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=92),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder1'),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, slaveid=-1, masterid=92),
             fakedb.BuildRequest(id=12, buildsetid=99, buildername='Builder2'),
-            fakedb.Build(number=0, brid=12),
+            fakedb.Build(number=0, buildrequestid=12, slaveid=-1, masterid=92),
         ])
-        mn.master = self # FIXME: Should be FakeMaster
+        mn.master = self.master
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -280,13 +285,14 @@ class TestMailNotifier(unittest.TestCase):
         build.reason = "testReason"
         build.getBuilder.return_value = builder
 
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=92),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, slaveid=-1, masterid=92),
         ])
-        mn.master = self
+        mn.master = self.master
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -333,13 +339,14 @@ class TestMailNotifier(unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
  
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=92),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, slaveid=-1, masterid=92),
         ])
-        mn.master = self
+        mn.master = self.master
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -401,13 +408,14 @@ class TestMailNotifier(unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername":"Builder", "brid":1}])
  
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=22),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, slaveid=-1, masterid=22),
         ])
-        mn.master = self
+        mn.master = self.master
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -644,11 +652,12 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=92),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, masterid=92, slaveid=-1),
             fakedb.Change(changeid=9123),
             fakedb.ChangeUser(changeid=9123, uid=1),
             fakedb.User(uid=1, identifier="tdurden"),
@@ -677,7 +686,7 @@ class TestMailNotifier(unittest.TestCase):
             return ["Big Bob <bob@mayhem.net>"]
         build.getResponsibleUsers = _getResponsibleUsers
 
-        mn.master = self # FIXME: Should be FakeMaster
+        mn.master = self.master
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
@@ -750,12 +759,13 @@ class TestMailNotifier(unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self, self)
+        self.db = self.master.db
         self.db.insertTestData([
+            fakedb.Master(id=92),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, brid=11),
-            fakedb.Build(number=1, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, slaveid=-1, masterid=92),
+            fakedb.Build(number=1, buildrequestid=11, slaveid=-1, masterid=92),
             fakedb.Change(changeid=9123),
             fakedb.Change(changeid=9124),
             fakedb.ChangeUser(changeid=9123, uid=1),
@@ -797,7 +807,7 @@ class TestMailNotifier(unittest.TestCase):
         build1.getSourceStamps = fakeGetSSlist(ss1)
         build2.getSourceStamps = fakeGetSSlist(ss2)
 
-        mn.master = self # FIXME: Should be FakeMaster
+        mn.master = self.master
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
