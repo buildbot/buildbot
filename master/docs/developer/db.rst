@@ -216,61 +216,84 @@ builds
 
 .. py:class:: BuildsConnectorComponent
 
-    This class handles a little bit of information about builds.
-
-    .. note::
-        The interface for this class will change - the builds table duplicates
-        some information available in pickles, without including all such
-        information.  Do not depend on this API.
+    This class handles builds.
+    One build record is created for each build performed by a master.
+    This record contains information on the status of the build, as well as links to the resources used in the build: builder, master, slave, etc.
 
     An instance of this class is available at ``master.db.builds``.
 
-    .. index:: bdict, bid
+    .. index:: bdict, buildid
 
-    Builds are indexed by *bid* and their contents represented as *bdicts*
-    (build dictionaries), with keys
+    Builds are indexed by *buildid* and their contents represented as *builddicts* (build dictionaries), with the following keys:
 
-    * ``bid`` (the build ID, globally unique)
-    * ``number`` (the build number, unique only within this master and builder)
-    * ``brid`` (the ID of the build request that caused this build)
-    * ``start_time``
-    * ``finish_time`` (datetime objects, or None).
+    * ``id`` (the build ID, globally unique)
+    * ``number`` (the build number, unique only within the builder)
+    * ``builderid`` (the ID of the builder that performed this build)
+    * ``buildrequestid`` (the ID of the build request that caused this build)
+    * ``slaveid`` (the ID of the slave on which this build was performed)
+    * ``masterid`` (the ID of the master on which this build was performed)
+    * ``started_at`` (datetime at which this build began)
+    * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
+    * ``state_strings`` (list of short strings describing the build's state)
+    * ``results`` (results of this build; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: getBuild(bid)
+    .. py:method:: getBuild(buildid)
 
-        :param bid: build id
-        :type bid: integer
+        :param integer buildid: build id
         :returns: Build dictionary as above or ``None``, via Deferred
 
-        Get a single build, in the format described above.  Returns ``None`` if
-        there is no such build.
+        Get a single build, in the format described above.
+        Returns ``None`` if there is no such build.
 
-    .. py:method:: getBuildsForRequest(brid)
+    .. py:method:: getBuildByNumber(builderid, number)
 
-        :param brids: list of build request ids
-        :returns: List of build dictionaries as above, via Deferred
+        :param integer builder: builder id
+        :param integer number: build number within that builder
+        :returns: Build dictionary as above or ``None``, via Deferred
 
-        Get a list of builds for the given build request.  The resulting build
-        dictionaries are in exactly the same format as for :py:meth:`getBuild`.
+        Get a single build, in the format described above, specified by builder and number, rather than build id.
+        Returns ``None`` if there is no such build.
 
-    .. py:method:: addBuild(brid, number)
+    .. py:method:: getBuilds(builderid=None, buildrequestid=None)
 
-        :param brid: build request id
-        :param number: build number
-        :returns: build ID via Deferred
+        :param integer builderid: builder to get builds for
+        :param integer buildrequestid: buildrequest to get builds for
+        :returns: list of build dictionaries as above, via Deferred
 
-        Add a new build to the db, recorded as having started at the current
-        time.
+        Get a list of builds, in the format described above.
+        Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: finishBuilds(bids)
+    .. py:method:: addBuild(builderid, buildrequestid, slaveid, masterid, state_strings)
 
-        :param bids: build ids
-        :type bids: list
+        :param integer builderid: builder to get builds for
+        :param integer buildrequestid: build request id
+        :param integer slaveid: slave performing the build
+        :param integer masterid: master performing the build
+        :param list state_strings: initial state of the build
+        :returns: tuple of build ID and build number, via Deferred
+
+        Add a new build to the db, recorded as having started at the current time.
+        This will invent a new number for the build, unique within the context of the builder.
+
+    .. py:method:: setBuildStateStrings(buildid, state_strings):
+
+        :param integer buildid: build id
+        :param list state_strings: updated state of the build
         :returns: Deferred
 
-        Mark the given builds as finished, with ``finish_time`` set to the
-        current time.  This is done unconditionally, even if the builds are
-        already finished.
+        Update the state strings for the given build.
+
+    .. py:method:: finishBuild(buildid, results)
+
+        :param integer buildid: build id
+        :param integer results: build result
+        :returns: Deferred
+
+        Mark the given build as finished, with ``complete_at`` set to the current time.
+
+        .. note::
+
+            This update is done unconditionally, even if the builds are already finished.
 
 buildsets
 ~~~~~~~~~

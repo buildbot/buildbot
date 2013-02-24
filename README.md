@@ -70,7 +70,9 @@ Each of these status displays will need to be rewritten based on the Data API.
 
 The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.
 
-* request merging (or queue collapsing) - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
+* Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
+  Builds for merged requests currently only refer to one of the merged requests.
+* In the Trigger step, add links from the triggering step to the triggered builds
 
 ## Documentation ##
 
@@ -133,6 +135,7 @@ Tasks:
 * Similarly, `addBuildset` often creates source stamps.
   Messages should be sent when this occurs.
 * Add support for uids to the change resource type
+* Consider importing build pickles into the new DB.
 
 ### Misc Data API Work ###
 
@@ -166,8 +169,13 @@ Tasks:
 
 The following will need to be rewritten:
 
+### MailNotifier ###
+
+Note that the tests for MailNotifier mock a lot of things out - incorrectly, now.
+So don't trust the tests!
+
+### Others ###
 * IRC (words.py)
-* MailNotifier
 * StatusClient (maybe)
 * WebStatus (already in progress with buildbot-www)
 * Tinderbox (maybe)
@@ -266,6 +274,7 @@ The MQ layer currently only has a simple (single-master) implementation.  We sho
 
 * Add identifiers for builders (url-component safe strings), and allow use of those in place of integer IDs in data API paths.
   For example, external users might find it easier to look at a request queue with `/builder/smoketest/requests` rather than `/buidler/12/requests`.
+* Specify ``slaves`` instead of a single slave for builds, to leave open the possibility of a build running on zero or multiple slaves.
 
 ### Infrastructure ###
 

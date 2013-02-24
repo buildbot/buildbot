@@ -35,6 +35,7 @@ class FakeUpdates(object):
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = [] # dictionaries
         self.schedulerIds = {} # { name : id }; users can add schedulers here
+        self.builderIds = {} # { name : id }; users can add schedulers here
         self.schedulerMasters = {} # { schedulerid : masterid }
 
     ## extra assertions
@@ -144,11 +145,18 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     def findSchedulerId(self, name):
-        validation.verifyType(None, 'scheduler name', name,
+        validation.verifyType(self.testcase, 'scheduler name', name,
                 validation.StringValidator())
         if name not in self.schedulerIds:
             self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
         return defer.succeed(self.schedulerIds[name])
+
+    def findBuilderId(self, name):
+        validation.verifyType(self.testcase, 'builder name', name,
+                validation.StringValidator())
+        if name not in self.builderIds:
+            self.builderIds[name] = max([0] + self.builderIds.values()) + 1
+        return defer.succeed(self.builderIds[name])
 
     def setSchedulerMaster(self, schedulerid, masterid):
         currentMasterid = self.schedulerMasters.get(schedulerid)
@@ -156,6 +164,29 @@ class FakeUpdates(object):
             return defer.fail(failure.Failure(
                 exceptions.SchedulerAlreadyClaimedError()))
         self.schedulerMasters[schedulerid] = masterid
+
+    def newBuild(self, builderid, buildrequestid, slaveid):
+        validation.verifyType(self.testcase, 'builderid', builderid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'slaveid', slaveid,
+                validation.IntValidator())
+        return defer.succeed((10, 1))
+
+    def setBuildStateStrings(self, buildid, state_strings):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                validation.IntValidator())
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        return defer.succeed(None)
+
+    def finishBuild(self, buildid, results):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'results', results,
+                validation.IntValidator())
+        return defer.succeed(None)
 
 
 class FakeDataConnector(object) :

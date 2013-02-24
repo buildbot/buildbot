@@ -86,15 +86,26 @@ class Model(base.DBConnectorComponent):
 
     # builds
 
-    # This table contains basic information about each build.  Note that most
-    # data about a build is still stored in on-disk pickles.
+    # This table contains basic information about each build.
     builds = sa.Table('builds', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+        sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
             nullable=False),
-        sa.Column('start_time', sa.Integer, nullable=False),
-        sa.Column('finish_time', sa.Integer),
+        # slave which performed this build
+        # TODO: ForeignKey to slaves table
+        # TODO: keep nullable to support slave-free builds
+        sa.Column('slaveid', sa.Integer),
+        # master which controlled this build
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
+        # start/complete times
+        sa.Column('started_at', sa.Integer, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+        # a list of strings describing the build's state
+        sa.Column('state_strings_json', sa.Text, nullable=False),
+        sa.Column('results', sa.Integer),
     )
 
     # buildsets
@@ -422,8 +433,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_buildername', buildrequests.c.buildername)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
-    sa.Index('builds_number', builds.c.number)
-    sa.Index('builds_brid', builds.c.brid)
+    sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     sa.Index('buildsets_complete', buildsets.c.complete)
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
@@ -469,6 +479,13 @@ class Model(base.DBConnectorComponent):
             buildset_sourcestamps.c.buildsetid,
             buildset_sourcestamps.c.sourcestampid,
             unique=True)
+    sa.Index('builds_number',
+            builds.c.builderid, builds.c.number,
+            unique=True)
+    sa.Index('builds_slaveid',
+            builds.c.slaveid)
+    sa.Index('builds_masterid',
+            builds.c.masterid)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be

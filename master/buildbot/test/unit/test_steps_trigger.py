@@ -95,15 +95,17 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         make_fake_br = lambda brid, name: fakedb.BuildRequest(id=brid,
                                                               buildsetid=BRID_TO_BSID(brid),
                                                               buildername=name)
-        make_fake_build = lambda brid: fakedb.Build(brid=brid,
+        make_fake_build = lambda brid: fakedb.Build(buildrequestid=brid,
                                                     id=BRID_TO_BID(brid),
-                                                    number=BRID_TO_BUILD_NUMBER(brid))
+                                                    number=BRID_TO_BUILD_NUMBER(brid),
+                                                    masterid=9)
 
         m.db.insertTestData([
-               make_fake_br(11, "A"),
-               make_fake_br(22, "B"),
-               make_fake_build(11),
-               make_fake_build(22),
+            fakedb.Master(id=9),
+            make_fake_br(11, "A"),
+            make_fake_br(22, "B"),
+            make_fake_build(11),
+            make_fake_build(22),
         ])
 
         def getAllSourceStamps():

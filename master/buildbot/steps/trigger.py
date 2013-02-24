@@ -194,7 +194,7 @@ class Trigger(LoggingBuildStep):
                 for was_cb, builddicts in res:
                     if was_cb:
                         for build in builddicts:
-                            bn = brid_to_bn[build['brid']]
+                            bn = brid_to_bn[build['buildrequestid']]
                             num = build['number']
 
                             url = master.status.getURLForBuild(bn, num)
@@ -202,7 +202,7 @@ class Trigger(LoggingBuildStep):
 
                 return self.end(result)
 
-            builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
+            builddicts = [master.db.builds.getBuilds(buildrequestid=br) for br in brids.values()]
             dl = defer.DeferredList(builddicts, consumeErrors=1)
             dl.addCallback(add_links)
 

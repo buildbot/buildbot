@@ -347,12 +347,19 @@ class Builder(config.ReconfigurableServiceMixin,
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
-        # record the build in the db - one row per buildrequest
+        # record the build in the db, but only for the last buildrequest
+        # (NOTE: this is a behavior change that will cause unexpected results
+        #  in the nine branch!)
+        # (NOTE: the build number the db assigns may not be the same that the
+        #  builder status assigns!)
         try:
             bids = []
-            for req in build.requests:
-                bid = yield self.master.db.builds.addBuild(req.id, bs.number)
-                bids.append(bid)
+            req = build.requests[-1]
+            # TODO: get id's for builder, slave
+            bid, number = yield self.master.db.builds.addBuild(builderid=-1,
+                    brid=req.id, slaveid=-1, masterid=self.master.masterid,
+                    state_strings=['created'])
+            bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
             run_cleanups()
@@ -395,12 +402,13 @@ class Builder(config.ReconfigurableServiceMixin,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
+        results = build.build_status.getResults()
+
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
-        d = self.master.db.builds.finishBuilds(bids)
+        d = self.master.db.builds.finishBuild(bids[0], results)
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
-        results = build.build_status.getResults()
         self.building.remove(build)
         if results == RETRY:
             d = self._resubmit_buildreqs(build)
