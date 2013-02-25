@@ -29,8 +29,8 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics, botmaster
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.locks import LockAccess
 from buildbot.util import subscription
+from buildbot.util.eventual import eventually
 from buildbot import config
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
@@ -123,12 +123,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = []
-        for access in self.access:
-            if not isinstance(access, LockAccess):
-                access = access.defaultAccess()
-            lock = self.botmaster.getLockByID(access.lockid)
-            locks.append((lock, access))
+        locks = [ (self.botmaster.getLockFromLockAccess(a), a)
+                    for a in self.access ]
         self.locks = [(l.getLock(self), la) for l, la in locks]
         self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
                                     for l, la in self.locks ]
@@ -483,7 +479,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             subs = self.detached_subs
             self.detached_subs = None
             subs.deliver()
-        reactor.callLater(0, notif)
+        eventually(notif)
 
     def subscribeToDetach(self, callback):
         """
@@ -529,7 +525,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # notifyOnDisconnect runs the callback with one argument, the
         # RemoteReference being disconnected.
         def _disconnected(rref):
-            reactor.callLater(0, d.callback, None)
+            eventually(d.callback, None)
         slave.notifyOnDisconnect(_disconnected)
         tport = slave.broker.transport
         # this is the polite way to request that a socket be closed
@@ -597,6 +593,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         L{maybeStartBuildsForSlave} to be called at that time, or builds on
         this slave will not start.
         """
+
+        if self.slave_status.isPaused():
+            return False
+
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
         if self.slave_status.getGraceful():
@@ -708,6 +708,18 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             return
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down slave')
+
+    def pause(self):
+        """Stop running new builds on the slave."""
+        self.slave_status.setPaused(True)
+
+    def unpause(self):
+        """Restart running new builds on the slave."""
+        self.slave_status.setPaused(False)
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
+
+    def isPaused(self):
+        return self.paused
 
 class BuildSlave(AbstractBuildSlave):
 
@@ -901,7 +913,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def _setBuildWaitTimer(self):
         self._clearBuildWaitTimer()
-        if self.build_wait_timeout < 0:
+        if self.build_wait_timeout <= 0:
             return
         self.build_wait_timer = reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)

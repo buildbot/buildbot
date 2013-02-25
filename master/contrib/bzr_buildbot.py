@@ -192,7 +192,7 @@ if DEFINE_POLLER:
     SHORT = object()
 
 
-    class BzrPoller(buildbot.changes.base.ChangeSource,
+    class BzrPoller(buildbot.changes.base.PollingChangeSource,
                     buildbot.util.ComparableMixin):
 
         compare_attrs = ['url']
@@ -214,7 +214,6 @@ if DEFINE_POLLER:
 
         def startService(self):
             twisted.python.log.msg("BzrPoller(%s) starting" % self.url)
-            buildbot.changes.base.ChangeSource.startService(self)
             if self.branch_name is FULL:
                 ourbranch = self.url
             elif self.branch_name is SHORT:
@@ -235,42 +234,32 @@ if DEFINE_POLLER:
                     break
             else:
                 self.last_revision = None
-            self.polling = False
-            twisted.internet.reactor.callWhenRunning(
-                self.loop.start, self.poll_interval)
+            buildbot.changes.base.PollingChangeSource.startService(self)
 
         def stopService(self):
             twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)
-            self.loop.stop()
-            return buildbot.changes.base.ChangeSource.stopService(self)
+            return buildbot.changes.base.PollingChangeSource.stopService(self)
 
         def describe(self):
             return "BzrPoller watching %s" % self.url
 
         @twisted.internet.defer.inlineCallbacks
         def poll(self):
-            if self.polling: # this is called in a loop, and the loop might
-                # conceivably overlap.
-                return
-            self.polling = True
+            # On a big tree, even individual elements of the bzr commands
+            # can take awhile. So we just push the bzr work off to a
+            # thread.
             try:
-                # On a big tree, even individual elements of the bzr commands
-                # can take awhile. So we just push the bzr work off to a
-                # thread.
-                try:
-                    changes = yield twisted.internet.threads.deferToThread(
-                        self.getRawChanges)
-                except (SystemExit, KeyboardInterrupt):
-                    raise
-                except:
-                    # we'll try again next poll.  Meanwhile, let's report.
-                    twisted.python.log.err()
-                else:
-                    for change_kwargs in changes:
-                        yield self.addChange(change_kwargs)
-                        self.last_revision = change_kwargs['revision']
-            finally:
-                self.polling = False
+                changes = yield twisted.internet.threads.deferToThread(
+                    self.getRawChanges)
+            except (SystemExit, KeyboardInterrupt):
+                raise
+            except:
+                # we'll try again next poll.  Meanwhile, let's report.
+                twisted.python.log.err()
+            else:
+                for change_kwargs in changes:
+                    yield self.addChange(change_kwargs)
+                    self.last_revision = change_kwargs['revision']
 
         def getRawChanges(self):
             branch = bzrlib.branch.Branch.open_containing(self.url)[0]

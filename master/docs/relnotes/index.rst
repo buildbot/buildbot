@@ -73,6 +73,12 @@ Master
 Features
 ~~~~~~~~
 
+* The algorithm to match build requests to slaves has been rewritten in :bb:pull:`615`.
+  The new algorithm automatically takes locks into account, and will not schedule a build only to have it wait on a lock.
+  The algorithm also introduces a ``canStartBuild`` builder configuration option which can be used to prevent a build request being assigned to a slave.
+
+* ``buildbot stop`` and ``buildbot restart`` now accept ``--clean`` to stop or restart the master cleanly (allowing all running builds to complete first).
+
 * The :bb:status:`IRC` bot now supports clean shutdown and immediate shutdown by using the command 'shutdown'.
   To allow the command to function, you must provide `allowShutdown=True`.
 
@@ -80,13 +86,30 @@ Features
 
 * default.css now wraps preformatted text by default.
 
+* Slaves can now be paused through the web status.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a dictionary instead of a tuple.
   This allows it to add extra information about a change (such as ``project`` or ``repository``).
-* The ``workdir`` property has been renamed to ``builddir``.
+
+* The ``workdir`` build property has been renamed to ``builddir``.
+  This change accurately reflects its content; the term "workdir" means something different.
+
 * The ``Blocker`` step has been removed.
+
+* Several polling ChangeSources are now documented to take a ``pollInterval`` argument, instead of ``pollinterval``.
+  The old name is still supported.
+
+* StatusReceivers' checkConfig method should no longer take an `errors` parameter.
+  It should indicate errors by calling :py:func:`~buildbot.config.error`.
+
+* Build steps now require that their name be a string.
+  Previously, they would accept anything, but not behave appropriately.
+
+* The web status no longer displays a potentially misleading message, indicating whether the build
+  can be rebuilt exactly.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

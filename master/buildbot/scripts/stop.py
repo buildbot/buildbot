@@ -25,6 +25,9 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
+    if config['clean']:
+      signame = 'USR1'
+
     if not base.isBuildmasterDir(config['basedir']):
         print "not a buildmaster directory"
         return 1
@@ -59,8 +62,11 @@ def stop(config, signame="TERM", wait=False):
         return 0
 
     time.sleep(0.1)
-    for _ in range(10):
-        # poll once per second until twistd.pid goes away, up to 10 seconds
+
+    # poll once per second until twistd.pid goes away, up to 10 seconds,
+    # unless we're doing a clean stop, in which case wait forever
+    count = 0
+    while count < 10 or config['clean']:
         try:
             os.kill(pid, 0)
         except OSError:
@@ -68,6 +74,7 @@ def stop(config, signame="TERM", wait=False):
                 print "buildbot process %d is dead" % pid
             return 0
         time.sleep(1)
+        count += 1
     if not quiet:
         print "never saw process go away"
     return 1

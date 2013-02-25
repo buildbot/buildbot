@@ -137,6 +137,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["clean", "c", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
@@ -147,6 +148,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
+        ["clean", "c", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"

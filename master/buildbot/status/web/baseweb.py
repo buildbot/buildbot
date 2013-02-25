@@ -534,7 +534,7 @@ class WebStatus(service.MultiService):
     # This is in preparation for removal of the IControl hierarchy
     # entirely.
 
-    def checkConfig(self, otherStatusReceivers, errors):
+    def checkConfig(self, otherStatusReceivers):
         duplicate_webstatus=0
         for osr in otherStatusReceivers:
             if isinstance(osr,WebStatus):
@@ -548,7 +548,7 @@ class WebStatus(service.MultiService):
                         duplicate_webstatus += 1
 
         if duplicate_webstatus:
-            errors.addError(
+            config.error(
                 "%d Webstatus objects have same port: %s"
                     % (duplicate_webstatus, self.http_port),
             )

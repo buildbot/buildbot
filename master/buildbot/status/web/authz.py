@@ -34,6 +34,7 @@ class Authz(object):
             'stopChange',
             'cleanShutdown',
             'showUsersPage',
+            'pauseSlave',
     ]
 
     def __init__(self,

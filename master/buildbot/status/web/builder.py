@@ -288,7 +288,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties' : properties,
                 })
 
-        numbuilds = int(req.args.get('numbuilds', [self.numbuilds])[0])
+        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
@@ -301,8 +301,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             s['link'] = path_to_slave(req, slave)
             s['name'] = slave.getName()
             c = s['connected'] = slave.isConnected()
+            s['paused'] = slave.isPaused()
+            s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
             if c:
-                s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
                 connected_slaves += 1
         cxt['connected_slaves'] = connected_slaves
 

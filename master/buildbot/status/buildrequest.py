@@ -75,6 +75,11 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.bsid)
 
+    @defer.inlineCallbacks
+    def getBuildProperties(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.properties)
+
     def getSourceStamp(self):
         # TODO..
         return defer.succeed(None)
@@ -132,6 +137,8 @@ class BuildRequestStatus:
 
         ss = yield self.getSourceStamp()
         result['source'] = ss.asDict()
+        props = yield self.getBuildProperties()
+        result['properties'] = props.asList()
         result['builderName'] = self.getBuilderName()
         result['submittedAt'] = yield self.getSubmitTime()
 

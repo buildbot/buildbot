@@ -43,6 +43,7 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.util.eventual import eventually
 from buildbot import monkeypatches
 from buildbot import config
 
@@ -210,8 +211,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
-                    _reactor.callLater(0, self.reconfig)
+                    eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
+
+            if hasattr(signal, "SIGUSR1"):
+                def sigusr1(*args):
+                    _reactor.callLater(0, self.botmaster.cleanShutdown)
+                signal.signal(signal.SIGUSR1, sigusr1)
 
             # get the masterid so other services can use it in
             # startup/reconfig.  This goes directly to the DB since the data
