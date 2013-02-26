@@ -209,13 +209,17 @@ class ChoiceStringParameter(BaseParameter):
             raise ValidationError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
 
-
+    def getChoices(self, master, scheduler, buildername):
+        return self.choices
 
 class InheritBuildParameter(ChoiceStringParameter):
     """A parameter that takes its values from another build"""
     type = ChoiceStringParameter.type + ["inherit"]
     name = "inherit"
     compatible_builds = None
+
+    def getChoices(self, master, scheduler, buildername):
+        return self.compatible_builds(master.status, buildername)
 
     def getFromKwargs(self, kwargs):
         raise ValidationError("InheritBuildParameter can only be used by properties")
