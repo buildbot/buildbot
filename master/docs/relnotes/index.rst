@@ -31,6 +31,8 @@ Features
 
 * Slaves can now be paused through the web status.
 
+* The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
