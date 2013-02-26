@@ -18,7 +18,7 @@ import time
 from email.Message import Message
 from email.Utils import formatdate
 from zope.interface import implements
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
 from twisted.spread import pb
@@ -934,6 +934,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
+        # a negative build_wait_timeout means the slave should never be shut
+        # down, so just disconnect.
         if self.build_wait_timeout < 0:
             yield AbstractBuildSlave.disconnect(self)
             return
@@ -943,7 +945,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             self.missing_timer = None
 
         if self.substantiation_deferred is not None:
-            log.msg("Weird: Got request to stop before started. Allowing slave to start cleanly to avoid inconsistent state")
+            log.msg("Weird: Got request to stop before started. Allowing "
+                    "slave to start cleanly to avoid inconsistent state")
             yield self.substantiation_deferred
             self.substantiation_deferred = None
             self.substantiation_build = None
@@ -964,7 +967,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             yield defer.DeferredList([
                 AbstractBuildSlave.disconnect(self),
                 self.insubstantiate(fast)
-                ])
+                ], consumeErrors=True, fireOnOneErrback=True)
         else:
             yield AbstractBuildSlave.disconnect(self)
             yield self.stop_instance(fast)
