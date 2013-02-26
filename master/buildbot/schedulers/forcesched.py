@@ -249,8 +249,8 @@ class InheritBuildParameter(ChoiceStringParameter):
 class BuildslaveChoiceParameter(ChoiceStringParameter):
     """A parameter that lets the buildslave name be explicitly chosen.
 
-    This parameter works in conjunction with 'builder.EnforceChosenSlave', which
-    should be added as the 'canStartBuild' parameter to the Builder.
+    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave', 
+    which should be added as the 'canStartBuild' parameter to the Builder.
 
     The "anySentinel" parameter represents the sentinel value to specify that 
     there is no buildslave preference.

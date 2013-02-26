@@ -260,11 +260,11 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
 
     @defer.inlineCallbacks
-    def test_EnforceChosenSlave(self):
-        """EnforceChosenSlave rejects and accepts builds"""
+    def test_enforceChosenSlave(self):
+        """enforceChosenSlave rejects and accepts builds"""
         yield self.makeBuilder()
 
-        self.bldr.config.canStartBuild = builder.EnforceChosenSlave
+        self.bldr.config.canStartBuild = builder.enforceChosenSlave
 
         slave = mock.Mock()
         slave.slave.slavename = 'slave5'

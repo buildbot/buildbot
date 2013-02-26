@@ -30,7 +30,7 @@ from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
 
-def EnforceChosenSlave(bldr, slavebuilder, breq):
+def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):

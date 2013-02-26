@@ -89,7 +89,6 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
-        properties = {}
     )
 
     id_column = 'id'
