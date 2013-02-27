@@ -16,9 +16,6 @@ project will typically have only a single :class:`ChangeSource` active. This sec
 provides a description of all available :class:`ChangeSource` types and explains how to
 set up each of them.
 
-In general, each Buildmaster watches a single source tree.  It is possible to
-work around this, but true support for multi-tree builds remains elusive.
-
 .. _Choosing-a-Change-Source:
 
 Choosing a Change Source
