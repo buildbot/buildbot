@@ -14,7 +14,8 @@
         li(ng-repeat='b in recent.recent_builds')
            a(href='{{b.link}}') {{b.caption}}
         li.divider
-        li Most recently browsed builders
+        li
+          small Most recently browsed builders
         li(ng-repeat='b in recent.recent_builders')
            a(href='{{b.link}}') {{b.caption}}
   .span8
@@ -31,3 +32,8 @@
             li Project Name: {{config.projectname}}
             li Project Version: {{config.projectversion}}
             li Project Url: {{config.projecturl}}
+        small.span4
+
+          | buildbot-www is using the following open-source JavaScript libraries:
+          ul
+             li(ng-repeat='(lib,version) in config.jslibs_versions') {{lib}} : {{version}}

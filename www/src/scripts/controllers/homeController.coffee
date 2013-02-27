@@ -8,6 +8,6 @@ angular.module('app').controller 'homeController', ['$log', '$scope', '$location
                 projectname: "cool project"
                 projectversion: "0.0.1"
                 projecturl: "http://buildbot.net"
-
+                jslibs_versions: window.jslibs_versions
 
 ]

@@ -3,7 +3,7 @@
 require
         shim:
                 'directives/topmenu'                 : deps: ['app']
-                'controllers/homeController'         : deps: ['app']
+                'controllers/homeController'         : deps: ['app','libs/versions']
                 'controllers/buildersController'     : deps: ['app','services/buildbotService']
                 'controllers/changesController'      : deps: ['app','services/buildbotService']
                 'filters/twitterfy'                  : deps: ['app']
