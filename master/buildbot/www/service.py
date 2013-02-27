@@ -16,9 +16,9 @@
 import pkg_resources
 from twisted.internet import defer
 from twisted.application import strports, service
-from twisted.web import server, static, resource
+from twisted.web import server
 from buildbot import config
-from buildbot.www import ui, rest, ws
+from buildbot.www import rest, ws, sse
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -83,21 +83,15 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def setupSite(self, new_config):
-        root = resource.Resource()
-
-        # render the UI HTML at the root
-        root.putChild('', ui.UIResource(self.master, self.apps))
-
-        # serve JS from /base and /app/$name
-        appComponent = static.Data('app', 'text/plain')
-        root.putChild('app', appComponent)
-        for name, app in self.apps.iteritems():
-            appComponent.putChild(name, static.File(app.static_dir))
+        root = self.apps['base'].resource
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))
 
         # /ws
         root.putChild('ws', ws.WsResource(self.master))
+
+        # /sse
+        root.putChild('sse', sse.EventResource(self.master))
 
         self.site = server.Site(root)
