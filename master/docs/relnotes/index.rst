@@ -33,6 +33,8 @@ Features
 
 * The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
 
+* :bb:step:`SVN` has a new option `preferLastChangedRev=True` to use the last changed revision for ``got_revision``
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
