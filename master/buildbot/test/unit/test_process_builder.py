@@ -16,8 +16,7 @@
 import mock
 import random
 from twisted.trial import unittest
-from twisted.python import failure
-from twisted.internet import defer, task
+from twisted.internet import defer
 from buildbot import config
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import builder, factory
@@ -218,29 +217,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
-    @defer.inlineCallbacks
-    def test_msg_buildrequests_unclaimed(self):
-        br1 = mock.Mock(name='br1')
-        br1.bsid = 10
-        br1.id = 13
-        br1.buildername = 'bldr'
-
-        br2 = mock.Mock(name='br2')
-        br2.bsid = 10
-        br2.id = 14
-        br2.buildername = 'bldr'
-
-        yield self.makeBuilder('bldr')
-
-        self.bldr._msg_buildrequests_unclaimed([br1, br2])
-
-        self.master.mq.assertProductions([
-            ( ('buildrequest', '10', '-1', '13', 'unclaimed'),
-                dict(brid=13, bsid=10, builderid=-1, buildername='bldr')),
-            ( ('buildrequest', '10', '-1', '14', 'unclaimed'),
-                dict(brid=14, bsid=10, builderid=-1, buildername='bldr')),
-        ])
-
     def test_canStartBuild(self):
         yield self.makeBuilder()
 
@@ -281,8 +257,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, False)
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
-    
->>>>>>> master
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 

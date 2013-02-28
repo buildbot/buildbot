@@ -15,7 +15,7 @@
 
 import mock
 import os
-from buildbot.www import service, ui, rest
+from buildbot.www import service, rest
 from twisted.trial import unittest
 from buildbot.test.util import www
 from buildbot.test.fake import fakemaster
@@ -89,7 +89,5 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault('', req),
-                ui.UIResource)
         self.assertIsInstance(root.getChildWithDefault('api', req),
                 rest.RestRootResource)
