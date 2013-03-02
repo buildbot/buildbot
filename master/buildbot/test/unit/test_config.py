@@ -410,6 +410,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(logCompressionMethod='foo'))
         self.assertConfigError(self.errors, "must be 'bz2' or 'gz'")
 
+    def test_load_global_codebaseGenerator(self):
+        func = lambda _: "dummy"
+        self.do_test_load_global(dict(codebaseGenerator=func),
+                                 codebaseGenerator=func)
+
+    def test_load_global_codebaseGenerator_invalid(self):
+        self.cfg.load_global(self.filename,
+                dict(codebaseGenerator='dummy'))
+        self.assertConfigError(self.errors,
+                "codebaseGenerator must be a callable "
+                "accepting a dict and returning a str")
+
     def test_load_global_logMaxSize(self):
         self.do_test_load_global(dict(logMaxSize=123), logMaxSize=123)
 
