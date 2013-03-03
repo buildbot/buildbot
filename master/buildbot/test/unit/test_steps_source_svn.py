@@ -78,7 +78,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             <depth>infinity</depth>
                             </wc-info>
                             <commit
-                               revision="100">
+                               revision="90">
                             <author>sally</author>
                             <date>2003-01-15T23:35:12.847647Z</date>
                             </commit>
@@ -192,6 +192,38 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.assertRaises(ValueError, lambda: int(revision))
         d.addCallback(lambda _: _checkType())
         return d
+
+    def test_revision_missing(self):
+        """Fail if 'revision' tag isnt there"""
+        svn_info_stdout = self.svn_info_stdout_xml.replace('entry', 'Blah')
+
+        svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
+        self.setupStep(svnTestStep)
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=svn_info_stdout) 
+            + 0,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
 
     def test_mode_incremental(self):
         self.setupStep(
@@ -422,6 +454,81 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_incremental_preferLastChangedRev(self):
+        """Give the last-changed rev if 'preferLastChangedRev' is set"""
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                        mode='incremental',username='user',
+                        preferLastChangedRev=True,
+                        password='pass', extra_args=['--random']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=self.svn_info_stdout_xml)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '90', 'SVN')
+        return self.runStep()
+
+    def test_mode_incremental_preferLastChangedRev_butMissing(self):
+        """If 'preferLastChangedRev' is set, but missing, fall back
+        to the regular revision value."""
+        svn_info_stdout = self.svn_info_stdout_xml.replace('commit', 'Blah')
+        
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                        mode='incremental',username='user',
+                        preferLastChangedRev=True,
+                        password='pass', extra_args=['--random']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=svn_info_stdout)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
     def test_mode_full_clobber(self):
