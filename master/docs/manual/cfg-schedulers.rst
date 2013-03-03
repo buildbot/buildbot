@@ -1158,6 +1158,7 @@ This is a parameter group to specify a sourcestamp for a given codebase.
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
     the build.  The default value is a string parameter.
 
+.. bb:sched:: InheritBuildParameter
 
 InheritBuildParameter
 #####################
@@ -1201,6 +1202,34 @@ Example::
                     compatible_builds=get_compatible_builds,
                     required = True),
                     ])
+
+.. bb:sched:: BuildslaveChoiceParameter
+
+BuildslaveChoiceParameter
+#########################
+
+This parameter allows a scheduler to require that a build is assigned to the
+chosen buildslave. The choice is assigned to the `slavename` property for the build.
+The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to
+the ``canStartBuild`` parameter for the ``Builder``.
+
+Example::
+
+    from buildbot.process.builder import enforceChosenSlave
+
+    # schedulers:
+        ForceScheduler(
+          # ...
+          properties=[
+            BuildslaveChoiceParameter(),
+          ]
+        )
+
+    # builders:
+        BuilderConfig(
+          # ...
+          canStartBuild=enforceChosenSlave,
+        )
 
 AnyPropertyParameter
 ####################
