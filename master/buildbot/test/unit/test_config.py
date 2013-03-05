@@ -23,7 +23,7 @@ from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces, revlinks
+from buildbot import config, buildslave, interfaces, revlinks, locks
 from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -767,7 +767,24 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.builders = [ b1, b2 ]
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
+    def setup_builder_locks(self,
+                            builder_lock=None,
+                            dup_builder_lock=False,
+                            bare_builder_lock=False):
+        """Set-up two mocked builders with specified locks.
+
+        @type  builder_lock: string or None
+        @param builder_lock: Name of the lock to add to first builder.
+                             If None, no lock is added.
+
+        @type dup_builder_lock: boolean
+        @param dup_builder_lock: if True, add a lock with duplicate name
+                                 to the second builder
+
+        @type dup_builder_lock: boolean
+        @param bare_builder_lock: if True, add bare lock objects, don't wrap
+                                  them into locks.LockAccess object
+        """
         def bldr(name):
             b = mock.Mock()
             b.name = name
@@ -776,9 +793,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock()
+            l = mock.Mock(spec=locks.MasterLock)
             l.name = name
-            return l
+            if bare_builder_lock:
+                return l
+            return locks.LockAccess(l, "counting")
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]
@@ -841,6 +860,14 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     def test_check_locks_none(self):
         # no locks in the whole config, should be fine
         self.setup_builder_locks()
+        self.cfg.check_locks()
+        self.assertNoConfigErrors(self.errors)
+
+    def test_check_locks_bare(self):
+        # check_locks() should be able to handle bare lock object,
+        # lock objects that are not wrapped into LockAccess() object
+        self.setup_builder_locks(builder_lock='oldlock',
+                                 bare_builder_lock=True)
         self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
