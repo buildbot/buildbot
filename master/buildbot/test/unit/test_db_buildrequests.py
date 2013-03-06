@@ -296,6 +296,58 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(check)
         return d
 
+    def do_test_getBuildRequests_branch_arg(self, **kwargs):
+        expected = kwargs.pop('expected')
+        d = self.insertTestData([
+            fakedb.BuildRequest(id=70, buildsetid=self.BSID+1),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=self.BSID+1),
+            fakedb.SourceStampSet(id=self.BSID+1),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+1,
+                               branch='branch_A'),
+
+            fakedb.BuildRequest(id=80, buildsetid=self.BSID+2),
+            fakedb.Buildset(id=self.BSID+2, sourcestampsetid=self.BSID+2),
+            fakedb.SourceStampSet(id=self.BSID+2),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+2,
+                               repository='repository_A'),
+
+            fakedb.BuildRequest(id=90, buildsetid=self.BSID+3),
+            fakedb.Buildset(id=self.BSID+3, sourcestampsetid=self.BSID+3),
+            fakedb.SourceStampSet(id=self.BSID+3),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+3,
+                               branch='branch_A', repository='repository_A'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequests(**kwargs))
+        def check(brlist):
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted(expected))
+        d.addCallback(check)
+        return d
+
+    def test_getBuildRequests_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(branch='branch_A',
+                                                      expected=[70, 90])
+
+    def test_getBuildRequests_branch_empty(self):
+      return self.do_test_getBuildRequests_branch_arg(branch='absent_branch',
+                                                      expected=[])
+
+    def test_getBuildRequests_repository(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='repository_A', expected=[80, 90])
+
+    def test_getBuildRequests_repository_empty(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='absent_repository', expected=[])
+
+    def test_getBuildRequests_repository_and_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='repository_A', branch='branch_A', expected=[90])
+
+    def test_getBuildRequests_no_repository_nor_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(expected=[70, 80, 90])
+
     def do_test_claimBuildRequests(self, rows, now, brids, expected=None,
                                   expfailure=None, claimed_at=None):
         clock = task.Clock()
