@@ -136,7 +136,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
     def updateSourceProperty(self, name, value, source=''):
         """
-        Update a property, indexing the proeprty by codebase if codebase is not
+        Update a property, indexing the property by codebase if codebase is not
         ''.  Source steps should generally use this instead of setProperty.
         """
         # pick a decent source name
