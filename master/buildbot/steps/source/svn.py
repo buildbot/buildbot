@@ -170,20 +170,20 @@ class SVN(Source):
             cmd = buildstep.RemoteCommand('cpdir',
                     { 'fromdir': 'source', 'todir':self.workdir,
                       'logEnviron': self.logEnviron })
+            cmd.useLog(self.stdio_log, False)
+
+            yield self.runCommand(cmd)
+
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+
         else:
-            export_cmd = ['svn', 'export']
+            export_cmd = ['export']
             if self.revision:
                 export_cmd.extend(["--revision", str(self.revision)])
             export_cmd.extend(['source', self.workdir])
-
-            cmd = buildstep.RemoteShellCommand('', export_cmd,
-                    env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
-        cmd.useLog(self.stdio_log, False)
-
-        yield self.runCommand(cmd)
-
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
+            export_cmd.extend(['workdir', ''])
+            yield self._dovccmd(export_cmd)
 
     def finish(self, res):
         d = defer.succeed(res)
@@ -197,7 +197,17 @@ class SVN(Source):
 
     def _dovccmd(self, command, collectStdout=False):
         assert command, "No command specified"
-        command.extend(['--non-interactive', '--no-auth-cache'])
+
+        #Fetch workdir argument value in command set in copy function when self.method's 'export' and then pop the attribute/value 
+        if command.__contains__('workdir'):
+            workdirArg = command[command.index('workdir')+1]
+            command.pop()
+            command.pop()
+        else:
+            workdirArg = self.workdir
+
+        if not command.__contains__('export'):
+            command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
         if self.password:
@@ -207,7 +217,7 @@ class SVN(Source):
         if self.extra_args:
             command.extend(self.extra_args)
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
+        cmd = buildstep.RemoteShellCommand(workdirArg, ['svn'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
