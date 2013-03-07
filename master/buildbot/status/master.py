@@ -131,6 +131,19 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             urllib.quote(builder_name, safe=''),
             build_number)
 
+    def getURLForBuildRequest(self, brid, builder_name, build_number):
+        d = self.master.db.masters.getMasterURL(brid)
+        
+        def getMasterURL(bmdict, builder_name, build_number):
+            url = {}
+            url['path'] = bmdict['buildbotURL'] + "builders/%s/builds/%d" % (
+                urllib.quote(builder_name, safe=''),
+                build_number)
+            url['text'] = "%s #%d" % (builder_name, build_number)
+            return url
+        d.addCallback(getMasterURL, builder_name, build_number)
+        return d
+
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
         if not prefix:

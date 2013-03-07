@@ -319,6 +319,18 @@ class Model(base.DBConnectorComponent):
         sa.Column("value_json", sa.Text, nullable=False),
     )
 
+    # masters
+    masters = sa.Table("masters", metadata,
+        # unique id per master
+        sa.Column('id', sa.Integer, primary_key=True),
+
+        # master's URL (generally in the form hostname:basedir)
+        sa.Column('buildbotURL', sa.Text, nullable=False),
+
+        # objectid where the masters is stored
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), nullable=False),
+    )
+
     #users
 
     # This table identifies individual users, and contains buildbot-specific
@@ -390,6 +402,7 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
+    sa.Index('masters_objectid', masters.c.objectid, unique=True)    
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be

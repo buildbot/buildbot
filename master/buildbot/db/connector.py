@@ -20,7 +20,7 @@ from twisted.application import internet, service
 from buildbot import config
 from buildbot.db import enginestrategy
 from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
-from buildbot.db import state, buildsets, buildrequests, builds, users
+from buildbot.db import state, buildsets, buildrequests, builds, users, masters
 
 class DatabaseNotReadyError(Exception):
     pass
@@ -71,6 +71,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
+        self.masters = masters.MastersConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                 self._doCleanup)

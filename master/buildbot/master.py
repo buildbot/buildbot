@@ -82,7 +82,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.db_loop = None
         # db configured values
         self.configured_db_url = None
-        self.configured_poll_interval = None        
+        self.configured_poll_interval = None
+        # running multimaster mode
+        self.configured_buildbotURL = None        
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
@@ -308,9 +310,16 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 self.db_loop = task.LoopingCall(self.pollDatabase)
                 self.db_loop.start(self.configured_poll_interval, now=False)
 
+        # setup buildbotURL
+        if self.configured_buildbotURL != new_config.buildbotURL:
+            self.configured_buildbotURL = new_config.buildbotURL
+            def setupMaster(_master_objectid):
+                self.db.masters.setupMaster(self.configured_buildbotURL, _master_objectid)
+            d = self.getObjectId()
+            d.addCallback(setupMaster)
+
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                             new_config)
-
 
     ## informational methods
 
