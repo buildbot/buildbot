@@ -98,7 +98,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             def update():
                 q = tbl.update(whereclause=(
                     (tbl.c.id == bsid) &
-                    ((tbl.c.complete == None) | (tbl.c.complete != 1))))
+                    ((tbl.c.complete_at == None) | (tbl.c.complete != 1))))
                 res = conn.execute(q,
                     complete=1,
                     results=results,
@@ -109,7 +109,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # maybe another build completed the buildset
             def checkupdated():
                 q = tbl.select(whereclause=((tbl.c.id == bsid)
-                               & (tbl.c.complete==1) & (tbl.c.complete != None)))
+                               & (tbl.c.complete==1) & (tbl.c.complete_at != None)))
                 res = conn.execute(q)
                 row = res.fetchone()
                 if not row:

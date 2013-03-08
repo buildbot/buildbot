@@ -27,6 +27,7 @@ class FakeMaster(object):
         self.bset_completion_subscr_cb = None
         self.caches = mock.Mock(name="caches")
         self.caches.get_cache = self.get_cache
+        self.configured_poll_interval = None
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)

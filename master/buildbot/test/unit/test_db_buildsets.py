@@ -330,7 +330,20 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildsets.completeBuildset(bsid=92, results=6,
                                                    _reactor=self.clock))
-        return self.assertFailure(d, KeyError)
+        # other build complete it this case the row should be already updated
+        # properly in the database
+
+        def check(_):
+            def thd(conn):
+                bs_tbl = self.db.model.buildsets
+                # should see one buildset row
+                r = conn.execute(bs_tbl.select(whereclause=((bs_tbl.c.id == 92)  & (bs_tbl.c.complete==1) & (bs_tbl.c.complete_at != None))))
+                row = r.fetchone()
+                self.assertEqual([(row['id'], row['complete'], row['complete_at'], row['results'])], [
+                    ( 92, 1, 298297876, 7) ])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
 
     def test_completeBuildset_missing(self):
         d = self.insert_test_getBuildsets_data()
