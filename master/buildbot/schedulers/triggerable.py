@@ -16,7 +16,7 @@
 from zope.interface import implements
 
 from twisted.python import failure
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
@@ -32,6 +32,8 @@ class Triggerable(base.BaseScheduler):
         self._waiters = {}
         self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
+        # loop for polling the db
+        self.db_loop = None
 
     def trigger(self, sourcestamps = None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
@@ -62,6 +64,10 @@ class Triggerable(base.BaseScheduler):
             self._bsc_subscription.unsubscribe()
             self._bsc_subscription = None
 
+        if self.db_loop:
+            self.db_loop.stop()
+            self.db_loop = None
+
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
@@ -80,6 +86,21 @@ class Triggerable(base.BaseScheduler):
         elif not self._waiters and self._bsc_subscription:
             self._bsc_subscription.unsubscribe()
             self._bsc_subscription = None
+
+        if self._waiters and not self.db_loop:
+            if (self.master.configured_poll_interval):
+                self.db_loop = task.LoopingCall(self.pollDatabaseBuildSets)
+                self.db_loop.start(self.master.configured_poll_interval)
+        elif not self._waiters and self.db_loop:
+                self.db_loop.stop()
+                self.db_loop = None
+
+    # poll database for buildset completion
+    # when running buildbot in multimaster mode
+    @defer.inlineCallbacks
+    def pollDatabaseBuildSets(self):
+        for bsid in self._waiters.keys():
+            yield self.master.maybeBuildsetComplete(bsid)
 
     def _buildsetComplete(self, bsid, result):
         if bsid not in self._waiters:

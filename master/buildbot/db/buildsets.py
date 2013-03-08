@@ -95,17 +95,31 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             tbl = self.db.model.buildsets
+            def update():
+                q = tbl.update(whereclause=(
+                    (tbl.c.id == bsid) &
+                    ((tbl.c.complete == None) | (tbl.c.complete != 1))))
+                res = conn.execute(q,
+                    complete=1,
+                    results=results,
+                    complete_at=complete_at)
 
-            q = tbl.update(whereclause=(
-                (tbl.c.id == bsid) &
-                ((tbl.c.complete == None) | (tbl.c.complete != 1))))
-            res = conn.execute(q,
-                complete=1,
-                results=results,
-                complete_at=complete_at)
+                return (res.rowcount > 0)
 
-            if res.rowcount != 1:
-                raise KeyError
+            # maybe another build completed the buildset
+            def checkupdated():
+                q = tbl.select(whereclause=((tbl.c.id == bsid)
+                               & (tbl.c.complete==1) & (tbl.c.complete != None)))
+                res = conn.execute(q)
+                row = res.fetchone()
+                if not row:
+                    raise KeyError
+                    
+            if update():               
+                return
+            else:
+                checkupdated()
+
         return self.db.pool.do(thd)
 
     def getBuildset(self, bsid):

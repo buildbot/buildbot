@@ -568,7 +568,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 cumulative_results = FAILURE
 
         # mark it as completed in the database
-        yield self.db.buildsets.completeBuildset(bsid, cumulative_results)
+        bs = yield self.db.buildsets.getBuildset(bsid)
+        if not bs['complete']:
+            yield self.db.buildsets.completeBuildset(bsid, cumulative_results)        
 
         # and deliver to any listeners
         self._buildsetComplete(bsid, cumulative_results)
