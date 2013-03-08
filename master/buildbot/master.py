@@ -81,7 +81,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # loop for polling the db
         self.db_loop = None
         # db configured values
-        self.configured_url = None
+        self.configured_db_url = None
         self.configured_poll_interval = None        
 
         # configuration / reconfiguration handling
@@ -171,7 +171,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
-                self.configured_url = self.config.db['db_url']
                 
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
@@ -291,7 +290,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def reconfigService(self, new_config):
-        if self.configured_url != new_config.db['db_url']:
+        if self.configured_db_url is None:
+            self.configured_db_url = new_config.db['db_url']
+        elif (self.configured_db_url != new_config.db['db_url']):
             config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
             )
