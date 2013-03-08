@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import textwrap
 from twisted.trial import unittest
 from twisted.python.reflect import namedModule
 from buildbot.steps.source import svn
