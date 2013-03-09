@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import xml.dom.minidom
 import xml.parsers.expat
 
@@ -37,7 +36,7 @@ class SVN(Source):
     def __init__(self, repourl=None, mode='incremental',
                  method=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
-                 depth=None, **kwargs):
+                 depth=None, preferLastChangedRev=False, **kwargs):
 
         self.repourl = repourl
         self.username = username
@@ -45,8 +44,9 @@ class SVN(Source):
         self.extra_args = extra_args
         self.keep_on_purge = keep_on_purge or []
         self.depth = depth
-        self.method=method
+        self.method = method
         self.mode = mode
+        self.preferLastChangedRev = preferLastChangedRev
         Source.__init__(self, **kwargs)
         errors = []
         if self.mode not in self.possible_modes:
@@ -241,44 +241,67 @@ class SVN(Source):
             defer.returnValue(False)
             return
 
-        # then run 'svn info' to check that the URL matches our repourl
-        stdout = yield self._dovccmd(['info'], collectStdout=True)
+        # then run 'svn info --xml' to check that the URL matches our repourl
+        stdout = yield self._dovccmd(['info', '--xml'], collectStdout=True)
 
-        # extract the URL, handling whitespace carefully so that \r\n works
-        # is a line terminator
-        mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
-        defer.returnValue(mo and mo.group(1) == self.repourl)
+        try:
+            stdout_xml = xml.dom.minidom.parseString(stdout)
+            extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue
+        except xml.parsers.expat.ExpatError:
+            msg = "Corrupted xml, aborting step"
+            self.stdio_log.addHeader(msg)
+            raise buildstep.BuildStepFailed()
+        defer.returnValue(extractedurl == self.repourl)
         return
 
+    @defer.inlineCallbacks
     def parseGotRevision(self, _):
         # if this was a full/export, then we need to check svnversion in the
         # *source* directory, not the build directory
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info'],
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
                                            collectStdout=True)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _setrev(_):
-            stdout = cmd.stdout
-            match = re.search('Revision:(.+?)\n', stdout)
+        yield self.runCommand(cmd)
+
+        stdout = cmd.stdout
+        try:
+            stdout_xml = xml.dom.minidom.parseString(stdout)
+        except xml.parsers.expat.ExpatError:
+            msg = "Corrupted xml, aborting step"
+            self.stdio_log.addHeader(msg)
+            raise buildstep.BuildStepFailed()
+
+        revision = None
+        if self.preferLastChangedRev:
             try:
-                revision = int(match.group(1))
-            except (AttributeError, ValueError):
-                msg =("SVN.parseGotRevision unable to parse output "
-                      "of svnversion: '%s'" % stdout)
+                revision = stdout_xml.getElementsByTagName('commit')[0].attributes['revision'].value
+            except (KeyError, IndexError):
+                msg =("SVN.parseGotRevision unable to detect Last Changed Rev in"
+                      " output of svn info")
+                log.msg(msg)
+                # fall through and try to get 'Revision' instead
+
+        if revision is None:
+            try:
+                revision = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
+            except (KeyError, IndexError):
+                msg =("SVN.parseGotRevision unable to detect revision in"
+                      " output of svn info")
                 log.msg(msg)
                 raise buildstep.BuildStepFailed()
 
-            log.msg("Got SVN revision %s" % (revision, ))
-            self.updateSourceProperty('got_revision', str(revision))
-            return 0
-        d.addCallback(lambda _: _setrev(cmd.rc))
-        return d
+        msg = "Got SVN revision %s" % (revision, )
+        self.stdio_log.addHeader(msg)
+        self.updateSourceProperty('got_revision', revision)
+
+        defer.returnValue(cmd.rc)
+
 
     def purge(self, ignore_ignores):
         """Delete everything that shown up on status."""

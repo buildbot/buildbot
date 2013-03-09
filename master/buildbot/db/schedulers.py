@@ -61,7 +61,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q)
         return self.db.pool.do(thd)
 
-    def getChangeClassifications(self, schedulerid, branch=-1):
+    def getChangeClassifications(self, schedulerid, branch=-1,
+                                 repository=-1, project=-1,
+                                 codebase=-1):
         # -1 here stands for "argument not given", since None has meaning
         # as a branch
         def thd(conn):
@@ -69,10 +71,25 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             ch_tbl = self.db.model.changes
 
             wc = (sch_ch_tbl.c.schedulerid == schedulerid)
+                        
+            # may need to filter further based on branch, etc
+            extra_wheres = [] 
             if branch != -1:
-                wc = wc & (
-                    (sch_ch_tbl.c.changeid == ch_tbl.c.changeid) &
-                    (ch_tbl.c.branch == branch))
+                extra_wheres.append(ch_tbl.c.branch == branch)
+            if repository != -1:
+                extra_wheres.append(ch_tbl.c.repository == repository)
+            if project != -1:
+                extra_wheres.append(ch_tbl.c.project == project)
+            if codebase != -1:
+                extra_wheres.append(ch_tbl.c.codebase == codebase)
+
+            # if we need to filter further append those, as well as a join
+            # on changeid (but just once for that one)
+            if extra_wheres:
+                wc &= (sch_ch_tbl.c.changeid == ch_tbl.c.changeid)
+                for w in extra_wheres:
+                    wc &= w
+
             q = sa.select(
                 [ sch_ch_tbl.c.changeid, sch_ch_tbl.c.important ],
                 whereclause=wc)

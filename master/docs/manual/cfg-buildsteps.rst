@@ -519,6 +519,11 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
    have depth-infinity. Infinity is equivalent to SVN default update
    behavior, without specifying any depth argument. 
 
+``preferLastChangedRev``
+   (optional): By default, the ``got_revision`` property is set to the
+   repository's global revision ("Revision" in the `svn info` output). Set this
+   parameter to ``True`` to have it set to the "Last Changed Rev" instead.
+
 ``mode``
 ``method``
 

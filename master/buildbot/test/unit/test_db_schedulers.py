@@ -95,7 +95,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getChangeClassifications(self):
         @self.assertArgSpecMatches(self.db.schedulers.getChangeClassifications)
-        def getChangeClassifications(self, schedulerid, branch=-1):
+        def getChangeClassifications(self, schedulerid, branch=-1,
+                repository=-1, project=-1, codebase=-1):
             pass
 
     @defer.inlineCallbacks

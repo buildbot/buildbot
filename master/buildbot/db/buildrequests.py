@@ -39,7 +39,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(sa.select([
                 reqs_tbl.outerjoin(claims_tbl,
                                    (reqs_tbl.c.id == claims_tbl.c.brid)) ],
-                whereclause=(reqs_tbl.c.id == brid)))
+                whereclause=(reqs_tbl.c.id == brid)), use_labels=True)
             row = res.fetchone()
 
             rv = None
@@ -50,12 +50,28 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None):
+            bsid=None, branch=None, repository=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
-            q = sa.select([ reqs_tbl.outerjoin(claims_tbl,
-                                    reqs_tbl.c.id == claims_tbl.c.brid) ])
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            sstamps_tbl = self.db.model.sourcestamps
+
+            from_clause = reqs_tbl.outerjoin(claims_tbl,
+                                            reqs_tbl.c.id == claims_tbl.c.brid)
+
+            # for branches, we need to join to the buildset and its
+            # sourcestamps
+            if branch or repository:
+              from_clause = from_clause.join(bsets_tbl,
+                                reqs_tbl.c.buildsetid == bsets_tbl.c.id)
+              from_clause = from_clause.join(bsss_tbl,
+                                bsets_tbl.c.id == bsss_tbl.c.buildsetid)
+              from_clause = from_clause.join(sstamps_tbl,
+                                bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+
+            q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
             if claimed is not None:
                 if not claimed:
                     q = q.where(
@@ -76,6 +92,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(reqs_tbl.c.complete == 0)
             if bsid is not None:
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
+
+            if branch is not None:
+              q = q.where(sstamps_tbl.c.branch == branch)
+            if repository is not None:
+              q = q.where(sstamps_tbl.c.repository == repository)
+
             res = conn.execute(q)
 
             return [ self._brdictFromRow(row, self.db.master.masterid)

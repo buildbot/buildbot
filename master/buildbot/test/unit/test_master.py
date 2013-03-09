@@ -248,9 +248,12 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.assertLogged("reconfig aborted without")
         self.failIf(self.master.reconfigService.called)
 
+    @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = config.MasterConfig()
         old.db['db_url'] = 'aaaa'
+        yield self.master.reconfigService(old)
+
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 

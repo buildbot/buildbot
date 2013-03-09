@@ -81,6 +81,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # set up child services
         self.create_child_services()
 
+        # db configured values
+        self.configured_db_url = None
+
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
         self.reconfig_active = False
@@ -186,6 +189,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
+                
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
                 for msg in e.errors:
@@ -328,7 +332,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def reconfigService(self, new_config):
-        if self.config.db['db_url'] != new_config.db['db_url']:
+        if self.configured_db_url is None:
+            self.configured_db_url = new_config.db['db_url']
+        elif (self.configured_db_url != new_config.db['db_url']):
             config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
             )

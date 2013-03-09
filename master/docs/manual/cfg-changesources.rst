@@ -16,9 +16,6 @@ project will typically have only a single :class:`ChangeSource` active. This sec
 provides a description of all available :class:`ChangeSource` types and explains how to
 set up each of them.
 
-In general, each Buildmaster watches a single source tree.  It is possible to
-work around this, but true support for multi-tree builds remains elusive.
-
 .. _Choosing-a-Change-Source:
 
 Choosing a Change Source
@@ -1077,10 +1074,10 @@ arguments:
     If this is a relative path, it will be interpreted relative to the master's basedir.
     Multiple Git pollers can share the same directory.
 
-An configuration for the Git poller might look like this::
+A configuration for the Git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
+    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
                                    branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
@@ -1164,7 +1161,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 A configuration for the Mercurial poller might look like this::
 
     from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
+    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
 

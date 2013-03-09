@@ -66,6 +66,7 @@ Nine
 The following are the release notes for Buildbot |version|.
 
 * The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
+* The master now poll the database for pending tasks when running buildbot in multi-master mode.
 
 Master
 ------
@@ -84,9 +85,21 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
+* :bb:sched:`BuildslaveChoiceParameter` has been added to provide a way to explicitly choose a buildslave
+  for a given build.
+
 * default.css now wraps preformatted text by default.
 
 * Slaves can now be paused through the web status.
+
+* The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
+
+* The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches, codebases, projects, and repositories.
+
+* :bb:step:`SVN` has a new option `preferLastChangedRev=True` to use the last changed revision for ``got_revision``
+
+* The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,6 +132,9 @@ Changes for Developers
 * An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
   to send a message back to the committer.
   See the linked documentation for details.
+
+* bb:sched:`ChoiceStringParameter` has a new method ``getChoices`` that can be used to generate
+  content dynamically for Force scheduler forms.
 
 Slave
 -----

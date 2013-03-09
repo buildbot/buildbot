@@ -258,6 +258,39 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         self.assertEqual(startable, False)
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
 
+    @defer.inlineCallbacks
+    def test_enforceChosenSlave(self):
+        """enforceChosenSlave rejects and accepts builds"""
+        yield self.makeBuilder()
+
+        self.bldr.config.canStartBuild = builder.enforceChosenSlave
+
+        slave = mock.Mock()
+        slave.slave.slavename = 'slave5'
+
+        breq = mock.Mock()
+
+        # no buildslave requested
+        breq.properties = {}
+        result = yield self.bldr.canStartBuild(slave, breq)
+        self.assertIdentical(True, result)
+
+        # buildslave requested as the right one
+        breq.properties = { 'slavename': 'slave5' }
+        result = yield self.bldr.canStartBuild(slave, breq)
+        self.assertIdentical(True, result)
+
+        # buildslave requested as the wrong one
+        breq.properties = { 'slavename': 'slave4' }
+        result = yield self.bldr.canStartBuild(slave, breq)
+        self.assertIdentical(False, result)
+
+        # buildslave set to non string value gets skipped
+        breq.properties = { 'slavename': 0 }
+        result = yield self.bldr.canStartBuild(slave, breq)
+        self.assertIdentical(True, result)
+
+
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
     def setUp(self):
