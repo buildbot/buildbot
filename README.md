@@ -68,7 +68,7 @@ Each of these status displays will need to be rewritten based on the Data API.
 
 ## Process ##
 
-The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.
+The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.  Tasks in the Buildbot process code include:
 
 * Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
   Builds for merged requests currently only refer to one of the merged requests.
@@ -139,6 +139,7 @@ Tasks:
 
 ### Misc Data API Work ###
 
+* Make sure that the arguments to `addChange` are flexible and compatible: http://trac.buildbot.net/ticket/2378 :runner:
 * addBuildset should take a list of builder IDs (involves integrating IDs into process Builder objects)
 * Paging, filtering, and so on of data API results.
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
