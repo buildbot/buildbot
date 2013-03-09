@@ -19,6 +19,7 @@ import re
 import os
 import textwrap
 import mock
+import __builtin__
 from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
@@ -214,23 +215,13 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.install_config_file('#dummy')
 
         # override build-in open() function to always rise IOError
-        std_open = __builtins__["open"]
-        __builtins__["open"] = raise_IOError
-
-        # call loadConfig() and capture any raised exception
-        raised_exception = None
-        try:
-            config.MasterConfig.loadConfig(self.basedir, self.filename)
-        except Exception as e:
-            raised_exception = e
-
-        # restore build-in open() function
-        __builtins__["open"] = std_open
+        self.patch(__builtin__, "open", raise_IOError)
 
         # check that we got the expected ConfigError exception
-        self.assertIsInstance(raised_exception, config.ConfigErrors)
-        self.assertConfigError(raised_exception,
-                re.compile("unable to open configuration file .*: error_msg"))
+        self.assertRaisesConfigError(
+            re.compile("unable to open configuration file .*: error_msg"),
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
 
     @compat.usesFlushLoggedErrors
     def test_loadConfig_parse_error(self):
