@@ -627,3 +627,18 @@ buildbot.util.pickle
 This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` modules.
 It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
 It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.
+
+buildbot.util.typechecks
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.typechecks
+
+This module makes it easy to check argument types.
+
+.. py:function:: isIdentifier(maxLength, object)
+
+    :param maxLength: maximum length of the identifier
+    :param object: object to test for identifier-ness
+    :returns: boolean
+
+    Is object a :ref:`identifier <type-identifier>`?
