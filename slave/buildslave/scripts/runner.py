@@ -314,7 +314,7 @@ def upgradeSlave(config):
     return 0
 
 
-class SlaveOptions(MakerBase):
+class CreateSlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -384,7 +384,7 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, SlaveOptions,
+        ['create-slave', None, CreateSlaveOptions,
          "Create and populate a directory for a new buildslave"],
         ['upgrade-slave', None, UpgradeSlaveOptions,
          "Upgrade an existing buildslave directory for the current version"],
