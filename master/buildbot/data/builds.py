@@ -44,10 +44,10 @@ class Db2DataMixin(object):
 
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'build', 'i:buildid' ),
-        ( 'builder', 'i:builderid', 'build', 'i:number' ),
-    ]
+    pathPatterns = """
+        /build/i:buildid
+        /builder/i:builderid/build/i:number
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -63,11 +63,11 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'build', ),
-        ( 'builder', 'i:builderid', 'build', ),
-        ( 'buildrequest', 'i:buildrequestid', 'build', ),
-    ]
+    pathPatterns = """
+        /build
+        /builder/i:builderid/build
+        /buildrequest/i:buildrequestid/build
+    """
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks

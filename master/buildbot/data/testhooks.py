@@ -23,7 +23,9 @@ from buildbot.data import base, exceptions
 
 class TestHooksEndpoint(base.ControlParamsCheckMixin,base.Endpoint):
     rootLinkName = 'testhooks'
-    pathPatterns = [ ( 'testhooks',) ]
+    pathPatterns = """
+        /testhooks
+    """
     action_specs = dict(playScenario=dict(scenario=dict(re=re.compile("[a-z\.]+"),
                                                         type=str,
                                                         required=True)))

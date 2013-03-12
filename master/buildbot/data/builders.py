@@ -18,8 +18,10 @@ from buildbot.data import base
 
 class BuilderEndpoint(base.Endpoint):
 
-    pathPatterns = [ ( 'builder', 'i:builderid' ),
-                     ( 'master', 'i:masterid', 'builder', 'i:builderid' ) ]
+    pathPatterns = """
+        /builder/i:builderid
+        /master/i:masterid/builder/i:builderid
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -41,8 +43,10 @@ class BuilderEndpoint(base.Endpoint):
 class BuildersEndpoint(base.Endpoint):
 
     rootLinkName = 'builders'
-    pathPatterns = [ ( 'builder', ),
-                     ( 'master', 'i:masterid', 'builder' ) ]
+    pathPatterns = """
+        /builder
+        /master/i:masterid/builder
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):

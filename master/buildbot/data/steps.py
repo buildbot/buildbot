@@ -39,15 +39,13 @@ class Db2DataMixin(object):
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'step', 'i:stepid' ),
-        ( 'build', 'i:buildid', 'step', 's:name' ),
-        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 's:name' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 'number', 'i:step_number' ),
-    ]
+    pathPatterns = """
+        /step/i:stepid
+        /build/i:buildid/step/s:name
+        /build/i:buildid/step/number/i:step_number
+        /builder/i:builderid/build/i:build_number/step/s:name
+        /builder/i:builderid/build/i:build_number/step/number/i:step_number
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -69,10 +67,10 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class StepsEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'build', 'i:buildid', 'step' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number', 'step' ),
-    ]
+    pathPatterns = """
+        /build/i:buildid/step
+        /builder/i:builderid/build/i:build_number/step
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):

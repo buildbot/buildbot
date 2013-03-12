@@ -42,7 +42,9 @@ def _db2data(ss):
 
 class SourceStampEndpoint(base.Endpoint):
 
-    pathPatterns = [ ( 'sourcestamp', 'i:ssid' ) ]
+    pathPatterns = """
+        /sourcestamp/i:ssid
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -53,7 +55,9 @@ class SourceStampEndpoint(base.Endpoint):
 
 class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
 
-    pathPatterns = [ ( 'sourcestamp', ) ]
+    pathPatterns = """
+        /sourcestamp
+    """
     rootLinkName = 'sourcestamps'
 
     @defer.inlineCallbacks

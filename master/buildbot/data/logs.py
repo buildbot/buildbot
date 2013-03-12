@@ -34,17 +34,14 @@ class EndpointMixin(object):
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'log', 'i:logid' ),
-        ( 'step', 'i:stepid', 'log', 's:log_name' ),
-        ( 'build', 'i:buildid', 'step', 's:step_name', 'log', 's:log_name' ),
-        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number',
-            'log', 's:log_name' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 's:step_name', 'log', 's:log_name' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 'number', 'i:step_number', 'log', 's:log_name' ),
-    ]
+    pathPatterns = """
+        /log/i:logid
+        /step/i:stepid/log/s:log_name
+        /build/i:buildid/step/s:step_name/log/s:log_name
+        /build/i:buildid/step/number/i:step_number/log/s:log_name
+        /builder/i:builderid/build/i:build_number/step/s:step_name/log/s:log_name
+        /builder/i:builderid/build/i:build_number/step/number/i:step_number/log/s:log_name
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -66,19 +63,14 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogContentEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'log', 'i:logid', 'content' ),
-        ( 'step', 'i:stepid', 'log', 's:log_name', 'content' ),
-        ( 'build', 'i:buildid', 'step', 's:step_name', 'log', 's:log_name',
-            'content' ),
-        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number',
-            'log', 's:log_name', 'content' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 's:step_name', 'log', 's:log_name', 'content' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 'number', 'i:step_number', 'log', 's:log_name',
-            'content' ),
-    ]
+    pathPatterns = """
+        /log/i:logid/content
+        /step/i:stepid/log/s:log_name/content
+        /build/i:buildid/step/s:step_name/log/s:log_name/content
+        /build/i:buildid/step/number/i:step_number/log/s:log_name/content
+        /builder/i:builderid/build/i:build_number/step/s:step_name/log/s:log_name/content
+        /builder/i:builderid/build/i:build_number/step/number/i:step_number/log/s:log_name/content
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -121,15 +113,13 @@ class LogContentEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'step', 'i:stepid', 'log' ),
-        ( 'build', 'i:buildid', 'step', 's:step_name', 'log' ),
-        ( 'build', 'i:buildid', 'step', 'number', 'i:step_number', 'log' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 's:step_name', 'log' ),
-        ( 'builder', 'i:builderid', 'build', 'i:build_number',
-            'step', 'number', 'i:step_number', 'log' ),
-    ]
+    pathPatterns = """
+        /step/i:stepid/log
+        /build/i:buildid/step/s:step_name/log
+        /build/i:buildid/step/number/i:step_number/log
+        /builder/i:builderid/build/i:build_number/step/s:step_name/log
+        /builder/i:builderid/build/i:build_number/step/number/i:step_number/log
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):

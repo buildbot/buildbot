@@ -38,8 +38,7 @@ class ResourceType(object):
         self.master.mq.produce(routingKey, msg)
 
 class Endpoint(object):
-    pathPattern = None
-    pathPatterns = []
+    pathPatterns = ""
     rootLinkName = None
 
     def __init__(self, master):

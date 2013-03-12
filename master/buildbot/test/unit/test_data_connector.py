@@ -187,18 +187,21 @@ class DataConnector(unittest.TestCase):
 # classes discovered by test_scanModule, above
 
 class TestsEndpoint(base.Endpoint):
-    pathPattern = ('test',)
+    pathPatterns = "/test"
     rootLinkName = 'tests'
 
 class TestsEndpointParentClass(base.Endpoint):
     rootLinkName = 'shouldnt-see-this'
 
 class TestsEndpointSubclass(TestsEndpointParentClass):
-    pathPattern = ('test', 'foo')
+    pathPatterns = "/test/foo"
 
 class TestEndpoint(base.Endpoint):
-    pathPattern = ('test', 'i:testid')
-    pathPatterns = [ ('test', 'i:testid', 'p1'), ('test', 'i:testid', 'p2') ]
+    pathPatterns = """
+        /test/i:testid
+        /test/i:testid/p1
+        /test/i:testid/p2
+    """
 
 class TestResourceType(base.ResourceType):
     type = 'test'

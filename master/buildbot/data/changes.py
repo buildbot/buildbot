@@ -38,7 +38,9 @@ class FixerMixin(object):
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
-    pathPattern = ( 'change', 'i:changeid' )
+    pathPatterns = """
+        /change/i:changeid
+    """
 
     def get(self, options, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
@@ -48,7 +50,9 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
 
-    pathPattern = ( 'change', )
+    pathPatterns = """
+        /change
+    """
     rootLinkName = 'change'
     maximumCount = 50
 
