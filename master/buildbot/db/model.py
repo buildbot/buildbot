@@ -402,7 +402,6 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
-    sa.Index('masters_objectid', masters.c.objectid, unique=True)    
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
