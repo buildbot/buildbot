@@ -178,7 +178,7 @@ def createSlave(config):
 
 
 
-def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
+def stop(config, signame="TERM", returnFalseOnNotRunning=False):
     import signal
     basedir = config['basedir']
     quiet = config['quiet']
@@ -203,10 +203,6 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
         if e.errno != 3:
             raise
 
-    if not wait:
-        if not quiet:
-            print "sent SIG%s to process" % signame
-        return
     time.sleep(0.1)
     while timer < 10:
         # poll once per second until twistd.pid goes away, up to 10 seconds
@@ -228,7 +224,7 @@ def restart(config):
         sys.exit(1)
 
     from buildslave.scripts.startup import start
-    if not stop(config, wait=True, returnFalseOnNotRunning=True):
+    if not stop(config, returnFalseOnNotRunning=True):
         if not quiet:
             print "no old buildslave process found to stop"
     if not quiet:
@@ -434,7 +430,7 @@ def run():
         from buildslave.scripts.startup import start
         start(so)
     elif command == "stop":
-        stop(so, wait=True)
+        stop(so)
     elif command == "restart":
         restart(so)
     sys.exit(0)
