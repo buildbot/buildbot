@@ -73,6 +73,7 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 * Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
   Builds for merged requests currently only refer to one of the merged requests.
 * In the Trigger step, add links from the triggering step to the triggered builds
+* Create builds, steps, logs, and log chunks during execution of a build.
 
 ## Documentation ##
 
@@ -87,10 +88,6 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 * DB API id handling (similar)
 
 ## Data API ##
-
-### Tests ###
-
-* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
 
 ### Remaining Resource Types ###
 
@@ -111,9 +108,6 @@ It's safe to leave tasks that have significant prerequisites - particularly the 
 The outstanding resource types are:
 
 * buildrequest
-* build
-* step
-* logfile
 * buildslave
 * changesource
 
@@ -166,6 +160,7 @@ Tasks:
   This is to address http://trac.buildbot.net/ticket/2431.
 * Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
   Same for builds.
+* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
 
 ## Status Rewrites ##
 
