@@ -17,7 +17,7 @@ import sys
 import mock
 import cStringIO
 from twisted.trial import unittest
-from buildslave.scripts import runner
+from buildslave.scripts import runner, base
 
 class TestUpgradeSlave(unittest.TestCase):
     """
@@ -35,7 +35,7 @@ class TestUpgradeSlave(unittest.TestCase):
 
         # override isBuildslaveDir
         mocked_isBuildslaveDir = mock.Mock(return_value=False)
-        self.patch(runner, "isBuildslaveDir", mocked_isBuildslaveDir)
+        self.patch(base, "isBuildslaveDir", mocked_isBuildslaveDir)
 
         # call upgradeSlave() and check that SystemExit exception is raised
         config = {"basedir" : "dummy"}

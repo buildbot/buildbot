@@ -16,16 +16,8 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 import os, sys, re, time
+from buildslave.scripts import base
 from twisted.python import usage
-
-def isBuildslaveDir(dir):
-    buildbot_tac = os.path.join(dir, "buildbot.tac")
-    if not os.path.isfile(buildbot_tac):
-        print "no buildbot.tac"
-        return False
-
-    contents = open(buildbot_tac, "r").read()
-    return "Application('buildslave')" in contents
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -191,7 +183,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
+    if not base.isBuildslaveDir(config['basedir']):
         print "not a buildslave directory"
         sys.exit(1)
 
@@ -233,7 +225,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
 def restart(config):
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
+    if not base.isBuildslaveDir(config['basedir']):
         print "not a buildslave directory"
         sys.exit(1)
 
@@ -308,7 +300,7 @@ class UpgradeSlaveOptions(MakerBase):
 def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
 
-    if not isBuildslaveDir(basedir):
+    if not base.isBuildslaveDir(basedir):
         print "not a buildslave directory"
         sys.exit(1)
 
@@ -438,10 +430,6 @@ def run():
     elif command == "upgrade-slave":
         upgradeSlave(so)
     elif command == "start":
-        if not isBuildslaveDir(so['basedir']):
-            print "not a buildslave directory"
-            sys.exit(1)
-
         from buildslave.scripts.startup import start
         start(so)
     elif command == "stop":

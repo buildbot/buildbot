@@ -15,6 +15,7 @@
 
 
 import os, sys, time
+from buildslave.scripts import base
 
 class Follower:
     def follow(self):
@@ -78,6 +79,10 @@ stop it, fix the config file, and restart.
 
 
 def start(config):
+    if not base.isBuildslaveDir(config['basedir']):
+        print "not a buildslave directory"
+        sys.exit(1)
+
     os.chdir(config['basedir'])
     if config['quiet']:
         return launch(config)
