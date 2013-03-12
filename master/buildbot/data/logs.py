@@ -31,32 +31,8 @@ class EndpointMixin(object):
         }
         return defer.succeed(data)
 
-    @defer.inlineCallbacks
-    def getStepid(self, kwargs):
-        if 'stepid' in kwargs:
-            defer.returnValue(kwargs['stepid'])
-        else:
-            # need to look in the context of a step, specified by build or
-            # builder or whatever
-            if 'buildid' in kwargs:
-                buildid = kwargs['buildid']
-            else:
-                build = yield self.master.db.builds.getBuildByNumber(
-                    builderid=kwargs['builderid'],
-                    number=kwargs['build_number'])
-                if not build:
-                    return
-                buildid = build['id']
 
-            dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                    number=kwargs.get('step_number'),
-                    name=kwargs.get('step_name'))
-            if not dbdict:
-                return
-            defer.returnValue(dbdict['id'])
-
-
-class LogEndpoint(EndpointMixin, base.Endpoint):
+class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = [
         ( 'log', 'i:logid' ),
@@ -88,7 +64,7 @@ class LogEndpoint(EndpointMixin, base.Endpoint):
                             if dbdict else None)
 
 
-class LogContentEndpoint(EndpointMixin, base.Endpoint):
+class LogContentEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = [
         ( 'log', 'i:logid', 'content' ),
@@ -143,7 +119,7 @@ class LogContentEndpoint(EndpointMixin, base.Endpoint):
             'content': logLines})
 
 
-class LogsEndpoint(EndpointMixin, base.Endpoint):
+class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = [
         ( 'step', 'i:stepid', 'log' ),

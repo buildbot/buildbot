@@ -54,6 +54,43 @@ class Endpoint(object):
     def startConsuming(self, callback, options, kwargs):
         raise NotImplementedError
 
+class BuildNestingMixin(object):
+    """
+    A mixin for methods to decipher the many ways a build, step, or log can be
+    specified.
+    """
+
+    @defer.inlineCallbacks
+    def getBuildid(self, kwargs):
+        # need to look in the context of a step, specified by build or
+        # builder or whatever
+        if 'buildid' in kwargs:
+            defer.returnValue(kwargs['buildid'])
+        else:
+            build = yield self.master.db.builds.getBuildByNumber(
+                builderid=kwargs['builderid'],
+                number=kwargs['build_number'])
+            if not build:
+                return
+            defer.returnValue(build['id'])
+
+    @defer.inlineCallbacks
+    def getStepid(self, kwargs):
+        if 'stepid' in kwargs:
+            defer.returnValue(kwargs['stepid'])
+        else:
+            buildid = yield self.getBuildid(kwargs)
+            if buildid is None:
+                return
+
+            dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
+                    number=kwargs.get('step_number'),
+                    name=kwargs.get('step_name'))
+            if not dbdict:
+                return
+            defer.returnValue(dbdict['id'])
+
+
 class GetParamsCheckMixin(object):
     """ a mixin for making generic paramater checks for the get data api"""
     maximumCount = 0

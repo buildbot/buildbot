@@ -37,7 +37,7 @@ class Db2DataMixin(object):
         return defer.succeed(data)
 
 
-class StepEndpoint(Db2DataMixin, base.Endpoint):
+class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = [
         ( 'step', 'i:stepid' ),
@@ -57,15 +57,9 @@ class StepEndpoint(Db2DataMixin, base.Endpoint):
                                 if dbdict else None)
             return
 
-        # need to look in the context of a build
-        if 'buildid' in kwargs:
-            buildid = kwargs['buildid']
-        else:
-            build = yield self.master.db.builds.getBuildByNumber(
-                builderid=kwargs['builderid'], number=kwargs['build_number'])
-            if not build:
-                return
-            buildid = build['id']
+        buildid = yield self.getBuildid(kwargs)
+        if buildid is None:
+            return
 
         dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
                 number=kwargs.get('step_number'), name=kwargs.get('name'))
