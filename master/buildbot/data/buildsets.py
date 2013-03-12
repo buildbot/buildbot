@@ -49,7 +49,9 @@ class Db2DataMixin(object):
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPattern = ( 'buildset', 'i:bsid' )
+    pathPatterns = """
+        /buildset/n:bsid
+    """
 
     def get(self, options, kwargs):
         d = self.master.db.buildsets.getBuildset(kwargs['bsid'])
@@ -63,7 +65,9 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPattern = ( 'buildset', )
+    pathPatterns = """
+        /buildset
+    """
     rootLinkName = 'buildset'
 
     def get(self, options, kwargs):
