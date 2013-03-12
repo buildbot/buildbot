@@ -61,14 +61,14 @@ Logs
 
         This path selects a specific log in a step
 
-    .. bb:rpath:: /build/:buildid/step/number/:number/log
+    .. bb:rpath:: /build/:buildid/step/:step_number/log
 
         :pathkey integer buildid: the ID of the build
-        :pathkey integer number: the number of the step within the build
+        :pathkey integer step_number: the number of the step within the build
 
         This path selects all logs for the given step.
 
-    .. bb:rpath:: /build/:buildid/step/number/:step_number/log/:log_name
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_name
 
         :pathkey integer buildid: the ID of the build
         :pathkey integer step_number: the number of the step within the build
@@ -93,7 +93,7 @@ Logs
 
         This path selects a specific log in the given step.
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/number/:step_number/log
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
@@ -101,7 +101,7 @@ Logs
 
         This path selects all logs for the given step.
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/number/:step_number/log/:log_name
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_name
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder

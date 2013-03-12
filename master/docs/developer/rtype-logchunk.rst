@@ -54,7 +54,7 @@ Logchunks
         :pathkey identifier step_name: the name of the step within the build
         :pathkey identifier log_name: the name of the log
 
-    .. bb:rpath:: /build/:buildid/step/number/:step_number/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_name/content?firstline=..&lastline=..
 
         :pathkey integer buildid: the ID of the build
         :pathkey integer step_number: the number of the step within the build
@@ -67,7 +67,7 @@ Logchunks
         :pathkey identifier name: the name of the step within the build
         :pathkey identifier log_name: the name of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/number/:step_number/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_name/content?firstline=..&lastline=..
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder

@@ -34,17 +34,17 @@ Steps
 
         This path lists steps for the given build, sorted by number.
 
-    .. bb:rpath:: /build/:buildid/step/:name
+    .. bb:rpath:: /build/:buildid/step/:step_name
 
         :pathkey integer buildid: the ID of the build
-        :pathkey identifier name: the name of the step within the build
+        :pathkey identifier step_name: the name of the step within the build
 
         This path selects a specific step, identified by its build ID and step name.
 
-    .. bb:rpath:: /build/:buildid/step/number/:number
+    .. bb:rpath:: /build/:buildid/step/:step_number
 
         :pathkey integer buildid: the ID of the build
-        :pathkey integer number: the number of the step within the build
+        :pathkey integer step_number: the number of the step within the build
 
         This path selects a specific step, identified by its build ID and step number.
 
@@ -63,7 +63,7 @@ Steps
 
         This path selects a specific step, identified by its builder, build number, and step name.
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/number/:step_number
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder

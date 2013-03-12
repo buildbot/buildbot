@@ -38,9 +38,9 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /log/n:logid
         /step/n:stepid/log/i:log_name
         /build/n:buildid/step/i:step_name/log/i:log_name
-        /build/n:buildid/step/number/n:step_number/log/i:log_name
+        /build/n:buildid/step/n:step_number/log/i:log_name
         /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_name
-        /builder/n:builderid/build/n:build_number/step/number/n:step_number/log/i:log_name
+        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_name
     """
 
     @defer.inlineCallbacks
@@ -67,9 +67,9 @@ class LogContentEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         /log/n:logid/content
         /step/n:stepid/log/i:log_name/content
         /build/n:buildid/step/i:step_name/log/i:log_name/content
-        /build/n:buildid/step/number/n:step_number/log/i:log_name/content
+        /build/n:buildid/step/n:step_number/log/i:log_name/content
         /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_name/content
-        /builder/n:builderid/build/n:build_number/step/number/n:step_number/log/i:log_name/content
+        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_name/content
     """
 
     @defer.inlineCallbacks
@@ -116,9 +116,9 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     pathPatterns = """
         /step/n:stepid/log
         /build/n:buildid/step/i:step_name/log
-        /build/n:buildid/step/number/n:step_number/log
+        /build/n:buildid/step/n:step_number/log
         /builder/n:builderid/build/n:build_number/step/i:step_name/log
-        /builder/n:builderid/build/n:build_number/step/number/n:step_number/log
+        /builder/n:builderid/build/n:build_number/step/n:step_number/log
     """
 
     @defer.inlineCallbacks

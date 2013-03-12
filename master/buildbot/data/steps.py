@@ -42,9 +42,9 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     pathPatterns = """
         /step/n:stepid
         /build/n:buildid/step/i:name
-        /build/n:buildid/step/number/n:step_number
+        /build/n:buildid/step/n:step_number
         /builder/n:builderid/build/n:build_number/step/i:name
-        /builder/n:builderid/build/n:build_number/step/number/n:step_number
+        /builder/n:builderid/build/n:build_number/step/n:step_number
     """
 
     @defer.inlineCallbacks
