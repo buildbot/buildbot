@@ -276,6 +276,20 @@ class ObjectState(Row):
 
     required_columns = ( 'objectid', )
 
+class Master(Row):
+    table = "master"
+
+    defaults = dict(
+        id = None,
+        buildbotURL = 'url',
+        objectid = None,
+    )
+
+    required_columns = ( 'objectid', )
+
+    id_column = 'id'
+
+
 class User(Row):
     table = "users"
 
@@ -1031,6 +1045,19 @@ class FakeBuildsComponent(FakeDBComponent):
             if b:
                 b.finish_time = now
 
+class FakeMastersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.masters = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Master):
+                self.builds[row.id] = row
+    
+    def setupMaster(self, buildbotURL, _master_objectid=None):
+        return defer.succeed(None)
+
 class FakeUsersComponent(FakeDBComponent):
 
     def setUp(self):
@@ -1174,6 +1201,8 @@ class FakeDBConnector(object):
         self.builds = comp = FakeBuildsComponent(self, testcase)
         self._components.append(comp)
         self.users = comp = FakeUsersComponent(self, testcase)
+        self._components.append(comp)
+        self.masters = comp = FakeMastersComponent(self, testcase)
         self._components.append(comp)
 
     def setup(self):

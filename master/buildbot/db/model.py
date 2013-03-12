@@ -328,7 +328,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('buildbotURL', sa.Text, nullable=False),
 
         # objectid where the masters is stored
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), nullable=False),
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), index=True,  unique=True, nullable=False),
     )
 
     #users
