@@ -41,6 +41,10 @@ def user(config):
             user['identifier'] = sorted(user.values())[0]
 
     uc = usersclient.UsersClient(master, username, passwd, port)
-    yield uc.send(op, bb_username, bb_password, ids, info)
+    d = uc.send(op, bb_username, bb_password, ids, info)
+    def callback(text):
+        print text
+    d.addCallback(callback)
+    yield d
 
     defer.returnValue(0)
