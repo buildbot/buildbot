@@ -247,7 +247,7 @@ class Logs(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Log(id=61, stepid=50, name='errors', type='t'),
             fakedb.Step(id=51, buildid=13, number=10, name='make_install'),
             fakedb.Log(id=70, stepid=51, name='stdio', type='s'),
-            fakedb.Log(id=71, stepid=51, name='results.html', type='h'),
+            fakedb.Log(id=71, stepid=51, name='results_html', type='h'),
             fakedb.Step(id=52, buildid=13, number=11, name='nothing'),
         ])
 
@@ -279,7 +279,7 @@ class Logs(endpoint.EndpointMixin, unittest.TestCase):
         [ validation.verifyData(self, 'log', {}, log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
-                         ['results.html', 'stdio'])
+                         ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_number(self):
@@ -288,7 +288,7 @@ class Logs(endpoint.EndpointMixin, unittest.TestCase):
         [ validation.verifyData(self, 'log', {}, log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
-                         ['results.html', 'stdio'])
+                         ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_name(self):
@@ -306,7 +306,7 @@ class Logs(endpoint.EndpointMixin, unittest.TestCase):
         [ validation.verifyData(self, 'log', {}, log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
-                         ['results.html', 'stdio'])
+                         ['results_html', 'stdio'])
 
 
 class BuildResourceType(interfaces.InterfaceTests, unittest.TestCase):

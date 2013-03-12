@@ -87,11 +87,11 @@ class VerifyDict(unittest.TestCase):
     def test_IdentifierValidator(self):
         self.doValidationTest(validation.IdentifierValidator(50),
             good = [
-                u"linux", u"Linux", u"abc123", u"123abc", u"a.b.c.d",
-                u"a-b_c.d9", u"a" * 50
+                u"linux", u"Linux", u"abc123", u"a" * 50,
             ], bad = [
-                None, u'', 'linux', u'a/b', u'\N{SNOWMAN}',
-                'spaces not allowed', u"a" * 51
+                None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+                u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
+                u"123 no initial digits",
             ])
 
     def test_NoneOk(self):
