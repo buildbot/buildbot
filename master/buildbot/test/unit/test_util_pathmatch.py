@@ -45,14 +45,29 @@ class Matcher(unittest.TestCase):
         self.assertEqual(self.m[('A', 'a', 'B', 'b')],
                 ('AB', dict(a='a', b='b')))
 
-    def test_pattern_variables_int(self):
-        self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
+    def test_pattern_variables_num(self):
+        self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
         self.assertEqual(self.m[('A', '10', 'B', '-20')],
                 ('AB', dict(a=10, b=-20)))
 
-    def test_pattern_variables_int_invalid(self):
-        self.m[('A', 'i:a')] = 'AB'
+    def test_pattern_variables_ident(self):
+        self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
+        self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')],
+                ('AB', dict(a='abc', b='x-z-B')))
+
+    def test_pattern_variables_num_invalid(self):
+        self.m[('A', 'n:a')] = 'AB'
         self.assertRaises(KeyError, lambda : self.m[('A', '1x0')])
+
+    def test_pattern_variables_ident_invalid(self):
+        self.m[('A', 'i:a')] = 'AB'
+        self.assertRaises(KeyError, lambda : self.m[('A', '10')])
+
+    def test_pattern_variables_ident_num_distinguised(self):
+        self.m[('A', 'n:a')] = 'num'
+        self.m[('A', 'i:a')] = 'ident'
+        self.assertEqual(self.m[('A', '123')], ('num', dict(a=123)))
+        self.assertEqual(self.m[('A', 'abc')], ('ident', dict(a='abc')))
 
     def test_prefix_matching(self):
         self.m[('A', ':a')] = 'A'

@@ -45,8 +45,8 @@ class Db2DataMixin(object):
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
-        /build/i:buildid
-        /builder/i:builderid/build/i:number
+        /build/n:buildid
+        /builder/n:builderid/build/n:number
     """
 
     @defer.inlineCallbacks
@@ -65,8 +65,8 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
         /build
-        /builder/i:builderid/build
-        /buildrequest/i:buildrequestid/build
+        /builder/n:builderid/build
+        /buildrequest/n:buildrequestid/build
     """
     rootLinkName = 'builds'
 

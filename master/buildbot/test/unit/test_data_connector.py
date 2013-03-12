@@ -106,7 +106,7 @@ class DataConnector(unittest.TestCase):
         ep = cls(self.master)
         ep.get = mock.Mock(name='MyEndpoint.get')
         ep.get.return_value = defer.succeed(9999)
-        self.data.matcher[('foo', 'i:fooid', 'bar')] = ep
+        self.data.matcher[('foo', 'n:fooid', 'bar')] = ep
         return ep
 
     # tests
@@ -198,9 +198,9 @@ class TestsEndpointSubclass(TestsEndpointParentClass):
 
 class TestEndpoint(base.Endpoint):
     pathPatterns = """
-        /test/i:testid
-        /test/i:testid/p1
-        /test/i:testid/p2
+        /test/n:testid
+        /test/n:testid/p1
+        /test/n:testid/p2
     """
 
 class TestResourceType(base.ResourceType):

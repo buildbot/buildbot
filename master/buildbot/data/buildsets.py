@@ -50,7 +50,7 @@ class Db2DataMixin(object):
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
-        /buildset/i:bsid
+        /buildset/n:bsid
     """
 
     def get(self, options, kwargs):

@@ -43,7 +43,7 @@ def _db2data(ss):
 class SourceStampEndpoint(base.Endpoint):
 
     pathPatterns = """
-        /sourcestamp/i:ssid
+        /sourcestamp/n:ssid
     """
 
     @defer.inlineCallbacks

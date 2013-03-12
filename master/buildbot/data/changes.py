@@ -39,7 +39,7 @@ class FixerMixin(object):
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
     pathPatterns = """
-        /change/i:changeid
+        /change/n:changeid
     """
 
     def get(self, options, kwargs):

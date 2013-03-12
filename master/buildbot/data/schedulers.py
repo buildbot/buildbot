@@ -36,8 +36,8 @@ class Db2DataMixin(object):
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
-        /scheduler/i:schedulerid
-        /master/i:masterid/scheduler/i:schedulerid
+        /scheduler/n:schedulerid
+        /master/n:masterid/scheduler/n:schedulerid
     """
 
     @defer.inlineCallbacks
@@ -55,7 +55,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
         /scheduler
-        /master/i:masterid/scheduler
+        /master/n:masterid/scheduler
     """
     rootLinkName = 'schedulers'
 

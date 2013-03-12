@@ -31,8 +31,8 @@ def _db2data(master):
 class MasterEndpoint(base.Endpoint):
 
     pathPatterns = """
-        /master/i:masterid
-        /builder/i:builderid/master/i:masterid
+        /master/n:masterid
+        /builder/n:builderid/master/n:masterid
     """
 
     @defer.inlineCallbacks
@@ -53,7 +53,7 @@ class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
 
     pathPatterns = """
         /master
-        /builder/i:builderid/master
+        /builder/n:builderid/master
     """
     rootLinkName = 'masters'
 

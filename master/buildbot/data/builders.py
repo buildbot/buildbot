@@ -19,8 +19,8 @@ from buildbot.data import base
 class BuilderEndpoint(base.Endpoint):
 
     pathPatterns = """
-        /builder/i:builderid
-        /master/i:masterid/builder/i:builderid
+        /builder/n:builderid
+        /master/n:masterid/builder/n:builderid
     """
 
     @defer.inlineCallbacks
@@ -45,7 +45,7 @@ class BuildersEndpoint(base.Endpoint):
     rootLinkName = 'builders'
     pathPatterns = """
         /builder
-        /master/i:masterid/builder
+        /master/n:masterid/builder
     """
 
     @defer.inlineCallbacks
