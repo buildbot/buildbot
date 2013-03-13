@@ -96,8 +96,7 @@ class LogFileProducer:
         while data:
             p.dataReceived(data)
             while chunks:
-                c = chunks.pop(0)
-                yield c
+                yield chunks.pop(0)
             f.seek(offset)
             data = f.read(self.BUFFERSIZE)
             offset = f.tell()
