@@ -726,8 +726,8 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
-    The incoming HTTP requests for this hook are not authenticated in
-    any way.  Anyone who can access the web status can "fake" a request from
+    The incoming HTTP requests for this hook are not authenticated by default.
+    Anyone who can access the web status can "fake" a request from
     GitHub, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use ``change_hook_auth``
