@@ -48,9 +48,8 @@ Buildbot-0.9.x will require:
 
 but it's a little more complicated:
 
- * If you want to do web *development*, or *build* the buildbot-www package, you'll need Node and Java.
-   It's a Dojo app, and that's what Dojo requires.
-   Future versions of Dojo may only require node.
+ * If you want to do web *development*, or *build* the buildbot-www package, you'll need Node.
+   It's an Angular app, and that's how such apps are developed.
    We've taken pains to not make either a requirement for users - you can simply 'pip install' buildbot-www and be on your way.
    This is the case even if you're hacking on the Python side of Buildbot.
  * For a single master, nothing else is required.
@@ -63,12 +62,13 @@ but it's a little more complicated:
 ## Progress ##
 
 At this point, most of the configuration objects (masters, schedulers, builders, etc.) and everything that is in the DB in 0.8.x are ported to the Data API.
-As data that has typically been in build pickles is migrated to the DB, all existing status code (web status, mail notifier, IRC, etc.) will become increasingly broken, because this code uses synchronous calls to get status information.
-Each of these status displays will need to be rewritten based on the Data API.
+The status objects (builds, steps, logs, log chunks) are defined in the DB and Data APIs, but Buildbot does not yet insert data into the database tables while performing a build.
+The next step is to insert this data, and then remove support for the existing status hierarchy.
+Each of the existing status listeners - irc, WebStatus, MailNotifier, etc. - will need to be rewritten based on the Data API.
 
 ## Process ##
 
-The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.  Tasks in the Buildbot process code include:
+The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.  Remaining work in the Buildbot process code includes:
 
 * Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
   Builds for merged requests currently only refer to one of the merged requests.
@@ -76,23 +76,21 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 
 ## Documentation ##
 
-* Document naming conventions (below) in the style guide, make sure everything adheres
-* Move data API how-to guides into a separate file
-
-### Naming Conventions ###
-
-* interCaps for Python
-* interCaps for JS?
-* data id handling: object has `id`; foreign keys use `{fooid}`, with `foo` sometimes shortened; blah blah
-* DB API id handling (similar)
+* Document naming conventions (below) in the style guide, make sure everything adheres to those conventions
+  * interCaps for Python, JavaScript function names
+  * In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
+  * In the DB API, each result field has an ``id`` key.
+* The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
 
 ## Data API ##
 
-### Tests ###
-
-* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
-
 ### Remaining Resource Types ###
+
+The outstanding resource types are:
+
+* buildrequest :runner:
+* buildslave :runner:
+* changesource :runner:
 
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 
@@ -106,65 +104,43 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Docs for those update methods
 * Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
 
-It's safe to leave tasks that have significant prerequisites - particularly the last point - commented as "TODO" in the source, with corresponding items added here.
-
-The outstanding resource types are:
-
-* buildrequest
-* build
-* step
-* logfile
-* buildslave
-* changesource
-
-### Notes on Build Requests ###
-
-Buildrequests include a `builderid` field which will need to be determined from the builders table.
-It should probably be an error to schedule a build on a builder that does not exist, as that build will not be executed.
-It's OK to schedule a build on a builder that's not implemented by a running master, though.
-
-Tasks:
-
-* define message formats, potentially including `claimed_at` and `masterid` in the "claimed" action
-* verify docs match validator
-
 ### Other Resource-Type Related Tasks ###
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
   It should, instead, coordinate with the buildrequests resource type to do so.
 * Similarly, `addBuildset` often creates source stamps.
   Messages should be sent when this occurs.
-* Add support for uids to the change resource type
-* Consider importing build pickles into the new DB.
+* Add support for uids to the change resource type :runner:
+* Consider importing build pickles into the new DB. :runner:
 
 ### Misc Data API Work ###
 
 * Make sure that the arguments to `addChange` are flexible and compatible: http://trac.buildbot.net/ticket/2378 :runner:
-* addBuildset should take a list of builder IDs (involves integrating IDs into process Builder objects)
-* Paging, filtering, and so on of data API results.
+* addBuildset should take a list of builder IDs, rather than names :runner:
+* REST stuff:
+  * Support paging, filtering, and so on of data API results. :runner:
+  * Create links with relations (`rel=..`). :runner:
+  * Assign `urn`s to objects, and use those to correlate messages with objects. :runner:
 * Parsing of endpoint options is currently left to the endpoint, which will lead to inconsistencies.
   Add and document some helper methods to ``base.Endpoint`` for parsing e.g., boolean options (supporting on/off, 0/1, true/false, etc.)
 * If several rtypes have `_db2data` functions or similar (so far masters and changes both do), then make that an idiom and document it.
 * Move the methods of BuilderControl to update methods of the Builder resouce type (or other places as appropriate), and add control methods where appropriate.
   In particular, implement `rebuildBuild` properly.
-* Use DateTimes everywhere
-* Ensure that all id's are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
-  This includes the self-id (so, ``buildsetid``, not ``id``, is a field of a buildset resource).
+* Use DateTimes everywhere :runner:
+* Ensure that all id's in the Data API are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
+  This includes the self-id (so, ``buildsetid``, not ``id``, is a field of a buildset resource). :runner:
 * Ensure that resources are consistent in their handling of embedded objects vs. ids/links.
   For example, a buildset includes its component sourcestamps.
   Does a build request include its parent buildset (and consequently the source stamps)?
   Does this differ between messages and resources?
-* Create links with relations (`rel=..`).
-* Assign `urn`s to objects, and use those to correlate messages with objects.
-* Define the proper means of synchronizing messages and resources for each resource type.
-  This information should be sufficient to reliably predict resource contents based on only on messages.
-* Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler
-* Add messages to the scheduler resource type, one for each possible change in scheduler status.
-* Add a call to enumerate builds *previous* to a given build, using flexible criteria.
+* Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler when they are no longer used.
+* Add messages to the scheduler resource type, one for each possible change in scheduler status. :runner:
+* Add a means to enumerate builds *previous* to a given build, using flexible criteria.
   Something like ``/build/1234/previous?lib:branch=foo&builder=bar&count=3`` to get the three builds before 1234 with branch ``foo`` in the ``lib`` codebase, on builder ``bar``.
   This is to address http://trac.buildbot.net/ticket/2431.
 * Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
-  Same for builds.
+  Same for builds. :runner:
+* Rewrite all message and endpoint names in the Data API documentation to use ``{var}`` instead of ``$var`` :runner:
 
 ## Status Rewrites ##
 
@@ -172,29 +148,29 @@ The following will need to be rewritten:
 
 ### MailNotifier ###
 
-Note that the tests for MailNotifier mock a lot of things out - incorrectly, now.
-So don't trust the tests!
 
 ### Others ###
-* IRC (words.py)
+* IRC (words.py) :runner:
 * StatusClient (maybe)
 * WebStatus (already in progress with buildbot-www)
+* MailNotifier.
+  Note that the tests for MailNotifier mock a lot of things out - incorrectly, now.
+  So don't trust the tests!
 * Tinderbox (maybe)
 * `status_gerrit`
 * `status_push` (maybe)
 
 ## Web ##
 
-### Infrastructure ###
-
-* Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change.
-
 ### Javascript ###
 
 * Standardize on interCaps spellings for identifiers (method and variable names).
 * Convert tabs to spaces
+* Verify licensing for Bootstrap
 
 ### Javascript Testing ###
+
+We need a means to unit-test the JavaScript frontend.
 
 Testing javascript and json api interaction is tricky. Few design principles:
 * Stubbing the data api in JS is considered wrong path, as we'll have to always make sure consistency between the stub and real implementation
@@ -214,35 +190,26 @@ Testing javascript and json api interaction is tricky. Few design principles:
 
 ### REST API ###
 
-* Use plurals in path elements (/changes/NNN rather than /change/NNN)
-* Return dates as strings
+* Support paging, filtering, and so on of data API results.
+  (Use TastyPie's URL parameters as a model) :runner:
+* Use plurals in path elements (/changes/NNN rather than /change/NNN) :runner:
+* Return dates as strings :runner:
+* Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change. :runner:
 
-### Vague Ideas ###
+### Localization ###
 
-These are just "things that need doing", where we don't have much idea *how* yet:
-
-* i18n/l10n support so contributors can easily translate the web UI
-  => dojo has support for i18n/l10n and accessibility
-* Use TastyPie as a model for a generic REST API library
-  => We decided to use data as a basis for REST API, we just need a translation layer for data <-> json REST, implemented in rest.py
-
-* Need to download bootstrap from upstream instead of having a hardcopy in our source code.
+Need to figure out how to do this!
 
 ## Database ##
 
 ### Schema Changes ###
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* ``changesources``
-* replace ``builds`` with a useful representation of builds
-* ``steps``
-* ``logs``
-* ``logchunks``
+* Add ``changesources`` :runner:
 
 ### DB API Changes ###
 
-* Switch to use epoch time throughout the DB API.
-* Use None/NULL, not -1, as the "no results yet" sentinel value in buildsets and buildrequests
+* Use None/NULL, not -1, as the "no results yet" sentinel value in buildsets and buildrequests :runner:
 * Make `completeBuildSet` return true if the database claims to have updated the row, and use that to narrow the race condition in `maybeBuildsetComplete`
 * Use sa.Text instead of sa.String(LEN), so we have unlimited-length strings.
   Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
@@ -251,8 +218,6 @@ These are just "things that need doing", where we don't have much idea *how* yet
 ### Documentation ###
 
 * Document Buildbot's behavior for a DBA: isolation assumptions, dependencies on autogenerated IDs, read-after-write expectations, buildrequest claiming, buildset completion detection
-* Document how to handle merging of build requests now that SourceStamps are dead.
-* Rewrite all message and endpoing names in the Data API documentation to use ``{var}`` instead of ``$var`` :runner:
 
 ### Miscellaneous ###
 
