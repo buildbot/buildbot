@@ -45,6 +45,11 @@ class Matcher(unittest.TestCase):
         self.assertEqual(self.m[('A', 'a', 'B', 'b')],
                 ('AB', dict(a='a', b='b')))
 
+    def test_pattern_variables_underscore(self):
+        self.m[('A', ':a_a_a')] = 'AB'
+        self.assertEqual(self.m[('A', 'a')],
+                ('AB', dict(a_a_a='a')))
+
     def test_pattern_variables_num(self):
         self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
         self.assertEqual(self.m[('A', '10', 'B', '-20')],
