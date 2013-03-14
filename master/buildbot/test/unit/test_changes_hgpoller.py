@@ -81,13 +81,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                                 'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout("73591"),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591', # only fetches that head
                                 '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
                 .path('/some/dir').stdout(os.linesep.join([
                     '1273258100.0 -7200',
                     'Bob Test <bobtest@example.org>',
@@ -133,7 +133,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                             'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
         )
 
@@ -150,13 +150,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                             'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout('5' + os.linesep),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
                             '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
                 .path('/some/dir').stdout(os.linesep.join([
                         '1273258009.0 -7200',
                         'Joe Test <joetest@example.org>',

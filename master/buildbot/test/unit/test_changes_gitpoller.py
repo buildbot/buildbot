@@ -523,7 +523,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.patch(base.PollingChangeSource, "startService", startService)
         d = self.poller.startService()
         def check(_):
-            self.assertEqual(self.poller.workdir, 'basedir/gitpoller-work')
+            self.assertEqual(self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
             self.assertEqual(self.poller.lastRev, {})
             startService.assert_called_once_with(self.poller)
         d.addCallback(check)
