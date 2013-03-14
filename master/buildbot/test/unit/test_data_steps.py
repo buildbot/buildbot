@@ -52,7 +52,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        step = yield self.callGet(dict(), dict(stepid=72))
+        step = yield self.callGet(('step', 72))
         self.validateData(step)
         self.assertEqual(step, {
             'build_link': base.Link(('build', '30')),
@@ -70,33 +70,31 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_name(self):
-        step = yield self.callGet(dict(), dict(buildid=30, name=u'two'))
+        step = yield self.callGet(('build', 30, 'step', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_number(self):
-        step = yield self.callGet(dict(), dict(buildid=30, step_number=1))
+        step = yield self.callGet(('build', 30, 'step', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_name(self):
-        step = yield self.callGet(dict(),
-                dict(builderid=77, build_number=7, name=u'two'))
+        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_number(self):
-        step = yield self.callGet(dict(),
-                dict(builderid=77, build_number=7, step_number=1))
+        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        step = yield self.callGet(dict(), dict(stepid=9914))
+        step = yield self.callGet(('step', 9999))
         self.assertEqual(step, None)
 
 
@@ -133,13 +131,13 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildid(self):
-        steps = yield self.callGet(dict(), dict(buildid=30))
+        steps = yield self.callGet(('build', 30, 'step'))
         [ self.validateData(step) for step in steps ]
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
 
     @defer.inlineCallbacks
     def xtest_get_builder(self):
-        steps = yield self.callGet(dict(), dict(builderid=77, build_number=7))
+        steps = yield self.callGet(('builder', 77, 'build', 7, 'step'))
         [ self.validateData(step) for step in steps ]
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
 

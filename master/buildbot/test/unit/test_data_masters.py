@@ -48,7 +48,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(masterid=14))
+        d = self.callGet(('master', 14))
         @d.addCallback
         def check(master):
             self.validateData(master)
@@ -57,7 +57,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_builderid_existing(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=23))
+        d = self.callGet(('builder', 23, 'master', 13))
         @d.addCallback
         def check(master):
             self.validateData(master)
@@ -66,7 +66,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_builderid_no_match(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=24))
+        d = self.callGet(('builder', 24, 'master', 13))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -74,7 +74,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_builderid_missing(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=25))
+        d = self.callGet(('builder', 25, 'master', 13))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -82,7 +82,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(masterid=99))
+        d = self.callGet(('master', 99))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -112,7 +112,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('master',))
         @d.addCallback
         def check(masters):
             [ self.validateData(m) for m in masters ]
@@ -121,7 +121,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(dict(), dict(builderid=22))
+        d = self.callGet(('builder', 22, 'master'))
         @d.addCallback
         def check(masters):
             [ self.validateData(m) for m in masters ]
@@ -130,7 +130,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid_missing(self):
-        d = self.callGet(dict(), dict(builderid=23))
+        d = self.callGet(('builder', 23, 'master'))
         @d.addCallback
         def check(masters):
             self.assertEqual(masters, [])

@@ -15,8 +15,10 @@
 
 import mock
 from twisted.internet import defer
+from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces, validation
+from buildbot.util import pathmatch
 
 class EndpointMixin(interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
@@ -34,6 +36,7 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
+        self.matcher = pathmatch.Matcher()
 
         rtype = self.rtype = self.resourceTypeClass(self.master)
         setattr(self.data.rtypes, rtype.name, rtype)
@@ -51,8 +54,7 @@ class EndpointMixin(interfaces.InterfaceTests):
         pathPatterns = [ tuple(pp.split('/')[1:])
                             for pp in pathPatterns ]
         for pp in pathPatterns:
-            if pp is not None:
-                self.assertIsInstance(pp, tuple)
+            self.matcher[pp] = self.ep
 
         self.pathArgs = [
             set([ arg.split(':', 1)[1] for arg in pp if ':' in arg ])
@@ -66,9 +68,12 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     # call methods, with extra checks
 
-    def callGet(self, options, kwargs):
-        self.assertIn(set(kwargs), self.pathArgs)
-        d = self.ep.get(options, kwargs)
+    def callGet(self, path, resultSpec=None):
+        if resultSpec is None:
+            resultSpec = resultspec.ResultSpec()
+        endpoint, kwargs = self.matcher[path]
+        self.assertIdentical(endpoint, self.ep)
+        d = endpoint.get(resultSpec, kwargs)
         self.assertIsInstance(d, defer.Deferred)
         return d
 
@@ -91,7 +96,7 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     def test_get_spec(self):
         @self.assertArgSpecMatches(self.ep.get)
-        def get(self, options, kwargs):
+        def get(self, resultSpec, kwargs):
             pass
 
     def test_startConsuming_spec(self):

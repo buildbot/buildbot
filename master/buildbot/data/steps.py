@@ -41,14 +41,14 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = """
         /step/n:stepid
-        /build/n:buildid/step/i:name
+        /build/n:buildid/step/i:step_name
         /build/n:buildid/step/n:step_number
-        /builder/n:builderid/build/n:build_number/step/i:name
+        /builder/n:builderid/build/n:build_number/step/i:step_name
         /builder/n:builderid/build/n:build_number/step/n:step_number
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
             defer.returnValue((yield self.db2data(dbdict))
@@ -60,7 +60,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             return
 
         dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                number=kwargs.get('step_number'), name=kwargs.get('name'))
+                number=kwargs.get('step_number'), name=kwargs.get('step_name'))
         defer.returnValue((yield self.db2data(dbdict))
                             if dbdict else None)
 
@@ -73,7 +73,7 @@ class StepsEndpoint(Db2DataMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'buildid' in kwargs:
             buildid = kwargs['buildid']
         else:

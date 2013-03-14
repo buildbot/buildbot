@@ -182,7 +182,7 @@ class V2RootResource(resource.Resource):
                 if request.method == "POST":
                     data = yield self.master.data.control(action, reqOptions, tuple(reqPath))
                 else:
-                    data = yield self.master.data.get(reqOptions, tuple(reqPath))
+                    data = yield self.master.data.get(tuple(reqPath))
             except data_exceptions.InvalidPathError,e:
                 write_error(str(e) or "invalid path", errcode=404)
                 return

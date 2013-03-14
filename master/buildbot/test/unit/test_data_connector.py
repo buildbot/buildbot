@@ -19,7 +19,7 @@ from twisted.internet import defer
 from twisted.python import reflect
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
-from buildbot.data import connector, base, types
+from buildbot.data import connector, base, types, resultspec
 
 class Tests(interfaces.InterfaceTests):
 
@@ -28,7 +28,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_get(self):
         @self.assertArgSpecMatches(self.data.get)
-        def get(self, options, path):
+        def get(self, path, filters=None, fields=None,
+                    order=None, limit=None, offset=None):
             pass
 
     def test_signature_startConsuming(self):
@@ -102,11 +103,20 @@ class DataConnector(unittest.TestCase):
         self.data = connector.DataConnector(self.master)
 
     def patchFooPattern(self):
-        cls = type('MyEndpoint', (base.Endpoint,), {})
+        cls = type('FooEndpoint', (base.Endpoint,), {})
         ep = cls(None, self.master)
-        ep.get = mock.Mock(name='MyEndpoint.get')
-        ep.get.return_value = defer.succeed(9999)
+        ep.get = mock.Mock(name='FooEndpoint.get')
+        ep.get.return_value = defer.succeed({'val': 9999})
         self.data.matcher[('foo', 'n:fooid', 'bar')] = ep
+        return ep
+
+    def patchFooListPattern(self):
+        cls = type('FoosEndpoint', (base.Endpoint,), {})
+        ep = cls(None, self.master)
+        ep.get = mock.Mock(name='FoosEndpoint.get')
+        ep.get.return_value = defer.succeed(
+                [{'val': v} for v in range(900, 920)])
+        self.data.matcher[('foo',)] = ep
         return ep
 
     # tests
@@ -151,13 +161,35 @@ class DataConnector(unittest.TestCase):
 
     def test_get(self):
         ep = self.patchFooPattern()
-        d = self.data.get({'option': '1'}, ('foo', '10', 'bar'))
+        d = self.data.get(('foo', '10', 'bar'))
 
         @d.addCallback
         def check(gotten):
-            self.assertEqual(gotten, 9999)
-            ep.get.assert_called_once_with({'option' : '1'},
-                                              {'fooid' : 10})
+            self.assertEqual(gotten, {'val': 9999})
+            ep.get.assert_called_once_with(mock.ANY, {'fooid' : 10})
+        return d
+
+    def test_get_filters(self):
+        ep = self.patchFooListPattern()
+        d = self.data.get(('foo',),
+            filters=[resultspec.Filter('val', 'lt', [902])])
+
+        @d.addCallback
+        def check(gotten):
+            self.assertEqual(gotten, [{'val': 900}, {'val': 901}])
+            ep.get.assert_called_once_with(mock.ANY, {})
+        return d
+
+    def test_get_resultSpec_args(self):
+        ep = self.patchFooListPattern()
+        f = resultspec.Filter('val', 'gt', [909])
+        d = self.data.get(('foo',), filters=[f], fields=['val'],
+                                order=['-val'], limit=2)
+
+        @d.addCallback
+        def check(gotten):
+            self.assertEqual(gotten, [{'val': 919}, {'val': 918}])
+            ep.get.assert_called_once_with(mock.ANY, {})
         return d
 
     def test_startConsuming(self):

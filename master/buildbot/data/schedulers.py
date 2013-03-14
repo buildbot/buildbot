@@ -23,7 +23,7 @@ class Db2DataMixin(object):
     def db2data(self, dbdict):
         master = None
         if dbdict['masterid'] is not None:
-            master = yield self.master.data.get({},
+            master = yield self.master.data.get(
                                     ('master', dbdict['masterid']))
         data = {
             'schedulerid': dbdict['id'],
@@ -42,7 +42,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.schedulers.getScheduler(
                                                         kwargs['schedulerid'])
         if 'masterid' in kwargs:
@@ -61,7 +61,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'schedulers'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(
                                 masterid=kwargs.get('masterid'))
         schdicts = yield defer.DeferredList(

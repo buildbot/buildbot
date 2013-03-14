@@ -35,7 +35,7 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get(self):
-        rootlinks = yield self.callGet(dict(), dict())
+        rootlinks = yield self.callGet(('',))
         [ self.validateData(root) for root in rootlinks ]
         self.assertEqual(rootlinks, [
             {'name': u'abc', 'link': base.Link(('abc',))},

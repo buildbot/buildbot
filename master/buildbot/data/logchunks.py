@@ -28,7 +28,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         # calculate the logid
         if 'logid' in kwargs:
             logid = kwargs['logid']
@@ -43,8 +43,8 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
                 return
             logid = dbdict['id']
 
-        firstline = options.get('firstline', 0)
-        lastline = options.get('lastline', None)
+        firstline = resultSpec.offset or 0
+        lastline = None if resultSpec.limit is None else firstline + resultSpec.limit - 1
 
         # get the number of lines, if necessary
         if lastline is None:

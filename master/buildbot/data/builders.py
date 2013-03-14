@@ -24,7 +24,7 @@ class BuilderEndpoint(base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         builderid = kwargs['builderid']
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
@@ -49,7 +49,7 @@ class BuildersEndpoint(base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
                 masterid=kwargs.get('masterid', None))
         defer.returnValue([

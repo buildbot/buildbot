@@ -41,7 +41,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(changeid=13))
+        d = self.callGet(('change', '13'))
         @d.addCallback
         def check(change):
             self.validateData(change)
@@ -50,7 +50,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(changeid=99))
+        d = self.callGet(('change', '99'))
         @d.addCallback
         def check(change):
             self.assertEqual(change, None)
@@ -80,41 +80,13 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('change',))
         @d.addCallback
         def check(changes):
             self.validateData(changes[0])
             self.assertEqual(changes[0]['changeid'], 13)
             self.validateData(changes[1])
             self.assertEqual(changes[1]['changeid'], 14)
-        return d
-
-    def test_get_fewer(self):
-        d = self.callGet(dict(count='1'), dict())
-        @d.addCallback
-        def check(changes):
-            self.assertEqual(len(changes), 1)
-            self.validateData(changes[0])
-            self.assertEqual(changes[0]['changeid'], 13)
-        return d
-    def test_get_paging(self):
-        d = self.callGet(dict(count='1',start=1), dict())
-        @d.addCallback
-        def check(changes):
-            self.assertEqual(len(changes), 1)
-            self.validateData(changes[0])
-            self.assertEqual(changes[0]['changeid'], 14)
-        return d
-
-    def test_get_sorted(self):
-        # invert the default order
-        d = self.callGet(dict(sort=[('changeid',1)]), dict())
-        @d.addCallback
-        def check(changes):
-            self.validateData(changes[1])
-            self.assertEqual(changes[1]['changeid'], 13)
-            self.validateData(changes[0])
-            self.assertEqual(changes[0]['changeid'], 14)
         return d
 
     def test_startConsuming(self):

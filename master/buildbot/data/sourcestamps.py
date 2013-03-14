@@ -48,7 +48,7 @@ class SourceStampEndpoint(base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(
                                                         kwargs['ssid'])
         defer.returnValue(_db2data(ssdict) if ssdict else None)
@@ -62,7 +62,7 @@ class SourceStampsEndpoint(base.Endpoint):
     rootLinkName = 'sourcestamps'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         defer.returnValue([ _db2data(ssdict) for ssdict in
             (yield self.master.db.sourcestamps.getSourceStamps()) ])
 

@@ -119,7 +119,7 @@ class Dependent(base.BaseScheduler):
         changed = False
         rv = []
         for bsid in self._cached_upstream_bsids[:]:
-            buildset = yield self.master.data.get({}, ('buildset', str(bsid)))
+            buildset = yield self.master.data.get(('buildset', str(bsid)))
             if not buildset:
                 self._cached_upstream_bsids.remove(bsid)
                 changed = True

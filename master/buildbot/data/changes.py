@@ -32,7 +32,7 @@ class FixerMixin(object):
             change['link'] = base.Link(('change', str(change['changeid'])))
 
             sskey = ('sourcestamp', str(change['sourcestampid']))
-            change['sourcestamp'] = yield self.master.data.get({}, sskey)
+            change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
         defer.returnValue(change)
 
@@ -42,7 +42,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         /change/n:changeid
     """
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
         d.addCallback(self._fixChange)
         return d
@@ -54,11 +54,10 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         /change
     """
     rootLinkName = 'change'
-    maximumCount = 50
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
-        changes = yield self.master.db.changes.getChanges(options)
+    def get(self, resultSpec, kwargs):
+        changes = yield self.master.db.changes.getChanges()
         changes = [ (yield self._fixChange(ch)) for ch in changes ]
         defer.returnValue(changes)
 
@@ -152,7 +151,7 @@ class Change(base.ResourceType):
             _reactor=_reactor)
 
         # get the change and munge the result for the notification
-        change = yield self.master.data.get({}, ('change', str(changeid)))
+        change = yield self.master.data.get(('change', str(changeid)))
         change = copy.deepcopy(change)
         del change['link']
         del change['sourcestamp']['link']

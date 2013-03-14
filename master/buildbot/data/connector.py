@@ -15,13 +15,15 @@
 
 import inspect
 from twisted.python import reflect
+from twisted.internet import defer
 from twisted.application import service
 from buildbot.util import pathmatch
-from buildbot.data import exceptions, base
+from buildbot.data import exceptions, base, resultspec
 
 class Updates(object):
     # empty container object; see _scanModule, below
     pass
+
 
 class RTypes(object):
     # empty container object; see _scanModule, below
@@ -74,8 +76,10 @@ class DataConnector(service.Service):
                     pathPatterns = [ tuple(pp.split('/')[1:])
                                      for pp in pathPatterns ]
                     for pp in pathPatterns:
-                        if pp is not None:
-                            self.matcher[pp] = ep
+                        # special-case the root
+                        if pp == ('',):
+                            pp = ()
+                        self.matcher[pp] = ep
                     rootLinkName = clsdict.get('rootLinkName')
                     if rootLinkName:
                         link = base.Link(pathPatterns[0])
@@ -95,9 +99,16 @@ class DataConnector(service.Service):
         except KeyError:
             raise exceptions.InvalidPathError
 
-    def get(self, options, path):
+    @defer.inlineCallbacks
+    def get(self, path, filters=None, fields=None, order=None,
+                        limit=None, offset=None):
+        resultSpec = resultspec.ResultSpec(filters=filters, fields=fields,
+                        order=order, limit=limit, offset=offset)
         endpoint, kwargs = self._lookup(path)
-        return endpoint.get(options, kwargs)
+        rv = yield endpoint.get(resultSpec, kwargs)
+        if resultSpec:
+            rv = resultSpec.apply(rv)
+        defer.returnValue(rv)
 
     def startConsuming(self, callback, options, path):
         endpoint, kwargs = self._lookup(path)

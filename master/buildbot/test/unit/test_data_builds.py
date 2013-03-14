@@ -46,28 +46,28 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        build = yield self.callGet(dict(), dict(buildid=14))
+        build = yield self.callGet(('build', 14))
         self.validateData(build)
         self.assertEqual(build['number'], 4)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        build = yield self.callGet(dict(), dict(buildid=9914))
+        build = yield self.callGet(('build', 9999))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_missing_builder_number(self):
-        build = yield self.callGet(dict(), dict(builderid=999, number=4))
+        build = yield self.callGet(('builder', 999, 'build', 4))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_missing_number(self):
-        build = yield self.callGet(dict(), dict(builderid=77, number=44))
+        build = yield self.callGet(('builder', 77, 'build', 44))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_number(self):
-        build = yield self.callGet(dict(), dict(builderid=77, number=5))
+        build = yield self.callGet(('builder', 77, 'build', 5))
         self.validateData(build)
         self.assertEqual(build['buildid'], 15)
 
@@ -97,20 +97,20 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_all(self):
-        builds = yield self.callGet(dict(), dict())
+        builds = yield self.callGet(('build',))
         [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]),
                          [3, 4, 5])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
-        builds = yield self.callGet(dict(), dict(builderid=78))
+        builds = yield self.callGet(('builder', 78, 'build'))
         [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]), [5])
 
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
-        builds = yield self.callGet(dict(), dict(buildrequestid=82))
+        builds = yield self.callGet(('buildrequest', 82, 'build'))
         [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]), [3, 4])
 

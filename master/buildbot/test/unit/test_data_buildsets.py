@@ -17,7 +17,7 @@ from zope.interface import implements
 from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot import interfaces
-from buildbot.data import buildsets
+from buildbot.data import buildsets, resultspec
 from buildbot.test.util import endpoint, interfaces as util_interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status.results import SUCCESS, FAILURE
@@ -46,7 +46,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(bsid=13))
+        d = self.callGet(('buildset', 13))
         @d.addCallback
         def check(buildset):
             self.validateData(buildset)
@@ -54,7 +54,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_no_sourcestamps(self):
-        d = self.callGet(dict(), dict(bsid=14))
+        d = self.callGet(('buildset', 14))
         @d.addCallback
         def check(buildset):
             self.validateData(buildset)
@@ -62,7 +62,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(bsid=99))
+        d = self.callGet(('buildset', 99))
         @d.addCallback
         def check(buildset):
             self.assertEqual(buildset, None)
@@ -93,7 +93,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('buildset',))
         @d.addCallback
         def check(buildsets):
             self.validateData(buildsets[0])
@@ -103,7 +103,9 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_complete(self):
-        d = self.callGet(dict(complete=True), dict())
+        f = resultspec.Filter('complete', 'eq', [True])
+        d = self.callGet(('buildset',),
+            resultSpec=resultspec.ResultSpec(filters=[f]))
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)
@@ -112,7 +114,9 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_incomplete(self):
-        d = self.callGet(dict(complete=False), dict())
+        f = resultspec.Filter('complete', 'eq', [False])
+        d = self.callGet(('buildset',),
+            resultSpec=resultspec.ResultSpec(filters=[f]))
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)

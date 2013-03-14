@@ -33,7 +33,7 @@ class Db2DataMixin(object):
         sourcestamps = []
         @defer.inlineCallbacks
         def getSs(ssid):
-            ss = yield self.master.data.get({}, ('sourcestamp', str(ssid)))
+            ss = yield self.master.data.get(('sourcestamp', str(ssid)))
             sourcestamps.append(ss)
         yield defer.DeferredList([ getSs(id)
                                    for id in buildset['sourcestamps'] ],
@@ -53,7 +53,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         /buildset/n:bsid
     """
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         d = self.master.db.buildsets.getBuildset(kwargs['bsid'])
         d.addCallback(self.db2data)
         return d
@@ -70,10 +70,8 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     """
     rootLinkName = 'buildset'
 
-    def get(self, options, kwargs):
-        complete = None
-        if 'complete' in options:
-            complete = bool(options['complete']) # TODO: booleans from strings?
+    def get(self, resultSpec, kwargs):
+        complete = resultSpec.popBooleanFilter('complete')
         d = self.master.db.buildsets.getBuildsets(complete=complete)
         @d.addCallback
         def db2data(buildsets):
@@ -124,7 +122,7 @@ class Buildset(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            (yield self.master.data.get({}, ('sourcestamp', str(ssid)))).copy()
+            (yield self.master.data.get(('sourcestamp', str(ssid)))).copy()
             for ssid in bsdict['sourcestamps'] ]
 
         # strip the links from those sourcestamps
@@ -208,7 +206,7 @@ class Buildset(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            copy.deepcopy((yield self.master.data.get({},
+            copy.deepcopy((yield self.master.data.get(
                                             ('sourcestamp', str(ssid)))))
             for ssid in bsdict['sourcestamps'] ]
 

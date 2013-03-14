@@ -55,12 +55,11 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.master = self.make_master(url='h:/')
         # patch out get to return its arguments
-        def get(options, path):
+        def get(path, resultSpec=None):
             if path == ('not', 'found'):
                 return defer.fail(exceptions.InvalidPathError())
             else:
-                rv = options.copy()
-                rv['path'] = path
+                rv = {'path': path}
                 return defer.succeed(rv)
         self.master.data.get = get
         def control(action, args, path):
@@ -92,7 +91,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                contentJson=dict(path=['some', 'path'], start=0, count=50),
+                contentJson=dict(path=['some', 'path']),
                 contentType='application/json',
                 responseCode=200,
                 contentDisposition="attachment; filename=\"/req.path.json\"" )
@@ -104,9 +103,8 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                content=json.dumps(
-                    {"count": 50, "path": ["some", "path"]},
-                    sort_keys=True, indent=2),
+                # note whitespace here:
+                content='{\n  "path": [\n    "some", \n    "path"\n  ]\n}',
                 contentType='text/plain',
                 responseCode=200,
                 contentDisposition=None)
@@ -119,7 +117,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         def check(_):
             self.assertRequest(
                 # note *no* whitespace here:
-                content='{"count":50,"path":["some","path"]}',
+                content='{"path":["some","path"]}',
                 contentType='text/plain',
                 responseCode=200,
                 contentDisposition=None)
@@ -131,7 +129,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                contentJson={'count': 50, 'full': 'a', 'path': ['some', 'path']},
+                contentJson= {u'path': [u'some', u'path']},
                 responseCode=200)
         return d
 
@@ -140,7 +138,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
                 args={'callback': ['mycb']})
         @d.addCallback
         def check(_):
-            self.assertRequest(content='mycb({"count":50,"path":["cb"],"start":0});',
+            self.assertRequest(content='mycb({"path":["cb"]});',
                                responseCode=200)
         return d
     def test_control_not_found(self):

@@ -50,7 +50,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'buildid' in kwargs:
             dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
         else:
@@ -71,7 +71,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         builds = yield self.master.db.builds.getBuilds(
                                 builderid=kwargs.get('builderid'),
                                 buildrequestid=kwargs.get('buildrequestid'))

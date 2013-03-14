@@ -205,7 +205,7 @@ class Tests(interfaces.InterfaceTests):
             pass
     def test_signature_getChanges(self):
         @self.assertArgSpecMatches(self.db.changes.getChanges)
-        def getChanges(self, opts={}):
+        def getChanges(self):
             pass
     def insert7Changes(self):
         return self.insertTestData([
@@ -226,20 +226,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(check)
         return d
 
-    def test_getChanges_subset_order_paging(self):
-        d = self.insert7Changes()
-        d.addCallback(lambda _ :
-                self.db.changes.getChanges(dict(start=1,count=5,sort=[("changeid",1)])))
-        def check(changes):
-            changeids = [ c['changeid'] for c in changes ]
-            self.assertEqual(changeids, [13, 12, 11, 10, 9])
-        d.addCallback(check)
-        return d
-
     def test_getChangesCount(self):
         d = self.insert7Changes()
         d.addCallback(lambda _ :
-                self.db.changes.getChangesCount(dict(start=1,count=5,sort=[("changeid",1)])))
+                self.db.changes.getChangesCount())
         def check(n):
             self.assertEqual(n, 7)
         d.addCallback(check)
@@ -247,11 +237,11 @@ class Tests(interfaces.InterfaceTests):
 
     def test_getChangesHugeCount(self):
         d = self.insertTestData([
-            fakedb.Change(changeid=i) for i in xrange(2000)])
+            fakedb.Change(changeid=i) for i in xrange(100)])
         d.addCallback(lambda _ :
-                self.db.changes.getChangesCount(dict(start=1,count=5,sort=[("changeid",1)])))
+                self.db.changes.getChangesCount())
         def check(n):
-            self.assertEqual(n, 2000)
+            self.assertEqual(n, 100)
         d.addCallback(check)
         return d
 
@@ -264,7 +254,7 @@ class Tests(interfaces.InterfaceTests):
             self.assertEqual(changeids, [])
         d.addCallback(check)
         d.addCallback(lambda _ :
-                self.db.changes.getChanges(dict(count=5)))
+                self.db.changes.getChanges())
         d.addCallback(check)
         return d
 
@@ -273,7 +263,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _ :
                 self.db.changes.getRecentChanges(5))
         def check(changes):
-            # requested 5, but only got 2
+            # requested all, but only got 2
             # sort by changeid, since we assert on change 13 at index 0
             changes.sort(key=lambda c: c['changeid'])
             changeids = [ c['changeid'] for c in changes ]
@@ -285,7 +275,7 @@ class Tests(interfaces.InterfaceTests):
                         { 'notest' : ('no', 'Change') })
         d.addCallback(check)
         d.addCallback(lambda _ :
-                self.db.changes.getChanges(dict(count=5)))
+                self.db.changes.getChanges())
         d.addCallback(check)
         return d
 

@@ -48,7 +48,7 @@ class Endpoint(object):
         self.rtype = rtype
         self.master = master
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         raise NotImplementedError
 
     def control(self, action, args, kwargs):

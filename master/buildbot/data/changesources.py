@@ -23,7 +23,7 @@ class Db2DataMixin(object):
     def db2data(self, dbdict):
         master = None
         if dbdict['masterid'] is not None:
-            master = yield self.master.data.get({},
+            master = yield self.master.data.get(
                                     ('master', dbdict['masterid']))
         data = {
             'changesourceid': dbdict['id'],
@@ -42,7 +42,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.changesources.getChangeSource(
                                                         kwargs['changesourceid'])
         if 'masterid' in kwargs:
@@ -61,7 +61,7 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'changesources'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         changesources = yield self.master.db.changesources.getChangeSources(
                                 masterid=kwargs.get('masterid'))
         csdicts = yield defer.DeferredList(

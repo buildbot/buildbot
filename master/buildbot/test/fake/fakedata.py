@@ -273,10 +273,12 @@ class FakeDataConnector(object) :
         self.realConnector = connector.DataConnector(master)
         self.rtypes = self.realConnector.rtypes
 
-    def get(self, options, path):
+    def get(self, path, filters=None, fields=None,
+                        order=None, limit=None, offset=None):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
-        return self.realConnector.get(options, path)
+        return self.realConnector.get(path, filters=filters, fields=fields,
+                order=order, limit=limit, offset=offset)
 
     def startConsuming(self, callback, options, path):
         if not isinstance(path, tuple):

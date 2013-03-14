@@ -47,7 +47,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_existing(self):
         """get an existing changesource by id"""
-        d = self.callGet(dict(), dict(changesourceid=14))
+        d = self.callGet(('changesource', 14))
         @d.addCallback
         def check(changesource):
             self.validateData(changesource)
@@ -56,7 +56,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_no_master(self):
         """get a changesource with no master"""
-        d = self.callGet(dict(), dict(changesourceid=13))
+        d = self.callGet(('changesource', 13))
         @d.addCallback
         def check(changesource):
             self.validateData(changesource)
@@ -65,7 +65,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_masterid_existing(self):
         """get an existing changesource by id on certain master"""
-        d = self.callGet(dict(), dict(changesourceid=14, masterid=22))
+        d = self.callGet(('master', 22, 'changesource', 14))
         @d.addCallback
         def check(changesource):
             self.validateData(changesource)
@@ -74,7 +74,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_masterid_no_match(self):
         """get an existing changesource by id on the wrong master"""
-        d = self.callGet(dict(), dict(changesourceid=13, masterid=33))
+        d = self.callGet(('master', 33, 'changesource', 13))
         @d.addCallback
         def check(changesource):
             self.assertEqual(changesource, None)
@@ -82,7 +82,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_masterid_missing(self):
         """get an existing changesource by id on an invalid master"""
-        d = self.callGet(dict(), dict(changesourceid=13, masterid=25))
+        d = self.callGet(('master', 25, 'changesource', 13))
         @d.addCallback
         def check(changesource):
             self.assertEqual(changesource, None)
@@ -90,7 +90,7 @@ class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_missing(self):
         """get an invalid changesource by id"""
-        d = self.callGet(dict(), dict(changesourceid=99))
+        d = self.callGet(('changesource', 99))
         @d.addCallback
         def check(changesource):
             self.assertEqual(changesource, None)
@@ -121,7 +121,7 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('changesource',))
         @d.addCallback
         def check(changesources):
             [ self.validateData(cs) for cs in changesources ]
@@ -130,7 +130,7 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(dict(), dict(masterid=33))
+        d = self.callGet(('master', 33, 'changesource'))
         @d.addCallback
         def check(changesources):
             [ self.validateData(cs) for cs in changesources ]
@@ -139,7 +139,7 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(dict(), dict(masterid=23))
+        d = self.callGet(('master', 23, 'changesource'))
         @d.addCallback
         def check(changesources):
             self.assertEqual(changesources, [])

@@ -69,10 +69,15 @@ Within the buildmaster process, the root of the data API is available at `self.m
     The ``path`` arguments to these methods should always be tuples.  Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
     Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
-    .. py:method:: get(options, kwargs)
+    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None):
 
-        :param options: dictionary containing model-specific options
-        :param kwargs: a dictionary describing the resource to get, extracted from the path
+        :param tuple path: A tuple of path elements representing the API path to fetch.
+            Numbers can be passed as strings or integers.
+        :param filters: result spec filters
+        :param fields: result spec fields
+        :param order: result spec order
+        :param limit: result spec limit
+        :param offset: result spec offset
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
@@ -80,18 +85,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
-        The options argument can be used to filter lists of resources, or to affect the amount of associated data returned with a single resource.
-
-        Several options are defined, and are available for all getter returning a list of data items:
-          - `sort`: list of tuples: [ ( key, descending ), .. ].
-          - `start`: skip the `start` first results of query
-          - `count`: return only `count` items of query
-          - TBD: `filter`: list of TBD generic filter (would be nice to have some kind of db backed match expression langage)
-
-        The goal of those generic querying options is to be able to access the buildbot data, and make heavy use of the db query performance. Doing the sorting/filtering in
-        buildbot is to be avoided in order to have maximum scalability.
-
-        Those query options are handled by generic functions in the BaseConnector classes (db and fakedb).
+        The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the :py:class:`~buildbot.data.resultspec.ResultSpec` constructor.
 
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
 
@@ -325,10 +319,20 @@ See that module's description for details.
         If set, then the first path pattern for this endpoint will be included as a link in the root of the API.
         This should be set for any endpoints that begin an explorable tree.
 
-    .. py:method:: get(options, kwargs)
+    .. py:method:: get(options, resultSpec, kwargs)
 
-        :param options: dictionary containing model-specific options
-        :param kwargs: fields extracted from the path
+        :param dict options: model-specific options
+        :param resultSpec: a :py:class:`~buildbot.data.resultspec.ResultSpec` instance describing the desired results
+        :param dict kwargs: fields extracted from the path
+        :returns: data via Deferred
+
+        Get data from the endpoint.
+        This should return either a list of dictionaries (for list endpoints), a dictionary, or None (both for details endpoints).
+        The endpoint is free to handle any part of the result spec.
+        When doing so, it should remove the relevant configuration from the spec.
+        For example, if the endpoint applies a filter expression, it should remove that filter expression from ``resultSpec.filters``.
+
+        Any result spec configuration that remains on return will be applied automatically.
 
     .. py:method:: startConsuming(callback, options, kwargs)
 
@@ -346,7 +350,7 @@ Continuing the pub example, a simple endpoint would look like this::
 
     class PubEndpoint(base.Endpoint):
         pathPattern = ( 'pub', 'i:pubid' )
-        def get(self, options, kwargs):
+        def get(self, options, resultSpec, kwargs):
             return self.master.db.pubs.getPub(kwargs['pubid'])
 
 In a more complex implementation, the options might be used to indicate whether or not the pub's menu should be included in the result.

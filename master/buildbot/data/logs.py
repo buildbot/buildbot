@@ -44,7 +44,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
             defer.returnValue((yield self.db2data(dbdict))
@@ -72,7 +72,7 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         stepid = yield self.getStepid(kwargs)
         if not stepid:
             defer.returnValue([])

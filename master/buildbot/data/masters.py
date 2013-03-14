@@ -36,7 +36,7 @@ class MasterEndpoint(base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         # if a builder is given, only return the master if it's associated with
         # this builder
         if 'builderid' in kwargs:
@@ -58,9 +58,8 @@ class MastersEndpoint(base.Endpoint):
     rootLinkName = 'masters'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
-        masterlist = yield self.master.db.masters.getMasters(options)
-        # filter by builder if requested
+    def get(self, resultSpec, kwargs):
+        masterlist = yield self.master.db.masters.getMasters()
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(
                     builderid=kwargs['builderid'])

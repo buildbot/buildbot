@@ -19,7 +19,7 @@ from buildbot.data import base, types
 class RootEndpoint(base.Endpoint):
     pathPatterns = "/"
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         return defer.succeed(self.master.data.rootLinks)
 
 

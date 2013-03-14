@@ -44,7 +44,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(schedulerid=14))
+        d = self.callGet(('scheduler', 14))
         @d.addCallback
         def check(scheduler):
             self.validateData(scheduler)
@@ -52,7 +52,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_no_master(self):
-        d = self.callGet(dict(), dict(schedulerid=13))
+        d = self.callGet(('scheduler', 13))
         @d.addCallback
         def check(scheduler):
             self.validateData(scheduler)
@@ -60,7 +60,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_existing(self):
-        d = self.callGet(dict(), dict(schedulerid=14, masterid=22))
+        d = self.callGet(('master', 22, 'scheduler', 14))
         @d.addCallback
         def check(scheduler):
             self.validateData(scheduler)
@@ -68,21 +68,21 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_no_match(self):
-        d = self.callGet(dict(), dict(schedulerid=13, masterid=33))
+        d = self.callGet(('master', 33, 'scheduler', 13))
         @d.addCallback
         def check(scheduler):
             self.assertEqual(scheduler, None)
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(dict(), dict(schedulerid=13, masterid=25))
+        d = self.callGet(('master', 99, 'scheduler', 13))
         @d.addCallback
         def check(scheduler):
             self.assertEqual(scheduler, None)
         return d
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(schedulerid=99))
+        d = self.callGet(('scheduler', 99))
         @d.addCallback
         def check(scheduler):
             self.assertEqual(scheduler, None)
@@ -113,7 +113,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('scheduler',))
         @d.addCallback
         def check(schedulers):
             [ self.validateData(m) for m in schedulers ]
@@ -122,7 +122,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(dict(), dict(masterid=33))
+        d = self.callGet(('master', 33, 'scheduler'))
         @d.addCallback
         def check(schedulers):
             [ self.validateData(m) for m in schedulers ]
@@ -131,7 +131,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(dict(), dict(masterid=23))
+        d = self.callGet(('master', 23, 'scheduler'))
         @d.addCallback
         def check(schedulers):
             self.assertEqual(schedulers, [])

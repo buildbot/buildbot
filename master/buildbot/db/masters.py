@@ -80,12 +80,12 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getMasters(self, opts={}):
+    def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
             return [
                 self._masterdictFromRow(row)
-                for row in conn.execute(tbl.select(**self.dataOptionsToSelectOptions(opts))).fetchall() ]
+                for row in conn.execute(tbl.select()).fetchall() ]
         return self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):

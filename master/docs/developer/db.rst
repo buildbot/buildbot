@@ -735,17 +735,15 @@ changes
             earlier than the time at which it is merged into a repository
             monitored by Buildbot.
 
-    .. py:method:: getChanges(opts={})
+    .. py:method:: getChanges()
 
-        :param opts: data query options
         :returns: list of dictionaries via Deferred
 
         Get a list of the changes, represented as
         dictionaries; changes are sorted, and paged using generic data query options
 
-    .. py:method:: getChangesCount(opts={})
+    .. py:method:: getChangesCount()
 
-        :param opts: data query options
         :returns: list of dictionaries via Deferred
 
         Get the number changes, that the query option would return if no
@@ -1256,7 +1254,7 @@ masters
 
         Get the indicated master.
 
-    .. py:method:: getMasters(opts={})
+    .. py:method:: getMasters()
 
         :returns: list of Master dicts via Deferred
 

@@ -17,7 +17,7 @@ import mock
 import textwrap
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.data import logchunks
+from buildbot.data import logchunks, resultspec
 from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
@@ -69,9 +69,9 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     @defer.inlineCallbacks
-    def do_test_chunks(self, kwargs, logid, expLines):
+    def do_test_chunks(self, path, logid, expLines):
         # get the whole thing in one go
-        logchunk = yield self.callGet(dict(), kwargs)
+        logchunk = yield self.callGet(path)
         self.validateData(logchunk)
         expContent = '\n'.join(expLines) + '\n'
         self.assertEqual(logchunk,
@@ -79,8 +79,8 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         # line-by-line
         for i in range(len(expLines)):
-            logchunk = yield self.callGet(dict(firstline=i, lastline=i),
-                                          kwargs)
+            logchunk = yield self.callGet(path,
+                    resultSpec=resultspec.ResultSpec(offset=i, limit=1))
             self.validateData(logchunk)
             self.assertEqual(logchunk,
                 {'logid': logid, 'firstline': i, 'content': expLines[i]+'\n'})
@@ -88,8 +88,8 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         # half and half
         mid = len(expLines)/2
         for f, l in (0, mid), (mid, len(expLines)-1):
-            logchunk = yield self.callGet(
-                    dict(firstline=f, lastline=l), kwargs)
+            logchunk = yield self.callGet(path,
+                    resultSpec=resultspec.ResultSpec(offset=f, limit=l-f+1))
             self.validateData(logchunk)
             expContent = '\n'.join(expLines[f:l+1]) + '\n'
             self.assertEqual(logchunk,
@@ -97,8 +97,8 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         # truncated at EOF
         f, l = len(expLines)-2, len(expLines)+10
-        logchunk = yield self.callGet(
-            dict(firstline=f, lastline=l), kwargs)
+        logchunk = yield self.callGet(path,
+                resultSpec=resultspec.ResultSpec(offset=f, limit=l-f+1))
         self.validateData(logchunk)
         expContent = '\n'.join(expLines[-2:]) + '\n'
         self.assertEqual(logchunk,
@@ -106,54 +106,59 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         # some illegal stuff
         self.assertEqual(
-            (yield self.callGet(dict(firstline=-1), kwargs)), None)
+            (yield self.callGet(path,
+                    resultSpec=resultspec.ResultSpec(offset=-1))), None)
         self.assertEqual(
-            (yield self.callGet(dict(firstline=10, lastline=9), kwargs)), None)
+            (yield self.callGet(path,
+                    resultSpec=resultspec.ResultSpec(offset=10, limit=-1))),
+            None)
 
     def test_get_logid_60(self):
-        return self.do_test_chunks({'logid': 60}, 60, self.log60Lines)
+        return self.do_test_chunks(('log', 60, 'content'), 60,
+                                   self.log60Lines)
 
     def test_get_logid_61(self):
-        return self.do_test_chunks({'logid': 61}, 61, self.log61Lines)
+        return self.do_test_chunks(('log', 61, 'content'), 61,
+                                   self.log61Lines)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        logchunk = yield self.callGet(dict(), dict(logid=99))
+        logchunk = yield self.callGet(('log', 99, 'content'))
         self.assertEqual(logchunk, None)
 
     @defer.inlineCallbacks
     def test_get_empty(self):
-        logchunk = yield self.callGet(dict(), dict(logid=62))
+        logchunk = yield self.callGet(('log', 62, 'content'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
         logchunk = yield self.callGet(
-                dict(), dict(stepid=50, log_name='errors'))
+                ('step', 50, 'log', 'errors', 'content'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
-        logchunk = yield self.callGet(dict(),
-                dict(buildid=13, step_number=9, log_name='stdio'))
+        logchunk = yield self.callGet(
+                ('build', 13, 'step', 9, 'log', 'stdio', 'content'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 60)
 
     @defer.inlineCallbacks
     def test_get_by_builder(self):
-        logchunk = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_number=9,
-                     log_name='errors'))
+        logchunk = yield self.callGet(
+                ('builder', 77, 'build', 3, 'step', 9,
+                 'log', 'errors', 'content'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
-        logchunk = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_name='make',
-                     log_name='errors'))
+        logchunk = yield self.callGet(
+                ('builder', 77, 'build', 3, 'step', 'make',
+                 'log', 'errors', 'content'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
