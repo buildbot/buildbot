@@ -17,7 +17,7 @@ import mock
 import textwrap
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.data import logchunks, base
+from buildbot.data import logchunks
 from buildbot.test.util import validation, endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
