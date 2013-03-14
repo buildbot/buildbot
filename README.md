@@ -161,6 +161,7 @@ Tasks:
 * Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
   Same for builds.
 * Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
+* Steps' URLs should be stored as JSON objects giving both a title and a URL. :runner:
 
 ## Status Rewrites ##
 
