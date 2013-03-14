@@ -103,7 +103,7 @@ class DataConnector(unittest.TestCase):
 
     def patchFooPattern(self):
         cls = type('MyEndpoint', (base.Endpoint,), {})
-        ep = cls(self.master)
+        ep = cls(None, self.master)
         ep.get = mock.Mock(name='MyEndpoint.get')
         ep.get.return_value = defer.succeed(9999)
         self.data.matcher[('foo', 'n:fooid', 'bar')] = ep

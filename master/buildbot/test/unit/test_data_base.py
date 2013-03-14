@@ -32,7 +32,7 @@ class ResourceType(unittest.TestCase):
         self.assertIdentical(inst.master, master)
 
     def test_getEndpoints_instances_fails(self):
-        ep = base.Endpoint(None)
+        ep = base.Endpoint(None, None)
         cls = self.makeResourceTypeSubclass(endpoints=[ep])
         inst = cls(None)
         self.assertRaises(TypeError, lambda : inst.getEndpoints())

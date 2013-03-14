@@ -24,7 +24,7 @@ class EndpointMixin(interfaces.InterfaceTests):
     # class being tested
     endpointClass = None
 
-    # if necessary, the corresponding resource type - this wil
+    # if necessary, the corresponding resource type - this will
     # be instantiated at self.data.rtypes[rtype.type] and self.rtype
     resourceTypeClass = None
 
@@ -34,11 +34,14 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
-        self.ep = self.endpointClass(self.master)
 
         if self.resourceTypeClass:
             rtype = self.rtype = self.resourceTypeClass(self.master)
             self.data.rtypes = { rtype.type : rtype }
+        else:
+            rtype = None
+
+        self.ep = self.endpointClass(rtype, self.master)
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma

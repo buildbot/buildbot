@@ -12,8 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 from buildbot.data import exceptions
 from twisted.internet import defer
+
 class ResourceType(object):
     type = None
     endpoints = []
@@ -28,7 +30,7 @@ class ResourceType(object):
             ep = endpoints[i]
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")
-            endpoints[i] = ep(self.master)
+            endpoints[i] = ep(self, self.master)
         return endpoints
 
     def produceEvent(self, msg, event):
@@ -37,11 +39,13 @@ class ResourceType(object):
              + (event,)
         self.master.mq.produce(routingKey, msg)
 
+
 class Endpoint(object):
     pathPatterns = ""
     rootLinkName = None
 
-    def __init__(self, master):
+    def __init__(self, rtype, master):
+        self.rtype = rtype
         self.master = master
 
     def get(self, options, kwargs):
@@ -52,6 +56,7 @@ class Endpoint(object):
 
     def startConsuming(self, callback, options, kwargs):
         raise NotImplementedError
+
 
 class BuildNestingMixin(object):
     """
