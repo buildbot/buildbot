@@ -43,6 +43,7 @@ class DataConnector(service.Service):
         'buildbot.data.builds',
         'buildbot.data.steps',
         'buildbot.data.logs',
+        'buildbot.data.logchunks',
         'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',

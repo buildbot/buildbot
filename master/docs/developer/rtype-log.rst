@@ -115,7 +115,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.logs``.
 
-.. py:class:: buildbot.data.steps.LogsResourceType
+.. py:class:: buildbot.data.logs.LogResourceType
 
     .. py:method:: newLog(stepid, name, type)
 
@@ -140,11 +140,3 @@ All update methods are available as attributes of ``master.data.logs``.
 
         Compress the given log, after it is finished.
         This operation may take some time.
-
-    .. py:method:: appendLog(logid, content):
-
-        :param integer logid: the log to which content should be appended
-        :param unicode content: the content to append
-
-        Append the given content to the given log.
-        The content must end with a newline.

@@ -61,56 +61,6 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
                             if dbdict else None)
 
 
-class LogContentEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
-
-    pathPatterns = """
-        /log/n:logid/content
-        /step/n:stepid/log/i:log_name/content
-        /build/n:buildid/step/i:step_name/log/i:log_name/content
-        /build/n:buildid/step/n:step_number/log/i:log_name/content
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_name/content
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_name/content
-    """
-
-    @defer.inlineCallbacks
-    def get(self, options, kwargs):
-        # calculate the logid
-        if 'logid' in kwargs:
-            logid = kwargs['logid']
-            dbdict = None
-        else:
-            stepid = yield self.getStepid(kwargs)
-            if stepid is None:
-                return
-            dbdict = yield self.master.db.logs.getLogByName(stepid,
-                                                kwargs.get('log_name'))
-            if not dbdict:
-                return
-            logid = dbdict['id']
-
-        firstline = options.get('firstline', 0)
-        lastline = options.get('lastline', None)
-
-        # get the number of lines, if necessary
-        if lastline is None:
-            if not dbdict:
-                dbdict = yield self.master.db.logs.getLog(logid)
-            if not dbdict:
-                return
-            lastline = max(0, dbdict['num_lines'] - 1)
-
-        # bounds checks
-        if firstline < 0 or lastline < 0 or firstline > lastline:
-            return
-
-        logLines = yield self.master.db.logs.getLogLines(
-                                logid, firstline, lastline)
-        defer.returnValue({
-            'logid': logid,
-            'firstline': firstline,
-            'content': logLines})
-
-
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     pathPatterns = """
@@ -133,8 +83,8 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsResourceType(base.ResourceType):
 
-    type = "step"
-    endpoints = [ LogEndpoint, LogContentEndpoint, LogsEndpoint ]
+    type = "log"
+    endpoints = [ LogEndpoint, LogsEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
 
     @base.updateMethod
@@ -150,6 +100,3 @@ class LogsResourceType(base.ResourceType):
     def compressLog(self, logid):
         return self.master.db.logs.compressLog(logid=logid)
 
-    @base.updateMethod
-    def appendLog(self, logid, content):
-        return self.master.db.logs.appendLog(logid=logid, content=content)

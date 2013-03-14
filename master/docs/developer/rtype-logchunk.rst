@@ -5,7 +5,7 @@ Logchunks
 
     :attr integer logid: the ID of log containing this chunk
     :attr integer firstline: zero-based line number of the first line in this chunk
-    :attr unicode content: content of the chunk
+    :attr string content: content of the chunk
 
     A logchunk represents a contiguous sequence of lines in a logfile.
     Logs are not individually addressible in the data API; instead, they must be requested by line number range.
@@ -77,4 +77,14 @@ Logchunks
 Update Methods
 --------------
 
-Update methods for log chunks are implemented by the :py:class:`~buildbot.data.steps.LogsResourceType` class.
+All update methods are available as attributes of ``master.data.logchunks``.
+
+.. py:class:: buildbot.data.logchunks.LogChunkResourceType
+
+    .. py:method:: appendLog(logid, content):
+
+        :param integer logid: the log to which content should be appended
+        :param unicode content: the content to append
+
+        Append the given content to the given log.
+        The content must end with a newline.

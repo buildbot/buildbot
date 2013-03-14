@@ -15,8 +15,8 @@ Steps
     :attr integer results: the results of the step (see :ref:`Build-Result-Codes`), or None if not complete
     :attr list state_strings: a list of strings giving progressively more detail on the state of the build.
         The first is usually one word or phrase; the remainder are sized for one-line display.
-    :attr list urls: a list of URLs associated with this step.
-        Each URL is represented by an object with keys ``title`` and ``url``.
+    :attr urls: a list of URLs associated with this step.
+    :type urls: list of strings
     :attr Link link: link for this step
 
     This resource type describes a step in a build.
@@ -76,7 +76,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.steps.StepsResourceType
+.. py:class:: buildbot.data.steps.StepResourceType
 
     .. py:method:: newStep(buildid, name)
 
