@@ -42,14 +42,19 @@ class EndpointMixin(interfaces.InterfaceTests):
 
         # this usually fails when a single-element pathPattern does not have a
         # trailing comma
-        patterns = [ self.ep.pathPattern ] + self.ep.pathPatterns
-        for pp in patterns:
+        pathPatterns = self.ep.pathPatterns.split()
+        for pp in pathPatterns:
+            assert pp.startswith('/') and not pp.endswith('/'), \
+                    "invalid pattern %r" % (pp,)
+        pathPatterns = [ tuple(pp.split('/')[1:])
+                            for pp in pathPatterns ]
+        for pp in pathPatterns:
             if pp is not None:
                 self.assertIsInstance(pp, tuple)
 
         self.pathArgs = [
             set([ arg.split(':', 1)[1] for arg in pp if ':' in arg ])
-            for pp in patterns if pp is not None ]
+            for pp in pathPatterns if pp is not None ]
 
     def tearDownEndpoint(self):
         pass

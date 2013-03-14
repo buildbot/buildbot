@@ -307,7 +307,202 @@ builds
 
         .. note::
 
-            This update is done unconditionally, even if the builds are already finished.
+            This update is done unconditionally, even if the build is already finished.
+
+steps
+~~~~~
+
+.. py:module:: buildbot.db.steps
+
+.. index:: double: Steps; DB Connector Component
+
+.. py:class:: StepsConnectorComponent
+
+    This class handles the steps performed within the context of a build.
+    Within a build, each step has a unique name and a unique, 0-based number.
+
+    An instance of this class is available at ``master.db.steps``.
+
+    .. index:: stepdict, stepid
+
+    Builds are indexed by *stepid* and their contents represented as *stepdicts* (step dictionaries), with the following keys:
+
+    * ``id`` (the step ID, globally unique)
+    * ``number`` (the step number, unique only within the build)
+    * ``name`` (the step name, an 50-character :ref:`identifier <type-identifier>` unique only within the build)
+    * ``buildid`` (the ID of the build containing this step)
+    * ``started_at`` (datetime at which this step began)
+    * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
+    * ``state_strings`` (list of short strings describing the step's state)
+    * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
+    * ``urls`` (list of URLs produced by this step)
+
+    .. py:method:: getStep(stepid)
+
+        :param integer stepid: the step id to retrieve
+        :returns: stepdict via Deferred
+
+        Get a single step by ID.
+
+    .. py:method:: getStepByNumber(buildid, number=None, name=None)
+
+        :param integer buildid: the build from which to get the step
+        :param integer number: the step number
+        :param name: the step name
+        :type name: 50-character :ref:`identifier <type-identifier>`
+        :returns: stepdict via Deferred
+
+        Get a single step within a build by either number or name.
+
+    .. py:method:: getSteps(buildid)
+
+        :param integer buildid: the build from which to get the step
+        :returns: list of stepdicts, sorted by number, via Deferred
+
+        Get all steps in the given build, in order by number.
+
+    .. py:method:: addStep(self, buildid, name, state_strings)
+
+        :param integer buildid: the build to which to add the step
+        :param name: the step name
+        :type name: 50-character :ref:`identifier <type-identifier>`
+        :param list state_strings: the initial state of the step
+        :returns: tuple of step ID, step number, and step name, via Deferred
+
+        Add a new step to a build.
+        The given name will be used if it is unique; otherwise, a unique numerical suffix will be appended.
+
+    .. py:method:: setStepStateStrings(stepid, state_strings):
+
+        :param integer stepid: step ID
+        :param list state_strings: updated state of the step
+        :returns: Deferred
+
+        Update the state strings for the given step.
+
+    .. py:method:: finishStep(stepid, results)
+
+        :param integer stepid: step ID
+        :param integer results: step result
+        :returns: Deferred
+
+        Mark the given step as finished, with ``complete_at`` set to the current time.
+
+        .. note::
+
+            This update is done unconditionally, even if the steps are already finished.
+
+logs
+~~~~
+
+.. py:module:: buildbot.db.logs
+
+.. index:: double: Logs; DB Connector Component
+
+.. py:class:: LogsConnectorComponent
+
+    This class handles log data.
+    Build steps can have zero or more logs.
+    Logs are uniquely identified by name within a step.
+
+    Information about a log, apart from its contents, is represented as a dictionary with the following keys, referred to as a *logdict*:
+
+    * ``id`` (log ID, globally unique)
+    * ``stepid`` (step ID, indicating the containing step)
+    * ``name`` (50-identifier for the log, unique within the step)
+    * ``complete`` (true if the log is complete and will not receive more lines)
+    * ``num_lines`` (number of lines in the log)
+    * ``type`` (log type; see below)
+
+    Each log has a type that describes how to interpret its contents.
+    See the :bb:rtype:`logchunk` resource type for details.
+
+    A log is contains a sequence of newline-separated lines of unicode.
+    Log line numbering is zero-based.
+
+    Each line must be less than 64k when encoded in UTF-8.
+    Longer lines will be truncated, and a warning logged.
+
+    Lines are stored internally in "chunks", and optionally compressed, but the implementation hides these details from callers.
+
+    .. py:method:: getLog(logid)
+
+        :param integer logid: ID of the requested log
+        :returns: logdict via Deferred
+
+        Get a log, identified by logid.
+
+    .. py:method:: getLogByName(stepid, name)
+
+        :param integer stepid: ID of the step containing this log
+        :param name: name of the logfile to retrieve
+        :type name: 50-character identifier
+        :returns: logdict via Deferred
+
+        Get a log, identified by name within the given step.
+
+    .. py:method:: getLogs(stepid)
+
+        :param integer stepid: ID of the step containing the desired logs
+        :returns: list of logdicts via Deferred
+
+        Get all logs within the given step.
+
+    .. py:method:: getLogLines(logid, first_line, last_line)
+
+        :param integer logid: ID of the log
+        :param first_line: first line to return
+        :param last_line: last line to return
+        :returns: see below
+
+        Get a subset of lines for a logfile.
+
+        The return value, via Deferred, is a concatenation of newline-terminated strings.
+        If the requested last line is beyond the end of the logfile, only existing lines will be included.
+        If the log does not exist, or has no associated lines, this method returns an empty string.
+
+    .. py:method:: addLog(stepid, name, type)
+
+        :param integer stepid: ID of the step containing this log
+        :param name: name of the logfile to retrieve
+        :type name: 50-character identifier
+        :param string type: log type (see above)
+        :raises KeyError: if a log by the given name already exists
+        :returns: ID of the new log, via Deferred
+
+        Add a new log file to the given step.
+
+    .. py:method:: appendLog(logid, content)
+
+        :param integer logid: ID of the requested log
+        :param string content: new content to be appended to the log
+        :returns: tuple of first and last line numbers in the new chunk, via Deferred
+
+        Append content to an existing log.
+        The content must end with a newline.
+        If the given log does not exist, the method will silently do nothing.
+
+        It is not safe to call this method more than once simultaneously for the same ``logid``.
+
+    .. py:method:: finishLog(logid)
+
+        :param integer logid: ID of the log to mark complete
+        :returns: Deferred
+
+        Mark a log as complete.
+
+        Note that no checking for completeness is performed when appending to a log.
+        It is up to the caller to avoid further calls to ``appendLog`` after ``finishLog``.
+
+    .. py:method:: compressLog(logid)
+
+        :param integer logid: ID of the log to compress
+        :returns: Deferred
+
+        Compress the given log.
+        This method performs internal optimizations of a log's chunks to reduce the space used and make read operations more efficient.
+        It should only be called for finished logs.
+        This method may take some time to complete.
 
 buildsets
 ~~~~~~~~~

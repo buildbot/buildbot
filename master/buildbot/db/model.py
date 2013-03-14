@@ -108,6 +108,45 @@ class Model(base.DBConnectorComponent):
         sa.Column('results', sa.Integer),
     )
 
+    # steps
+
+    steps = sa.Table('steps', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('number', sa.Integer, nullable=False),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
+        sa.Column('started_at', sa.Integer, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+        # a list of strings describing the step's state
+        sa.Column('state_strings_json', sa.Text, nullable=False),
+        sa.Column('results', sa.Integer),
+        sa.Column('urls_json', sa.Text, nullable=False),
+    )
+
+    # logs
+
+    logs = sa.Table('logs', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
+        sa.Column('complete', sa.SmallInteger, nullable=False),
+        sa.Column('num_lines', sa.Integer, nullable=False),
+        # 's' = stdio, 't' = text, 'h' = html
+        sa.Column('type', sa.String(1), nullable=False),
+    )
+
+    logchunks = sa.Table('logchunks', metadata,
+        sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
+        # 0-based line number range in this chunk (inclusive); note that for
+        # HTML logs, this counts lines of HTML, not lines of rendered output
+        sa.Column('first_line', sa.Integer, nullable=False),
+        sa.Column('last_line', sa.Integer, nullable=False),
+        # log contents, including a terminating newline, encoded in utf-8 or,
+        # if 'compressed' is true, compressed with gzip
+        sa.Column('content', sa.LargeBinary(65536)),
+        sa.Column('compressed', sa.SmallInteger, nullable=False),
+    )
+
     # buildsets
 
     # This table contains input properties for buildsets
@@ -486,8 +525,15 @@ class Model(base.DBConnectorComponent):
             builds.c.slaveid)
     sa.Index('builds_masterid',
             builds.c.masterid)
+    sa.Index('steps_number', steps.c.buildid, steps.c.number,
+            unique=True)
+    sa.Index('steps_name', steps.c.buildid, steps.c.name,
+            unique=True)
+    sa.Index('logs_name', logs.c.stepid, logs.c.name, unique=True)
+    sa.Index('logchunks_firstline', logchunks.c.logid, logchunks.c.first_line)
+    sa.Index('logchunks_lastline', logchunks.c.logid, logchunks.c.last_line)
 
-    # MySQl creates indexes for foreign keys, and these appear in the
+    # MySQL creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
     # expected on this platform
 

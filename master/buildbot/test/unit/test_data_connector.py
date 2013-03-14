@@ -106,7 +106,7 @@ class DataConnector(unittest.TestCase):
         ep = cls(self.master)
         ep.get = mock.Mock(name='MyEndpoint.get')
         ep.get.return_value = defer.succeed(9999)
-        self.data.matcher[('foo', 'i:fooid', 'bar')] = ep
+        self.data.matcher[('foo', 'n:fooid', 'bar')] = ep
         return ep
 
     # tests
@@ -187,18 +187,21 @@ class DataConnector(unittest.TestCase):
 # classes discovered by test_scanModule, above
 
 class TestsEndpoint(base.Endpoint):
-    pathPattern = ('test',)
+    pathPatterns = "/test"
     rootLinkName = 'tests'
 
 class TestsEndpointParentClass(base.Endpoint):
     rootLinkName = 'shouldnt-see-this'
 
 class TestsEndpointSubclass(TestsEndpointParentClass):
-    pathPattern = ('test', 'foo')
+    pathPatterns = "/test/foo"
 
 class TestEndpoint(base.Endpoint):
-    pathPattern = ('test', 'i:testid')
-    pathPatterns = [ ('test', 'i:testid', 'p1'), ('test', 'i:testid', 'p2') ]
+    pathPatterns = """
+        /test/n:testid
+        /test/n:testid/p1
+        /test/n:testid/p2
+    """
 
 class TestResourceType(base.ResourceType):
     type = 'test'

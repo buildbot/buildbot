@@ -84,6 +84,16 @@ class VerifyDict(unittest.TestCase):
                 datetime.datetime(1980, 6, 15, 12, 31, 15), # no timezone
             ])
 
+    def test_IdentifierValidator(self):
+        self.doValidationTest(validation.IdentifierValidator(50),
+            good = [
+                u"linux", u"Linux", u"abc123", u"a" * 50,
+            ], bad = [
+                None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+                u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
+                u"123 no initial digits",
+            ])
+
     def test_NoneOk(self):
         self.doValidationTest(
             validation.NoneOk(validation.BooleanValidator()),

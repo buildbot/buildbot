@@ -73,6 +73,7 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 * Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
   Builds for merged requests currently only refer to one of the merged requests.
 * In the Trigger step, add links from the triggering step to the triggered builds
+* Create builds, steps, logs, and log chunks during execution of a build.
 
 ## Documentation ##
 
@@ -112,6 +113,7 @@ For each resource type, we'll need the following (based on "Adding Resource Type
   Messages should be sent when this occurs.
 * Add support for uids to the change resource type :runner:
 * Consider importing build pickles into the new DB. :runner:
+* Implement compression in log chunks - implement ``compressLog`` to re-split logs into larger chunks and compress them; implement decompression, and handle the csae where chunks overlap during the compression process :runner:
 
 ### Misc Data API Work ###
 
@@ -141,6 +143,8 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
   Same for builds. :runner:
 * Rewrite all message and endpoint names in the Data API documentation to use ``{var}`` instead of ``$var`` :runner:
+* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
+* Steps' URLs should be stored as JSON objects giving both a title and a URL. :runner:
 
 ## Status Rewrites ##
 
@@ -214,6 +218,8 @@ Need to figure out how to do this!
 * Use sa.Text instead of sa.String(LEN), so we have unlimited-length strings.
   Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
   Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
+* Rather than naming builders, build requests should use a foreign key to reference the builders table. :runner:
+* Convert master, builder, and scheduler names to identifiers, removing use of hashes :runner:
 
 ### Documentation ###
 

@@ -188,6 +188,54 @@ class FakeUpdates(object):
                 validation.IntValidator())
         return defer.succeed(None)
 
+    def newStep(self, buildid, name):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name,
+                validation.IdentifierValidator(50))
+        return defer.succeed((10, 1))
+
+    def setStepStateStrings(self, stepid, state_strings):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                validation.IntValidator())
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        return defer.succeed(None)
+
+    def finishStep(self, stepid, results):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'results', results,
+                validation.IntValidator())
+        return defer.succeed(None)
+
+    def newLog(self, stepid, name, type):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name,
+                validation.IdentifierValidator(50))
+        validation.verifyType(self.testcase, 'type', type,
+                validation.IdentifierValidator(1))
+        return defer.succeed(10)
+
+    def finishLog(self, logid):
+        validation.verifyType(self.testcase, 'logid', logid,
+                validation.IntValidator())
+        return defer.succeed(None)
+
+    def compressLog(self, logid):
+        validation.verifyType(self.testcase, 'logid', logid,
+                validation.IntValidator())
+        return defer.succeed(None)
+
+    def appendLog(self, logid, content):
+        validation.verifyType(self.testcase, 'logid', logid,
+                validation.IntValidator())
+        validation.verifyType(self.testcase, 'content', content,
+                validation.StringValidator())
+        self.testcase.assertEqual(content[-1], u'\n')
+        return defer.succeed(None)
+
 
 class FakeDataConnector(object) :
     # FakeDataConnector delegates to the real DataConnector so it can get all

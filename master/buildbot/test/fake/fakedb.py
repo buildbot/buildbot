@@ -372,6 +372,49 @@ class Build(Row):
     id_column = 'id'
     required_columns = ( 'buildrequestid', 'masterid' ) # slaveid omitted temporarily
 
+class Step(Row):
+    table = "steps"
+
+    defaults = dict(
+        id = None,
+        number = 29,
+        name = 'step29',
+        buildid = None,
+        started_at = 1304262222,
+        complete_at = None,
+        state_strings_json = '[]',
+        results = None,
+        urls_json = '[]')
+
+    id_column = 'id'
+    required_columns = ( 'buildid', )
+
+class Log(Row):
+    table = "logs"
+
+    defaults = dict(
+        id = None,
+        name = 'step29',
+        stepid = None,
+        complete = 0,
+        num_lines = 0,
+        type = 's')
+
+    id_column = 'id'
+    required_columns = ( 'stepid', )
+
+class LogChunk(Row):
+    table = "logchunks"
+
+    defaults = dict(
+        logid = None,
+        first_line = 0,
+        last_line = 0,
+        content = u'',
+        compressed = 0)
+
+    required_columns = ( 'logid', )
+
 class Master(Row):
     table = "masters"
 
@@ -1287,6 +1330,207 @@ class FakeBuildsComponent(FakeDBComponent):
             b['results'] = results
         return defer.succeed(None)
 
+
+class FakeStepsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.steps = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Step):
+                self.steps[row.id] = row.values.copy()
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.steps:
+            id += 1
+        return id
+
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            buildid=row['buildid'],
+            number=row['number'],
+            name=row['name'],
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
+            state_strings=json.loads(row['state_strings_json']),
+            results=row['results'],
+            urls=json.loads(row['urls_json']))
+
+    def getStep(self, stepid):
+        row = self.steps.get(stepid)
+        if not row:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getStepByBuild(self, buildid, number=None, name=None):
+        if number is None and name is None:
+            return defer.fail(RuntimeError("specify both name and number"))
+        for row in self.steps.itervalues():
+            if row['buildid'] != buildid:
+                continue
+            if number is not None and row['number'] != number:
+                continue
+            if name is not None and row['name'] != name:
+                continue
+            return defer.succeed(self._row2dict(row))
+        return defer.succeed(None)
+
+    def getSteps(self, buildid):
+        ret = []
+
+        for row in self.steps.itervalues():
+            if row['buildid'] != buildid:
+                continue
+            ret.append(self._row2dict(row))
+
+        ret.sort(key = lambda r : r['number'])
+        return defer.succeed(ret)
+
+    def addStep(self, buildid, name, state_strings, _reactor=reactor):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        validation.verifyType(self.t, 'name', name,
+                validation.IdentifierValidator(50))
+        # get a unique name and number
+        build_steps = [r for r in self.steps.itervalues()
+                       if r['buildid'] == buildid]
+        if build_steps:
+            number = max([r['number'] for r in build_steps]) + 1
+            names = set([r['name'] for r in build_steps])
+            if name in names:
+                i = 1
+                while '%s_%d' % (name, i) in names:
+                    i += 1
+                name = '%s_%d' % (name, i)
+        else:
+            number = 0
+
+        id = self._newId()
+        self.steps[id] = {
+            'id': id,
+            'buildid': buildid,
+            'number': number,
+            'name': name,
+            'started_at': _reactor.seconds(),
+            'complete_at': None,
+            'results': None,
+            'state_strings_json': json.dumps(state_strings),
+            'urls_json': '[]'}
+
+        return defer.succeed((id, number, name))
+
+    def setStepStateStrings(self, stepid, state_strings):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        b = self.steps.get(stepid)
+        if b:
+            b['state_strings_json'] = json.dumps(state_strings)
+        return defer.succeed(None)
+
+    def finishStep(self, stepid, results, _reactor=reactor):
+        now = _reactor.seconds()
+        b = self.steps.get(stepid)
+        if b:
+            b['complete_at'] = now
+            b['results'] = results
+        return defer.succeed(None)
+
+class FakeLogsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.logs = {}
+        self.log_lines = {} # { logid : [ lines ] }
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Log):
+                self.logs[row.id] = row.values.copy()
+        for row in rows:
+            if isinstance(row, LogChunk):
+                lines = self.log_lines.setdefault(row.logid, [])
+                # make sure there are enough slots in the list
+                if len(lines) < row.last_line + 1:
+                    lines.append([None] * (row.last_line + 1 - len(lines)))
+                lines[row.first_line:row.last_line+1] = row.content.split('\n')
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.logs:
+            id += 1
+        return id
+
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            stepid=row['stepid'],
+            name=row['name'],
+            complete=bool(row['complete']),
+            num_lines=row['num_lines'],
+            type=row['type'])
+
+    def getLog(self, logid):
+        row = self.logs.get(logid)
+        if not row:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getLogByName(self, stepid, name):
+        row = None
+        for row in self.logs.itervalues():
+            if row['name'] == name and row['stepid'] == stepid:
+                break
+        else:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getLogs(self, stepid):
+        return defer.succeed([
+                 self._row2dict(row)
+                 for row in self.logs.itervalues()
+                 if row['stepid'] == stepid ])
+
+    def getLogLines(self, logid, first_line, last_line):
+        if logid not in self.logs or first_line > last_line:
+            return defer.succeed('')
+        lines = self.log_lines.get(logid, [])
+        rv = '\n'.join(lines[first_line:last_line+1])
+        return defer.succeed(rv + u'\n' if rv else u'')
+
+    def addLog(self, stepid, name, type):
+        id = self._newId()
+        self.logs[id] = dict(id=id, stepid=stepid,
+                name=name, type=type, complete=0,
+                num_lines=0)
+        return defer.succeed(id)
+
+    def appendLog(self, logid, content):
+        validation.verifyType(self.t, 'logid', logid,
+                validation.IntValidator())
+        validation.verifyType(self.t, 'content', content,
+                validation.StringValidator())
+        self.t.assertEqual(content[-1], u'\n')
+        content = content[:-1].split('\n')
+        lines = self.log_lines[logid]
+        lines.extend(content)
+        num_lines = self.logs[logid]['num_lines'] = len(lines)
+        return defer.succeed((num_lines-len(content), num_lines-1))
+
+    def finishLog(self, logid):
+        if id in self.logs:
+            self.logs['id'].complete = 1
+        return defer.succeed(None)
+
+    def compressLog(self, logid):
+        return defer.succeed(None)
+
+
 class FakeUsersComponent(FakeDBComponent):
 
     def setUp(self):
@@ -1547,6 +1791,10 @@ class FakeDBConnector(object):
         self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
+        self._components.append(comp)
+        self.steps = comp = FakeStepsComponent(self, testcase)
+        self._components.append(comp)
+        self.logs = comp = FakeLogsComponent(self, testcase)
         self._components.append(comp)
         self.users = comp = FakeUsersComponent(self, testcase)
         self._components.append(comp)

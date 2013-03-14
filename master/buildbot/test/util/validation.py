@@ -569,6 +569,90 @@ dbdict['builddict'] = DictValidator(
     results=NoneOk(IntValidator()),
 )
 
+# steps
+
+_step = dict(
+    stepid=IntValidator(),
+    number=IntValidator(),
+    name=IdentifierValidator(50),
+    buildid=IntValidator(),
+    started_at=IntValidator(),
+    complete=BooleanValidator(),
+    complete_at=NoneOk(IntValidator()),
+    state_strings=ListValidator(StringValidator()),
+    results=NoneOk(IntValidator()),
+    urls=ListValidator(StringValidator()),
+)
+_stepKeyFields = ['buildid', 'stepid']
+_stepEvents = ['new', 'complete']
+
+data['step'] = Selector()
+data['step'].add(None,
+    DictValidator(
+        build_link=LinkValidator(),
+        link=LinkValidator(),
+        **_step
+))
+
+message['step'] = Selector()
+message['step'].add(None,
+    MessageValidator(
+        keyFields=_stepKeyFields,
+        events=_stepEvents,
+        messageValidator=DictValidator(
+            **_step
+)))
+
+dbdict['stepdict'] = DictValidator(
+    id=IntValidator(),
+    number=IntValidator(),
+    name=IdentifierValidator(50),
+    buildid=IntValidator(),
+    started_at=DateTimeValidator(),
+    complete_at=NoneOk(DateTimeValidator()),
+    state_strings=ListValidator(StringValidator()),
+    results=NoneOk(IntValidator()),
+    urls=ListValidator(StringValidator()),
+)
+
+# logs
+
+_log = dict(
+    logid=IntValidator(),
+    name=IdentifierValidator(50),
+    stepid=IntValidator(),
+    complete=BooleanValidator(),
+    num_lines=IntValidator(),
+    type=IdentifierValidator(1))
+_logKeyFields = ['stepid', 'logid']
+_logEvents = ['new', 'complete', 'appended']
+
+data['log'] = Selector()
+data['log'].add(None,
+    DictValidator(
+        step_link=LinkValidator(),
+        link=LinkValidator(),
+        **_log))
+
+# message['log']
+
+dbdict['logdict'] = DictValidator(
+    id=IntValidator(),
+    stepid=IntValidator(),
+    name=IdentifierValidator(50),
+    complete=BooleanValidator(),
+    num_lines=IntValidator(),
+    type=IdentifierValidator(1))
+
+
+data['logchunk'] = Selector()
+data['logchunk'].add(None,
+    DictValidator(
+        logid=IntValidator(),
+        firstline=IntValidator(),
+        content=StringValidator())
+)
+
 # external functions
 
 def _verify(testcase, validator, name, object):

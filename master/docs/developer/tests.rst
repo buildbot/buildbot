@@ -220,6 +220,7 @@ A few classes deserve special mention:
 
  * ``NoneOk`` wraps another validator, allowing the object to be None.
  * ``Any`` will match any object without error.
+ * ``IdentifierValidator`` will match identifiers; see :ref:`identifier <type-identifier>`.
  * ``DictValidator`` takes key names as keyword arguments, with the values giving validators for each key.
    The ``optionalNames`` argument is a list of keys which may be omitted without error.
  * ``SourcedPropertiesValidator`` matches dictionaries with (value, source) keys, the representation used for properties in the data API.

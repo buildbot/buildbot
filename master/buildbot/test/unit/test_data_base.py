@@ -64,7 +64,9 @@ class ResourceType(unittest.TestCase):
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     class MyEndpoint(base.Endpoint):
-        pathPattern = ( 'my', 'pattern' )
+        pathPatterns = """
+            /my/pattern
+        """
 
     endpointClass = MyEndpoint
 

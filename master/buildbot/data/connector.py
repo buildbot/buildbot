@@ -41,6 +41,9 @@ class DataConnector(service.Service):
     submodules = [
         'buildbot.data.builders',
         'buildbot.data.builds',
+        'buildbot.data.steps',
+        'buildbot.data.logs',
+        'buildbot.data.logchunks',
         'buildbot.data.buildsets',
         'buildbot.data.changes',
         'buildbot.data.masters',
@@ -73,16 +76,19 @@ class DataConnector(service.Service):
                 for ep in rtype.getEndpoints():
                     # don't use inherited values for these parameters
                     clsdict = ep.__class__.__dict__
-                    pathPattern = clsdict.get('pathPattern')
-                    pathPatterns = clsdict.get('pathPatterns', [])
-                    patterns = [ pathPattern ] if pathPattern else []
-                    patterns.extend(pathPatterns)
-                    rootLinkName = clsdict.get('rootLinkName')
-                    for pp in patterns:
+                    pathPatterns = clsdict.get('pathPatterns', '')
+                    pathPatterns = pathPatterns.split()
+                    for pp in pathPatterns:
+                        assert pp.startswith('/') and not pp.endswith('/'), \
+                                "invalid pattern %r" % (pp,)
+                    pathPatterns = [ tuple(pp.split('/')[1:])
+                                     for pp in pathPatterns ]
+                    for pp in pathPatterns:
                         if pp is not None:
                             self.matcher[pp] = ep
+                    rootLinkName = clsdict.get('rootLinkName')
                     if rootLinkName:
-                        link = base.Link(patterns[0])
+                        link = base.Link(pathPatterns[0])
                         self.rootLinks[rootLinkName] = link
 
     def _setup(self):

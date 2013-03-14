@@ -35,10 +35,10 @@ class Db2DataMixin(object):
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'scheduler', 'i:schedulerid' ),
-        ( 'master', 'i:masterid', 'scheduler', 'i:schedulerid' ),
-    ]
+    pathPatterns = """
+        /scheduler/n:schedulerid
+        /master/n:masterid/scheduler/n:schedulerid
+    """
 
     @defer.inlineCallbacks
     def get(self, options, kwargs):
@@ -53,10 +53,10 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
-    pathPatterns = [
-        ( 'scheduler', ),
-        ( 'master', 'i:masterid', 'scheduler', ),
-    ]
+    pathPatterns = """
+        /scheduler
+        /master/n:masterid/scheduler
+    """
     rootLinkName = 'schedulers'
 
     @defer.inlineCallbacks
