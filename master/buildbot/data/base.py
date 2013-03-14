@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import UserList
 from buildbot.data import exceptions
 from twisted.internet import defer
 
@@ -95,6 +96,42 @@ class BuildNestingMixin(object):
             defer.returnValue(dbdict['id'])
 
 
+class ListResult(UserList.UserList):
+
+    __slots__ = [ 'offset', 'total', 'limit']
+
+    # if set, this is the index in the overall results of the first element of
+    # this list
+    offset = None
+
+    # if set, this is the total number of results
+    total = None
+
+    # if set, this is the limit, either from the user or the implementation
+    limit = None
+
+    def __init__(self, values,
+            offset=None, total=None, limit=None):
+        UserList.UserList.__init__(self, values)
+        self.offset = offset
+        self.total = total
+        self.limit = limit
+
+    def __repr__(self):
+        return "ListResult(%r, offset=%r, total=%r, limit=%r)" % \
+                (self.data, self.offset, self.total, self.limit)
+
+    def __eq__(self, other):
+        if isinstance(other, ListResult):
+            return list(self) == other \
+                and self.offset == other.offset \
+                and self.total == other.total \
+                and self.limit == other.limit
+        else:
+            return list(self) == other
+
+
+# TODO: cruft
 class GetParamsCheckMixin(object):
     """ a mixin for making generic paramater checks for the get data api"""
     maximumCount = 0
@@ -117,6 +154,7 @@ class GetParamsCheckMixin(object):
     def safeGet(self, options, kwargs):
         raise NotImplementedError
 
+# TODO: cruft
 class ControlParamsCheckMixin(object):
     """ a mixin for making generic paramater checks for the control data api"""
     action_specs = {}
