@@ -42,6 +42,7 @@ def user(config):
 
     uc = usersclient.UsersClient(master, username, passwd, port)
     output = yield uc.send(op, bb_username, bb_password, ids, info)
-    print output
+    if output:
+        print output
 
     defer.returnValue(0)
