@@ -290,19 +290,20 @@ See that module's description for details.
 
 .. py:class:: Endpoint
 
-    .. py:attribute:: pathPattern
-
-        :type: tuple
-
-        The path pattern which incoming paths must match to select this endpoint.
-
     .. py:attribute:: pathPatterns
 
-        :type: list of tuples
+        :type: string
 
-        List of path patterns which incoming paths must match to select this endpoint.
-        This is useful where the same endpoint class services multiple paths.
-        If specified, ``pathPattern`` is prepended to this list.
+        This attribute defines the path patterns which incoming paths must match to select this endpoint.
+        Paths are specified as URIs, and can contain variables as parsed by :py:class:`buildbot.util.pathmatch.Matcher`.
+        Multiple paths are separated by whitespace.
+
+        For example, the following specifies two paths with the second having a single variable::
+
+            pathPatterns = """
+                /bugs
+                /component/i:component_name/bugs
+            """
 
     .. py:attribute:: rootLinkName
 

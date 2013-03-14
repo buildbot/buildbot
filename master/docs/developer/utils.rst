@@ -538,15 +538,22 @@ buildbot.util.pathmatch
     This class implements the path-matching algorithm used by the data API.
 
     Patterns are tuples of strings, with strings beginning with a colon (``:``) denoting variables.
-    A tuple of strings matches a pattern if the lengths are identical, and if every non-variable pattern element matches exactly.
+    A character can precede the colon to indicate the variable type:
+
+        * ``i`` specifies an identifier (:ref:`identifier <type-identifier>`).
+        * ``n`` specifies a number (parseable by ``int``).
+
+    A tuple of strings matches a pattern if the lengths are identical, every variable matches and has the correct type, and every non-variable pattern element matches exactly.
 
     A matcher object takes patterns using dictionary-assignment syntax::
 
-        matcher[('change', ':changeid')] = Change()
+        ep = ChangeEndpoint()
+        matcher[('change', 'n:changeid')] = ep
 
     and performs matching using the dictionary-lookup syntax::
 
         changeEndpoint, kwargs = matcher[('change', '13')]
+        # -> (ep, {'changeid': 13})
 
     where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
 
