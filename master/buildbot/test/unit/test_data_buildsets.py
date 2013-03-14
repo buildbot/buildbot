@@ -18,16 +18,17 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot import interfaces
 from buildbot.data import buildsets
-from buildbot.test.util import validation, endpoint, interfaces as util_interfaces
+from buildbot.test.util import endpoint, interfaces as util_interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.status.results import SUCCESS, FAILURE
 
 A_TIMESTAMP = 1341700729
 EARLIER = 1248529376
 
-class Buildset(endpoint.EndpointMixin, unittest.TestCase):
+class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = buildsets.BuildsetEndpoint
+    resourceTypeClass = buildsets.Buildset
 
     def setUp(self):
         self.setUpEndpoint()
@@ -48,7 +49,7 @@ class Buildset(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(bsid=13))
         @d.addCallback
         def check(buildset):
-            validation.verifyData(self, 'buildset', {}, buildset)
+            self.validateData(buildset)
             self.assertEqual(buildset['reason'], 'because I said so')
         return d
 
@@ -56,7 +57,7 @@ class Buildset(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(bsid=14))
         @d.addCallback
         def check(buildset):
-            validation.verifyData(self, 'buildset', {}, buildset)
+            self.validateData(buildset)
             self.assertEqual(buildset['sourcestamps'], [])
         return d
 
@@ -72,9 +73,10 @@ class Buildset(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('buildset', '13', 'complete'))
 
 
-class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
+class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = buildsets.BuildsetsEndpoint
+    resourceTypeClass = buildsets.Buildset
 
     def setUp(self):
         self.setUpEndpoint()
@@ -94,9 +96,9 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(buildsets):
-            validation.verifyData(self, 'buildset', {}, buildsets[0])
+            self.validateData(buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 13)
-            validation.verifyData(self, 'buildset', {}, buildsets[1])
+            self.validateData(buildsets[1])
             self.assertEqual(buildsets[1]['bsid'], 14)
         return d
 
@@ -105,7 +107,7 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)
-            validation.verifyData(self, 'buildset', {}, buildsets[0])
+            self.validateData(buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 13)
         return d
 
@@ -114,7 +116,7 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(buildsets):
             self.assertEqual(len(buildsets), 1)
-            validation.verifyData(self, 'buildset', {}, buildsets[0])
+            self.validateData(buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 14)
         return d
 
@@ -124,12 +126,12 @@ class Buildsets(endpoint.EndpointMixin, unittest.TestCase):
 
 
 
-class BuildsetResourceType(util_interfaces.InterfaceTests, unittest.TestCase):
+class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = buildsets.BuildsetResourceType(self.master)
+        self.rtype = buildsets.Buildset(self.master)
         return self.master.db.insertTestData([
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
                         project='pr', repository='rep', revision='rev',

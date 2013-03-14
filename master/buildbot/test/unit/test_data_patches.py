@@ -13,21 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data import base, types
+from twisted.trial import unittest
+from buildbot.data import patches
+from buildbot.test.fake import fakemaster
 
-class RootEndpoint(base.Endpoint):
-    pathPatterns = "/"
+class Patch(unittest.TestCase):
 
-    def get(self, options, kwargs):
-        return defer.succeed(self.master.data.rootLinks)
+    def setUp(self):
+        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+                                            wantData=True, testcase=self)
+        self.rtype = patches.Patch(self.master)
 
-
-class Root(base.ResourceType):
-    name = "rootlink"
-    endpoints = [ RootEndpoint ]
-
-    class EntityType(types.Entity):
-        name = types.String()
-        link = types.Link()
-    entityType = EntityType(name)
+    # no update methods -> nothing to test

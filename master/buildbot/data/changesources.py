@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, masters
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
 class Db2DataMixin(object):
@@ -74,11 +74,18 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
                 ('changesource', None, None))
 
 
-class ChangeSourceResourceType(base.ResourceType):
+class ChangeSource(base.ResourceType):
 
-    type = "changesource"
+    name = "changesource"
     endpoints = [ ChangeSourceEndpoint, ChangeSourcesEndpoint ]
     keyFields = [ 'changesourceid' ]
+
+    class EntityType(types.Entity):
+        changesourceid = types.Integer()
+        name = types.String()
+        master = types.NoneOk(masters.Master.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def findChangeSourceId(self, name):

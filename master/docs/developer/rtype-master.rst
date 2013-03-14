@@ -5,7 +5,8 @@ Masters
 
     :attr integer masterid: the ID of this master
     :attr unicode name: master name (in the form "hostname:basedir")
-    :attr unicode state: master state, either 'started' or 'stopped'
+    :attr boolean active: true if the master is active
+    :attr timestamp last_active: time this master was last marked active
 
     This resource type describes buildmasters in the buildmaster cluster.
 
@@ -49,7 +50,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.changes.MasterResourceType
+.. py:class:: buildbot.data.masters.MasterResourceType
 
     .. py:method:: masterActive(name, masterid)
 

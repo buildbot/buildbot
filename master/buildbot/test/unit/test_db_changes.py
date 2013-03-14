@@ -130,6 +130,7 @@ class Tests(interfaces.InterfaceTests):
                 'patch_comment': None,
                 'patch_level': None,
                 'patch_subdir': None,
+                'patchid': None,
                 'project': u'proj',
                 'repository': u'repo://',
                 'revision': u'2d6caa52',

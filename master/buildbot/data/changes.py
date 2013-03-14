@@ -16,7 +16,7 @@
 import copy
 from twisted.internet import defer, reactor
 from twisted.python import log
-from buildbot.data import base
+from buildbot.data import base, types, sourcestamps
 from buildbot.process import metrics
 from buildbot.process.users import users
 from buildbot.util import datetime2epoch, epoch2datetime
@@ -68,11 +68,29 @@ class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
                 ('change', None, 'new'))
 
 
-class ChangeResourceType(base.ResourceType):
+class Change(base.ResourceType):
 
-    type = "change"
+    name = "change"
     endpoints = [ ChangeEndpoint, ChangesEndpoint ]
     keyFields = [ 'changeid' ]
+
+    class EntityType(types.Entity):
+        changeid = types.Integer()
+        author = types.String()
+        files = types.List(of=types.String())
+        comments = types.String()
+        revision = types.NoneOk(types.String())
+        when_timestamp  = types.Integer()
+        branch = types.NoneOk(types.String())
+        category = types.NoneOk(types.String())
+        revlink = types.NoneOk(types.String())
+        properties = types.SourcedProperties()
+        repository = types.String()
+        project = types.String()
+        codebase = types.String()
+        sourcestamp = sourcestamps.SourceStamp.entityType
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -117,7 +135,7 @@ class ChangeResourceType(base.ResourceType):
         else:
             codebase = codebase or u''
 
-        # add the Change to the database 
+        # add the Change to the database
         changeid = yield self.master.db.changes.addChange(
             author=author,
             files=files,

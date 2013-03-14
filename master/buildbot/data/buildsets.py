@@ -18,7 +18,7 @@ from twisted.python import log
 from twisted.internet import defer, reactor
 from buildbot.util import datetime2epoch, epoch2datetime
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.data import base
+from buildbot.data import base, types, sourcestamps
 
 class Db2DataMixin(object):
 
@@ -90,11 +90,24 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
                 ('buildset', None, 'new'))
 
 
-class BuildsetResourceType(base.ResourceType):
+class Buildset(base.ResourceType):
 
-    type = "buildset"
+    name = "buildset"
     endpoints = [ BuildsetEndpoint, BuildsetsEndpoint ]
     keyFields = [ 'bsid' ]
+
+    class EntityType(types.Entity):
+        bsid = types.Integer()
+        external_idstring = types.NoneOk(types.String())
+        reason = types.String()
+        submitted_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer())
+        results = types.NoneOk(types.Integer())
+        sourcestamps = types.List(
+                of=sourcestamps.SourceStamp.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

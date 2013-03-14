@@ -49,7 +49,7 @@ class DataConnector(service.Service):
         self.master = master
 
         self.matcher = pathmatch.Matcher()
-        self.rootLinks = {} # links from the root of the API
+        self.rootLinks = [] # links from the root of the API
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):
@@ -57,7 +57,7 @@ class DataConnector(service.Service):
             obj = getattr(mod, sym)
             if inspect.isclass(obj) and issubclass(obj, base.ResourceType):
                 rtype = obj(self.master)
-                setattr(self.rtypes, rtype.type, rtype)
+                setattr(self.rtypes, rtype.name, rtype)
 
                 # put its update methonds into our 'updates' attribute
                 for name in dir(rtype):
@@ -71,9 +71,6 @@ class DataConnector(service.Service):
                     clsdict = ep.__class__.__dict__
                     pathPatterns = clsdict.get('pathPatterns', '')
                     pathPatterns = pathPatterns.split()
-                    for pp in pathPatterns:
-                        assert pp.startswith('/') and not pp.endswith('/'), \
-                                "invalid pattern %r" % (pp,)
                     pathPatterns = [ tuple(pp.split('/')[1:])
                                      for pp in pathPatterns ]
                     for pp in pathPatterns:
@@ -82,7 +79,8 @@ class DataConnector(service.Service):
                     rootLinkName = clsdict.get('rootLinkName')
                     if rootLinkName:
                         link = base.Link(pathPatterns[0])
-                        self.rootLinks[rootLinkName] = link
+                        self.rootLinks.append({'name': rootLinkName,
+                                               'link': link})
 
     def _setup(self):
         self.updates = Updates()

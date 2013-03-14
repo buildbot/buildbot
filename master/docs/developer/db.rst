@@ -965,6 +965,7 @@ sourcestamps
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
       which case this is a relative source stamp)
+    * ``patchid`` (ID of the patch)
     * ``patch_body`` (body of the patch, or ``None``)
     * ``patch_level`` (directory stripping level of the patch, or ``None``)
     * ``patch_subdir`` (subdirectory in which to apply the patch, or ``None``)
@@ -1540,6 +1541,14 @@ You will also want to add an in-memory implementation of the methods to the
 fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
 is tested using these fake implementations in order to isolate that code from
 the database code.
+
+The keys and types used in the return value from a connector's ``get`` methods are described in :bb:src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
+This is a dictionary of ``DictValidator`` objects, one for each return value.
+
+These values are used within test methods like this::
+
+    rv = yield self.db.masters.getMaster(7)
+    validation.verifyDbDict(self, 'masterdict', rv)
 
 .. _Modifying-the-Database-Schema:
 

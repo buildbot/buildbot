@@ -17,12 +17,13 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builders
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class Builder(endpoint.EndpointMixin, unittest.TestCase):
+class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builders.BuilderEndpoint
+    resourceTypeClass = builders.Builder
 
     def setUp(self):
         self.setUpEndpoint()
@@ -40,7 +41,7 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(builderid=2))
         @d.addCallback
         def check(builder):
-            validation.verifyData(self, 'builder', {}, builder)
+            self.validateData(builder)
             self.assertEqual(builder['name'], u'builderb')
         return d
 
@@ -55,7 +56,7 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=13, builderid=2))
         @d.addCallback
         def check(builder):
-            validation.verifyData(self, 'builder', {}, builder)
+            self.validateData(builder)
             self.assertEqual(builder['name'], u'builderb')
         return d
 
@@ -74,9 +75,10 @@ class Builder(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
-class Builders(endpoint.EndpointMixin, unittest.TestCase):
+class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builders.BuildersEndpoint
+    resourceTypeClass = builders.Builder
 
     def setUp(self):
         self.setUpEndpoint()
@@ -96,7 +98,7 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(builders):
-            [ validation.verifyData(self, 'builder', {}, b) for b in builders ]
+            [ self.validateData(b) for b in builders ]
             self.assertEqual(sorted([b['builderid'] for b in builders]),
                              [1, 2])
         return d
@@ -105,7 +107,7 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=13))
         @d.addCallback
         def check(builders):
-            [ validation.verifyData(self, 'builder', {}, b) for b in builders ]
+            [ self.validateData(b) for b in builders ]
             self.assertEqual(sorted([b['builderid'] for b in builders]),
                              [2])
         return d
@@ -123,12 +125,12 @@ class Builders(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('builder', None, None))
 
 
-class BuilderResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Builder(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = builders.BuildersResourceType(self.master)
+        self.rtype = builders.Builder(self.master)
         return self.master.db.insertTestData([
             fakedb.Master(id=13),
             fakedb.Master(id=14),

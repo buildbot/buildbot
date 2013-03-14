@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer, reactor
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch, epoch2datetime
 
 # time, in minutes, after which a master that hasn't checked in will be
@@ -76,11 +76,19 @@ class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
                 ('master', None, None))
 
 
-class MasterResourceType(base.ResourceType):
+class Master(base.ResourceType):
 
-    type = "master"
+    name = "master"
     endpoints = [ MasterEndpoint, MastersEndpoint ]
     keyFields = [ 'masterid' ]
+
+    class EntityType(types.Entity):
+        masterid = types.Integer()
+        name = types.String()
+        active = types.Boolean()
+        last_active = types.Integer()
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

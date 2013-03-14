@@ -55,6 +55,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(ssdict, {
             'branch': u'production',
             'codebase': u'cb',
+            'patchid': None,
             'patch_author': None,
             'patch_body': None,
             'patch_comment': None,
@@ -110,6 +111,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(ssdict, {
             'branch': u'production',
             'codebase': u'cb',
+            'patchid': 1,
             'patch_author': 'me',
             'patch_body': 'my patch',
             'patch_comment': 'comment',
@@ -140,6 +142,7 @@ class Tests(interfaces.InterfaceTests):
                 'repository': 'rep',
                 'codebase':  'cb',
                 'project': 'prj',
+                'patchid': None,
                 'patch_body': None,
                 'patch_level': None,
                 'patch_subdir': None, 
@@ -212,6 +215,7 @@ class Tests(interfaces.InterfaceTests):
                     'branch': u'b',
                     'codebase': u'c',
                     'patch_author': u'bar',
+                    'patchid': 99,
                     'patch_body': 'hello, world',
                     'patch_comment': u'foo',
                     'patch_level': 3,
@@ -224,6 +228,7 @@ class Tests(interfaces.InterfaceTests):
                 }, {
                     'branch': u'b2',
                     'codebase': u'c2',
+                    'patchid': None,
                     'patch_author': None,
                     'patch_body': None,
                     'patch_comment': None,

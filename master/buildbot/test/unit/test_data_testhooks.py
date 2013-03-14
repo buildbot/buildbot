@@ -23,9 +23,10 @@ class DummyScenario(testhooks.TestHooksScenario):
     def dummy(self):
         pass
 
-class TestHooks(endpoint.EndpointMixin, unittest.TestCase):
+class TestHooksEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = testhooks.TestHooksEndpoint
+    resourceTypeClass = testhooks.TestHooks
 
     def setUp(self):
         self.setUpEndpoint()

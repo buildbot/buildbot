@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class BuilderEndpoint(base.Endpoint):
 
@@ -63,13 +63,17 @@ class BuildersEndpoint(base.Endpoint):
                 ('builder', None, None))
 
 
-class BuildersResourceType(base.ResourceType):
+class Builder(base.ResourceType):
 
-    type = "builder"
-    endpoints = [
-        BuilderEndpoint, BuildersEndpoint,
-    ]
+    name = "builder"
+    endpoints = [ BuilderEndpoint, BuildersEndpoint ]
     keyFields = [ 'builderid' ]
+
+    class EntityType(types.Entity):
+        builderid = types.Integer()
+        name = types.String()
+        link = types.Link()
+    entityType = EntityType(name)
 
     def __init__(self, master):
         base.ResourceType.__init__(self, master)

@@ -16,7 +16,7 @@
 import mock
 from twisted.internet import defer
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import interfaces
+from buildbot.test.util import interfaces, validation
 
 class EndpointMixin(interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
@@ -24,8 +24,8 @@ class EndpointMixin(interfaces.InterfaceTests):
     # class being tested
     endpointClass = None
 
-    # if necessary, the corresponding resource type - this will
-    # be instantiated at self.data.rtypes[rtype.type] and self.rtype
+    # the corresponding resource type - this will be instantiated at
+    # self.data.rtypes[rtype.type] and self.rtype
     resourceTypeClass = None
 
     def setUpEndpoint(self):
@@ -35,11 +35,8 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.mq = self.master.mq
         self.data = self.master.data
 
-        if self.resourceTypeClass:
-            rtype = self.rtype = self.resourceTypeClass(self.master)
-            self.data.rtypes = { rtype.type : rtype }
-        else:
-            rtype = None
+        rtype = self.rtype = self.resourceTypeClass(self.master)
+        setattr(self.data.rtypes, rtype.name, rtype)
 
         self.ep = self.endpointClass(rtype, self.master)
 
@@ -47,8 +44,10 @@ class EndpointMixin(interfaces.InterfaceTests):
         # trailing comma
         pathPatterns = self.ep.pathPatterns.split()
         for pp in pathPatterns:
-            assert pp.startswith('/') and not pp.endswith('/'), \
-                    "invalid pattern %r" % (pp,)
+            if pp == '/':
+                continue
+            if not pp.startswith('/') or pp.endswith('/'):
+                raise AssertionError("invalid pattern %r" % (pp,))
         pathPatterns = [ tuple(pp.split('/')[1:])
                             for pp in pathPatterns ]
         for pp in pathPatterns:
@@ -61,6 +60,9 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     def tearDownEndpoint(self):
         pass
+
+    def validateData(self, object):
+        validation.verifyData(self, self.rtype.entityType, {}, object)
 
     # call methods, with extra checks
 

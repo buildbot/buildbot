@@ -19,7 +19,7 @@ from twisted.internet import defer
 from twisted.python import reflect
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
-from buildbot.data import connector, base
+from buildbot.data import connector, base, types
 
 class Tests(interfaces.InterfaceTests):
 
@@ -138,8 +138,8 @@ class DataConnector(unittest.TestCase):
         self.assertEqual(self.data.updates.testUpdate(), "testUpdate return")
 
         # and that it added the single root link
-        self.assertEqual(self.data.rootLinks.items(),
-                [ ('tests', base.Link(('test',))) ])
+        self.assertEqual(self.data.rootLinks,
+                [ {'name': 'tests', 'link': base.Link(('test',))} ])
 
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)
@@ -204,9 +204,13 @@ class TestEndpoint(base.Endpoint):
     """
 
 class TestResourceType(base.ResourceType):
-    type = 'test'
+    name = 'test'
     endpoints = [ TestsEndpoint, TestEndpoint, TestsEndpointSubclass ]
     keyFields = ( 'testid', )
+
+    class EntityType(types.Entity):
+        testid = types.Integer()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def testUpdate(self):

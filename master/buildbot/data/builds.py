@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch
 
 class Db2DataMixin(object):
@@ -83,11 +83,30 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
                 ('build', None, None, None))
 
 
-class BuildsResourceType(base.ResourceType):
+class Build(base.ResourceType):
 
-    type = "build"
+    name = "build"
     endpoints = [ BuildEndpoint, BuildsEndpoint ]
     keyFields = [ 'builderid', 'buildid' ]
+
+    class EntityType(types.Entity):
+        buildid = types.Integer()
+        number = types.Integer()
+        builderid = types.Integer()
+        builder_link = types.Link()
+        buildrequestid = types.Integer()
+        buildrequest_link = types.Link()
+        slaveid = types.Integer()
+        slave_link = types.Link()
+        masterid = types.Integer()
+        master_link = types.Link()
+        started_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer)
+        results = types.NoneOk(types.Integer())
+        state_strings = types.List(of=types.String())
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newBuild(self, builderid, buildrequestid, slaveid):

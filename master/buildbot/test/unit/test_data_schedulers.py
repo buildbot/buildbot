@@ -18,12 +18,13 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.python import failure
 from buildbot.data import schedulers
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
+class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = schedulers.SchedulerEndpoint
+    resourceTypeClass = schedulers.Scheduler
 
     def setUp(self):
         self.setUpEndpoint()
@@ -46,7 +47,7 @@ class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(schedulerid=14))
         @d.addCallback
         def check(scheduler):
-            validation.verifyData(self, 'scheduler', {}, scheduler)
+            self.validateData(scheduler)
             self.assertEqual(scheduler['name'], 'other:scheduler')
         return d
 
@@ -54,7 +55,7 @@ class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(schedulerid=13))
         @d.addCallback
         def check(scheduler):
-            validation.verifyData(self, 'scheduler', {}, scheduler)
+            self.validateData(scheduler)
             self.assertEqual(scheduler['master'], None),
         return d
 
@@ -62,7 +63,7 @@ class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(schedulerid=14, masterid=22))
         @d.addCallback
         def check(scheduler):
-            validation.verifyData(self, 'scheduler', {}, scheduler)
+            self.validateData(scheduler)
             self.assertEqual(scheduler['name'], 'other:scheduler')
         return d
 
@@ -88,9 +89,10 @@ class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
-class Schedulers(endpoint.EndpointMixin, unittest.TestCase):
+class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = schedulers.SchedulersEndpoint
+    resourceTypeClass = schedulers.Scheduler
 
     def setUp(self):
         self.setUpEndpoint()
@@ -114,8 +116,7 @@ class Schedulers(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(schedulers):
-            [ validation.verifyData(self, 'scheduler', {}, m)
-                for m in schedulers ]
+            [ self.validateData(m) for m in schedulers ]
             self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                              [13, 14, 15, 16])
         return d
@@ -124,8 +125,7 @@ class Schedulers(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=33))
         @d.addCallback
         def check(schedulers):
-            [ validation.verifyData(self, 'scheduler', {}, m)
-                for m in schedulers ]
+            [ self.validateData(m) for m in schedulers ]
             self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
                              [15, 16])
         return d
@@ -142,12 +142,12 @@ class Schedulers(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('scheduler', None, None))
 
 
-class SchedulerResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
-        self.rtype = schedulers.SchedulerResourceType(self.master)
+        self.rtype = schedulers.Scheduler(self.master)
 
     def test_signature_findSchedulerId(self):
         @self.assertArgSpecMatches(

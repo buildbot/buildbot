@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch
 
 class Db2DataMixin(object):
@@ -86,11 +86,26 @@ class StepsEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in steps ])
 
 
-class StepsResourceType(base.ResourceType):
+class Step(base.ResourceType):
 
-    type = "step"
+    name = "step"
     endpoints = [ StepEndpoint, StepsEndpoint ]
     keyFields = [ 'builderid', 'stepid' ]
+
+    class EntityType(types.Entity):
+        stepid = types.Integer()
+        number = types.Integer()
+        name = types.Identifier(50)
+        buildid = types.Integer()
+        build_link = types.Link()
+        started_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer())
+        results = types.NoneOk(types.Integer())
+        state_strings = types.List(of=types.String())
+        urls = types.List(of=types.String())
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newStep(self, buildid, name):

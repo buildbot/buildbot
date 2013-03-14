@@ -19,12 +19,13 @@ from twisted.internet import defer
 from twisted.python import failure
 from buildbot.data import changesources
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class ChangeSource(endpoint.EndpointMixin, unittest.TestCase):
+class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = changesources.ChangeSourceEndpoint
+    resourceTypeClass = changesources.ChangeSource
 
     def setUp(self):
         self.setUpEndpoint()
@@ -49,7 +50,7 @@ class ChangeSource(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(changesourceid=14))
         @d.addCallback
         def check(changesource):
-            validation.verifyData(self, 'changesource', {}, changesource)
+            self.validateData(changesource)
             self.assertEqual(changesource['name'], 'other:changesource')
         return d
 
@@ -58,7 +59,7 @@ class ChangeSource(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(changesourceid=13))
         @d.addCallback
         def check(changesource):
-            validation.verifyData(self, 'changesource', {}, changesource)
+            self.validateData(changesource)
             self.assertEqual(changesource['master'], None),
         return d
 
@@ -67,7 +68,7 @@ class ChangeSource(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(changesourceid=14, masterid=22))
         @d.addCallback
         def check(changesource):
-            validation.verifyData(self, 'changesource', {}, changesource)
+            self.validateData(changesource)
             self.assertEqual(changesource['name'], 'other:changesource')
         return d
 
@@ -96,9 +97,10 @@ class ChangeSource(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
-class ChangeSources(endpoint.EndpointMixin, unittest.TestCase):
+class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = changesources.ChangeSourcesEndpoint
+    resourceTypeClass = changesources.ChangeSource
 
     def setUp(self):
         self.setUpEndpoint()
@@ -122,8 +124,7 @@ class ChangeSources(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict())
         @d.addCallback
         def check(changesources):
-            [ validation.verifyData(self, 'changesource', {}, m)
-                for m in changesources ]
+            [ self.validateData(cs) for cs in changesources ]
             self.assertEqual(sorted([m['changesourceid'] for m in changesources]),
                              [13, 14, 15, 16])
         return d
@@ -132,8 +133,7 @@ class ChangeSources(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(dict(), dict(masterid=33))
         @d.addCallback
         def check(changesources):
-            [ validation.verifyData(self, 'changesource', {}, m)
-                for m in changesources ]
+            [ self.validateData(cs) for cs in changesources ]
             self.assertEqual(sorted([m['changesourceid'] for m in changesources]),
                              [15, 16])
         return d
@@ -150,12 +150,12 @@ class ChangeSources(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('changesource', None, None))
 
 
-class ChangeSourceResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
-        self.rtype = changesources.ChangeSourceResourceType(self.master)
+        self.rtype = changesources.ChangeSource(self.master)
 
     def test_signature_findChangeSourceId(self):
         @self.assertArgSpecMatches(

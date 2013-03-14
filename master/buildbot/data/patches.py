@@ -13,21 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from buildbot.data import base, types
 
-class RootEndpoint(base.Endpoint):
-    pathPatterns = "/"
 
-    def get(self, options, kwargs):
-        return defer.succeed(self.master.data.rootLinks)
+# NOTE: patches are not available via endpoints
 
 
-class Root(base.ResourceType):
-    name = "rootlink"
-    endpoints = [ RootEndpoint ]
+class Patch(base.ResourceType):
+
+    name = "patch"
+    endpoints = [ ]
+    keyFields = [ 'patchid' ]
 
     class EntityType(types.Entity):
-        name = types.String()
-        link = types.Link()
+        patchid = types.Integer()
+        body = types.Binary()
+        level = types.Integer()
+        subdir = types.String()
+        author = types.String()
+        comment = types.String()
     entityType = EntityType(name)

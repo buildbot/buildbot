@@ -206,3 +206,4 @@ class VerifyDict(unittest.TestCase):
                 ('str', 1),
                 ('float', 1.0),
             ])
+

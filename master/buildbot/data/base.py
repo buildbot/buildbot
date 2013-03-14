@@ -17,7 +17,7 @@ from buildbot.data import exceptions
 from twisted.internet import defer
 
 class ResourceType(object):
-    type = None
+    name = None
     endpoints = []
     keyFields = []
 
@@ -34,7 +34,7 @@ class ResourceType(object):
         return endpoints
 
     def produceEvent(self, msg, event):
-        routingKey = (self.type,) \
+        routingKey = (self.name,) \
              + tuple(str(msg[k]) for k in self.keyFields) \
              + (event,)
         self.master.mq.produce(routingKey, msg)

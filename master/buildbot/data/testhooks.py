@@ -38,10 +38,11 @@ class TestHooksScenario(object):
     def __init__(self, master):
         self.master = master
 
-class TestHooksResourceType(base.ResourceType):
+class TestHooks(base.ResourceType):
 
-    type = "testhooks"
+    name = "testhooks"
     endpoints = [ TestHooksEndpoint]
+
     @base.updateMethod
     def playTestScenario(self, scenario):
         scenario = scenario.split(".")

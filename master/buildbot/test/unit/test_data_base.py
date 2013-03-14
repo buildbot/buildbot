@@ -22,7 +22,7 @@ from buildbot.test.fake import fakemaster
 class ResourceType(unittest.TestCase):
 
     def makeResourceTypeSubclass(self, **attributes):
-        attributes.setdefault('type', 'thing')
+        attributes.setdefault('name', 'thing')
         return type('ThingResourceType', (base.ResourceType,), attributes)
 
     def test_sets_master(self):
@@ -49,7 +49,7 @@ class ResourceType(unittest.TestCase):
 
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-                type='singular',
+                name='singular',
                 keyFields=('fooid', 'barid'))
         master = fakemaster.make_master(testcase=self, wantMq=True)
         master.mq.verifyMessages = False # since this is a pretend message
@@ -63,12 +63,16 @@ class ResourceType(unittest.TestCase):
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 
+    class MyResourceType(base.ResourceType):
+        name = "my"
+
     class MyEndpoint(base.Endpoint):
         pathPatterns = """
             /my/pattern
         """
 
     endpointClass = MyEndpoint
+    resourceTypeClass = MyResourceType
 
     def setUp(self):
         self.setUpEndpoint()

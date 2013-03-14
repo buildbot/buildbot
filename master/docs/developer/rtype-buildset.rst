@@ -49,7 +49,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.changes.BuildsetResourceType
+.. py:class:: buildbot.data.buildsets.BuildsetResourceType
 
     .. py:method:: addBuildset(scheduler=None, sourcestamps=[], reason='', properties={}, builderNames=[], external_idstring=None)
 

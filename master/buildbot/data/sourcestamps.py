@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, patches
 from buildbot.util import datetime2epoch
 
 def _db2data(ss):
@@ -31,6 +31,7 @@ def _db2data(ss):
     }
     if ss['patch_body']:
         data['patch'] = {
+            'patchid': ss['patchid'],
             'level' : ss['patch_level'],
             'subdir' : ss['patch_subdir'],
             'author' : ss['patch_author'],
@@ -70,8 +71,20 @@ class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
                 ('sourcestamp', None, None))
 
 
-class SourceStampResourceType(base.ResourceType):
+class SourceStamp(base.ResourceType):
 
-    type = "sourcestamp"
+    name = "sourcestamp"
     endpoints = [ SourceStampEndpoint, SourceStampsEndpoint ]
     keyFields = [ 'ssid' ]
+
+    class EntityType(types.Entity):
+        ssid = types.Integer()
+        revision = types.NoneOk(types.String())
+        branch = types.NoneOk(types.String())
+        repository = types.String()
+        project = types.String()
+        codebase = types.String()
+        patch = types.NoneOk(patches.Patch.entityType)
+        created_at = types.Integer()
+        link = types.Link()
+    entityType = EntityType(name)

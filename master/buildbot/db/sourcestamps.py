@@ -103,10 +103,11 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
     def _rowToSsdict_thd(self, conn, row):
         ssid = row.id
         ssdict = SsDict(ssid=ssid, branch=row.branch,
-                revision=row.revision, patch_body=None, patch_level=None,
-                patch_author=None, patch_comment=None, patch_subdir=None,
-                repository=row.repository, codebase=row.codebase,
-                project=row.project, created_at=epoch2datetime(row.created_at))
+                revision=row.revision, patchid=None, patch_body=None,
+                patch_level=None, patch_author=None, patch_comment=None,
+                patch_subdir=None, repository=row.repository,
+                codebase=row.codebase, project=row.project,
+                created_at=epoch2datetime(row.created_at))
         patchid = row.patchid
 
         # fetch the patch, if necessary
@@ -117,6 +118,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if row:
                 # note the subtle renaming here
+                ssdict['patchid'] = patchid
                 ssdict['patch_level'] = row.patchlevel
                 ssdict['patch_subdir'] = row.subdir
                 ssdict['patch_author'] = row.patch_author

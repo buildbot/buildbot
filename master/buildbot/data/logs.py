@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class EndpointMixin(object):
 
@@ -81,11 +81,22 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in logs ])
 
 
-class LogsResourceType(base.ResourceType):
+class Log(base.ResourceType):
 
-    type = "log"
+    name = "log"
     endpoints = [ LogEndpoint, LogsEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
+
+    class EntityType(types.Entity):
+        logid = types.Integer()
+        name = types.Identifier(50)
+        stepid = types.Integer()
+        step_link = types.Link()
+        complete = types.Boolean()
+        num_lines = types.Integer()
+        type = types.Identifier(1)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newLog(self, stepid, name, type):

@@ -18,12 +18,13 @@ import textwrap
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import logchunks
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
+class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = logchunks.LogChunkEndpoint
+    resourceTypeClass = logchunks.LogChunk
 
     def setUp(self):
         self.setUpEndpoint()
@@ -71,7 +72,7 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
     def do_test_chunks(self, kwargs, logid, expLines):
         # get the whole thing in one go
         logchunk = yield self.callGet(dict(), kwargs)
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         expContent = '\n'.join(expLines) + '\n'
         self.assertEqual(logchunk,
             {'logid': logid, 'firstline': 0, 'content': expContent})
@@ -80,7 +81,7 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
         for i in range(len(expLines)):
             logchunk = yield self.callGet(dict(firstline=i, lastline=i),
                                           kwargs)
-            validation.verifyData(self, 'logchunk', {}, logchunk)
+            self.validateData(logchunk)
             self.assertEqual(logchunk,
                 {'logid': logid, 'firstline': i, 'content': expLines[i]+'\n'})
 
@@ -89,7 +90,7 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
         for f, l in (0, mid), (mid, len(expLines)-1):
             logchunk = yield self.callGet(
                     dict(firstline=f, lastline=l), kwargs)
-            validation.verifyData(self, 'logchunk', {}, logchunk)
+            self.validateData(logchunk)
             expContent = '\n'.join(expLines[f:l+1]) + '\n'
             self.assertEqual(logchunk,
                 {'logid': logid, 'firstline': f, 'content': expContent})
@@ -98,7 +99,7 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
         f, l = len(expLines)-2, len(expLines)+10
         logchunk = yield self.callGet(
             dict(firstline=f, lastline=l), kwargs)
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         expContent = '\n'.join(expLines[-2:]) + '\n'
         self.assertEqual(logchunk,
             {'logid': logid, 'firstline': f, 'content': expContent})
@@ -123,21 +124,21 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_empty(self):
         logchunk = yield self.callGet(dict(), dict(logid=62))
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
         logchunk = yield self.callGet(
                 dict(), dict(stepid=50, log_name='errors'))
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
         logchunk = yield self.callGet(dict(),
                 dict(buildid=13, step_number=9, log_name='stdio'))
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 60)
 
     @defer.inlineCallbacks
@@ -145,7 +146,7 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
         logchunk = yield self.callGet(dict(),
                 dict(builderid=77, build_number=3, step_number=9,
                      log_name='errors'))
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
@@ -153,16 +154,16 @@ class LogChunk(endpoint.EndpointMixin, unittest.TestCase):
         logchunk = yield self.callGet(dict(),
                 dict(builderid=77, build_number=3, step_name='make',
                      log_name='errors'))
-        validation.verifyData(self, 'logchunk', {}, logchunk)
+        self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
 
-class LogChunkResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class LogChunk(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = logchunks.LogsResourceType(self.master)
+        self.rtype = logchunks.LogChunk(self.master)
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
             exp_kwargs=None, *args, **kwargs):

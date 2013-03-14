@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, masters
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 class Db2DataMixin(object):
@@ -74,11 +74,18 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
                 ('scheduler', None, None))
 
 
-class SchedulerResourceType(base.ResourceType):
+class Scheduler(base.ResourceType):
 
-    type = "scheduler"
+    name = "scheduler"
     endpoints = [ SchedulerEndpoint, SchedulersEndpoint ]
     keyFields = [ 'schedulerid' ]
+
+    class EntityType(types.Entity):
+        schedulerid = types.Integer()
+        name = types.String()
+        master = types.NoneOk(masters.Master.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def findSchedulerId(self, name):

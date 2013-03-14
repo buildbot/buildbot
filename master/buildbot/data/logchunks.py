@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
@@ -66,11 +66,17 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
             'content': logLines})
 
 
-class LogsResourceType(base.ResourceType):
+class LogChunk(base.ResourceType):
 
-    type = "logchunk"
+    name = "logchunk"
     endpoints = [ LogChunkEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
+
+    class EntityType(types.Entity):
+        logid = types.Integer()
+        firstline = types.Integer()
+        content = types.String()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def appendLog(self, logid, content):

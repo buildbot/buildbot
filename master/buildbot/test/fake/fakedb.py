@@ -902,7 +902,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
             patch_author=None, patch_comment=None, patch_subdir=None,
             _reactor=reactor):
         if patch_body:
-            patchid = len(self.patches) + 100
+            patchid = len(self.patches) + 1
             while patchid in self.patches:
                 patchid += 1
             self.patches[patchid] = dict(
@@ -946,13 +946,13 @@ class FakeSourceStampsComponent(FakeDBComponent):
             patchid = ssdict['patchid']
             if patchid:
                 ssdict.update(self.patches[patchid])
+                ssdict['patchid'] = patchid
             else:
                 ssdict['patch_body'] = None
                 ssdict['patch_level'] = None
                 ssdict['patch_subdir'] = None
                 ssdict['patch_author'] = None
                 ssdict['patch_comment'] = None
-            del ssdict['patchid']
             return ssdict
         else:
             return None

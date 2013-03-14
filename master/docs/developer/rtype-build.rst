@@ -82,7 +82,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.builds.BuildsResourceType
+.. py:class:: buildbot.data.builds.BuildResourceType
 
     .. py:method:: newBuild(builderid, buildrequestid, slaveid)
 

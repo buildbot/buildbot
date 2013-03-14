@@ -225,14 +225,21 @@ You can also follow an existing file, like :bb:src:`master/buildbot/data/changes
 In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
 
     from buildbot.data import base
-    class PubResourceType(base.ResourceType):
-        type = "pub"
+    class Pub(base.ResourceType):
+        name = "pub"
         endpoints = []
         keyFields = [ 'pubid' ]
 
+        class EntityType(types.Entity):
+            pubid = types.Integer()
+            name = types.String()
+            num_taps = types.Integer()
+            closes_at = types.Integer()
+        entityType = EntityType(name)
+
 .. py:class:: ResourceType
 
-    .. py:attribute:: type
+    .. py:attribute:: name
 
         :type: string
 
@@ -249,9 +256,18 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 
         :type: list
 
-        This attribute should list the message fields hose values will comprise the fields in the message routing key between the type and the event.
+        This attribute should list the message fields whose values will comprise the fields in the message routing key between the type and the event.
 
         In the example above, a call to ``produceEvent({ 'pubid' : 10, 'name' : 'Winchester' }, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
+
+    .. py:attribute:: entityType
+
+        :type: :py:class:`buildbot.data.types.Entity`
+
+        The entity type describes the types of all of the fields in this particular resource type.
+        See :py:class:`buildbot.data.types.Entity` and :ref:`Adding-Fields-To-Resource-Types`.
+
+    The parent class provides the following methods
 
     .. py:method:: getEndpoints()
 
@@ -273,10 +289,7 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 Like all Buildbot source files, every resource type module must have corresponding tests.
 These should thoroughly exercise all update methods.
 
-All resource types must be documented in the Buildbot documentation, linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
-
-All resource types must have corresponding type verification information.
-See :ref:`Adding-Fields-to-Resource-Types` for details.
+All resource types must be documented in the Buildbot documentation and linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
 
 Adding Endpoints
 ++++++++++++++++
@@ -341,6 +354,16 @@ In a more complex implementation, the options might be used to indicate whether 
 Endpoint implementations must have unit tests.
 An endpoint's path should be documented in the ``.rst`` file for its resource type.
 
+Adding Messages
++++++++++++++++
+
+Message types are defined in :bb:src:`master/buildbot/test/util/validation.py`, via the ``message`` module-level value.
+This is a dictionary of ``MessageValidator`` objects, one for each message type.
+The message type is determined from the first atom of its routing key.
+The ``events`` dictionary lists the possible last atoms of the routing key.
+The ``keyFields`` argument lists the message fields whose values will comprise the fields in the message routing key between the type and the event.
+It should be identical to the attribute of the ResourceType with the same name.
+
 Adding Update Methods
 +++++++++++++++++++++
 
@@ -379,19 +402,112 @@ That fake implementation should be tested to match the real implementation in :b
 Adding Fields to Resource Types
 +++++++++++++++++++++++++++++++
 
+.. py:module:: buildbot.data.types
+
 The details of the fields of a resource type are rigorously enforced at several points in the Buildbot tests.
-This enforcement is performed by modules under :bb:src:`master/buildbot/test/util/types`, one per resource type.
+The enforcement is performed by the :py:mod:`buildbot.data.types` module.
 
-There are three types of verification performed: messages, database dictionaries, and getter return values (data).
-For each type, a verifier is listed in :bb:src:`master/buildbot/test/util/types/__init__.py`, by object name, with  prefix of ``buildbot.test.util.types`` assumed.
+The module provides a number of type classes for basic and compound types.
+Each resource type class defines its entity type in its :py:attr:`~buildbot.data.base.ResourceType.entityType` class attribute.
+Other resource types may refer to this class attribute if they embed an entity of that type.
 
-Message verifiers take a routing key and message, and should check both for well-formedness.
-Database dictionary verifiers take a type (e.g., ``chdict``) and the value to be verified (a dictionary).
-Data verifiers take a type (e.g., ``change``), options, and the value to be verified (a dictionary).
-They should consult the options to determine which variant is expected.
+The types are used both for tests, and by the REST interface to properly decode user-supplied query parameters.
 
-The module :py:mod:`buildbot.test.util.verifier` provides useful utility methods for all three types of verification.
-Consult this module and the existing verifier modules for more details.
+Basic Types
+...........
+
+.. py:class:: Integer()
+
+    An integer. ::
+
+        myid = types.Integer()
+
+.. py:class:: String()
+
+    A string.
+    Strings must always be Unicode. ::
+
+        name = types.String()
+
+.. py:class:: Binary()
+
+    A binary bytestring. ::
+
+        data = types.Binary()
+
+.. py:class:: Boolean()
+
+    A boolean value. ::
+
+        complete = types.Boolean()
+
+.. py:class:: Link()
+
+    A REST link. ::
+
+        link = types.Link()
+
+.. py:class:: Identifier(length)
+
+    An identifier; see :ref:`Identifier <type-identifier>`.
+    The constructor argument specifies the maximum length. ::
+
+        ident = types.Identifier(25)
+
+Compound Types
+..............
+
+.. py:class:: NoneOk(nestedType)
+
+    Either the nested type, or None. ::
+
+        category = types.NoneOk(types.String())
+
+.. py:class:: List(of)
+
+    An list of objects.
+    The named constructor argument ``of`` specifies the type of the list elements. ::
+
+        tags = types.List(of=types.String())
+
+.. py:class:: SourcedProperties()
+
+    A data structure representing properties with their sources, in the form ``{name: (value, source)}``.
+    The property name and source must be Unicode, and the value must be JSON-able. ::
+
+        props = types.SourcedProperties()
+
+Entity Type
+...........
+
+.. py:class:: Entity(name)
+
+    A data resource is represented by a dictionary with well-known keys.
+    To define those keys and their values, subclass the :py:class:`Entity` class within your ResourceType class and include each field as an attribute::
+
+        class MyStuff(base.ResourceType):
+            name = "mystuff"
+            # ...
+            class EntityType(types.Entity):
+                myid = types.Integer()
+                name = types.String()
+                data = types.Binary()
+                complete = types.Boolean()
+                link = types.Link()
+                ident = types.Identifier(25)
+                category = types.NoneOk(types.String())
+                tags = types.List(of=types.String())
+                props = types.SourcedProperties()
+
+    Then instantiate the class with the resource type name ::
+
+        entityType = EntityType(name)
+
+    To embed another entity type, reference its entityType class attribute::
+
+        class EntityType(types.Entity):
+            # ...
+            master = masters.Master.entityType
 
 Data Model
 ----------
@@ -425,6 +541,7 @@ All strings in the data model are unicode strings.
     rtype-master
     rtype-builder
     rtype-sourcestamp
+    rtype-patch
     rtype-scheduler
     rtype-build
     rtype-step
