@@ -29,11 +29,13 @@ shabuildbot:{SHA}TwEDa5Q31ZhI4GLmIbE1VrrAkpk=
 from twisted.trial import unittest
 
 from buildbot.status.web.auth import HTPasswdAprAuth
+from buildbot.test.util import compat
 
 class TestHTPasswdAprAuth(unittest.TestCase):
 
     htpasswd = HTPasswdAprAuth(__file__)
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_des(self):
         for key in ('buildmaster','buildslave','buildbot'):                
             if self.htpasswd.authenticate('des'+key, key) == False:
@@ -57,12 +59,14 @@ class TestHTPasswdAprAuth(unittest.TestCase):
         if self.htpasswd.authenticate('foo', 'bar') == True:
             self.fail("authenticate succeed for 'foo:bar'")
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wopassword(self):
         for algo in ('des','md5','sha'):
             if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
                 self.fail("authenticate succeed for %s w/o password"
                                         % (algo+'buildmaster'))
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wrongpassword(self):
         for algo in ('des','md5','sha'):
             if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
