@@ -193,5 +193,5 @@ use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.inte
         return d
 
 Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
-fire, or for one of them to fail. You may attach  Callbacks and errbacks to a
+fire, or for one of them to fail. You may attach callbacks and errbacks to a
 ``DeferredList`` just as for a deferred.
