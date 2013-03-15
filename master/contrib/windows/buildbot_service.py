@@ -144,6 +144,9 @@ class BBService(win32serviceutil.ServiceFramework):
                 # for ppl who build Python itself from source.
                 python_exe = os.path.join(sys.prefix, "PCBuild", "python.exe")
             if not os.path.isfile(python_exe):
+                # virtualenv support
+                python_exe = os.path.join(sys.prefix, "Scripts", "python.exe")
+            if not os.path.isfile(python_exe):
                 self.error("Can not find python.exe to spawn subprocess")
                 return False
 
@@ -226,7 +229,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.info("Starting BuildBot in directory '%s'" % (bbdir, ))
             hstop = self.hWaitStop
 
-            cmd = '%s --spawn %d start %s' % (self.runner_prefix, hstop, bbdir)
+            cmd = '%s --spawn %d start --nodaemon %s' % (self.runner_prefix, hstop, bbdir)
             #print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
@@ -545,7 +548,7 @@ def HandleCommandLine():
         # child-process.
         # First arg is the handle to wait on
         # Fourth arg is the config directory to use for the buildbot/slave
-        _RunChild(DetermineRunner(sys.argv[4]))
+        _RunChild(DetermineRunner(sys.argv[5]))
     else:
         win32serviceutil.HandleCommandLine(BBService,
                                            customOptionHandler=CustomInstall)
