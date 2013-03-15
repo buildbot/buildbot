@@ -132,7 +132,7 @@ the style within Buildbot is as follows::
 The key points to notice here:
 
 * Always import ``defer`` as a module, not the names within it.
-* Use the decorator form of ``inlineCallbacks``
+* Use the decorator form of ``inlineCallbacks``.
 * In most cases, the result of a ``yield`` expression should be assigned to a
   variable.  It can be used in a larger expression, but remember that Python
   requires that you enclose the expression in its own set of parentheses.
