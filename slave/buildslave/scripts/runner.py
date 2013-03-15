@@ -170,7 +170,7 @@ def createSlave(config):
 
     asd = config['allow-shutdown']
     if asd:
-      config['allow-shutdown'] = "'%s'" % asd
+        config['allow-shutdown'] = "'%s'" % asd
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
