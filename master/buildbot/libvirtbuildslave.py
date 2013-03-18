@@ -34,7 +34,7 @@ class WorkQueue(object):
     I am a class that turns parallel access into serial access.
 
     I exist because we want to run libvirt access in threads as we don't
-    trust calls not to block, but under load libvirt doesnt seem to like
+    trust calls not to block, but under load libvirt doesn't seem to like
     this kind of threaded use.
     """
 
@@ -272,8 +272,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         """
         log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
-             log.msg("I don't think that domain is even running, aborting")
-             return defer.succeed(None)
+            log.msg("I don't think that domain is even running, aborting")
+            return defer.succeed(None)
 
         domain = self.domain
         self.domain = None
