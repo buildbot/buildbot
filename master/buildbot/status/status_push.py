@@ -172,7 +172,7 @@ class StatusPush(StatusReceiverMultiService):
             # Call right now, we're shutting down.
             @defer.inlineCallbacks
             def BlockForEverythingBeingSent():
-                yield defer.maybeDeferred(self.serverPushCb())
+                yield self.serverPushCb()
             return BlockForEverythingBeingSent()
         else:
             # delay should never be 0.  That can cause Buildbot to spin tightly

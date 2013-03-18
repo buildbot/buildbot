@@ -20,6 +20,7 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot import config 
 
 class ValidationError(ValueError):
     pass
@@ -208,13 +209,17 @@ class ChoiceStringParameter(BaseParameter):
             raise ValidationError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
         return s
 
-
+    def getChoices(self, master, scheduler, buildername):
+        return self.choices
 
 class InheritBuildParameter(ChoiceStringParameter):
     """A parameter that takes its values from another build"""
     type = ChoiceStringParameter.type + ["inherit"]
     name = "inherit"
     compatible_builds = None
+
+    def getChoices(self, master, scheduler, buildername):
+        return self.compatible_builds(master.status, buildername)
 
     def getFromKwargs(self, kwargs):
         raise ValidationError("InheritBuildParameter can only be used by properties")
@@ -239,6 +244,42 @@ class InheritBuildParameter(ChoiceStringParameter):
                 props[name] = value
         properties.update(props)
         changes.extend(b.changes)
+
+
+class BuildslaveChoiceParameter(ChoiceStringParameter):
+    """A parameter that lets the buildslave name be explicitly chosen.
+
+    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave', 
+    which should be added as the 'canStartBuild' parameter to the Builder.
+
+    The "anySentinel" parameter represents the sentinel value to specify that 
+    there is no buildslave preference.
+    """
+    anySentinel = '-any-'
+    label = 'Build slave'
+    required = False
+    strict = False
+
+    def __init__(self, name='slavename', **kwargs):
+        ChoiceStringParameter.__init__(self, name, **kwargs)
+
+    def updateFromKwargs(self, kwargs, **unused):
+        slavename = self.getFromKwargs(kwargs)
+        if slavename==self.anySentinel:
+            # no preference, so dont set a parameter at all
+            return
+        ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
+
+    def getChoices(self, master, scheduler, buildername):
+        if buildername is None:
+            # this is the "Force All Builds" page
+            slavenames = master.status.getSlaveNames()
+        else:
+            builderStatus = master.status.getBuilder(buildername)
+            slavenames = [slave.getName() for slave in builderStatus.getSlaves()]
+        slavenames.sort()
+        slavenames.insert(0, self.anySentinel)
+        return slavenames
 
 
 class NestedParameter(BaseParameter):
@@ -452,10 +493,10 @@ class ForceScheduler(base.BaseScheduler):
 
         @param username: the "owner" for a build (may not be shown depending
                          on the Auth configuration for the master)
-        @type reason: BaseParameter or None (to disable this field)
+        @type username: BaseParameter
 
         @param reason: the "reason" for a build
-        @type reason: BaseParameter or None (to disable this field)
+        @type reason: BaseParameter
 
         @param codebases: the codebases for a build
         @type codebases: list of string's or CodebaseParameter's;
@@ -466,14 +507,39 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
-        self.reason = reason
-        self.username = username
+        if not self.checkIfType(name, str):
+           config.error("ForceScheduler name must be a unicode string: %r" %
+                        name)
+
+        if not name:
+           config.error("ForceScheduler name must not be empty: %r " %
+                        name)
+
+        if not self.checkIfListOfType(builderNames, str):
+           config.error("ForceScheduler builderNames must be a list of strings: %r" %
+                         builderNames)
+
+        if self.checkIfType(reason, BaseParameter):
+            self.reason = reason
+        else:
+            config.error("ForceScheduler reason must be a StringParameter: %r" %
+                         reason) 
+ 
+        if not self.checkIfListOfType(properties, BaseParameter):
+            config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
+                         properties)
+
+        if self.checkIfType(username, BaseParameter):
+            self.username = username
+        else:
+            config.error("ForceScheduler username must be a StringParameter: %r" %
+                         username) 
         
         self.forcedProperties = []
         
         if any((branch, revision, repository, project)):
             if codebases:
-                raise ValidationError("Must either specify 'codebases' or the 'branch/revision/repository/project' parameters")
+                config.error("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters: %r " % (codebases,))
             
             codebases = [
                 CodebaseParameter(codebase='',
@@ -488,14 +554,14 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases =[CodebaseParameter(codebase='')]
         elif not codebases:
-            raise ValidationError("'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed")
+            config.error("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (codebases,))
         
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, basestring):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                raise ValidationError("'codebases' must be a list of strings or CodebaseParameter objects")
+                config.error("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (codebases,))
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(branch='',repository='',revision='')
@@ -512,6 +578,22 @@ class ForceScheduler(base.BaseScheduler):
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
+
+    def checkIfType(self, obj, chkType):
+        return isinstance(obj, chkType)
+
+    def checkIfListOfType(self, obj, chkType):
+        isListOfType = True 
+
+        if self.checkIfType(obj, list):
+           for item in obj:
+               if not self.checkIfType(item, chkType):
+                  isListOfType = False
+                  break 
+        else:
+           isListOfType = False
+ 
+        return isListOfType
 
     def startService(self):
         pass

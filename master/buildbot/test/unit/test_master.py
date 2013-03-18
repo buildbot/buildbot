@@ -340,14 +340,17 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.assertLogged("reconfig aborted without")
         self.failIf(self.master.reconfigService.called)
 
+    @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = config.MasterConfig()
         old.db['db_url'] = 'aaaa'
+        yield self.master.reconfigService(old)
+
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
         self.assertRaises(config.ConfigErrors, lambda :
-            self.master.reconfigService(new))
+                self.master.reconfigService(new))
 
     def test_reconfigService_start_polling(self):
         loopingcall = mock.Mock()
@@ -363,20 +366,20 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             loopingcall.start.assert_called_with(120, now=False)
         return d
 
+    @defer.inlineCallbacks
     def test_reconfigService_stop_polling(self):
         db_loop = self.master.db_loop = mock.Mock()
 
         old = self.master.config = config.MasterConfig()
         old.db['db_poll_interval'] = 120
+        yield self.master.reconfigService(old)
+
         new = config.MasterConfig()
         new.db['db_poll_interval'] = None
+        yield self.master.reconfigService(new)
 
-        d = self.master.reconfigService(new)
-        @d.addCallback
-        def check(_):
-            db_loop.stop.assert_called()
-            self.assertEqual(self.master.db_loop, None)
-        return d
+        db_loop.stop.assert_called()
+        self.assertEqual(self.master.db_loop, None)
 
 
 class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):

@@ -17,13 +17,17 @@
 {%- endmacro %}
 
 
-{% macro stamp_td(ss) -%}
+{% macro stamp_td(sourcestamps) -%}
   <td valign="bottom" class="sourcestamp">    
-    {%- if ss.revision -%}
-    {{ ss.revision|shortrev(ss.repository) }}
-    {%- else %}latest{% endif %}
-    {%- if ss.branch %} in {{ ss.branch|e }}{% endif %}
-    {%- if ss.hasPatch %} [patch]{% endif %}
+    {% for ss in sourcestamps %}
+      {%- if ss.codebase %}{{ ss.codebase|e }}: {% endif %}
+      {%- if ss.revision -%}
+      {{ ss.revision|shortrev(ss.repository) }}
+      {%- else %}latest{% endif %}
+      {%- if ss.branch %} in {{ ss.branch|e }}{% endif %}
+      {%- if ss.hasPatch %} [patch]{% endif -%}
+    <br/>
+    {%- endfor %}
   </td>
 {%- endmacro %}
 

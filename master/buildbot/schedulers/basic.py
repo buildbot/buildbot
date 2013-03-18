@@ -243,12 +243,14 @@ class AnyBranchScheduler(BaseBasicScheduler):
                 categories=categories)
 
     def getTimerNameForChange(self, change):
-        return change.branch
+        # Py2.6+: could be a namedtuple
+        return (change.codebase, change.project, change.repository, change.branch)
 
     def getChangeClassificationsForTimer(self, objectid, timer_name):
-        branch = timer_name # set in getTimerNameForChange
+        codebase, project, repository, branch = timer_name # set in getTimerNameForChange
         return self.master.db.schedulers.getChangeClassifications(
-                self.objectid, branch=branch)
+                self.objectid, branch=branch, repository=repository,
+                codebase=codebase, project=project)
 
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent

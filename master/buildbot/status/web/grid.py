@@ -87,13 +87,14 @@ class GridStatusMixin(object):
 
         defer.returnValue(cxt)
 
-    def getSourceStampKey(self, ss):
+    def getSourceStampKey(self, sourcestamps):
         """Given two source stamps, we want to assign them to the same row if
         they are the same version of code, even if they differ in minor detail.
 
         This function returns an appropriate comparison key for that.
         """
-        return (ss.branch, ss.revision, ss.patch)
+        # TODO: Maybe order sourcestamps in key by codebases names?
+        return tuple([(ss.branch, ss.revision, ss.patch) for ss in sourcestamps])
 
     def getRecentBuilds(self, builder, numBuilds, branch):
         """
@@ -135,10 +136,9 @@ class GridStatusMixin(object):
             if categories and builder.category not in categories:
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
-                key= self.getSourceStampKey(ss)
-                start = build.getTimes()[0]
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                start = min(build.getTimes())
                 if key not in sourcestamps or sourcestamps[key][1] > start:
                     sourcestamps[key] = (ss, start)
 
@@ -176,7 +176,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': map(SourceStamp.asDict, stamps)
+                    'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                    })
         
         sortedBuilderNames = status.getBuilderNames()[:]
@@ -192,13 +192,12 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key= self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                
+                for i, sstamp in enumerate(stamps):
+                    if key == self.getSourceStampKey(sstamp) and builds[i] is None:
+                        builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
 
@@ -243,7 +242,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': map(SourceStamp.asDict, stamps),
+                    'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                     })
 
         sortedBuilderNames = status.getBuilderNames()[:]
@@ -265,12 +264,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key = self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                
+                for i, sstamp in enumerate(stamps):
+                    if key == self.getSourceStampKey(sstamp) and builds[i] is None:
+                        builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
             builders.append(b)

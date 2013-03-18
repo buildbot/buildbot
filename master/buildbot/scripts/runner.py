@@ -27,8 +27,26 @@ import sys
 
 from buildbot.scripts import base
 
-# Note that the terms 'options' and 'config' are used intechangeably here - in
-# fact, they are intercanged several times.  Caveat legator.
+# Note that the terms 'options' and 'config' are used interchangeably here - in
+# fact, they are interchanged several times.  Caveat legator.
+
+def validate_master_option(master):
+    """Validate master (-m, --master) command line option.
+
+    Checks that option is a string of the 'hostname:port' form, otherwise
+    raises an UsageError exception.
+
+    @type  master: string
+    @param master: master option
+
+    @raise usage.UsageError: on invalid master option
+    """
+    try:
+        hostname, port = master.split(":")
+        port = int(port)
+    except:
+        raise usage.UsageError("master must have the form 'hostname:port'")
+
 
 class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
@@ -134,6 +152,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["clean", "c", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
@@ -144,6 +163,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
+        ["clean", "c", "Clean shutdown master"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
@@ -192,6 +212,10 @@ class DebugClientOptions(base.SubcommandOptions):
         if len(args) > 2:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+        validate_master_option(self.get('master'))
+
 
 class BaseStatusClientOptions(base.SubcommandOptions):
     optFlags = [
@@ -214,6 +238,11 @@ class BaseStatusClientOptions(base.SubcommandOptions):
             self['master'] = args[0]
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
+
+    def postOptions(self):
+        base.SubcommandOptions.postOptions(self)
+        validate_master_option(self.get('master'))
+
 
 
 class StatusLogOptions(BaseStatusClientOptions):
@@ -319,11 +348,7 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
-        if not self.get('who'):
-            raise usage.UsageError("you must provide a committer (--who)")
-        if not self.get('master'):
-            raise usage.UsageError("you must provide the master location")
-
+        validate_master_option(self.get('master'))
 
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"
@@ -457,6 +482,12 @@ class TryOptions(base.SubcommandOptions):
         if not self['master']:
             self['master'] = opts.get('masterstatus', None)
 
+        if self['connect'] == 'pb':
+            if not self['master']:
+                raise usage.UsageError("master location must be specified" \
+                                       "for 'pb' connections")
+            validate_master_option(self['master'])
+
 
 class TryServerOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.tryserver.tryserver"
@@ -575,12 +606,7 @@ class UserOptions(base.SubcommandOptions):
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
 
-        master = self.get('master')
-        try:
-            master, port = master.split(":")
-            port = int(port)
-        except:
-            raise usage.UsageError("master must have the form 'hostname:port'")
+        validate_master_option(self.get('master'))
 
         op = self.get('op')
         if not op:

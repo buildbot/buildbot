@@ -19,11 +19,12 @@ import re
 import os
 import textwrap
 import mock
+import __builtin__
 from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces, revlinks
+from buildbot import config, buildslave, interfaces, revlinks, locks
 from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -99,6 +100,20 @@ class ConfigErrors(unittest.TestCase):
         config.error("message")
         self.assertEqual(e.errors, ["message"])
 
+    def test_str(self):
+        ex = config.ConfigErrors()
+        self.assertEqual(str(ex), "")
+
+        ex = config.ConfigErrors(["a"])
+        self.assertEqual(str(ex), "a")
+
+        ex = config.ConfigErrors(["a", "b"])
+        self.assertEqual(str(ex), "a\nb")
+
+        ex = config.ConfigErrors(["a"])
+        ex.addError('c')
+        self.assertEqual(str(ex), "a\nc")
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -127,11 +142,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 if typ == 'loader':
                     self.patch(config.MasterConfig, n,
                         mock.Mock(side_effect=
-                            lambda filename, config_dict, errors : None))
+                            lambda filename, config_dict: None))
                 else:
                     self.patch(config.MasterConfig, n,
                         mock.Mock(side_effect=
-                            lambda errors : None))
+                            lambda: None))
 
 
     def install_config_file(self, config_file, other_files={}):
@@ -187,6 +202,26 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             re.compile("basedir .* does not exist"),
             lambda : config.MasterConfig.loadConfig(
                 os.path.join(self.basedir, 'NO'), 'test.cfg'))
+
+    def test_loadConfig_open_error(self):
+        """
+        Check that loadConfig() raises correct ConfigError exception in cases
+        when configure file is found, but we fail to open it.
+        """
+
+        def raise_IOError(*args):
+            raise IOError("error_msg")
+
+        self.install_config_file('#dummy')
+
+        # override build-in open() function to always rise IOError
+        self.patch(__builtin__, "open", raise_IOError)
+
+        # check that we got the expected ConfigError exception
+        self.assertRaisesConfigError(
+            re.compile("unable to open configuration file .*: error_msg"),
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
 
     @compat.usesFlushLoggedErrors
     def test_loadConfig_parse_error(self):
@@ -295,6 +330,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.cfg = config.MasterConfig()
         self.errors = config.ConfigErrors()
+        self.patch(config, '_errors', self.errors)
 
     # utils
 
@@ -308,21 +344,21 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     # tests
 
     def test_load_global_defaults(self):
-        self.cfg.load_global(self.filename, {}, self.errors)
+        self.cfg.load_global(self.filename, {})
         self.assertResults(**global_defaults)
 
     def test_load_global_string_param_not_string(self):
         self.cfg.load_global(self.filename,
-                dict(title=10), self.errors)
+                dict(title=10))
         self.assertConfigError(self.errors, 'must be a string')
 
     def test_load_global_int_param_not_int(self):
         self.cfg.load_global(self.filename,
-                dict(changeHorizon='yes'), self.errors)
+                dict(changeHorizon='yes'))
         self.assertConfigError(self.errors, 'must be an int')
 
     def do_test_load_global(self, config_dict, **expected):
-        self.cfg.load_global(self.filename, config_dict, self.errors)
+        self.cfg.load_global(self.filename, config_dict)
         self.assertResults(**expected)
 
     def test_load_global_title(self):
@@ -362,8 +398,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_logCompressionMethod_invalid(self):
         self.cfg.load_global(self.filename,
-                dict(logCompressionMethod='foo'), self.errors)
+                dict(logCompressionMethod='foo'))
         self.assertConfigError(self.errors, "must be 'bz2' or 'gz'")
+
+    def test_load_global_codebaseGenerator(self):
+        func = lambda _: "dummy"
+        self.do_test_load_global(dict(codebaseGenerator=func),
+                                 codebaseGenerator=func)
+
+    def test_load_global_codebaseGenerator_invalid(self):
+        self.cfg.load_global(self.filename,
+                dict(codebaseGenerator='dummy'))
+        self.assertConfigError(self.errors,
+                "codebaseGenerator must be a callable "
+                "accepting a dict and returning a str")
 
     def test_load_global_logMaxSize(self):
         self.do_test_load_global(dict(logMaxSize=123), logMaxSize=123)
@@ -378,7 +426,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_properties_invalid(self):
         self.cfg.load_global(self.filename,
-                dict(properties='yes'), self.errors)
+                dict(properties='yes'))
         self.assertConfigError(self.errors, "must be a dictionary")
 
     def test_load_global_mergeRequests_bool(self):
@@ -392,7 +440,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_mergeRequests_invalid(self):
         self.cfg.load_global(self.filename,
-                dict(mergeRequests='yes'), self.errors)
+                dict(mergeRequests='yes'))
         self.assertConfigError(self.errors,
                 "must be a callable, True, or False")
 
@@ -403,7 +451,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_prioritizeBuilders_invalid(self):
         self.cfg.load_global(self.filename,
-                dict(prioritizeBuilders='yes'), self.errors)
+                dict(prioritizeBuilders='yes'))
         self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_global_slavePortnum_int(self):
@@ -431,11 +479,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 revlink=callable)
 
     def test_load_global_revlink_invalid(self):
-        self.cfg.load_global(self.filename, dict(revlink=''), self.errors)
+        self.cfg.load_global(self.filename, dict(revlink=''))
         self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_validation_defaults(self):
-        self.cfg.load_validation(self.filename, {}, self.errors)
+        self.cfg.load_validation(self.filename, {})
         self.assertEqual(sorted(self.cfg.validation.keys()),
             sorted([
                 'branch', 'revision', 'property_name', 'property_value',
@@ -443,135 +491,125 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_validation_invalid(self):
         self.cfg.load_validation(self.filename,
-                dict(validation='plz'), self.errors)
+                dict(validation='plz'))
         self.assertConfigError(self.errors, "must be a dictionary")
 
     def test_load_validation_unk_keys(self):
         self.cfg.load_validation(self.filename,
-                dict(validation=dict(users='.*')), self.errors)
+                dict(validation=dict(users='.*')))
         self.assertConfigError(self.errors, "unrecognized validation key(s)")
 
     def test_load_validation(self):
         r = re.compile('.*')
         self.cfg.load_validation(self.filename,
-                dict(validation=dict(branch=r)), self.errors)
+                dict(validation=dict(branch=r)))
         self.assertEqual(self.cfg.validation['branch'], r)
         # check that defaults are still around
         self.assertIn('revision', self.cfg.validation)
 
 
     def test_load_db_defaults(self):
-        self.cfg.load_db(self.filename, {}, self.errors)
+        self.cfg.load_db(self.filename, {})
         self.assertResults(
             db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=None))
 
     def test_load_db_db_url(self):
-        self.cfg.load_db(self.filename, dict(db_url='abcd'), self.errors)
+        self.cfg.load_db(self.filename, dict(db_url='abcd'))
         self.assertResults(db=dict(db_url='abcd', db_poll_interval=None))
 
     def test_load_db_db_poll_interval(self):
-        self.cfg.load_db(self.filename, dict(db_poll_interval=2), self.errors)
+        self.cfg.load_db(self.filename, dict(db_poll_interval=2))
         self.assertResults(
             db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=2))
 
     def test_load_db_dict(self):
         self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval=10)),
-            self.errors)
+            dict(db=dict(db_url='abcd', db_poll_interval=10)))
         self.assertResults(db=dict(db_url='abcd', db_poll_interval=10))
 
     def test_load_db_unk_keys(self):
         self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')),
-            self.errors)
+            dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
         self.assertConfigError(self.errors, "unrecognized keys in")
 
     def test_load_db_not_int(self):
         self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval='ten')),
-            self.errors)
+            dict(db=dict(db_url='abcd', db_poll_interval='ten')))
         self.assertConfigError(self.errors, "must be an int")
 
 
     def test_load_metrics_defaults(self):
-        self.cfg.load_metrics(self.filename, {}, self.errors)
+        self.cfg.load_metrics(self.filename, {})
         self.assertResults(metrics=None)
 
     def test_load_metrics_invalid(self):
-        self.cfg.load_metrics(self.filename, dict(metrics=13), self.errors)
+        self.cfg.load_metrics(self.filename, dict(metrics=13))
         self.assertConfigError(self.errors, "must be a dictionary")
 
     def test_load_metrics(self):
         self.cfg.load_metrics(self.filename,
-                dict(metrics=dict(foo=1)),
-                self.errors)
+                dict(metrics=dict(foo=1)))
         self.assertResults(metrics=dict(foo=1))
 
 
     def test_load_caches_defaults(self):
-        self.cfg.load_caches(self.filename, {}, self.errors)
+        self.cfg.load_caches(self.filename, {})
         self.assertResults(caches=dict(Changes=10, Builds=15))
 
     def test_load_caches_invalid(self):
-        self.cfg.load_caches(self.filename, dict(caches=13), self.errors)
+        self.cfg.load_caches(self.filename, dict(caches=13))
         self.assertConfigError(self.errors, "must be a dictionary")
 
     def test_load_caches_buildCacheSize(self):
         self.cfg.load_caches(self.filename,
-                dict(buildCacheSize=13),
-                self.errors)
+                dict(buildCacheSize=13))
         self.assertResults(caches=dict(Builds=13, Changes=10))
 
     def test_load_caches_buildCacheSize_and_caches(self):
         self.cfg.load_caches(self.filename,
-                dict(buildCacheSize=13, caches=dict(builds=11)),
-                self.errors)
+                dict(buildCacheSize=13, caches=dict(builds=11)))
         self.assertConfigError(self.errors, "cannot specify")
 
     def test_load_caches_changeCacheSize(self):
         self.cfg.load_caches(self.filename,
-                dict(changeCacheSize=13),
-                self.errors)
+                dict(changeCacheSize=13))
         self.assertResults(caches=dict(Changes=13, Builds=15))
 
     def test_load_caches_changeCacheSize_and_caches(self):
         self.cfg.load_caches(self.filename,
-                dict(changeCacheSize=13, caches=dict(changes=11)),
-                self.errors)
+                dict(changeCacheSize=13, caches=dict(changes=11)))
         self.assertConfigError(self.errors, "cannot specify")
 
     def test_load_caches(self):
         self.cfg.load_caches(self.filename,
-                dict(caches=dict(foo=1)),
-                self.errors)
+                dict(caches=dict(foo=1)))
         self.assertResults(caches=dict(Changes=10, Builds=15, foo=1))
 
     def test_load_caches_entries_test(self):
         self.cfg.load_caches(self.filename,
-                dict(caches=dict(foo="1")),
-                self.errors)
+                dict(caches=dict(foo="1")))
         self.assertConfigError(self.errors,
                                "value for cache size 'foo' must be an integer")
 
     def test_load_schedulers_defaults(self):
-        self.cfg.load_schedulers(self.filename, {}, self.errors)
+        self.cfg.load_schedulers(self.filename, {})
         self.assertResults(schedulers={})
 
     def test_load_schedulers_not_list(self):
         self.cfg.load_schedulers(self.filename,
-                dict(schedulers=dict()), self.errors)
+                dict(schedulers=dict()))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_schedulers_not_instance(self):
         self.cfg.load_schedulers(self.filename,
-                dict(schedulers=[mock.Mock()]), self.errors)
+                dict(schedulers=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_schedulers_dupe(self):
         sch1 = FakeScheduler(name='sch')
         sch2 = FakeScheduler(name='sch')
         self.cfg.load_schedulers(self.filename,
-                dict(schedulers=[ sch1, sch2 ]), self.errors)
+                dict(schedulers=[ sch1, sch2 ]))
         self.assertConfigError(self.errors,
                 "scheduler name 'sch' used multiple times")
 
@@ -581,35 +619,35 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 self.name = name
         sch = Sch('sch')
         self.cfg.load_schedulers(self.filename,
-                dict(schedulers=[sch]), self.errors)
+                dict(schedulers=[sch]))
         self.assertResults(schedulers=dict(sch=sch))
 
 
     def test_load_builders_defaults(self):
-        self.cfg.load_builders(self.filename, {}, self.errors)
+        self.cfg.load_builders(self.filename, {})
         self.assertResults(builders=[])
 
     def test_load_builders_not_list(self):
         self.cfg.load_builders(self.filename,
-                dict(builders=dict()), self.errors)
+                dict(builders=dict()))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_builders_not_instance(self):
         self.cfg.load_builders(self.filename,
-                dict(builders=[mock.Mock()]), self.errors)
-        self.assertConfigError(self.errors, "must be a list of")
+                dict(builders=[mock.Mock()]))
+        self.assertConfigError(self.errors, "is not a builder config (in c['builders']")
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
                         factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
-                dict(builders=[bldr]), self.errors)
+                dict(builders=[bldr]))
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
         bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
         self.cfg.load_builders(self.filename,
-                dict(builders=[bldr]), self.errors)
+                dict(builders=[bldr]))
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
@@ -618,77 +656,81 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
                 builddir=os.path.abspath('.'))
         self.cfg.load_builders(self.filename,
-                dict(builders=[bldr]), self.errors)
+                dict(builders=[bldr]))
         self.assertEqual(
             len(self.flushWarnings([self.cfg.load_builders])),
             1)
 
     def test_load_slaves_defaults(self):
-        self.cfg.load_slaves(self.filename, {}, self.errors)
+        self.cfg.load_slaves(self.filename, {})
         self.assertResults(slaves=[])
 
     def test_load_slaves_not_list(self):
         self.cfg.load_slaves(self.filename,
-                dict(slaves=dict()), self.errors)
+                dict(slaves=dict()))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_slaves_not_instance(self):
         self.cfg.load_slaves(self.filename,
-                dict(slaves=[mock.Mock()]), self.errors)
+                dict(slaves=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_slaves_reserved_names(self):
         for name in 'debug', 'change', 'status':
             self.cfg.load_slaves(self.filename,
-                    dict(slaves=[buildslave.BuildSlave(name, 'x')]),
-                    self.errors)
+                    dict(slaves=[buildslave.BuildSlave(name, 'x')]))
             self.assertConfigError(self.errors, "is reserved")
             self.errors.errors[:] = [] # clear out the errors
 
     def test_load_slaves(self):
         sl = buildslave.BuildSlave('foo', 'x')
         self.cfg.load_slaves(self.filename,
-                dict(slaves=[sl]), self.errors)
+                dict(slaves=[sl]))
         self.assertResults(slaves=[sl])
 
 
     def test_load_change_sources_defaults(self):
-        self.cfg.load_change_sources(self.filename, {}, self.errors)
+        self.cfg.load_change_sources(self.filename, {})
         self.assertResults(change_sources=[])
 
     def test_load_change_sources_not_instance(self):
         self.cfg.load_change_sources(self.filename,
-                dict(change_source=[mock.Mock()]), self.errors)
+                dict(change_source=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_change_sources_single(self):
         chsrc = FakeChangeSource()
         self.cfg.load_change_sources(self.filename,
-                dict(change_source=chsrc), self.errors)
+                dict(change_source=chsrc))
         self.assertResults(change_sources=[chsrc])
 
     def test_load_change_sources_list(self):
         chsrc = FakeChangeSource()
         self.cfg.load_change_sources(self.filename,
-                dict(change_source=[chsrc]), self.errors)
+                dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
 
+    def test_load_status_not_list(self):
+        self.cfg.load_status(self.filename, dict(status="not-list"))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_status_not_status_rec(self):
+        self.cfg.load_status(self.filename, dict(status=['fo']))
+        self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_user_managers_defaults(self):
-        self.cfg.load_user_managers(self.filename, {}, self.errors)
+        self.cfg.load_user_managers(self.filename, {})
         self.assertResults(user_managers=[])
 
     def test_load_user_managers_not_list(self):
         self.cfg.load_user_managers(self.filename,
-                dict(user_managers='foo'),
-                self.errors)
+                dict(user_managers='foo'))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_user_managers(self):
         um = mock.Mock()
         self.cfg.load_user_managers(self.filename,
-                dict(user_managers=[um]),
-                self.errors)
+                dict(user_managers=[um]))
         self.assertResults(user_managers=[um])
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
@@ -696,6 +738,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.cfg = config.MasterConfig()
         self.errors = config.ConfigErrors()
+        self.patch(config, '_errors', self.errors)
 
     # utils
 
@@ -715,7 +758,24 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.builders = [ b1, b2 ]
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
+    def setup_builder_locks(self,
+                            builder_lock=None,
+                            dup_builder_lock=False,
+                            bare_builder_lock=False):
+        """Set-up two mocked builders with specified locks.
+
+        @type  builder_lock: string or None
+        @param builder_lock: Name of the lock to add to first builder.
+                             If None, no lock is added.
+
+        @type dup_builder_lock: boolean
+        @param dup_builder_lock: if True, add a lock with duplicate name
+                                 to the second builder
+
+        @type dup_builder_lock: boolean
+        @param bare_builder_lock: if True, add bare lock objects, don't wrap
+                                  them into locks.LockAccess object
+        """
         def bldr(name):
             b = mock.Mock()
             b.name = name
@@ -724,9 +784,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock()
+            l = mock.Mock(spec=locks.MasterLock)
             l.name = name
-            return l
+            if bare_builder_lock:
+                return l
+            return locks.LockAccess(l, "counting")
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]
@@ -739,19 +801,19 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_single_master_multimaster(self):
         self.cfg.multiMaster = True
-        self.cfg.check_single_master(self.errors)
+        self.cfg.check_single_master()
         self.assertNoConfigErrors(self.errors)
 
     def test_check_single_master_no_builders(self):
         self.setup_basic_attrs()
         self.cfg.builders = [ ]
-        self.cfg.check_single_master(self.errors)
+        self.cfg.check_single_master()
         self.assertConfigError(self.errors, "no builders are configured")
 
     def test_check_single_master_no_slaves(self):
         self.setup_basic_attrs()
         self.cfg.slaves = [ ]
-        self.cfg.check_single_master(self.errors)
+        self.cfg.check_single_master()
         self.assertConfigError(self.errors, "no slaves are configured")
 
     def test_check_single_master_unsch_builder(self):
@@ -759,7 +821,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b3 = mock.Mock()
         b3.name = 'b3'
         self.cfg.builders.append(b3)
-        self.cfg.check_single_master(self.errors)
+        self.cfg.check_single_master()
         self.assertConfigError(self.errors, "have no schedulers to drive them")
 
 
@@ -767,29 +829,37 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.setup_basic_attrs()
         del self.cfg.builders[1] # remove b2, leaving b1
 
-        self.cfg.check_schedulers(self.errors)
+        self.cfg.check_schedulers()
         self.assertConfigError(self.errors, "Unknown builder 'b2'")
 
     def test_check_schedulers(self):
         self.setup_basic_attrs()
-        self.cfg.check_schedulers(self.errors)
+        self.cfg.check_schedulers()
         self.assertNoConfigErrors(self.errors)
 
 
     def test_check_locks_dup_builder_lock(self):
         self.setup_builder_locks(builder_lock='l', dup_builder_lock=True)
-        self.cfg.check_locks(self.errors)
+        self.cfg.check_locks()
         self.assertConfigError(self.errors, "Two locks share")
 
     def test_check_locks(self):
         self.setup_builder_locks(builder_lock='bl')
-        self.cfg.check_locks(self.errors)
+        self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
     def test_check_locks_none(self):
         # no locks in the whole config, should be fine
         self.setup_builder_locks()
-        self.cfg.check_locks(self.errors)
+        self.cfg.check_locks()
+        self.assertNoConfigErrors(self.errors)
+
+    def test_check_locks_bare(self):
+        # check_locks() should be able to handle bare lock object,
+        # lock objects that are not wrapped into LockAccess() object
+        self.setup_builder_locks(builder_lock='oldlock',
+                                 bare_builder_lock=True)
+        self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
 
@@ -801,7 +871,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b1 = FakeBuilder(slavenames=[ 'xyz', 'abc' ], builddir='x', name='b1')
         self.cfg.builders = [ b1 ]
 
-        self.cfg.check_builders(self.errors)
+        self.cfg.check_builders()
         self.assertConfigError(self.errors,
                 "builder 'b1' uses unknown slaves 'abc'")
 
@@ -810,7 +880,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2 = FakeBuilder(slavenames=[], name='b1', builddir='2')
         self.cfg.builders = [ b1, b2 ]
 
-        self.cfg.check_builders(self.errors)
+        self.cfg.check_builders()
         self.assertConfigError(self.errors,
                 "duplicate builder name 'b1'")
 
@@ -819,7 +889,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2 = FakeBuilder(slavenames=[], name='b2', builddir='dir')
         self.cfg.builders = [ b1, b2 ]
 
-        self.cfg.check_builders(self.errors)
+        self.cfg.check_builders()
         self.assertConfigError(self.errors,
                 "duplicate builder builddir 'dir'")
 
@@ -832,16 +902,16 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2 = FakeBuilder(slavenames=[ 'a' ], name='b2', builddir='dir2')
         self.cfg.builders = [ b1, b2 ]
 
-        self.cfg.check_builders(self.errors)
+        self.cfg.check_builders()
         self.assertNoConfigErrors(self.errors)
 
 
     def test_check_status_fails(self):
         st = FakeStatusReceiver()
-        st.checkConfig = lambda status, errors : errors.addError("oh noes")
+        st.checkConfig = lambda status: config.error("oh noes")
         self.cfg.status = [ st ]
 
-        self.cfg.check_status(self.errors)
+        self.cfg.check_status()
 
         self.assertConfigError(self.errors, "oh noes")
 
@@ -850,32 +920,32 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         st.checkConfig = mock.Mock()
         self.cfg.status = [ st ]
 
-        self.cfg.check_status(self.errors)
+        self.cfg.check_status()
 
         self.assertNoConfigErrors(self.errors)
-        st.checkConfig.assert_called_once_with(self.cfg.status, self.errors)
+        st.checkConfig.assert_called_once_with(self.cfg.status)
 
     def test_check_horizons(self):
         self.cfg.logHorizon = 100
         self.cfg.buildHorizon = 50
-        self.cfg.check_horizons(self.errors)
+        self.cfg.check_horizons()
 
         self.assertConfigError(self.errors, "logHorizon must be less")
 
     def test_check_slavePortnum_set(self):
         self.cfg.slavePortnum = 10
-        self.cfg.check_slavePortnum(self.errors)
+        self.cfg.check_slavePortnum()
         self.assertNoConfigErrors(self.errors)
 
     def test_check_slavePortnum_not_set_slaves(self):
         self.cfg.slaves = [ mock.Mock() ]
-        self.cfg.check_slavePortnum(self.errors)
+        self.cfg.check_slavePortnum()
         self.assertConfigError(self.errors,
                 "slaves are configured, but no slavePortnum is set")
 
     def test_check_slavePortnum_not_set_debug(self):
         self.cfg.debugPassword = 'ssh'
-        self.cfg.check_slavePortnum(self.errors)
+        self.cfg.check_slavePortnum()
         self.assertConfigError(self.errors,
                 "debug client is configured, but no slavePortnum is set")
 
@@ -941,6 +1011,30 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             "category must be a string",
             lambda : config.BuilderConfig(category=13,
                 name='a', slavenames=['a'], factory=self.factory))
+
+    def test_inv_nextSlave(self):
+        self.assertRaisesConfigError(
+            "nextSlave must be a callable",
+            lambda : config.BuilderConfig(nextSlave="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_nextBuild(self):
+        self.assertRaisesConfigError(
+            "nextBuild must be a callable",
+            lambda : config.BuilderConfig(nextBuild="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_canStartBuild(self):
+        self.assertRaisesConfigError(
+            "canStartBuild must be a callable",
+            lambda : config.BuilderConfig(canStartBuild="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_env(self):
+        self.assertRaisesConfigError(
+            "builder's env must be a dictionary",
+            lambda : config.BuilderConfig(env="foo",
+                name="a", slavenames=['a'], factory=self.factory))
 
     def test_defaults(self):
         cfg = config.BuilderConfig(

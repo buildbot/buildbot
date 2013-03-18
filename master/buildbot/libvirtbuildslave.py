@@ -16,9 +16,10 @@
 
 import os
 
-from twisted.internet import defer, utils, reactor, threads
+from twisted.internet import defer, utils, threads
 from twisted.python import log, failure
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
+from buildbot.util.eventual import eventually
 from buildbot import config
 
 try:
@@ -33,7 +34,7 @@ class WorkQueue(object):
     I am a class that turns parallel access into serial access.
 
     I exist because we want to run libvirt access in threads as we don't
-    trust calls not to block, but under load libvirt doesnt seem to like
+    trust calls not to block, but under load libvirt doesn't seem to like
     this kind of threaded use.
     """
 
@@ -65,7 +66,7 @@ class WorkQueue(object):
             self.queue.pop(0)
             if self.queue:
                 log.msg("Preparing next piece of work")
-                reactor.callLater(0, self._process)
+                eventually(self._process)
             return res
         d2.addBoth(_work_done)
 
@@ -271,8 +272,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         """
         log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
-             log.msg("I don't think that domain is even running, aborting")
-             return defer.succeed(None)
+            log.msg("I don't think that domain is even running, aborting")
+            return defer.succeed(None)
 
         domain = self.domain
         self.domain = None

@@ -18,7 +18,7 @@ import time
 
 from twisted.trial import unittest
 from buildbot.steps.package.deb import pbuilder
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import steps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot import config
@@ -252,7 +252,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
-            + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
+            + Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             + 0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['sudo', '/usr/sbin/cowbuilder', '--update',
@@ -270,7 +270,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(pbuilder.DebCowbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
-            + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
+            + Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             + 0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                 command=['pdebuild', '--buildresult', '.',
@@ -278,6 +278,33 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                     '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             +0)
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        return self.runStep()
+
+    def test_update_reg(self):
+        self.setupStep(pbuilder.DebCowbuilder(basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
+        self.expectCommands(
+            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow'})
+            + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
+            + 0,
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                command=['sudo', '/usr/sbin/cowbuilder', '--update',
+                    '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
+            + 1)
+        self.expectOutcome(result=FAILURE, status_text=['PBuilder update.'])
+        return self.runStep()
+
+    def test_buildonly_reg(self):
+        self.setupStep(pbuilder.DebCowbuilder(basetgz='/var/cache/pbuilder/stable-local-buildbot.cow'))
+        self.expectCommands(
+            Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow'})
+            + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
+            + 0,
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                command=['pdebuild', '--buildresult', '.',
+                    '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
+                    '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
+            + 1)
+        self.expectOutcome(result=FAILURE, status_text=['pdebuild', 'failed'])
         return self.runStep()
 
 class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):

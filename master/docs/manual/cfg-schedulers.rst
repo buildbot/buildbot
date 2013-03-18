@@ -210,6 +210,13 @@ on some set of Builders. The Scheduler accepts a :meth:`fileIsImportant`
 function which can be used to ignore some Changes if they do not
 affect any *important* files.
 
+If ``treeStableTimer`` is not set, then this scheduler starts a build for every Change that matches its ``change_filter`` and statsfies :meth:`fileIsImportant`.
+If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
+
+.. note:: The behavior of this scheduler is undefined, if ``treeStableTimer`` is set, and changes from multiple branches, repositories or codebases are accepted by the filter.
+
+.. note:: The ``codebases`` argument will filter out codebases not specified there, but *won't* filter based on the branches specified there.
+
 The arguments to this scheduler are:
 
 ``name``
@@ -291,6 +298,9 @@ AnyBranchScheduler
 
 This scheduler uses a tree-stable-timer like the default one, but
 uses a separate timer for each branch.
+
+If ``treeStableTimer`` is not set, then this scheduler is indistinguishable from bb:sched:``SingleBranchScheduler``.
+If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
 
 The arguments to this scheduler are:
 
@@ -808,7 +818,7 @@ Here is a fully-worked example::
     # on checkin, run tests
     checkin_factory = factory.BuildFactory()
     checkin_factory.addStep(shell.Test())
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
+    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly']))
 
     # and every night, package the latest successful build
     nightly_factory = factory.BuildFactory()
@@ -1061,6 +1071,8 @@ use the authenticated user instead of displaying a text-entry box.
 ``need_email`` (optional; default True)
     If true, require a full email address rather than arbitrary text.
 
+.. bb:sched:: ChoiceStringParameter
+
 ChoiceStringParameter
 #####################
 
@@ -1072,8 +1084,13 @@ ChoiceStringParameter
 This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
 is false, then its result is a string - one of the choices.  If ``multiple`` is
-true, then the result is a list of strings from the choices.  Its arguments, in
-addition to the common options, are:
+true, then the result is a list of strings from the choices.  
+
+Note that for some use cases, the choices need to be generated dynamically. This can 
+be done via subclassing and overiding the 'getChoices' member function. An example 
+of this is provided by the source for the :py:class:`InheritBuildParameter` class.
+
+Its arguments, in addition to the common options, are:
 
 ``choices``
 
@@ -1111,6 +1128,10 @@ Example::
 CodebaseParameter
 #####################
 
+::
+
+    CodebaseParameter(codebase="myrepo")
+
 This is a parameter group to specify a sourcestamp for a given codebase.
 
 ``codebase``
@@ -1136,6 +1157,8 @@ This is a parameter group to specify a sourcestamp for a given codebase.
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
     the build.  The default value is a string parameter.
+
+.. bb:sched:: InheritBuildParameter
 
 InheritBuildParameter
 #####################
@@ -1179,6 +1202,34 @@ Example::
                     compatible_builds=get_compatible_builds,
                     required = True),
                     ])
+
+.. bb:sched:: BuildslaveChoiceParameter
+
+BuildslaveChoiceParameter
+#########################
+
+This parameter allows a scheduler to require that a build is assigned to the
+chosen buildslave. The choice is assigned to the `slavename` property for the build.
+The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to
+the ``canStartBuild`` parameter for the ``Builder``.
+
+Example::
+
+    from buildbot.process.builder import enforceChosenSlave
+
+    # schedulers:
+        ForceScheduler(
+          # ...
+          properties=[
+            BuildslaveChoiceParameter(),
+          ]
+        )
+
+    # builders:
+        BuilderConfig(
+          # ...
+          canStartBuild=enforceChosenSlave,
+        )
 
 AnyPropertyParameter
 ####################

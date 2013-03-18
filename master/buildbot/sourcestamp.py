@@ -32,7 +32,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
        integers should provide a string here, but the Source checkout step
        will integerize it when making comparisons.
      - (revision=REV, patchspec=(LEVEL, DIFF), changes=None): checkout REV,
-       then apply a patch to the source, with C{patch -pPATCHLEVEL <DIFF}.
+       then apply a patch to the source, with C{patch -pLEVEL <DIFF}.
        If REV is None, checkout HEAD and patch it.
      - (revision=None, patchspec=None, changes=[CHANGES]): let the Source
        step check out the latest revision indicated by the given Changes.
@@ -179,7 +179,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if other.project != self.project:
             return False
         if self.patch or other.patch:
-            return False # you can't merge patched builds with anything
+            # you can't merge patched builds with anything else
+            return self is other
 
         if self.changes and other.changes:
             return True

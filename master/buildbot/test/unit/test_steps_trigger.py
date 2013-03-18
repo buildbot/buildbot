@@ -452,7 +452,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(
             a=({}, {}),
             b=({}, {}))
-        self.expectTriggeredLinks('a') # b doesnt return a brid
+        self.expectTriggeredLinks('a') # b doesn't return a brid
         d = self.runStep(expect_waitForFinish=True)
         def flush(_):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)

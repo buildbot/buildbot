@@ -58,6 +58,10 @@
       {{ forms.graceful_shutdown(shutdown_url, authz) }}
     {% endif %}
   {% endif %}
+  {% if authz.advertiseAction('pauseSlave', request) %}
+    <h2>Pause Slave</h2>
+    {{ forms.pause_slave(pause_url, authz, slave.isPaused()) }}
+  {% endif %}
 {% endif %}
 </div>
   

@@ -495,8 +495,7 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
 
 ``password``
    (optional): if specified, this will be passed to the ``svn`` binary
-   with a ``--password`` option. The password itself will be suitably
-   obfuscated in the logs.
+   with a ``--password`` option.
 
 ``extra_args``
    (optional): if specified, an array of strings that will be passed
@@ -519,6 +518,11 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
    subdirectories not already present; the new subdirectories will
    have depth-infinity. Infinity is equivalent to SVN default update
    behavior, without specifying any depth argument. 
+
+``preferLastChangedRev``
+   (optional): By default, the ``got_revision`` property is set to the
+   repository's global revision ("Revision" in the `svn info` output). Set this
+   parameter to ``True`` to have it set to the "Last Changed Rev" instead.
 
 ``mode``
 ``method``
@@ -1803,9 +1807,14 @@ source code filenames involved).
 .. bb:step:: VC6
 .. bb:step:: VC7
 .. bb:step:: VC8
-.. bb:step:: VC2003
-.. bb:step:: VC2005
-.. bb:step:: VC2008
+.. bb:step:: VC9
+.. bb:step:: VC10
+.. bb:step:: VC11
+.. bb:step:: VS2003
+.. bb:step:: VS2005
+.. bb:step:: VS2008
+.. bb:step:: VS2010
+.. bb:step:: VS2012
 .. bb:step:: VCExpress9
 .. bb:step:: MsBuild
 
@@ -1813,7 +1822,7 @@ Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-10 (aka Visual Studio 2003-2010 and VCExpress9) are supported via calling
+VC++ 6-11 (aka Visual Studio 2003-2012 and VCExpress9) are supported via calling
 ``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
 ``MsBuild`` step. These steps will take care of setting up a clean compilation
 environment, parsing the generated
@@ -1826,10 +1835,13 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC7``
  * ``VC8``
  * ``VC9``
+ * ``VC10``
+ * ``VC11``
  * ``VS2003``
  * ``VS2005``
  * ``VS2008``
  * ``VS2010``
+ * ``VS2012``
  * ``VCExpress9``
  * ``MsBuild``
 
@@ -2333,6 +2345,19 @@ it can be seen as part of the status output. ::
 
     from buildbot.steps.python_twisted import Trial
     f.addStep(Trial(tests='petmail.test'))
+
+Trial has the ability to run tests on several workers in parallel (beginning
+with Twisted 12.3.0).  Set ``jobs`` to the number of workers you want to
+run.  Note that running :command:`trial` in this way will create multiple log
+files (named :file:`test.N.log`, :file:`err.N.log` and :file:`out.N.log`
+starting with ``N=0``) rather than a single :file:`test.log`.
+
+This step takes the following arguments:
+
+``jobs``
+   (optional) Number of slave-resident workers to use when running the tests.
+   Defaults to 1 worker.  Only works with Twisted>=12.3.0.
+   
 
 .. bb:step:: RemovePYCs
 

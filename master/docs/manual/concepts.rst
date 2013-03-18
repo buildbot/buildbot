@@ -246,7 +246,7 @@ Codebase
 
 This attribute specifies the codebase to which this change was made.
 As described :ref:`above <Source-Stamps>`, multiple repositories may contain the same codebase.
-A change's codebase is usually determined by the bb:cfg:`codebaseGenerator` configuration.
+A change's codebase is usually determined by the :bb:cfg:`codebaseGenerator` configuration.
 By default the codebase is ''; this value is used automatically for single-codebase configurations.
 
 .. _Attr-Revision:
@@ -810,6 +810,11 @@ Configuring all of this takes a coordinated approach.  A complete multiple repos
         .. note::
 
             Each :ref:`source step<Source-Checkout>` has to have its own ``workdir`` set in order for the checkout to be done for each codebase in its own directory.
+
+        .. note::
+
+            Ensure you specify the codebase within your source step's Interpolate() calls (ex. ``http://.../svn/%(src:codebase:branch)s)``.
+            See :ref:`Interpolate` for details.
 
 .. warning::
 

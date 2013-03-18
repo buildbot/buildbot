@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sys
-import os
 
 import twisted
 from twisted.trial import unittest
@@ -58,6 +57,5 @@ try:
     import mock
     mock = mock
 except ImportError:
-    print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
-                         "try 'pip install mock'")
-    os._exit(1)
+    raise ImportError("Buildbot tests require the 'mock' module; "
+            "try 'pip install mock'")

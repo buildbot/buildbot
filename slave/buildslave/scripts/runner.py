@@ -30,8 +30,8 @@ def isBuildslaveDir(dir):
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
 
-# Note that the terms 'options' and 'config' are used intechangeably here - in
-# fact, they are intercanged several times.  Caveat legator.
+# Note that the terms 'options' and 'config' are used interchangeably here - in
+# fact, they are interchanged several times.  Caveat legator.
 
 class Maker:
     def __init__(self, config):
@@ -170,7 +170,7 @@ def createSlave(config):
 
     asd = config['allow-shutdown']
     if asd:
-      config['allow-shutdown'] = "'%s'" % asd
+        config['allow-shutdown'] = "'%s'" % asd
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
@@ -307,6 +307,11 @@ class UpgradeSlaveOptions(MakerBase):
 
 def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
+
+    if not isBuildslaveDir(basedir):
+        print "not a buildslave directory"
+        sys.exit(1)
+
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
     new_buildbot_tac = buildbot_tac.replace(
         "from buildbot.slave.bot import BuildSlave",

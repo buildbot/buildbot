@@ -16,9 +16,6 @@ project will typically have only a single :class:`ChangeSource` active. This sec
 provides a description of all available :class:`ChangeSource` types and explains how to
 set up each of them.
 
-In general, each Buildmaster watches a single source tree.  It is possible to
-work around this, but true support for multi-tree builds remains elusive.
-
 .. _Choosing-a-Change-Source:
 
 Choosing a Change Source
@@ -40,7 +37,7 @@ CVS
    sendchange`` run in a loginfo script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
    :file:`contrib/viewcvspoll.py` polling process which examines the ViewCVS
-   database directly
+   database directly)
  * :bb:chsrc:`Change Hooks` in WebStatus
 
 SVN
@@ -756,7 +753,7 @@ depot for changes. It accepts the following arguments:
     which effectively disables branch support. You should supply a function
     which understands your repository structure.
 
-``pollinterval``
+``pollInterval``
     How often to poll, in seconds. Defaults to 600 (10 minutes).
 
 ``histmax``
@@ -888,7 +885,7 @@ multiple branches.
     Like ``svnuser``, this will cause a :option:`--password` argument to
     be passed to all :command:`svn` commands.
 
-``pollinterval``
+``pollInterval``
     How often to poll, in seconds. Defaults to 600 (checking once every 10
     minutes). Lower this if you want the buildbot to notice changes
     faster, raise it if you want to reduce the network and CPU load on
@@ -896,7 +893,7 @@ multiple branches.
     using a large interval when polling them.
 
 ``histmax``
-    The maximum number of changes to inspect at a time. Every ``pollinterval``
+    The maximum number of changes to inspect at a time. Every ``pollInterval``
     seconds, the :bb:chsrc:`SVNPoller` asks for the last ``histmax`` changes and
     looks through them for any revisions it does not already know about. If
     more than ``histmax`` revisions have been committed since the last poll,
@@ -1042,7 +1039,7 @@ arguments:
     accepts a single branch name to fetch.
     Exists for backwards compatibility with old configurations.
 
-``pollinterval``
+``pollInterval``
     interval in seconds between polls, default is 10 minutes
 
 ``gitbin``
@@ -1077,10 +1074,10 @@ arguments:
     If this is a relative path, it will be interpreted relative to the master's basedir.
     Multiple Git pollers can share the same directory.
 
-An configuration for the Git poller might look like this::
+A configuration for the Git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
+    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
                                    branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
@@ -1134,7 +1131,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
     If relative, the ``workdir`` will be interpreted from the master directory.
 
-``pollinterval``
+``pollInterval``
     interval in seconds between polls, default is 10 minutes
 
 ``hgbin``
@@ -1164,7 +1161,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 A configuration for the Mercurial poller might look like this::
 
     from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
+    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
 

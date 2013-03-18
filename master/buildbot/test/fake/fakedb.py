@@ -440,6 +440,7 @@ class FakeChangesComponent(FakeDBComponent):
             revlink=change.revlink,
             properties=change.properties,
             repository=change.repository,
+            codebase=change.codebase,
             project=change.project)
         self.changes[changeid] = row
 
@@ -471,16 +472,37 @@ class FakeSchedulersComponent(FakeDBComponent):
             self.classifications[objectid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, objectid, branch=-1):
+    def getChangeClassifications(self, objectid, branch=-1, repository=-1,
+                                 project=-1, codebase=-1):
         classifications = self.classifications.setdefault(objectid, {})
-        if branch is not -1:
+
+        sentinel = dict(branch=object(), repository=object(),
+                        project=object(), codebase=object())
+
+        if branch != -1:
             # filter out the classifications for the requested branch
-            change_branches = dict(
-                    (id, c['branch'])
-                    for id, c in self.db.changes.changes.iteritems() )
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if k in change_branches and change_branches[k] == branch )
+                    if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
+            
+        if repository != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
+            
+        if project != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['project'] == project )
+            
+        if codebase != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
+            
         return defer.succeed(classifications)
 
     # fake methods
@@ -937,6 +959,17 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
                 objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
+        return defer.succeed(None)
+
+    def unclaimBuildRequests(self, brids):
+        for brid in brids:
+            try:
+                self.claims.pop(brid)
+            except KeyError:
+                print "trying to unclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))                
+            
         return defer.succeed(None)
 
     # Code copied from buildrequests.BuildRequestConnectorComponent

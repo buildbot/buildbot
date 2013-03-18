@@ -19,14 +19,15 @@ import types
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.python.failure import Failure
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 
-from buildbot import interfaces, locks
+from buildbot import interfaces
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
   RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
 
 
 class Build(properties.PropertiesMixin):
@@ -85,8 +86,10 @@ class Build(properties.PropertiesMixin):
         """
         self.builder = builder
 
-    def setLocks(self, locks):
-        self.locks = locks
+    def setLocks(self, lockList):
+        # convert all locks into their real forms
+        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
+                        for access in lockList ]
 
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
@@ -157,8 +160,8 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        buildmaster = self.builder.botmaster.parent
-        props.updateFromProperties(buildmaster.config.properties)
+        master = self.builder.botmaster.master
+        props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change
         for change in self.allChanges():
@@ -220,18 +223,9 @@ class Build(properties.PropertiesMixin):
         self.setupSlaveBuilder(slavebuilder)
         slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
 
-        # convert all locks into their real forms
-        lock_list = []
-        for access in self.locks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder.slave), la)
-                       for l, la in self.locks]
+        self.locks = [(l.getLock(self.slavebuilder.slave), a) 
+                        for l, a in self.locks ]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 
@@ -263,7 +257,7 @@ class Build(properties.PropertiesMixin):
             self.builder.builder_status.addPointEvent(["setupBuild",
                                                        "exception"])
             self.finished = True
-            self.results = FAILURE
+            self.results = EXCEPTION
             self.deferred = None
             d.callback(self)
             return d
@@ -271,6 +265,14 @@ class Build(properties.PropertiesMixin):
         self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
+
+    @staticmethod
+    def canStartWithSlavebuilder(lockList, slavebuilder):
+        for lock, access in lockList:
+            slave_lock = lock.getLock(slavebuilder.slave)
+            if not slave_lock.isAvailable(None, access):
+                return False
+        return True
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
@@ -539,7 +541,7 @@ class Build(properties.PropertiesMixin):
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
-        reactor.callLater(0, self.releaseLocks)
+        eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None
 
