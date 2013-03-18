@@ -44,7 +44,7 @@ import buildbot.changes.base
 import buildbot.changes.changes
 
 try:
-    import bzrlib
+    import bzrlib.branch
 except ImportError:
     BZRLIB_PRESENT = False
 else:
@@ -128,69 +128,129 @@ def generate_change(branch,
 #############################################################################
 # poller
 
-# We don't want to make the hooks unnecessarily depend on buildbot being
-# installed locally, so we conditionally create the BzrPoller class.
-if True:  # was BUILDBOT_DEFINED,
-# TODO: don't want to change indentation right now
+FULL = object()
+SHORT = object()
 
-    FULL = object()
-    SHORT = object()
 
-    class BzrPoller(buildbot.changes.base.PollingChangeSource,
-                    buildbot.util.ComparableMixin):
+class BzrPoller(buildbot.changes.base.PollingChangeSource,
+                buildbot.util.ComparableMixin):
 
-        compare_attrs = ['url']
+    compare_attrs = ['url']
 
-        def __init__(self, url, poll_interval=10*60, blame_merge_author=False,
-                     branch_name=None, category=None):
-            # poll_interval is in seconds, so default poll_interval is 10
-            # minutes.
-            # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
-            # works, lp:~launchpad-pqm/launchpad/devel/ doesn't without help.
-            if url.startswith('lp:'):
-                url = 'bzr+ssh://bazaar.launchpad.net/' + url[3:]
-            self.url = url
-            self.poll_interval = poll_interval
-            self.loop = twisted.internet.task.LoopingCall(self.poll)
-            self.blame_merge_author = blame_merge_author
-            self.branch_name = branch_name
-            self.category = category
+    db_class_name = 'BzrPoller'
 
-        def startService(self):
-            if not BZRLIB_PRESENT:
-                raise ImportError('bzrlib')
-            twisted.python.log.msg("BzrPoller(%s) starting" % self.url)
-            if self.branch_name is FULL:
-                ourbranch = self.url
-            elif self.branch_name is SHORT:
-                # We are in a bit of trouble, as we cannot really know what our
-                # branch is until we have polled new changes.
-                # Seems we would have to wait until we polled the first time,
-                # and only then do the filtering, grabbing the branch name from
-                # whatever we polled.
-                # For now, leave it as it was previously (compare against
-                # self.url); at least now things work when specifying the
-                # branch name explicitly.
-                ourbranch = self.url
-            else:
-                ourbranch = self.branch_name
-            for change in reversed(self.parent.changes):
-                if change.branch == ourbranch:
-                    self.last_revision = change.revision
-                    break
-            else:
-                self.last_revision = None
-            buildbot.changes.base.PollingChangeSource.startService(self)
+    def __init__(self, url, poll_interval=10*60, blame_merge_author=False,
+                 branch_name=None, category=None):
+        # poll_interval is in seconds, so default poll_interval is 10
+        # minutes.
+        # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
+        # works, lp:~launchpad-pqm/launchpad/devel/ doesn't without help.
+        if url.startswith('lp:'):
+            url = 'bzr+ssh://bazaar.launchpad.net/' + url[3:]
+        self.url = url
+        self.pollInterval = poll_interval
+        self.loop = twisted.internet.task.LoopingCall(self.poll)
+        self.blame_merge_author = blame_merge_author
+        self.branch_name = branch_name
+        self.category = category
 
-        def stopService(self):
-            twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)
-            return buildbot.changes.base.PollingChangeSource.stopService(self)
+    def _getStateObjectId(self, branch_name):
+        """Return a deferred for object id in state db.
 
-        def describe(self):
-            return "BzrPoller watching %s" % self.url
+        Being unique among pollers, workdir is used with branch as instance
+        name for db.
+        """
+        return self.master.db.state.getObjectId(
+            branch_name, self.db_class_name)
 
-        @twisted.internet.defer.inlineCallbacks
-        def poll(self):
+    def startService(self):
+        if not BZRLIB_PRESENT:
+            # this raise has been deferred here to allow for unit testing
+            # by injection of a mock
+            raise ImportError('bzrlib')
+        self.last_revision = None
+        self.polling = False
+
+        buildbot.changes.base.PollingChangeSource.startService(self)
+
+    def _initLastRevision(self):
+        if self.branch_name is FULL or self.branch_name is None:
+            ourbranch = self.url
+        elif self.branch_name is SHORT:
+            # We are in a bit of trouble, as we cannot really know what our
+            # branch is until we have polled new changes.
+            # Seems we would have to wait until we polled the first time,
+            # and only then do the filtering, grabbing the branch name from
+            # whatever we polled.
+            # For now, leave it as it was previously (compare against
+            # self.url); at least now things work when specifying the
+            # branch name explicitly.
+            ourbranch = self.url
+        else:
+            ourbranch = self.branch_name
+        oid = self._getStateObjectId(ourbranch)
+
+        def oid_callback(oid):
+            print "oid callback for BzrPoller of url=%r" % self.url
+
+            def set_rev(rev):
+                print "setting rev %r for BzrPoller of url=%r" % (
+                    rev, self.url)
+                self.last_revision = rev
+            d = self.master.db.state.getState(oid, 'current_rev', None)
+            d.addCallback(set_rev)
+            return d
+        oid.addCallback(oid_callback)
+        return oid
+
+    def _setLastRevision(self, rev, oid=None):
+        """Return a deferred to set current revision in persistent state.
+
+        oid is self's id for state db.
+        It can be passed to avoid a db lookup.
+        """
+        if self.branch_name is FULL or self.branch_name is None:
+            ourbranch = self.url
+        elif self.branch_name is SHORT:
+            # We are in a bit of trouble, as we cannot really know what our
+            # branch is until we have polled new changes.
+            # Seems we would have to wait until we polled the first time,
+            # and only then do the filtering, grabbing the branch name from
+            # whatever we polled.
+            # For now, leave it as it was previously (compare against
+            # self.url); at least now things work when specifying the
+            # branch name explicitly.
+            ourbranch = self.url
+        else:
+            ourbranch = self.branch_name
+        if oid is None:
+            d = self._getStateObjectId(ourbranch)
+        else:
+            d = defer.succeed(oid)
+
+        def set_in_state(obj_id):
+            return self.master.db.state.setState(
+                obj_id, 'current_rev', rev)
+        d.addCallback(set_in_state)
+
+    def stopService(self):
+        twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)
+        return buildbot.changes.base.PollingChangeSource.stopService(self)
+
+    def describe(self):
+        return "BzrPoller watching %s" % self.url
+
+    @twisted.internet.defer.inlineCallbacks
+    def poll(self):
+        if self.polling:  # this is called in a loop, and the loop might
+            # conceivably overlap.
+            # GR: this is to be handled by doPoll by calling
+            # SerializableInvocation
+            return
+        if self.last_revision is None:
+            yield self._initLastRevision()
+        self.polling = True
+        try:
             # On a big tree, even individual elements of the bzr commands
             # can take awhile. So we just push the bzr work off to a
             # thread.
@@ -204,44 +264,40 @@ if True:  # was BUILDBOT_DEFINED,
                 twisted.python.log.err()
             else:
                 for change in changes:
-                    yield self.addChange(
-                        buildbot.changes.changes.Change(**change))
+                    yield self.addChange(change)
                     self.last_revision = change['revision']
+                    yield self._setLastRevision(self.last_revision)
+        finally:
+            self.polling = False
 
-        def getRawChanges(self):
-            branch = bzrlib.branch.Branch.open_containing(self.url)[0]
-            if self.branch_name is FULL:
-                branch_name = self.url
-            elif self.branch_name is SHORT:
-                branch_name = branch.nick
-            else:  # presumably a string or maybe None
-                branch_name = self.branch_name
-            changes = []
-            change = generate_change(
-                branch, blame_merge_author=self.blame_merge_author)
-            if (self.last_revision is None or
-                    change['revision'] > self.last_revision):
-                change['branch'] = branch_name
-                change['category'] = self.category
-                changes.append(change)
-                if self.last_revision is not None:
-                    while self.last_revision + 1 < change['revision']:
-                        change = generate_change(
-                            branch, new_revno=change['revision']-1,
-                            blame_merge_author=self.blame_merge_author)
-                        change['branch'] = branch_name
-                        changes.append(change)
-            changes.reverse()
-            return changes
+    def getRawChanges(self):
+        branch = bzrlib.branch.Branch.open_containing(self.url)[0]
+        if self.branch_name is FULL:
+            branch_name = self.url
+        elif self.branch_name is SHORT:
+            branch_name = branch.nick
+        else:  # presumably a string or maybe None
+            branch_name = self.branch_name
+        changes = []
+        change = generate_change(
+            branch, blame_merge_author=self.blame_merge_author)
+        if (self.last_revision is None or
+                change['revision'] > self.last_revision):
+            change['branch'] = branch_name
+            change['category'] = self.category
+            changes.append(change)
+            if self.last_revision is not None:
+                while self.last_revision + 1 < change['revision']:
+                    change = generate_change(
+                        branch, new_revno=change['revision']-1,
+                        blame_merge_author=self.blame_merge_author)
+                    change['branch'] = branch_name
+                    changes.append(change)
+        changes.reverse()
+        return changes
 
-        def addChange(self, change):
-            d = twisted.internet.defer.Deferred()
-
-            def _add_change():
-                d.callback(
-                    self.parent.addChange(change, src='bzr'))
-            twisted.internet.reactor.callLater(0, _add_change)
-            return d
+    def addChange(self, change):
+        return self.master.addChange(src='bzr', **change)
 
 ##########################
 # Work around Twisted bug.
