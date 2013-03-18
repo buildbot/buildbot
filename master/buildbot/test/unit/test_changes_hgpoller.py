@@ -64,6 +64,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
     def test_describe(self):
         self.assertSubstring("HgPoller", self.poller.describe())
 
+    def test_name(self):
+        self.assertEqual(self.remote_repo, self.poller.name)
+
+        # and one with explicit name...
+        other = hgpoller.HgPoller(self.remote_repo, name="MyName", workdir='/some/dir')
+        self.assertEqual("MyName", other.name)
+
     def test_hgbin_default(self):
         self.assertEqual(self.poller.hgbin, "hg")
 

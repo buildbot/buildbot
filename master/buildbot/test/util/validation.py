@@ -249,6 +249,40 @@ data = {}
 message = {}
 dbdict = {}
 
+# masters
+
+_master = dict(
+    masterid=IntValidator(),
+    name=StringValidator(),
+    active=BooleanValidator(),
+    last_active=IntValidator(),
+)
+data['master'] = Selector()
+data['master'].add(None,
+    DictValidator(
+        link=LinkValidator(),
+        **_master
+))
+
+message['master'] = Selector()
+message['master'].add(None,
+    MessageValidator(
+        keyFields=['masterid'],
+        events=['started', 'stopped'],
+        messageValidator=DictValidator(
+            masterid=IntValidator(),
+            name=StringValidator(),
+            active=BooleanValidator(),
+            # last_active is not included
+)))
+
+dbdict['masterdict'] = DictValidator(
+    id=IntValidator(),
+    name=StringValidator(),
+    active=BooleanValidator(),
+    last_active=DateTimeValidator(),
+)
+
 # sourcestamp
 
 _sourcestamp = dict(
@@ -465,38 +499,23 @@ dbdict['chdict'] = DictValidator(
     sourcestampid=IntValidator(),
 )
 
-# masters
+# changesources
 
-_master = dict(
-    masterid=IntValidator(),
-    name=StringValidator(),
-    active=BooleanValidator(),
-    last_active=IntValidator(),
-)
-data['master'] = Selector()
-data['master'].add(None,
+data['changesource'] = Selector()
+data['changesource'].add(None,
     DictValidator(
+        changesourceid=IntValidator(),
+        name=StringValidator(),
+        master=NoneOk(DictValidator(
+            link=LinkValidator(),
+            **_master)),
         link=LinkValidator(),
-        **_master
 ))
 
-message['master'] = Selector()
-message['master'].add(None,
-    MessageValidator(
-        keyFields=['masterid'],
-        events=['started', 'stopped'],
-        messageValidator=DictValidator(
-            masterid=IntValidator(),
-            name=StringValidator(),
-            active=BooleanValidator(),
-            # last_active is not included
-)))
-
-dbdict['masterdict'] = DictValidator(
+dbdict['changesourcedict'] = DictValidator(
     id=IntValidator(),
     name=StringValidator(),
-    active=BooleanValidator(),
-    last_active=DateTimeValidator(),
+    masterid=NoneOk(IntValidator()),
 )
 
 # schedulers

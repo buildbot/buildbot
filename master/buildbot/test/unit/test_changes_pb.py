@@ -25,6 +25,13 @@ class TestPBChangeSource(
             pbmanager.PBManagerMixin,
             unittest.TestCase):
 
+    DEFAULT_CONFIG = dict(port='9999', 
+        user='alice', 
+        passwd='sekrit',
+        name=changesource.ChangeSourceMixin.DEFAULT_NAME)
+
+    EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
+
     def setUp(self):
         self.setUpPBChangeSource()
         d = self.setUpChangeSource()
@@ -39,8 +46,8 @@ class TestPBChangeSource(
                 user='alice', passwd='sekrit')
 
     def test_registration_global_slaveport(self):
-        return self._test_registration(('9999', 'alice', 'sekrit'),
-                slavePort='9999', user='alice', passwd='sekrit')
+        return self._test_registration(self.EXP_DEFAULT_REGISTRATION,
+                **self.DEFAULT_CONFIG)
 
     def test_registration_custom_port(self):
         return self._test_registration(('8888', 'alice', 'sekrit'),
@@ -52,6 +59,31 @@ class TestPBChangeSource(
 
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None)
+
+    def test_no_registration_if_master_already_claimed(self):
+        # claim the CS on another master...
+        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        # and then use the same args as one of the above success cases,
+        # but expect that it will NOT register
+        return self._test_registration(None, **self.DEFAULT_CONFIG)
+
+    def test_registration_later_if_master_can_do_it(self):
+        # get the changesource running but not active due to the other master
+        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+        self.attachChangeSource(pb.PBChangeSource(**self.DEFAULT_CONFIG))
+        self.startChangeSource()
+        self.assertNotRegistered()
+
+        # other master goes away
+        self.setChangeSourceToMaster(None)
+
+        # not quite enough time to cause it to activate
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC*4/5)
+        self.assertNotRegistered()
+
+        # there we go!
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC*2/5)
+        self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
     def _test_registration(self, exp_registration, slavePort=None,
@@ -82,6 +114,17 @@ class TestPBChangeSource(
     def test_describe(self):
         cs = pb.PBChangeSource()
         self.assertSubstring("PBChangeSource", cs.describe())
+
+    def test_name(self):
+        cs = pb.PBChangeSource(port=1234)
+        self.assertEqual("PBChangeSource:1234", cs.name)
+
+        cs = pb.PBChangeSource(port=1234, prefix="pre")
+        self.assertEqual("PBChangeSource:pre:1234", cs.name)
+
+        # explicit name:
+        cs = pb.PBChangeSource(name="MyName")
+        self.assertEqual("MyName", cs.name)
 
     def test_describe_prefix(self):
         cs = pb.PBChangeSource(prefix="xyz")
@@ -127,6 +170,30 @@ class TestPBChangeSource(
         yield self.stopChangeSource()
 
         self.assertUnregistered('1234', 'change', 'changepw')
+
+    @defer.inlineCallbacks
+    def test_reconfigService_default_changed_but_inactive(self):
+        """reconfig one that's not active on this master"""
+        config = mock.Mock()
+        config.slavePortnum = '9876'
+        self.attachChangeSource(pb.PBChangeSource())
+        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+
+        self.startChangeSource()
+        yield self.changesource.reconfigService(config)
+
+        self.assertNotRegistered()
+
+        config.slavePortnum = '1234'
+
+        yield self.changesource.reconfigService(config)
+
+        self.assertNotRegistered()
+
+        yield self.stopChangeSource()
+
+        self.assertNotRegistered()
+        self.assertNotUnregistered()
 
 
 class TestChangePerspective(unittest.TestCase):

@@ -141,6 +141,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_describe(self):
         self.assertSubstring("GitPoller", self.poller.describe())
 
+    def test_name(self):
+        self.assertEqual(self.REPOURL, self.poller.name)
+
+        # and one with explicit name...
+        other = gitpoller.GitPoller(self.REPOURL, name="MyName")
+        self.assertEqual("MyName", other.name)
+
     def test_poll_initial(self):
         self.expectCommands(
                 gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),

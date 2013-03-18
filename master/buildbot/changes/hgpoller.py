@@ -26,9 +26,10 @@ class HgPoller(base.PollingChangeSource):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ["repourl", "branch", "workdir",
+    compare_attrs = base.PollingChangeSource.compare_attrs + \
+                   ("repourl", "branch", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
-                     "category", "project"]
+                     "category", "project")
 
     db_class_name = 'HgPoller'
 
@@ -36,16 +37,19 @@ class HgPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
-                 encoding='utf-8'):
+                 encoding='utf-8', name=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
+        if name is None:
+            name = repourl
+
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=repourl, pollInterval=pollInterval)
+            self, name=name, pollInterval=pollInterval)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
@@ -57,7 +61,7 @@ class HgPoller(base.PollingChangeSource):
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
 
-        if self.workdir == None:
+        if self.workdir is None:
             config.error("workdir is mandatory for now in HgPoller")
 
     def describe(self):

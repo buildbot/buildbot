@@ -181,6 +181,33 @@ class Model(base.DBConnectorComponent):
         sa.Column('results', sa.SmallInteger),
     )
 
+    # changesources
+
+    # The changesources table gives a unique identifier to each ChangeSource.  It
+    # also links to other tables used to ensure only one master runs each
+    # changesource
+    changesources = sa.Table('changesources', metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+
+        # name for this changesource, as given in the configuration, plus a hash
+        # of that name used for a unique index
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
+
+    # This links changesources to the master where they are running.  A changesource
+    # linked to a master that is inactive can be unlinked by any master.  This
+    # is a separate table so that we can "claim" changesources on a master by
+    # inserting; this has better support in database servers for ensuring that
+    # exactly one claim succeeds.  The ID column is present for external users;
+    # see bug #1053.
+    changesource_masters = sa.Table('changesource_masters', metadata,
+        sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
+            nullable=False, primary_key=True),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+            nullable=False),
+    )
+
     # changes
 
     # Files touched in changes
@@ -485,6 +512,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
     sa.Index('changes_sourcestampid', changes.c.sourcestampid)
+    sa.Index('changesource_name_hash', changesources.c.name_hash, unique=True)
     sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
     sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
@@ -543,6 +571,8 @@ class Model(base.DBConnectorComponent):
         ('sourcestamps',
             dict(unique=False, column_names=['patchid'], name='patchid')),
         ('scheduler_masters',
+            dict(unique=False, column_names=['masterid'], name='masterid')),
+        ('changesource_masters',
             dict(unique=False, column_names=['masterid'], name='masterid')),
         ('buildset_sourcestamps',
             dict(unique=False, column_names=['sourcestampid'],

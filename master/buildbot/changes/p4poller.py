@@ -45,8 +45,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollInterval"]
+    compare_attrs = base.PollingChangeSource.compare_attrs + \
+                    ("p4port", "p4user", "p4passwd", "p4base",
+                     "p4bin", "pollInterval")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET" , "PATH"]
@@ -71,6 +72,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+
+        if name is None:
+            name = "P4Source:%s:%s" % (p4port, p4base)
 
         base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
 

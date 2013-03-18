@@ -27,25 +27,30 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
     
-    compare_attrs = ["repourl", "branches", "workdir",
+    compare_attrs = base.PollingChangeSource.compare_attrs + \
+                    ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project"]
+                     "category", "project")
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
-                 encoding='utf-8'):
+                 encoding='utf-8', name=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        base.PollingChangeSource.__init__(self, name=repourl,
+        if name is None:
+            name = repourl
+
+        base.PollingChangeSource.__init__(self, name=name,
                 pollInterval=pollInterval)
 
-        if project is None: project = ''
+        if project is None:
+            project = ''
 
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
@@ -69,10 +74,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             config.error("GitPoller: fetch_refspec is no longer supported. "
                     "Instead, only the given branches are downloaded.")
         
-        if self.workdir == None:
+        if self.workdir is None:
             self.workdir = 'gitpoller-work'
 
-    def startService(self):
+    def activate(self):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
@@ -83,8 +88,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             self.lastRev = lastRev
         d.addCallback(setLastRev)
 
-        d.addCallback(lambda _:
-                base.PollingChangeSource.startService(self))
         d.addErrback(log.err, 'while initializing GitPoller repository')
 
         return d

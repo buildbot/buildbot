@@ -27,8 +27,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def tearDown(self):
         return self.tearDownChangeSource()
 
-    def newChangeSource(self, host, user):
-        s = gerritchangesource.GerritChangeSource(host, user)
+    def newChangeSource(self, host, user, **kwargs):
+        s = gerritchangesource.GerritChangeSource(host, user, **kwargs)
         self.attachChangeSource(s)
         return s
 
@@ -37,6 +37,13 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def test_describe(self):
         s = self.newChangeSource('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
+
+    def test_name(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
+
+        s = self.newChangeSource('somehost', 'someuser', name="MyName")
+        self.assertEqual("MyName", s.name)
 
     # TODO: test the backoff algorithm
 
