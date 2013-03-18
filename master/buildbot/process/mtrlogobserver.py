@@ -98,10 +98,8 @@ class MtrLogObserver(LogLineObserver):
         self.warnList = []
         LogLineObserver.__init__(self)
 
-    def setLog(self, loog):
-        LogLineObserver.setLog(self, loog)
-        d= loog.waitUntilFinished()
-        d.addCallback(lambda l: self.closeTestFail())
+    def logFinished(self):
+        self.closeTestFail()
 
     def outLineReceived(self, line):
         stripLine = line.strip("\r\n")

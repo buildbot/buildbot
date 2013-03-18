@@ -297,13 +297,18 @@ class LogObserver:
         assert interfaces.IStatusLog.providedBy(loog)
         loog.subscribe(self, True)
 
+        d = loog.waitUntilFinished()
+        d.addCallback(lambda _: self.logFinished())
+
+    def logFinished(self):
+        """This will be called when the log file is completed"""
+        pass
+
     def logChunk(self, build, step, log, channel, text):
         if channel == interfaces.LOG_CHANNEL_STDOUT:
             self.outReceived(text)
         elif channel == interfaces.LOG_CHANNEL_STDERR:
             self.errReceived(text)
-
-    # TODO: add a logEnded method? er, stepFinished?
 
     def outReceived(self, data):
         """This will be called with chunks of stdout data. Override this in
@@ -314,7 +319,6 @@ class LogObserver:
         """This will be called with chunks of stderr data. Override this in
         your observer."""
         pass
-
 
 class LogLineObserver(LogObserver):
     def __init__(self):
