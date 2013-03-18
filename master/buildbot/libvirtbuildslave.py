@@ -34,7 +34,7 @@ class WorkQueue(object):
     I am a class that turns parallel access into serial access.
 
     I exist because we want to run libvirt access in threads as we don't
-    trust calls not to block, but under load libvirt doesnt seem to like
+    trust calls not to block, but under load libvirt doesn't seem to like
     this kind of threaded use.
     """
 
