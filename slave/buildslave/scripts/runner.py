@@ -184,7 +184,6 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     quiet = config['quiet']
 
     if not base.isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
         sys.exit(1)
 
     os.chdir(basedir)
@@ -226,7 +225,6 @@ def restart(config):
     quiet = config['quiet']
 
     if not base.isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
         sys.exit(1)
 
     from buildslave.scripts.startup import start
@@ -301,7 +299,6 @@ def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
 
     if not base.isBuildslaveDir(basedir):
-        print "not a buildslave directory"
         sys.exit(1)
 
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
