@@ -18,22 +18,23 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
 from twisted.python import failure
-from buildbot import config, interfaces, openstackbuildslave
-from buildbot.test.fake import openstack
+from buildbot import config, interfaces
+from buildbot.buildslave import openstack
+import buildbot.test.fake.openstack as novaclient
 from buildbot.test.util import compat
 
 class TestOpenStackBuildSlave(unittest.TestCase):
 
-    class ConcreteBuildSlave(openstackbuildslave.OpenStackLatentBuildSlave):
+    class ConcreteBuildSlave(openstack.OpenStackLatentBuildSlave):
         pass
 
     def setUp(self):
-        self.patch(openstackbuildslave, "nce", openstack)
-        self.patch(openstackbuildslave, "client", openstack)
+        self.patch(openstack, "nce", novaclient)
+        self.patch(openstack, "client", novaclient)
 
     def test_constructor_nonova(self):
-        self.patch(openstackbuildslave, "nce", None)
-        self.patch(openstackbuildslave, "client", None)
+        self.patch(openstack, "nce", None)
+        self.patch(openstack, "client", None)
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave,
             'bot', 'pass', 'flavor', 'image', 'user', 'pass', 'tenant', 'auth')
 
@@ -61,7 +62,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
         bs = self.ConcreteBuildSlave('bot', 'pass', 'flavor', image_callable,
                 'user', 'pass', 'tenant', 'auth')
-        os_client = openstack.Client('user', 'pass', 'tenant', 'auth')
+        os_client = novaclient.Client('user', 'pass', 'tenant', 'auth')
         os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
         self.assertEqual('uuid1', bs._get_image(os_client))
 
@@ -75,7 +76,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'flavor', 'image-uuid',
                 'user', 'pass', 'tenant', 'auth')
         bs._poll_resolution = 0
-        self.patch(openstack.Servers, 'fail_to_get', True)
+        self.patch(novaclient.Servers, 'fail_to_get', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
                 bs._start_instance)
 
@@ -83,7 +84,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'flavor', 'image-uuid',
                 'user', 'pass', 'tenant', 'auth')
         bs._poll_resolution = 0
-        self.patch(openstack.Servers, 'fail_to_start', True)
+        self.patch(novaclient.Servers, 'fail_to_start', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
                 bs._start_instance)
 
