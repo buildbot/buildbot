@@ -520,24 +520,24 @@ def _WaitForShutdown(h):
     reactor.callLater(0, reactor.stop)
 
 def DetermineRunner(bbdir):
-   '''Checks if the given directory is a buildslave or a master and returns the
-   appropriate run function.'''
-   try:
-      import buildslave.scripts.runner
-      tacfile = os.path.join(bbdir, 'buildbot.tac')
+    '''Checks if the given directory is a buildslave or a master and returns the
+    appropriate run function.'''
+    try:
+        import buildslave.scripts.runner
+        tacfile = os.path.join(bbdir, 'buildbot.tac')
 
-      if os.path.exists(tacfile):
-         with open(tacfile, 'r') as f:
-            contents = f.read()
-            if 'import BuildSlave' in contents:
-               return buildslave.scripts.runner.run
+        if os.path.exists(tacfile):
+            with open(tacfile, 'r') as f:
+                contents = f.read()
+                if 'import BuildSlave' in contents:
+                    return buildslave.scripts.runner.run
 
-   except ImportError:
-      # Use the default
-      pass
+    except ImportError:
+        # Use the default
+        pass
 
-   import buildbot.scripts.runner
-   return buildbot.scripts.runner.run
+    import buildbot.scripts.runner
+    return buildbot.scripts.runner.run
 
 # This function is also called by the py2exe startup code.
 

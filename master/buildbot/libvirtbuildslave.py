@@ -182,11 +182,11 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         domains = yield self.connection.all()
         for d in domains:
-           name = yield d.name()
-           if name.startswith(self.name):
-               self.domain = d
-               self.substantiated = True
-               break
+            name = yield d.name()
+            if name.startswith(self.name):
+                self.domain = d
+                self.substantiated = True
+                break
 
         self.ready = True
 
@@ -243,8 +243,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-             log.msg("Cannot start_instance '%s' as already active" % self.name)
-             defer.returnValue(False)
+            log.msg("Cannot start_instance '%s' as already active" % self.name)
+            defer.returnValue(False)
 
         yield self._prepare_base_image()
 
