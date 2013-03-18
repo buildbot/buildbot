@@ -59,7 +59,7 @@ class Git(Source):
     name='git'
     renderables = [ "repourl"]
 
-    def __init__(self, repourl=None, branch='HEAD', mode='incremental',
+    def __init__(self, repourl=None, branch='master', mode='incremental',
                  method=None, submodules=False, shallow=False, progress=False,
                  retryFetch=False, clobberOnFailure=False, getDescription=False,
                  **kwargs):
@@ -125,7 +125,7 @@ class Git(Source):
             config.error("Git: getDescription must be a boolean or a dict.")
 
     def startVC(self, branch, revision, patch):
-        self.branch = branch or 'HEAD'
+        self.branch = branch or 'master'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
@@ -190,7 +190,7 @@ class Git(Source):
         if rc == 0:
             yield self._dovccmd(['reset', '--hard', self.revision, '--'])
 
-            if self.branch != 'HEAD':
+            if self.branch != 'master':
                 yield self._dovccmd(['branch', '-M', self.branch],
                         abandonOnFailure=False)
         else:
@@ -339,7 +339,7 @@ class Git(Source):
             d.addCallback(lambda _: res)
             return d
 
-        if self.branch != 'HEAD':
+        if self.branch != 'master':
             d.addCallback(renameBranch)
         return d
 
