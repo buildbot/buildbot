@@ -45,11 +45,6 @@ class P4(Source):
     renderables = [ 'p4base', 'p4client','p4viewspec', 'p4branch' ]
     possible_modes = ('incremental', 'full')
     
-    # SVN Has 'clean', 'fresh', 'clobber', 'copy', 'export', it may make sense to have 
-    # different methods for p4 syncing, but for the moment assume that the two modes
-    # are sufficient
-    possible_methods = (None,)
-
     def __init__(self, mode='incremental',
                  method=None,p4base=None, p4branch=None,
                  p4port=None, p4user=None,
@@ -127,8 +122,6 @@ class P4(Source):
         errors = []
         if self.mode not in self.possible_modes:
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
-        if self.method not in self.possible_methods:
-            errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
         if not p4viewspec and p4base is None:
             errors.append("you must provide p4base")
