@@ -462,6 +462,85 @@ won't be able to find a VM to start.
     like that used with ``virsh define``. The VM will be created
     automatically when needed, and destroyed when not needed any longer.
 
+OpenStack
++++++++++
+`OpenStack <http://openstack.org/>`_ is a series of interconnected components
+that facilitates managing compute, storage, and network resources in a
+data center. It is available under the Apache License and has a REST interface
+along with a Python client.
+
+Get an Account in an OpenStack cloud
+####################################
+Setting up OpenStack is outside the domain of this document. There are four
+account details necessary for the Buildbot master to interact with your
+OpenStack cloud: username, password, a tenant name, and the auth URL to use.
+
+Create an Image
+###############
+OpenStack supports a large number of image formats. OpenStack maintains a short
+list of prebuilt images; if the desired image is not listed, The
+`OpenStack Compute Administration Manual <http://docs.openstack.org/trunk/openstack-compute/admin/content/index.html>`_
+is a good resource for creating new images. You need to configure the image with
+a buildbot slave to connect to the master on boot.
+
+Configure the Master with an OpenStackLatentBuildSlave
+######################################################
+With the configured image in hand, it is time to configure the buildbot master
+to create OpenStack instances of it. You will need the aforementioned account
+details. These are the same details set in either environment variables or
+passed as options to an OpenStack client.
+
+When creating an OpenStackLatentBuildSlave, the first eight arguments are
+required. The first two arguments, the name and password, work the same as with
+normal buildslaves. The next argument is the flavor ID to use for the instance;
+this describes what resources the instance will have. The next argument is the
+image to use for the instance. The final four arguments are the OpenStack
+username, password, tenant name, and auth URL to use.
+
+Here is the simplest example of configuring an OpenStack latent buildslave. ::
+
+    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
+                    '898e6a8f-9004-11e2-8a28-1c6f65c7e45a',
+                    'os_user', 'os_password', 'tenant',
+                    'http://127.0.0.1:35357/v2.0')]
+
+Instead of using an explicit image UUID, a callable can be given instead. The
+function will be passed a list of available images. The function can then filter
+the list and return the image that should be used. ::
+
+    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+
+    def find_image(images):
+        # Sort oldest to newest.
+        cmp_fn = lambda x,y: cmp(x.created, y.created)
+        candidate_images = sorted(images, cmp=cmp_fn)
+        # Return the oldest candiate image.
+        return candidate_images[0]
+
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
+                    find_image,
+                    'os_user', 'os_password', 'tenant',
+                    'http://127.0.0.1:35357/v2.0')]
+
+OpenStack allows passing string key-value pairs via the ``meta`` option. The options
+passed will be available under the ``meta`` key from the metadata service or
+config drive. ::
+
+    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
+                    '898e6a8f-9004-11e2-8a28-1c6f65c7e45a',
+                    'os_user', 'os_password', 'tenant',
+                    'http://127.0.0.1:35357/v2.0',
+                    meta={'description': 'buildslave test'})]
+
+
+:class:`OpenStackLatentBuildSlave` supports all other configuration from the
+standard :class:`BuildSlave`. The ``missing_timeout`` and ``notify_on_missing``
+specify how long to wait for an OpenStack instance to attach before considering
+the attempt to have failed and email addresses to alert, respectively.
+``missing_timeout`` defaults to 20 minutes.
+
 Dangers with Latent Buildslaves
 +++++++++++++++++++++++++++++++
 
