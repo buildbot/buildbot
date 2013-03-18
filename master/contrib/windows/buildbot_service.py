@@ -345,7 +345,7 @@ class BBService(win32serviceutil.ServiceFramework):
         self._dolog(servicemanager.LogErrorMsg, s)
 
     # Functions that spawn a child process, redirecting any output.
-    # Although builtbot itself does this, it is very handy to debug issues
+    # Although buildbot itself does this, it is very handy to debug issues
     # such as ImportErrors that happen before buildbot has redirected.
 
     def createProcess(self, cmd):

@@ -126,7 +126,7 @@ class Connection(object):
 
     @defer.inlineCallbacks
     def lookupByName(self, name):
-        """ I lookup an existing prefined domain """
+        """ I lookup an existing predefined domain """
         res = yield queue.executeInThread(self.connection.lookupByName, name)
         defer.returnValue(self.DomainClass(self, res))
 
