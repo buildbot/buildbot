@@ -726,10 +726,21 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
-    The incoming HTTP requests for this hook are not authenticated in
-    any way.  Anyone who can access the web status can "fake" a request from
-    GitHub, potentially causing the buildmaster to run arbitrary code.  See
-    :bb:bug:`2186` for work to fix this problem.
+    The incoming HTTP requests for this hook are not authenticated by default.
+    Anyone who can access the web status can "fake" a request from
+    GitHub, potentially causing the buildmaster to run arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth``
+option. ::
+
+    c['status'].append(html.WebStatus(..
+                                      change_hook_auth=('user', 'password')))
+
+Then, create github service hook ``https://help.github.com/articles/post-receive-hooks``
+with WebHook URL looking as follow
+``http://user:password@builds.mycompany.com/bbot/change_hook/github``
+
+Note that not using ``change_hook_auth`` can expose you to security risks
 
 Google Code hook
 ################
