@@ -12,17 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import absolute_import
 
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from twisted.python import log as twlog
+from txgithub.api import GithubApi as GitHubAPI
 from zope.interface import implements
-from twisted.python import log
-from github import Github, GithubException
 
+from buildbot.interfaces import IStatusReceiver
+from buildbot.process.properties import Interpolate
 from buildbot.status.builder import SUCCESS, FAILURE, EXCEPTION
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.interfaces import IStatusReceiver
 
 
 GITHUB_STATE = {
@@ -36,30 +38,9 @@ class GitHubStatus(StatusReceiverMultiService):
     implements(IStatusReceiver)
 
     """
-    Publishes a build status using Github Status API
-    (http://developer.github.com/v3/repos/statuses/).
+    Send build status to GitHub.
 
-    Builders will need to define the following properties:
-    * github_repo_owner
-    * github_repo_name
-
-    Buildes without this properties are skipped.
-
-    The following class members can be changes for custom detailed message:
-    * startDescription
-    * endDescription
-
-    The following keys are available for custome message:
-    * state - 'pending'|'success'|'failure'|'error'
-    * sha
-    * targetUrl - URL to Buildbot build page.
-    * repoOwner - Name of repo owner.
-    * repoName - Name of the repo.
-    * buildNumber - Buildbot build number.
-    * builderName - Name of the builder.
-    * startDateTime
-    * endDateTime
-    * duration - Human readable representation of elapsed time.
+    For more details see user manual.
     """
 
     startDescription = (
@@ -70,14 +51,18 @@ class GitHubStatus(StatusReceiverMultiService):
         "Done at %(endDateTime)s."
         )
 
-    def __init__(self, token):
+    def __init__(self, token, repoOwner, repoName, sha=None):
         """
         Token for GitHub API.
         """
         StatusReceiverMultiService.__init__(self)
-        self._token = token
-        self._github = Github(token)
-        self._repos = {}
+        self._github = GitHubAPI(oauth2_token=token, sha=None)
+        if not sha:
+            sha = Interpolate("%(src::revision)s")
+
+        self._sha = sha
+        self._repoOwner = repoOwner
+        self._repoName = repoName
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
@@ -91,24 +76,21 @@ class GitHubStatus(StatusReceiverMultiService):
         return self
 
     def buildStarted(self, builderName, build):
-        sha = build.getProperty('revision', None)
         repo = self._getGitHubRepoProperties(build)
         if not repo:
             return
 
         (startTime, endTime) = build.getTimes()
-        buildNumber = str(build.getNumber())
         state = 'pending'
-        targetUrl = self._status.getURLForThing(build)
 
         status = {
             'state': state,
-            'sha': sha,
+            'sha': repo['sha'],
             'description': self.startDescription,
-            'targetUrl': targetUrl,
-            'repoOwner': repo['owner'],
-            'repoName': repo['name'],
-            'buildNumber': buildNumber,
+            'targetUrl': repo['targetUrl'],
+            'repoOwner': repo['repoOwner'],
+            'repoName': repo['repoName'],
+            'buildNumber': repo['buildNumber'],
             'builderName': builderName,
             'startDateTime': datetime.datetime.fromtimestamp(
                 startTime).isoformat(' '),
@@ -127,18 +109,15 @@ class GitHubStatus(StatusReceiverMultiService):
         state = GITHUB_STATE[results]
         (startTime, endTime) = build.getTimes()
         duration = self._timeDeltaToHumanReadable(startTime, endTime)
-        buildNumber = str(build.getNumber())
-        sha = build.getProperty('revision')
-        targetUrl = self._status.getURLForThing(build)
 
         status = {
             'state': state,
-            'sha': sha,
+            'sha': repo['sha'],
             'description': self.endDescription,
-            'targetUrl': targetUrl,
-            'repoOwner': repo['owner'],
-            'repoName': repo['name'],
-            'buildNumber': buildNumber,
+            'targetUrl': repo['targetUrl'],
+            'repoOwner': repo['repoOwner'],
+            'repoName': repo['repoName'],
+            'buildNumber': repo['buildNumber'],
             'builderName': builderName,
             'startDateTime': datetime.datetime.fromtimestamp(
                 startTime).isoformat(' '),
@@ -173,49 +152,40 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         Return a dictionary with GitHub related properties from `build`.
         """
-        owner = build.getProperty('github_repo_owner', None)
-        name = build.getProperty('github_repo_name', None)
+        repoOwner = build.render(self._repoOwner)
+        repoName = build.render(self._repoName)
+        sha = build.render(self._sha)
 
-        if not owner or not name:
+        if not repoOwner or not repoName or not sha:
             return {}
 
         return {
-            'owner': owner,
-            'name': name,
+            'repoOwner': repoOwner,
+            'repoName': repoName,
+            'sha': sha,
+            'targetUrl': self._status.getURLForThing(build),
+            'buildNumber': str(build.getNumber()),
         }
-
-    def _getGitHubCachedRepo(self, repo_name):
-        """
-        Return cached repo.
-
-        Here we have a cache and we have a problem.
-        I hope repos should not change location that often.
-        """
-        try:
-            return self._repos[repo_name]
-        except KeyError:
-            self._repos[repo_name] = self._github.get_repo(repo_name)
-            return self._repos[repo_name]
 
     def _sendGitHubStatus(self, status):
         """
         Send status to github.
         """
         if not status['sha']:
-            log.msg('GitHubStatus: Build has no revision')
+            twlog.msg('GitHubStatus: Build has no revision')
             return
 
-        repo_name = "%s/%s" % (status['repoOwner'], status['repoName'])
         description = status['description'] % status
-        try:
-            repo = self._getGitHubCachedRepo(repo_name)
-            commit = repo.get_commit(status['sha'])
-            commit.create_status(
-                status['state'],
-                status['targetUrl'],
-                description,
-                )
-        except GithubException, error:
-            log.msg(
-                'GitHubStatus: Failed to send status for %s to GitHub: %s' % (
-                repo_name, str(error)))
+        deferred = self._github.createStatus(
+            repo_user=status['repoOwner'],
+            repo_name=status['repoName'],
+            sha=status['sha'],
+            state=status['state'],
+            target_url=status['targetUrl'],
+            description=description,
+            )
+        deferred.addErrback(
+            twlog.err,
+            "while sending GitHub status for %s/%s at %s." % (
+                status['repoOwner'], status['repoName'], status['sha'])
+            )
