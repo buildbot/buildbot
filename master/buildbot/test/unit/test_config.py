@@ -197,6 +197,20 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             lambda : config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
 
+    def test_loadConfig_location_from_tac(self):
+        self.patch_load_helpers()
+        tacfile = os.path.join(self.basedir, "buildbot.tac")
+        otherConfigFile = os.path.join(self.basedir, "other.cfg")
+        with open(tacfile, "wt") as f:
+            f.write("configfile = '%s'" % otherConfigFile)
+        with open(otherConfigFile, "wt") as f:
+            f.write(textwrap.dedent("""\
+                BuildmasterConfig = dict()
+                """))
+        rv = config.MasterConfig.loadConfig(self.basedir, self.filename)
+        self.assertIsInstance(rv, config.MasterConfig)
+
+
     def test_loadConfig_missing_basedir(self):
         self.assertRaisesConfigError(
             re.compile("basedir .* does not exist"),
