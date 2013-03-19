@@ -68,7 +68,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
     def _get_image(self, os_client):
         # If self.image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
-        if hasattr(self.image, '__call__'):
+        if callable(self.image):
             image_uuid = self.image(os_client.images.list())
         else:
             image_uuid = self.image
