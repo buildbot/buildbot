@@ -1518,6 +1518,69 @@ optionally also sending a message when a build is started.
 is ``None``, no review will be sent.
 ``startCB`` should return a message.
 
+.. bb:status:: GitHubStatusPush
+
+GitHubStatusPush
+~~~~~~~~~~~~~~~~
+
+.. @cindex GitHubStatusPush
+.. py:class:: buildbot.status.github.GitHubStatusPush
+
+::
+
+    import buildbot.status.github
+
+    repoOwner = 'myorg'
+    repoName = Interpolate("%(prop::github_repo_name)s"
+    sha = Interpolate("%(src::revision)s")
+    gs = buildbot.status.github.GitHubStatus(token='githubAPIToken',
+                                             repoOwner=repoOwner,
+                                             repoName=repoName)
+                                             sha=sha)
+    gs.startDescription = "Build started at %(startDateTime)s."
+    gs.endDescription = "[%(state)s] Build done after %(duration)s."
+    c['status'].append(gs)
+
+:class:`GitHubStatus` publishes a build status using
+`Github Status API <http://developer.github.com/v3/repos/statuses>`_.
+
+It is configured with a GitHub API token and :class:`Interolation` for
+owner of the repository, name of the repository and SHA for which to send
+the status.
+
+You can create a token from you own
+`GitHub - Profile - Applications - Register new application
+<https://github.com/settings/applications>`_ or use an external tool to
+generate one.
+
+`repoOwner`, `repoName` and `sha` are provided to inform the plugin where
+to send status for build. By default `sha` is defined as: `%(src::revision)s`.
+
+In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or
+empty string, the plugin will skip sending the status.
+
+To inform the status the repository's owner and name, you can define
+custome properties on builders (ex: github_repo_owner and github_repo_name).
+
+The following class members can be changes for custom messages:
+
+* `startDescription`
+* `endDescription`
+
+The following keys are available for custom message interpolation:
+
+* state - 'pending'|'success'|'failure'|'error'
+* sha
+* targetUrl - URL to Buildbot build page.
+* repoOwner - Name of repo owner.
+* repoName - Name of the repo.
+* buildNumber - Buildbot build number.
+* builderName - Name of the builder.
+* startDateTime
+* endDateTime
+* duration - Human readable representation of elapsed time.
+
+
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
 .. [#] It may even be possible to provide SSL access by using a
