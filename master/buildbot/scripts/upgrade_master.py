@@ -47,7 +47,7 @@ def checkBasedir(config):
 
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print "checking master.cfg"
+        print "checking %s" % configFileName
 
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
