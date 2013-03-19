@@ -65,7 +65,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         self.os_auth_url = os_auth_url
         self.meta = meta
 
-    def _get_image(self, os_client):
+    def _getImage(self, os_client):
         # If self.image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
         if callable(self.image):
@@ -83,7 +83,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         # Authenticate to OpenStack.
         os_client = client.Client(self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
-        image_uuid = self._get_image(os_client)
+        image_uuid = self._getImage(os_client)
         flavor_id = self.flavor
         boot_args = [self.slavename, image_uuid, flavor_id]
         boot_kwargs = {}
