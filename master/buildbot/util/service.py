@@ -19,9 +19,6 @@ from twisted.python import log
 
 from buildbot import util
 
-class AlreadyClaimedError(Exception):
-    pass
-
 class ClusteredService(service.Service, util.ComparableMixin):
 
     compare_attrs = ('name',)
@@ -142,7 +139,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                log.err(None, 'WARNING: ClusteredService(%s) is only partially active' % self.getName())
+                log.err(None, 'WARNING: ClusteredService(%s) is only partially active' % self.name)
 
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail

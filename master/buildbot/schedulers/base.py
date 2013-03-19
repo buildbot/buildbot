@@ -15,7 +15,7 @@
 
 from zope.interface import implements
 from twisted.python import failure, log
-from twisted.internet import defer, task
+from twisted.internet import defer
 from buildbot.process.properties import Properties
 from buildbot.changes import changes
 from buildbot import config, interfaces
@@ -94,7 +94,8 @@ class BaseScheduler(ClusteredService, StateMixin):
                                                               self.master.masterid)
 
     def _unclaimService(self):
-        return self.master.data.updates.trySetSchedulerMaster(self.serviceid, None)
+        return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
+                                                              None)
 
 
     def stopService(self):

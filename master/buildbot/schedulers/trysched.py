@@ -62,9 +62,13 @@ class BadJobfile(Exception):
 class JobdirService(MaildirService):
     # NOTE: tightly coupled with Try_Jobdir, below
 
+    def __init__(self, scheduler, basedir=None):
+        self.scheduler = scheduler
+        MaildirService.__init__(self, basedir)
+
     def messageReceived(self, filename):
         f = self.moveToCurDir(filename)
-        return self.parent.handleJobFile(filename, f)
+        return self.scheduler.handleJobFile(filename, f)
 
 
 class Try_Jobdir(TryBase):
@@ -76,17 +80,28 @@ class Try_Jobdir(TryBase):
         TryBase.__init__(self, name=name, builderNames=builderNames,
                          properties=properties)
         self.jobdir = jobdir
-        self.watcher = JobdirService()
-        self.watcher.setServiceParent(self)
+        self.watcher = JobdirService(scheduler=self)
 
-    def startService(self):
+    def addService(self, child):
+        pass
+
+    def removeService(self, child):
+        pass
+
+    def activate(self):
         # set the watcher's basedir now that we have a master
         jobdir = os.path.join(self.master.basedir, self.jobdir)
         self.watcher.setBasedir(jobdir)
         for subdir in "cur new tmp".split():
             if not os.path.exists(os.path.join(jobdir, subdir)):
                 os.mkdir(os.path.join(jobdir, subdir))
-        TryBase.startService(self)
+
+        # bridge the activate/deactivate to a startService/stopService on the child service
+        self.watcher.startService()
+
+    def deactivate(self):
+        # bridge the activate/deactivate to a startService/stopService on the child service
+        self.watcher.stopService()
 
     def parseJob(self, f):
         # jobfiles are serialized build requests. Each is a list of
@@ -270,9 +285,7 @@ class Try_Userpass(TryBase):
         self.port = port
         self.userpass = userpass
 
-    def startService(self):
-        TryBase.startService(self)
-
+    def activate(self):
         # register each user/passwd with the pbmanager
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
@@ -282,11 +295,6 @@ class Try_Userpass(TryBase):
                 self.master.pbmanager.register(
                     self.port, user, passwd, factory))
 
-    def stopService(self):
-        d = defer.maybeDeferred(TryBase.stopService, self)
-
-        def unreg(_):
-            return defer.gatherResults(
-                [reg.unregister() for reg in self.registrations])
-        d.addCallback(unreg)
-        return d
+    def deactivate(self):
+        return defer.gatherResults(
+            [reg.unregister() for reg in self.registrations])
