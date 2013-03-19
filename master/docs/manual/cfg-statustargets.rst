@@ -1029,6 +1029,16 @@ MailNotifier arguments
     provoked the message.
 
 ``mode``
+    Mode is a list of strings; however there are two strings which can be used
+    as shortcuts instead of the full lists. The possible shortcuts are:
+
+    ``all``
+        Always send mail about builds. Equivalent to (``change``, ``failing``,
+        ``passing``, ``passing``, ``problem``, ``warnings``, ``exception``).
+
+    ``warnings``
+        Equivalent to (``warnings``, ``failing``).
+
     (list of strings). A combination of:
 
     ``change``
@@ -1049,9 +1059,6 @@ MailNotifier arguments
     ``exception``
         Send mail about builds which generate exceptions.
 
-    ``all``
-        Always send mail about builds.
-        
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
