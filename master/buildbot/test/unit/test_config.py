@@ -31,7 +31,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
-from buildbot.scripts.base import getConfigFileWithFallback
 
 global_defaults = dict(
     title='Buildbot',
