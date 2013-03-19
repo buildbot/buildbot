@@ -490,24 +490,50 @@ to create OpenStack instances of it. You will need the aforementioned account
 details. These are the same details set in either environment variables or
 passed as options to an OpenStack client.
 
-When creating an OpenStackLatentBuildSlave, the first eight arguments are
-required. The first two arguments, the name and password, work the same as with
-normal buildslaves. The next argument is the flavor ID to use for the instance;
-this describes what resources the instance will have. The next argument is the
-image to use for the instance. The final four arguments are the OpenStack
-username, password, tenant name, and auth URL to use.
+:class:`OpenStackLatentBuildSlave` accepts the following arguments:
+
+``name``
+    The buildslave name.
+
+``password``
+    A password for the buildslave to login to the master with.
+
+``flavor``
+    The flavor ID to use for the instance.
+
+``image``
+    A string containing the image UUID to use for the instance. A callable may
+    instead be passed. It will be passed the list of available images and must
+    return the image to use.
+
+``os_username``
+
+``os_password``
+
+``os_tenant_name``
+
+``os_auth_url``
+    The OpenStack authentication needed to create and delete instances. These
+    are the same as the environment variables with uppercase names of the
+    arguments.
+
+``meta``
+    A dictionary of string key-value pairs to pass to the instance. These will
+    be available under the ``metadata`` key from the metadata service.
 
 Here is the simplest example of configuring an OpenStack latent buildslave. ::
 
     from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
-                    '898e6a8f-9004-11e2-8a28-1c6f65c7e45a',
-                    'os_user', 'os_password', 'tenant',
-                    'http://127.0.0.1:35357/v2.0')]
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+                    flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
+                    os_username='user', os_password='password',
+                    os_tenant_name='tenant',
+                    os_auth_url='http://127.0.0.1:35357/v2.0')]
 
-Instead of using an explicit image UUID, a callable can be given instead. The
-function will be passed a list of available images. The function can then filter
-the list and return the image that should be used. ::
+The ``image`` argument also supports being given a callable. The callable will
+be passed the list of available images and must return the image to use. The
+invocation happens in a separate thread to prevent blocking the build master
+when interacting with OpenStack. ::
 
     from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
 
@@ -518,21 +544,11 @@ the list and return the image that should be used. ::
         # Return the oldest candiate image.
         return candidate_images[0]
 
-    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
-                    find_image,
-                    'os_user', 'os_password', 'tenant',
-                    'http://127.0.0.1:35357/v2.0')]
-
-OpenStack allows passing string key-value pairs via the ``meta`` option. The options
-passed will be available under the ``meta`` key from the metadata service or
-config drive. ::
-
-    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit', 1,
-                    '898e6a8f-9004-11e2-8a28-1c6f65c7e45a',
-                    'os_user', 'os_password', 'tenant',
-                    'http://127.0.0.1:35357/v2.0',
-                    meta={'description': 'buildslave test'})]
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+                    flavor=1, image=find_image,
+                    os_username='user', os_password='password',
+                    os_tenant_name='tenant',
+                    os_auth_url='http://127.0.0.1:35357/v2.0')]
 
 
 :class:`OpenStackLatentBuildSlave` supports all other configuration from the
