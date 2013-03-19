@@ -50,8 +50,9 @@ def loadConfig(config):
         print "checking master.cfg"
 
     try:
+        configFile = base.getConfigFileWithFallback(config['basedir'])
         master_cfg = config_module.MasterConfig.loadConfig(
-                                            config['basedir'], 'master.cfg')
+                                            config['basedir'], configFile)
     except config_module.ConfigErrors, e:
         print "Errors loading configuration:"
         for msg in e.errors:

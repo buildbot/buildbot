@@ -118,14 +118,6 @@ class MasterConfig(object):
             ])
         filename = os.path.join(basedir, filename)
         if not os.path.exists(filename):
-            # execute the .tac file to see if its configfile location exists
-            tacFile = os.path.join(basedir, 'buildbot.tac')
-            # don't mess with the global namespace
-            if os.path.exists(tacFile):
-                tacGlobals = {}
-                execfile(tacFile, tacGlobals)
-                filename = tacGlobals["configfile"]
-        if not os.path.exists(filename):
             raise ConfigErrors([
                 "configuration file '%s' does not exist" % (filename,),
             ])

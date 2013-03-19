@@ -16,12 +16,12 @@
 import sys
 import os
 from buildbot import config
+from buildbot.scripts.base import getConfigFileWithFallback
 
 class ConfigLoader(object):
-    def __init__(self, basedir=os.getcwd(), configFileName="master.cfg"):
+    def __init__(self, basedir=os.getcwd(), configFileName='master.cfg'):
         self.basedir = os.path.abspath(basedir)
-        self.configFileName = os.path.abspath(
-                                os.path.join(basedir, configFileName))
+        self.configFileName = getConfigFileWithFallback(basedir, configFileName)
 
     def load(self, quiet=False):
         try:

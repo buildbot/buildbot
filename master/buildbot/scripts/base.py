@@ -18,6 +18,7 @@ from __future__ import with_statement
 import os
 import copy
 import stat
+import sys
 from twisted.python import usage, runtime
 
 def isBuildmasterDir(dir):
@@ -29,6 +30,21 @@ def isBuildmasterDir(dir):
     with open(buildbot_tac, "r") as f:
         contents = f.read()
     return "Application('buildmaster')" in contents
+
+def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
+    configFile = os.path.abspath(os.path.join(basedir, defaultName))
+    if os.path.exists(configFile):
+        return configFile
+    # execute the .tac file to see if its configfile location exists
+    print "No file named %s. Falling back to buildbot.tac" % configFile
+    if isBuildmasterDir(basedir):
+        tacFile = os.path.join(basedir, 'buildbot.tac')
+        # don't mess with the global namespace
+        tacGlobals = {}
+        execfile(tacFile, tacGlobals)
+        return tacGlobals["configfile"]
+    print "Couldn't find a valid config file."
+    sys.exit(1)
 
 class SubcommandOptions(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
