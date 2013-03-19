@@ -789,7 +789,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             l.name = name
             if bare_builder_lock:
                 return l
-            return locks.LockAccess(l, "counting")
+            return locks.LockAccess(l, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]
