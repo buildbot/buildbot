@@ -374,8 +374,8 @@ class Builder(config.ReconfigurableServiceMixin,
             req = build.requests[-1]
             # TODO: get id's for builder, slave
             bid, number = yield self.master.db.builds.addBuild(builderid=-1,
-                    brid=req.id, slaveid=-1, masterid=self.master.masterid,
-                    state_strings=['created'])
+                    buildrequestid=req.id, slaveid=-1,
+                    masterid=self.master.masterid, state_strings=['created'])
             bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
