@@ -50,6 +50,33 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertTrue(base.isBuildmasterDir(os.path.abspath('test')))
         self.assertWasQuiet()
 
+class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.basedir = os.path.abspath('basedir')
+        self.stdout = cStringIO.StringIO()
+        self.filename = 'master.cfg'
+        return self.setUpDirs('basedir')
+
+    def test_tacFallback_location_from_tac(self):
+        tacfile = os.path.join(self.basedir, "buildbot.tac")
+        otherConfigFile = os.path.join(self.basedir, "other.cfg")
+        with open(tacfile, "wt") as f:
+            f.write("configfile = '%s'" % otherConfigFile)
+        with open(otherConfigFile, "wt") as f:
+            f.write("#dummy")
+        self.filename = base.getConfigFileWithFallback(self.basedir)
+        self.assertEqual(self.filename, otherConfigFile)
+
+    def test_tacFallback_noFallback(self):
+        defaultFilename = self.filename
+        with open(self.filename, "wt") as f:
+            f.write("#dummy")
+        self.filename = base.getConfigFileWithFallback(self.basedir)
+        self.assertEqual(self.filename,
+                         os.path.join(self.basedir, defaultFilename))
+
+
 class TestSubcommandOptions(unittest.TestCase):
 
     def fakeOptionsFile(self, **kwargs):
