@@ -172,9 +172,9 @@ class HgPoller(base.PollingChangeSource):
         d = self._getStateObjectId()
         def oid_cb(oid):
             d = self.master.db.state.getState(oid, 'current_rev', None)
-            def to_int(cur):
+            def addOid(cur):
                 return oid, cur
-            d.addCallback(to_int)
+            d.addCallback(addOid)
             return d
         d.addCallback(oid_cb)
         return d
