@@ -120,7 +120,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
-        self.filename = 'test.cfg'
+        self.filename = os.path.join(self.basedir, 'test.cfg')
         return self.setUpDirs('basedir')
 
     def tearDown(self):

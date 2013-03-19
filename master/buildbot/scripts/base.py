@@ -36,15 +36,14 @@ def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
     if os.path.exists(configFile):
         return configFile
     # execute the .tac file to see if its configfile location exists
-    print "No file named %s. Falling back to buildbot.tac" % configFile
-    if isBuildmasterDir(basedir):
-        tacFile = os.path.join(basedir, 'buildbot.tac')
+    tacFile = os.path.join(basedir, 'buildbot.tac')
+    if os.path.exists(tacFile):
         # don't mess with the global namespace
         tacGlobals = {}
         execfile(tacFile, tacGlobals)
         return tacGlobals["configfile"]
-    print "Couldn't find a valid config file."
-    sys.exit(1)
+    # No config file found; return default location and fail elsewhere
+    return configFile
 
 class SubcommandOptions(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the

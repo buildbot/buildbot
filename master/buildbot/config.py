@@ -116,7 +116,6 @@ class MasterConfig(object):
             raise ConfigErrors([
                 "basedir '%s' does not exist" % (basedir,),
             ])
-        filename = os.path.join(basedir, filename)
         if not os.path.exists(filename):
             raise ConfigErrors([
                 "configuration file '%s' does not exist" % (filename,),

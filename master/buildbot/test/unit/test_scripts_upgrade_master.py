@@ -48,7 +48,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
             return basedirOk
         self.patch(upgrade_master, 'checkBasedir', checkBasedir)
 
-        def loadConfig(config):
+        def loadConfig(config, configFileName='master.cfg'):
             self.calls.append('loadConfig')
             return config_module.MasterConfig() if configOk else False
         self.patch(upgrade_master, 'loadConfig', loadConfig)
