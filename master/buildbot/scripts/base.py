@@ -18,7 +18,6 @@ from __future__ import with_statement
 import os
 import copy
 import stat
-import sys
 from twisted.python import usage, runtime
 
 def isBuildmasterDir(dir):
