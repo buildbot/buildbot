@@ -187,16 +187,17 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.master.data.updates.schedulerMasters[20] = 93
 
         sched.startService()
-        sched.clock.advance(sched.POLL_INTERVAL/2)
-        sched.clock.advance(sched.POLL_INTERVAL/5)
-        sched.clock.advance(sched.POLL_INTERVAL/5)
+        sched.clock.advance(sched.POLL_INTERVAL_SEC/2)
+        sched.clock.advance(sched.POLL_INTERVAL_SEC/5)
+        sched.clock.advance(sched.POLL_INTERVAL_SEC/5)
         self.assertFalse(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
         self.assertFalse(sched.active)
+        self.assertEqual(sched.serviceid, 20)
 
         # clear that masterid
         del self.master.data.updates.schedulerMasters[20]
-        sched.clock.advance(sched.POLL_INTERVAL)
+        sched.clock.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
         self.assertTrue(sched.active)
@@ -218,7 +219,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched.activate = activate
 
         sched.startService()
-        sched.clock.advance(sched.POLL_INTERVAL/2)
+        sched.clock.advance(sched.POLL_INTERVAL_SEC/2)
         yield sched.stopService()
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 

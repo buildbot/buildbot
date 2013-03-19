@@ -84,10 +84,15 @@ class SchedulerResourceType(base.ResourceType):
         return self.master.db.schedulers.findSchedulerId(name)
 
     @base.updateMethod
-    def setSchedulerMaster(self, schedulerid, masterid):
-        # the db method raises the same exception as documented
-        return self.master.db.schedulers.setSchedulerMaster(
+    def trySetSchedulerMaster(self, schedulerid, masterid):
+        # the db layer throws an exception if the claim fails; we translate
+        # that to a straight true-false value. We could trap the exception
+        # type, but that seems a bit too restrictive
+        d = self.master.db.schedulers.setSchedulerMaster(
                                             schedulerid, masterid)
+        d.addCallback(lambda _: True)
+        d.addErrback(lambda _: False)
+        return d
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):

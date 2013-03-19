@@ -162,18 +162,18 @@ class SchedulerResourceType(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual((yield self.rtype.findSchedulerId(u'sch')), 10)
         self.master.db.schedulers.findSchedulerId.assert_called_with(u'sch')
 
-    def test_signature_setSchedulerMaster(self):
+    def test_signature_trySetSchedulerMaster(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.setSchedulerMaster, # fake
-            self.rtype.setSchedulerMaster) # real
-        def setSchedulerMaster(self, schedulerid, masterid):
+            self.master.data.updates.trySetSchedulerMaster, # fake
+            self.rtype.trySetSchedulerMaster) # real
+        def trySetSchedulerMaster(self, schedulerid, masterid):
             pass
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_succeeds(self):
         self.master.db.schedulers.setSchedulerMaster = mock.Mock(
                                         return_value=defer.succeed(None))
-        yield self.rtype.setSchedulerMaster(10, 20)
+        yield self.rtype.trySetSchedulerMaster(10, 20)
         self.master.db.schedulers.setSchedulerMaster.assert_called_with(10, 20)
 
     @defer.inlineCallbacks
