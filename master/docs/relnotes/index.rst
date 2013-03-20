@@ -43,6 +43,10 @@ Features
 
 * The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
 
+* The ``SetProperty`` step in ``buidlbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
+
+* A new :bb:step:`SetProperty` step has been added in ``buildbot.steps.master`` which can set a property directly without accessing the slave.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
