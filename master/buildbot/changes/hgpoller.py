@@ -174,6 +174,8 @@ class HgPoller(base.PollingChangeSource):
         def oid_cb(oid):
             d = self.master.db.state.getState(oid, 'current_rev', None)
             def addOid(cur):
+                if cur is not None:
+                    return  oid, int(cur)
                 return oid, cur
             d.addCallback(addOid)
             return d
