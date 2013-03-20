@@ -2557,17 +2557,18 @@ which allows the value to be built from other property values::
     f.addStep(SetProperty(property="SomeProperty",
         value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
 
+.. bb:step:: SetPropertyFromCommand
 
-SetProperty(shell)
-++++++++++++++++++
+SetPropertyFromCommand
+++++++++++++++++++++++
 
-.. py:class:: buildbot.steps.shell.SetProperty
+.. py:class:: buildbot.steps.shell.SetPropertyFromCommand
 
 This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
 output of the command into a property.  It is usually used like this::
 
     from buildbot.steps import shell
-    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
+    f.addStep(shell.SetPropertyFromCommand(command="uname -a", property="uname"))
 
 This runs ``uname -a`` and captures its stdout, stripped of leading
 and trailing whitespace, in the property ``uname``.  To avoid stripping,
@@ -2587,12 +2588,12 @@ a string.  It should return a dictionary containing all new properties. ::
     def glob2list(rc, stdout, stderr):
         jpgs = [ l.strip() for l in stdout.split('\n') ]
         return { 'jpgs' : jpgs }
-    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+    f.addStep(SetPropertyFromCommand(command="ls -1 *.jpg", extract_fn=glob2list))
 
 Note that any ordering relationship of the contents of stdout and
 stderr is lost.  For example, given ::
 
-    f.addStep(SetProperty(
+    f.addStep(SetPropertyFromCommand(
         command="echo output1; echo error >&2; echo output2",
         extract_fn=my_extract))
 
