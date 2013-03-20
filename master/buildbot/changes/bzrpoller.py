@@ -44,11 +44,12 @@ import buildbot.changes.base
 import buildbot.changes.changes
 
 try:
-    import bzrlib.branch
+    import bzrlib
 except ImportError:
     BZRLIB_PRESENT = False
 else:
     BZRLIB_PRESENT = True
+    from bzrlib.branch import Branch as BzrBranch
 
 import twisted.cred.credentials
 import twisted.internet.base
@@ -70,7 +71,7 @@ def generate_change(branch,
                     blame_merge_author=False):
     """Return a dict of information about a change to the branch.
 
-    Dict has keys of "files", "who", "comments", and "revision", as used by
+    Dict has keys of "files", "author", "comments", and "revision", as used by
     the buildbot Change (and the PBChangeSource).
 
     If only the branch is given, the most recent change is returned.
@@ -82,10 +83,10 @@ def generate_change(branch,
     bzr hooks usually provide this information.
 
     blame_merge_author means that the author of the merged branch is
-    identified as the "who", not the person who committed the branch itself.
+    identified as the "author", not the person who committed the branch itself.
     This is typically used for PQM.
     """
-    change = {}  # files, who, comments, revision; NOT branch (= branch.nick)
+    change = {}  # files, author, comments, revision; NOT branch (= branch.nick)
     if new_revno is None:
         new_revno = branch.revno()
     if new_revid is None:
@@ -99,10 +100,10 @@ def generate_change(branch,
     new_rev = repository.get_revision(new_revid)
     if blame_merge_author:
         # this is a pqm commit or something like it
-        change['who'] = repository.get_revision(
+        change['author'] = repository.get_revision(
             new_rev.parent_ids[-1]).get_apparent_authors()[0]
     else:
-        change['who'] = new_rev.get_apparent_authors()[0]
+        change['author'] = new_rev.get_apparent_authors()[0]
     # maybe useful to know:
     # name, email = bzrtools.config.parse_username(change['who'])
     change['comments'] = new_rev.message
@@ -154,11 +155,11 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
         self.branch_name = branch_name
         self.category = category
 
+        self.last_revision = None
+        self.polling = False
+
     def _getStateObjectId(self, branch_name):
         """Return a deferred for object id in state db.
-
-        Being unique among pollers, workdir is used with branch as instance
-        name for db.
         """
         return self.master.db.state.getObjectId(
             branch_name, self.db_class_name)
@@ -168,8 +169,6 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
             # this raise has been deferred here to allow for unit testing
             # by injection of a mock
             raise ImportError('bzrlib')
-        self.last_revision = None
-        self.polling = False
 
         buildbot.changes.base.PollingChangeSource.startService(self)
 
@@ -240,6 +239,23 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
     def describe(self):
         return "BzrPoller watching %s" % self.url
 
+    def _getStateCurrentRev(self):
+        """Return a deferred for object id in state db and current numeric rev.
+
+        If never has been set, current rev is None.
+        """
+        d = self._getStateObjectId(self.branch_name)
+
+        def oid_cb(oid):
+            current = self.master.db.state.getState(oid, 'current_rev', None)
+
+            def to_int(cur):
+                return oid, cur and int(cur) or None
+            current.addCallback(to_int)
+            return current
+        d.addCallback(oid_cb)
+        return d
+
     @twisted.internet.defer.inlineCallbacks
     def poll(self):
         if self.polling:  # this is called in a loop, and the loop might
@@ -271,7 +287,7 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
             self.polling = False
 
     def getRawChanges(self):
-        branch = bzrlib.branch.Branch.open_containing(self.url)[0]
+        branch = BzrBranch.open_containing(self.url)[0]
         if self.branch_name is FULL:
             branch_name = self.url
         elif self.branch_name is SHORT:
