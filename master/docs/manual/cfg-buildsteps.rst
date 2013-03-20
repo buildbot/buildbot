@@ -2546,6 +2546,21 @@ These steps set properties on the master based on information from the slave.
 SetProperty
 +++++++++++
 
+.. py:class:: buildbot.steps.master.SetProperty
+
+SetProperty takes two arguments of ``property`` and ``value`` where the ``value`` is to be assigned to the ``property`` key.
+It is usually called with the ``value`` argument being specifed as a :ref:`Interpolate` object
+which allows the value to be built from other property values::
+
+    from buildbot.steps.master import SetProperty
+    from buildbot.process.properties import Interpolate
+    f.addStep(SetProperty(property="SomeProperty",
+        value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+
+
+SetProperty(shell)
+++++++++++++++++++
+
 .. py:class:: buildbot.steps.shell.SetProperty
 
 This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
@@ -2613,6 +2628,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
+
 
 .. index:: Properties; triggering schedulers
 
