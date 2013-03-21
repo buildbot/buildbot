@@ -336,7 +336,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss.get('repository', None),
+                        repository=ss.get('repository', ''),
                         branch=ss.get('branch', None),
                         revision=ss.get('revision', None),
                         project=ss.get('project', ''),
