@@ -21,7 +21,7 @@ import getpass
 import mock
 import cStringIO
 from twisted.trial import unittest
-from twisted.python import usage, runtime
+from twisted.python import usage, runtime, log
 from buildbot.scripts import base, runner
 from buildbot.test.util import misc
 
@@ -888,6 +888,12 @@ class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         except SystemExit, e:
             self.assertEqual(e.args[0], 0)
         self.assertInStdout('Buildbot version:')
+
+    def test_verbose(self):
+        self.patch(log, 'startLogging', mock.Mock())
+        self.assertRaises(usage.UsageError, self.parse, "--verbose")
+        log.startLogging.assert_called_once_with(sys.stderr)
+
 
 class TestRun(unittest.TestCase):
 

@@ -27,8 +27,8 @@ import sys
 
 from buildbot.scripts import base
 
-# Note that the terms 'options' and 'config' are used intechangeably here - in
-# fact, they are intercanged several times.  Caveat legator.
+# Note that the terms 'options' and 'config' are used interchangeably here - in
+# fact, they are interchanged several times.  Caveat legator.
 
 def validate_master_option(master):
     """Validate master (-m, --master) command line option.

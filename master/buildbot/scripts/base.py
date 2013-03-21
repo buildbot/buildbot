@@ -30,6 +30,20 @@ def isBuildmasterDir(dir):
         contents = f.read()
     return "Application('buildmaster')" in contents
 
+def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
+    configFile = os.path.abspath(os.path.join(basedir, defaultName))
+    if os.path.exists(configFile):
+        return configFile
+    # execute the .tac file to see if its configfile location exists
+    tacFile = os.path.join(basedir, 'buildbot.tac')
+    if os.path.exists(tacFile):
+        # don't mess with the global namespace
+        tacGlobals = {}
+        execfile(tacFile, tacGlobals)
+        return tacGlobals["configfile"]
+    # No config file found; return default location and fail elsewhere
+    return configFile
+
 class SubcommandOptions(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
     # .buildbot/options file.  Note that this *only* works with optParameters,

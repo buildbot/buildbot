@@ -20,6 +20,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from twisted.internet import error
 from twisted.internet.protocol import ProcessProtocol
+import pprint
 
 class MasterShellCommand(BuildStep):
     """
@@ -169,3 +170,38 @@ class MasterShellCommand(BuildStep):
         except error.ProcessExitedAlready:
             pass
         BuildStep.interrupt(self, reason)
+
+
+class SetProperty(BuildStep):
+    name='SetProperty'
+    description=['Setting']
+    descriptionDone=['Set']
+    renderables = [ 'value' ]
+
+    def __init__(self, property, value, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.property = property
+        self.value = value
+
+    def start(self):
+        properties = self.build.getProperties()
+        properties.setProperty(self.property, self.value, self.name, runtime=True)
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
+
+
+class LogRenderable(BuildStep):
+    name='LogRenderable'
+    description=['Logging']
+    descriptionDone=['Logged']
+    renderables = ['content']
+
+    def __init__(self, content, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.content = content
+
+    def start(self):
+        content = pprint.pformat(self.content)
+        self.addCompleteLog(name='Output', text=content)
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)

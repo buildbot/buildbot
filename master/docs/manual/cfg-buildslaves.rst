@@ -435,20 +435,23 @@ set the username to ``minion1``, the password to ``sekrit``. The base image is c
 and a copy of it will be made for the duration of the VM's life. That copy will be thrown
 away every time a build is complete. ::
 
-    from buildbot.libvirtbuildslave import LibVirtBuildSlave
-    c['slaves'] = [LibVirtBuildSlave('minion1', 'sekrit',
-                                       '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
+    from buildbot.libvirtbuildslave import LibVirtSlave, Connection
+    c['slaves'] = [LibVirtSlave('minion1', 'sekrit', Connection("qemu:///session"),
+                                '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
 
 You can use virt-manager to define ``minion1`` with the correct hardware. If you don't, buildbot
 won't be able to find a VM to start.
 
-:class:`LibVirtBuildSlave` accepts the following arguments:
+:class:`LibVirtSlave` accepts the following arguments:
 
 ``name``
-    Both a buildbot username and the name of the virtual machine
+    Both a buildbot username and the name of the virtual machine.
 
 ``password``
-    A password for the buildbot to login to the master with
+    A password for the buildbot to login to the master with.
+
+``connection``
+    :class:`Connection` instance wrapping connection to libvirt.
 
 ``hd_image``
     The path to a libvirt disk image, normally in qcow2 format when using KVM.

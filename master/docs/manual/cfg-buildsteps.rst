@@ -2529,6 +2529,16 @@ be substituted using :ref:`Interpolate`.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
+   
+.. bb:step:: LogRenderable
+
+LogRenderable
++++++++++++++
+
+.. py:class:: buildbot.steps.master.LogRenderable
+
+This build step takes content which can be renderable and logs it in a pretty-printed format.
+It can be useful for debugging properties during a build.
 
 .. index:: Properties; from steps
 
@@ -2546,13 +2556,29 @@ These steps set properties on the master based on information from the slave.
 SetProperty
 +++++++++++
 
-.. py:class:: buildbot.steps.shell.SetProperty
+.. py:class:: buildbot.steps.master.SetProperty
+
+SetProperty takes two arguments of ``property`` and ``value`` where the ``value`` is to be assigned to the ``property`` key.
+It is usually called with the ``value`` argument being specifed as a :ref:`Interpolate` object
+which allows the value to be built from other property values::
+
+    from buildbot.steps.master import SetProperty
+    from buildbot.process.properties import Interpolate
+    f.addStep(SetProperty(property="SomeProperty",
+        value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+
+.. bb:step:: SetPropertyFromCommand
+
+SetPropertyFromCommand
+++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.shell.SetPropertyFromCommand
 
 This buildstep is similar to :bb:step:`ShellCommand`, except that it captures the
 output of the command into a property.  It is usually used like this::
 
     from buildbot.steps import shell
-    f.addStep(shell.SetProperty(command="uname -a", property="uname"))
+    f.addStep(shell.SetPropertyFromCommand(command="uname -a", property="uname"))
 
 This runs ``uname -a`` and captures its stdout, stripped of leading
 and trailing whitespace, in the property ``uname``.  To avoid stripping,
@@ -2572,12 +2598,12 @@ a string.  It should return a dictionary containing all new properties. ::
     def glob2list(rc, stdout, stderr):
         jpgs = [ l.strip() for l in stdout.split('\n') ]
         return { 'jpgs' : jpgs }
-    f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+    f.addStep(SetPropertyFromCommand(command="ls -1 *.jpg", extract_fn=glob2list))
 
 Note that any ordering relationship of the contents of stdout and
 stderr is lost.  For example, given ::
 
-    f.addStep(SetProperty(
+    f.addStep(SetPropertyFromCommand(
         command="echo output1; echo error >&2; echo output2",
         extract_fn=my_extract))
 
@@ -2613,6 +2639,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
+
 
 .. index:: Properties; triggering schedulers
 

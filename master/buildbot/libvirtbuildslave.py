@@ -34,7 +34,7 @@ class WorkQueue(object):
     I am a class that turns parallel access into serial access.
 
     I exist because we want to run libvirt access in threads as we don't
-    trust calls not to block, but under load libvirt doesnt seem to like
+    trust calls not to block, but under load libvirt doesn't seem to like
     this kind of threaded use.
     """
 
@@ -126,7 +126,7 @@ class Connection(object):
 
     @defer.inlineCallbacks
     def lookupByName(self, name):
-        """ I lookup an existing prefined domain """
+        """ I lookup an existing predefined domain """
         res = yield queue.executeInThread(self.connection.lookupByName, name)
         defer.returnValue(self.DomainClass(self, res))
 
@@ -182,11 +182,11 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         domains = yield self.connection.all()
         for d in domains:
-           name = yield d.name()
-           if name.startswith(self.name):
-               self.domain = d
-               self.substantiated = True
-               break
+            name = yield d.name()
+            if name.startswith(self.name):
+                self.domain = d
+                self.substantiated = True
+                break
 
         self.ready = True
 
@@ -243,8 +243,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-             log.msg("Cannot start_instance '%s' as already active" % self.name)
-             defer.returnValue(False)
+            log.msg("Cannot start_instance '%s' as already active" % self.name)
+            defer.returnValue(False)
 
         yield self._prepare_base_image()
 
@@ -272,8 +272,8 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         """
         log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
-             log.msg("I don't think that domain is even running, aborting")
-             return defer.succeed(None)
+            log.msg("I don't think that domain is even running, aborting")
+            return defer.succeed(None)
 
         domain = self.domain
         self.domain = None

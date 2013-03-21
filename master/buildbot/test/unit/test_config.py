@@ -120,7 +120,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
-        self.filename = 'test.cfg'
+        self.filename = os.path.join(self.basedir, 'test.cfg')
         return self.setUpDirs('basedir')
 
     def tearDown(self):
@@ -821,7 +821,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             l.name = name
             if bare_builder_lock:
                 return l
-            return locks.LockAccess(l, "counting")
+            return locks.LockAccess(l, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]
