@@ -45,6 +45,9 @@ Features
 
 * A new :bb:step:`SetProperty` step has been added in ``buildbot.steps.master`` which can set a property directly without accessing the slave.
 
+* The new :bb:step:`LogRenderable` step logs Python objects, which can contain renderables, to the logfile.
+  This is helpful for debugging property values during a build.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
