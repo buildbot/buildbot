@@ -22,7 +22,6 @@ def restart(config):
     quiet = config['quiet']
 
     if not base.isBuildmasterDir(basedir):
-        print "not a buildmaster directory"
         return 1
 
     if stop.stop(config, wait=True) != 0:

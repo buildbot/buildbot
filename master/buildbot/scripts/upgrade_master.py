@@ -32,7 +32,6 @@ def checkBasedir(config):
         print "checking basedir"
 
     if not base.isBuildmasterDir(config['basedir']):
-        print "'%s' is not a Buildbot basedir" % (config['basedir'],)
         return False
 
     if runtime.platformType != 'win32': # no pids on win32
