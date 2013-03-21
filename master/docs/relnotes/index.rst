@@ -43,6 +43,8 @@ Features
 
 * The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
 
+* Added :bb:step:`LogRenderable`.  This allows logging content including renderables.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
