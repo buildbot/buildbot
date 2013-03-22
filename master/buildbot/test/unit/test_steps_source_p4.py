@@ -61,7 +61,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 #                         Last Changed Date: 2012-01-19 16:41:47 +0530 (Thu, 19 Jan 2012)
 #                      """)
     def setUp(self):
-        return self.setUpSourceStep()
+        self.setUpSourceStep()
+        self.properties.setProperty('builddir','/home/user/workspace')
 
     def tearDown(self):
         return self.tearDownSourceStep()
@@ -77,7 +78,6 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors, lambda :
                 P4(p4viewspec=('//depot/trunk',''), p4base='//depot',p4branch='trunk', p4extra_views=['src','doc']))
         
-    
     def test_no_p4viewspec_is_string_step_config(self):
         self.assertRaises(config.ConfigErrors, lambda :
                 P4(p4viewspec='a_bad_idea'))
@@ -98,49 +98,56 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors, lambda :
                 P4(p4extra_views='blah'))
 
-
-#    def test_incorrect_mode(self):
-#        self.assertRaises(config.ConfigErrors, lambda :
-#                svn.SVN(repourl='http://svn.local/app/trunk',
-#                        mode='invalid'))
+    def test_incorrect_mode(self):
+        self.assertRaises(config.ConfigErrors, lambda :
+                P4(p4base='//depot',
+                        mode='invalid'))
 #
 #    def test_incorrect_method(self):
 #        self.assertRaises(config.ConfigErrors, lambda :
 #                svn.SVN(repourl='http://svn.local/app/trunk',
 #                        method='invalid'))
 #
+
 #    def test_mode_incremental(self):
+#        # The step which would should issue the commands in
+#        # the expectCommands below.
+#        # Not run until the self.runStep() below
 #        self.setupStep(
-#                svn.SVN(repourl='http://svn.local/app/trunk',
-#                        mode='incremental',username='user',
-#                        password='pass', extra_args=['--random']))
+#                P4(p4port='localhost:12000',
+#                        mode='incremental',
+#                        p4base='//depot',
+#                        p4branch='trunk',
+#                        p4user='user',
+#                        p4client='p4_client1',
+#                        p4passwd='pass'))
+#        
+#        
 #        self.expectCommands(
+#            ExpectShell(workdir='wkdir', # defaults to this, only changes if it has a copy mode.
+#                        command=['p4', '-V'])  # expected remote command
+#            + 0,  # expected exit status
+#            
 #            ExpectShell(workdir='wkdir',
-#                        command=['svn', '--version'])
-#            + 0,
-#            Expect('stat', dict(file='wkdir/.svn',
-#                                logEnviron=True))
-#            + 0,
-#            ExpectShell(workdir='wkdir',
-#                        command=['svn', 'info', '--non-interactive',
-#                                 '--no-auth-cache', '--username', 'user',
-#                                 '--password', 'pass', '--random'])
-#            + ExpectShell.log('stdio',
-#                stdout="URL: http://svn.local/app/trunk")
+#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],)
+##            Expect('stat', dict(file='wkdir/.svn',
+##                                logEnviron=True))
 #            + 0,
 #            ExpectShell(workdir='wkdir',
-#                        command=['svn', 'update', '--non-interactive',
-#                                 '--no-auth-cache', '--username', 'user',
-#                                 '--password', 'pass', '--random'])
+#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync'])
+##            + ExpectShell.log('stdio',
+##                stdout="File(s) up-to-date.")
 #            + 0,
 #            ExpectShell(workdir='wkdir',
-#                        command=['svn', 'info'])
-#            + ExpectShell.log('stdio',
-#                stdout=self.svn_info_stdout)
+#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
 #            + 0,
+#            # Use the below if a step expects output from some command it sends to the slave.
+##            + ExpectShell.log('stdio',
+##                stdout=self.svn_info_stdout)
+##            + 0,
 #        )
 #        self.expectOutcome(result=SUCCESS, status_text=["update"])
-#        self.expectProperty('got_revision', '100', 'SVN')
+#        self.expectProperty('got_revision', '100', 'P4')
 #        return self.runStep()
 #
 #    def test_mode_incremental_timeout(self):

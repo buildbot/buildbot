@@ -33,8 +33,11 @@ from types import StringType
 
 """
 Notes:
-    see  for getting p4 command to output
-    marshalled python dictionaries as output for commands
+    see 
+    http://www.perforce.com/perforce/doc.current/manuals/cmdref/o.gopts.html#1040647 
+    for getting p4 command to output marshalled python dictionaries as output for commands.
+    Perhaps switch to using 'p4 -G' :  From URL above:
+    -G Causes all output (and batch input for form commands with -i) to be formatted as marshalled Python dictionary objects. This is most often used when scripting.
     """
     
 
@@ -140,10 +143,10 @@ class P4(Source):
             errors.append("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
             
         if p4base and p4base.endswith('/'):
-            errors.append('p4base should not end with a trailing /')
+            errors.append('p4base should not end with a trailing / [p4base = %s]'%p4base)
         
         if p4branch and p4branch.endswith('/'):
-            errors.append('p4branch should not end with a training /')
+            errors.append('p4branch should not end with a trailing / [p4branch = %s]'%p4branch)
             
         if (p4branch or p4extra_views) and not p4base:
             errors.append('If you specify either p4branch or p4extra_views you must also specify p4base')
@@ -209,19 +212,27 @@ class P4(Source):
         log.msg("P4:incremental()")
         updatable = yield self._sourcedirIsUpdatable()
 
-        if not updatable:
-            # blow away the old (un-updatable) directory
-            # TODO: Figure out if this makes sense for perforce..
-            # yield self._rmdir(self.workdir)
+#        if not updatable:
+#            # blow away the old (un-updatable) directory
+#            # TODO: Figure out if this makes sense for perforce..
+#            # yield self._rmdir(self.workdir)
+#            
+#            # First we need to create the client
+#            yield self._createClientSpec()
+#
+#            # and plan to do a checkout
+#            command = ['sync',]
+#        else:
+#            # otherwise, do an update
+#            command = ['sync',]
             
-            # First we need to create the client
-            yield self._createClientSpec()
+        # First we need to create the client
+        yield self._createClientSpec()
+        
+        # and plan to do a checkout
+        command = ['sync',]
 
-            # and plan to do a checkout
-            command = ['sync',]
-        else:
-            # otherwise, do an update
-            command = ['sync',]
+
 
         if self.revision:
             command.extend(['%s...@%d'%(self.p4base,int(self.revision))])
@@ -305,28 +316,15 @@ class P4(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
-    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
-        # first, perform a stat to ensure that this is really an p4 directory
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.p4',
-                                               'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-
-        if cmd.rc != 0:
-            defer.returnValue(False)
-            return
-
-        # then run 'p4 info' to check that the URL matches our repourl
-        stdout = yield self._dovccmd(['info'], collectStdout=True)
-
-        # extract the URL, handling whitespace carefully so that \r\n works
-        # is a line terminator
-        mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
-        defer.returnValue(mo and mo.group(1) == self.repourl)
-        return
+        # In general you should always be able to write to the directory
+        # You just specified as the root of your client
+        # So just return.
+        # If we find a case where this is no longer true, then this 
+        # needs to be implemented
+        # in which case add : @defer.inlineCallbacks decorator above this
+        return defer.succeed(True)
     
-       
     @defer.inlineCallbacks
     def _createClientSpec(self):
         builddir=self.getProperty('builddir')
@@ -341,6 +339,9 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
+        
+        print "builddir:%s"%builddir
+        print "self.workdir:%s"%self.workdir
         
         client_spec += "Root:\t%s\n\n" % os.path.join(builddir,self.workdir)
         client_spec += "Options:\tallwrite rmdir\n\n"
@@ -365,7 +366,7 @@ class P4(Source):
             client_spec += "\t%s" % (self.p4base)
 
             if self.p4branch:
-                client_spec += "%s" % (self.p4branch)
+                client_spec += "/%s" % (self.p4branch)
             
             client_spec += "/... //%s/...\n" % (self.p4client)
                 
