@@ -22,36 +22,18 @@ from twisted.web import static
 def sibpath(*elts):
     return os.path.join(os.path.dirname(__file__), *elts)
 
-# (see comments in setup.py about contexts)
-#
-# this script never runs in the SDIST state, so if src/ is missing,
-# then we're INSTALLED
-src_exists = os.path.isdir(sibpath('src'))
-built_exists = os.path.isdir(sibpath('built'))
-if src_exists:
-    if not built_exists:
-        context = 'SRC'
-    else:
-        context = 'BUILT'
-else:
-    context = 'INSTALLED'
 
 class Application(object):
     def __init__(self):
         self.description = "Buildbot UI"
-
-        # the rest depends on the context we're executing in
-        if context == 'SRC':
-            raise Exception("cannot run in source mode! you need to first call grunt dev.")
-        elif context == 'BUILT':
-            self.version = 'source'
-            self.static_dir = os.path.abspath(sibpath('built'))
-        else: # context == 'INSTALLED'
-            instdir = os.path.join(sys.prefix, 'share', 'buildbot', 'dist')
-            verfile = os.path.join(instdir, 'buildbot-version.txt')
-            self.version = open(verfile).read().strip()
-            self.static_dir = instdir
-
+        # VERSION's location differs depending on whether we're installed
+        for f in sibpath('VERSION'), sibpath('buildbot_www', 'VERSION'):
+            if os.path.exists(f):
+                self.version = open(f).read().strip()
+                break
+        else:
+            self.version = '<unknown>'
+        self.static_dir = os.path.abspath(sibpath('buildbot_www'))
         self.resource = static.File(self.static_dir)
 
 

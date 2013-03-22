@@ -1,2 +1,3 @@
-recursive-include built *
-include built/file-list.txt
+include package.json
+include VERSION
+recursive-include buildbot_www *

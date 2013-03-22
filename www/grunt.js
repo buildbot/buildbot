@@ -1,15 +1,19 @@
 // Build configurations.
 module.exports = function (grunt) {
+    /* The overall operation is this:
+     *  - build into ./temp (the temp directory)
+     *  - copy the result to ./buildbot_www (the built directory)
+     */
     grunt.initConfig({
         /*
             Deletes built and temp directories.
             The temp directory is used during the build process.
-            The built directory contains the artifacts of the build.
+            The built directory (buildbot_www) contains the artifacts of the build.
             These directories should be deleted before subsequent builds.
         */
         delete: {
             built: {
-                files: ['./built/']
+                files: ['./buildbot_www/']
             },
             temp: {
                 files: ['./temp/']
@@ -180,7 +184,7 @@ module.exports = function (grunt) {
             */
             dev: {
                 files: {
-                    './built/': './temp/'
+                    './buildbot_www/': './temp/'
                 }
             },
             /*
@@ -190,36 +194,36 @@ module.exports = function (grunt) {
             */
             prod: {
                 files: {
-                    './built/img/': './temp/img/',
-                    './built/font/': './temp/font/',
-                    './built/scripts/': './temp/scripts/scripts.min.js',
-                    './built/scripts/libs': ['./temp/scripts/libs/html5shiv-printshiv.js', './temp/scripts/libs/json2.js'],
-                    './built/styles/': './temp/styles/styles.min.css',
-                    './built/index.html': './temp/index.min.html'
+                    './buildbot_www/img/': './temp/img/',
+                    './buildbot_www/font/': './temp/font/',
+                    './buildbot_www/scripts/': './temp/scripts/scripts.min.js',
+                    './buildbot_www/scripts/libs': ['./temp/scripts/libs/html5shiv-printshiv.js', './temp/scripts/libs/json2.js'],
+                    './buildbot_www/styles/': './temp/styles/styles.min.css',
+                    './buildbot_www/index.html': './temp/index.min.html'
                 }
             },
             // Task is run when a watched script is modified.
             scripts: {
                 files: {
-                    './built/scripts/': './temp/scripts/'
+                    './buildbot_www/scripts/': './temp/scripts/'
                 }
             },
             // Task is run when a watched style is modified.
             styles: {
                 files: {
-                    './built/styles/': './temp/styles/'
+                    './buildbot_www/styles/': './temp/styles/'
                 }
             },
             // Task is run when the watched index.template file is modified.
             index: {
                 files: {
-                    './built/': './temp/index.html'
+                    './buildbot_www/': './temp/index.html'
                 }
             },
             // Task is run when a watched view is modified.
             views: {
                 files: {
-                    './built/views/': './temp/views/'
+                    './buildbot_www/views/': './temp/views/'
                 }
             }
         },
