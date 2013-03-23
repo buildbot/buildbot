@@ -158,12 +158,6 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
         self.last_revision = None
         self.polling = False
 
-    def _getStateObjectId(self, branch_name):
-        """Return a deferred for object id in state db.
-        """
-        return self.master.db.state.getObjectId(
-            branch_name, self.db_class_name)
-
     def startService(self):
         if not BZRLIB_PRESENT:
             # this raise has been deferred here to allow for unit testing
@@ -172,66 +166,6 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
 
         buildbot.changes.base.PollingChangeSource.startService(self)
 
-    def _initLastRevision(self):
-        if self.branch_name is FULL or self.branch_name is None:
-            ourbranch = self.url
-        elif self.branch_name is SHORT:
-            # We are in a bit of trouble, as we cannot really know what our
-            # branch is until we have polled new changes.
-            # Seems we would have to wait until we polled the first time,
-            # and only then do the filtering, grabbing the branch name from
-            # whatever we polled.
-            # For now, leave it as it was previously (compare against
-            # self.url); at least now things work when specifying the
-            # branch name explicitly.
-            ourbranch = self.url
-        else:
-            ourbranch = self.branch_name
-        oid = self._getStateObjectId(ourbranch)
-
-        def oid_callback(oid):
-            print "oid callback for BzrPoller of url=%r" % self.url
-
-            def set_rev(rev):
-                print "setting rev %r for BzrPoller of url=%r" % (
-                    rev, self.url)
-                self.last_revision = rev
-            d = self.master.db.state.getState(oid, 'current_rev', None)
-            d.addCallback(set_rev)
-            return d
-        oid.addCallback(oid_callback)
-        return oid
-
-    def _setLastRevision(self, rev, oid=None):
-        """Return a deferred to set current revision in persistent state.
-
-        oid is self's id for state db.
-        It can be passed to avoid a db lookup.
-        """
-        if self.branch_name is FULL or self.branch_name is None:
-            ourbranch = self.url
-        elif self.branch_name is SHORT:
-            # We are in a bit of trouble, as we cannot really know what our
-            # branch is until we have polled new changes.
-            # Seems we would have to wait until we polled the first time,
-            # and only then do the filtering, grabbing the branch name from
-            # whatever we polled.
-            # For now, leave it as it was previously (compare against
-            # self.url); at least now things work when specifying the
-            # branch name explicitly.
-            ourbranch = self.url
-        else:
-            ourbranch = self.branch_name
-        if oid is None:
-            d = self._getStateObjectId(ourbranch)
-        else:
-            d = defer.succeed(oid)
-
-        def set_in_state(obj_id):
-            return self.master.db.state.setState(
-                obj_id, 'current_rev', rev)
-        d.addCallback(set_in_state)
-
     def stopService(self):
         twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)
         return buildbot.changes.base.PollingChangeSource.stopService(self)
@@ -239,12 +173,41 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
     def describe(self):
         return "BzrPoller watching %s" % self.url
 
+    def _initLastRevision(self):
+        """Return a deferred to set last_revision attr from persistent state.
+        """
+
+        def set_rev(oid_rev):
+            oid, rev = oid_rev
+            self.last_revision = rev
+
+        d = self._getStateCurrentRev()
+        d.addCallback(set_rev)
+        return d
+
+    def _setLastRevision(self, rev, oid=None):
+        """Return a deferred to set current revision in persistent state.
+
+        oid is self's id for state db.
+        It can be passed to avoid a db lookup.
+        """
+        if oid is None:
+            d = self._getStateObjectId()
+        else:
+            d = defer.succeed(oid)
+
+        def set_in_state(obj_id):
+            return self.master.db.state.setState(
+                obj_id, 'current_rev', rev)
+        d.addCallback(set_in_state)
+        return d
+
     def _getStateCurrentRev(self):
         """Return a deferred for object id in state db and current numeric rev.
 
         If never has been set, current rev is None.
         """
-        d = self._getStateObjectId(self.branch_name)
+        d = self._getStateObjectId()
 
         def oid_cb(oid):
             current = self.master.db.state.getState(oid, 'current_rev', None)
@@ -255,6 +218,26 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
             return current
         d.addCallback(oid_cb)
         return d
+
+    def _getStateObjectId(self):
+        """Return a deferred for object id in state db.
+        """
+        if self.branch_name is FULL or self.branch_name is None:
+            ourbranch = self.url
+        elif self.branch_name is SHORT:
+            # We are in a bit of trouble, as we cannot really know what our
+            # branch is until we have polled new changes.
+            # Seems we would have to wait until we polled the first time,
+            # and only then do the filtering, grabbing the branch name from
+            # whatever we polled.
+            # For now, leave it as it was previously (compare against
+            # self.url); at least now things work when specifying the
+            # branch name explicitly.
+            ourbranch = self.url
+        else:
+            ourbranch = self.branch_name
+
+        return self.master.db.state.getObjectId(ourbranch, self.db_class_name)
 
     @twisted.internet.defer.inlineCallbacks
     def poll(self):
