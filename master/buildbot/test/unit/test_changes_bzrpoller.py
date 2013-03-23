@@ -20,24 +20,34 @@ from buildbot.test.util import changesource
 from buildbot.test.fake.fakedb import FakeDBConnector
 
 
-class FakeRevision(object):
-    """A fake bzr revision."""
+class MockRevision(mock.Mock):
+    """A mock bzr revision.
 
-    def __init__(self, revno, changes_from=None):
+    Besides being a mock object, it has the added capability to return the
+    changelog from another revision. In bzrlib, this'd be done by the
+    repository tree.
+
+    The collapsing of retrieval of revision from current branch and
+    changelog retrieval is actually implemented in prepare_revisions() below.
+    """
+
+    def __init__(self, revno, changes_from=None, **kwargs):
+        mock.Mock.__init__(self, **kwargs)
         self.revno = revno
         self._changes_from = changes_from
 
+    def _get_child_mock(self, **kw):
+        """Override to avoid child mocks (attributes) being of the same class.
+
+        This is explained by docstring in super class.
+        """
+        return mock.Mock(**kw)
+
+    def get_apparent_authors(self):
+        return self.authors
+
     def changes_from(self, rev):
         return self._changes_from.get(rev.revno)
-
-
-class FakeChange(object):
-
-    def __init__(self, added=(), removed=(), modified=(), renamed=()):
-        self.added = added
-        self.removed = removed
-        self.modified = modified
-        self.renamed = renamed
 
 
 class TestBzrPoller(changesource.ChangeSourceMixin,
@@ -74,24 +84,43 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
     def tearDown(self):
         return self.tearDownChangeSource()
 
+    def prepare_revisions(self, revisions):
+        """Initialize the mock system with given revisions.
+
+        revisions is a list or tuple, the last one being considered the
+        head of the mock branch."""
+
+        last_rev = revisions[-1].revno
+        rev_dict = dict(('revid-%d' % rev.revno, rev) for rev in revisions)
+
+        self.branch.revno.return_value = last_rev
+        repository = self.branch.repository
+
+        get_rev = rev_dict.__getitem__
+        repository.get_revision.side_effect = get_rev
+        repository.revision_tree.side_effect = get_rev
+
+    def check_current_rev(self, wished):
+        def check_on_rev(_):
+            d = self.poller._getStateCurrentRev()
+            d.addCallback(lambda oid_rev: self.assertEqual(oid_rev[1], wished))
+        return check_on_rev
+
     def test_describe(self):
         self.assertSubstring("BzrPoller", self.poller.describe())
 
     def test_poll_initial(self):
         self.repo_ready = False
-        self.branch.revno.return_value = 123
-        rev = self.branch.repository.get_revision.return_value
-        rev.get_apparent_authors.return_value = [
-            'Bob Test <bobtest@example.org>']
-        rev.message = 'This is revision 123'
-        revisions = {
-            'revid-123': FakeRevision(123, changes_from={
-                122: FakeChange(added=[('a/f1', '', 'file')],
-                                removed=[('r/f2', '', 'file')],
-                                modified=[('f3', '', 'file')])}),
-            'revid-122': FakeRevision(122)}
-        tree = self.branch.repository.revision_tree
-        tree.side_effect = lambda revid: revisions[revid]
+        self.prepare_revisions([
+            MockRevision(122, message="No message"),
+            MockRevision(123, message="This is revision 123",
+                         authors=['Bob Test <bobtest@example.org>'],
+                         changes_from={
+                             122: mock.Mock(added=[('a/f1', '', 'file')],
+                                            removed=[('r/f2', '', 'file')],
+                                            renamed=(),
+                                            modified=[('f3', '', 'file')])}),
+        ])
 
         # do the poll
         d = self.poller.poll()
@@ -117,9 +146,3 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
         d.addCallback(check_changes)
         d.addCallback(self.check_current_rev(123))
         return d
-
-    def check_current_rev(self, wished):
-        def check_on_rev(_):
-            d = self.poller._getStateCurrentRev()
-            d.addCallback(lambda oid_rev: self.assertEqual(oid_rev[1], wished))
-        return check_on_rev
