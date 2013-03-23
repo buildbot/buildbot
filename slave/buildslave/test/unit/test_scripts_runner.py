@@ -297,6 +297,22 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                                 "incorrect number of arguments",
                                 self.parse, "extra_arg", *self.req_args)
 
+
+class TestOptions(unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.Options class.
+    """
+    def parse(self, *args):
+        opts = runner.Options()
+        opts.parseOptions(args)
+        return opts
+
+    def test_defaults(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "must specify a command",
+                                self.parse)
+
+
 # used by TestRun.test_run_good to patch in a callback
 functionPlaceholder = None
 
