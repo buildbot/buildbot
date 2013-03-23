@@ -15,6 +15,8 @@
 
 import mock
 from twisted.trial import unittest
+
+from buildbot.util import epoch2datetime
 from buildbot.changes import bzrpoller
 from buildbot.test.util import changesource
 from buildbot.test.fake.fakedb import FakeDBConnector
@@ -115,6 +117,7 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
             MockRevision(122, message="No message"),
             MockRevision(123, message="This is revision 123",
                          authors=['Bob Test <bobtest@example.org>'],
+                         timestamp=1361795401.71,
                          changes_from={
                              122: mock.Mock(added=[('a/f1', '', 'file')],
                                             removed=[('r/f2', '', 'file')],
@@ -139,9 +142,8 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
             self.assertEqual(change['src'], 'bzr')
             self.assertEqual(change['branch'], 'branch name')
             self.assertEqual(change['comments'], 'This is revision 123')
-#           TODO there's currently no timestamp in emitted bzr changes
-#            self.assertEqual(change['when_timestamp'],
-#                             epoch2datetime(1273258100)),
+            self.assertEqual(change['when_timestamp'],
+                             epoch2datetime(1361795401.71)),
 
         d.addCallback(check_changes)
         d.addCallback(self.check_current_rev(123))

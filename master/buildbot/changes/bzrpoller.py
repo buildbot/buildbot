@@ -108,6 +108,7 @@ def generate_change(branch,
     # name, email = bzrtools.config.parse_username(change['who'])
     change['comments'] = new_rev.message
     change['revision'] = new_revno
+    change['when_timestamp'] = buildbot.util.epoch2datetime(new_rev.timestamp)
     files = change['files'] = []
     changes = repository.revision_tree(new_revid).changes_from(
         repository.revision_tree(old_revid))
