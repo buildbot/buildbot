@@ -340,8 +340,8 @@ class P4(Source):
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
         
-        print "builddir:%s"%builddir
-        print "self.workdir:%s"%self.workdir
+#        print "builddir:%s"%builddir
+#        print "self.workdir:%s"%self.workdir
         
         client_spec += "Root:\t%s\n\n" % os.path.join(builddir,self.workdir)
         client_spec += "Options:\tallwrite rmdir\n\n"

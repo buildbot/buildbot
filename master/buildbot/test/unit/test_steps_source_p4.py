@@ -61,14 +61,16 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 #                         Last Changed Date: 2012-01-19 16:41:47 +0530 (Thu, 19 Jan 2012)
 #                      """)
     def setUp(self):
-        self.setUpSourceStep()
-        self.properties.setProperty('builddir','/home/user/workspace')
+        return self.setUpSourceStep()
+
 
     def tearDown(self):
         return self.tearDownSourceStep()
+    
+    def setupStep(self, step, args={}, patch=None, **kwargs):
+        sourcesteps.SourceStepMixin.setupStep(self, step, args={}, patch=None, **kwargs)
+        self.properties.setProperty('builddir','/home/user/workspace','P4')
 
-#    def patch_slaveVersionIsOlderThan(self, result):
-#        self.patch(svn.SVN, 'slaveVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_empty_step_config(self):
         self.assertRaises(config.ConfigErrors, lambda :
@@ -109,46 +111,48 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 #                        method='invalid'))
 #
 
-#    def test_mode_incremental(self):
-#        # The step which would should issue the commands in
-#        # the expectCommands below.
-#        # Not run until the self.runStep() below
-#        self.setupStep(
-#                P4(p4port='localhost:12000',
-#                        mode='incremental',
-#                        p4base='//depot',
-#                        p4branch='trunk',
-#                        p4user='user',
-#                        p4client='p4_client1',
-#                        p4passwd='pass'))
-#        
-#        
-#        self.expectCommands(
-#            ExpectShell(workdir='wkdir', # defaults to this, only changes if it has a copy mode.
-#                        command=['p4', '-V'])  # expected remote command
-#            + 0,  # expected exit status
-#            
-#            ExpectShell(workdir='wkdir',
-#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],)
-##            Expect('stat', dict(file='wkdir/.svn',
-##                                logEnviron=True))
-#            + 0,
-#            ExpectShell(workdir='wkdir',
-#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync'])
-##            + ExpectShell.log('stdio',
-##                stdout="File(s) up-to-date.")
-#            + 0,
-#            ExpectShell(workdir='wkdir',
-#                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
-#            + 0,
-#            # Use the below if a step expects output from some command it sends to the slave.
-##            + ExpectShell.log('stdio',
-##                stdout=self.svn_info_stdout)
-##            + 0,
-#        )
-#        self.expectOutcome(result=SUCCESS, status_text=["update"])
-#        self.expectProperty('got_revision', '100', 'P4')
-#        return self.runStep()
+    def test_mode_incremental(self):
+
+        # The step which would should issue the commands in
+        # the expectCommands below.
+        # Not run until the self.runStep() below
+        self.setupStep(
+                P4(p4port='localhost:12000',
+                        mode='incremental',
+                        p4base='//depot',
+                        p4branch='trunk',
+                        p4user='user',
+                        p4client='p4_client1',
+                        p4passwd='pass'))
+        
+
+        
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', # defaults to this, only changes if it has a copy mode.
+                        command=['p4', '-V'])  # expected remote command
+            + 0,  # expected exit status
+            
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],
+                        initialStdin = 'Client: p4_client1\n\nOwner: user\n\nDescription:\n\tCreated by user\n\nRoot:\t/home/user/workspace/wkdir\n\nOptions:\tallwrite rmdir\n\nLineEnd:\tlocal\n\nView:\n\t//depot/trunk/... //p4_client1/...\n',)
+                            
+#            Expect('stat', dict(file='wkdir/.svn',
+#                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync'])
+#            + ExpectShell.log('stdio',
+#                stdout="File(s) up-to-date.")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
+            + ExpectShell.log('stdio',
+                stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'P4')
+        return self.runStep()
 #
 #    def test_mode_incremental_timeout(self):
 #        self.setupStep(
@@ -1264,3 +1268,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 #        """
 #        unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
 #        self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
+#
+#    def patch_slaveVersionIsOlderThan(self, result):
+#        self.patch(svn.SVN, 'slaveVersionIsOlderThan', lambda x, y, z: result)
+
+
