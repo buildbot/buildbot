@@ -15,6 +15,7 @@
 
 import mock
 from twisted.trial import unittest
+from twisted.internet import defer
 
 from buildbot.util import epoch2datetime
 from buildbot.changes import bzrpoller
@@ -56,7 +57,7 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
                     unittest.TestCase):
 
     def setUp(self):
-        bzrpoller.BzrBranch = mock.Mock()  # FakeBzrBranch
+        bzrpoller.BzrBranch = mock.Mock()
         self.branch = mock.Mock()
         bzrpoller.BzrBranch.open_containing = mock.Mock(
             return_value=[self.branch])
@@ -66,14 +67,10 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
         self.remote_repo = 'sftp://example.com/foo/baz/trunk'
         self.repo_ready = True
 
-        def _isRepositoryReady():
-            return self.repo_ready
-
         def create_poller(_):
             self.poller = bzrpoller.BzrPoller(self.remote_repo,
                                               branch_name='branch name')
             self.poller.master = self.master
-            self.poller._isRepositoryReady = _isRepositoryReady
 
         def create_db(_):
             db = self.master.db = FakeDBConnector(self)
@@ -148,3 +145,34 @@ class TestBzrPoller(changesource.ChangeSourceMixin,
         d.addCallback(check_changes)
         d.addCallback(self.check_current_rev(123))
         return d
+
+    @defer.inlineCallbacks
+    def test_poll(self):
+        self.repo_ready = False
+        self.prepare_revisions([
+            MockRevision(314, message="No message", authors=['Someone'],
+                         timestamp=0),
+            MockRevision(315, message="No message",
+                         timestamp=0, authors=['Someone'],
+                         changes_from={
+                             314: mock.Mock(added=(), removed=(),
+                                            renamed=(), modified=())}),
+            MockRevision(316, message="This is revision 123",
+                         authors=['Bob Test <bobtest@example.org>'],
+                         timestamp=1361795401.71,
+                         changes_from={
+                             315: mock.Mock(added=[('a/f1', '', 'file')],
+                                            removed=[('r/f2', '', 'file')],
+                                            renamed=(),
+                                            modified=[('f3', '', 'file')])}),
+        ])
+
+        yield self.poller._setLastRevision(314)
+
+        def check_changes(_):
+            self.assertEqual(len(self.changes_added), 2)
+
+        d = self.poller.poll()
+        d.addCallback(check_changes)
+        d.addCallback(self.check_current_rev(316))
+        yield d
