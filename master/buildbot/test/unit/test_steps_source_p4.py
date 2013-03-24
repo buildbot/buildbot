@@ -119,6 +119,59 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
+    
+    def test_mode_full(self):
+
+        # The step which would should issue the commands in
+        # the expectCommands below.
+        # Not run until the self.runStep() below
+        self.setupStep(
+            P4(p4port = 'localhost:12000',
+               mode = 'full',
+               p4base = '//depot',
+               p4branch = 'trunk',
+               p4user = 'user',
+               p4client = 'p4_client1',
+               p4passwd = 'pass'))
+        
+
+        
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', # defaults to this, only changes if it has a copy mode.
+                        command=['p4', '-V'])  # expected remote command
+            + 0,  # expected exit status
+            
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],
+                        initialStdin = 'Client: p4_client1\n\nOwner: user\n\nDescription:\n\tCreated by user\n\nRoot:\t/home/user/workspace/wkdir\n\nOptions:\tallwrite rmdir\n\nLineEnd:\tlocal\n\nView:\n\t//depot/trunk/... //p4_client1/...\n',)
+                            
+#            Expect('stat', dict(file='wkdir/.svn',
+#                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync','#none'])
+#            + ExpectShell.log('stdio',
+#                stdout="File(s) up-to-date.")
+            + 0,
+
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+
+
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync'])
+#            + ExpectShell.log('stdio',
+#                stdout="File(s) up-to-date.")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
+            + ExpectShell.log('stdio',
+                stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'P4')
+        return self.runStep()
 #
 #    def test_mode_incremental_timeout(self):
 #        self.setupStep(

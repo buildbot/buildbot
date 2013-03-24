@@ -181,58 +181,42 @@ class P4(Source):
     
     @defer.inlineCallbacks
     def full(self, _):
+        log.msg("P4:full()..")
         
         # First we need to create the client
         yield self._createClientSpec()
-        
+
+        # Then p4 sync #none
+        yield self._dovccmd(['sync','#none'],collectStdout=True)
+
+        # Then remove directory.
+        # NOTE: Not using CompositeStepMixin's runRmdir() as it requires self.rc_log
+        #       to be defined and ran into issues where setting that in _dovccmd would
+        #       yield multiple logs named 'stdio' in the waterfall report..
+        yield self._rmdir(self.workdir)
+
         # Then we need to sync the client
         if self.revision:
             log.msg("P4: full() sync command based on :base:%s changeset:%d",self.p4base,int(self.revision))
             yield self._dovccmd(['sync','%s...@%d'%(self.p4base,int(self.revision))], collectStdout=True)
         else:
+            log.msg("P4: full() sync command based on :base:%s no revision",self.p4base)
             yield self._dovccmd(['sync'], collectStdout=True)
 
-        log.msg("P4: full() sync command based on :base:%s changeset:%d",self.p4base,int(self.revision))
+        log.msg("P4: full() sync done.")
 
-#
-#        updatable = yield self._sourcedirIsUpdatable()
-#        if not updatable:
-#            # blow away the old (un-updatable) directory
-#            yield self._rmdir(self.workdir)
-#
-#            # then do a checkout
-#            checkout_cmd = ['checkout', self.repourl, '.']
-#            if self.revision:
-#                checkout_cmd.extend(["--revision", str(self.revision)])
-#            yield self._dovccmd(checkout_cmd)
 
 
     @defer.inlineCallbacks
     def incremental(self, _):
         log.msg("P4:incremental()")
         updatable = yield self._sourcedirIsUpdatable()
-
-#        if not updatable:
-#            # blow away the old (un-updatable) directory
-#            # TODO: Figure out if this makes sense for perforce..
-#            # yield self._rmdir(self.workdir)
-#            
-#            # First we need to create the client
-#            yield self._createClientSpec()
-#
-#            # and plan to do a checkout
-#            command = ['sync',]
-#        else:
-#            # otherwise, do an update
-#            command = ['sync',]
             
         # First we need to create the client
         yield self._createClientSpec()
         
         # and plan to do a checkout
         command = ['sync',]
-
-
 
         if self.revision:
             command.extend(['%s...@%d'%(self.p4base,int(self.revision))])
@@ -250,18 +234,6 @@ class P4(Source):
         d.addCallback(_gotResults)
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
-
-# Not used?
-#    @defer.inlineCallbacks
-#    def _rmdir(self, dir):
-#        cmd = buildstep.RemoteCommand('rmdir',
-#                {'dir': dir, 'logEnviron': self.logEnviron })
-#        cmd.useLog(self.stdio_log, False)
-#        yield self.runCommand(cmd)
-#        if cmd.rc != 0:
-#            raise buildstep.BuildStepFailed()
-#        
-#        # Pull comment says use: buildbot.steps.slave.CompositeStepMixin
 
     def _buildVCCommand(self,doCommand):
         assert doCommand, "No command specified"
@@ -285,6 +257,7 @@ class P4(Source):
 
 
     def _dovccmd(self, command, collectStdout=False,initialStdin=None):
+
         command = self._buildVCCommand(command)
 
         log.msg("P4:_dovccmd():workdir->%s"%self.workdir)
@@ -443,3 +416,11 @@ class P4(Source):
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
     
+    @defer.inlineCallbacks
+    def _rmdir(self, dir):
+        cmd = buildstep.RemoteCommand('rmdir',
+                {'dir': dir, 'logEnviron': self.logEnviron })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+        if cmd.rc != 0:
+            raise buildstep.BuildStepFailed()
