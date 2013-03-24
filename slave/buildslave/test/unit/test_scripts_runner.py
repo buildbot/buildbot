@@ -298,10 +298,13 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                                 self.parse, "extra_arg", *self.req_args)
 
 
-class TestOptions(unittest.TestCase):
+class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
     """
     Test buildslave.scripts.runner.Options class.
     """
+    def setUp(self):
+        self.setUpStdoutAssertions()
+
     def parse(self, *args):
         opts = runner.Options()
         opts.parseOptions(args)
@@ -311,6 +314,11 @@ class TestOptions(unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "must specify a command",
                                 self.parse)
+
+    def test_version(self):
+        exception = self.assertRaises(SystemExit, self.parse, '--version')
+        self.assertEqual(exception.code, 0, "unexpected exit code")
+        self.assertInStdout('Buildslave version:')
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())
