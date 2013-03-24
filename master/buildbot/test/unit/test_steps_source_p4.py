@@ -26,49 +26,15 @@ from buildbot import config
 
 class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
-#    svn_st_xml = """<?xml version="1.0"?>
-#        <status>
-#            <target path=".">
-#                <entry path="svn_external_path">
-#                    <wc-status props="none" item="external">
-#                    </wc-status>
-#                </entry>
-#                <entry path="svn_external_path/unversioned_file1">
-#                    <wc-status props="none" item="unversioned">
-#                    </wc-status>
-#                </entry>
-#                <entry path="svn_external_path/unversioned_file2">
-#                    <wc-status props="none" item="unversioned">
-#                    </wc-status>
-#                </entry>
-#            </target>
-#        </status>
-#        """
-#    svn_st_xml_empty = """<?xml version="1.0"?>
-#                          <status>
-#                          <target path=".">
-#                          </target>
-#                          </status>"""
-#    svn_info_stdout = textwrap.dedent("""Path: .
-#                         URL: https://svn.example.com/svn/trunk
-#                         Repository Root: https://svn.example.com/svn
-#                         Repository UUID: 21b45634-0984-11de-b025-799c3e7cca98
-#                         Revision: 100
-#                         Node Kind: directory
-#                         Schedule: normal
-#                         Last Changed Author: reiern70
-#                         Last Changed Rev: 100
-#                         Last Changed Date: 2012-01-19 16:41:47 +0530 (Thu, 19 Jan 2012)
-#                      """)
     def setUp(self):
         return self.setUpSourceStep()
-
 
     def tearDown(self):
         return self.tearDownSourceStep()
     
     def setupStep(self, step, args={}, patch=None, **kwargs):
         sourcesteps.SourceStepMixin.setupStep(self, step, args={}, patch=None, **kwargs)
+        # builddir propety used to create absolute path required in perforce client spec.
         self.properties.setProperty('builddir','/home/user/workspace','P4')
 
 
