@@ -700,28 +700,32 @@ client specification and performs an update. ::
    factory.addStep(P4(p4port=p4port,
                       p4client=WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
                       p4user=p4user,
-                      p4base='//depot/',
+                      p4base='//depot',
                       p4viewspec=p4viewspec,
                       mode='incremental',
                       ))
                       
 You can specify the client spec in two different ways. You can use the ``p4base``, 
 ``p4branch``, and (optionally) ``p4extra_views`` to build up the viewspec, or you can utilize
-the ``p4viewspec`` to specify the whole viewspec as a set of tuples.  Using p4viewspec
-will allow you to add lines such as:
-``-//depot/branch/mybranch/notthisdir/... //<p4client>/notthisdir/...``
+the ``p4viewspec`` to specify the whole viewspec as a set of tuples.  
 
-If you specify ``p4viewspec`` then ``p4base``, ``p4branch``, and/or ``p4extra_views`` will
-be ignored.
+Using p4viewspec will allow you to add lines such as::
+
+    //depot/branch/mybranch/...             //<p4client>/...
+    -//depot/branch/mybranch/notthisdir/... //<p4client>/notthisdir/...
+
+
+If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4extra_views`` 
+you will receive a configuration error exception.
 
 
 ``p4base``
-    A view into the Perforce depot without branch name or trailing "...".
-    Typically ``//depot/proj/``.
+    A view into the Perforce depot without branch name or trailing "/...".
+    Typically ``//depot/proj``.
     
 ``p4branch``
     (optional): A single string, which is appended to the p4base as follows
-     ``<p4base><p4branch>/...`` to form the first line in the viewspec
+     ``<p4base>/<p4branch>/...`` to form the first line in the viewspec
 
 ``p4extra_views``
     (optional): a list of ``(depotpath, clientpath)`` tuples containing extra
