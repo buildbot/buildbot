@@ -104,9 +104,6 @@ class P4(Source):
         self.p4line_end = p4line_end
         self.p4client = p4client
         
-        # needs fix in Interpolate: __repr__ to handle no args or kwargs.
-#        log.msg(format="P4:__init__(): p4client:%(p4client)s",p4client=self.p4client)
-#        print "P4:__init__(): p4client:%s"%p4client
         Source.__init__(self, **kwargs)
         
         self.addFactoryArguments(mode = mode,
@@ -156,6 +153,7 @@ class P4(Source):
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLog("stdio")
+
 
         d = self.checkP4()
         def checkInstall(p4Installed):
@@ -216,8 +214,8 @@ class P4(Source):
 
         if self.revision:
             command.extend(['%s...@%d'%(self.p4base,int(self.revision))])
-
-        log.msg("P4:incremental() command:%s",command)
+            
+        log.msg("P4:incremental() command:%s revision:%s",command,self.revision)
         yield self._dovccmd(command)
 
 
