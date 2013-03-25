@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 import re
-import xml.dom.minidom
-import xml.parsers.expat
 import os
 
 
@@ -24,8 +22,7 @@ from twisted.internet import defer
 
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
-from zope.interface import implements
-from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process.properties import Interpolate
 from buildbot.config import ConfigErrors
 from types import StringType
@@ -210,7 +207,7 @@ class P4(Source):
     @defer.inlineCallbacks
     def incremental(self, _):
         log.msg("P4:incremental()")
-        updatable = yield self._sourcedirIsUpdatable()
+#        updatable = yield self._sourcedirIsUpdatable()
             
         # First we need to create the client
         yield self._createClientSpec()

@@ -13,15 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import textwrap
 from twisted.trial import unittest
-from twisted.python.reflect import namedModule
 from buildbot.steps.source.p4 import P4
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS
 from buildbot.test.util import sourcesteps
-from buildbot.process import buildstep
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot.test.util.properties import ConstantRenderable
 from buildbot import config
 
 class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -77,7 +73,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 #                        method='invalid'))
 #
 
-    def test_mode_incremental(self):
+    def test_mode_incremental_p4base(self):
 
         # The step which would should issue the commands in
         # the expectCommands below.
