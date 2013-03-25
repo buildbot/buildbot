@@ -16,10 +16,9 @@
 import re
 import os
 
-
 from twisted.python import log
 from twisted.internet import defer
-
+from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -139,10 +138,10 @@ class P4(Source):
         if p4viewspec and type(p4viewspec) is StringType:
             errors.append("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
             
-        if p4base and p4base.endswith('/'):
+        if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
             errors.append('p4base should not end with a trailing / [p4base = %s]'%p4base)
         
-        if p4branch and p4branch.endswith('/'):
+        if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):
             errors.append('p4branch should not end with a trailing / [p4branch = %s]'%p4branch)
             
         if (p4branch or p4extra_views) and not p4base:
@@ -309,10 +308,6 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
-        
-#        print "builddir:%s"%builddir
-#        print "self.workdir:%s"%self.workdir
-        
         client_spec += "Root:\t%s\n\n" % os.path.join(builddir,self.workdir)
         client_spec += "Options:\tallwrite rmdir\n\n"
         if self.p4line_end:
@@ -322,7 +317,6 @@ class P4(Source):
 
         # Setup a view
         client_spec += "View:\n"
-        
         
         if self.p4viewspec:
             # uses only p4viewspec array of tuples to build view
