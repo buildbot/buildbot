@@ -242,25 +242,23 @@ class BzrPoller(PollingChangeSource, buildbot.util.ComparableMixin):
     def poll(self):
         if self.last_revision is None:
             yield self._initLastRevision()
+
+        # On a big tree, even individual elements of the bzr commands
+        # can take awhile. So we just push the bzr work off to a
+        # thread.
         try:
-            # On a big tree, even individual elements of the bzr commands
-            # can take awhile. So we just push the bzr work off to a
-            # thread.
-            try:
-                changes = yield twisted.internet.threads.deferToThread(
-                    self.getRawChanges)
-            except (SystemExit, KeyboardInterrupt):
-                raise
-            except:
-                # we'll try again next poll.  Meanwhile, let's report.
-                twisted.python.log.err()
-            else:
-                for change in changes:
-                    yield self.addChange(change)
-                    self.last_revision = change['revision']
-                    yield self._setLastRevision(self.last_revision)
-        finally:
-            pass
+            changes = yield twisted.internet.threads.deferToThread(
+                self.getRawChanges)
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except:
+            # we'll try again next poll.  Meanwhile, let's report.
+            twisted.python.log.err()
+        else:
+            for change in changes:
+                yield self.addChange(change)
+                self.last_revision = change['revision']
+                yield self._setLastRevision(self.last_revision)
 
     def getRawChanges(self):
         branch = BzrBranch.open_containing(self.url)[0]
