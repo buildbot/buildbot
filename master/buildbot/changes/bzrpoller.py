@@ -42,7 +42,7 @@ Maintainer/author: gary.poster@canonical.com
 import buildbot.util
 import buildbot.changes.base
 import buildbot.changes.changes
-
+from buildbot.changes.base import PollingChangeSource
 try:
     import bzrlib
 except ImportError:
@@ -134,8 +134,7 @@ FULL = object()
 SHORT = object()
 
 
-class BzrPoller(buildbot.changes.base.PollingChangeSource,
-                buildbot.util.ComparableMixin):
+class BzrPoller(PollingChangeSource, buildbot.util.ComparableMixin):
 
     compare_attrs = ['url']
 
@@ -143,6 +142,7 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
 
     def __init__(self, url, poll_interval=10*60, blame_merge_author=False,
                  branch_name=None, category=None):
+        PollingChangeSource.__init__(self, pollInterval=poll_interval)
         # poll_interval is in seconds, so default poll_interval is 10
         # minutes.
         # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
@@ -150,14 +150,12 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
         if url.startswith('lp:'):
             url = 'bzr+ssh://bazaar.launchpad.net/' + url[3:]
         self.url = url
-        self.pollInterval = poll_interval
         self.loop = twisted.internet.task.LoopingCall(self.poll)
         self.blame_merge_author = blame_merge_author
         self.branch_name = branch_name
         self.category = category
 
         self.last_revision = None
-        self.polling = False
 
     def startService(self):
         if not BZRLIB_PRESENT:
@@ -242,14 +240,8 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
 
     @twisted.internet.defer.inlineCallbacks
     def poll(self):
-        if self.polling:  # this is called in a loop, and the loop might
-            # conceivably overlap.
-            # GR: this is to be handled by doPoll by calling
-            # SerializableInvocation
-            return
         if self.last_revision is None:
             yield self._initLastRevision()
-        self.polling = True
         try:
             # On a big tree, even individual elements of the bzr commands
             # can take awhile. So we just push the bzr work off to a
@@ -268,7 +260,7 @@ class BzrPoller(buildbot.changes.base.PollingChangeSource,
                     self.last_revision = change['revision']
                     yield self._setLastRevision(self.last_revision)
         finally:
-            self.polling = False
+            pass
 
     def getRawChanges(self):
         branch = BzrBranch.open_containing(self.url)[0]
