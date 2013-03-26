@@ -45,6 +45,7 @@ import buildbot.changes.changes
 from buildbot.changes.base import PollingChangeSource
 try:
     import bzrlib
+    _hush_pyflakes = [bzrlib]
 except ImportError:
     BZRLIB_PRESENT = False
 else:
@@ -86,7 +87,7 @@ def generate_change(branch,
     identified as the "author", not the person who committed the branch itself.
     This is typically used for PQM.
     """
-    change = {}  # files, author, comments, revision; NOT branch (= branch.nick)
+    change = {}  # files, author, comments, revision; NOT branch (=branch.nick)
     if new_revno is None:
         new_revno = branch.revno()
     if new_revid is None:
