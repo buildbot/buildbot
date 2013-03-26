@@ -142,7 +142,8 @@ class BzrPoller(PollingChangeSource, buildbot.util.ComparableMixin):
 
     def __init__(self, url, poll_interval=10*60, blame_merge_author=False,
                  branch_name=None, category=None):
-        PollingChangeSource.__init__(self, pollInterval=poll_interval)
+        PollingChangeSource.__init__(self, pollInterval=poll_interval,
+                                     name=url)
         # poll_interval is in seconds, so default poll_interval is 10
         # minutes.
         # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
