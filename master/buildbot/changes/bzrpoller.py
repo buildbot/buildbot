@@ -137,7 +137,7 @@ SHORT = object()
 
 class BzrPoller(PollingChangeSource, buildbot.util.ComparableMixin):
 
-    compare_attrs = ['url']
+    compare_attrs = ['url', 'branch_name', 'category']
 
     db_class_name = 'BzrPoller'
 
