@@ -369,14 +369,18 @@ class CreateSlaveOptions(MakerBase):
 
     def postOptions(self):
         MakerBase.postOptions(self)
-        self['usepty'] = int(self['usepty'])
-        self['keepalive'] = int(self['keepalive'])
-        self['maxdelay'] = int(self['maxdelay'])
-        if not re.match('^\d+$', self['log-size']):
-            raise usage.UsageError("log-size parameter needs to be an int")
+
+        # check and convert numeric parameters
+        for argument in ["usepty", "keepalive", "maxdelay", "log-size"]:
+            try:
+                self[argument] = int(self[argument])
+            except ValueError:
+                raise usage.UsageError("%s parameter needs to be an number" \
+                                                                    % argument)
+
         if not re.match('^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int "+
+            raise usage.UsageError("log-count parameter needs to be an number"
                                    " or None")
 
 class Options(usage.Options):

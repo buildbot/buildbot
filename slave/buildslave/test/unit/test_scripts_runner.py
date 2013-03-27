@@ -15,6 +15,7 @@
 
 import mock
 from twisted.trial import unittest
+from twisted.python import usage
 from buildslave.scripts import runner, base
 
 class TestUpgradeSlave(unittest.TestCase):
@@ -39,3 +40,41 @@ class TestUpgradeSlave(unittest.TestCase):
 
         # check that isBuildslaveDir was called with correct argument
         mocked_isBuildslaveDir.assert_called_once_with("dummy")
+
+
+class TestCreateSlaveOptions(unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.CreateSlaveOptions class.
+    """
+
+    req_args = ["bdir", "mstr", "name", "pswd"]
+
+    def parse(self, *args):
+        opts = runner.CreateSlaveOptions()
+        opts.parseOptions(args)
+        return opts
+
+    def test_inv_keepalive(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "keepalive parameter needs to be an number",
+                                self.parse, "--keepalive=X", *self.req_args)
+
+    def test_inv_usepty(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "usepty parameter needs to be an number",
+                                self.parse, "--usepty=X", *self.req_args)
+
+    def test_inv_maxdelay(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "maxdelay parameter needs to be an number",
+                                self.parse, "--maxdelay=X", *self.req_args)
+
+    def test_inv_log_size(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "log-size parameter needs to be an number",
+                                self.parse, "--log-size=X", *self.req_args)
+
+    def test_inv_log_count(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                        "log-count parameter needs to be an number or None",
+                        self.parse, "--log-count=X", *self.req_args)
