@@ -37,8 +37,6 @@ Notes:
     """
     
 
-#class P4(buildbot.steps.slave.CompositeStepMixin,Source):
-
 class P4(Source):
     """Perform Perforce checkout/update operations."""
 
