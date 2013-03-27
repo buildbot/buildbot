@@ -50,7 +50,7 @@ class P4(Source):
     def __init__(self, mode='incremental',
                  method=None,p4base=None, p4branch=None,
                  p4port=None, p4user=None,
-                 p4passwd=None, p4extra_views=[], p4line_end='local',
+                 p4passwd=None, p4extra_views=(), p4line_end='local',
                  p4viewspec=None,
                  p4client=Interpolate('buildbot_%(prop:slavename)s_%(prop:buildername)s'),
                  p4bin='p4',
@@ -105,23 +105,7 @@ class P4(Source):
         self.p4client = p4client
         
         Source.__init__(self, **kwargs)
-        
-        self.addFactoryArguments(mode = mode,
-                                 method = method,
-                                 p4bin = p4bin,
-                                 p4base = p4base,
-                                 defaultBranch = p4branch,
-                                 p4branch = p4branch,
-                                 p4port = p4port,
-                                 p4user = p4user,
-                                 p4passwd = p4passwd,
-                                 p4extra_views = p4extra_views,
-                                 p4viewspec = p4viewspec,
-                                 p4line_end = p4line_end,
-                                 p4client = p4client,
-                                 )
-        self.p4client = p4client
-        
+                
         errors = []
         if self.mode not in self.possible_modes:
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
