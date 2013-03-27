@@ -319,15 +319,15 @@ class Model(base.DBConnectorComponent):
         sa.Column("value_json", sa.Text, nullable=False),
     )
 
-    # masters
-    masters = sa.Table("masters", metadata,
+    # mastersconfig
+    mastersconfig = sa.Table("mastersconfig", metadata,
         # unique id per master
         sa.Column('id', sa.Integer, primary_key=True),
 
         # master's URL (generally in the form hostname:basedir)
         sa.Column('buildbotURL', sa.Text, nullable=False),
 
-        # objectid where the masters is stored
+        # objectid where the mastersconfig is stored
         sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), index=True,  unique=True, nullable=False),
     )
 

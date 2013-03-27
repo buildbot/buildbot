@@ -132,7 +132,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             build_number)
 
     def getURLForBuildRequest(self, brid, builder_name, build_number):
-        d = self.master.db.masters.getMasterURL(brid)
+        d = self.master.db.mastersconfig.getMasterURL(brid)
         
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}

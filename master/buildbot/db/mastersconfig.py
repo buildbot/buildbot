@@ -21,14 +21,14 @@ from buildbot.db import base
 class AlreadySetupError(Exception):
     pass
 
-class MasterDict(dict):
+class MasterConfigDict(dict):
     pass
 
-class MastersConnectorComponent(base.DBConnectorComponent):
+class MastersConfigConnectorComponent(base.DBConnectorComponent):
 
     def setupMaster(self, buildbotURL, _master_objectid=None):
         def thd(conn):
-            tbl = self.db.model.masters
+            tbl = self.db.model.mastersconfig
 
             def update():
                 q = tbl.update(whereclause=(tbl.c.objectid == _master_objectid))
@@ -54,7 +54,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
     def getMasterURL(self, brid=None):
         def thd(conn):
             if (brid) is not None:
-                mast_tbl=self.db.model.masters
+                mast_tbl=self.db.model.mastersconfig
                 claims_tbl = self.db.model.buildrequest_claims
                 res = conn.execute(sa.select(columns=[mast_tbl], from_obj=[
                 claims_tbl.join(mast_tbl,
@@ -62,13 +62,13 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                                              distinct=True,
                                              whereclause=(claims_tbl.c.brid == brid)))
                 row = res.fetchone()
-                masterdict = None
+                masterconfigdict = None
                 if row:
-                    masterdict = self._masterdictFromRow(row)
+                    masterconfigdict = self._masterconfigdictFromRow(row)
                 res.close()
-                return masterdict
+                return masterconfigdict
             
         return self.db.pool.do(thd)
 
-    def _masterdictFromRow(self, row):
-        return MasterDict(id=row.id, buildbotURL=row.buildbotURL, objectid=row.objectid)
+    def _masterconfigdictFromRow(self, row):
+        return MasterConfigDict(id=row.id, buildbotURL=row.buildbotURL, objectid=row.objectid)

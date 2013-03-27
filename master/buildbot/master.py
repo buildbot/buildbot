@@ -314,7 +314,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         if self.configured_buildbotURL != new_config.buildbotURL:
             self.configured_buildbotURL = new_config.buildbotURL
             def setupMaster(_master_objectid):
-                self.db.masters.setupMaster(self.configured_buildbotURL, _master_objectid)
+                self.db.mastersconfig.setupMaster(self.configured_buildbotURL, _master_objectid)
             d = self.getObjectId()
             d.addCallback(setupMaster)
 

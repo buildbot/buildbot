@@ -33,12 +33,12 @@ def upgrade(migrate_engine):
         sa.UniqueConstraint('name', 'class_name', name='object_identity'),
     )
 
-    # add masters table
-    masters_table = sa.Table('masters', metadata,
+    # add mastersconfig table
+    mastersconfig_table = sa.Table('mastersconfig', metadata,
                              sa.Column('id', sa.Integer, primary_key=True),
                              sa.Column('buildbotURL', sa.Text, nullable=False),
                              sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), index=True,  unique=True, nullable=False),
                              )
 
     # create the initial schema
-    masters_table.create()
+    mastersconfig_table.create()
