@@ -42,7 +42,19 @@ class TestUpgradeSlave(unittest.TestCase):
         mocked_isBuildslaveDir.assert_called_once_with("dummy")
 
 
-class TestCreateSlaveOptions(unittest.TestCase):
+class OptionsMixin(object):
+    def assertOptions(self, opts, exp):
+        got = dict([(k, opts[k]) for k in exp])
+        if got != exp:
+            msg = []
+            for k in exp:
+                if opts[k] != exp[k]:
+                    msg.append(" %s: expected %r, got %r" %
+                               (k, exp[k], opts[k]))
+            self.fail("did not get expected options\n" + ("\n".join(msg)))
+
+
+class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
     """
     Test buildslave.scripts.runner.CreateSlaveOptions class.
     """
@@ -53,6 +65,50 @@ class TestCreateSlaveOptions(unittest.TestCase):
         opts = runner.CreateSlaveOptions()
         opts.parseOptions(args)
         return opts
+
+    def test_defaults(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "incorrect number of arguments",
+                                self.parse)
+
+    def test_synopsis(self):
+        opts = runner.CreateSlaveOptions()
+        self.assertIn('buildslave create-slave', opts.getSynopsis())
+
+    def test_min_args(self):
+
+        # patch runner.MakerBase.postOptions() so that 'basedir'
+        # argument will not be converted to absolute path
+        self.patch(runner.MakerBase, "postOptions", mock.Mock())
+
+        self.assertOptions(self.parse(*self.req_args),
+                           dict(basedir="bdir", master="mstr",
+                                name="name", passwd="pswd"))
+
+    def test_all_args(self):
+
+        # patch runner.MakerBase.postOptions() so that 'basedir'
+        # argument will not be converted to absolute path
+        self.patch(runner.MakerBase, "postOptions", mock.Mock())
+
+        opts = self.parse("--force", "--relocatable", "--no-logrotate",
+                          "--keepalive=4", "--usepty=0", "--umask=022",
+                          "--maxdelay=3", "--log-size=2", "--log-count=1",
+                          "--allow-shutdown=file", *self.req_args)
+        self.assertOptions(opts,
+                           {"force"          : True,
+                            "relocatable"    : True,
+                            "no-logrotate"   : True,
+                            "usepty"         : 0,
+                            "umask"          : "022",
+                            "maxdelay"       : 3,
+                            "log-size"       : 2,
+                            "log-count"      : "1",
+                            "allow-shutdown" : "file",
+                            "basedir"        : "bdir",
+                            "master"         : "mstr",
+                            "name"           : "name",
+                            "passwd"         : "pswd"})
 
     def test_inv_keepalive(self):
         self.assertRaisesRegexp(usage.UsageError,
