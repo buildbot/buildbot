@@ -78,3 +78,13 @@ class TestCreateSlaveOptions(unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                         "log-count parameter needs to be an number or None",
                         self.parse, "--log-count=X", *self.req_args)
+
+    def test_too_few_args(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "incorrect number of arguments",
+                                self.parse, "arg1", "arg2")
+
+    def test_too_many_args(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "incorrect number of arguments",
+                                self.parse, "extra_arg", *self.req_args)

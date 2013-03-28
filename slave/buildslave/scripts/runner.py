@@ -357,8 +357,8 @@ class CreateSlaveOptions(MakerBase):
         return "Usage:    buildslave create-slave [options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
-        if len(args) < 4:
-            raise usage.UsageError("command needs more arguments")
+        if len(args) != 4:
+            raise usage.UsageError("incorrect number of arguments")
         basedir, master, name, passwd = args
         if master[:5] == "http:":
             raise usage.UsageError("<master> is not a URL - do not use URL")
