@@ -110,6 +110,11 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                             "name"           : "name",
                             "passwd"         : "pswd"})
 
+    def test_master_url(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "<master> is not a URL - do not use URL",
+                                self.parse, "a", "http://b.c", "d", "e")
+
     def test_inv_keepalive(self):
         self.assertRaisesRegexp(usage.UsageError,
                                 "keepalive parameter needs to be an number",
