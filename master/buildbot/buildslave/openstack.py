@@ -90,9 +90,9 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         if self.meta is not None:
             boot_kwargs['meta'] = self.meta
         self.instance = os_client.servers.create(*boot_args, **boot_kwargs)
-        log.msg('%s %s starting instance %s (%s)' %
+        log.msg('%s %s starting instance %s (image %s)' %
                 (self.__class__.__name__, self.slavename, self.instance.id,
-                 self.instance.name))
+                 image_uuid))
         duration = 0
         interval = self._poll_resolution
         inst = self.instance
