@@ -17,7 +17,7 @@
 # subcommands want to load modules that need the gtk reactor.
 import os, sys, re, time
 from buildslave.scripts import base
-from twisted.python import usage
+from twisted.python import usage, reflect
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -287,6 +287,7 @@ class MakerBase(usage.Options):
         self['basedir'] = os.path.abspath(self['basedir'])
 
 class StartOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.startup.startCommand"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -295,10 +296,12 @@ class StartOptions(MakerBase):
         return "Usage:    buildslave start [<basedir>]"
 
 class StopOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.runner.stop"
     def getSynopsis(self):
         return "Usage:    buildslave stop [<basedir>]"
 
 class RestartOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.runner.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -307,6 +310,7 @@ class RestartOptions(MakerBase):
         return "Usage:    buildslave restart [<basedir>]"
 
 class UpgradeSlaveOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.runner.upgradeSlave"
     optFlags = [
         ]
     optParameters = [
@@ -340,6 +344,7 @@ def upgradeSlave(config):
 
 
 class CreateSlaveOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.runner.createSlave"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -448,19 +453,6 @@ def run():
         print str(c)
         sys.exit(1)
 
-    command = config.subCommand
-    so = config.subOptions
-
-    if command == "create-slave":
-        createSlave(so)
-    elif command == "upgrade-slave":
-        upgradeSlave(so)
-    elif command == "start":
-        from buildslave.scripts.startup import startCommand
-        startCommand(so)
-    elif command == "stop":
-        stop(so)
-    elif command == "restart":
-        restart(so)
-    sys.exit(0)
-
+    subconfig = config.subOptions
+    subcommandFunction = reflect.namedObject(subconfig.subcommandFunction)
+    sys.exit(subcommandFunction(subconfig))
