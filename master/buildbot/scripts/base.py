@@ -16,6 +16,7 @@
 from __future__ import with_statement
 
 import os
+import re
 import copy
 import stat
 from twisted.python import usage, runtime
@@ -28,7 +29,10 @@ def isBuildmasterDir(dir):
 
     with open(buildbot_tac, "r") as f:
         contents = f.read()
-    return "Application('buildmaster')" in contents
+    return re.search(
+        r'''service.Application\((?:[\s]*)(?:['"]+)buildmaster(?:['"]+)''',
+        contents
+    ) is not None
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
     configFile = os.path.abspath(os.path.join(basedir, defaultName))
