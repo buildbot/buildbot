@@ -15,7 +15,10 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, sys, re, time
+import os
+import re
+import sys
+import time
 from twisted.python import usage
 
 def isBuildslaveDir(dir):
@@ -25,7 +28,10 @@ def isBuildslaveDir(dir):
         return False
 
     contents = open(buildbot_tac, "r").read()
-    return "Application('buildslave')" in contents
+    return re.search(
+        r'''service.Application\((?:[\s]*)(?:['"]+)buildslave(?:['"]+)''',
+        contents
+    ) is not None
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
