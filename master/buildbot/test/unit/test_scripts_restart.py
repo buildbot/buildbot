@@ -40,7 +40,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_restart_not_basedir(self):
         self.assertEqual(restart.restart(mkconfig(basedir='doesntexist')), 1)
-        self.assertInStdout('not a buildmaster directory')
+        self.assertInStdout('invalid buildmaster directory')
 
     def test_restart_stop_fails(self):
         self.patch(stop, 'stop', lambda config, wait : 1)

@@ -32,17 +32,20 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_isBuildmasterDir_no_dir(self):
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test/nosuch')))
-        self.assertInStdout('no buildbot.tac')
+        self.assertInStdout('error reading')
+        self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_no_file(self):
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
-        self.assertInStdout('no buildbot.tac')
+        self.assertInStdout('error reading')
+        self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_no_Application(self):
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
             f.write("foo\nx = Application('buildslave')\nbar")
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
-        self.assertWasQuiet()
+        self.assertInStdout('unexpected content')
+        self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_matches(self):
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
