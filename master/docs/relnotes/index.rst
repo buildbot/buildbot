@@ -48,6 +48,9 @@ Features
 * The new :bb:step:`LogRenderable` step logs Python objects, which can contain renderables, to the logfile.
   This is helpful for debugging property values during a build.
 
+* The :bb:step:`ShellCommand` step has a new parameter ``user``.  When this is set, the slave will use 'sudo' to
+  run the command as the given user.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
