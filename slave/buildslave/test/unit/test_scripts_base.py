@@ -14,13 +14,12 @@
 # Copyright Buildbot Team Members
 
 import sys
-import mock
-import __builtin__
 import cStringIO
 from twisted.trial import unittest
 from buildslave.scripts import base
+from buildslave.test.util import misc
 
-class TestIsBuildslaveDir(unittest.TestCase):
+class TestIsBuildslaveDir(misc.OpenFileMixin, unittest.TestCase):
     """Test buildslave.scripts.base.isBuildslaveDir()"""
 
     def setUp(self):
@@ -34,22 +33,11 @@ class TestIsBuildslaveDir(unittest.TestCase):
                          "invalid buildslave directory 'testdir'\n" % strerror,
                          "unexpected error message on stdout")
 
-    def setUpMockedTacFile(self, file_contents):
-        """Patch open() to return a file object with specified contents."""
-
-        fileobj_mock = mock.Mock()
-        fileobj_mock.read = mock.Mock(return_value=file_contents)
-        open_mock = mock.Mock(return_value=fileobj_mock)
-        self.patch(__builtin__, "open", open_mock)
-
-        return (fileobj_mock, open_mock)
-
     def test_open_error(self):
         """Test that open() errors are handled."""
 
         # patch open() to raise IOError
-        open_mock = mock.Mock(side_effect=IOError(1, "open-error", "dummy"))
-        self.patch(__builtin__, "open", open_mock)
+        self.setUpOpenError(1, "open-error", "dummy")
 
         # check that isBuildslaveDir() flags directory as invalid
         self.assertFalse(base.isBuildslaveDir("testdir"))
@@ -58,17 +46,13 @@ class TestIsBuildslaveDir(unittest.TestCase):
         self.assertReadErrorMessage("open-error")
 
         # check that open() was called with correct path
-        open_mock.assert_called_once_with("testdir/buildbot.tac")
+        self.open.assert_called_once_with("testdir/buildbot.tac")
 
     def test_read_error(self):
         """Test that read() errors on buildbot.tac file are handled."""
 
         # patch open() to return file object that raises IOError on read()
-        fileobj_mock = mock.Mock()
-        fileobj_mock.read = mock.Mock(side_effect=IOError(1, "read-error",
-                                                          "dummy"))
-        open_mock = mock.Mock(return_value=fileobj_mock)
-        self.patch(__builtin__, "open", open_mock)
+        self.setUpReadError(1, "read-error", "dummy")
 
         # check that isBuildslaveDir() flags directory as invalid
         self.assertFalse(base.isBuildslaveDir("testdir"))
@@ -77,13 +61,13 @@ class TestIsBuildslaveDir(unittest.TestCase):
         self.assertReadErrorMessage("read-error")
 
         # check that open() was called with correct path
-        open_mock.assert_called_once_with("testdir/buildbot.tac")
+        self.open.assert_called_once_with("testdir/buildbot.tac")
 
     def test_unexpected_tac_contents(self):
         """Test that unexpected contents in buildbot.tac is handled."""
 
         # patch open() to return file with unexpected contents
-        (fileobj_mock, open_mock) = self.setUpMockedTacFile("dummy-contents")
+        self.setUpOpen("dummy-contents")
 
         # check that isBuildslaveDir() flags directory as invalid
         self.assertFalse(base.isBuildslaveDir("testdir"))
@@ -94,17 +78,16 @@ class TestIsBuildslaveDir(unittest.TestCase):
                          "invalid buildslave directory 'testdir'\n",
                          "unexpected error message on stdout")
         # check that open() was called with correct path
-        open_mock.assert_called_once_with("testdir/buildbot.tac")
+        self.open.assert_called_once_with("testdir/buildbot.tac")
 
     def test_slavedir_good(self):
         """Test checking valid buildslave directory."""
 
         # patch open() to return file with valid buildslave tac contents
-        (fileobj_mock, open_mock) = \
-            self.setUpMockedTacFile("Application('buildslave')")
+        self.setUpOpen("Application('buildslave')")
 
         # check that isBuildslaveDir() flags directory as good
         self.assertTrue(base.isBuildslaveDir("testdir"))
 
         # check that open() was called with correct path
-        open_mock.assert_called_once_with("testdir/buildbot.tac")
+        self.open.assert_called_once_with("testdir/buildbot.tac")

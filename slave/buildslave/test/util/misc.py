@@ -15,7 +15,9 @@
 
 import os
 import sys
+import mock
 import shutil
+import __builtin__
 import cStringIO
 
 def nl(s):
@@ -54,6 +56,55 @@ class PatcherMixin(object):
                 del os.uname
             self.addCleanup(cleanup)
             os.uname = replacement
+
+
+class OpenFileMixin:
+    """
+    Mixin for patching open() to simulate successful reads and I/O errors.
+    """
+    def setUpOpen(self, file_contents):
+        """
+        patch open() to return file object with provided contents.
+
+        @param file_contents: contents that will be returned by file object's
+                              read() method
+        """
+        # create mocked file object that returns 'file_contents' on read()
+        self.fileobj = mock.Mock()
+        self.fileobj.read = mock.Mock(return_value=file_contents)
+
+        # patch open() to return mocked object
+        self.open = mock.Mock(return_value=self.fileobj)
+        self.patch(__builtin__, "open", self.open)
+
+    def setUpOpenError(self, errno, strerror="dummy-msg",
+                       filename="dummy-file"):
+        """
+        patch open() to raise IOError
+
+        @param    errno: exception's errno value
+        @param strerror: exception's strerror value
+        @param filename: exception's filename value
+        """
+        self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
+        self.patch(__builtin__, "open", self.open)
+
+    def setUpReadError(self, errno, strerror="dummy-msg",
+                       filename="dummy-file"):
+        """
+        patch open() to return a file object that will raise IOError on read()
+
+        @param    errno: exception's errno value
+        @param strerror: exception's strerror value
+        @param filename: exception's filename value
+
+        """
+        self.fileobj = mock.Mock()
+        self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
+                                                          filename))
+        self.open = mock.Mock(return_value=self.fileobj)
+        self.patch(__builtin__, "open", self.open)
+
 
 class StdoutAssertionsMixin(object):
     """
