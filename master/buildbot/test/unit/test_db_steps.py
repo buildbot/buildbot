@@ -40,12 +40,13 @@ class Tests(interfaces.InterfaceTests):
             builderid=88),
     ]
     stepRows = [
-        fakedb.Step(id=70, number=0, name='one', buildid=30,
-            started_at=TIME1, complete_at=TIME2, state_strings_json='["test"]',
-            results=0),
+            fakedb.Step(id=70, number=0, name='one', buildid=30,
+            started_at=TIME1, complete_at=TIME2,
+            state_strings_json=u'["test"]', results=0),
         fakedb.Step(id=71, number=1, name='two', buildid=30,
-            started_at=TIME2, complete_at=TIME3, state_strings_json='["test"]',
-            results=2, urls_json='["http://url"]'),
+            started_at=TIME2, complete_at=TIME3,
+            state_strings_json=u'["test"]', results=2,
+            urls_json=u'["http://url"]'),
         fakedb.Step(id=72, number=2, name='three', buildid=30,
             started_at=TIME3),
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),

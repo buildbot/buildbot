@@ -1309,7 +1309,7 @@ class FakeBuildsComponent(FakeDBComponent):
         self.builds[id] = dict(id=id, number=number,
                 buildrequestid=buildrequestid, builderid=builderid,
                 slaveid=slaveid, masterid=masterid,
-                state_strings_json=json.dumps(state_strings),
+                state_strings_json=unicode(json.dumps(state_strings)),
                 started_at=_reactor.seconds(), complete_at=None,
                 results=None)
         return defer.succeed((id, number))
@@ -1319,7 +1319,7 @@ class FakeBuildsComponent(FakeDBComponent):
                 validation.ListValidator(validation.StringValidator()))
         b = self.builds.get(buildid)
         if b:
-            b['state_strings_json'] = json.dumps(state_strings)
+            b['state_strings_json'] = unicode(json.dumps(state_strings))
         return defer.succeed(None)
 
     def finishBuild(self, buildid, results, _reactor=reactor):
@@ -1419,7 +1419,7 @@ class FakeStepsComponent(FakeDBComponent):
             'started_at': _reactor.seconds(),
             'complete_at': None,
             'results': None,
-            'state_strings_json': json.dumps(state_strings),
+            'state_strings_json': unicode(json.dumps(state_strings)),
             'urls_json': '[]'}
 
         return defer.succeed((id, number, name))
