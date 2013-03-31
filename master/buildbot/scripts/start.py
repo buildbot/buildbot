@@ -98,7 +98,6 @@ def launch(config):
 
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
-        print "not a buildmaster directory"
         return 1
 
     if config['nodaemon']:

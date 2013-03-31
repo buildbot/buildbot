@@ -29,7 +29,6 @@ def stop(config, signame="TERM", wait=False):
       signame = 'USR1'
 
     if not base.isBuildmasterDir(config['basedir']):
-        print "not a buildmaster directory"
         return 1
 
     pidfile = os.path.join(basedir, 'twistd.pid')
