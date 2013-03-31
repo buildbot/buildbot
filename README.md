@@ -89,9 +89,9 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 
 The outstanding resource types are:
 
-* buildrequest :runner:
-* buildslave :runner:
-* changesource :runner:
+* buildrequest :runner: (in progress by Maria Marcano)
+* buildslave :runner: (in progress by ewong)
+* changesource :runner: (in progress by Jared Grubb)
 
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 
@@ -117,6 +117,11 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 
 ### Misc Data API Work ###
 
+* Add proper messages about build requests and buildsets to the build request distributor
+  * claiming build requests
+  * unclaiming build requests
+  * completing build requests
+  * completing buildsets
 * Make sure that the arguments to `addChange` are flexible and compatible: http://trac.buildbot.net/ticket/2378 :runner:
 * addBuildset should take a list of builder IDs, rather than names :runner:
 * REST stuff:
