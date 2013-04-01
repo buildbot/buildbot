@@ -48,6 +48,8 @@ Features
 * The new :bb:step:`LogRenderable` step logs Python objects, which can contain renderables, to the logfile.
   This is helpful for debugging property values during a build.
 
+* The ``Git`` step has a new ``config`` option, which accepts a dict of git configuration options to
+  pass to the low-level git commands.  See :bb:step:`Git` for details.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
