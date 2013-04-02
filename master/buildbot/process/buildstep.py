@@ -30,6 +30,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
 from buildbot.process import metrics, properties
 from buildbot.util.eventual import eventually
+from buildbot.interfaces import BuildSlaveTooOldError
 
 class BuildStepFailed(Exception):
     pass
@@ -361,7 +362,8 @@ class RemoteShellCommand(RemoteCommand):
                  usePTY="slave-config", logEnviron=True,
                  collectStdout=False,collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0:SUCCESS}):
+                 initialStdin=None, decodeRC={0:SUCCESS},
+                 user=None):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -382,6 +384,8 @@ class RemoteShellCommand(RemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
+        if user is not None:
+            args['user'] = user
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
                                collectStderr=collectStderr,
                                decodeRC=decodeRC)
@@ -393,6 +397,10 @@ class RemoteShellCommand(RemoteCommand):
             # fixup themselves
             if self.step.slaveVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
+        if ('user' in self.args and
+                self.step.slaveVersionIsOlderThan("shell", "2.16")):
+            m = "slave does not support the 'user' parameter"
+            raise BuildSlaveTooOldError(m)
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
         log.msg(what)
