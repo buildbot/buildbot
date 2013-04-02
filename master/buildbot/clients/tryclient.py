@@ -844,7 +844,13 @@ class Try(pb.Referenceable):
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
     def _getBuilderNames(self, remote, output):
-        d = remote.callRemote("getAvailableBuilderNames")
+        # Older schedulers won't support the properties argument, so only
+        # attempt to send them when necessary.
+        properties = self.config.get('properties', {})
+        if properties:
+            d = remote.callRemote("getAvailableBuilderNames", properties)
+        else:
+            d = remote.callRemote("getAvailableBuilderNames")
         d.addCallback(self._getBuilderNames2)
         return d
 
