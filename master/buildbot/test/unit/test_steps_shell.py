@@ -66,9 +66,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
-        pos_args = ['build', 'echo Hello World']
-        invalid_args = {"usePTY": "slave-config",
-                        "wrongArg1": 1, "wrongArg2": "two"}
         self.assertRaisesConfigError(
                     "Invalid argument(s) passed to RemoteShellCommand: ",
                     lambda: shell.ShellCommand('build', "echo Hello World",
