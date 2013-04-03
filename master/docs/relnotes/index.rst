@@ -53,6 +53,10 @@ Features
   only a single property and therefore allows commas to be included in the property
   name and value.
 
+* The ``TryScheduler`` now accepts an additional ``properties`` argument to its
+  ``getAvailableBuilderNames`` method, which 'buildbot try' uses to send the properties
+  it was passed (and are normally sent when starting a build).
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
