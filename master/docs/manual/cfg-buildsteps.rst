@@ -443,6 +443,10 @@ The Git step takes the following arguments:
       * ``abbrev=7``: `--abbrev=7`
       * ``candidates=7``: `--candidates=7`
       * ``dirty=foo``: `--dirty=foo`
+
+``config``
+
+   (optional) A dict of git configuration settings to pass to the remote git commands.
     
 .. bb:step:: SVN
 
