@@ -34,5 +34,16 @@ def patch_bug5079():
         from buildslave.monkeypatches import bug5079
         bug5079.patch()
 
-def patch_all():
+def patch_testcase_assert_raises_regexp():
+    # pythons before 2.7 does not have TestCase.assertRaisesRegexp() method
+    # add our local implementation if needed
+    import sys
+    if sys.version_info[:2] < (2,7):
+        from buildslave.monkeypatches import testcase_assert
+        testcase_assert.patch()
+
+def patch_all(for_tests=False):
     patch_bug4881()
+
+    if for_tests:
+        patch_testcase_assert_raises_regexp()
