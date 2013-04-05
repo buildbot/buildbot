@@ -16,12 +16,9 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer, reactor, utils
-from twisted.python import failure
 from buildbot import config, interfaces
 from buildbot.buildslave import openstack
 import buildbot.test.fake.openstack as novaclient
-from buildbot.test.util import compat
 
 class TestOpenStackBuildSlave(unittest.TestCase):
 
