@@ -82,18 +82,18 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         client_spec = textwrap.dedent('''\
         Client: p4_client1
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-        
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client1/...
         ''');
@@ -104,14 +104,20 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,  # expected exit status
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'client', '-i'],
                         initialStdin=client_spec)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync', '//depot...@100'])
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'sync', '//depot...@100'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -127,14 +133,20 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,  # expected exit status
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'client', '-i'],
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'client', '-i'],
                         initialStdin=client_stdin,)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'sync'])
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'sync'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user', '-P', 'pass', '-c', 'p4_client1', 'changes', '-m1', '#have'])
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1',
+                                       'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -144,36 +156,30 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_p4base(self):
-        # The step which would should issue the commands in
-        # the expectCommands below.
-        # Not run until the self.runStep() below
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
-        
+
         client_spec = textwrap.dedent('''\
         Client: p4_client1
 
         Owner: user
-        
+
         Description:
         \tCreated by user
-        
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client1/...
         ''')
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_p4extra_views(self):
-        # The step which would should issue the commands in
-        # the expectCommands below.
-        # Not run until the self.runStep() below
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4extra_views=[('-//depot/trunk/test', 'test'),
@@ -183,16 +189,16 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Client: p4_client1
 
         Owner: user
-        
+
         Description:
         \tCreated by user
-        
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client1/...
         \t-//depot/trunk/test/... //p4_client1/test/...
@@ -201,9 +207,6 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
-        # The step which would should issue the commands in
-        # the expectCommands below.
-        # Not run until the self.runStep() below
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4viewspec=[('//depot/trunk/', '')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
@@ -211,16 +214,16 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Client: p4_client1
 
         Owner: user
-        
+
         Description:
         \tCreated by user
-        
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client1/...
         ''')
@@ -233,21 +236,28 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,  # expected exit status
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user, '-P', 'pass', '-c', p4client, 'client', '-i'],
+                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
+                                       '-P', 'pass', '-c', p4client, 'client',
+                                       '-i'],
                         initialStdin=client_stdin)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user, '-P', 'pass', '-c', p4client, 'sync', '#none'])
+                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
+                                       '-P', 'pass', '-c', p4client, 'sync',
+                                       '#none'])
             + 0,
 
             Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
             + 0,
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user, '-P', 'pass', '-c', p4client, 'sync'])
+                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
+                                       '-P', 'pass', '-c', p4client, 'sync'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user, '-P', 'pass', '-c', p4client, 'changes', '-m1', '#have'])
+                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
+                                       '-P', 'pass', '-c', p4client, 'changes',
+                                       '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -264,44 +274,41 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         client_stdin = textwrap.dedent('''\
         Client: p4_client1
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client1/...\n''')
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4viewspec(self):
-        # The step which would should issue the commands in
-        # the expectCommands below.
-        # Not run until the self.runStep() below
         self.setupStep(
             P4(p4port='localhost:12000',
                mode='full', p4viewspec=[('//depot/main/', '')],
                p4user='user', p4client='p4_client1', p4passwd='pass'))
         client_stdin = textwrap.dedent('''\
         Client: p4_client1
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/main/... //p4_client1/...\n''')
 
@@ -311,23 +318,24 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         # Note that the config check skips checking p4base if it's a renderable
         self.setupStep(
             P4(p4port='localhost:12000',
-               mode='full', p4base=ConstantRenderable('//depot'), p4branch='release/1.0',
-               p4user='user', p4client='p4_client2', p4passwd='pass'))
+               mode='full', p4base=ConstantRenderable('//depot'),
+               p4branch='release/1.0', p4user='user', p4client='p4_client2',
+               p4passwd='pass'))
 
         client_stdin = textwrap.dedent('''\
         Client: p4_client2
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/release/1.0/... //p4_client2/...\n''')
 
@@ -338,22 +346,23 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             P4(p4port='localhost:12000',
                mode='full', p4base='//depot', p4branch='trunk',
-               p4user='user', p4client=ConstantRenderable('p4_client_render'), p4passwd='pass'))
+               p4user='user', p4client=ConstantRenderable('p4_client_render'),
+               p4passwd='pass'))
 
         client_stdin = textwrap.dedent('''\
         Client: p4_client_render
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/trunk/... //p4_client_render/...\n''')
 
@@ -363,23 +372,24 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         # Note that the config check skips checking p4base if it's a renderable
         self.setupStep(
             P4(p4port='localhost:12000',
-               mode='full', p4base='//depot', p4branch=ConstantRenderable('render_branch'),
+               mode='full', p4base='//depot',
+               p4branch=ConstantRenderable('render_branch'),
                p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         client_stdin = textwrap.dedent('''\
         Client: p4_client1
-        
+
         Owner: user
-        
+
         Description:
         \tCreated by user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/render_branch/... //p4_client1/...\n''')
 
@@ -388,23 +398,25 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_renderable_p4viewspec(self):
         self.setupStep(
             P4(p4port='localhost:12000',
-               mode='full', p4viewspec=[(ConstantRenderable('//depot/render_trunk/'), '')],
-               p4user='different_user', p4client='p4_client1', p4passwd='pass'))
+               mode='full',
+               p4viewspec=[(ConstantRenderable('//depot/render_trunk/'), '')],
+               p4user='different_user', p4client='p4_client1',
+               p4passwd='pass'))
 
         client_stdin = textwrap.dedent('''\
         Client: p4_client1
-        
+
         Owner: different_user
-        
+
         Description:
         \tCreated by different_user
-            
+
         Root:\t/home/user/workspace/wkdir
-        
+
         Options:\tallwrite rmdir
-        
+
         LineEnd:\tlocal
-        
+
         View:
         \t//depot/render_trunk/... //p4_client1/...\n''')
 
