@@ -57,42 +57,6 @@ class P4(Source):
                  p4client=Interpolate('buildbot_%(prop:slavename)s_%(prop:buildername)s'),
                  p4bin='p4',
                  **kwargs):
-        """
-        @type  p4base: string
-        @param p4base: A view into a perforce depot, typically
-                       "//depot/proj/"
-
-        @type  p4branch: string
-        @param p4branch: A single string, which is appended to the p4base as follows
-                        "<p4base><p4branch>/..."
-                        to form the first line in the viewspec
-
-        @type  p4extra_views: list of tuples
-        @param p4extra_views: Extra views to be added to the client that is being used.
-
-        @type  p4viewspec: list of tuples
-        @param p4viewspec: This will override any p4branch, p4base, and/or p4extra_views
-                           specified.  The viewspec will be an array of tuples as follows
-                           [('//depot/main/','')]  yields a viewspec with just
-                           //depot/main/... //<p4client>/...
-
-        @type  p4port: string
-        @param p4port: Specify the perforce server to connection in the format
-                       <host>:<port>. Example "perforce.example.com:1666"
-
-        @type  p4user: string
-        @param p4user: The perforce user to run the command as.
-
-        @type  p4passwd: string
-        @param p4passwd: The password for the perforce user.
-
-        @type  p4line_end: string
-        @param p4line_end: value of the LineEnd client specification property
-
-        @type  p4client: string
-        @param p4client: The perforce client to use for this buildslave.
-        """
-
         self.method = method
         self.mode = mode
         self.p4branch = p4branch
