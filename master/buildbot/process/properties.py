@@ -418,8 +418,10 @@ class Interpolate(util.ComparableMixin, object):
     def __repr__(self):
         if self.args:
             return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
-        if self.kwargs:
+        elif self.kwargs:
             return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
+        else:
+            return 'Interpolate(%r)' % (self.fmtstring,)
 
     @staticmethod
     def _parse_prop(arg):
