@@ -44,7 +44,7 @@ class Tests(interfaces.InterfaceTests):
                 want_stderr=1, timeout=20*60, maxTime=None, logfiles={},
                 usePTY="slave-config", logEnviron=True, collectStdout=False,
                 collectStderr=False, interruptSignal=None, initialStdin=None,
-                decodeRC={0:SUCCESS}):
+                decodeRC={0:SUCCESS}, user=None):
             pass
 
     def test_signature_run(self):

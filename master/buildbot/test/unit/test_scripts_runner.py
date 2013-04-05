@@ -448,6 +448,31 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(properties=dict(a='b', c='d'))
         self.assertOptions(opts, exp)
 
+    def test_property(self):
+        opts = self.parse('--property=a=b')
+        exp = self.defaults_and(properties=dict(a='b'))
+        self.assertOptions(opts, exp)
+
+    def test_property_multiple_opts(self):
+        opts = self.parse('--property=X=1', '--property=Y=2')
+        exp = self.defaults_and(properties=dict(X='1', Y='2'))
+        self.assertOptions(opts, exp)
+
+    def test_property_equals(self):
+        opts = self.parse('--property=X=2+2=4')
+        exp = self.defaults_and(properties=dict(X='2+2=4'))
+        self.assertOptions(opts, exp)
+
+    def test_property_commas(self):
+        opts = self.parse('--property=a=b,c=d')
+        exp = self.defaults_and(properties=dict(a='b,c=d'))
+        self.assertOptions(opts, exp)
+
+    def test_property_and_properties(self):
+        opts = self.parse('--property=X=1', '--properties=Y=2')
+        exp = self.defaults_and(properties=dict(X='1', Y='2'))
+        self.assertOptions(opts, exp)
+
     def test_properties_builders_multiple(self):
         opts = self.parse('--builder=aa', '--builder=bb')
         exp = self.defaults_and(builders=['aa', 'bb'])

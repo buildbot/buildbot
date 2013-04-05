@@ -443,6 +443,10 @@ The Git step takes the following arguments:
       * ``abbrev=7``: `--abbrev=7`
       * ``candidates=7``: `--candidates=7`
       * ``dirty=foo``: `--dirty=foo`
+
+``config``
+
+   (optional) A dict of git configuration settings to pass to the remote git commands.
     
 .. bb:step:: SVN
 
@@ -1608,6 +1612,12 @@ The :bb:step:`ShellCommand` arguments are:
     WARNINGS.
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
+
+``user``
+    When this is not None, runs the command as the given user by wrapping the
+    command with 'sudo', which typically requires root permissions to run
+    (and as discussed in the :ref:`System Architecture <System-Architecture>`
+    section, is generally not a good idea).
 
 .. bb:step:: Configure
 
