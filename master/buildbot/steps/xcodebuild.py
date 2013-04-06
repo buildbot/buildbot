@@ -49,7 +49,7 @@ class XcodeBuild(Compile):
         if not name:
             # generate as interesting a name as we can, filtering out non-strings (and '/' which mess up URLs)
             name = ['xcodebuild', project, scheme, target]
-            name = [x.replace('/','-') for x in name if isinstance(x, basestring)]
+            name = [x.replace('/','-') for x in name if isinstance(x, str)]
 
         Compile.__init__(self, name=name,
                    description=["building"],
@@ -58,13 +58,58 @@ class XcodeBuild(Compile):
                    **kwargs)
 
     def setupLogfiles(self, cmd, logfiles):
-        summary = self.addLog("summary")
+        summary = self.addHTMLLog("summary.html")
         self.summarizer = XcodebuildSummarizer(summary)
         self.addLogObserver('stdio', self.summarizer)
 
     def createWarningsLog(self, log):
         self.warnCount = self.summarizer.getCount('warning')
 
+
+HTML_HEADER = """
+<html>
+<style type="text/css">
+    .lineno {
+        background-color: #ececec;
+        color: #aaa;
+        padding: 0 6px;
+        border-right: 1px solid #ddd;
+        text-align: right;
+        cursor: pointer;
+    }
+
+    .line, .header, .lineno {
+        font-family: Consolas, "Liberation Mono", Courier, monospace;
+        white-space: pre;
+    }
+
+    .header-info {
+        font-weight: bold;
+    }
+    .header-warning {
+        font-weight: bold;
+        background-color: orange;
+    }
+    .header-error {
+        font-weight: bold;
+        background-color: red;
+    }
+
+</style>
+<body>
+<table class='summary'>
+<tbody>
+"""
+
+HTML_FOOTER = """
+</tbody>
+</table>
+</body>
+</html>
+"""
+
+HTML_HEADER_LINE = """<tr><td class='header header-%(kind)s' colspan=2>%(line)s</td></tr>\n"""
+HTML_INFO_LINE = """<tr><td class='lineno'>%(lineno)s</td><td class='line'>%(line)s</td></tr>\n"""
 
 class LogFileSummarizer(LogLineObserver):
     """A log observer that generates a summary log file.
@@ -91,13 +136,23 @@ class LogFileSummarizer(LogLineObserver):
         self.kindCounter = Counter()
         self.progressCounter = Counter()
 
+        self.lineno = 1
+
+    def setLog(self, loog):
+        # start the geneartor/reset the generator
+        self.lineConsumer.send(None)
+        LogLineObserver.setLog(self, loog)
+
+        self.summaryLogFile.addStdout(HTML_HEADER)
+
     def outLineReceived(self, line):
         """Process a received stdout line."""
-        self.lineConsumer.send(line)
+        self.lineConsumer.send({ 'lineno': self.lineno, 'line': line })
+        self.lineno += 1
 
     def errLineReceived(self, line):
         """Process a received stderr line."""
-        self.lineConsumer.send(line)
+        self.lineConsumer.send({ 'line': line })
 
     def logFinished(self):
          # signal the log file is complete and give it a chance
@@ -107,30 +162,25 @@ class LogFileSummarizer(LogLineObserver):
         except StopIteration:
             pass
 
+        self.summaryLogFile.addStdout(HTML_FOOTER)
+
+
     def reportSummary(self, summary):
         kind = summary.get('kind', '')
         self.kindCounter[kind] += 1
-     
-        writeLog    = self.summaryLogFile.addStdout
-        writeHeader = self.summaryLogFile.addHeader
    
-        if kind=='error':
-            # write the lead line as error
-            writeHeader = self.summaryLogFile.addStderr
-        elif kind=='header':
-            # write all lines as header
-            writeLog = writeHeader
-
         if 'progress' in summary:
             progress = summary['progress']
             self.progressCounter[progress] += 1
             self.step.setProgress(progress, self.progressCounter[progress])
 
         if 'header' in summary:
-            writeHeader(summary['header'] + '\n')
+            self.summaryLogFile.addStdout(HTML_HEADER_LINE % { 'kind': kind, 'line': summary['header']})
 
-        for line in summary.get('lines', []):
-            writeLog(line + '\n')
+        for linedict in summary.get('lines', []):
+            lineno = linedict.get('lineno', '')
+            line   = linedict['line']
+            self.summaryLogFile.addStdout(HTML_INFO_LINE % { 'lineno': lineno, 'line': line})
 
 
 class WarningSummarizer(LogFileSummarizer):
@@ -154,16 +204,16 @@ class WarningSummarizer(LogFileSummarizer):
             footer['lines'].append("%d warnings detected" % warning_count)
 
             step_warning_count = self.step.step_status.getStatistic('warnings', 0)
-            self.step_status.setStatistic('warnings', step_warning_count + warning_count)
+            self.step.step_status.setStatistic('warnings', step_warning_count + warning_count)
 
             build_warning_count = self.step.getProperty("warnings-count", 0)
-            self.setProperty("warnings-count", build_warning_count + warning_count, 'WarningSummarizer')
+            self.step.setProperty("warnings-count", build_warning_count + warning_count, 'WarningSummarizer')
 
         if error_count:
             footer['lines'].append("%d errors" % error_count)
 
             step_error_count = self.step.step_status.getStatistic('errors', 0)
-            self.step_status.setStatistic('errors detected', step_error_count + error_count)
+            self.step.step_status.setStatistic('errors detected', step_error_count + error_count)
 
         if not error_count and not warning_count:
             footer['lines'].append("No warnings or errors detected")            
@@ -174,15 +224,15 @@ class WarningSummarizer(LogFileSummarizer):
 class XcodebuildSummarizer(WarningSummarizer):
     def __init__(self, summaryLogFile, lineConsumer=None, **kwargs):
         if not lineConsumer:
-            lineConsumer = createXcodebuildLineSummarizer(self.reportSummary)
+            lineConsumer = xcodebuildLineSummarizer(self.reportSummary)
 
         LogFileSummarizer.__init__(self, 
                                    summaryLogFile=summaryLogFile,
                                    lineConsumer=lineConsumer, 
                                    **kwargs)
 
-def createClangLineSummarizer(addSummary):
-    clang_diag =    re.compile(r"(?P<path>.*?(?P<file>[^/]+)):(?P<line>\d+):(?P<col>\d+): (?P<kind>warning|error|note): (?P<text>.*)")
+def clangLineSummarizer(addSummaryFunctor):
+    clang_diag =    re.compile(r"(?P<path>.*?(?P<file>[^/]+)):(?P<line>\d+):(?P<col>\d+): (?P<kind>warning|fatal error|error|note): (?P<text>.*)")
     clang_summary = re.compile(r"\d+ (error|warning)s? generated.")
 
     ld_diag =       re.compile(r"ld: (?P<warning>warning: )?.*")
@@ -190,106 +240,111 @@ def createClangLineSummarizer(addSummary):
     ld_missing_symbols_start = re.compile("Undefined symbols for architecture .*:")
     ld_missing_symbols_end   = re.compile("ld: symbol(s) not found for architecture .*")
 
-    def consumer():
-        # This python generator that receives log lines as input and consumes 
-        # them, calling 'addSummary' whenever an issue or other 
-        # interesting information has been detected.
-        #
-        # This is implemented as a generator so that we can maintain a simple state
-        # machine. For example, some clang errors/warnings are followed by helpful
-        # 'note' lines, which we want to collect as well.
+    # This python generator that receives log lines as input and consumes 
+    # them, calling 'addSummaryFunctor' whenever an issue or other 
+    # interesting information has been detected.
+    #
+    # This is implemented as a generator so that we can maintain a simple state
+    # machine. For example, some clang errors/warnings are followed by helpful
+    # 'note' lines, which we want to collect as well.
 
-        summaryLines = None
-        while 1:
-            # yields True if we're currently enjoying the lines we're getting
-            line = yield (summaryLines is not None)
+    summaryLines = None
+    while 1:
+        # yields True if we're currently enjoying the lines we're getting
+        linedict = yield (summaryLines is not None)
 
-            # sending in "None" is a way to signal a clang build is complete
-            if line is None:
+        # sending in "None" is a way to signal a clang build is complete
+        if linedict is None:
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+                summaryLines = None
+            continue
+
+        line = linedict['line']
+
+        # check if it's a warning/error/note line
+        m = clang_diag.match(line)
+        if m:
+            kind = m.group('kind')
+            if kind=='note':
+                # a 'note' must follow a error or warning, so we expect to
+                # just append to a prior interest group
+                assert summaryLines is not None
+            else:
+                # close out anything prior
                 if summaryLines:
-                    addSummary(summaryLines)
-                    summaryLines = None
-                continue
+                    addSummaryFunctor(summaryLines)
 
-            # check if it's a warning/error/note line
-            m = clang_diag.match(line)
-            if m:
-                if m.group('kind')=='note':
-                    # a 'note' must follow a error or warning, so we expect to
-                    # just append to a prior interest group
-                    assert summaryLines is not None
-                else:
-                    # close out anything prior
-                    if summaryLines:
-                        addSummary(summaryLines)
-                    summaryLines = {
-                        'header': "%(kind)s in %(file)s:%(line)s: %(text)s" % m.groupdict(),
-                        'kind': m.group('kind'), 
-                        'lines': [] 
-                    }
+                if kind == 'fatal error':
+                    kind = 'error'
 
-                summaryLines['lines'].append(line)
-                continue
-
-            # builds that have warnings or errors end in a summary line
-            m = clang_summary.match(line)
-            if m:
-                if summaryLines:
-                    addSummary(summaryLines)
-
-                summaryLines = { 
-                    'header': line,  # the 'header' is the line itself
-                    'kind': 'info', 
+                summaryLines = {
+                    'header': "%(kind)s in %(file)s:%(line)s: %(text)s" % m.groupdict(),
+                    'kind': kind, 
                     'lines': [] 
                 }
-                continue
 
-            # catch ld errors
-            m = ld_diag.match(line)
-            if m:
-                if summaryLines:
-                    addSummary(summaryLines)
+            summaryLines['lines'].append(linedict)
+            continue
 
-                summaryLines = { 
-                    'header': line,  # the 'header' is the line itself
-                    'kind': 'warning', 
-                    'lines': [] 
-                }
-                continue
+        # builds that have warnings or errors end in a summary line
+        m = clang_summary.match(line)
+        if m:
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
 
-            # once we hit a blank line, we're done
-            if not line.strip():
-                if summaryLines:
-                    addSummary(summaryLines)
-                    summaryLines = None
-                continue
+            summaryLines = { 
+                'kind': 'info', 
+                'lines': [ linedict ] 
+            }
+            continue
 
-            # any other lines are collected if our 'summaryLines' group is active
-            # if possible (this expects that we'll hit some line to close the
-            # prior group)
-            if summaryLines is not None:
-                summaryLines['lines'].append(line)
+        # catch ld errors
+        m = ld_diag.match(line)
+        if m:
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
 
-    consumer = consumer()
-    next(consumer) # start it
-    return consumer
+            summaryLines = { 
+                'kind': 'warning', 
+                'lines': [ linedict ] 
+            }
+            continue
 
-def createGenericSummarizer(addSummary):
+        # once we hit a blank line, we're done
+        if not line.strip():
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+                summaryLines = None
+            continue
+
+        # any other lines are collected if our 'summaryLines' group is active
+        # if possible (this expects that we'll hit some line to close the
+        # prior group)
+        if summaryLines is not None:
+            summaryLines['lines'].append(linedict)
+
+
+def genericSummarizer(addSummaryFunctor):
     """A consumer that just consumes up to the next blank line"""
-    def consumer():
-        value = False
-        while 1:
-            # yields True if we're currently enjoying the lines we're getting
-            line = yield value
-            if line is not None:
-                line = line.strip()
-            value = False if not line else True
+    value = False
+    while 1:
+        # yields True if we're currently enjoying the lines we're getting
+        linedict = yield value
+        if linedict is None:
+            value = False
+        else:
+            line = linedict.get('line','')
+            value = False if not line.strip() else True
+        
 
-    consumer = consumer()
-    next(consumer) # start it
-    return consumer
+XcodebuildBuilderSummaryFactory = {
+    'default':  genericSummarizer,
+    'CompileC': clangLineSummarizer,
+    'Ld':       clangLineSummarizer,
+}
 
-def createXcodebuildLineSummarizer(addSummary):
+def xcodebuildLineSummarizer(addSummaryFunctor, builderSummaryFactory=XcodebuildBuilderSummaryFactory):
     # each build phase:
     #    starts with a line like "=== blah blah ==="
     #    ends with a line like "** blah blah **"
@@ -306,7 +361,7 @@ def createXcodebuildLineSummarizer(addSummary):
 
     # build settings:
     xcode_build_settings_start = re.compile("Build settings from command line:")
-    xcode_build_settings_end   = re.compile("") # an empty line
+    xcode_build_settings_end   = re.compile(r"^\S*$") # an empty line
 
     # when a build fails we get lines that start and end like this:
     xcode_build_failed_start = re.compile(r"\*\* BUILD FAILED \*\*")
@@ -323,163 +378,163 @@ def createXcodebuildLineSummarizer(addSummary):
     # we will check this list and push them to our summarizer.
     builderSummaryLines = []
     
-    genericSummarizer = createGenericSummarizer(builderSummaryLines.append)
-    clangSummarizer = createClangLineSummarizer(builderSummaryLines.append)
+    builderSummarizers = {}
+    for builder, factory in builderSummaryFactory.iteritems():
+        summarizer = factory(builderSummaryLines.append)
+        summarizer.send(None)
+        builderSummarizers[builder] = summarizer
 
-    builderSummarizers = {
-        'CompileC': clangSummarizer,
-        'Ld':       clangSummarizer,
-    }
+    genericSummarizer = builderSummarizers['default']
 
-    def consumer():
-        # This python generator that receives log lines as input and consumes 
-        # them, calling addSummary whenever an issue or other 
-        # interesting information has been detected.
-        #
-        # This is implemented as a generator so that we can maintain a simple state
-        # machine. For example, some clang errors/warnings are followed by helpful
-        # 'note' lines, which we want to collect as well.
+    # This python generator that receives log lines as input and consumes 
+    # them, calling addSummaryFunctor whenever an issue or other 
+    # interesting information has been detected.
+    #
+    # This is implemented as a generator so that we can maintain a simple state
+    # machine. For example, some clang errors/warnings are followed by helpful
+    # 'note' lines, which we want to collect as well.
 
-        summaryLines = None
-        while 1:
-            # yields True if we're currently enjoying the lines we're getting
-            line = yield (summaryLines is not None)
+    summaryLines = None
+    while 1:
+        # yields True if we're currently enjoying the lines we're getting
+        linedict = yield (summaryLines is not None)
 
-            # sending in "None" is a way to signal a clang build is complete
-            if line is None:
-                # clear out the summarizers too:
-                for name, s in builderSummarizers.iteritems():
-                    s.send(None)
+        # sending in "None" is a way to signal a clang build is complete
+        if linedict is None:
+            # clear out the summarizers too:
+            for name, s in builderSummarizers.iteritems():
+                s.send(None)
 
-                if summaryLines:
-                    addSummary(summaryLines)
-                    summaryLines = None
-                continue
-
-            # a build phase change:
-            #    just push out the line as something always interesting
-            m = xcode_build_phase_start.match(line)
-            if m:
-                # close out anything prior
-                if summaryLines:
-                    addSummary(summaryLines)
-                summaryLines = { 
-                    'header': line,
-                    'kind': 'info',
-                    'progress': 'targets',  # build phases are good markers of progress
-                    'lines': [] 
-                }
-                continue
-
-
-            # a report of the build settings
-            #    consume everything up to the 'end' marker
-            m = xcode_build_settings_start.match(line)
-            if m:
-                # close out anything prior
-                if summaryLines:
-                    addSummary(summaryLines)
-                summaryLines = { 
-                    'header': line,  # the first line makes a nice header
-                    'kind': 'info', 
-                    'lines': [] 
-                }
-
-                # capture all lines until we hit the "end" marker for the settings report
-                while 1:
-                    line = yield True
-                    m = xcode_build_settings_end.match(line)
-                    if m:
-                        break
-                    summaryLines['lines'].append(line)
-                    
-                addSummary(summaryLines)
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
                 summaryLines = None
-                continue
+            continue
+
+        line = linedict['line']
+
+        # a build phase change:
+        #    just push out the line as something always interesting
+        m = xcode_build_phase_start.match(line)
+        if m:
+            # close out anything prior
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+            summaryLines = { 
+                'kind': 'info',
+                'progress': 'targets',  # build phases are good markers of progress
+                'lines': [linedict] 
+            }
+            continue
 
 
-            # a report of other kinds of build failures
-            #    consume everything up to the 'end' marker
-            m = xcode_build_failed_start.match(line)
-            if m:
-                # close out anything prior
-                if summaryLines:
-                    addSummary(summaryLines)
-                summaryLines = { 
-                    'kind': 'error', 
-                    'lines': [] 
-                }
+        # a report of the build settings
+        #    consume everything up to the 'end' marker
+        m = xcode_build_settings_start.match(line)
+        if m:
+            # close out anything prior
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+            summaryLines = { 
+                'kind': 'info', 
+                'lines': [linedict] 
+            }
 
-                # capture all lines until we hit the "end" marker
-                while 1:
-                    summaryLines['lines'].append(line)
-                    
-                    line = yield True
-                    m = xcode_build_failed_end.match(line)
-                    if m:
-                        break
+            # capture all lines until we hit the "end" marker for the settings report
+            while 1:
+                linedict = yield True
 
-                addSummary(summaryLines)
+                if not linedict:
+                    break
+
+                summaryLines['lines'].append(linedict)
+
+                m = xcode_build_settings_end.match(linedict['line'])
+                if m:
+                    break
+                
+            addSummaryFunctor(summaryLines)
+            summaryLines = None
+            continue
+
+
+        # a report of other kinds of build failures
+        #    consume everything up to the 'end' marker
+        m = xcode_build_failed_start.match(line)
+        if m:
+            # close out anything prior
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+            summaryLines = { 
+                'kind': 'error', 
+                'lines': [] 
+            }
+
+            # capture all lines until we hit the "end" marker
+            while 1:
+                summaryLines['lines'].append(linedict)
+                
+                linedict = yield True
+                m = xcode_build_failed_end.match(line)
+                if m:
+                    break
+
+            addSummaryFunctor(summaryLines)
+            summaryLines = None
+            continue
+
+        # Otherwise, we might be reporting a build step:
+        m = xcode_step_line_start.match(line)
+        if m:
+            # close out anything prior
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
+
+            summaryLines = { 
+                'header': "Context for the next issues reported:",
+                'kind': 'info', 
+                'lines': [linedict] 
+            }
+
+            builder = builderSummarizers.get(m.group('kind'), genericSummarizer)
+            count = 0
+            while 1:
+                linedict = yield True
+                consumed = builder.send(linedict)
+
+                # if the line was interesting, keep going!
+                if consumed:
+                    continue 
+
+                # if the line was not interesting, it might be time to move on to something
+                # else; xcodebuild uses blank lines between build steps, so if we're there
+                # let's get out and see what's next
+                if not linedict or not linedict['line'].strip(): # a blank line ends it
+                    break
+
+            # reset the builder
+            builder.send(None)
+
+            # only print something if the builder found it interesting:
+            if builderSummaryLines:
+                addSummaryFunctor(summaryLines)
+
+                for s in builderSummaryLines:
+                    addSummaryFunctor(s)
+
+                del builderSummaryLines[:] # XX: keep same list object, just clear it
+
+            summaryLines = None
+            continue
+
+        # once we hit a blank line, we're done
+        if not line.strip():
+            if summaryLines:
+                addSummaryFunctor(summaryLines)
                 summaryLines = None
-                continue
+            continue
 
-            # Otherwise, we might be reporting a build step:
-            m = xcode_step_line_start.match(line)
-            if m:
-                # close out anything prior
-                if summaryLines:
-                    addSummary(summaryLines)
-
-                summaryLines = { 
-                    'kind': 'info', 
-                    'lines': [line] 
-                }
-
-                builder = builderSummarizers.get(m.group('kind'), genericSummarizer)
-                count = 0
-                while 1:
-                    line = yield True
-                    consumed = builder.send(line)
-
-                    # if the line was interesting, keep going!
-                    if consumed:
-                        continue 
-
-                    # if the line was not interesting, it might be time to move on to something
-                    # else; xcodebuild uses blank lines between build steps, so if we're there
-                    # let's get out and see what's next
-                    if not line or not line.strip(): # a blank line ends it
-                        break
-
-                # reset the builder
-                builder.send(None)
-
-                # only print something if the builder found it interesting:
-                if builderSummaryLines:
-                    addSummary(summaryLines)
-
-                    for s in builderSummaryLines:
-                        addSummary(s)
-
-                    del builderSummaryLines[:] # XX: keep same list object, just clear it
-
-                summaryLines = None
-                continue
-
-            # once we hit a blank line, we're done
-            if not line.strip():
-                if summaryLines:
-                    addSummary(summaryLines)
-                    summaryLines = None
-                continue
-
-            # any other lines are collected if our 'summaryLines' group is active
-            # if possible (this expects that we'll hit some line to close the
-            # prior group)
-            if summaryLines is not None:
-                summaryLines['lines'].append(line)
-
-
-    consumer = consumer()
-    next(consumer) # start it
-    return consumer
+        # any other lines are collected if our 'summaryLines' group is active
+        # if possible (this expects that we'll hit some line to close the
+        # prior group)
+        if summaryLines is not None:
+            summaryLines['lines'].append(linedict)

@@ -19,6 +19,9 @@ from buildbot.status.logfile import STDOUT, STDERR, HEADER
 from cStringIO import StringIO
 from buildbot.status.results import SUCCESS, FAILURE
 
+from zope.interface import implements
+from buildbot import interfaces
+
 
 class FakeRemoteCommand(object):
 
@@ -97,6 +100,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
 
 
 class FakeLogFile(object):
+    implements(interfaces.IStatusLog, interfaces.ILogFile)
 
     def __init__(self, name, step):
         self.name = name
@@ -105,6 +109,7 @@ class FakeLogFile(object):
         self.stderr = ''
         self.chunks = []
         self.step = step
+        self.finishDeferred = None
 
     def getName(self):
         return self.name
@@ -148,7 +153,8 @@ class FakeLogFile(object):
                         if not channels or ch in channels ]
 
     def finish(self):
-        pass
+        if self.finishDeferred:
+            self.finishDeferred.callback(None)
 
     def fakeData(self, header='', stdout='', stderr=''):
         if header:
@@ -160,6 +166,21 @@ class FakeLogFile(object):
         if stderr:
             self.stderr += stderr
             self.chunks.append((STDERR, stderr))
+
+    def subscribe(self, receiver, catchup):
+        pass
+
+    def unsubscribe(self, receiver):
+        pass
+
+    def subscribeConsumer(self, consumer):
+        pass
+
+    def waitUntilFinished(self):
+        if not self.finishDeferred:
+            self.finishDeferred = defer.Deferred()
+        return self.finishDeferred
+
 
 class ExpectRemoteRef(object):
     """
