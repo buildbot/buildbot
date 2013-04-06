@@ -818,7 +818,7 @@ Here is a fully-worked example::
     # on checkin, run tests
     checkin_factory = factory.BuildFactory()
     checkin_factory.addStep(shell.Test())
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
+    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly']))
 
     # and every night, package the latest successful build
     nightly_factory = factory.BuildFactory()
@@ -1071,6 +1071,8 @@ use the authenticated user instead of displaying a text-entry box.
 ``need_email`` (optional; default True)
     If true, require a full email address rather than arbitrary text.
 
+.. bb:sched:: ChoiceStringParameter
+
 ChoiceStringParameter
 #####################
 
@@ -1082,8 +1084,13 @@ ChoiceStringParameter
 This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
 is false, then its result is a string - one of the choices.  If ``multiple`` is
-true, then the result is a list of strings from the choices.  Its arguments, in
-addition to the common options, are:
+true, then the result is a list of strings from the choices.  
+
+Note that for some use cases, the choices need to be generated dynamically. This can 
+be done via subclassing and overiding the 'getChoices' member function. An example 
+of this is provided by the source for the :py:class:`InheritBuildParameter` class.
+
+Its arguments, in addition to the common options, are:
 
 ``choices``
 
@@ -1121,6 +1128,10 @@ Example::
 CodebaseParameter
 #####################
 
+::
+
+    CodebaseParameter(codebase="myrepo")
+
 This is a parameter group to specify a sourcestamp for a given codebase.
 
 ``codebase``
@@ -1146,6 +1157,8 @@ This is a parameter group to specify a sourcestamp for a given codebase.
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for
     the build.  The default value is a string parameter.
+
+.. bb:sched:: InheritBuildParameter
 
 InheritBuildParameter
 #####################
@@ -1189,6 +1202,34 @@ Example::
                     compatible_builds=get_compatible_builds,
                     required = True),
                     ])
+
+.. bb:sched:: BuildslaveChoiceParameter
+
+BuildslaveChoiceParameter
+#########################
+
+This parameter allows a scheduler to require that a build is assigned to the
+chosen buildslave. The choice is assigned to the `slavename` property for the build.
+The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to
+the ``canStartBuild`` parameter for the ``Builder``.
+
+Example::
+
+    from buildbot.process.builder import enforceChosenSlave
+
+    # schedulers:
+        ForceScheduler(
+          # ...
+          properties=[
+            BuildslaveChoiceParameter(),
+          ]
+        )
+
+    # builders:
+        BuilderConfig(
+          # ...
+          canStartBuild=enforceChosenSlave,
+        )
 
 AnyPropertyParameter
 ####################

@@ -50,7 +50,7 @@ true if the requests can be merged, and False otherwise. For example::
 
     def mergeRequests(builder, req1, req2):
         "any requests with the same branch can be merged"
-        return req1.branch == req2.branch
+        return req1.source.branch == req2.source.branch
     c['mergeRequests'] = mergeRequests
 
 In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.

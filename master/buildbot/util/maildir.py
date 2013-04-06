@@ -41,6 +41,7 @@ class MaildirService(service.MultiService):
             self.setBasedir(basedir)
         self.files = []
         self.dnotify = None
+        self.timerService = None
 
     def setBasedir(self, basedir):
         # some users of MaildirService (scheduler.Try_Jobdir, in particular)
@@ -68,10 +69,11 @@ class MaildirService(service.MultiService):
             # because of a python bug
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
-            t = internet.TimerService(self.pollinterval, self.poll)
-            t.setServiceParent(self)
-        self.poll()
-
+            self.timerService = internet.TimerService(self.pollinterval, self.poll)
+            self.timerService.setServiceParent(self)
+        self.poll()  
+           
+        
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
 
@@ -91,6 +93,9 @@ class MaildirService(service.MultiService):
         if self.dnotify:
             self.dnotify.remove()
             self.dnotify = None
+        if self.timerService is not None:
+            self.timerService.disownServiceParent() 
+            self.timerService = None
         return service.MultiService.stopService(self)
 
     @defer.inlineCallbacks

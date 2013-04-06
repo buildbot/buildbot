@@ -16,22 +16,14 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 import os, sys, re, time
+from buildslave.scripts import base
 from twisted.python import usage
-
-def isBuildslaveDir(dir):
-    buildbot_tac = os.path.join(dir, "buildbot.tac")
-    if not os.path.isfile(buildbot_tac):
-        print "no buildbot.tac"
-        return False
-
-    contents = open(buildbot_tac, "r").read()
-    return "Application('buildslave')" in contents
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
 
-# Note that the terms 'options' and 'config' are used intechangeably here - in
-# fact, they are intercanged several times.  Caveat legator.
+# Note that the terms 'options' and 'config' are used interchangeably here - in
+# fact, they are interchanged several times.  Caveat legator.
 
 class Maker:
     def __init__(self, config):
@@ -170,7 +162,7 @@ def createSlave(config):
 
     asd = config['allow-shutdown']
     if asd:
-      config['allow-shutdown'] = "'%s'" % asd
+        config['allow-shutdown'] = "'%s'" % asd
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
@@ -191,8 +183,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
+    if not base.isBuildslaveDir(config['basedir']):
         sys.exit(1)
 
     os.chdir(basedir)
@@ -233,8 +224,7 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
 def restart(config):
     quiet = config['quiet']
 
-    if not isBuildslaveDir(config['basedir']):
-        print "not a buildslave directory"
+    if not base.isBuildslaveDir(config['basedir']):
         sys.exit(1)
 
     from buildslave.scripts.startup import start
@@ -307,6 +297,10 @@ class UpgradeSlaveOptions(MakerBase):
 
 def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
+
+    if not base.isBuildslaveDir(basedir):
+        sys.exit(1)
+
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
     new_buildbot_tac = buildbot_tac.replace(
         "from buildbot.slave.bot import BuildSlave",
@@ -320,7 +314,7 @@ def upgradeSlave(config):
     return 0
 
 
-class SlaveOptions(MakerBase):
+class CreateSlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -363,8 +357,8 @@ class SlaveOptions(MakerBase):
         return "Usage:    buildslave create-slave [options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
-        if len(args) < 4:
-            raise usage.UsageError("command needs more arguments")
+        if len(args) != 4:
+            raise usage.UsageError("incorrect number of arguments")
         basedir, master, name, passwd = args
         if master[:5] == "http:":
             raise usage.UsageError("<master> is not a URL - do not use URL")
@@ -375,14 +369,18 @@ class SlaveOptions(MakerBase):
 
     def postOptions(self):
         MakerBase.postOptions(self)
-        self['usepty'] = int(self['usepty'])
-        self['keepalive'] = int(self['keepalive'])
-        self['maxdelay'] = int(self['maxdelay'])
-        if not re.match('^\d+$', self['log-size']):
-            raise usage.UsageError("log-size parameter needs to be an int")
+
+        # check and convert numeric parameters
+        for argument in ["usepty", "keepalive", "maxdelay", "log-size"]:
+            try:
+                self[argument] = int(self[argument])
+            except ValueError:
+                raise usage.UsageError("%s parameter needs to be an number" \
+                                                                    % argument)
+
         if not re.match('^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int "+
+            raise usage.UsageError("log-count parameter needs to be an number"
                                    " or None")
 
 class Options(usage.Options):
@@ -390,7 +388,7 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, SlaveOptions,
+        ['create-slave', None, CreateSlaveOptions,
          "Create and populate a directory for a new buildslave"],
         ['upgrade-slave', None, UpgradeSlaveOptions,
          "Upgrade an existing buildslave directory for the current version"],
@@ -433,10 +431,6 @@ def run():
     elif command == "upgrade-slave":
         upgradeSlave(so)
     elif command == "start":
-        if not isBuildslaveDir(so['basedir']):
-            print "not a buildslave directory"
-            sys.exit(1)
-
         from buildslave.scripts.startup import start
         start(so)
     elif command == "stop":

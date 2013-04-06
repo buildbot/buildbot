@@ -22,6 +22,8 @@ from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
+from buildbot.process.properties import Interpolate
+import pprint
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -175,7 +177,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
 
-        # call twice to make sure the suffix doesnt get double added
+        # call twice to make sure the suffix doesn't get double added
         self.assertEqual(self.step.describe(), ['x', 'z'])
         self.assertEqual(self.step.describe(), ['x', 'z'])
 
@@ -192,4 +194,36 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                     ('rc', 0),
                 ])
         self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
+        return self.runStep()
+
+class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
+    
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_simple(self):
+        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
+        self.properties.setProperty('slavename', 'testSlave', source='SetPropery', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=["SetProperty"])
+        self.expectProperty('testProperty', 'sch=force, slave=testSlave', source='SetProperty')
+        return self.runStep()
+
+class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_simple(self):
+        self.setupStep(master.LogRenderable(content=Interpolate('sch=%(prop:scheduler)s, slave=%(prop:slavename)s')))
+        self.properties.setProperty('scheduler', 'force', source='TestSetProperty', runtime=True)
+        self.properties.setProperty('slavename', 'testSlave', source='TestSetProperty', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=['LogRenderable'])
+        self.expectLogfile('Output', pprint.pformat('sch=force, slave=testSlave'))
         return self.runStep()

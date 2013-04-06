@@ -62,7 +62,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_start_not_basedir(self):
         self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
-        self.assertInStdout('not a buildmaster directory')
+        self.assertInStdout('invalid buildmaster directory')
 
     def runStart(self, **config):
         args=[
@@ -99,7 +99,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         return d
 
     if twisted.version <= versions.Version('twisted', 9, 0, 0):
-        test_start = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
+        test_start.skip = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks

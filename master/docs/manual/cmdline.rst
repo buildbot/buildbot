@@ -470,6 +470,18 @@ exiting. Unless you use the :option:`--quiet` option (or
 ``try_quiet=True``), it will emit a progress message every 60
 seconds until the builds have completed.
 
+Sending properties
+##################
+
+You can set properties to send with your change using either the
+:option:`--property=key=value` option, which sets a single property,
+or the :option:`--properties=key1=value1,key2=value2...` option,
+which sets multiple comma-separated properties.
+Either of these can be sepcified multiple times.
+Note that the :option:`--properties` option uses commas to split on
+properties, so if your property value itself contains a comma,
+you'll need to use the :option:`--property` option to set it.
+
 .. _try--diff:
 
 try --diff

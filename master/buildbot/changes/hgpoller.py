@@ -36,8 +36,12 @@ class HgPoller(base.PollingChangeSource):
     def __init__(self, repourl, branch='default',
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
-                 category=None, project='',
+                 category=None, project='', pollinterval=-2,
                  encoding='utf-8'):
+
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
 
         self.repourl = repourl
         self.branch = branch
@@ -168,11 +172,13 @@ class HgPoller(base.PollingChangeSource):
         """
         d = self._getStateObjectId()
         def oid_cb(oid):
-            current = self.master.db.state.getState(oid, 'current_rev', None)
-            def to_int(cur):
-                return oid, cur and int(cur) or None
-            current.addCallback(to_int)
-            return current
+            d = self.master.db.state.getState(oid, 'current_rev', None)
+            def addOid(cur):
+                if cur is not None:
+                    return  oid, int(cur)
+                return oid, cur
+            d.addCallback(addOid)
+            return d
         d.addCallback(oid_cb)
         return d
 

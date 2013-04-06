@@ -166,7 +166,6 @@ class MasterConfig(object):
             error("Configuration file %r does not define 'BuildmasterConfig'"
                     % (filename,),
             )
-            raise errors
 
         config_dict = localDict['BuildmasterConfig']
 
@@ -277,7 +276,7 @@ class MasterConfig(object):
             error("codebaseGenerator must be a callable accepting a dict and returning a str")
         else:
             self.codebaseGenerator = codebaseGenerator
-            
+
         prioritizeBuilders = config_dict.get('prioritizeBuilders')
         if prioritizeBuilders is not None and not callable(prioritizeBuilders):
             error("prioritizeBuilders must be a callable")
@@ -364,8 +363,8 @@ class MasterConfig(object):
             else:
                 valPairs = caches.items()
                 for (x, y) in valPairs:
-                  if (not isinstance(y, int)):
-                     error("value for cache size '%s' must be an integer" % x)
+                    if not isinstance(y, int):
+                        error("value for cache size '%s' must be an integer" % x)
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:
@@ -603,7 +602,8 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None, description=None):
+            properties=None, mergeRequests=None, description=None,
+            canStartBuild=None):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -662,6 +662,10 @@ class BuilderConfig:
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
+        self.canStartBuild = canStartBuild
+        if canStartBuild and not callable(canStartBuild):
+            error('canStartBuild must be a callable')
+
         self.locks = locks or []
         self.env = env or {}
         if not isinstance(self.env, dict):

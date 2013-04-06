@@ -32,7 +32,6 @@ def checkBasedir(config):
         print "checking basedir"
 
     if not base.isBuildmasterDir(config['basedir']):
-        print "'%s' is not a Buildbot basedir" % (config['basedir'],)
         return False
 
     if runtime.platformType != 'win32': # no pids on win32
@@ -45,13 +44,13 @@ def checkBasedir(config):
 
     return True
 
-def loadConfig(config):
+def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print "checking master.cfg"
+        print "checking %s" % configFileName
 
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
-                                            config['basedir'], 'master.cfg')
+                                            config['basedir'], configFileName)
     except config_module.ConfigErrors, e:
         print "Errors loading configuration:"
         for msg in e.errors:
@@ -160,7 +159,8 @@ def upgradeMaster(config, _noMonkey=False):
 
     os.chdir(config['basedir'])
 
-    master_cfg = loadConfig(config)
+    configFile = base.getConfigFileWithFallback(config['basedir'])
+    master_cfg = loadConfig(config, configFile)
     if not master_cfg:
         defer.returnValue(1)
         return

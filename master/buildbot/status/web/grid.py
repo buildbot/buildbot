@@ -87,15 +87,30 @@ class GridStatusMixin(object):
 
         defer.returnValue(cxt)
 
-    def getSourceStampKey(self, ss):
+    def getSourceStampKey(self, sourcestamps):
         """Given two source stamps, we want to assign them to the same row if
         they are the same version of code, even if they differ in minor detail.
 
         This function returns an appropriate comparison key for that.
         """
-        return (ss.branch, ss.revision, ss.patch)
+        # TODO: Maybe order sourcestamps in key by codebases names?
+        return tuple([(ss.branch, ss.revision, ss.patch) for ss in sourcestamps])
+
+    def clearRecentBuildsCache(self):
+        self.__recentBuildsCache__ = {}
 
     def getRecentBuilds(self, builder, numBuilds, branch):
+        cache = getattr(self, '__recentBuildsCache__', {})
+        key = (builder.getName(), branch, numBuilds)
+        try:
+            return cache[key]
+        except KeyError:
+            # cache miss, get the value and store it in the cache
+            result = [b for b in self.__getRecentBuilds(builder, numBuilds, branch)]
+            cache[key] = result
+            return result
+
+    def __getRecentBuilds(self, builder, numBuilds, branch):
         """
         get a list of most recent builds on given builder
         """
@@ -135,18 +150,15 @@ class GridStatusMixin(object):
             if categories and builder.category not in categories:
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                ss = build.getSourceStamps(absolute=True)[0]
-                key= self.getSourceStampKey(ss)
-                start = build.getTimes()[0]
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                start = min(build.getTimes())
                 if key not in sourcestamps or sourcestamps[key][1] > start:
                     sourcestamps[key] = (ss, start)
 
         # now sort those and take the NUMBUILDS most recent
-        sourcestamps = sourcestamps.values()
-        sourcestamps.sort(lambda x, y: cmp(x[1], y[1]))
-        sourcestamps = map(lambda tup : tup[0], sourcestamps)
-        sourcestamps = sourcestamps[-numBuilds:]
+        sourcestamps = sorted(sourcestamps.itervalues(), key = lambda stamp: stamp[1])
+        sourcestamps = [stamp[0] for stamp in sourcestamps][-numBuilds:]
 
         return sourcestamps
 
@@ -176,11 +188,10 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': map(SourceStamp.asDict, stamps)
+                    'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                    })
         
-        sortedBuilderNames = status.getBuilderNames()[:]
-        sortedBuilderNames.sort()
+        sortedBuilderNames = sorted(status.getBuilderNames())
         
         cxt['builders'] = []
 
@@ -192,13 +203,12 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
-                #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key= self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                
+                for i, sstamp in enumerate(stamps):
+                    if key == self.getSourceStampKey(sstamp) and builds[i] is None:
+                        builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
 
@@ -208,6 +218,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
             cxt['builders'].append(b)
 
+        self.clearRecentBuildsCache()
         template = request.site.buildbot_service.templates.get_template("grid.html")
         defer.returnValue(template.render(**cxt))
 
@@ -243,11 +254,10 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': map(SourceStamp.asDict, stamps),
+                    'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                     })
 
-        sortedBuilderNames = status.getBuilderNames()[:]
-        sortedBuilderNames.sort()
+        sortedBuilderNames = sorted(status.getBuilderNames())
         
         cxt['sorted_builder_names'] = sortedBuilderNames
         cxt['builder_builds'] = builder_builds = []
@@ -265,17 +275,18 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 #TODO: support multiple sourcestamps
-                if len(build.getSourceStamps()) == 1:
-                    ss = build.getSourceStamps(absolute=True)[0]
-                    key = self.getSourceStampKey(ss)
-                    for i in range(len(stamps)):
-                        if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
-                            builds[i] = build
+                ss = build.getSourceStamps(absolute=True)
+                key = self.getSourceStampKey(ss)
+                
+                for i, sstamp in enumerate(stamps):
+                    if key == self.getSourceStampKey(sstamp) and builds[i] is None:
+                        builds[i] = build
 
             b = yield self.builder_cxt(request, builder)
             builders.append(b)
 
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
+        self.clearRecentBuildsCache()
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
         defer.returnValue(template.render(**cxt))

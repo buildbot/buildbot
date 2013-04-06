@@ -58,16 +58,33 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     class Thunk: pass
-    def getChangeClassifications(self, objectid, branch=Thunk):
+    def getChangeClassifications(self, objectid, branch=Thunk,
+                                 repository=Thunk, project=Thunk,
+                                 codebase=Thunk):
         def thd(conn):
             sch_ch_tbl = self.db.model.scheduler_changes
             ch_tbl = self.db.model.changes
 
             wc = (sch_ch_tbl.c.objectid == objectid)
+                        
+            # may need to filter further based on branch, etc
+            extra_wheres = [] 
             if branch is not self.Thunk:
-                wc = wc & (
-                    (sch_ch_tbl.c.changeid == ch_tbl.c.changeid) &
-                    (ch_tbl.c.branch == branch))
+                extra_wheres.append(ch_tbl.c.branch == branch)
+            if repository is not self.Thunk:
+                extra_wheres.append(ch_tbl.c.repository == repository)
+            if project is not self.Thunk:
+                extra_wheres.append(ch_tbl.c.project == project)
+            if codebase is not self.Thunk:
+                extra_wheres.append(ch_tbl.c.codebase == codebase)
+
+            # if we need to filter further append those, as well as a join
+            # on changeid (but just once for that one)
+            if extra_wheres:
+                wc &= (sch_ch_tbl.c.changeid == ch_tbl.c.changeid)
+                for w in extra_wheres:
+                    wc &= w
+
             q = sa.select(
                 [ sch_ch_tbl.c.changeid, sch_ch_tbl.c.important ],
                 whereclause=wc)

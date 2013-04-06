@@ -94,8 +94,8 @@
        <span class="label">{{f.label}}</span>
        <span class="select">
        <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
-         {% for c in f.choices %}
-         <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
+         {% for c in default_props[sch.name+"."+f.fullName+".choices"] %}
+           <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
          {% endfor %}
        </select>
        </span>
@@ -145,7 +145,7 @@
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
-  {% for name, sch in force_schedulers.items() %}
+  {% for name, sch in force_schedulers.items() | sort %}
     {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props) }}
   {% endfor %}
 
