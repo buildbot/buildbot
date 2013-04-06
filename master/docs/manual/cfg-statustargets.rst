@@ -1539,7 +1539,7 @@ GitHubStatus
     from buildbot.status.github import GitHubStatus
 
     repoOwner = 'myorg'
-    repoName = Interpolate("%(prop::github_repo_name)s"
+    repoName = Interpolate("%(prop:github_repo_name)s"
     sha = Interpolate("%(src::revision)s")
     startDescription = Interpolate('Build started.')
     endDescription = Interpolate('Build done.')

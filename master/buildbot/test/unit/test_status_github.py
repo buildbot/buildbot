@@ -106,7 +106,7 @@ class TestGitHubStatus(unittest.TestCase):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetUrl': 'http://domain.tld',
+            'targetURL': 'http://domain.tld',
             'buildNumber': '1',
             }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -122,7 +122,7 @@ class TestGitHubStatus(unittest.TestCase):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetUrl': 'http://domain.tld',
+            'targetURL': 'http://domain.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'pending',
@@ -155,7 +155,7 @@ class TestGitHubStatus(unittest.TestCase):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetUrl': 'http://domain.tld',
+            'targetURL': 'http://domain.tld',
             'buildNumber': '1',
             }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -171,7 +171,7 @@ class TestGitHubStatus(unittest.TestCase):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetUrl': 'http://domain.tld',
+            'targetURL': 'http://domain.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'success',
@@ -267,7 +267,7 @@ class TestGitHubStatus(unittest.TestCase):
             'repoName': 'name',
             'repoOwner': 'owner',
             'sha': 'sha',
-            'targetUrl': 'http://thing',
+            'targetURL': 'http://thing',
             },
             result[0])
 
@@ -284,3 +284,33 @@ class TestGitHubStatus(unittest.TestCase):
 
         self.assertEqual(
             'error', self.status._getGitHubState('anything-else'))
+
+    def test_sendGitHubStatus(self):
+        """
+        sendGitHubStatus will call the txgithub createStatus and encode
+        all data.
+        """
+        status = {
+            'repoOwner': u'owner-resum\xe9',
+            'repoName': u'name-resum\xe9',
+            'sha': u'sha-resum\xe9',
+            'state': u'state-resum\xe9',
+            'targetURL': u'targetURL-resum\xe9',
+            'description': u'description-resum\xe9',
+            }
+        self.status._github.repos.createStatus = Mock(
+            return_value=defer.succeed(None))
+
+        d = self.status._sendGitHubStatus(status)
+        result = []
+        d.addCallback(result.append)
+
+        self.assertEqual(None, result[0])
+        self.status._github.repos.createStatus.assert_called_with(
+            repo_name='name-resum\xc3\xa9',
+            repo_user='owner-resum\xc3\xa9',
+            sha='sha-resum\xc3\xa9',
+            state='state-resum\xc3\xa9',
+            target_url='targetURL-resum\xc3\xa9',
+            description='description-resum\xc3\xa9',
+            )

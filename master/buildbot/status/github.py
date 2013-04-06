@@ -18,6 +18,7 @@ import datetime
 
 from twisted.internet import defer
 from twisted.python import log
+from txgithub.api import GithubApi as GitHubAPI
 from zope.interface import implements
 
 from buildbot.interfaces import IStatusReceiver
@@ -57,6 +58,7 @@ class GitHubStatus(StatusReceiverMultiService):
         self._sha = sha
         self._repoOwner = repoOwner
         self._repoName = repoName
+        self._github = GitHubAPI(oauth2_token=self._token)
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
@@ -165,7 +167,7 @@ class GitHubStatus(StatusReceiverMultiService):
             'repoOwner': repoOwner,
             'repoName': repoName,
             'sha': sha,
-            'targetUrl': self._status.getURLForThing(build),
+            'targetURL': self._status.getURLForThing(build),
             'buildNumber': str(build.getNumber()),
         }
         defer.returnValue(result)
@@ -191,21 +193,24 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         Send status to GitHub API.
         """
-        from txgithub.api import GithubApi as GitHubAPI
 
-        github = GitHubAPI(oauth2_token=self._token)
-        d = github.createStatus(
-            repo_user=status['repoOwner'],
-            repo_name=status['repoName'],
-            sha=status['sha'],
-            state=status['state'],
-            target_url=status['targetUrl'],
-            description=status['description'],
+        d = self._github.repos.createStatus(
+            repo_user=status['repoOwner'].encode('utf-8'),
+            repo_name=status['repoName'].encode('utf-8'),
+            sha=status['sha'].encode('utf-8'),
+            state=status['state'].encode('utf-8'),
+            target_url=status['targetURL'].encode('utf-8'),
+            description=status['description'].encode('utf-8'),
             )
-        d.addCallback(lambda result: None)
-        d.addErrback(
-            log.err,
-            "while sending GitHub status for %s/%s at %s." % (
-                status['repoOwner'], status['repoName'], status['sha'])
+
+        success_message = (
+            'Status "%(state)s" sent for '
+            '%(repoOwner)s/%(repoName)s at %(sha)s.'
+            ) % status
+        error_message = (
+            'Fail to send status "%(state)s" for '
+            '%(repoOwner)s/%(repoName)s at %(sha)s.'
             )
+        d.addCallback(log.msg, success_message)
+        d.addErrback(log.err, error_message)
         return d
