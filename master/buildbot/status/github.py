@@ -154,7 +154,11 @@ class GitHubStatus(StatusReceiverMultiService):
             build.render(self._sha),
             ])
 
-        if not repoOwner or not repoName or not sha:
+        if not repoOwner or not repoName:
+            defer.returnValue({})
+
+        if not sha:
+            log.msg('GitHubStatus: No revision found.')
             defer.returnValue({})
 
         result = {
@@ -185,11 +189,8 @@ class GitHubStatus(StatusReceiverMultiService):
 
     def _sendGitHubStatus(self, status):
         """
-        Send status to github.
+        Send status to GitHub API.
         """
-        if not status['sha']:
-            log.msg('GitHubStatus: Build has no revision')
-            return
         from txgithub.api import GithubApi as GitHubAPI
 
         github = GitHubAPI(oauth2_token=self._token)
@@ -207,3 +208,4 @@ class GitHubStatus(StatusReceiverMultiService):
             "while sending GitHub status for %s/%s at %s." % (
                 status['repoOwner'], status['repoName'], status['sha'])
             )
+        return d
