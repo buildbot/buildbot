@@ -361,3 +361,5 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             u'Fail to send status "state" for owner/name at sha.',
             log_event['why'],
             )
+        errors = self.flushLoggedErrors()
+        self.assertEqual(1, len(errors))
