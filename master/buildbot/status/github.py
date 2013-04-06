@@ -211,6 +211,6 @@ class GitHubStatus(StatusReceiverMultiService):
             'Fail to send status "%(state)s" for '
             '%(repoOwner)s/%(repoName)s at %(sha)s.'
             ) % status
-        d.addCallback(log.msg, success_message)
-        d.addErrback(log.err, error_message)
+        d.addCallback(lambda result: log.msg(success_message))
+        d.addErrback(lambda failure: log.err(failure, error_message))
         return d

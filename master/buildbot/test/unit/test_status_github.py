@@ -46,7 +46,38 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             len(self._logEvents),
             'There are still logs not validated:\n%s' % self._logEvents,
             )
+
+        pending_errors = self.flushLoggedErrors()
+        self.assertEqual(
+            0,
+            len(pending_errors),
+            'There are still errors not validated:\n%s' % pending_errors,
+            )
+
         super(TestGitHubStatus, self).tearDown()
+
+    def assertLog(self, message):
+        """
+        Check that top of the log queue has message.
+        """
+        log_event = self._popLog()
+        self.assertFalse(log_event['isError'], 'Log is an error.')
+        self.assertEqual(
+            (message, ), log_event['message'], 'Wrong log message')
+
+    def assertLogError(self, message):
+        """
+        Pop log queue and validate error message.
+        """
+        log_event = self._popLog()
+        self.assertTrue(log_event['isError'], 'Log is not an error.')
+        self.assertEqual(message, log_event['why'], 'Wrong error message.')
+
+    def _popLog(self):
+        try:
+            return self._logEvents.pop()
+        except IndexError:
+            raise AssertionError('Log queue is empty.')
 
     def test_initialization_required_arguments(self):
         """
@@ -227,16 +258,11 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.build._sha = Interpolate('')
 
         d = self.status._getGitHubRepoProperties(self.build)
-
         result = []
         d.addCallback(result.append)
-        self.assertEqual({}, result[0])
 
-        # Check log.
-        log_event = self._logEvents.pop()
-        self.assertFalse(log_event['isError'])
-        self.assertEqual(
-            ('GitHubStatus: No revision found.',), log_event['message'])
+        self.assertEqual({}, result[0])
+        self.assertLog('GitHubStatus: No revision found.')
 
     def test_getGitHubRepoProperties_skip_no_owner(self):
         self.status._repoOwner = Interpolate('')
@@ -255,9 +281,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._sha = Interpolate('sha')
 
         d = self.status._getGitHubRepoProperties(self.build)
-
         result = []
         d.addCallback(result.append)
+
         self.assertEqual({}, result[0])
 
     def test_getGitHubRepoProperties_ok(self):
@@ -271,10 +297,11 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._status = Mock()
         self.status._status.getURLForThing = lambda build: 'http://thing'
         self.build.getNumber = lambda: 1
-        d = self.status._getGitHubRepoProperties(self.build)
 
+        d = self.status._getGitHubRepoProperties(self.build)
         result = []
         d.addCallback(result.append)
+
         self.assertEqual({
             'buildNumber': '1',
             'repoName': 'name',
@@ -328,14 +355,10 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             description='description-resum\xc3\xa9',
             )
 
-        # Check log.
-        log_event = self._logEvents.pop()
-        self.assertFalse(log_event['isError'])
-        self.assertEqual(
-            (None,
-                u'Status "state-resum\xe9" sent for '
-                u'owner-resum\xe9/name-resum\xe9 at sha-resum\xe9.'),
-            log_event['message'])
+        self.assertLog(
+            u'Status "state-resum\xe9" sent for '
+            u'owner-resum\xe9/name-resum\xe9 at sha-resum\xe9.'
+            )
 
     def test_sendGitHubStatus_error(self):
         """
@@ -354,12 +377,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         self.status._sendGitHubStatus(status)
 
-        # Check error log.
-        log_event = self._logEvents.pop()
-        self.assertTrue(log_event['isError'])
-        self.assertEqual(
-            u'Fail to send status "state" for owner/name at sha.',
-            log_event['why'],
-            )
+        self.assertLogError(
+            u'Fail to send status "state" for owner/name at sha.')
+
+        # We also put the error in the error queue.
         errors = self.flushLoggedErrors()
         self.assertEqual(1, len(errors))
