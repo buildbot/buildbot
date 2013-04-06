@@ -210,7 +210,7 @@ class GitHubStatus(StatusReceiverMultiService):
         error_message = (
             'Fail to send status "%(state)s" for '
             '%(repoOwner)s/%(repoName)s at %(sha)s.'
-            )
+            ) % status
         d.addCallback(log.msg, success_message)
         d.addErrback(log.err, error_message)
         return d

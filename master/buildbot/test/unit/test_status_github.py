@@ -25,21 +25,28 @@ from buildbot.process.properties import Interpolate
 from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.status.github import GitHubStatus
 from buildbot.test.fake.fakebuild import FakeBuild
-from buildbot.test.fake.sourcestamp import FakeSourceStamp
+from buildbot.test.util import logging
 
 
-class TestGitHubStatus(unittest.TestCase):
+class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
     """
     Unit tests for `GitHubStatus`.
     """
 
     def setUp(self):
         super(TestGitHubStatus, self).setUp()
+        self.setUpLogging()
         self.build = FakeBuild()
-        self.props = self.build.build_status.properties
-        self.sourcestamp = FakeSourceStamp()
         self.status = GitHubStatus(
             token='token', repoOwner='owner', repoName='name')
+
+    def tearDown(self):
+        self.assertEqual(
+            0,
+            len(self._logEvents),
+            'There are still logs not validated:\n%s' % self._logEvents,
+            )
+        super(TestGitHubStatus, self).tearDown()
 
     def test_initialization_required_arguments(self):
         """
@@ -225,6 +232,12 @@ class TestGitHubStatus(unittest.TestCase):
         d.addCallback(result.append)
         self.assertEqual({}, result[0])
 
+        # Check log.
+        log_event = self._logEvents.pop()
+        self.assertFalse(log_event['isError'])
+        self.assertEqual(
+            ('GitHubStatus: No revision found.',), log_event['message'])
+
     def test_getGitHubRepoProperties_skip_no_owner(self):
         self.status._repoOwner = Interpolate('')
         self.status._repoName = Interpolate('name')
@@ -285,7 +298,7 @@ class TestGitHubStatus(unittest.TestCase):
         self.assertEqual(
             'error', self.status._getGitHubState('anything-else'))
 
-    def test_sendGitHubStatus(self):
+    def test_sendGitHubStatus_success(self):
         """
         sendGitHubStatus will call the txgithub createStatus and encode
         all data.
@@ -313,4 +326,38 @@ class TestGitHubStatus(unittest.TestCase):
             state='state-resum\xc3\xa9',
             target_url='targetURL-resum\xc3\xa9',
             description='description-resum\xc3\xa9',
+            )
+
+        # Check log.
+        log_event = self._logEvents.pop()
+        self.assertFalse(log_event['isError'])
+        self.assertEqual(
+            (None,
+                u'Status "state-resum\xe9" sent for '
+                u'owner-resum\xe9/name-resum\xe9 at sha-resum\xe9.'),
+            log_event['message'])
+
+    def test_sendGitHubStatus_error(self):
+        """
+        sendGitHubStatus will log an error if txgithub sendGitHubStatus fails.
+        """
+        status = {
+            'repoOwner': u'owner',
+            'repoName': u'name',
+            'sha': u'sha',
+            'state': u'state',
+            'targetURL': u'targetURL',
+            'description': u'description',
+            }
+        self.status._github.repos.createStatus = Mock(
+            return_value=defer.fail(AssertionError('fail-send-status')))
+
+        self.status._sendGitHubStatus(status)
+
+        # Check error log.
+        log_event = self._logEvents.pop()
+        self.assertTrue(log_event['isError'])
+        self.assertEqual(
+            u'Fail to send status "state" for owner/name at sha.',
+            log_event['why'],
             )
