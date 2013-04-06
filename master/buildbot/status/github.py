@@ -15,10 +15,9 @@
 from __future__ import absolute_import
 
 import datetime
-from dateutil.relativedelta import relativedelta
 
+from twisted.internet import defer
 from twisted.python import log
-from txgithub.api import GithubApi as GitHubAPI
 from zope.interface import implements
 
 from buildbot.interfaces import IStatusReceiver
@@ -42,21 +41,19 @@ class GitHubStatus(StatusReceiverMultiService):
         Token for GitHub API.
         """
         StatusReceiverMultiService.__init__(self)
-        self._github = GitHubAPI(oauth2_token=token, sha=None)
+
         if not sha:
             sha = Interpolate("%(src::revision)s")
 
         if not startDescription:
-            startDescription = "Build started at %(startDateTime)s."
-        self.startDescription = startDescription
+            startDescription = Interpolate("Build started.")
+        self._startDescription = startDescription
 
         if not endDescription:
-            endDescription = (
-                "[%(state)s] Build done after %(duration)s. "
-                "Done at %(endDateTime)s."
-                )
-        self.endDescription = endDescription
+            endDescription = Interpolate("Build done.")
+        self._endDescription = endDescription
 
+        self._token = token
         self._sha = sha
         self._repoOwner = repoOwner
         self._repoName = repoName
@@ -72,59 +69,52 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         return self
 
+    @defer.inlineCallbacks
     def buildStarted(self, builderName, build):
-        repo = self._getGitHubRepoProperties(build)
-        if not repo:
-            return
+        status = yield self._getGitHubRepoProperties(build)
+        if not status:
+            defer.returnValue(None)
 
         (startTime, endTime) = build.getTimes()
-        state = 'pending'
 
-        status = {
-            'state': state,
-            'sha': repo['sha'],
-            'description': self.startDescription,
-            'targetUrl': repo['targetUrl'],
-            'repoOwner': repo['repoOwner'],
-            'repoName': repo['repoName'],
-            'buildNumber': repo['buildNumber'],
+        description = yield build.render(self._startDescription)
+
+        status.update({
+            'state': 'pending',
+            'description': description,
             'builderName': builderName,
             'startDateTime': datetime.datetime.fromtimestamp(
                 startTime).isoformat(' '),
             'endDateTime': 'In progress',
             'duration': 'In progress',
-            }
+            })
+        result = yield self._sendGitHubStatus(status)
+        defer.returnValue(result)
 
-        self._sendGitHubStatus(status)
-        return self
-
+    @defer.inlineCallbacks
     def buildFinished(self, builderName, build, results):
-        repo = self._getGitHubRepoProperties(build)
-        if not repo:
-            return
+        status = yield self._getGitHubRepoProperties(build)
+        if not status:
+            defer.returnValue(None)
 
         state = self._getGitHubState(results)
         (startTime, endTime) = build.getTimes()
         duration = self._timeDeltaToHumanReadable(startTime, endTime)
+        description = yield build.render(self._endDescription)
 
-        status = {
+        status.update({
             'state': state,
-            'sha': repo['sha'],
-            'description': self.endDescription,
-            'targetUrl': repo['targetUrl'],
-            'repoOwner': repo['repoOwner'],
-            'repoName': repo['repoName'],
-            'buildNumber': repo['buildNumber'],
+            'description': description,
             'builderName': builderName,
             'startDateTime': datetime.datetime.fromtimestamp(
                 startTime).isoformat(' '),
             'endDateTime': datetime.datetime.fromtimestamp(
                 endTime).isoformat(' '),
             'duration': duration,
-            }
+            })
 
-        self._sendGitHubStatus(status)
-        return self
+        result = yield self._sendGitHubStatus(status)
+        defer.returnValue(result)
 
     def _timeDeltaToHumanReadable(self, start, end):
         """
@@ -132,44 +122,56 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         start_date = datetime.datetime.fromtimestamp(start)
         end_date = datetime.datetime.fromtimestamp(end)
-        delta = relativedelta(end_date, start_date)
-
-        attributes = [
-            'years', 'months', 'days', 'hours', 'minutes', 'seconds']
+        delta = end_date - start_date
 
         result = []
-        for attribute_name in attributes:
-            attribute = getattr(delta, attribute_name)
-            if attribute > 0:
-                result.append('%d %s' % (attribute, attribute_name))
+        if delta.days > 0:
+            result.append('%d days' % (delta.days,))
+        if delta.seconds > 0:
+            hours = delta.seconds / 3600
+            if hours > 0:
+                result.append('%d hours' % (hours,))
+            minutes = (delta.seconds - hours * 3600) / 60
+            if minutes:
+                result.append('%d minutes' % (minutes,))
+            seconds = delta.seconds % 60
+            if seconds > 0:
+                result.append('%d seconds' % (seconds,))
+        result = ', '.join(result)
+        if not result:
+            return 'super fast'
+        else:
+            return result
 
-        return ', '.join(result)
-
+    @defer.inlineCallbacks
     def _getGitHubRepoProperties(self, build):
         """
         Return a dictionary with GitHub related properties from `build`.
         """
-        repoOwner = build.render(self._repoOwner)
-        repoName = build.render(self._repoName)
-        sha = build.render(self._sha)
+        repoOwner, repoName, sha = yield defer.gatherResults([
+            build.render(self._repoOwner),
+            build.render(self._repoName),
+            build.render(self._sha),
+            ])
 
         if not repoOwner or not repoName or not sha:
-            return {}
+            defer.returnValue({})
 
-        return {
+        result = {
             'repoOwner': repoOwner,
             'repoName': repoName,
             'sha': sha,
             'targetUrl': self._status.getURLForThing(build),
             'buildNumber': str(build.getNumber()),
         }
+        defer.returnValue(result)
 
     def _getGitHubState(self, results):
         """
         Convert Buildbot states into GitHub states.
         """
-        # GitHub defines `succes`, `failure` and `error` states.
-        # We explicitly map sucess and failure. Any other BuildBot status
+        # GitHub defines `success`, `failure` and `error` states.
+        # We explicitly map success and failure. Any other BuildBot status
         # is converted to `error`.
         state_map = {
           SUCCESS: 'success',
@@ -188,16 +190,18 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status['sha']:
             log.msg('GitHubStatus: Build has no revision')
             return
+        from txgithub.api import GithubApi as GitHubAPI
 
-        description = status['description'] % status
-        d = self._github.createStatus(
+        github = GitHubAPI(oauth2_token=self._token)
+        d = github.createStatus(
             repo_user=status['repoOwner'],
             repo_name=status['repoName'],
             sha=status['sha'],
             state=status['state'],
             target_url=status['targetUrl'],
-            description=description,
+            description=status['description'],
             )
+        d.addCallback(lambda result: None)
         d.addErrback(
             log.err,
             "while sending GitHub status for %s/%s at %s." % (

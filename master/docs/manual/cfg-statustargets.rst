@@ -1533,18 +1533,19 @@ GitHubStatus
     repoOwner = 'myorg'
     repoName = Interpolate("%(prop::github_repo_name)s"
     sha = Interpolate("%(src::revision)s")
+    startDescription = Interpolate('Build started.')
+    endDescription = Interpolate('Build done.')
     gs = GitHubStatus(token='githubAPIToken',
                       repoOwner=repoOwner,
                       repoName=repoName)
                       sha=sha,
-                      startDescription='Build started at %(startDateTime)s.',
-                      endDescription=(
-                        '[%(state)s] Build done after %(duration)s.'),
+                      startDescription=startDescription,
+                      endDescription=endDescription,
                       )
     c['status'].append(gs)
 
 :class:`GitHubStatus` publishes a build status using
-`Github Status API <http://developer.github.com/v3/repos/statuses>`_.
+`GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
 It is configured with at least a GitHub API token, repoOwner and repoName
 arguments.
@@ -1565,20 +1566,7 @@ In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or
 empty string, the plugin will skip sending the status.
 
 You can define custom start and end build messages using the
-`startDescription` and `endDescription` optional arguments. They can be
-provided as static string or use the following placeholders
-for custom message interpolation:
-
-* state - 'pending'|'success'|'failure'|'error'
-* sha
-* targetUrl - URL to Buildbot build page.
-* repoOwner - Name of repo owner.
-* repoName - Name of the repo.
-* buildNumber - Buildbot build number.
-* builderName - Name of the builder.
-* startDateTime
-* endDateTime
-* duration - Human readable representation of elapsed time.
+`startDescription` and `endDescription` optional interpolation arguments.
 
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
