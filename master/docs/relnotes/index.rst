@@ -127,6 +127,8 @@ Features
 * OpenStack-based Latent Buildslave support was added.
   See :bb:pull:`666`.
 
+* Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
+  See :bb:pull:`596`.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,6 +172,12 @@ Slave
 
 Features
 ~~~~~~~~
+
+* The fix for Twisted bug #5079 is now applied on the slave side, too.
+  This fixes a perspective broker memory leak in older versions of Twisted.
+  This fix was added on the master in Buildbot-0.8.4 (see :bb:bug:`1958`).
+
+* The ``--nodaemon`` option to ``buildslave start`` now correctly prevents the slave from forking before running.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
