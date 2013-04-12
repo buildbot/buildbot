@@ -177,23 +177,33 @@ def createSlave(config):
         print "buildslave configured in %s" % m.basedir
 
 
+class SlaveNotRunning(Exception):
+    """
+    raised when trying to stop slave process that is not running
+    """
 
-def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
+
+def stopSlave(basedir, quiet, signame="TERM"):
+    """
+    Stop slave process by sending it a signal.
+
+    Using the specified basedir path, read slave process's pid file and
+    try to terminate that process with specified signal.
+
+    @param basedir: buildslave basedir path
+    @param   quite: if False, don't print any messages to stdout
+    @param signame: signal to send to the slave process
+
+    @raise SlaveNotRunning: if slave pid file is not found
+    """
     import signal
-    basedir = config['basedir']
-    quiet = config['quiet']
-
-    if not base.isBuildslaveDir(config['basedir']):
-        sys.exit(1)
 
     os.chdir(basedir)
     try:
         f = open("twistd.pid", "rt")
     except:
-        if returnFalseOnNotRunning:
-            return False
-        if not quiet: print "buildslave not running."
-        sys.exit(0)
+        raise SlaveNotRunning()
+
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
@@ -203,10 +213,6 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
         if e.errno != 3:
             raise
 
-    if not wait:
-        if not quiet:
-            print "sent SIG%s to process" % signame
-        return
     time.sleep(0.1)
     while timer < 10:
         # poll once per second until twistd.pid goes away, up to 10 seconds
@@ -221,6 +227,21 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     if not quiet:
         print "never saw process go away"
 
+
+def stop(config, signame="TERM"):
+    quiet = config['quiet']
+    basedir = config['basedir']
+
+    if not base.isBuildslaveDir(basedir):
+        sys.exit(1)
+
+    try:
+        stopSlave(basedir, quiet, signame)
+    except SlaveNotRunning:
+        if not quiet:
+            print "buildslave not running"
+
+
 def restart(config):
     quiet = config['quiet']
 
@@ -228,7 +249,9 @@ def restart(config):
         sys.exit(1)
 
     from buildslave.scripts.startup import start
-    if not stop(config, wait=True, returnFalseOnNotRunning=True):
+    try:
+        stopSlave(config['basedir'], quiet)
+    except SlaveNotRunning:
         if not quiet:
             print "no old buildslave process found to stop"
     if not quiet:
@@ -434,7 +457,7 @@ def run():
         from buildslave.scripts.startup import start
         start(so)
     elif command == "stop":
-        stop(so, wait=True)
+        stop(so)
     elif command == "restart":
         restart(so)
     sys.exit(0)
