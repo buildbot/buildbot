@@ -30,8 +30,9 @@ from buildbot.scripts import base
 # Note that the terms 'options' and 'config' are used interchangeably here - in
 # fact, they are interchanged several times.  Caveat legator.
 
-def validate_master_option(master):
-    """Validate master (-m, --master) command line option.
+def validateMasterOption(master):
+    """
+    Validate master (-m, --master) command line option.
 
     Checks that option is a string of the 'hostname:port' form, otherwise
     raises an UsageError exception.
@@ -214,7 +215,7 @@ class DebugClientOptions(base.SubcommandOptions):
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
 
 class BaseStatusClientOptions(base.SubcommandOptions):
@@ -241,7 +242,7 @@ class BaseStatusClientOptions(base.SubcommandOptions):
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
 
 
@@ -348,7 +349,7 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"
@@ -493,7 +494,7 @@ class TryOptions(base.SubcommandOptions):
             if not self['master']:
                 raise usage.UsageError("master location must be specified" \
                                        "for 'pb' connections")
-            validate_master_option(self['master'])
+            validateMasterOption(self['master'])
 
 
 class TryServerOptions(base.SubcommandOptions):
@@ -613,7 +614,7 @@ class UserOptions(base.SubcommandOptions):
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
 
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
         op = self.get('op')
         if not op:

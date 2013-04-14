@@ -549,10 +549,18 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
                 buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
-    def test_pb_no_master(self):
+    def test_pb_withNoMaster(self):
+        """
+        When 'builbot try' is asked to connect via pb, but no master is
+        specified, a usage error is raised.
+        """
         self.assertRaises(usage.UsageError, self.parse, '--connect=pb')
 
-    def test_master_inval(self):
+    def test_pb_withInvalidMaster(self):
+        """
+        When 'buildbot try' is asked to conncect via pb, but an invalid
+        master is specified, a usage error is raised.
+        """
         self.assertRaises(usage.UsageError, self.parse,
                           '--connect=pb', '--master=foo')
 
