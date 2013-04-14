@@ -23,7 +23,7 @@ from twisted.python import usage, log
 from twisted.application import internet
 from twisted.internet import defer, task
 
-from buildbot import interfaces, util
+from buildbot import config, interfaces, util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
@@ -1044,8 +1044,10 @@ class IRC(base.StatusReceiverMultiService):
             allowShutdown=False):
         base.StatusReceiverMultiService.__init__(self)
 
-        assert allowForce in (True, False) # TODO: implement others
-        assert allowShutdown in (True, False)
+        if allowForce not in (True, False):
+            config.error("allowForce must be boolean, not %r" % (allowForce,))
+        if allowShutdown not in (True, False):
+            config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
 
         # need to stash these so we can detect changes later
         self.host = host
