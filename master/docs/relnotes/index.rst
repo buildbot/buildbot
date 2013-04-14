@@ -73,6 +73,10 @@ Features
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
   See :bb:pull:`596`.
 
+* Build status can be sent to GitHub. Depends on txgithub package.
+  See :bb:status:`GitHubStatus` and
+  `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

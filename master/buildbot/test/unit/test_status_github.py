@@ -98,10 +98,8 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         # Check default values.
         self.assertEqual(status._sha, Interpolate("%(src::revision)s"))
-        self.assertEqual(
-            status._startDescription, Interpolate("Build started."))
-        self.assertEqual(
-            status._endDescription, Interpolate("Build done."))
+        self.assertEqual(status._startDescription, "Build started.")
+        self.assertEqual(status._endDescription, "Build done.")
 
     def test_startService(self):
         """
@@ -247,6 +245,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 1)
         self.assertEqual('1 days', result)
+
+        result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 2)
+        self.assertEqual('1 days, 1 seconds', result)
 
     def test_getGitHubRepoProperties_skip_no_sha(self):
         """

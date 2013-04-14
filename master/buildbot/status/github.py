@@ -47,11 +47,11 @@ class GitHubStatus(StatusReceiverMultiService):
             sha = Interpolate("%(src::revision)s")
 
         if not startDescription:
-            startDescription = Interpolate("Build started.")
+            startDescription = "Build started."
         self._startDescription = startDescription
 
         if not endDescription:
-            endDescription = Interpolate("Build done.")
+            endDescription = "Build done."
         self._endDescription = endDescription
 
         self._token = token

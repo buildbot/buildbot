@@ -1555,6 +1555,9 @@ GitHubStatus
 :class:`GitHubStatus` publishes a build status using
 `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
+It requires `txgithub <https://pypi.python.org/pypi/txgithub>` package to
+allow interaction with GitHub API.
+
 It is configured with at least a GitHub API token, repoOwner and repoName
 arguments.
 
