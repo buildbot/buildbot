@@ -71,9 +71,9 @@ class MaildirService(service.MultiService):
         if not self.dnotify:
             self.timerService = internet.TimerService(self.pollinterval, self.poll)
             self.timerService.setServiceParent(self)
-        self.poll()  
-           
-        
+        self.poll()
+
+
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
 
@@ -94,7 +94,7 @@ class MaildirService(service.MultiService):
             self.dnotify.remove()
             self.dnotify = None
         if self.timerService is not None:
-            self.timerService.disownServiceParent() 
+            self.timerService.disownServiceParent()
             self.timerService = None
         return service.MultiService.stopService(self)
 

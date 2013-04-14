@@ -379,4 +379,3 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            status_text=["generic"])
         return self.runStep()
-

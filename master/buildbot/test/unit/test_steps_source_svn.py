@@ -182,7 +182,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
-                stdout=self.svn_info_stdout_xml_nonintegerrevision) 
+                stdout=self.svn_info_stdout_xml_nonintegerrevision)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -208,7 +208,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
             + ExpectShell.log('stdio',
@@ -221,7 +221,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
             + ExpectShell.log('stdio',
-                stdout=svn_info_stdout) 
+                stdout=svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
@@ -240,7 +240,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', 'pass', '--random'])
@@ -278,7 +278,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', 'pass', '--random'])
@@ -373,7 +373,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
             + ExpectShell.log('stdio', # expecting ../trunk/app
@@ -479,7 +479,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', 'pass', '--random'])
@@ -505,7 +505,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         """If 'preferLastChangedRev' is set, but missing, fall back
         to the regular revision value."""
         svn_info_stdout = self.svn_info_stdout_xml.replace('commit', 'Blah')
-        
+
         self.setupStep(
                 svn.SVN(repourl='http://svn.local/app/trunk',
                         mode='incremental',username='user',
@@ -519,7 +519,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml',  
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', 'pass', '--random'])
@@ -650,7 +650,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--depth', 'infinite' ])
             + ExpectShell.log('stdio',
@@ -692,7 +692,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache' ])
             + ExpectShell.log('stdio',
@@ -774,7 +774,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                             'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache' ])
             + ExpectShell.log('stdio',
@@ -1083,7 +1083,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='source',
                         timeout=1,
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache' ])
             + ExpectShell.log('stdio',
@@ -1126,7 +1126,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
-                        command=['svn', 'info', '--xml', 
+                        command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache' ])
             + ExpectShell.log('stdio',

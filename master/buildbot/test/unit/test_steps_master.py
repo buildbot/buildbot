@@ -197,7 +197,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
-    
+
     def setUp(self):
         return self.setUpBuildStep()
 
