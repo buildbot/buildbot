@@ -1538,18 +1538,26 @@ GitHubStatus
 
     from buildbot.status.github import GitHubStatus
 
-    repoOwner = 'myorg'
+    repoOwner = Interpolate("%(prop:github_repo_owner)s"
     repoName = Interpolate("%(prop:github_repo_name)s"
     sha = Interpolate("%(src::revision)s")
-    startDescription = Interpolate('Build started.')
-    endDescription = Interpolate('Build done.')
     gs = GitHubStatus(token='githubAPIToken',
                       repoOwner=repoOwner,
                       repoName=repoName)
                       sha=sha,
-                      startDescription=startDescription,
-                      endDescription=endDescription,
+                      startDescription='Build started.',
+                      endDescription='Build done.',
                       )
+    buildbot_bbtools = BuilderConfig(
+        name='builder-name',
+        slavenames=['slave1'],
+        factory=BuilderFactory(),
+        properties={
+            "github_repo_owner": "buildbot",
+            "github_repo_name": "bbtools",
+            },
+        )
+    c['builders'].append(buildbot_bbtools)
     c['status'].append(gs)
 
 :class:`GitHubStatus` publishes a build status using
@@ -1567,8 +1575,11 @@ You can create a token from you own
 generate one.
 
 `repoOwner`, `repoName` are used to inform the plugin where
-to send status for build. They can be passes as a static `string` or
-:class:`Interpolate` for dynamic substitution.
+to send status for build. This allow using a single :class:`GitHubStatus` for
+multiple projects.
+`repoOwner`, `repoName` can be passes as a static `string` (for single
+project) or :class:`Interpolate` for dynamic substitution in multiple
+project.
 
 `sha` argument is use to define the commit SHA for which to send the status.
 By default `sha` is defined as: `%(src::revision)s`.
@@ -1585,6 +1596,6 @@ You can define custom start and end build messages using the
 .. [#] It may even be possible to provide SSL access by using a
     specification like ``"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"``,
     but this is completely untested
-    
+
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 
