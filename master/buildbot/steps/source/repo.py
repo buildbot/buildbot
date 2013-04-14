@@ -94,13 +94,6 @@ class Repo(Source):
         Source.__init__(self, **kwargs)
 
         assert self.manifest_url is not None
-        self.addFactoryArguments(manifest_url=manifest_url,
-                                 manifest_branch=manifest_branch,
-                                 manifest_file=manifest_file,
-                                 tarball=tarball,
-                                 sync_all_branches=sync_all_branches,
-                                 update_tarball=update_tarball,
-                                 )
 
     def computeSourceRevision(self, changes):
         if not changes:
