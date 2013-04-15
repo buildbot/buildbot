@@ -176,7 +176,7 @@ below the WebStatus line in master.cfg::
 
 Reconfigure the build master then do::
 
-  cat master/twistd.log | grep IRC
+  grep -i irc master/twistd.log
 
 The log output should contain a line like this::
 
