@@ -94,13 +94,13 @@ You should see lines like this::
 Creating a slave
 ----------------
 
-Open a new terminal, and first enter the same sandbox you created before::
+Open a new terminal and enter the same sandbox you created before::
 
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
 
-Install buildslave command::
+Install the ``buildslave`` command::
 
    easy_install buildbot-slave
 
@@ -109,8 +109,8 @@ Now, create the slave::
   buildslave create-slave slave localhost:9989 example-slave pass
 
 The user:host pair, username, and password should be the same as the ones in
-master.cfg; verify this is the case by looking at the section for `c['slaves']`
-and `c['slavePortnum']`::
+master.cfg; verify this is the case by looking at the section for ``c['slaves']``
+and ``c['slavePortnum']``::
 
   cat master/master.cfg
 
