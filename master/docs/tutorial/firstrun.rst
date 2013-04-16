@@ -28,8 +28,7 @@ There are many ways to get the code on your machine.
 For this tutorial, we will use easy_install to install and run buildbot.
 While this isn't the preferred method to install buildbot, it is the simplest
 one to use for the purposes of this tutorial because it should work on all
-systems.  (The preferred method would be to install buildbot from packages
-of your distribution.)
+systems.  (The preferred method would be to install buildbot via ``pip``.)
 
 To make this work, you will need the following installed:
  * Python_ and the development packages for it
