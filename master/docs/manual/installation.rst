@@ -142,9 +142,9 @@ and for the slave:
     pip install buildbot-slave
 
 When using ``pip`` to install instead of distribution specific package manangers, 
-e.g. via `apt-get` or `ports`, it is easier to choose exactly which version one wants
+e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants
 to use. It may however be easier to install via distribution specific package mangers
-but note that they may provide an earlier version than what is available via `pip`.
+but note that they may provide an earlier version than what is available via ``pip``.
 
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
