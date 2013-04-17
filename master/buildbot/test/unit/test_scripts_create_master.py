@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.scripts import create_master
 from buildbot.db import connector, model
-from buildbot.test.util import dirs, misc
+from buildbot.test.util import dirs, misc, www
 
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
@@ -78,8 +78,8 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
             self.assertInStdout('buildmaster configured in')
         return d
 
-class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                                unittest.TestCase):
+class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
+                                misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
