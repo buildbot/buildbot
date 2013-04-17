@@ -17,8 +17,9 @@ from twisted.trial import unittest
 from buildbot.util import namespace
 import pickle
 from buildbot.util import json
+from buildbot.test.util import www
 
-class Namespace(unittest.TestCase):
+class Namespace(www.WwwTestMixin, unittest.TestCase):
 
     def test_basic(self):
         n = namespace.Namespace({'a':{'b':{'c':1}}})
