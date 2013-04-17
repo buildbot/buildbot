@@ -190,7 +190,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     Using the specified basedir path, read slave process's pid file and
     try to terminate that process with specified signal.
 
-    @param basedir: buildslave basedir path
+    @param basedir: buildslave's basedir path
     @param   quite: if False, don't print any messages to stdout
     @param signame: signal to send to the slave process
 
@@ -244,19 +244,21 @@ def stop(config, signame="TERM"):
 
 def restart(config):
     quiet = config['quiet']
+    basedir = config['basedir']
 
-    if not base.isBuildslaveDir(config['basedir']):
+    if not base.isBuildslaveDir(basedir):
         sys.exit(1)
 
-    from buildslave.scripts.startup import start
     try:
-        stopSlave(config['basedir'], quiet)
+        stopSlave(basedir, quiet)
     except SlaveNotRunning:
         if not quiet:
             print "no old buildslave process found to stop"
     if not quiet:
         print "now restarting buildslave process.."
-    start(config)
+
+    from buildslave.scripts.startup import startSlave
+    startSlave(basedir, quiet, config['nodaemon'])
 
 
 class MakerBase(usage.Options):
@@ -454,8 +456,8 @@ def run():
     elif command == "upgrade-slave":
         upgradeSlave(so)
     elif command == "start":
-        from buildslave.scripts.startup import start
-        start(so)
+        from buildslave.scripts.startup import startCommand
+        startCommand(so)
     elif command == "stop":
         stop(so)
     elif command == "restart":

@@ -123,7 +123,7 @@ class TestRestart(misc.IsBuildslaveDirMixin,
     """
     Test buildslave.scripts.runner.restart()
     """
-    config = {"basedir": "dummy", "quiet": False}
+    config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 
     def setUp(self):
         self.setUpStdoutAssertions()
@@ -131,9 +131,9 @@ class TestRestart(misc.IsBuildslaveDirMixin,
         # patch basedir check to always succeed
         self.setupUpIsBuildslaveDir(True)
 
-        # patch startup.start() to do nothing
-        self.start = mock.Mock()
-        self.patch(startup, "start", self.start)
+        # patch startup.startSlave() to do nothing
+        self.startSlave = mock.Mock()
+        self.patch(startup, "startSlave", self.startSlave)
 
     def test_no_slave_running(self):
         """
@@ -143,9 +143,11 @@ class TestRestart(misc.IsBuildslaveDirMixin,
         mock_stopSlave = mock.Mock(side_effect=runner.SlaveNotRunning())
         self.patch(runner, "stopSlave", mock_stopSlave)
 
-        # check that restart() calls start() and prints correct messages
+        # check that restart() calls startSlave() and prints correct messages
         runner.restart(self.config)
-        self.start.assert_called_once_with(self.config)
+        self.startSlave.assert_called_once_with(self.config["basedir"],
+                                                self.config["quiet"],
+                                                self.config["nodaemon"]);
         self.assertStdoutEqual("no old buildslave process found to stop\n"
                                "now restarting buildslave process..\n")
 
@@ -158,10 +160,12 @@ class TestRestart(misc.IsBuildslaveDirMixin,
         mock_stopSlave = mock.Mock()
         self.patch(runner, "stopSlave", mock_stopSlave)
 
-        # check that restart() calls start() and prints correct messages
+        # check that restart() calls startSlave() and prints correct messages
         runner.restart(self.config)
+        self.startSlave.assert_called_once_with(self.config["basedir"],
+                                                self.config["quiet"],
+                                                self.config["nodaemon"]);
         self.assertStdoutEqual("now restarting buildslave process..\n")
-        self.start.assert_called_once_with(self.config)
 
 
 class TestUpgradeSlave(misc.IsBuildslaveDirMixin, unittest.TestCase):
