@@ -20,18 +20,8 @@ import errno
 import signal
 from twisted.trial import unittest
 from twisted.python import usage
-from buildslave.scripts import runner, base
-from buildslave.scripts import startup
+from buildslave.scripts import runner, startup
 from buildslave.test.util import misc
-
-
-class IsBuildslaveDirMixin:
-    """
-    Mixin for setting up mocked base.isBuildslaveDir() function
-    """
-    def setupUpIsBuildslaveDir(self, return_value):
-        self.isBuildslaveDir = mock.Mock(return_value=return_value)
-        self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
 
 
 class TestStopSlave(misc.OpenFileMixin,
@@ -88,7 +78,7 @@ class TestStopSlave(misc.OpenFileMixin,
         self.assertStdoutEqual("buildslave process %s is dead\n" % self.PID)
 
 
-class TestStop(IsBuildslaveDirMixin,
+class TestStop(misc.IsBuildslaveDirMixin,
                misc.StdoutAssertionsMixin,
                unittest.TestCase):
     """
@@ -127,7 +117,7 @@ class TestStop(IsBuildslaveDirMixin,
                                                "TERM")
 
 
-class TestRestart(IsBuildslaveDirMixin,
+class TestRestart(misc.IsBuildslaveDirMixin,
                   misc.StdoutAssertionsMixin,
                   unittest.TestCase):
     """
@@ -174,7 +164,7 @@ class TestRestart(IsBuildslaveDirMixin,
         self.start.assert_called_once_with(self.config)
 
 
-class TestUpgradeSlave(IsBuildslaveDirMixin, unittest.TestCase):
+class TestUpgradeSlave(misc.IsBuildslaveDirMixin, unittest.TestCase):
     """
     Test buildslave.scripts.runner.upgradeSlave()
     """
