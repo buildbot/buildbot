@@ -14,8 +14,8 @@ The Buildbot-0.9.x series of releases will give the new APIs time to "settle in"
 Commitment will wait for Buildbot-1.0.0 (as per http://semver.org).
 Once Buildbot reaches version 1.0.0, upgrades will become much easier for users.
 
-To encourage contributions from a wider field of developers, the web application is designed to look like a normal Dojo application.
-Developers familiar with Dojo, but not with Python, should be able to start hacking on the web application quickly.
+To encourage contributions from a wider field of developers, the web application is designed to look like a normal AngularJS application.
+Developers familiar with AngularJS, but not with Python, should be able to start hacking on the web application quickly.
 The web application is "pluggable", so users who develop their own status displays can package those separately from Buildbot itself.
 
 Other goals:
