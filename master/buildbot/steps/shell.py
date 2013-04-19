@@ -253,23 +253,23 @@ class ShellCommand(buildstep.LoggingBuildStep):
         kwargs.update(self.remote_kwargs)
         tmp = []
         if isinstance(self.command, list):
-           self._flattenList(tmp, self.command) 
+           self._flattenList(tmp, self.command)
         else:
            tmp = self.command
 
-        kwargs['command'] = tmp 
+        kwargs['command'] = tmp
 
         # check for the usePTY flag
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
-        
+
         # check for the interruptSignal flag
         if kwargs.has_key('interruptSignal') and self.slaveVersionIsOlderThan("shell", "2.15"):
             warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
-        
+
         return kwargs
 
     def start(self):
@@ -382,6 +382,9 @@ class Configure(ShellCommand):
     descriptionDone = ["configure"]
     command = ["./configure"]
 
+    def __init__(self):
+        self.renderables.extend(['haltOnFailure', 'flunkOnFailure'])
+
 class StringFileWriter(pb.Referenceable):
     """
     FileWriter class that just puts received data into a buffer.
@@ -404,7 +407,7 @@ class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory " 
+    directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
