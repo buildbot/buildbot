@@ -73,9 +73,8 @@ class ComparableMixin:
         pass
  
     def __hash__(self):
-        backup = self.compare_attrs
         tmp = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', tmp, backup) 
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', tmp) 
 
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in tmp]
@@ -92,18 +91,16 @@ class ComparableMixin:
 
         acomp = []
         bcomp = []
-        aback = self.compare_attrs
-        bback = them.compare_attrs 
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', acomp, aback)
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', bcomp, bback)
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', acomp)
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', bcomp)
         result = cmp(acomp, bcomp)
         if result:
             return result
 
         self_list = [getattr(self, name, self._None)
-                     for name in aback]
+                     for name in acomp]
         them_list = [getattr(them, name, self._None)
-                     for name in aback]
+                     for name in bcomp]
         return cmp(self_list, them_list)
 
 def diffSets(old, new):
