@@ -4,8 +4,8 @@ angular.module('app').config ['$routeProvider', ($routeProvider) ->
         # If the route has a caption, it is linked in the top menu
         # The route is configured in $routeProvider
         # $scope is not available at this time.
-        # @hack Need to find a better 'angularonic' way of passing the info to topmenu
-        # than global variable
+        # @hack Need to find a better 'angularonic' way
+        # of passing the info to topmenu than global variable
         window.route_config =
                 home:
                     caption:"Home"

@@ -1,18 +1,20 @@
 angular.module('app').config ['$httpProvider', ($httpProvider) ->
-	$httpProvider.responseInterceptors.push ['$log', '$rootScope', '$q', ($log, $rootScope, $q) ->
-		success = (response) ->
-			$rootScope.$broadcast "success:#{response.status}", response
+    $httpProvider.responseInterceptors.push
+    ['$log', '$rootScope', '$q',
+        ($log, $rootScope, $q) ->
+        success = (response) ->
+            $rootScope.$broadcast "success:#{response.status}", response
 
-			response
+            response
 
-		error = (response) ->
-			deferred = $q.defer()
+        error = (response) ->
+            deferred = $q.defer()
 
-			$rootScope.$broadcast "error:#{response.status}", response
+            $rootScope.$broadcast "error:#{response.status}", response
 
-			$q.reject response
+            $q.reject response
 
-		(promise) ->
-			promise.then success, error
-	]
+        (promise) ->
+            promise.then success, error
+    ]
 ]

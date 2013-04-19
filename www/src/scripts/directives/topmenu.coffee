@@ -1,5 +1,9 @@
-angular.module('app').directive 'topmenu', ['$log', ($log) ->
-    controller = ['$scope', '$element', '$rootScope', ($scope, $element, $rootScope) ->
+angular.module('app').directive 'topmenu',
+['$log',
+    ($log) ->
+    controller =
+    ['$scope', '$element', '$rootScope',
+        ($scope, $element, $rootScope) ->
         $scope.tabs = []
         $scope.select = (tab) ->
             return if tab.selected is true
