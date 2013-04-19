@@ -81,9 +81,9 @@ stop it, fix the config file, and restart.
 def startCommand(config):
     basedir = config['basedir']
     if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
+        return 1
 
-    startSlave(basedir, config['quiet'], config['nodaemon'])
+    return startSlave(basedir, config['quiet'], config['nodaemon'])
 
 def startSlave(basedir, quiet, nodaemon):
     """
@@ -99,6 +99,8 @@ def startSlave(basedir, quiet, nodaemon):
     @param  basedir: buildslave's basedir path
     @param    quiet: don't display startup log messages
     @param nodaemon: don't daemonize (stay in foreground)
+    @return: 0 if slave was successfully started,
+             1 if we are not sure that slave started successfully
     """
 
     os.chdir(basedir)
@@ -115,7 +117,7 @@ def startSlave(basedir, quiet, nodaemon):
     if os.fork():
         # this is the parent
         rc = Follower().follow()
-        sys.exit(rc)
+        return rc
     # this is the child: give the logfile-watching parent a chance to start
     # watching it before we start the daemon
     time.sleep(0.2)

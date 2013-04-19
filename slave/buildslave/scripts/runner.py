@@ -158,7 +158,7 @@ def createSlave(config):
     except:
         print "unparseable master location '%s'" % master
         print " expecting something more like localhost:8007 or localhost"
-        raise
+        return 1
 
     asd = config['allow-shutdown']
     if asd:
@@ -175,6 +175,8 @@ def createSlave(config):
 
     if not m.quiet:
         print "buildslave configured in %s" % m.basedir
+
+    return 0
 
 
 class SlaveNotRunning(Exception):
@@ -233,7 +235,7 @@ def stop(config, signame="TERM"):
     basedir = config['basedir']
 
     if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
+        return 1
 
     try:
         stopSlave(basedir, quiet, signame)
@@ -241,13 +243,15 @@ def stop(config, signame="TERM"):
         if not quiet:
             print "buildslave not running"
 
+    return 0
+
 
 def restart(config):
     quiet = config['quiet']
     basedir = config['basedir']
 
     if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
+        return 1
 
     try:
         stopSlave(basedir, quiet)
@@ -258,7 +262,7 @@ def restart(config):
         print "now restarting buildslave process.."
 
     from buildslave.scripts.startup import startSlave
-    startSlave(basedir, quiet, config['nodaemon'])
+    return startSlave(basedir, quiet, config['nodaemon'])
 
 
 class MakerBase(usage.Options):
@@ -328,7 +332,7 @@ def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
 
     if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
+        return 1
 
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
     new_buildbot_tac = buildbot_tac.replace(

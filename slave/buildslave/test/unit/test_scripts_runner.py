@@ -180,12 +180,10 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin, unittest.TestCase):
         # override isBuildslaveDir() to always fail
         self.setupUpIsBuildslaveDir(False)
 
-        # call upgradeSlave() and check that SystemExit exception is raised
+        # call upgradeSlave() and check that correct exit code is returned
         config = {"basedir" : "dummy"}
-        exception = self.assertRaises(SystemExit, runner.upgradeSlave, config)
-
-        # check exit code
-        self.assertEqual(exception.code, 1, "unexpected exit code")
+        self.assertEqual(runner.upgradeSlave(config), 1,
+                         "unexpected exit code")
 
         # check that isBuildslaveDir was called with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")

@@ -31,12 +31,10 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
         # patch isBuildslaveDir() to fail
         self.setupUpIsBuildslaveDir(False)
 
-        # call start() and check that SystemExit exception is raised
+        # call startCommand() and check that correct exit code is returned
         config = {"basedir": "dummy"}
-        exception = self.assertRaises(SystemExit, startup.startCommand, config)
-
-        # check exit code
-        self.assertEqual(exception.code, 1, "unexpected exit code")
+        self.assertEqual(startup.startCommand(config), 1,
+                         "unexpected exit code")
 
         # check that isBuildslaveDir was called with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")
@@ -50,11 +48,12 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
         self.setupUpIsBuildslaveDir(True)
 
         # patch startSlave() to do nothing
-        mocked_startSlave = mock.Mock()
+        mocked_startSlave = mock.Mock(return_value=0)
         self.patch(startup, "startSlave", mocked_startSlave)
 
         config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
-        startup.startCommand(config)
+        self.assertEqual(startup.startCommand(config), 0,
+                         "unexpected exit code")
 
         # check that isBuildslaveDir() and startSlave() were called
         # with correct argument
