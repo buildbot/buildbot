@@ -129,7 +129,7 @@ together.
 Installation From PyPI
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The easiest way to install Buildbot is using 'pip'. For the master:
+The preferred way to install Buildbot is using ``pip``. For the master:
 
 .. code-block:: bash
 
@@ -140,6 +140,11 @@ and for the slave:
 .. code-block:: bash
 
     pip install buildbot-slave
+
+When using ``pip`` to install instead of distribution specific package manangers, 
+e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants
+to use. It may however be easier to install via distribution specific package mangers
+but note that they may provide an earlier version than what is available via ``pip``.
 
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

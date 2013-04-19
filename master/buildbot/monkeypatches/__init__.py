@@ -83,3 +83,5 @@ def patch_all(for_tests=False):
         testcase_patch.patch_testcase_patch()
         from buildbot.monkeypatches import decorators
         decorators.patch()
+        from buildbot.monkeypatches import testcase_synctest
+        testcase_synctest.patch_testcase_synctest()

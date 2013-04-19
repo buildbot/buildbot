@@ -127,6 +127,7 @@ setup_args = {
               "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
               "buildbot.www",
               "buildbot.changes",
+              "buildbot.buildslave",
               "buildbot.steps",
               "buildbot.steps.package",
               "buildbot.steps.package.deb",
