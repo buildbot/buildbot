@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from buildslave.scripts import startup
+from buildslave.scripts import start
 from buildslave.test.util import misc
 
 
@@ -33,8 +33,7 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
 
         # call startCommand() and check that correct exit code is returned
         config = {"basedir": "dummy"}
-        self.assertEqual(startup.startCommand(config), 1,
-                         "unexpected exit code")
+        self.assertEqual(start.startCommand(config), 1, "unexpected exit code")
 
         # check that isBuildslaveDir was called with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")
@@ -49,11 +48,10 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
 
         # patch startSlave() to do nothing
         mocked_startSlave = mock.Mock(return_value=0)
-        self.patch(startup, "startSlave", mocked_startSlave)
+        self.patch(start, "startSlave", mocked_startSlave)
 
         config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
-        self.assertEqual(startup.startCommand(config), 0,
-                         "unexpected exit code")
+        self.assertEqual(start.startCommand(config), 0, "unexpected exit code")
 
         # check that isBuildslaveDir() and startSlave() were called
         # with correct argument
