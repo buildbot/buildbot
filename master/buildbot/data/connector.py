@@ -15,10 +15,9 @@
 
 import inspect
 from twisted.python import reflect
-from twisted.internet import defer
 from twisted.application import service
 from buildbot.util import pathmatch
-from buildbot.data import exceptions, base, root
+from buildbot.data import exceptions, base
 
 class Updates(object):
     # empty container object; see _scanModule, below

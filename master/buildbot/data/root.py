@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from buildbot.data import base
 
 class Root(base.Endpoint):
