@@ -104,8 +104,9 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                # note whitespace here:
-                content='{\n  "count": 50, \n  "path": [\n    "some", \n    "path"\n  ]\n}',
+                content=json.dumps(
+                    {"count": 50, "path": ["some", "path"]},
+                    sort_keys=True, indent=2),
                 contentType='text/plain',
                 responseCode=200,
                 contentDisposition=None)
