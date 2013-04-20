@@ -93,8 +93,8 @@ class ClusteredService(service.Service, util.ComparableMixin):
         def deactivate_if_needed(_):
             if self.active:
                 self.active = False
-                d = self._unclaimService()
-                d.addCallback(lambda _: self.deactivate())
+                d = defer.maybeDeferred(self.deactivate)
+                d.addCallback(lambda _: defer.maybeDeferred(self._unclaimService))
                 return d
 
         d.addCallback(lambda _: service.Service.stopService(self))
@@ -136,7 +136,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
             try:
                 yield self.activate()
             except Exception:
-                # this scheduler is half-active, and noted as such in the db..
+                # this service is half-active, and noted as such in the db..
                 log.err(None, 'WARNING: ClusteredService(%s) is only partially active' % self.getName())
 
         except Exception:

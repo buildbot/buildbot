@@ -37,22 +37,18 @@ class ClusteredService(unittest.TestCase):
 
         svc.clock = task.Clock()
 
-        self.setServiceClaimable(svc,   False)
+        self.setServiceClaimable(svc,   defer.succeed(False))
         self.setActivateToReturn(svc,   defer.succeed(None))
         self.setDeactivateToReturn(svc, defer.succeed(None))
-        self.setGetServiceIdToReturn(svc, serviceid)
+        self.setGetServiceIdToReturn(svc, defer.succeed(serviceid))
         self.setUnclaimToReturn(svc,    defer.succeed(None))
 
         return svc
 
-    def setServiceClaimable(self, svc, claimable=True):
-        if isinstance(claimable, bool):
-            claimable = defer.succeed(claimable)
+    def setServiceClaimable(self, svc, claimable):
         svc._claimService = mock.Mock(return_value=claimable)
 
     def setGetServiceIdToReturn(self, svc, serviceid):
-        if isinstance(serviceid, int):
-            serviceid =  defer.succeed(serviceid)
         svc._getServiceId = mock.Mock(return_value=serviceid)
 
     def setUnclaimToReturn(self, svc, unclaim):
@@ -164,7 +160,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1+NUMBER_OF_POLLS, self.svc._claimService.call_count)
 
     def test_start_ClaimSucceeds(self):
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
 
         self.svc.startService()
 
@@ -178,7 +174,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(True, self.svc.active)
 
     def test_start_PollingAfterClaimSucceedsDoesNothing(self):
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
 
         self.svc.startService()
 
@@ -213,7 +209,33 @@ class ClusteredService(unittest.TestCase):
         self.assertFalse(self.svc.active)
 
     def test_stop_AfterActivated(self):
+        self.setServiceClaimable(self.svc, defer.succeed(True))
+        self.svc.startService()
+
+        # now deactivate:
+        stopDeferred = self.svc.stopService()
+
+        # immediately stops
+        self.successResultOf(stopDeferred)
+
+        self.assertEqual(1, self.svc.activate.call_count)
+        self.assertEqual(1, self.svc._getServiceId.call_count)
+        self.assertEqual(1, self.svc._claimService.call_count)
+
+        self.assertEqual(1, self.svc._unclaimService.call_count)
+        self.assertEqual(1, self.svc.deactivate.call_count)
+
+        self.assertEqual(False, self.svc.active)
+
+    def test_stop_AfterActivated_NoDeferred(self):
+        # set all the child-class functions to return non-deferreds,
+        # just to check we can handle both:
         self.setServiceClaimable(self.svc, True)
+        self.setActivateToReturn(self.svc,   None)
+        self.setDeactivateToReturn(self.svc, None)
+        self.setGetServiceIdToReturn(self.svc, self.SVC_ID)
+        self.setUnclaimToReturn(self.svc,    None)
+
         self.svc.startService()
 
         # now deactivate:
@@ -236,7 +258,7 @@ class ClusteredService(unittest.TestCase):
         svcIdDeferred = defer.Deferred()
         self.setGetServiceIdToReturn(self.svc, svcIdDeferred)
 
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
         self.svc.startService()
 
         # stop before it has the service id (the svcIdDeferred is stuck)
@@ -307,7 +329,7 @@ class ClusteredService(unittest.TestCase):
         activateDeferred = defer.Deferred()
         self.setActivateToReturn(self.svc, activateDeferred)
 
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
         self.svc.startService()
 
         # stop before it's done activating
@@ -342,7 +364,7 @@ class ClusteredService(unittest.TestCase):
         unclaimDeferred = defer.Deferred()
         self.setUnclaimToReturn(self.svc, unclaimDeferred)
 
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
         self.svc.startService()
 
         # stop before it's done activating
@@ -370,7 +392,7 @@ class ClusteredService(unittest.TestCase):
         deactivateDeferred = defer.Deferred()
         self.setDeactivateToReturn(self.svc, deactivateDeferred)
 
-        self.setServiceClaimable(self.svc, True)
+        self.setServiceClaimable(self.svc, defer.succeed(True))
         self.svc.startService()
 
         # stop before it's done activating
@@ -379,7 +401,7 @@ class ClusteredService(unittest.TestCase):
         self.assertNoResult(stopDeferred)
 
         self.assertEqual(1, self.svc.deactivate.call_count)
-        self.assertEqual(1, self.svc._unclaimService.call_count)
+        self.assertEqual(0, self.svc._unclaimService.call_count)
         self.assertEqual(False, self.svc.active)
 
         # then let deactivate finish
