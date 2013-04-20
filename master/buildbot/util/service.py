@@ -42,6 +42,9 @@ class ClusteredService(service.Service, util.ComparableMixin):
 
     ## activity handling
 
+    def isActive(self):
+        return self.active
+
     def activate(self):
 	# will run when this instance becomes THE CHOSEN ONE for the cluster
         return defer.succeed(None)
@@ -51,7 +54,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
 	# will run when this instance loses its chosen status
         return defer.succeed(None)
 
-    ## service handling
+    ## service arbitration hooks
 
     def _getServiceId(self):
         # retrieve the id for this service; we assume that, once we have a valid id,
@@ -69,6 +72,8 @@ class ClusteredService(service.Service, util.ComparableMixin):
         # service, and this really should be robust and release the claim. May return
         # a Deferred.
         raise NotImplementedError
+
+    ## default implementation to delegate to the above methods
 
     def startService(self):
         # subclasses should override startService only to perform actions that should

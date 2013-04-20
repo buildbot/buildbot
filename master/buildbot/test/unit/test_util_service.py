@@ -99,7 +99,7 @@ class ClusteredService(unittest.TestCase):
 
     def test_create_IsInactive(self):
         # starts in inactive state
-        self.assertFalse(self.svc.active)
+        self.assertFalse(self.svc.isActive())
 
     def test_create_HasNoServiceIdYet(self):
         # has no service id at first
@@ -108,7 +108,7 @@ class ClusteredService(unittest.TestCase):
     def test_start_UnclaimableSoNotActiveYet(self):
         self.svc.startService()
 
-        self.assertFalse(self.svc.active)
+        self.assertFalse(self.svc.isActive())
 
     def test_start_GetsServiceIdAssigned(self):
         self.svc.startService()
@@ -131,7 +131,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
 
-        self.assertFalse(self.svc.active)
+        self.assertFalse(self.svc.isActive())
 
     def test_start_PollButClaimFails(self):
         self.svc.startService()
@@ -146,7 +146,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
 
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_start_PollsPeriodically(self):
         NUMBER_OF_POLLS = 15
@@ -171,7 +171,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
 
-        self.assertEqual(True, self.svc.active)
+        self.assertEqual(True, self.svc.isActive())
 
     def test_start_PollingAfterClaimSucceedsDoesNothing(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
@@ -188,7 +188,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
 
-        self.assertEqual(True, self.svc.active)
+        self.assertEqual(True, self.svc.isActive())
 
     def test_stopWhileStarting_NeverActive(self):
         self.svc.startService()
@@ -206,7 +206,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc._unclaimService.call_count)
         self.assertEqual(0, self.svc.deactivate.call_count)
 
-        self.assertFalse(self.svc.active)
+        self.assertFalse(self.svc.isActive())
 
     def test_stop_AfterActivated(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
@@ -225,7 +225,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._unclaimService.call_count)
         self.assertEqual(1, self.svc.deactivate.call_count)
 
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stop_AfterActivated_NoDeferred(self):
         # set all the child-class functions to return non-deferreds,
@@ -251,7 +251,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._unclaimService.call_count)
         self.assertEqual(1, self.svc.deactivate.call_count)
 
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stopWhileStarting_getServiceIdTakesForever(self):
         # create a deferred that will take a while...
@@ -270,7 +270,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc.activate.call_count)
         self.assertEqual(0, self.svc._claimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
         # then let service id part finish
         svcIdDeferred.callback(None)
@@ -286,7 +286,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
 
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stopWhileStarting_claimServiceTakesForever(self):
         # create a deferred that will take a while...
@@ -307,7 +307,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
         # then let claim succeed, but we should see things unwind
         claimDeferred.callback(True)
@@ -321,7 +321,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stopWhileStarting_activateTakesForever(self):
         """If activate takes forever, things acquiesce nicely"""
@@ -343,7 +343,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
-        self.assertEqual(True, self.svc.active)
+        self.assertEqual(True, self.svc.isActive())
 
         # then let activate finish
         activateDeferred.callback(None)
@@ -357,7 +357,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stop_unclaimTakesForever(self):
         # create a deferred that will take a while...
@@ -375,7 +375,7 @@ class ClusteredService(unittest.TestCase):
         # .. no deactivates yet....
         self.assertEqual(0, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
         # then let unclaim part finish
         unclaimDeferred.callback(None)
@@ -385,7 +385,7 @@ class ClusteredService(unittest.TestCase):
         # and everything should unwind:
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
     def test_stop_unclaimTakesForever(self):
         # create a deferred that will take a while...
@@ -402,7 +402,7 @@ class ClusteredService(unittest.TestCase):
 
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())
 
         # then let deactivate finish
         deactivateDeferred.callback(None)
@@ -412,4 +412,4 @@ class ClusteredService(unittest.TestCase):
         # and everything else should unwind too:
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
-        self.assertEqual(False, self.svc.active)
+        self.assertEqual(False, self.svc.isActive())

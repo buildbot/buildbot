@@ -18,3 +18,4 @@ The sections contained here document classes that can be used or subclassed.
     cls-forcesched
     cls-irenderable
     cls-iproperties
+    cls-clusteredservice
