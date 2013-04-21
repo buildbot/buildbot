@@ -387,7 +387,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._unclaimService.call_count)
         self.assertEqual(False, self.svc.isActive())
 
-    def test_stop_unclaimTakesForever(self):
+    def test_stop_deactivateTakesForever(self):
         # create a deferred that will take a while...
         deactivateDeferred = defer.Deferred()
         self.setDeactivateToReturn(self.svc, deactivateDeferred)
