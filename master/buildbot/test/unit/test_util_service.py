@@ -373,7 +373,7 @@ class ClusteredService(unittest.TestCase):
         self.assertNoResult(stopDeferred)
 
         # .. no deactivates yet....
-        self.assertEqual(0, self.svc.deactivate.call_count)
+        self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
         self.assertEqual(False, self.svc.isActive())
 
