@@ -333,6 +333,8 @@ components in Buildbot.
     reconfig support in Buildbot is intended for "intermediate" uses of the
     software, where there are fewer surprises.
 
+.. index:: Service Mixins; ReconfigurableServiceMixin
+
 Reconfigurable Services
 -----------------------
 
