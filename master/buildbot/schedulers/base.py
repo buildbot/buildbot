@@ -21,7 +21,6 @@ from buildbot.changes import changes
 from buildbot import config, interfaces
 from buildbot.util.state import StateMixin
 from buildbot.util.service import ClusteredService
-from buildbot.data import exceptions
 
 class BaseScheduler(ClusteredService, StateMixin):
 
@@ -82,7 +81,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         return defer.succeed(None)
 
     def deactivate(self):
-        return defer.succeed(None)
+        return defer.maybeDeferred(self._stopConsumingChanges)
 
     ## service handling
 
@@ -96,12 +95,6 @@ class BaseScheduler(ClusteredService, StateMixin):
     def _unclaimService(self):
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
                                                               None)
-
-
-    def stopService(self):
-        d = defer.maybeDeferred(self._stopConsumingChanges())
-        d.addBoth(lambda _: ClusteredService.stopService(self))
-        return d
 
     ## status queries
 

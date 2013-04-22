@@ -191,7 +191,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched.clock.advance(sched.POLL_INTERVAL_SEC/5)
         self.assertFalse(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
-        self.assertFalse(sched.active)
+        self.assertFalse(sched.isActive())
         self.assertEqual(sched.serviceid, sched.objectid)  # objectid is attached by the test helper
 
         # clear that masterid
@@ -199,13 +199,25 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched.clock.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
-        self.assertTrue(sched.active)
+        self.assertTrue(sched.isActive())
 
         # stop the service and see that deactivate is called
         yield sched.stopService()
         self.assertTrue(sched.activate.called)
         self.assertTrue(sched.deactivate.called)
-        self.assertFalse(sched.active)
+        self.assertFalse(sched.isActive())
+
+    @compat.usesFlushLoggedErrors
+    def test_activation_claim_raises(self):
+        sched = self.makeScheduler(name='n', builderNames=['a'])
+        sched.clock = task.Clock()
+
+        # set the schedulerid, and claim the scheduler on another master
+        self.setSchedulerToMaster(RuntimeError())
+
+        sched.startService()
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        self.assertFalse(sched.isActive())
 
     @compat.usesFlushLoggedErrors
     def test_activation_activate_fails(self):

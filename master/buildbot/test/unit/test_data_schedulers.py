@@ -15,7 +15,8 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.python import failure
 from buildbot.data import schedulers
 from buildbot.test.util import validation, endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
@@ -170,11 +171,39 @@ class SchedulerResourceType(interfaces.InterfaceTests, unittest.TestCase):
             pass
 
     @defer.inlineCallbacks
-    def test_setSchedulerMaster_succeeds(self):
+    def test_trySetSchedulerMaster_succeeds(self):
         self.master.db.schedulers.setSchedulerMaster = mock.Mock(
                                         return_value=defer.succeed(None))
-        yield self.rtype.trySetSchedulerMaster(10, 20)
+
+        result = yield self.rtype.trySetSchedulerMaster(10, 20)
+
+        self.assertTrue(result)
         self.master.db.schedulers.setSchedulerMaster.assert_called_with(10, 20)
+
+    @defer.inlineCallbacks
+    def test_trySetSchedulerMaster_fails(self):
+        d = defer.fail(failure.Failure(
+                schedulers.SchedulerAlreadyClaimedError('oh noes')))
+
+        self.master.db.schedulers.setSchedulerMaster = mock.Mock(
+                                        return_value=d)
+        result = yield self.rtype.trySetSchedulerMaster(10, 20)
+
+        self.assertFalse(result)
+
+    @defer.inlineCallbacks
+    def test_trySetSchedulerMaster_raisesOddException(self):
+        d = defer.fail(failure.Failure(RuntimeError('oh noes')))
+
+        self.master.db.schedulers.setSchedulerMaster = mock.Mock(
+                                        return_value=d)
+
+        try:
+            yield self.rtype.trySetSchedulerMaster(10, 20)
+        except RuntimeError:
+            pass
+        else:
+            self.fail("The RuntimeError did not propogate")
 
     @defer.inlineCallbacks
     def test__masterDeactivated(self):

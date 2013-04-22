@@ -60,7 +60,8 @@ class BadJobfile(Exception):
 
 
 class JobdirService(MaildirService):
-    # NOTE: tightly coupled with Try_Jobdir, below
+    # NOTE: tightly coupled with Try_Jobdir, below. We used to track it as a "parent"
+    # via the MultiService API, but now we just track it as the member "self.scheduler"
 
     def __init__(self, scheduler, basedir=None):
         self.scheduler = scheduler
@@ -82,11 +83,17 @@ class Try_Jobdir(TryBase):
         self.jobdir = jobdir
         self.watcher = JobdirService(scheduler=self)
 
+    # TryBase used to be a MultiService and managed the JobdirService via a parent/child 
+    # relationship. We stub out the addService/removeService and just keep track of 
+    # JobdirService as self.watcher. We'll refactor these things later and remove
+    # the need for this.
     def addService(self, child):
         pass
 
     def removeService(self, child):
         pass
+
+    # activation handlers
 
     def activate(self):
         # set the watcher's basedir now that we have a master
