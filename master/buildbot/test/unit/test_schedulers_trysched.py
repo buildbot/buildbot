@@ -62,20 +62,19 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         self.tearDownDirs()
 
     def test_messageReceived(self):
-        svc = trysched.JobdirService(self.jobdir)
+        scheduler =  mock.Mock()       # stub out svc.scheduler.handleJobFile and .jobdir
+        def handleJobFile(filename, f):
+            self.assertEqual(filename, 'jobdata')
+            self.assertEqual(f.read(), 'JOBDATA')
+        scheduler.handleJobFile = handleJobFile
+        scheduler.jobdir = self.jobdir
+
+        svc = trysched.JobdirService(scheduler=scheduler, basedir=self.jobdir)
 
         # creat some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
         with open(jobdata, "w") as f:
             f.write('JOBDATA')
-
-        # stub out svc.parent.handleJobFile and .jobdir
-        def handleJobFile(filename, f):
-            self.assertEqual(filename, 'jobdata')
-            self.assertEqual(f.read(), 'JOBDATA')
-        svc.parent = mock.Mock()
-        svc.parent.handleJobFile = handleJobFile
-        svc.parent.jobdir = self.jobdir
 
         # run it
         svc.messageReceived('jobdata')
@@ -96,7 +95,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
     # tests
 
-    def do_test_startService(self, jobdir, exp_jobdir):
+    def setup_test_startService(self, jobdir, exp_jobdir):
         # set up jobdir
         self.jobdir = os.path.abspath('jobdir')
         if os.path.exists(self.jobdir):
@@ -109,28 +108,62 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             trysched.Try_Jobdir(**kwargs), self.OBJECTID,
             overrideBuildsetMethods=True)
 
+        # watch interaction with the watcher service
+        sched.watcher.startService = mock.Mock()
+        sched.watcher.stopService = mock.Mock()
+
+    @defer.inlineCallbacks
+    def do_test_startService(self):
         # start it
-        sched.startService()
+        self.sched.startService()
 
         # check that it has set the basedir correctly
-        self.assertEqual(sched.watcher.basedir, self.jobdir)
+        self.assertEqual(self.sched.watcher.basedir, self.jobdir)
+        self.assertEqual(1, self.sched.watcher.startService.call_count)
+        self.assertEqual(0, self.sched.watcher.stopService.call_count)
 
-        return sched.stopService()
+        yield self.sched.stopService()
+
+        self.assertEqual(1, self.sched.watcher.startService.call_count)
+        self.assertEqual(1, self.sched.watcher.stopService.call_count)
 
     def test_startService_reldir(self):
-        return self.do_test_startService(
+        self.setup_test_startService(
+                'jobdir',
+                os.path.abspath('basedir/jobdir'))
+        return self.do_test_startService()
+
+    def test_startService_reldir_subdir(self):
+        self.setup_test_startService(
+                'jobdir',
+                os.path.abspath('basedir/jobdir/cur'))
+        return self.do_test_startService()
+
+    def test_startService_absdir(self):
+        self.setup_test_startService(
+                os.path.abspath('jobdir'),
+                os.path.abspath('jobdir'))
+        return self.do_test_startService()
+
+    @defer.inlineCallbacks
+    def do_test_startService_but_not_active(self, jobdir, exp_jobdir):
+        """Same as do_test_startService, but the master wont activate this service"""
+        self.setup_test_startService(
                 'jobdir',
                 os.path.abspath('basedir/jobdir'))
 
-    def test_startService_reldir_subdir(self):
-        return self.do_test_startService(
-                'jobdir',
-                os.path.abspath('basedir/jobdir/cur'))
+        self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
-    def test_startService_absdir(self):
-        return self.do_test_startService(
-                os.path.abspath('jobdir'),
-                os.path.abspath('jobdir'))
+        # start it
+        self.sched.startService()
+
+        # check that it has set the basedir correctly, even if it doesnt start
+        self.assertEqual(self.sched.watcher.basedir, self.jobdir)
+
+        yield self.sched.stopService()
+
+        self.assertEqual(0, self.sched.watcher.startService.call_count)
+        self.assertEqual(0, self.sched.watcher.stopService.call_count)
 
     # parseJob
 
@@ -774,3 +807,17 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
         persp = self.got_factory(mock.Mock(), 'fred')
         self.failUnless(isinstance(persp, trysched.Try_Userpass_Perspective))
         return sched.stopService()
+
+    @defer.inlineCallbacks
+    def test_service_but_not_active(self):
+        sched = self.makeScheduler(name='tsched', builderNames=['a'],
+                port='tcp:9999', userpass=[('fred', 'derf')])
+
+        self.setSchedulerToMaster(self.OTHER_MASTER_ID)
+
+        sched.master.pbmanager = mock.Mock()
+
+        sched.startService()
+        yield sched.stopService()
+
+        self.assertFalse(sched.master.pbmanager.register.called)

@@ -775,7 +775,7 @@ schedulers
     This class manages the state of the Buildbot schedulers.  This state includes
     classifications of as-yet un-built changes.
 
-    An instance of this class is available at ``master.db.changes``.
+    An instance of this class is available at ``master.db.schedulers``.
 
     Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
 

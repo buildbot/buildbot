@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 from buildbot.data import base
+from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 class Db2DataMixin(object):
 
@@ -84,10 +85,23 @@ class SchedulerResourceType(base.ResourceType):
         return self.master.db.schedulers.findSchedulerId(name)
 
     @base.updateMethod
-    def setSchedulerMaster(self, schedulerid, masterid):
-        # the db method raises the same exception as documented
-        return self.master.db.schedulers.setSchedulerMaster(
+    def trySetSchedulerMaster(self, schedulerid, masterid):
+        d = self.master.db.schedulers.setSchedulerMaster(
                                             schedulerid, masterid)
+
+        # set is successful: deferred result is True
+        d.addCallback(lambda _: True)
+
+        @d.addErrback
+        def trapAlreadyClaimedError(why):
+            # the db layer throws an exception if the claim fails; we squash
+            # that error but let other exceptions continue upward
+            why.trap(SchedulerAlreadyClaimedError)
+            
+            # set failed: deferred result is False
+            return False
+
+        return d
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):

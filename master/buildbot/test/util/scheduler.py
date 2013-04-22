@@ -34,6 +34,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
     @ivar db: the fake db (same as C{self.master.db}, but shorter)
     """
 
+    OTHER_MASTER_ID = 93
+
     def setUpScheduler(self):
         pass
 
@@ -102,6 +104,13 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         self.sched = scheduler
         return scheduler
+
+    def setSchedulerToMaster(self, otherMaster):
+        self.master.data.updates.schedulerIds[self.sched.name] = self.sched.objectid
+        if otherMaster:
+            self.master.data.updates.schedulerMasters[self.sched.objectid] = otherMaster
+        else:
+            del self.master.data.updates.schedulerMasters[self.sched.objectid]
 
     class FakeChange:
         who = ''

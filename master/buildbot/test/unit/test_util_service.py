@@ -17,6 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
 import buildbot.util.service
+from buildbot.test.util import compat
 
 class ClusteredService(unittest.TestCase):
     SVC_NAME = 'myName'
@@ -45,20 +46,28 @@ class ClusteredService(unittest.TestCase):
 
         return svc
 
+    def makeMock(self, value):
+        mockObj = mock.Mock()
+        if isinstance(value, Exception):
+            mockObj.side_effect  = value
+        else:
+            mockObj.return_value = value
+        return mockObj
+
     def setServiceClaimable(self, svc, claimable):
-        svc._claimService = mock.Mock(return_value=claimable)
+        svc._claimService = self.makeMock(claimable)
 
     def setGetServiceIdToReturn(self, svc, serviceid):
-        svc._getServiceId = mock.Mock(return_value=serviceid)
+        svc._getServiceId = self.makeMock(serviceid)
 
     def setUnclaimToReturn(self, svc, unclaim):
-        svc._unclaimService = mock.Mock(return_value=unclaim)
+        svc._unclaimService = self.makeMock(unclaim)
 
     def setActivateToReturn(self, svc, activate):
-        svc.activate = mock.Mock(return_value=activate)
+        svc.activate = self.makeMock(activate)
 
     def setDeactivateToReturn(self, svc, deactivate):
-        svc.deactivate = mock.Mock(return_value=deactivate)
+        svc.deactivate = self.makeMock(deactivate)
 
 
     def test_name_PreservesUnicodePromotion(self):
@@ -412,4 +421,46 @@ class ClusteredService(unittest.TestCase):
         # and everything else should unwind too:
         self.assertEqual(1, self.svc.deactivate.call_count)
         self.assertEqual(1, self.svc._unclaimService.call_count)
+        self.assertEqual(False, self.svc.isActive())
+
+    @compat.usesFlushLoggedErrors
+    def test_claim_raises(self):
+        self.setServiceClaimable(self.svc, RuntimeError())
+
+        self.svc.startService()
+        
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        self.assertEqual(False, self.svc.isActive())
+
+    @compat.usesFlushLoggedErrors
+    def test_activate_raises(self):
+        self.setServiceClaimable(self.svc, defer.succeed(True))
+        self.setActivateToReturn(self.svc, RuntimeError())
+
+        self.svc.startService()
+        
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        # half-active: we actually return True in this case:
+        self.assertEqual(True, self.svc.isActive())
+
+    @compat.usesFlushLoggedErrors
+    def test_deactivate_raises(self):
+        self.setServiceClaimable(self.svc, defer.succeed(True))
+        self.setDeactivateToReturn(self.svc, RuntimeError())
+
+        self.svc.startService()
+        self.svc.stopService()
+        
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        self.assertEqual(False, self.svc.isActive())
+
+    @compat.usesFlushLoggedErrors
+    def test_unclaim_raises(self):
+        self.setServiceClaimable(self.svc, defer.succeed(True))
+        self.setUnclaimToReturn(self.svc, RuntimeError())
+
+        self.svc.startService()
+        self.svc.stopService()
+
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())

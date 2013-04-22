@@ -448,7 +448,8 @@ class ForceScheduler(base.BaseScheduler):
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
     """
-    compare_attrs = ( 'name', 'builderNames',
+    compare_attrs = base.BaseScheduler.compare_attrs + \
+                   ( 'builderNames',
                      'reason', 'username',
                      'forcedProperties' )
 
