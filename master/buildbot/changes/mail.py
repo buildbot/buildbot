@@ -24,7 +24,7 @@ from email.Utils import parseaddr, parsedate_tz, mktime_tz
 from email.Iterators import body_line_iterator
 
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, reflect
 from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
@@ -398,12 +398,15 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
     name = "Launchpad"
 
-    compare_attrs = MaildirSource.compare_attrs + ["branchMap", "defaultBranch"]
+    compare_attrs = ["branchMap", "defaultBranch"]
 
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap
         self.defaultBranch = defaultBranch
         MaildirSource.__init__(self, maildir, prefix, **kwargs)
+        alist = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
+        self.compare_attrs = alist
 
     def parse(self, m, prefix=None):
         """Parse branch notification messages sent by Launchpad.
