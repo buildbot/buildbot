@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.python import log
+from twisted.python import log, reflect
 from buildbot import util, interfaces, config
 from buildbot.status.results import SUCCESS, WARNINGS
 from buildbot.schedulers import base

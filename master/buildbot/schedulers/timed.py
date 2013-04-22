@@ -20,7 +20,7 @@ from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep, properties
 from buildbot.schedulers import base
 from twisted.internet import defer, reactor
-from twisted.python import log
+from twisted.python import log, reflect
 from buildbot import config
 from buildbot.changes import filter
 # Import croniter if available.
