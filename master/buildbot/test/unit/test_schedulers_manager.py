@@ -16,6 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.python import reflect
 from buildbot.schedulers import manager, base
 from buildbot import config
 
@@ -48,7 +49,7 @@ class SchedulerManager(unittest.TestCase):
     class Sched(base.BaseScheduler):
 
         # changing sch.attr should make a scheduler look "updated"
-        compare_attrs = base.BaseScheduler.compare_attrs + ( 'attr', )
+        compare_attrs = ( 'attr', )
         already_started = False
         reconfig_count = 0
 
