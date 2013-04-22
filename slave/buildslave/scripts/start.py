@@ -78,31 +78,52 @@ stop it, fix the config file, and restart.
         reactor.stop()
 
 
-def start(config):
-    if not base.isBuildslaveDir(config['basedir']):
-        sys.exit(1)
+def startCommand(config):
+    basedir = config['basedir']
+    if not base.isBuildslaveDir(basedir):
+        return 1
 
-    os.chdir(config['basedir'])
-    if config['quiet'] or config['nodaemon']:
-        return launch(config)
+    return startSlave(basedir, config['quiet'], config['nodaemon'])
+
+def startSlave(basedir, quiet, nodaemon):
+    """
+    Start slave process.
+
+    Fork and start twisted application described in basedir buildbot.tac file.
+    Print it's log messages to stdout for a while and try to figure out if
+    start was successful.
+
+    If quiet or nodaemon parameters are True, or we are running on a win32
+    system, will not fork and log will not be printed to stdout.
+
+    @param  basedir: buildslave's basedir path
+    @param    quiet: don't display startup log messages
+    @param nodaemon: don't daemonize (stay in foreground)
+    @return: 0 if slave was successfully started,
+             1 if we are not sure that slave started successfully
+    """
+
+    os.chdir(basedir)
+    if quiet or nodaemon:
+        return launch(nodaemon)
 
     # we probably can't do this os.fork under windows
     from twisted.python.runtime import platformType
     if platformType == "win32":
-        return launch(config)
+        return launch(nodaemon)
 
     # fork a child to launch the daemon, while the parent process tails the
     # logfile
     if os.fork():
         # this is the parent
         rc = Follower().follow()
-        sys.exit(rc)
+        return rc
     # this is the child: give the logfile-watching parent a chance to start
     # watching it before we start the daemon
     time.sleep(0.2)
-    launch(config)
+    launch(nodaemon)
 
-def launch(config):
+def launch(nodaemon):
     sys.path.insert(0, os.path.abspath(os.getcwd()))
 
     # see if we can launch the application without actually having to
@@ -113,7 +134,7 @@ def launch(config):
             "--no_save",
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
-    if config['nodaemon']:
+    if nodaemon:
         argv.extend(['--nodaemon'])
     sys.argv = argv
 

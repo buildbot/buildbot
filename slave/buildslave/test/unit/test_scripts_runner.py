@@ -14,187 +14,12 @@
 # Copyright Buildbot Team Members
 
 import os
-import time
+import sys
 import mock
-import errno
-import signal
 from twisted.trial import unittest
-from twisted.python import usage
-from buildslave.scripts import runner, base
-from buildslave.scripts import startup
+from twisted.python import usage, log
+from buildslave.scripts import runner
 from buildslave.test.util import misc
-
-
-class IsBuildslaveDirMixin:
-    """
-    Mixin for setting up mocked base.isBuildslaveDir() function
-    """
-    def setupUpIsBuildslaveDir(self, return_value):
-        self.isBuildslaveDir = mock.Mock(return_value=return_value)
-        self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
-
-
-class TestStopSlave(misc.OpenFileMixin,
-                    misc.StdoutAssertionsMixin,
-                    unittest.TestCase):
-    """
-    Test buildslave.scripts.runner.stopSlave()
-    """
-    PID = 9876
-    def setUp(self):
-        self.setUpStdoutAssertions()
-
-        # patch os.chdir() to do nothing
-        self.patch(os, "chdir", mock.Mock())
-
-    def test_no_pid_file(self):
-        """
-        test calling stopSlave() when no pid file is present
-        """
-
-        # patch open() to raise 'file not found' exception
-        self.setUpOpenError(2)
-
-        # check that stop() raises SlaveNotRunning exception
-        self.assertRaises(runner.SlaveNotRunning,
-                          runner.stopSlave, None, False)
-
-    def test_successful_stop(self):
-        """
-        test stopSlave() on a successful slave stop
-        """
-
-        def emulated_kill(pid, sig):
-            if sig == 0:
-                # when probed if a signal can be send to the process
-                # emulate that it is dead with 'No such process' error
-                raise OSError(errno.ESRCH, "dummy")
-
-        # patch open() to return a pid file
-        self.setUpOpen(str(self.PID))
-
-        # patch os.kill to emulate successful kill
-        mocked_kill = mock.Mock(side_effect=emulated_kill)
-        self.patch(os, "kill", mocked_kill)
-
-        # don't waste time
-        self.patch(time, "sleep", mock.Mock())
-
-        # check that stopSlave() sends expected signal to right PID
-        # and print correct message to stdout
-        runner.stopSlave(None, False)
-        mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
-                                      mock.call(self.PID, 0)])
-        self.assertStdoutEqual("buildslave process %s is dead\n" % self.PID)
-
-
-class TestStop(IsBuildslaveDirMixin,
-               misc.StdoutAssertionsMixin,
-               unittest.TestCase):
-    """
-    Test buildslave.scripts.runner.stop()
-    """
-    config = {"basedir": "dummy", "quiet": False}
-
-    def setUp(self):
-        # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
-
-    def test_no_slave_running(self):
-        """
-        test calling stop() when no slave is running
-        """
-        self.setUpStdoutAssertions()
-
-        # patch stopSlave() to raise an exception
-        mock_stopSlave = mock.Mock(side_effect=runner.SlaveNotRunning())
-        self.patch(runner, "stopSlave", mock_stopSlave)
-
-        runner.stop(self.config)
-        self.assertStdoutEqual("buildslave not running\n")
-
-    def test_successful_stop(self):
-        """
-        test calling stop() when slave is running
-        """
-        # patch stopSlave() to do nothing
-        mock_stopSlave = mock.Mock()
-        self.patch(runner, "stopSlave", mock_stopSlave)
-
-        runner.stop(self.config)
-        mock_stopSlave.assert_called_once_with(self.config["basedir"],
-                                               self.config["quiet"],
-                                               "TERM")
-
-
-class TestRestart(IsBuildslaveDirMixin,
-                  misc.StdoutAssertionsMixin,
-                  unittest.TestCase):
-    """
-    Test buildslave.scripts.runner.restart()
-    """
-    config = {"basedir": "dummy", "quiet": False}
-
-    def setUp(self):
-        self.setUpStdoutAssertions()
-
-        # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
-
-        # patch startup.start() to do nothing
-        self.start = mock.Mock()
-        self.patch(startup, "start", self.start)
-
-    def test_no_slave_running(self):
-        """
-        test calling restart() when no slave is running
-        """
-        # patch stopSlave() to raise an exception
-        mock_stopSlave = mock.Mock(side_effect=runner.SlaveNotRunning())
-        self.patch(runner, "stopSlave", mock_stopSlave)
-
-        # check that restart() calls start() and prints correct messages
-        runner.restart(self.config)
-        self.start.assert_called_once_with(self.config)
-        self.assertStdoutEqual("no old buildslave process found to stop\n"
-                               "now restarting buildslave process..\n")
-
-
-    def test_restart(self):
-        """
-        test calling restart() when slave is running
-        """
-        # patch stopSlave() to do nothing
-        mock_stopSlave = mock.Mock()
-        self.patch(runner, "stopSlave", mock_stopSlave)
-
-        # check that restart() calls start() and prints correct messages
-        runner.restart(self.config)
-        self.assertStdoutEqual("now restarting buildslave process..\n")
-        self.start.assert_called_once_with(self.config)
-
-
-class TestUpgradeSlave(IsBuildslaveDirMixin, unittest.TestCase):
-    """
-    Test buildslave.scripts.runner.upgradeSlave()
-    """
-
-    def test_upgradeSlave_bad_basedir(self):
-        """
-        test calling upgradeSlave() with bad base directory
-        """
-        # override isBuildslaveDir() to always fail
-        self.setupUpIsBuildslaveDir(False)
-
-        # call upgradeSlave() and check that SystemExit exception is raised
-        config = {"basedir" : "dummy"}
-        exception = self.assertRaises(SystemExit, runner.upgradeSlave, config)
-
-        # check exit code
-        self.assertEqual(exception.code, 1, "unexpected exit code")
-
-        # check that isBuildslaveDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with("dummy")
 
 
 class OptionsMixin(object):
@@ -207,6 +32,109 @@ class OptionsMixin(object):
                     msg.append(" %s: expected %r, got %r" %
                                (k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
+
+class BaseDirTestsMixin:
+    """
+    Common tests for Options classes with 'basedir' parameter
+    """
+
+    GETCWD_PATH = "test-dir"
+    ABSPATH_PREFIX = "test-prefix-"
+    MY_BASEDIR = "my-basedir"
+
+    # the options class to instantiate for test cases
+    options_class = None
+
+    def setUp(self):
+        self.patch(os, "getcwd", lambda : self.GETCWD_PATH)
+        self.patch(os.path, "abspath", lambda path: self.ABSPATH_PREFIX + path)
+
+    def parse(self, *args):
+        assert self.options_class != None
+
+        opts = self.options_class()
+        opts.parseOptions(args)
+        return opts
+
+    def test_defaults(self):
+        opts = self.parse()
+        self.assertEqual(opts["basedir"],
+                         self.ABSPATH_PREFIX + self.GETCWD_PATH,
+                         "unexpected basedir path")
+
+    def test_basedir_arg(self):
+        opts = self.parse(self.MY_BASEDIR)
+        self.assertEqual(opts["basedir"],
+                         self.ABSPATH_PREFIX + self.MY_BASEDIR,
+                         "unexpected basedir path")
+
+    def test_too_many_args(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "I wasn't expecting so many arguments",
+                                self.parse, "arg1", "arg2")
+
+
+class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.MakerBase class.
+    """
+    options_class = runner.MakerBase
+
+
+class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.StopOptions class.
+    """
+    options_class = runner.StopOptions
+
+    def test_synopsis(self):
+        opts = runner.StopOptions()
+        self.assertIn('buildslave stop', opts.getSynopsis())
+
+
+class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.StartOptions class.
+    """
+    options_class = runner.StartOptions
+
+    def test_synopsis(self):
+        opts = runner.StartOptions()
+        self.assertIn('buildslave start', opts.getSynopsis())
+
+    def test_all_args(self):
+        opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
+        self.assertOptions(opts,
+                           dict(quiet=True, nodaemon=True,
+                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+
+
+class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.RestartOptions class.
+    """
+    options_class = runner.RestartOptions
+
+    def test_synopsis(self):
+        opts = runner.RestartOptions()
+        self.assertIn('buildslave restart', opts.getSynopsis())
+
+    def test_all_args(self):
+        opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
+        self.assertOptions(opts,
+                           dict(quiet=True, nodaemon=True,
+                                basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
+
+
+class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.UpgradeSlaveOptions class.
+    """
+    options_class = runner.UpgradeSlaveOptions
+
+    def test_synopsis(self):
+        opts = runner.UpgradeSlaveOptions()
+        self.assertIn('buildslave upgrade-slave', opts.getSynopsis())
 
 
 class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
@@ -304,3 +232,118 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "incorrect number of arguments",
                                 self.parse, "extra_arg", *self.req_args)
+
+
+class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.Options class.
+    """
+    def setUp(self):
+        self.setUpStdoutAssertions()
+
+    def parse(self, *args):
+        opts = runner.Options()
+        opts.parseOptions(args)
+        return opts
+
+    def test_defaults(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "must specify a command",
+                                self.parse)
+
+    def test_version(self):
+        exception = self.assertRaises(SystemExit, self.parse, '--version')
+        self.assertEqual(exception.code, 0, "unexpected exit code")
+        self.assertInStdout('Buildslave version:')
+
+    def test_verbose(self):
+        self.patch(log, 'startLogging', mock.Mock())
+        self.assertRaises(usage.UsageError, self.parse, "--verbose")
+        log.startLogging.assert_called_once_with(sys.stderr)
+
+
+# used by TestRun.test_run_good to patch in a callback
+functionPlaceholder = None
+
+class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.run()
+    """
+
+    def setUp(self):
+        self.setUpStdoutAssertions()
+
+    class TestSubCommand(usage.Options):
+        subcommandFunction = __name__ + ".functionPlaceholder"
+        optFlags = [["test-opt", None, None]]
+
+    class TestOptions(usage.Options):
+        """
+        Option class that emulates usage error. The 'suboptions' flag
+        enables emulation of usage error in a sub-option.
+        """
+        optFlags = [["suboptions", None, None]]
+
+        def postOptions(self):
+            if self["suboptions"]:
+                self.subOptions = "SubOptionUsage"
+            raise usage.UsageError("usage-error-message")
+
+        def __str__(self):
+            return "GeneralUsage"
+
+    def test_run_good(self):
+        """
+        Test successful invocation of buildslave command.
+        """
+
+        self.patch(sys, "argv", ["command", 'test', '--test-opt'])
+
+        # patch runner module to use our test subcommand class
+        self.patch(runner.Options, 'subCommands',
+            [['test', None, self.TestSubCommand, None ]])
+
+        # trace calls to subcommand function
+        subcommand_func = mock.Mock(return_value = 42)
+        self.patch(sys.modules[__name__],
+                   "functionPlaceholder",
+                   subcommand_func)
+
+        # check that subcommand function called with correct arguments
+        # and that it's return value is used as exit code
+        exception = self.assertRaises(SystemExit, runner.run)
+        subcommand_func.assert_called_once_with({'test-opt': 1})
+        self.assertEqual(exception.code, 42, "unexpected exit code")
+
+    def test_run_bad_noargs(self):
+        """
+        Test handling of invalid command line arguments.
+        """
+        self.patch(sys, "argv", ["command"])
+
+        # patch runner module to use test Options class
+        self.patch(runner, "Options", self.TestOptions)
+
+        exception = self.assertRaises(SystemExit, runner.run)
+        self.assertEqual(exception.code, 1, "unexpected exit code")
+        self.assertStdoutEqual("command:  usage-error-message\n\n"
+                               "GeneralUsage\n",
+                               "unexpected error message on stdout")
+
+    def test_run_bad_suboption(self):
+        """
+        Test handling of invalid command line arguments in a suboption.
+        """
+
+        self.patch(sys, "argv", ["command", "--suboptions"])
+
+        # patch runner module to use test Options class
+        self.patch(runner, "Options", self.TestOptions)
+
+        exception = self.assertRaises(SystemExit, runner.run)
+        self.assertEqual(exception.code, 1, "unexpected exit code")
+
+        # check that we get error message for a sub-option
+        self.assertStdoutEqual("command:  usage-error-message\n\n"
+                               "SubOptionUsage\n",
+                               "unexpected error message on stdout")
