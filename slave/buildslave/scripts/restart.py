@@ -13,11 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-# this file imports a number of source files that are not
-# included in the coverage because none of the tests import
-# them; this results in a more accurate total coverage percent.
+from buildslave.scripts import base, start, stop
 
-modules = [] # for the benefit of pyflakes
 
-from buildslave.scripts import logwatcher, create_slave
-modules.extend([logwatcher, create_slave])
+def restart(config):
+    quiet = config['quiet']
+    basedir = config['basedir']
+
+    if not base.isBuildslaveDir(basedir):
+        return 1
+
+    try:
+        stop.stopSlave(basedir, quiet)
+    except stop.SlaveNotRunning:
+        if not quiet:
+            print "no old buildslave process found to stop"
+    if not quiet:
+        print "now restarting buildslave process.."
+
+    return start.startSlave(basedir, quiet, config['nodaemon'])

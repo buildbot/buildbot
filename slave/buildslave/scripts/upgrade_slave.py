@@ -13,11 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-# this file imports a number of source files that are not
-# included in the coverage because none of the tests import
-# them; this results in a more accurate total coverage percent.
+import os
+from buildslave.scripts import base
 
-modules = [] # for the benefit of pyflakes
 
-from buildslave.scripts import logwatcher, create_slave
-modules.extend([logwatcher, create_slave])
+def upgradeSlave(config):
+    basedir = os.path.expanduser(config['basedir'])
+
+    if not base.isBuildslaveDir(basedir):
+        return 1
+
+    buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
+    new_buildbot_tac = buildbot_tac.replace(
+        "from buildbot.slave.bot import BuildSlave",
+        "from buildslave.bot import BuildSlave")
+    if new_buildbot_tac != buildbot_tac:
+        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
+        print "buildbot.tac updated"
+    else:
+        print "No changes made"
+
+    return 0

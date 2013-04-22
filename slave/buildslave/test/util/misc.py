@@ -19,6 +19,7 @@ import mock
 import shutil
 import __builtin__
 import cStringIO
+from buildslave.scripts import base
 
 def nl(s):
     """Convert the given string to the native newline format, assuming it is
@@ -40,6 +41,16 @@ class BasedirMixin(object):
     def tearDownBasedir(self):
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
+
+
+class IsBuildslaveDirMixin:
+    """
+    Mixin for setting up mocked base.isBuildslaveDir() function
+    """
+    def setupUpIsBuildslaveDir(self, return_value):
+        self.isBuildslaveDir = mock.Mock(return_value=return_value)
+        self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
+
 
 class PatcherMixin(object):
     """
