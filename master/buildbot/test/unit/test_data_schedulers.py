@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.python import failure
 from buildbot.data import schedulers
 from buildbot.test.util import validation, endpoint, interfaces
