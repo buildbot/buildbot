@@ -40,7 +40,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.changes.SchedulerResourceType
+.. py:class:: buildbot.data.schedulers.SchedulerResourceType
 
     .. py:method:: findSchedulerId(name)
 
@@ -49,13 +49,12 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Get the ID for the given scheduler name, inventing one if necessary.
 
-    .. py:method:: setSchedulerMaster(schedulerid, masterid)
+    .. py:method:: trySetSchedulerMaster(schedulerid, masterid)
 
         :param integer schedulerid: scheduler ID to try to claim
         :param integer masterid: this master's master ID
         :raises: :py:exc:`~buildbot.data.exceptions.SchedulerAlreadyClaimedError`
-        :returns: Deferred
+        :returns: ``True`` or ``False``, via Deferred
 
-        Attempt to claim the given scheduler on the master.
-        If the scheduler cannot be claimed, this method raises a :py:exc:`~buildbot.data.exceptions.SchedulerAlreadyClaimedError`.
-
+        Try to claim the given scheduler for the given master and return ``True`` if
+        the scheduler is to be activated on that master.

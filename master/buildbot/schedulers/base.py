@@ -15,28 +15,25 @@
 
 from zope.interface import implements
 from twisted.python import failure, log
-from twisted.application import service
-from twisted.internet import defer, task
+from twisted.internet import defer
 from buildbot.process.properties import Properties
-from buildbot.util import ComparableMixin
 from buildbot.changes import changes
-from buildbot import config, interfaces, util
+from buildbot import config, interfaces
 from buildbot.util.state import StateMixin
-from buildbot.data import exceptions
+from buildbot.util.service import ClusteredService
 
-class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
+class BaseScheduler(ClusteredService, StateMixin):
 
     implements(interfaces.IScheduler)
 
     DEFAULT_CODEBASES = {'':{}}
-    POLL_INTERVAL = 300 # 5 minutes
 
-    compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
+    compare_attrs = ClusteredService.compare_attrs + \
+                      ('builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties,
                  codebases = DEFAULT_CODEBASES):
-        service.MultiService.__init__(self)
-        self.name = util.ascii2unicode(name)
+        ClusteredService.__init__(self, name)
 
         ok = True
         if not isinstance(builderNames, (list, tuple)):
@@ -56,9 +53,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
         self.objectid = None
-        self.schedulerid = None
         self.master = None
-        self.active = False
 
         # Set the codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without changes
@@ -86,77 +81,20 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         return defer.succeed(None)
 
     def deactivate(self):
-        return defer.succeed(None)
+        return defer.maybeDeferred(self._stopConsumingChanges)
 
     ## service handling
 
-    def startService(self):
-        service.MultiService.startService(self)
-        self._startActivityPolling()
+    def _getServiceId(self):
+        return self.master.data.updates.findSchedulerId(self.name)
 
-    def _startActivityPolling(self):
-        self._activityPollCall = task.LoopingCall(self._activityPoll)
-        # plug in a clock if we have one, for tests
-        if hasattr(self, 'clock'):
-            self._activityPollCall.clock = self.clock
-        self._activityPollDeferred = d = self._activityPollCall.start(
-                self.POLL_INTERVAL, now=True)
-        # this should never happen, but just in case:
-        d.addErrback(log.err, 'while polling for scheduler activity:')
+    def _claimService(self):
+        return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
+                                                              self.master.masterid)
 
-    def _stopActivityPolling(self):
-        if self._activityPollCall:
-            self._activityPollCall.stop()
-            self._activityPollCall = None
-
-    @defer.inlineCallbacks
-    def _activityPoll(self):
-        try:
-            # just in case..
-            if self.active:
-                return
-
-            upd = self.master.data.updates
-            if self.schedulerid is None:
-                self.schedulerid = yield upd.findSchedulerId(self.name)
-
-            # try to claim the scheduler; if this fails, that's OK - it just
-            # means we try again next time.
-            try:
-                yield upd.setSchedulerMaster(self.schedulerid,
-                                            self.master.masterid)
-            except exceptions.SchedulerAlreadyClaimedError:
-                return
-
-            self._stopActivityPolling()
-            self.active = True
-            try:
-                yield self.activate()
-            except Exception:
-                # this scheduler is half-active, and noted as such in the db..
-                log.err(None, 'WARNING: scheduler is only partially active')
-
-            # Note that, in this implementation, the scheduler will never
-            # become inactive again.  This may change in later versions.
-
-        except Exception:
-            # don't pass exceptions into LoopingCall, which can cause it to fail
-            pass
-
-
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield service.MultiService.stopService(self)
-        self._stopActivityPolling()
-        # wait for the activity polling LoopingCall to complete
-        yield self._activityPollDeferred
-        yield self._stopConsumingChanges()
-        if self.active:
-            self.active = False
-            yield self.deactivate()
-            # unclaim the scheduler
-            upd = self.master.data.updates
-            yield upd.setSchedulerMaster(self.schedulerid, None)
+    def _unclaimService(self):
+        return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
+                                                              None)
 
     ## status queries
 

@@ -17,7 +17,7 @@ from buildbot.util import json
 import types
 from twisted.internet import defer
 from twisted.python import failure
-from buildbot.data import connector, exceptions
+from buildbot.data import connector
 from buildbot.test.util import validation
 
 class FakeUpdates(object):
@@ -158,12 +158,15 @@ class FakeUpdates(object):
             self.builderIds[name] = max([0] + self.builderIds.values()) + 1
         return defer.succeed(self.builderIds[name])
 
-    def setSchedulerMaster(self, schedulerid, masterid):
+    def trySetSchedulerMaster(self, schedulerid, masterid):
         currentMasterid = self.schedulerMasters.get(schedulerid)
-        if currentMasterid and masterid is not None:
+        if isinstance(currentMasterid, Exception):
             return defer.fail(failure.Failure(
-                exceptions.SchedulerAlreadyClaimedError()))
+                currentMasterid))
+        if currentMasterid and masterid is not None:
+            return defer.succeed(False)
         self.schedulerMasters[schedulerid] = masterid
+        return defer.succeed(True)
 
     def newBuild(self, builderid, buildrequestid, slaveid):
         validation.verifyType(self.testcase, 'builderid', builderid,

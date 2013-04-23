@@ -19,9 +19,6 @@ from twisted.python import log
 
 from buildbot import util
 
-class AlreadyClaimedError(Exception):
-    pass
-
 class ClusteredService(service.Service, util.ComparableMixin):
 
     compare_attrs = ('name',)
@@ -98,8 +95,13 @@ class ClusteredService(service.Service, util.ComparableMixin):
         def deactivate_if_needed(_):
             if self.active:
                 self.active = False
+
                 d = defer.maybeDeferred(self.deactivate)
+                # no errback here: skip the "unclaim" if the deactivation is uncertain
+
                 d.addCallback(lambda _: defer.maybeDeferred(self._unclaimService))
+
+                d.addErrback(log.err, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
                 return d
 
         d.addCallback(lambda _: service.Service.stopService(self))
@@ -132,7 +134,12 @@ class ClusteredService(service.Service, util.ComparableMixin):
             if self.serviceid is None:
                 self.serviceid = yield self._getServiceId()
 
-            claimed = yield self._claimService()
+            try:
+                claimed = yield self._claimService()
+            except Exception:
+                log.err(_why='WARNING: ClusteredService(%s) got exception while trying to claim' % self.name)
+                return
+
             if not claimed:
                 return
 
@@ -142,7 +149,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                log.err(None, 'WARNING: ClusteredService(%s) is only partially active' % self.getName())
+                log.err(_why='WARNING: ClusteredService(%s) is only partially active' % self.name)
 
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
