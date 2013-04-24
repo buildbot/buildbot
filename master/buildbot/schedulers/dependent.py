@@ -33,9 +33,6 @@ class Dependent(base.BaseScheduler):
         self._buildset_addition_subscr = None
         self._buildset_completion_subscr = None
         self._cached_upstream_bsids = None
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         # the subscription lock makes sure that we're done inserting a
         # subcription into the DB before registering that the buildset is

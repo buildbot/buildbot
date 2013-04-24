@@ -50,9 +50,6 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # initialize parent classes
         base.BaseScheduler.__init__(self, name, builderNames, properties, **kwargs)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         self.treeStableTimer = treeStableTimer
         if fileIsImportant is not None:

@@ -45,9 +45,6 @@ class Timed(base.BaseScheduler):
     def __init__(self, name, builderNames, properties={}, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
                                     **kwargs)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         # tracking for when to start the next build
         self.lastActuated = None
@@ -204,9 +201,6 @@ class Periodic(Timed):
             branch=None, properties={}, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         if periodicBuildTimer <= 0:
             config.error(
@@ -232,9 +226,6 @@ class NightlyBase(Timed):
                  properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         Timed.__init__(self, name=name, builderNames=builderNames,
                 properties=properties, codebases=codebases)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         self.minute = minute
         self.hour = hour
@@ -286,9 +277,6 @@ class Nightly(NightlyBase):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                 minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
                 properties=properties, codebases=codebases)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant

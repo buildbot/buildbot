@@ -404,9 +404,6 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         self.branchMap = branchMap
         self.defaultBranch = defaultBranch
         MaildirSource.__init__(self, maildir, prefix, **kwargs)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
     def parse(self, m, prefix=None):
         """Parse branch notification messages sent by Launchpad.
