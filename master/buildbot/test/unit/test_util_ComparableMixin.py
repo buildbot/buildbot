@@ -71,4 +71,4 @@ class ComparableMixin(unittest.TestCase):
         assert self.f123 < self.f134
 
     def test_lt_differentClasses(self):
-        assert self.b123 < self.f123
+        assert self.f123 < self.b123
