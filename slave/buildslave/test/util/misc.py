@@ -81,8 +81,10 @@ class OpenFileMixin:
                               read() method
         """
         # create mocked file object that returns 'file_contents' on read()
+        # and tracks any write() calls
         self.fileobj = mock.Mock()
         self.fileobj.read = mock.Mock(return_value=file_contents)
+        self.fileobj.write = mock.Mock()
 
         # patch open() to return mocked object
         self.open = mock.Mock(return_value=self.fileobj)
