@@ -73,11 +73,11 @@ class ComparableMixin:
         pass
  
     def __hash__(self):
-        tmp = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', tmp) 
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs) 
 
         alist = [self.__class__] + \
-                [getattr(self, name, self._None) for name in tmp]
+                [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
     def __cmp__(self, them):
@@ -89,17 +89,9 @@ class ComparableMixin:
         if result:
             return result
 
-        acomp = []
-        bcomp = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', acomp)
-        reflect.accumulateClassList(them.__class__, 'compare_attrs', bcomp)
-        result = cmp(acomp, bcomp)
-        if result:
-            return result
-
         self_list = [getattr(self, name, self._None)
                      for name in acomp]
-        them_list = [getattr(them, name, them._None)
+        them_list = [getattr(them, name, self._None)
                      for name in bcomp]
         return cmp(self_list, them_list)
 

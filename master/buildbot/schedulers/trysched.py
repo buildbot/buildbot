@@ -78,9 +78,6 @@ class Try_Jobdir(TryBase):
         self.jobdir = jobdir
         self.watcher = JobdirService()
         self.watcher.setServiceParent(self)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
 
     def startService(self):
         # set the watcher's basedir now that we have a master
