@@ -16,7 +16,7 @@
 import os
 
 from twisted.internet import defer
-from twisted.python import log, reflect
+from twisted.python import log
 from twisted.protocols import basic
 
 from buildbot import pbutil
@@ -279,9 +279,6 @@ class Try_Userpass(TryBase):
                  properties={}):
         TryBase.__init__(self, name=name, builderNames=builderNames,
                          properties=properties)
-        alist = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', alist)
-        self.compare_attrs = alist
         self.port = port
         self.userpass = userpass
 

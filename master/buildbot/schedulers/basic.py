@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer, reactor
-from twisted.python import log, reflect
+from twisted.python import log
 from buildbot import util, config
 from buildbot.util import NotABranch
 from collections import defaultdict

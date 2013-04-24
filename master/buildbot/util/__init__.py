@@ -89,13 +89,13 @@ class ComparableMixin:
         if result:
             return result
 
-        acomp = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', acomp)
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
         self_list = [getattr(self, name, self._None)
-                     for name in acomp]
+                     for name in compare_attrs]
         them_list = [getattr(them, name, self._None)
-                     for name in acomp]
+                     for name in compare_attrs]
         return cmp(self_list, them_list)
 
 def diffSets(old, new):
