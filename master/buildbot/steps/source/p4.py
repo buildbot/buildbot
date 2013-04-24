@@ -46,6 +46,8 @@ class P4(Source):
 
     name = 'p4'
 
+    # mark p4viewspec as a list so it won't be flattened by BuildStep
+    p4viewspec = []
     renderables = ['p4base', 'p4client', 'p4viewspec', 'p4branch']
     possible_modes = ('incremental', 'full')
 

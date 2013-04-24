@@ -157,14 +157,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setCommand(self, command):
         self.command = command
 
-    def _flattenList(self, mainlist, commands):
-        for x in commands:
-            if isinstance(x, (list, tuple)):
-                if x != []:
-                    self._flattenList(mainlist, x)
-            else:
-                mainlist.append(x)
-
     def describe(self, done=False):
         desc = self._describe(done)
         if self.descriptionSuffix:
@@ -211,9 +203,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 return ["???"]
 
             # flatten any nested lists
-            tmp = []
-            self._flattenList(tmp, words)
-            words = tmp
+            words = self._flattenList([], words)
 
             # strip instances and other detritus (which can happen if a
             # description is requested before rendering)
@@ -251,13 +241,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
-        tmp = []
-        if isinstance(self.command, list):
-           self._flattenList(tmp, self.command) 
-        else:
-           tmp = self.command
 
-        kwargs['command'] = tmp 
+        kwargs['command'] = self.command
 
         # check for the usePTY flag
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
