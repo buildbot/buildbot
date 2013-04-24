@@ -40,8 +40,6 @@ class Timed(base.BaseScheduler):
     before the service stops.
     """
 
-    compare_attrs = []
-
     def __init__(self, name, builderNames, properties={}, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
                                     **kwargs)
