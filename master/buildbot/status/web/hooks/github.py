@@ -17,7 +17,7 @@
 """
 github_buildbot.py is based on git_buildbot.py
 
-github_buildbot.py will determine the repository information from the JSON 
+github_buildbot.py will determine the repository information from the JSON
 HTTP POST it receives from github.com and build the appropriate repository.
 If your github repository is private, you must add a ssh key to the github
 repository for the user who initiated the build on the buildslave.
@@ -35,49 +35,49 @@ try:
 except ImportError:
     import simplejson as json
 
+
 # python is silly about how it handles timezones
 class fixedOffset(datetime.tzinfo):
     """
     fixed offset timezone
     """
-    def __init__(self, minutes, hours, offsetSign = 1):
+    def __init__(self, minutes, hours, offsetSign=1):
         self.minutes = int(minutes) * offsetSign
-        self.hours   = int(hours)   * offsetSign
-        self.offset  = datetime.timedelta(minutes = self.minutes,
-                                         hours   = self.hours)
+        self.hours = int(hours) * offsetSign
+        self.offset = datetime.timedelta(
+            minutes=self.minutes, hours=self.hours)
 
     def utcoffset(self, dt):
         return self.offset
 
     def dst(self, dt):
         return datetime.timedelta(0)
-    
+
+
 def convertTime(myTestTimestamp):
     #"1970-01-01T00:00:00+00:00"
-    matcher = re.compile(r'(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([-+])(\d\d):(\d\d)')
-    result  = matcher.match(myTestTimestamp)
-    (year, month, day, hour, minute, second, offsetsign, houroffset, minoffset) = \
-        result.groups()
+    matcher = re.compile(
+        r'(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([-+])(\d\d):(\d\d)')
+    result = matcher.match(myTestTimestamp)
+    (year, month, day, hour,
+        minute, second, offsetsign, houroffset, minoffset) = result.groups()
     if offsetsign == '+':
         offsetsign = 1
     else:
         offsetsign = -1
-    
-    offsetTimezone = fixedOffset( minoffset, houroffset, offsetsign )
-    myDatetime = datetime.datetime( int(year),
-                                    int(month),
-                                    int(day),
-                                    int(hour),
-                                    int(minute),
-                                    int(second),
-                                    0,
-                                    offsetTimezone)
-    return calendar.timegm( myDatetime.utctimetuple() )
 
-def getChanges(request, options = None):
+    offsetTimezone = fixedOffset(minoffset, houroffset, offsetsign)
+    myDatetime = datetime.datetime(
+        int(year), int(month), int(day), int(hour),
+        int(minute), int(second), 0, offsetTimezone
+    )
+    return calendar.timegm(myDatetime.utctimetuple())
+
+
+def getChanges(request, options=None):
         """
         Reponds only to POST events and starts the build process
-        
+
         :arguments:
             request
                 the http request object
@@ -97,10 +97,11 @@ def getChanges(request, options = None):
         log.msg("Received %s changes from github" % len(changes))
         return (changes, 'git')
 
+
 def process_change(payload, user, repo, repo_url, project):
         """
         Consumes the JSON as a python object and actually starts the build.
-        
+
         :arguments:
             payload
                 Python Object that represents the JSON sent by GitHub Service
@@ -120,7 +121,7 @@ def process_change(payload, user, repo, repo_url, project):
         if re.match(r"^0*$", newrev):
             log.msg("Branch `%s' deleted, ignoring" % branch)
             return []
-        else: 
+        else:
             for commit in payload['commits']:
                 files = []
                 if 'added' in commit:
@@ -129,19 +130,19 @@ def process_change(payload, user, repo, repo_url, project):
                     files.extend(commit['modified'])
                 if 'removed' in commit:
                     files.extend(commit['removed'])
-                when =  convertTime( commit['timestamp'])
+                when = convertTime(commit['timestamp'])
                 log.msg("New revision: %s" % commit['id'][:8])
                 chdict = dict(
-                    who      = commit['author']['name'] 
-                                + " <" + commit['author']['email'] + ">",
-                    files    = files,
-                    comments = commit['message'], 
-                    revision = commit['id'],
-                    when     = when,
-                    branch   = branch,
-                    revlink  = commit['url'], 
-                    repository = repo_url,
-                    project  = project)
-                changes.append(chdict) 
+                    who=commit['author']['name']
+                    + " <" + commit['author']['email'] + ">",
+                    files=files,
+                    comments=commit['message'],
+                    revision=commit['id'],
+                    when=when,
+                    branch=branch,
+                    revlink=commit['url'],
+                    repository=repo_url,
+                    project=project
+                )
+                changes.append(chdict)
             return changes
-        
