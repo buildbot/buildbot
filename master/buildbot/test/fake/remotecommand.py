@@ -287,7 +287,7 @@ class ExpectShell(Expect):
                  want_stdout=1, want_stderr=1, initialStdin=None,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 user=None):
+                 user=None, description=None):
         args = dict(workdir=workdir, command=command, env=env,
                 want_stdout=want_stdout, want_stderr=want_stderr,
                 initial_stdin=initialStdin,

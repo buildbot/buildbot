@@ -593,6 +593,9 @@ class BuildStep(object, properties.PropertiesMixin):
         accumulateClassList(self.__class__, 'renderables', renderables)
 
         def setRenderable(res, attr):
+            #only flatten renderables which are not list
+            if not isinstance(getattr(self.__class__, attr, None), (list, tuple)):
+                res = self._flatten(res)
             setattr(self, attr, res)
 
         dl = [ doStep ]
@@ -604,6 +607,20 @@ class BuildStep(object, properties.PropertiesMixin):
 
         dl.addCallback(self._startStep_3)
         return dl
+
+    def _flatten(self, val):
+        if not isinstance(val, (list, tuple)):
+            return val
+        return self._flattenList([], val)
+
+    def _flattenList(self, mainlist, val):
+        for x in val:
+            if isinstance(x, (list, tuple)):
+                if x != []:
+                    self._flattenList(mainlist, x)
+            else:
+                mainlist.append(x)
+        return mainlist
 
     @defer.inlineCallbacks
     def _startStep_3(self, doStep):
