@@ -4,15 +4,26 @@ Buildbot Coding Style
 Symbol Names
 ------------
 
-Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_ regarding
-the formatting of symbol names.
+Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_ regarding the formatting of symbol names.
+Because Buildbot uses Twisted so heavily, and Twisted uses interCaps, this is not very consistently applied throughout the codebase.
 
-The single exception in naming of functions and methods. Because Buildbot uses
-Twisted so heavily, and Twisted uses interCaps, Buildbot methods should do the
-same. That is, you should spell methods and functions with the first character
-in lower-case, and the first letter of subsequent words capitalized, e.g.,
-``compareToOther`` or ``getChangesGreaterThan``. This point is not applied very
-consistently in Buildbot, but let's try to be consistent in new code. 
+The single exception to PEP8 is in naming of functions and methods.
+That is, you should spell methods and functions with the first character in lower-case, and the first letter of subsequent words capitalized, e.g., ``compareToOther`` or ``getChangesGreaterThan``.
+
+Symbols used as parameters to functions used in configuration files should use underscores.
+
+In summary, then:
+
+================== ============
+Symbol Type        Format
+================== ============
+Methods            interCaps
+Functions          interCaps
+Function Arguments under_scores
+Classes            InitialCaps
+Variables          under_scores
+Constants          ALL_CAPS
+================== ============
 
 Twisted Idioms
 --------------
