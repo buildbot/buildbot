@@ -34,11 +34,11 @@ def naturalSort(l):
     l = [ i[1] for i in keyed_l ]
     return l
 
-def flatten(l):
-    if l and type(l[0]) == list:
+def flatten(l, types=list):
+    if l and isinstance(l, types):
         rv = []
         for e in l:
-            if type(e) == list:
+            if isinstance(e, types):
                 rv.extend(flatten(e))
             else:
                 rv.append(e)

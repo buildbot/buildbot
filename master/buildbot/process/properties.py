@@ -18,7 +18,7 @@ import re
 import warnings
 import weakref
 from buildbot import config, util
-from buildbot.util import json
+from buildbot.util import json, flatten
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -602,6 +602,29 @@ class Property(util.ComparableMixin):
                 return props.render(props.getProperty(self.key))
             else:
                 return props.render(self.default)
+
+class FlattenList(util.ComparableMixin):
+    """
+    An instance of this class flattens all nested lists in a list
+    """
+    implements(IRenderable)
+
+    compare_attrs = ('nestedlist')
+
+    def __init__(self, nestedlist, types=(list, tuple)):
+        """
+        @param nestedlist: a list of values to render
+        @param types: only flatten these types. defaults to (list, tuple)
+        """
+        self.nestedlist = nestedlist
+        self.types = types
+
+    def getRenderingFor(self, props):
+        d = props.render(self.nestedlist)
+        def flat(r):
+            return flatten(r, self.types)
+        d.addCallback(flat)
+        return d
 
 class _Renderer(util.ComparableMixin, object):
     implements(IRenderable)
