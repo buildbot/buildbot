@@ -14,6 +14,8 @@ Master
 Features
 ~~~~~~~~
 
+* A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

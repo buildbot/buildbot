@@ -74,8 +74,6 @@ Features
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
   See :bb:pull:`596`.
 
-* A new :py:class:`FlattenList` Renderable has been added which can flatten nested list.
-
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
