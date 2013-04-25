@@ -16,7 +16,6 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from twisted.python import reflect
 from buildbot.schedulers import manager, base
 from buildbot import config
 

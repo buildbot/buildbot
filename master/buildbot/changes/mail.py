@@ -24,7 +24,7 @@ from email.Utils import parseaddr, parsedate_tz, mktime_tz
 from email.Iterators import body_line_iterator
 
 from zope.interface import implements
-from twisted.python import log, reflect
+from twisted.python import log
 from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
