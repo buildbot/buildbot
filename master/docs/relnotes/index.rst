@@ -73,6 +73,8 @@ Features
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
   See :bb:pull:`596`.
 
+* Builder configurations can now include a ``descsription``, which will appear in the web UI to help humans figure out what the builder does.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
