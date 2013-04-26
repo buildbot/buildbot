@@ -137,7 +137,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
-        return threads.deferToThread(self._stop_instance, instance, fast)
+        self._stop_instance(instance, fast)
 
     def _stop_instance(self, instance, fast):
         # Authenticate to OpenStack. This is needed since it seems the update
@@ -159,25 +159,3 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s terminating instance %s (%s)' %
                     (self.__class__.__name__, self.slavename, instance.id,
                      instance.name))
-        duration = 0
-        interval = self._poll_resolution
-        if fast:
-            goal = (DELETED, UNKNOWN)
-        else:
-            goal = (DELETED,)
-        while inst.status not in goal:
-            time.sleep(interval)
-            duration += interval
-            if duration % 60 == 0:
-                log.msg(
-                    '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.slavename, duration//60,
-                     instance.id))
-            try:
-                inst = os_client.servers.get(instance.id)
-            except nce.NotFound:
-                break
-        log.msg('%s %s instance %s %s '
-                'after about %d minutes %d seconds' %
-                (self.__class__.__name__, self.slavename,
-                 instance.id, goal, duration//60, duration%60))
