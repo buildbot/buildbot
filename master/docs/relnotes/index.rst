@@ -16,6 +16,8 @@ Features
 
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
 
+* Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
