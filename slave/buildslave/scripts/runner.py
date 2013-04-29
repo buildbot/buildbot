@@ -129,6 +129,36 @@ class CreateSlaveOptions(MakerBase):
     yourself.
     """
 
+    def validateMasterArgument(self, master_arg):
+        """
+        Parse the <master> argument.
+
+        @param master_arg: the <master> argument to parse
+
+        @return: tuple of master's host and port
+        @raise UsageError: on errors parsing the argument
+        """
+        if master_arg[:5] == "http:":
+            raise usage.UsageError("<master> is not a URL - do not use URL")
+
+        if ":" not in master_arg:
+            master = master_arg
+            port = 9989
+        else:
+            master, port = master_arg.split(":")
+
+        if len(master) < 1:
+            raise usage.UsageError("invalid <master> argument '%s'" % \
+                                   master_arg)
+        try:
+            port = int(port)
+        except ValueError:
+            raise usage.UsageError("invalid master port '%s', "\
+                                   "needs to be an number" % port)
+
+        return master, port
+
+
     def getSynopsis(self):
         return "Usage:    buildslave create-slave [options] <basedir> <master> <name> <passwd>"
 
@@ -136,10 +166,8 @@ class CreateSlaveOptions(MakerBase):
         if len(args) != 4:
             raise usage.UsageError("incorrect number of arguments")
         basedir, master, name, passwd = args
-        if master[:5] == "http:":
-            raise usage.UsageError("<master> is not a URL - do not use URL")
         self['basedir'] = basedir
-        self['master'] = master
+        self['host'], self['port'] = self.validateMasterArgument(master)
         self['name'] = name
         self['passwd'] = passwd
 

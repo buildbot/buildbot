@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import os
-import re
 
 
 class Maker:
@@ -140,18 +139,6 @@ def createSlave(config):
     m.chdir()
     if config['relocatable']:
         config['basedir'] = '.'
-    try:
-        master = config['master']
-        port = None
-        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
-        if port == None:
-            port = '9989'
-        config['host'] = host
-        config['port'] = int(port)
-    except:
-        print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007 or localhost"
-        return 1
 
     asd = config['allow-shutdown']
     if asd:
