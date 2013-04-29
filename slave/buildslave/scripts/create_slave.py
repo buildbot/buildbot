@@ -16,75 +16,6 @@
 import os
 
 
-class Maker:
-    def __init__(self, config):
-        self.config = config
-        self.basedir = config['basedir']
-        self.force = config.get('force', False)
-        self.quiet = config['quiet']
-
-    def mkdir(self):
-        if os.path.exists(self.basedir):
-            if not self.quiet:
-                print "updating existing installation"
-            return
-        if not self.quiet:
-            print "mkdir", self.basedir
-        os.mkdir(self.basedir)
-
-    def mkinfo(self):
-        path = os.path.join(self.basedir, "info")
-        if not os.path.exists(path):
-            if not self.quiet:
-                print "mkdir", path
-            os.mkdir(path)
-        created = False
-        admin = os.path.join(path, "admin")
-        if not os.path.exists(admin):
-            if not self.quiet:
-                print "Creating info/admin, you need to edit it appropriately"
-            f = open(admin, "wt")
-            f.write("Your Name Here <admin@youraddress.invalid>\n")
-            f.close()
-            created = True
-        host = os.path.join(path, "host")
-        if not os.path.exists(host):
-            if not self.quiet:
-                print "Creating info/host, you need to edit it appropriately"
-            f = open(host, "wt")
-            f.write("Please put a description of this build host here\n")
-            f.close()
-            created = True
-        access_uri = os.path.join(path, "access_uri")
-        if not os.path.exists(access_uri):
-            if not self.quiet:
-                print "Not creating info/access_uri - add it if you wish"
-        if created and not self.quiet:
-            print "Please edit the files in %s appropriately." % path
-
-    def chdir(self):
-        if not self.quiet:
-            print "chdir", self.basedir
-        os.chdir(self.basedir)
-
-    def makeTAC(self, contents, secret=False):
-        tacfile = "buildbot.tac"
-        if os.path.exists(tacfile):
-            oldcontents = open(tacfile, "rt").read()
-            if oldcontents == contents:
-                if not self.quiet:
-                    print "buildbot.tac already exists and is correct"
-                return
-            if not self.quiet:
-                print "not touching existing buildbot.tac"
-                print "creating buildbot.tac.new instead"
-            tacfile = "buildbot.tac.new"
-        f = open(tacfile, "wt")
-        f.write(contents)
-        f.close()
-        if secret:
-            os.chmod(tacfile, 0600)
-
 slaveTACTemplate = ["""
 import os
 
@@ -133,10 +64,103 @@ s.setServiceParent(application)
 """]
 
 
+def _makeBaseDir(basedir, quiet):
+    """
+    Create buildslave base directory if needed.
+
+    @param basedir: buildslave base directory relative path
+    @param   quiet: if True, don't print info messages
+    """
+    if os.path.exists(basedir):
+        if not quiet:
+            print "updating existing installation"
+        return
+
+    if not quiet:
+        print "mkdir", basedir
+
+    os.mkdir(basedir)
+
+
+def _makeBuildbotTac(basedir, tac_file_contents, quiet):
+    """
+    Create buildbot.tac file. If buildbot.tac file already exists with
+    different contents, create buildbot.tac.new instead.
+
+    @param basedir: buildslave base directory relative path
+    @param tac_file_contents: contents of buildbot.tac file to write
+    @param quiet: if True, don't print info messages
+    """
+    tacfile = os.path.join(basedir, "buildbot.tac")
+
+    if os.path.exists(tacfile):
+        oldcontents = open(tacfile, "rt").read()
+
+        if oldcontents == tac_file_contents:
+            if not quiet:
+                print "buildbot.tac already exists and is correct"
+            return
+
+        if not quiet:
+            print "not touching existing buildbot.tac"
+            print "creating buildbot.tac.new instead"
+
+        tacfile = os.path.join(basedir, "buildbot.tac.new")
+
+    f = open(tacfile, "wt")
+    f.write(tac_file_contents)
+    f.close()
+    os.chmod(tacfile, 0600)
+
+
+def _makeInfoFiles(basedir, quiet):
+    """
+    Create info/* files inside basedir.
+
+    @param basedir: buildslave base directory relative path
+    @param   quiet: if True, don't print info messages
+    """
+    def createFile(path, file, contents):
+        filepath = os.path.join(path, file)
+
+        if os.path.exists(filepath):
+            return False
+
+        if not quiet:
+            print "Creating info/%s, you need to edit it appropriately." % file
+
+        open(filepath, "wt").write(contents)
+
+        return True
+
+    path = os.path.join(basedir, "info")
+    if not os.path.exists(path):
+        if not quiet:
+            print "mkdir", path
+        os.mkdir(path)
+
+    # create 'info/admin' file
+    created = createFile(path, "admin",
+                         "Your Name Here <admin@youraddress.invalid>\n")
+
+    # create 'info/host' file
+    created = createFile(path, "host",
+                         "Please put a description of this build host here\n")
+
+    access_uri = os.path.join(path, "access_uri")
+
+    if not os.path.exists(access_uri):
+        if not quiet:
+            print "Not creating info/access_uri - add it if you wish"
+
+    if created and not quiet:
+        print "Please edit the files in %s appropriately." % path
+
+
 def createSlave(config):
-    m = Maker(config)
-    m.mkdir()
-    m.chdir()
+    basedir = config['basedir']
+    quiet = config['quiet']
+
     if config['relocatable']:
         config['basedir'] = '.'
 
@@ -150,10 +174,11 @@ def createSlave(config):
         slaveTAC = "".join(slaveTACTemplate)
     contents = slaveTAC % config
 
-    m.makeTAC(contents, secret=True)
-    m.mkinfo()
+    _makeBaseDir(basedir, quiet)
+    _makeBuildbotTac(basedir, contents, quiet)
+    _makeInfoFiles(basedir, quiet)
 
-    if not m.quiet:
-        print "buildslave configured in %s" % m.basedir
+    if not quiet:
+        print "buildslave configured in %s" % basedir
 
     return 0
