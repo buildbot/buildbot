@@ -43,32 +43,34 @@ package_json = """\
     "name": "buildbot-www",
     "version": "VERSION",
     "author": {
-        "name": "Pierre Tardy",
-        "email": "tardyp@gmail.com",
-        "url": "https://github.com/tardyp"
+        "name": "Buildbot Team Members",
+        "url": "https://github.com/buildbot"
     },
     "description": "Buildbot UI",
-    "contributors": [
-        {
-        "name": "David Bochenski",
-        "email": "david@bochenski.co.uk",
-        "url": "https://github.com/Bochenski"
-        },
-        {
-        "name": "Cary Landholt",
-        "email": "cary@landholt.com",
-        "url": "https://github.com/CaryLandholt"
-        }
-    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/buildbot/buildbot"
     },
     "dependencies": {
-        "grunt": "~0.3.17",
-        "grunt-hustler": "~0.7.4",
-        "grunt-reload": "~0.2.0",
-        "grunt-jade": "~0.3.9"
+       "coffee-script": "~1.6.2",
+        "express": "~3.1.1",
+        "grunt": "~0.4.1",
+        "grunt-cli": "~0.1.1",
+        "grunt-contrib-clean": "~0.4.0",
+        "grunt-contrib-coffee": "~0.6.5",
+        "grunt-contrib-copy": "~0.4.1",
+        "grunt-contrib-imagemin": "~0.1.3",
+        "grunt-contrib-jade": "~0.5.0",
+        "grunt-contrib-less": "~0.5.0",
+        "grunt-contrib-livereload": "~0.1.2",
+        "grunt-contrib-requirejs": "~0.4.0",
+        "grunt-contrib-watch": "~0.3.1",
+        "grunt-mkdir": "~0.1.1",
+        "grunt-express": "~0.3.2",
+        "grunt-hustler": "0.11.2",
+        "grunt-regarde": "~0.1.1",
+        "grunt-testacular": "~0.3.0",
+        "socket.io": "~0.9.14"
     },
     "devDependencies": {
         "coffee-script": "~1.4.0",

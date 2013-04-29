@@ -30,6 +30,8 @@ require
             deps: ['app']
         'run':
             deps: ['app']
+        'views':
+            deps: ['app']
     [
         'require'
         'directives/topmenu'
@@ -40,6 +42,7 @@ require
         'services/buildbotService'
         'responseInterceptors/dispatcher'
         'routes'
+        'views'
         'run'
     ], (require) ->
         require ['bootstrap']
