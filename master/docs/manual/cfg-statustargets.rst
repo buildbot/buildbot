@@ -365,7 +365,7 @@ be used to access them.
 :samp:`/png?builder=${BUILDERNAME}&number=$BUILDNUM&size=large`
     This generate a large png image reporting the status of the given $BUILDNUM for the given builder $BUILDERNAME. The sizes are `small`, `normal` and `large` if no size is given the `normal` size is returned, if no $BUILDNUM is given the last build is returned. For example:
 
-    .. image:: _images/success_normal.png
+    .. image:: ../_images/success_normal.png
 
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.
