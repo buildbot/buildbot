@@ -91,43 +91,44 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         boot_kwargs = {}
         if self.meta is not None:
             boot_kwargs['meta'] = self.meta
-        self.instance = os_client.servers.create(*boot_args, **boot_kwargs)
+        instance = os_client.servers.create(*boot_args, **boot_kwargs)
+        self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
-                (self.__class__.__name__, self.slavename, self.instance.id,
+                (self.__class__.__name__, self.slavename, instance.id,
                  image_uuid))
         duration = 0
         interval = self._poll_resolution
-        inst = self.instance
+        inst = instance
         while inst.status == BUILD:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
                         (self.__class__.__name__, self.slavename, duration//60,
-                         self.instance.id))
+                         instance.id))
             try:
-                inst = os_client.servers.get(self.instance.id)
+                inst = os_client.servers.get(instance.id)
             except nce.NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.slavename,
-                         self.instance.id, self.instance.name))
+                         instance.id, instance.name))
                 raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                    self.instance.id, self.instance.status)
+                    instance.id, instance.status)
         if inst.status == ACTIVE:
             minutes = duration//60
             seconds = duration%60
             log.msg('%s %s instance %s (%s) started '
                     'in about %d minutes %d seconds' %
                     (self.__class__.__name__, self.slavename,
-                     self.instance.id, self.instance.name, minutes, seconds))
-            return [self.instance.id, image_uuid,
+                     instance.id, instance.name, minutes, seconds))
+            return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
-                     self.instance.id, inst.status))
+                     instance.id, inst.status))
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                self.instance.id, self.instance.status)
+                instance.id, inst.status)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
@@ -137,7 +138,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
-        return threads.deferToThread(self._stop_instance, instance, fast)
+        self._stop_instance(instance, fast)
 
     def _stop_instance(self, instance, fast):
         # Authenticate to OpenStack. This is needed since it seems the update
@@ -159,25 +160,3 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s terminating instance %s (%s)' %
                     (self.__class__.__name__, self.slavename, instance.id,
                      instance.name))
-        duration = 0
-        interval = self._poll_resolution
-        if fast:
-            goal = (DELETED, UNKNOWN)
-        else:
-            goal = (DELETED,)
-        while inst.status not in goal:
-            time.sleep(interval)
-            duration += interval
-            if duration % 60 == 0:
-                log.msg(
-                    '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.slavename, duration//60,
-                     instance.id))
-            try:
-                inst = os_client.servers.get(instance.id)
-            except nce.NotFound:
-                break
-        log.msg('%s %s instance %s %s '
-                'after about %d minutes %d seconds' %
-                (self.__class__.__name__, self.slavename,
-                 instance.id, goal, duration//60, duration%60))
