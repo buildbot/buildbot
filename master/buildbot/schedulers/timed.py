@@ -40,8 +40,6 @@ class Timed(base.BaseScheduler):
     before the service stops.
     """
 
-    compare_attrs = base.BaseScheduler.compare_attrs
-
     def __init__(self, name, builderNames, properties={}, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
                                     **kwargs)
@@ -195,12 +193,13 @@ class Timed(base.BaseScheduler):
 
 
 class Periodic(Timed):
-    compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
+    compare_attrs = ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
             branch=None, properties={}, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames,
                     properties=properties)
+
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
@@ -218,8 +217,7 @@ class Periodic(Timed):
         return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
 
 class NightlyBase(Timed):
-    compare_attrs = (Timed.compare_attrs
-            + ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek'))
+    compare_attrs = ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek')
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
@@ -265,9 +263,8 @@ class NightlyBase(Timed):
         return defer.succeed(nextdate)
 
 class Nightly(NightlyBase):
-    compare_attrs = (NightlyBase.compare_attrs
-            + ('branch', 'onlyIfChanged', 'fileIsImportant',
-               'change_filter', 'onlyImportant',))
+    compare_attrs = ('branch', 'onlyIfChanged', 'fileIsImportant',
+               'change_filter', 'onlyImportant',)
 
     class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
