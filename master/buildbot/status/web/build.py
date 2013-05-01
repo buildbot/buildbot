@@ -57,6 +57,13 @@ class ForceBuildActionResource(ActionResource):
             comments.decode(getRequestCharset(req))
             reason = ("The web-page 'rebuild' button was pressed by "
                       "'%s': %s\n" % (name, comments))
+
+            useSourcestamp = req.args.get("useSourcestamp", None)
+            if useSourcestamp and useSourcestamp==['updated']:
+                absolute=False
+            else:
+                absolute=True
+
             msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
@@ -66,7 +73,10 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                tup = yield bc.rebuildBuild(b, reason, extraProperties)
+                tup = yield bc.rebuildBuild(b, 
+                    reason=reason, 
+                    extraProperties=extraProperties,
+                    absolute=absolute)
                 # rebuildBuild returns None on error (?!)
                 if not tup:
                     msg = "rebuilding a build failed "+ str(tup)
