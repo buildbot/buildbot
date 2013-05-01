@@ -1,4 +1,5 @@
 node_modules
-temp
-built
+.temp
+buildbot_www
+buildbot_www_test
 dist

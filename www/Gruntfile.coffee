@@ -16,12 +16,6 @@ module.exports = (grunt) ->
                     './.temp/views'
                     './.temp/'
                 ]
-            # Used for those that desire plain old JavaScript.
-            jslove:
-                src: [
-                    '**/*.coffee'
-                    '!**/node_modules/**'
-                ]
 
         # Compile CoffeeScript (.coffee) files to JavaScript (.js).
         coffee:
@@ -43,19 +37,6 @@ module.exports = (grunt) ->
                     # Don't include a surrounding Immediately-Invoked Function Expression (IIFE) in the compiled output.
                     # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
                     bare: true
-            # Used for those that desire plain old JavaScript.
-            jslove:
-                files: [
-                    cwd: './'
-                    src: [
-                        '**/*.coffee'
-                        '!**/node_modules/**'
-                    ]
-                    dest: './'
-                    expand: true
-                    ext: '.js'
-                ]
-                options: '<%= coffee.scripts.options %>'
 
         # Copies directories and files from one location to another.
         copy:
@@ -169,10 +150,6 @@ module.exports = (grunt) ->
                     './.temp/styles/styles.css': './src/styles/styles.less'
 
         # Minifiy index.html.
-        # Extra white space and comments will be removed.
-        # Content within <pre /> tags will be left unchanged.
-        # IE conditional comments will be left unchanged.
-        # As of this writing, the output is reduced by over 14%.
         minifyHtml:
             prod:
                 files:
@@ -238,12 +215,6 @@ module.exports = (grunt) ->
                     optimizeCss: 'standard'
                     out: './.temp/styles/styles.min.css'
 
-        # Create temp directory (grunt-contrib-jade does not do it automatically)
-        #
-        mkdir:
-            views:
-                options:
-                    create: ['.temp/views']
         # Compile jade files (.jade) to HTML (.html).
         #
         jade:
@@ -269,18 +240,27 @@ module.exports = (grunt) ->
                         timestamp: "<%= grunt.template.today() %>"
                         environment: 'prod'
 
-        # Runs unit tests using testacular
-        testacular:
-            unit:
+        # Runs unit tests using karma (formerly testacular)
+        karma:
+            options:
+                autoWatch: true
+                colors: true
+                configFile: './karma.conf.js'
+                keepalive: true
+                reporters: ['progress']
+                singleRun: false
+            chrome:
                 options:
-                    autoWatch: true
                     browsers: ['Chrome']
-                    colors: true
-                    configFile: './testacular.conf.js'
-                    keepalive: true
-                    port: 8081
-                    reporters: ['progress']
-                    runnerPort: 9100
+            firefox:
+                options:
+                    browsers: ['Firefox']
+            ci:
+                options:
+                    autoWatch: false
+                    colors: false
+                    browsers: ['PhantomJS']
+                    configFile: './karma.conf.js'
                     singleRun: true
 
         # Sets up file watchers and runs tasks when watched files are changed.
@@ -320,7 +300,6 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-contrib-imagemin'
     grunt.loadNpmTasks 'grunt-contrib-less'
     grunt.loadNpmTasks 'grunt-contrib-jade'
-    grunt.loadNpmTasks 'grunt-mkdir'
     grunt.loadNpmTasks 'grunt-contrib-livereload'
     grunt.loadNpmTasks 'grunt-contrib-requirejs'
     grunt.loadNpmTasks 'grunt-contrib-watch'
@@ -334,17 +313,26 @@ module.exports = (grunt) ->
     # Recommended watcher for LiveReload
     grunt.loadNpmTasks 'grunt-regarde'
 
-    # Register grunt tasks supplied by grunt-testacular.
+    # Register grunt tasks supplied by grunt-karma.
     # Referenced in package.json.
-    # https://github.com/Dignifiedquire/grunt-testacular
-    grunt.loadNpmTasks 'grunt-testacular'
+    # https://github.com/Dignifiedquire/grunt-karma
+    grunt.loadNpmTasks 'grunt-karma'
 
     # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
     # Enter the following command at the command line to execute this build task:
-    # grunt test
-    grunt.registerTask 'test', [
+    # grunt ci
+    grunt.registerTask 'ci', [
         'default'
-        'testacular'
+        'karma:ci'
+    ]
+    # For developing, run the karma test suite in watch mode (in parallel with the dev mode ("grunt dev"))
+    # grunt chrometest
+    grunt.registerTask 'chrometest', [
+        'karma:chrome'
+    ]
+    # grunt fftest
+    grunt.registerTask 'fftest', [
+        'karma:firefox'
     ]
 
     # Starts a reload server
@@ -356,21 +344,11 @@ module.exports = (grunt) ->
         'regarde'
     ]
 
-    # Compiles all CoffeeScript files in the project to JavaScript then deletes all CoffeeScript files.
-    # Used for those that desire plain old JavaScript.
-    # Enter the following command at the command line to execute this build task:
-    # grunt jslove
-    grunt.registerTask 'jslove', [
-        'coffee:jslove'
-        'clean:jslove'
-    ]
-
     # Compiles the app with non-optimized build settings and places the build artifacts in the buildbot_www directory.
     # Enter the following command at the command line to execute this build task:
     # grunt
     grunt.registerTask 'default', [
         'clean:working'
-        'mkdir:views'
         'coffee:scripts'
         'copy:js'
         'less'

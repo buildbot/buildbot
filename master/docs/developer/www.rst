@@ -188,8 +188,6 @@ Start by cloning the project and its git submodules:
 .. code-block:: none
 
     git clone git://github.com/buildbot/buildbot.git
-    cd buildbot/www
-    npm install
 
 In the root of the source tree, create and activate a virtualenv to install everything in:
 
@@ -209,6 +207,7 @@ Next, install the Buildbot-WWW and Buildbot packages using ``--editable``, which
     pip install --editable master/
 
 This will fetch a number of dependencies from pypi, the Python package repository.
+This will also fetch a bunch a bunch of node.js dependancies used for building the web application.
 
 Now you'll need to create a master instance.
 For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
@@ -232,44 +231,47 @@ When doing web development, you can run:
     grunt dev
 
 This will compile the webapp in development mode, and automatically rebuild when files change.
-If your browser and dev environment are on the same machine, this will even reload the browser!
+
+If your browser and dev environment are on the same machine, you can use the livereload feature of the build script.
+For this to work, you need to run those command from another terminal, at the same time as "grunt dev"
+
+.. code-block:: none
+
+    cd www
+    . tosource
+    grunt reloadserver
 
 
 Testing Setup
 -------------
 
-TBD with testacular
+buildbot_www uses `Karma <http://karma-runner.github.io>`_ to run the coffeescript test suite. This is the official test framework made for angular.js
+We dont run the front-end testsuite inside the python 'trial' test suite, because testing python and JS is technically very different.
+
+Karma needs a browser to run the unit test in. It supports all the major browsers. buildbot www's build script supports two popular browsers. like for the livereload feature, the test-runner works with autowatch mode. You need to use "grunt dev" in parallel from the following commands:
 
 
-Ghost.py
-~~~~~~~~
+Run the tests in Firefox:
 
-Ghost.py is a testing library offering fullfeatured browser control.
-It actually uses python binding to webkit browser engine.
-Buildbot www test framework is instanciating the www server with stubbed data api, and testing how the JS code is behaving inside the headless browser.
-More info on ghost is on the `original web server <http://jeanphix.me/Ghost.py/>`_
+.. code-block:: none
 
-As buildbot is running inside twisted, and our tests are running with the help of trial, we need to have a special version of ghost, we called txghost, for twisted ghost.
+    cd www
+    . tosource
+    grunt fftest
 
-This version has the same API as the original documented ghost, but every call is returning deferred.
+Run the tests in Chrome:
 
-Note, that as ghost is using webkit, which is based on qt technology, we must use some tricks in order to run the qt main loop inside trial reactor
+.. code-block:: none
 
-Also, ghost has no support for websocket, so message passing tests are disabled when websocket is unavailable.
+    cd www
+    . tosource
+    grunt fftest
 
-The ghost tests is running the same tests as ``buildbot ui-test-server`` would do on a real browser, but allows them to be run automatically in metabuildbot.
-It is not recomended to run the tests via ghost method for development. Running them inside a real browser is much more productive, because you can use
-the powerfull debug tools provided by them.
+For the purpose of the metabuildbot, a special grunt target is made for running the test suite inside PhantomJS:
 
-Developer setup
-~~~~~~~~~~~~~~~
+.. code-block:: none
 
-Unfortunately, PyQt is difficult to install in a virtualenv.
-If you use ``--no-site-packages`` to set up a virtualenv, it will not inherit a globally installed PyQt.
-So you need to convert your virtual env to use site packages.
+    cd www
+    . tosource
+    grunt ci
 
-.. code-block:: bash
-
-     virtualenv path/to/your/sandbox
-
-You can then install either PyQt or PySide systemwide, and use it within the virtualenv.

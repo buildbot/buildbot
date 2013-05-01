@@ -15,6 +15,8 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
        link(rel='stylesheet', href='styles/styles.min.css?_#{(new Date()).getTime()}')
     default
        link(rel='stylesheet', href='styles/styles.css')
+        // Live-reload support
+       script(src='http://localhost:35729/livereload.js')
 
   body.ng-cloak(ng-cloak='ng-cloak')
     block content
