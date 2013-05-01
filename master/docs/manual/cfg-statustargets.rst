@@ -747,6 +747,40 @@ Then, create a GitHub service hook (see https://help.github.com/articles/post-re
 
 Note that not using ``change_hook_auth`` can expose you to security risks.
 
+BitBucket hook
+##############
+
+The BitBucket hook is as simple as GitHub one and it also takes no options. ::
+
+    c['status'].append(html.WebStatus(..
+                       change_hook_dialects={ 'bitbucket' : True }))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket``
+relative to the root of the web status. For example, it the grid URL is
+``http://builds.mycompany.com/bbot/grid``, then point BitBucket to
+``http://builds.mycompany.com/change_hook/bitbucket``. To specify a project associated
+to the repository, append ``?project=name`` to the URL.
+
+Note that there is a satandalone HTTP server available for receiving BitBucket
+notifications, as well: :file:`contrib/bitbucket_buildbot.py`. This script may be
+useful in cases where you cannot expose the WebStatus for public consumption.
+
+.. warning::
+
+    As in the previous case, the incoming HTTP requests for this hook are not
+    authenticated bu default. Anyone who can access the web status can "fake"
+    a request from BitBucket, potentially causing the buildmaster to run
+    arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+  c['status'].append(html.WebStatus(..
+                                    change_hook_auth=('user', 'password')))
+
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+
+Note that as before, not using ``change_hook_auth`` can expose you to security risks.
+
 Google Code hook
 ################
 
