@@ -64,12 +64,20 @@ s.setServiceParent(application)
 """]
 
 
+class CreateSlaveError(Exception):
+    """
+    Raised on errors while setting up buildslave directory.
+    """
+
+
 def _makeBaseDir(basedir, quiet):
     """
-    Create buildslave base directory if needed.
+    Make buildslave base directory if needed.
 
     @param basedir: buildslave base directory relative path
     @param   quiet: if True, don't print info messages
+
+    @raise CreateSlaveError: on error making base directory
     """
     if os.path.exists(basedir):
         if not quiet:
@@ -79,7 +87,11 @@ def _makeBaseDir(basedir, quiet):
     if not quiet:
         print "mkdir", basedir
 
-    os.mkdir(basedir)
+    try:
+        os.mkdir(basedir)
+    except OSError, exception:
+        raise CreateSlaveError("error creating directory %s: %s" %
+                                        (basedir, exception.strerror))
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -90,11 +102,17 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
     @param basedir: buildslave base directory relative path
     @param tac_file_contents: contents of buildbot.tac file to write
     @param quiet: if True, don't print info messages
+
+    @raise CreateSlaveError: on error reading or writing tac file
     """
     tacfile = os.path.join(basedir, "buildbot.tac")
 
     if os.path.exists(tacfile):
-        oldcontents = open(tacfile, "rt").read()
+        try:
+            oldcontents = open(tacfile, "rt").read()
+        except IOError, exception:
+            raise CreateSlaveError("error reading %s: %s" %
+                                        (tacfile, exception.strerror))
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -107,10 +125,14 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
 
         tacfile = os.path.join(basedir, "buildbot.tac.new")
 
-    f = open(tacfile, "wt")
-    f.write(tac_file_contents)
-    f.close()
-    os.chmod(tacfile, 0600)
+    try:
+        f = open(tacfile, "wt")
+        f.write(tac_file_contents)
+        f.close()
+        os.chmod(tacfile, 0600)
+    except IOError, exception:
+        raise CreateSlaveError("could not write %s: %s" %
+                                    (tacfile, exception.strerror))
 
 
 def _makeInfoFiles(basedir, quiet):
@@ -119,6 +141,9 @@ def _makeInfoFiles(basedir, quiet):
 
     @param basedir: buildslave base directory relative path
     @param   quiet: if True, don't print info messages
+
+    @raise CreateSlaveError: on error making info directory or
+                             writing info files
     """
     def createFile(path, file, contents):
         filepath = os.path.join(path, file)
@@ -129,15 +154,22 @@ def _makeInfoFiles(basedir, quiet):
         if not quiet:
             print "Creating info/%s, you need to edit it appropriately." % file
 
-        open(filepath, "wt").write(contents)
-
+        try:
+            open(filepath, "wt").write(contents)
+        except IOError, exception:
+            raise CreateSlaveError("could not write %s: %s" %
+                                        (filepath, exception.strerror))
         return True
 
     path = os.path.join(basedir, "info")
     if not os.path.exists(path):
         if not quiet:
             print "mkdir", path
-        os.mkdir(path)
+        try:
+            os.mkdir(path)
+        except OSError, exception:
+            raise CreateSlaveError("error creating directory %s: %s" %
+                                    (path, exception.strerror))
 
     # create 'info/admin' file
     created = createFile(path, "admin",
@@ -174,9 +206,14 @@ def createSlave(config):
         slaveTAC = "".join(slaveTACTemplate)
     contents = slaveTAC % config
 
-    _makeBaseDir(basedir, quiet)
-    _makeBuildbotTac(basedir, contents, quiet)
-    _makeInfoFiles(basedir, quiet)
+    try:
+        _makeBaseDir(basedir, quiet)
+        _makeBuildbotTac(basedir, contents, quiet)
+        _makeInfoFiles(basedir, quiet)
+    except CreateSlaveError, exception:
+        print "%s\nfailed to configure buildslave in %s" % \
+                  (exception.message, config['basedir'])
+        return 1
 
     if not quiet:
         print "buildslave configured in %s" % basedir
