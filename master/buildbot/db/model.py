@@ -199,8 +199,7 @@ class Model(base.DBConnectorComponent):
     # linked to a master that is inactive can be unlinked by any master.  This
     # is a separate table so that we can "claim" changesources on a master by
     # inserting; this has better support in database servers for ensuring that
-    # exactly one claim succeeds.  The ID column is present for external users;
-    # see bug #1053.
+    # exactly one claim succeeds.
     changesource_masters = sa.Table('changesource_masters', metadata,
         sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
             nullable=False, primary_key=True),

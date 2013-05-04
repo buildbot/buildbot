@@ -26,8 +26,7 @@ class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = base.ChangeSource.compare_attrs + \
-                     ("gerritserver", "gerritport")
+    compare_attrs = ("gerritserver", "gerritport")
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"

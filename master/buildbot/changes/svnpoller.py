@@ -68,8 +68,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = base.PollingChangeSource.compare_attrs + \
-                    ("svnurl", "split_file",
+    compare_attrs = ("svnurl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath")

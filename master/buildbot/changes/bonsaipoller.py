@@ -202,8 +202,7 @@ class BonsaiParser:
 
 
 class BonsaiPoller(base.PollingChangeSource):
-    compare_attrs = base.PollingChangeSource.compare_attrs + \
-                    ("bonsaiURL", "pollInterval", "tree",
+    compare_attrs = ("bonsaiURL", "pollInterval", "tree",
                      "module", "branch", "cvsroot")
 
     def __init__(self, bonsaiURL, module, branch, tree="default",

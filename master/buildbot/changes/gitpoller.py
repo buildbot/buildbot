@@ -27,8 +27,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
     
-    compare_attrs = base.PollingChangeSource.compare_attrs + \
-                    ("repourl", "branches", "workdir",
+    compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project")
 

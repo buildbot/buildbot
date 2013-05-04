@@ -26,8 +26,7 @@ class HgPoller(base.PollingChangeSource):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = base.PollingChangeSource.compare_attrs + \
-                   ("repourl", "branch", "workdir",
+    compare_attrs = ("repourl", "branch", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
                      "category", "project")
 
