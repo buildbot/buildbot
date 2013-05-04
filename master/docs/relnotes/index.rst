@@ -18,8 +18,10 @@ Features
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
-* Buildbot now support a new PNG Status Resource that can be accessed publicly from for example README.md files or wikis or whatever other resource.
+* The web UI now supports a PNG Status Resource that can be accessed publicly from for example README.md files or wikis or whatever other resource.
   This view produces an image in PNG format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
+
+* The web hooks now include support for Bitbucket.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
