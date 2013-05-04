@@ -26,6 +26,8 @@ Features
 * The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to 
   rebuild from exact revisions or from the same sourcestamps (ie, update branch references)
 
+* The ``start``, ``restart``, and ``reconfig`` commands will now wait for longer than 10 seconds as long as the master continues producing log lines indicating that the configuration is progressing.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
