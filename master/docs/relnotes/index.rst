@@ -23,6 +23,9 @@ Features
 
 * The web hooks now include support for Bitbucket.
 
+* The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to 
+  rebuild from exact revisions or from the same sourcestamps (ie, update branch references)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -218,6 +218,13 @@
      <span class="label">Reason for re-running build:</span>
      <input type='text' name='comments' />
    </div>
+   <div class="row">
+     Rebuild using:
+     <select name="useSourcestamp">
+        <option value='exact' selected>Exact same revisions</option>
+        <option value='updated'>Same sourcestamps (ignoring 'got revision')</option>
+     </select>
+   </div>
    <input type="submit" value="Rebuild" />
  </form>
 {% endmacro %}
