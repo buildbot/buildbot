@@ -253,7 +253,7 @@ class JsonResource(resource.Resource):
         if callback:
             # Only accept things that look like identifiers for now
             callback = callback[0]
-            if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
+            if re.match(r'^[a-zA-Z$_][a-zA-Z$0-9._]*$', callback):
                 data = '%s(%s);' % (callback, data)
         defer.returnValue(data)
 

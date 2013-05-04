@@ -359,6 +359,14 @@ be used to access them.
     As with ``/one_line_per_build``, this page will also honor
     ``builder=`` and ``branch=`` arguments.
 
+``/png``
+    This view produces an image in png format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
+
+:samp:`/png?builder=${BUILDERNAME}&number=$BUILDNUM&size=large`
+    This generate a large png image reporting the status of the given $BUILDNUM for the given builder $BUILDERNAME. The sizes are `small`, `normal` and `large` if no size is given the `normal` size is returned, if no $BUILDNUM is given the last build is returned. For example:
+
+    .. image:: ../_images/success_normal.png
+
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.
     It'll redirect to ``/authfail`` on ``False``, ``/users/table`` on ``True``,
@@ -738,6 +746,40 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
 
 Note that not using ``change_hook_auth`` can expose you to security risks.
+
+BitBucket hook
+##############
+
+The BitBucket hook is as simple as GitHub one and it also takes no options. ::
+
+    c['status'].append(html.WebStatus(..
+                       change_hook_dialects={ 'bitbucket' : True }))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket``
+relative to the root of the web status. For example, it the grid URL is
+``http://builds.mycompany.com/bbot/grid``, then point BitBucket to
+``http://builds.mycompany.com/change_hook/bitbucket``. To specify a project associated
+to the repository, append ``?project=name`` to the URL.
+
+Note that there is a satandalone HTTP server available for receiving BitBucket
+notifications, as well: :file:`contrib/bitbucket_buildbot.py`. This script may be
+useful in cases where you cannot expose the WebStatus for public consumption.
+
+.. warning::
+
+    As in the previous case, the incoming HTTP requests for this hook are not
+    authenticated bu default. Anyone who can access the web status can "fake"
+    a request from BitBucket, potentially causing the buildmaster to run
+    arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+  c['status'].append(html.WebStatus(..
+                                    change_hook_auth=('user', 'password')))
+
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+
+Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
 Google Code hook
 ################
@@ -1161,8 +1203,8 @@ status objects:
 Name of the builder that generated this event
     ``name``
 
-Name of the project
-    :meth:`master_status.getProjectName()`
+Title of the buildmaster
+    :meth:`master_status.getTitle()`
 
 MailNotifier mode
     ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``,

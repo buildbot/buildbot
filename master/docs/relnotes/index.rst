@@ -71,6 +71,20 @@ Master
 Features
 ~~~~~~~~
 
+* A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
+
+* Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
+
+* The web UI now supports a PNG Status Resource that can be accessed publicly from for example README.md files or wikis or whatever other resource.
+  This view produces an image in PNG format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
+
+* The web hooks now include support for Bitbucket.
+
+* The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to 
+  rebuild from exact revisions or from the same sourcestamps (ie, update branch references)
+
+* The ``start``, ``restart``, and ``reconfig`` commands will now wait for longer than 10 seconds as long as the master continues producing log lines indicating that the configuration is progressing.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

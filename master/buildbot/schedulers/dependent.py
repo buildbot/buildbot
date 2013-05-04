@@ -20,7 +20,7 @@ from buildbot.schedulers import base
 
 class Dependent(base.BaseScheduler):
 
-    compare_attrs = base.BaseScheduler.compare_attrs + ('upstream_name',)
+    compare_attrs = ('upstream_name',)
 
     def __init__(self, name, upstream, builderNames, properties={}, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,

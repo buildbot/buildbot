@@ -18,6 +18,8 @@ import types
 import time, re, string
 import datetime
 import calendar
+from twisted.python import reflect 
+
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
 def naturalSort(l):
@@ -35,11 +37,11 @@ def naturalSort(l):
     l = [ i[1] for i in keyed_l ]
     return l
 
-def flatten(l):
-    if l and type(l[0]) == list:
+def flatten(l, types=list):
+    if l and isinstance(l, types):
         rv = []
         for e in l:
-            if type(e) == list:
+            if isinstance(e, types):
                 rv.extend(flatten(e))
             else:
                 rv.append(e)
@@ -70,10 +72,13 @@ class ComparableMixin:
 
     class _None:
         pass
-
+ 
     def __hash__(self):
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs) 
+
         alist = [self.__class__] + \
-                [getattr(self, name, self._None) for name in self.compare_attrs]
+                [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
     def __cmp__(self, them):
@@ -81,18 +86,17 @@ class ComparableMixin:
         if result:
             return result
 
-        result = cmp(self.__class__.__name__, them.__class__.__name__)
+        result = cmp(self.__class__, them.__class__)
         if result:
             return result
 
-        result = cmp(self.compare_attrs, them.compare_attrs)
-        if result:
-            return result
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
         self_list = [getattr(self, name, self._None)
-                     for name in self.compare_attrs]
+                     for name in compare_attrs]
         them_list = [getattr(them, name, self._None)
-                     for name in self.compare_attrs]
+                     for name in compare_attrs]
         return cmp(self_list, them_list)
 
 def diffSets(old, new):

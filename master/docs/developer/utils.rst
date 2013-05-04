@@ -44,6 +44,11 @@ package.
             compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
 
 
+    A point to note is that the compare_attrs list is cumulative; that is,
+    when a subclass also has a compare_attrs and the parent class has a
+    compare_attrs, the subclass' compare_attrs also includes the parent
+    class' compare_attrs.
+
 .. py:function:: safeTranslate(str)
 
     :param str: input string

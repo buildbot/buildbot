@@ -153,7 +153,7 @@ class GridStatusMixin(object):
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamps(absolute=True)
                 key = self.getSourceStampKey(ss)
-                start = min(build.getTimes())
+                start = build.getTimes()[0]
                 if key not in sourcestamps or sourcestamps[key][1] > start:
                     sourcestamps[key] = (ss, start)
 

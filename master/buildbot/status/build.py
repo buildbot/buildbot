@@ -177,7 +177,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.currentStep
 
     # Once you know the build has finished, the following methods are legal.
-    # Before ths build has finished, they all return None.
+    # Before this build has finished, they all return None.
 
     def getText(self):
         text = []
