@@ -69,9 +69,11 @@ class BaseBasicScheduler(base.BaseScheduler):
         raise NotImplementedError
 
     def activate(self):
-        d = self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+        d = base.BaseScheduler.activate(self)
+        d.addCallback(lambda _ :
+            self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                        change_filter=self.change_filter,
-                                       onlyImportant=self.onlyImportant)
+                                       onlyImportant=self.onlyImportant))
 
         # if treeStableTimer is False, then we don't care about classified
         # changes, so get rid of any hanging around from previous
@@ -89,15 +91,18 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         return d
 
+    @defer.inlineCallbacks
     def deactivate(self):
-        # the base stopService will unsubscribe from new changes
+        # the base deactivate will unsubscribe from new changes
+        yield base.BaseScheduler.deactivate(self)
+
         @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers():
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
-        return cancel_timers()
+        yield cancel_timers()
 
     @util.deferredLocked('_stable_timers_lock')
     def gotChange(self, change, important):

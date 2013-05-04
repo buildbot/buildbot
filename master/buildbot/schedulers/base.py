@@ -159,7 +159,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         d.addErrback(log.err, 'while processing change')
 
     def _stopConsumingChanges(self):
-        # (note: called automatically in stopService)
+        # (note: called automatically in deactivate)
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption

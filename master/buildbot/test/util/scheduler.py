@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from buildbot.schedulers import base
 from buildbot.test.fake import fakemaster, fakedb
 from buildbot.test.util import interfaces
 
@@ -101,6 +102,30 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 self.addedSourceStampSets.append([])
                 return defer.succeed(400 + len(self.addedSourceStampSets) - 1)
             self.db.sourcestamps.addSourceStampSet = fake_addSourceStampSet
+
+        # patch methods to detect a failure to upcall the activate and
+        # deactivate methods .. unless we're testing BaseScheduler
+        def patch(meth):
+            oldMethod = getattr(scheduler, meth)
+            def newMethod():
+                self._parentMethodCalled = False
+                d = defer.maybeDeferred(oldMethod)
+                @d.addCallback
+                def check(rv):
+                    self.assertTrue(self._parentMethodCalled,
+                        "'%s' did not call its parent" % meth)
+                    return rv
+                return d
+            setattr(scheduler, meth, newMethod)
+
+            oldParent = getattr(base.BaseScheduler, meth)
+            def newParent(self_):
+                self._parentMethodCalled = True
+                return oldParent(self_)
+            self.patch(base.BaseScheduler, meth, newParent)
+        if scheduler.__class__ != base.BaseScheduler:
+            patch('activate')
+            patch('deactivate')
 
         self.sched = scheduler
         return scheduler

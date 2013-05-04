@@ -95,7 +95,10 @@ class Try_Jobdir(TryBase):
 
     # activation handlers
 
+    @defer.inlineCallbacks
     def activate(self):
+        yield TryBase.activate(self)
+
         # set the watcher's basedir now that we have a master
         jobdir = os.path.join(self.master.basedir, self.jobdir)
         self.watcher.setBasedir(jobdir)
@@ -103,11 +106,15 @@ class Try_Jobdir(TryBase):
             if not os.path.exists(os.path.join(jobdir, subdir)):
                 os.mkdir(os.path.join(jobdir, subdir))
 
-        # bridge the activate/deactivate to a startService/stopService on the child service
+        # bridge the activate/deactivate to a startService/stopService on the
+        # child service
         self.watcher.startService()
 
+    @defer.inlineCallbacks
     def deactivate(self):
-        # bridge the activate/deactivate to a startService/stopService on the child service
+        yield TryBase.deactivate(self)
+        # bridge the activate/deactivate to a startService/stopService on the
+        # child service
         self.watcher.stopService()
 
     def parseJob(self, f):
@@ -292,7 +299,10 @@ class Try_Userpass(TryBase):
         self.port = port
         self.userpass = userpass
 
+    @defer.inlineCallbacks
     def activate(self):
+        yield TryBase.activate(self)
+
         # register each user/passwd with the pbmanager
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
@@ -302,6 +312,8 @@ class Try_Userpass(TryBase):
                 self.master.pbmanager.register(
                     self.port, user, passwd, factory))
 
+    @defer.inlineCallbacks
     def deactivate(self):
-        return defer.gatherResults(
+        yield TryBase.deactivate(self)
+        yield defer.gatherResults(
             [reg.unregister() for reg in self.registrations])

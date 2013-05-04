@@ -79,6 +79,7 @@ That may involve calling :py:meth:`~buildbot.schedulers.base.BaseScheduler.start
 
 Any processing begun by the ``activate`` method, or by an active scheduler, should be stopped by the ``deactivate`` method.
 The ``deactivate`` method's Deferred should not fire until such processing has completely stopped.
+Schedulers must up-call the parent class's ``activate`` and ``deactivate`` methods!
 
 Keeping State
 -------------
