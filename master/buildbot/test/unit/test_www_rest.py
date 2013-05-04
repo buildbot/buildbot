@@ -181,7 +181,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                errorJsonRPC={'code': -32603, 'message': 'invalid path'},
+                errorJsonRpcCode=-32603,
                 contentType='application/json',
                 responseCode=404)
         return d
@@ -192,10 +192,11 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                errorJsonRPC={'code': -32601, 'message': 'invalid method'},
+                errorJsonRpcCode=-32601,
                 contentType='application/json',
                 responseCode=501)
         return d
+
     def test_controljs_badaction2(self):
         d = self.render_control_resource(self.rsrc, ['path'],
                                          {"param1":["foo"]},action="notfounderror",
@@ -203,10 +204,11 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                errorJsonRPC={'code': -32601, 'message': 'notfounderror not found'},
+                errorJsonRpcCode=-32601,
                 contentType='application/json',
                 responseCode=501)
         return d
+
     def dotest_controljs_malformedjson(self, _json, error, noIdCheck=False, httpcode=400,
                                        autoEncode=True):
         request = self.make_request(['path'])
@@ -220,54 +222,51 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         @d.addCallback
         def check(_):
             self.assertRequest(
-                errorJsonRPC=error,
+                errorJsonRpcCode=error,
                 contentType='application/json',
                 responseCode=httpcode)
         return d
+
     def test_controljs_malformedjsonparse(self):
         return self.dotest_controljs_malformedjson(
-            "{]",
-            {'code': -32700, 'message': "jsonrpc parse error: Expecting property name: line 1 column 1 (char 1)"}
-            ,noIdCheck=True, autoEncode=False)
+            "{]", -32700, noIdCheck=True, autoEncode=False)
+
     def test_controljs_malformedjsonlist(self):
         return self.dotest_controljs_malformedjson(
             [ "list_not_supported"],
-            {'code': -32603, 'message': 'jsonrpc call batch is not supported'}
-            ,noIdCheck=True)
+            -32603, noIdCheck=True)
 
     def test_controljs_malformedjson_no_dict(self):
         return self.dotest_controljs_malformedjson(
             "str_not_supported",
-            {'code': -32700, 'message': 'json root object must be a dictionary: "str_not_supported"'}
-            ,noIdCheck=True)
+            -32700, noIdCheck=True)
+
     def test_controljs_malformedjson_nojsonrpc(self):
         return self.dotest_controljs_malformedjson(
             { "method": "action", "params": {"arg":"args"}, "id": "_id"},
-            {'code': -32600, 'message': "need 'jsonrpc' to be present"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)
+
     def test_controljs_malformedjson_no_method(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "params": {"arg":"args"}, "id": "_id"},
-            {'code': -32600, 'message': "need 'method' to be present"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)
+
     def test_controljs_malformedjson_bad_method(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "params": {"arg":"args"}, "method":1,"id": "_id"},
-            {'code': -32600,
-             'message': "need 'method' to be of type <type 'str'> or <type 'unicode'>:1"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)
+
     def test_controljs_malformedjson_no_param(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method": "action",  "id": "_id"},
-            {'code': -32600, 'message': "need 'params' to be present"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)
+
     def test_controljs_malformedjson_bad_param(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method":"action", "params": ["args"], "id": "_id"},
-            {'code': -32600, 'message': "need 'params' to be of type <type 'dict'>:[\"args\"]"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)
+
     def test_controljs_malformedjson_no_id(self):
         return self.dotest_controljs_malformedjson(
             { "jsonrpc": "2.0", "method": "action",  "params": {"arg":"args"} },
-            {'code': -32600, 'message': "need 'id' to be present"}
-            ,noIdCheck=True)
+            -32600, noIdCheck=True)

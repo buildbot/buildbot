@@ -115,7 +115,7 @@ class WwwTestMixin(object):
         return d
 
     def assertRequest(self, content=None, contentJson=None, contentType=None,
-            responseCode=None, contentDisposition=None, errorJsonRPC=None):
+            responseCode=None, contentDisposition=None, errorJsonRpcCode=None):
         got, exp = {}, {}
         if content is not None:
             got['content'] = self.request.written
@@ -123,11 +123,12 @@ class WwwTestMixin(object):
         if contentJson is not None:
             got['contentJson'] = json.loads(self.request.written)
             exp['contentJson'] = contentJson
-        if errorJsonRPC is not None:
+        if errorJsonRpcCode is not None:
             jsonrpc = json.loads(self.request.written)
             self.assertIn("error", jsonrpc)
-            got['errorJsonRPC'] = jsonrpc["error"]
-            exp['errorJsonRPC'] = errorJsonRPC
+            self.assertIn("code", jsonrpc["error"])
+            got['errorJsonRpcCode'] = jsonrpc["error"]["code"]
+            exp['errorJsonRpcCode'] = errorJsonRpcCode
         if contentType is not None:
             got['contentType'] =  self.request.headers['content-type']
             exp['contentType'] = [ contentType ]
