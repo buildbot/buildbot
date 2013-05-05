@@ -208,7 +208,7 @@ class LogFile:
         @type  parent: L{BuildStepStatus}
         @param parent: the Step that this log is a part of
         @type  name: string
-        @param name: the name of this log, typically 'output'
+        @param name: the name of this log, typically 'stdio'
         @type  logfilename: string
         @param logfilename: the Builder-relative pathname for the saved entries
         """

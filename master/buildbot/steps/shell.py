@@ -534,7 +534,7 @@ class WarningCountingShellCommand(ShellCommand):
         self.addSuppression(list)
         return ShellCommand.start(self)
 
-    def createSummary(self, log):
+    def createWarningsLog(self, log):
         """
         Match log lines against warningPattern.
 
@@ -587,16 +587,18 @@ class WarningCountingShellCommand(ShellCommand):
             self.addCompleteLog("warnings (%d)" % self.warnCount,
                     "\n".join(warnings) + "\n")
 
+    def createSummary(self, log):
+        self.createWarningsLog(log)
+
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
 
         old_count = self.getProperty("warnings-count", 0)
         self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
-
     def evaluateCommand(self, cmd):
         if ( cmd.didFail() or
-           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
+           ( self.maxWarnCount is not None and self.warnCount > self.maxWarnCount ) ):
             return FAILURE
         if self.warnCount:
             return WARNINGS
