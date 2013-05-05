@@ -98,10 +98,18 @@ class ChangePerspective(NewCredPerspective):
         return d
 
 class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
-    compare_attrs = ["user", "passwd", "port", "prefix", "port"]
+    compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None,
-            prefix=None):
+            prefix=None, name=None):
+
+        if name is None:
+            if prefix:
+                name = "PBChangeSource:%s:%s" % (prefix, port)
+            else:
+                name = "PBChangeSource:%s" % (port,)
+
+        base.ChangeSource.__init__(self, name)
 
         self.user = user
         self.passwd = passwd
@@ -125,17 +133,19 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             port = new_config.slavePortnum
 
         # and, if it's changed, re-register
-        if port != self.registered_port:
+        if port != self.registered_port and self.isActive():
             yield self._unregister()
             self._register(port)
 
         yield config.ReconfigurableServiceMixin.reconfigService(
                 self, new_config)
 
-    def stopService(self):
-        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
-        d.addCallback(lambda _ : self._unregister())
-        return d
+    def activate(self):
+        self._register(self.port)
+        return defer.succeed(None)
+
+    def deactivate(self):
+        return self._unregister()
 
     def _register(self, port):
         if not port:

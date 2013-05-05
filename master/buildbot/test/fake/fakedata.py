@@ -31,12 +31,14 @@ class FakeUpdates(object):
 
         # test cases should assert the values here:
         self.changesAdded = [] # Changes are numbered starting at 1.
+        self.changesourceIds = {}  # { name : id }; users can add changesources here
         self.buildsetsAdded = [] # Buildsets are numbered starting at 1
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = [] # dictionaries
         self.schedulerIds = {} # { name : id }; users can add schedulers here
         self.builderIds = {} # { name : id }; users can add schedulers here
         self.schedulerMasters = {} # { schedulerid : masterid }
+        self.changesourceMasters = {} # { changesourceid : masterid }
 
     ## extra assertions
 
@@ -151,6 +153,13 @@ class FakeUpdates(object):
             self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
         return defer.succeed(self.schedulerIds[name])
 
+    def findChangeSourceId(self, name):
+        validation.verifyType(self.testcase, 'changesource name', name,
+                validation.StringValidator())
+        if name not in self.changesourceIds:
+            self.changesourceIds[name] = max([0] + self.changesourceIds.values()) + 1
+        return defer.succeed(self.changesourceIds[name])
+
     def findBuilderId(self, name):
         validation.verifyType(self.testcase, 'builder name', name,
                 validation.StringValidator())
@@ -166,6 +175,16 @@ class FakeUpdates(object):
         if currentMasterid and masterid is not None:
             return defer.succeed(False)
         self.schedulerMasters[schedulerid] = masterid
+        return defer.succeed(True)
+
+    def trySetChangeSourceMaster(self, changesourceid, masterid):
+        currentMasterid = self.changesourceMasters.get(changesourceid)
+        if isinstance(currentMasterid, Exception):
+            return defer.fail(failure.Failure(
+                currentMasterid))
+        if currentMasterid and masterid is not None:
+            return defer.succeed(False)
+        self.changesourceMasters[changesourceid] = masterid
         return defer.succeed(True)
 
     def newBuild(self, builderid, buildrequestid, slaveid):

@@ -275,6 +275,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller('file://')
         self.assertSubstring("SVNPoller", s.describe())
 
+    def test_name(self):
+        s = self.attachSVNPoller('file://')
+        self.assertEqual("file://", s.name)
+
+        s = self.attachSVNPoller('file://', name='MyName')
+        self.assertEqual("MyName", s.name)
+
     def test_strip_svnurl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
         s = self.attachSVNPoller(base + "/")

@@ -155,6 +155,11 @@ class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
         self.master.data.rtypes.scheduler._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
+        self.master.data.rtypes.changesources = mock.Mock(
+                                    spec=builders.BuildersResourceType)
+        self.master.data.rtypes.changesources._masterDeactivated.side_effect = \
+                            lambda masterid : defer.succeed(None)
+
         self.rtype = masters.MasterResourceType(self.master)
 
     def test_signature_masterActive(self):
@@ -274,4 +279,6 @@ class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
         self.master.data.rtypes.builder._masterDeactivated. \
                 assert_called_with(masterid=14)
         self.master.data.rtypes.scheduler._masterDeactivated. \
+                assert_called_with(masterid=14)
+        self.master.data.rtypes.changesources._masterDeactivated. \
                 assert_called_with(masterid=14)

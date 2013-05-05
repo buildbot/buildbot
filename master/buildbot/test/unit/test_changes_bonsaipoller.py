@@ -240,6 +240,10 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
 
     # tests
 
+    def test_name(self):
+        # the name is just the url
+        self.assertEqual(self.changesource.bonsaiURL, self.changesource.name)
+
     def test_describe(self):
         assert re.search(r'bonsai\.mozilla\.org', self.changesource.describe())
 

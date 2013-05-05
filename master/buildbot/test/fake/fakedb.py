@@ -26,7 +26,7 @@ from operator import itemgetter
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
-from buildbot.db import buildrequests, schedulers
+from buildbot.db import buildrequests, schedulers, changesources
 from buildbot.test.util import validation
 
 # Fake DB Rows
@@ -140,6 +140,29 @@ class BuildRequestClaim(Row):
 
     required_columns = ('brid', 'masterid', 'claimed_at')
 
+
+class ChangeSource(Row):
+    table = "changesources"
+
+    defaults = dict(
+        id = None,
+        name = 'csname',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
+
+
+class ChangeSourceMaster(Row):
+    table = "changesource_masters"
+
+    defaults = dict(
+        changesourceid = None,
+        masterid = None,
+    )
+
+    required_columns = ( 'changesourceid', 'masterid' )
 
 class Change(Row):
     table = "changes"
@@ -474,6 +497,90 @@ class FakeDBComponent(object):
         if 'count' in opts and opts['count'] != 0:
             l = l[:int(opts['count'])]
         return l
+
+class FakeChangeSourcesComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.changesources = {}
+        self.changesource_masters = {}
+        self.states = {}
+
+    def insertTestData(self, rows):
+        pass
+        for row in rows:
+            if isinstance(row, ChangeSource):
+                self.changesources[row.id] = row.name
+            if isinstance(row, ChangeSourceMaster):
+                self.changesource_masters[row.changesourceid] = row.masterid
+
+    # component methods
+
+    def findChangeSourceId(self, name):
+        for cs_id, cs_name in self.changesources.iteritems():
+            if cs_name == name:
+                return defer.succeed(cs_id)
+        new_id = (max(self.changesources) + 1) if self.changesources else 1
+        self.changesources[new_id] = name
+        return defer.succeed(new_id)
+
+    def getChangeSource(self, changesourceid):
+        if changesourceid in self.changesources:
+            rv = dict(
+                id=changesourceid,
+                name=self.changesources[changesourceid],
+                masterid=None)
+            # only set masterid if the relevant changesource master exists and
+            # is active
+            rv['masterid'] = self.changesource_masters.get(changesourceid)
+            return defer.succeed(rv)
+        else:
+            return None
+
+    def getChangeSources(self, active=None, masterid=None):
+        d = defer.DeferredList([
+            self.getChangeSource(id) for id in self.changesources
+        ])
+        @d.addCallback
+        def filter(results):
+            # filter off the DeferredList results (we know it's good)
+            results = [ r[1] for r in results ]
+            # filter for masterid
+            if masterid is not None:
+                results = [ r for r in results
+                            if r['masterid'] == masterid ]
+            # filter for active or inactive if necessary
+            if active:
+                results = [ r for r in results
+                            if r['masterid'] is not None ]
+            elif active is not None:
+                results = [ r for r in results
+                            if r['masterid'] is None ]
+            return results
+        return d
+
+    def setChangeSourceMaster(self, changesourceid, masterid):
+        current_masterid = self.changesource_masters.get(changesourceid)
+        if current_masterid and masterid is not None:
+            return defer.fail(changesources.ChangeSourceAlreadyClaimedError())
+        self.changesource_masters[changesourceid] = masterid
+        return defer.succeed(None)
+
+    # fake methods
+
+    def fakeChangeSource(self, name, changesourceid):
+        self.changesources[changesourceid] = name
+
+    def fakeChangeSourceMaster(self, changesourceid, masterid):
+        if masterid is not None:
+            self.changesource_masters[changesourceid] = masterid
+        else:
+            del self.changesource_masters[changesourceid]
+
+    # assertions
+
+    def assertChangeSourceMaster(self, changesourceid, masterid):
+        self.t.assertEqual(self.changesource_masters.get(changesourceid),
+                           masterid)
 
 class FakeChangesComponent(FakeDBComponent):
 
@@ -1779,6 +1886,8 @@ class FakeDBConnector(object):
 
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
+        self._components.append(comp)
+        self.changesources = comp = FakeChangeSourcesComponent(self, testcase)
         self._components.append(comp)
         self.schedulers = comp = FakeSchedulersComponent(self, testcase)
         self._components.append(comp)
