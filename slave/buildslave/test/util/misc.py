@@ -73,7 +73,7 @@ class OpenFileMixin:
     """
     Mixin for patching open() to simulate successful reads and I/O errors.
     """
-    def setUpOpen(self, file_contents):
+    def setUpOpen(self, file_contents="dummy-contents"):
         """
         patch open() to return file object with provided contents.
 
@@ -115,6 +115,21 @@ class OpenFileMixin:
         self.fileobj = mock.Mock()
         self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
                                                           filename))
+        self.open = mock.Mock(return_value=self.fileobj)
+        self.patch(__builtin__, "open", self.open)
+
+    def setUpWriteError(self, errno, strerror="dummy-msg",
+                        filename="dummy-file"):
+        """
+        patch open() to return a file object that will raise IOError on write()
+
+        @param    errno: exception's errno value
+        @param strerror: exception's strerror value
+        @param filename: exception's filename value
+        """
+        self.fileobj = mock.Mock()
+        self.fileobj.write = mock.Mock(side_effect=IOError(errno, strerror,
+                                                           filename))
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
 
