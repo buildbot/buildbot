@@ -306,7 +306,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if not self.parent:
             return
 
-        buildmaster = self.botmaster.master
+        buildmaster = self.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the buildslave named %s went away\n" %
@@ -445,7 +445,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             log.msg("bot attached")
             self.messageReceivedFromSlave()
             self.stopMissingTimer()
-            self.botmaster.master.status.slaveConnected(self.slavename)
+            self.master.status.slaveConnected(self.slavename)
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
@@ -469,7 +469,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        self.botmaster.master.status.slaveDisconnected(self.slavename)
+        self.master.status.slaveDisconnected(self.slavename)
         self.stopKeepaliveTimer()
         self.releaseLocks()
 
@@ -616,7 +616,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def _mail_missing_message(self, subject, text):
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
-        buildmaster = self.botmaster.master
+        buildmaster = self.master
         for st in buildmaster.status:
             if isinstance(st, MailNotifier):
                 break
@@ -869,7 +869,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         if not self.parent or not self.notify_on_missing:
             return
 
-        buildmaster = self.botmaster.master
+        buildmaster = self.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
         text += ("has noticed that the latent buildslave named %s \n" %
