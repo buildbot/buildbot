@@ -13,10 +13,99 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 import mock
 from twisted.trial import unittest
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
+
+
+class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
+    """
+    Test buildslave.scripts.create_slave._makeBaseDir()
+    """
+    def setUp(self):
+        # capture stdout
+        self.setUpStdoutAssertions()
+
+        # patch os.mkdir() to do nothing
+        self.mkdir = mock.Mock()
+        self.patch(os, "mkdir", self.mkdir)
+
+    def testBasedirExists(self):
+        """
+        test calling _makeBaseDir() on existing base directory
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=True))
+
+        # call _makeBaseDir()
+        create_slave._makeBaseDir("dummy", False)
+
+        # check that correct message was printed to stdout
+        self.assertStdoutEqual("updating existing installation\n")
+        # check that os.mkdir was not called
+        self.assertFalse(self.mkdir.called,
+                         "unexpected call to os.mkdir()")
+
+    def testBasedirExistsQuiet(self):
+        """
+        test calling _makeBaseDir() on existing base directory with
+        quiet flag enabled
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=True))
+
+        # call _makeBaseDir()
+        create_slave._makeBaseDir("dummy", True)
+
+        # check that nothing was printed to stdout
+        self.assertWasQuiet()
+        # check that os.mkdir was not called
+        self.assertFalse(self.mkdir.called,
+                         "unexpected call to os.mkdir()")
+
+    def testBasedirCreated(self):
+        """
+        test creating new base directory with _makeBaseDir()
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=False))
+
+        # call _makeBaseDir()
+        create_slave._makeBaseDir("dummy", False)
+
+        # check that os.mkdir() was called with correct path
+        self.mkdir.assert_called_once_with("dummy")
+        # check that correct message was printed to stdout
+        self.assertStdoutEqual("mkdir dummy\n")
+
+    def testBasedirCreatedQuiet(self):
+        """
+        test creating new base directory with _makeBaseDir()
+        and quiet flag enabled
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=False))
+
+        # call _makeBaseDir()
+        create_slave._makeBaseDir("dummy", True)
+
+        # check that os.mkdir() was called with correct path
+        self.mkdir.assert_called_once_with("dummy")
+        # check that nothing was printed to stdout
+        self.assertWasQuiet()
+
+    def testMkdirError(self):
+        """
+        test that _makeBaseDir() handles error creating directory correctly
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=False))
+
+        # patch os.mkdir() to raise an exception
+        self.patch(os, "mkdir",
+                   mock.Mock(side_effect=OSError(0, "dummy-error")))
+
+        # check that correct exception was raised
+        self.assertRaisesRegexp(create_slave.CreateSlaveError,
+                                "error creating directory dummy: dummy-error",
+                                create_slave._makeBaseDir, "dummy", False)
 
 
 class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
