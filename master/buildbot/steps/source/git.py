@@ -57,12 +57,11 @@ git_describe_flags = [
 class Git(Source):
     """ Class for Git with all the smarts """
     name='git'
-    renderables = [ "repourl"]
+    renderables = [ "repourl", "reference"]
 
-    def __init__(self, repourl=None, branch='HEAD', mode='incremental',
-                 method=None, submodules=False, shallow=False, progress=False,
-                 retryFetch=False, clobberOnFailure=False, getDescription=False,
-                 config=None, **kwargs):
+    def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
+                 reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
+                 clobberOnFailure=False, getDescription=False, config=None, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -83,10 +82,14 @@ class Git(Source):
         @param method: Full builds can be done is different ways. This parameter
                        specifies which method to use.
 
+        @type reference: string
+        @param reference: If available use a reference repo.
+                          Uses `--reference` in git command. Refer `git clone --help`
         @type  progress: boolean
         @param progress: Pass the --progress option when fetching. This
                          can solve long fetches getting killed due to
                          lack of output, but requires Git 1.7.2+.
+
         @type  shallow: boolean
         @param shallow: Use a shallow or clone, if possible
 
@@ -106,6 +109,7 @@ class Git(Source):
         self.method    = method
         self.prog  = progress
         self.repourl   = repourl
+        self.reference = reference
         self.retryFetch = retryFetch
         self.submodules = submodules
         self.shallow   = shallow
@@ -381,9 +385,10 @@ class Git(Source):
             args += ['--branch', self.branch]
         if shallowClone:
             args += ['--depth', '1']
+        if self.reference:
+            args += ['--reference', self.reference]
         command = ['clone'] + args + [self.repourl, '.']
 
-        #Fix references
         if self.prog:
             command.append('--progress')
 

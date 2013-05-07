@@ -290,6 +290,31 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_full_clean_no_existing_repo_with_reference(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                                    mode='full', method='clean', reference='path/to/reference/repo'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+
+            Expect('stat', dict(file='wkdir/.git',
+                                logEnviron=True))
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone', '--reference', 'path/to/reference/repo',
+                                 'http://github.com/buildbot/buildbot.git', '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_full_clean_no_existing_repo_branch(self):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
