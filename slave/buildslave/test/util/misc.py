@@ -16,6 +16,7 @@
 import os
 import sys
 import mock
+import errno
 import shutil
 import __builtin__
 import cStringIO
@@ -92,7 +93,7 @@ class OpenFileMixin:
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
 
-    def setUpOpenError(self, errno, strerror="dummy-msg",
+    def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
                        filename="dummy-file"):
         """
         patch open() to raise IOError
@@ -104,7 +105,7 @@ class OpenFileMixin:
         self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
         self.patch(__builtin__, "open", self.open)
 
-    def setUpReadError(self, errno, strerror="dummy-msg",
+    def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
                        filename="dummy-file"):
         """
         patch open() to return a file object that will raise IOError on read()
@@ -120,7 +121,7 @@ class OpenFileMixin:
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
 
-    def setUpWriteError(self, errno, strerror="dummy-msg",
+    def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg",
                         filename="dummy-file"):
         """
         patch open() to return a file object that will raise IOError on write()

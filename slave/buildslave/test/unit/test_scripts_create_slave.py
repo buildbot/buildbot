@@ -128,7 +128,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         """
         self.patch(os.path, "exists", mock.Mock(return_value=True))
         # patch open() to raise exception
-        self.setUpOpenError(0)
+        self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
@@ -142,7 +142,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         """
         self.patch(os.path, "exists", mock.Mock(return_value=True))
         # patch read() to raise exception
-        self.setUpReadError(0)
+        self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
