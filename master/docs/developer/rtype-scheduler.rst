@@ -53,7 +53,6 @@ All update methods are available as attributes of ``master.data.updates``.
 
         :param integer schedulerid: scheduler ID to try to claim
         :param integer masterid: this master's master ID
-        :raises: :py:exc:`~buildbot.data.exceptions.SchedulerAlreadyClaimedError`
         :returns: ``True`` or ``False``, via Deferred
 
         Try to claim the given scheduler for the given master and return ``True`` if

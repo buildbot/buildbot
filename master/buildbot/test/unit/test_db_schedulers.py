@@ -279,6 +279,11 @@ class Tests(interfaces.InterfaceTests):
             dict(id=24, name='schname', masterid=13),
         ]))
 
+        schlist = yield self.db.schedulers.getSchedulers(
+                                            active=True, masterid=14)
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        self.assertEqual(sorted(schlist), [])
+
     @defer.inlineCallbacks
     def test_getSchedulers_inactive(self):
         yield self.insertTestData([
@@ -301,6 +306,11 @@ class Tests(interfaces.InterfaceTests):
                 active=False, masterid=13)
         [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
         self.assertEqual(sorted(schlist), [])
+
+        schlist = yield self.db.schedulers.getSchedulers(
+                active=False, masterid=14)
+        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        self.assertEqual(sorted(schlist), [])   # always returns [] by spec!
 
 
 class RealTests(Tests):

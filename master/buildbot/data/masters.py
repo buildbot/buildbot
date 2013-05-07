@@ -122,6 +122,8 @@ class MasterResourceType(base.ResourceType):
                                                     masterid=masterid)
         yield self.master.data.rtypes.scheduler._masterDeactivated(
                                                     masterid=masterid)
+        yield self.master.data.rtypes.changesources._masterDeactivated(
+                                                    masterid=masterid)
         self.produceEvent(
             dict(masterid=masterid, name=name, active=False),
             'stopped')

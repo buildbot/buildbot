@@ -26,7 +26,7 @@ class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ["gerritserver", "gerritport"]
+    compare_attrs = ("gerritserver", "gerritport")
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -40,7 +40,7 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None):
+    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None, name=None):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -56,6 +56,11 @@ class GerritChangeSource(base.ChangeSource):
 
         """
         # TODO: delete API comment when documented
+
+        if not name:
+            name = "GerritChangeSource:%s@%s:%d" % (username, gerritserver, gerritport)
+
+        base.ChangeSource.__init__(self, name=name)
 
         self.gerritserver = gerritserver
         self.gerritport = gerritport
@@ -182,17 +187,16 @@ class GerritChangeSource(base.ChangeSource):
         self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
           [ "ssh" ] + args + [ "gerrit", "stream-events" ])
 
-    def startService(self):
+    def activate(self):
         self.wantProcess = True
         self.startStreamProcess()
 
-    def stopService(self):
+    def deactivate(self):
         self.wantProcess = False
         if self.process:
             self.process.signalProcess("KILL")
         # TODO: if this occurs while the process is restarting, some exceptions may
         # be logged, although things will settle down normally
-        return base.ChangeSource.stopService(self)
 
     def describe(self):
         status = ""

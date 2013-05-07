@@ -34,7 +34,7 @@ class Scheduler(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SchedulerMaster(schedulerid=13, masterid=None),
             fakedb.Scheduler(id=14, name='other:scheduler'),
             fakedb.SchedulerMaster(schedulerid=14, masterid=22),
-            fakedb.Scheduler(id=15, name='other:scheduler'),
+            fakedb.Scheduler(id=15, name='another:scheduler'),
             fakedb.SchedulerMaster(schedulerid=15, masterid=33),
         ])
 
@@ -101,9 +101,9 @@ class Schedulers(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.SchedulerMaster(schedulerid=13, masterid=None),
             fakedb.Scheduler(id=14, name='other:scheduler'),
             fakedb.SchedulerMaster(schedulerid=14, masterid=22),
-            fakedb.Scheduler(id=15, name='other:scheduler'),
+            fakedb.Scheduler(id=15, name='another:scheduler'),
             fakedb.SchedulerMaster(schedulerid=15, masterid=33),
-            fakedb.Scheduler(id=16, name='other:scheduler'),
+            fakedb.Scheduler(id=16, name='wholenother:scheduler'),
             fakedb.SchedulerMaster(schedulerid=16, masterid=33),
         ])
 

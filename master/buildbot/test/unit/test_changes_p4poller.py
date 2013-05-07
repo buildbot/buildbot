@@ -97,6 +97,19 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                          split_file=lambda x: x.split('/', 1)))
         self.assertSubstring("p4source", self.changesource.describe())
 
+    def test_name(self):
+        # no name:
+        cs1 = P4Source(p4port=None, p4user=None,
+                         p4base='//depot/myproject/',
+                         split_file=lambda x: x.split('/', 1))
+        self.assertEqual("P4Source:None://depot/myproject/", cs1.name)
+
+        # explicit name:
+        cs2 = P4Source(p4port=None, p4user=None, name='MyName',
+                         p4base='//depot/myproject/',
+                         split_file=lambda x: x.split('/', 1))
+        self.assertEqual("MyName", cs2.name)
+
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
         self.attachChangeSource(

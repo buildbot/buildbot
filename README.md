@@ -91,7 +91,6 @@ The outstanding resource types are:
 
 * buildrequest :runner: (in progress by Maria Marcano)
 * buildslave :runner: (in progress by ewong)
-* changesource :runner: (in progress by Jared Grubb)
 
 For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
 

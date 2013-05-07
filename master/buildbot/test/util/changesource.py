@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.test.fake import fakemaster
 
 class ChangeSourceMixin(object):
@@ -26,6 +26,10 @@ class ChangeSourceMixin(object):
 
     changesource = None
     started = False
+
+    DUMMY_CHANGESOURCE_ID = 20
+    OTHER_MASTER_ID = 93
+    DEFAULT_NAME = "ChangeSource"
 
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
@@ -47,6 +51,10 @@ class ChangeSourceMixin(object):
         self.changesource = cs
         self.changesource.master = self.master
 
+        # also, now that changesources are ClusteredServices, setting up
+        # the clock here helps in the unit tests that check that behavior
+        self.changesource.clock = task.Clock()
+
     def startChangeSource(self):
         "start the change source as a service"
         self.started = True
@@ -59,3 +67,17 @@ class ChangeSourceMixin(object):
             self.started = False
         d.addCallback(mark_stopped)
         return d
+
+    def setChangeSourceToMaster(self, otherMaster):
+        # some tests build the CS late, so for those tests we will require that
+        # they use the default name in order to run tests that require master assignments
+        if self.changesource is not None:
+            name = self.changesource.name
+        else:
+            name = self.DEFAULT_NAME
+
+        self.master.data.updates.changesourceIds[name] = self.DUMMY_CHANGESOURCE_ID
+        if otherMaster:
+            self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID] = otherMaster
+        else:
+            del self.master.data.updates.changesourceMasters[self.DUMMY_CHANGESOURCE_ID]

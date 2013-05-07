@@ -421,6 +421,7 @@ All strings in the data model are unicode strings.
 
     rtype-buildset
     rtype-change
+    rtype-changesource
     rtype-master
     rtype-builder
     rtype-sourcestamp
