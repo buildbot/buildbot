@@ -263,6 +263,185 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.chmod.assert_called_once_with(tac_file_path, 0600)
 
 
+class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
+                        misc.OpenFileMixin,
+                        unittest.TestCase):
+    """
+    Test buildslave.scripts.create_slave._makeInfoFiles()
+    """
+    def setUp(self):
+        # capture stdout
+        self.setUpStdoutAssertions()
+
+    def checkMkdirError(self, quiet):
+        """
+        Utility function to test _makeInfoFiles() when os.mkdir() fails.
+
+        Patch os.mkdir() to raise an exception, and check that _makeInfoFiles()
+        handles mkdir errors correctly.
+
+        @param quiet: the value of 'quiet' argument for _makeInfoFiles()
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=False))
+        # patch os.mkdir() to raise an exception
+        self.patch(os, "mkdir", mock.Mock(side_effect=OSError(0, "err-msg")))
+
+        # call _makeInfoFiles() and check that correct exception is raised
+        self.assertRaisesRegexp(create_slave.CreateSlaveError,
+                                "error creating directory bdir/info: err-msg",
+                                create_slave._makeInfoFiles,
+                                "bdir", quiet)
+
+        # check output to stdout
+        if quiet:
+            self.assertWasQuiet()
+        else:
+            self.assertStdoutEqual("mkdir %s\n" % os.path.join("bdir", "info"))
+
+    def testMkdirError(self):
+        """
+        test _makeInfoFiles() when os.mkdir() fails
+        """
+        self.checkMkdirError(False)
+
+    def testMkdirErrorQuiet(self):
+        """
+        test _makeInfoFiles() when os.mkdir() fails and quiet flag is enabled
+        """
+        self.checkMkdirError(True)
+
+    def checkIOError(self, error_type, quiet):
+        """
+        Utility function to test _makeInfoFiles() when open() or write() fails.
+
+        Patch file IO functions to raise an exception, and check that
+        _makeInfoFiles() handles file IO errors correctly.
+
+        @param error_type: type of error to emulate,
+                           'open' - patch open() to fail
+                           'write' - patch write() to fail
+        @param quiet: the value of 'quiet' argument for _makeInfoFiles()
+        """
+        # patch os.path.exists() to simulate that 'info' directory exists
+        # but not 'admin' or 'host' files
+        self.patch(os.path, "exists", lambda path: path.endswith("info"))
+
+        # set-up requested IO error
+        if error_type == "open":
+            self.setUpOpenError(strerror="info-err-msg")
+        elif error_type == "write":
+            self.setUpWriteError(strerror="info-err-msg")
+        else:
+            self.fail("unexpected error_type '%s'" % error_type)
+
+        # call _makeInfoFiles() and check that correct exception is raised
+        self.assertRaisesRegexp(create_slave.CreateSlaveError,
+                                "could not write %s: info-err-msg" %
+                                        os.path.join("bdir", "info", "admin"),
+                                create_slave._makeInfoFiles,
+                                "bdir", quiet)
+
+        # check output to stdout
+        if quiet:
+            self.assertWasQuiet()
+        else:
+            self.assertStdoutEqual(
+                "Creating info/admin, you need to edit it appropriately.\n")
+
+    def testOpenError(self):
+        """
+        test _makeInfoFiles() when open() fails
+        """
+        self.checkIOError("open", False)
+
+    def testOpenErrorQuiet(self):
+        """
+        test _makeInfoFiles() when open() fails and quiet flag is enabled
+        """
+        self.checkIOError("open", True)
+
+    def testWriteError(self):
+        """
+        test _makeInfoFiles() when write() fails
+        """
+        self.checkIOError("write", False)
+
+    def testWriteErrorQuiet(self):
+        """
+        test _makeInfoFiles() when write() fails and quiet flag is enabled
+        """
+        self.checkIOError("write", True)
+
+    def checkCreatedSuccessfully(self, quiet):
+        """
+        Utility function to test _makeInfoFiles() when called on
+        base directory that does not have 'info' sub-directory.
+
+        @param quiet: the value of 'quiet' argument for _makeInfoFiles()
+        """
+        # patch os.path.exists() to report the no dirs/files exists
+        self.patch(os.path, "exists", mock.Mock(return_value=False))
+        # patch os.mkdir() to do nothing
+        mkdir_mock = mock.Mock()
+        self.patch(os, "mkdir", mkdir_mock)
+        # capture calls to open() and write()
+        self.setUpOpen()
+
+        # call _makeInfoFiles()
+        create_slave._makeInfoFiles("bdir", quiet)
+
+        # check calls to os.mkdir()
+        info_path = os.path.join("bdir", "info")
+        mkdir_mock.assert_called_once_with(info_path)
+
+        # check open() calls
+        self.open.assert_has_calls(
+                [mock.call(os.path.join(info_path, "admin"), "wt"),
+                 mock.call(os.path.join(info_path, "host"), "wt")])
+
+        # check write() calls
+        self.fileobj.write.assert_has_calls(
+            [mock.call("Your Name Here <admin@youraddress.invalid>\n"),
+             mock.call("Please put a description of this build host here\n")])
+
+        # check output to stdout
+        if quiet:
+            self.assertWasQuiet()
+        else:
+            self.assertStdoutEqual(
+                "mkdir %s\n"
+                "Creating info/admin, you need to edit it appropriately.\n"
+                "Creating info/host, you need to edit it appropriately.\n"
+                "Not creating info/access_uri - add it if you wish\n"
+                "Please edit the files in bdir/info appropriately.\n" %
+                    os.path.join("bdir", "info"))
+
+    def testCreatedSuccessfully(self):
+        """
+        test calling _makeInfoFiles() on basedir without 'info' directory
+        """
+        self.checkCreatedSuccessfully(False)
+
+    def testCreatedSuccessfullyQuiet(self):
+        """
+        test calling _makeInfoFiles() on basedir without 'info' directory
+        and quiet flag is enabled
+        """
+        self.checkCreatedSuccessfully(True)
+
+    def testInfoDirExists(self):
+        """
+        test calling _makeInfoFiles() on basedir with fully populated
+        'info' directory
+        """
+        self.patch(os.path, "exists", mock.Mock(return_value=True))
+
+        create_slave._makeInfoFiles("bdir", False)
+
+        # there should be no messages to stdout
+        self.assertWasQuiet()
+
+
 class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
     """
     Test buildslave.scripts.create_slave.createSlave()
