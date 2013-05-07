@@ -193,7 +193,9 @@ class MercurialExtractor(SourceStampExtractor):
 
     def parseStatus(self, output):
         m = re.search(r'^(\w+)', output)
-        self.baserev = m.group(0)
+        if not m:
+            raise RuntimeError("Revision %r is not in the right format" % (output,))
+            self.baserev = m.group(0)
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-r", self.baserev])
