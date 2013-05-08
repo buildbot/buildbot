@@ -72,9 +72,10 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class OpenFileMixin:
+class FileIOMixin:
     """
-    Mixin for patching open() to simulate successful reads and I/O errors.
+    Mixin for patching open(), read() and write() to simulate successful
+    I/O operations and various I/O errors.
     """
     def setUpOpen(self, file_contents="dummy-contents"):
         """

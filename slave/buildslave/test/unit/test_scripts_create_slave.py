@@ -109,7 +109,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 
 
 class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
-                          misc.OpenFileMixin,
+                          misc.FileIOMixin,
                           unittest.TestCase):
     """
     Test buildslave.scripts.create_slave._makeBuildbotTac()
@@ -264,7 +264,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 
 
 class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
-                        misc.OpenFileMixin,
+                        misc.FileIOMixin,
                         unittest.TestCase):
     """
     Test buildslave.scripts.create_slave._makeInfoFiles()
