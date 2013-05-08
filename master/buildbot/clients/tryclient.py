@@ -187,7 +187,7 @@ class MercurialExtractor(SourceStampExtractor):
         upstream = ""
         if self.repository:
             upstream = "r'%s'" % self.repository
-        d = self.dovc(["log", "--template", "{node}\\n", "-r", "limit(parents(outgoing(%s) and branch(parents())) or parents(), 1)" % upstream])
+        d = self.dovc(["log", "--template", "{node}\\n", "-r", "max(::. - outgoing(%s))" % upstream])
         d.addCallback(self.parseStatus)
         return d
 
