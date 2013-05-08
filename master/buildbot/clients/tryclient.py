@@ -195,7 +195,7 @@ class MercurialExtractor(SourceStampExtractor):
         m = re.search(r'^(\w+)', output)
         if not m:
             raise RuntimeError("Revision %r is not in the right format" % (output,))
-            self.baserev = m.group(0)
+        self.baserev = m.group(0)
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-r", self.baserev])
