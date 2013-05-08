@@ -183,6 +183,17 @@ class MercurialExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "hg"
 
+    def _didvc(self, res, cmd):
+        (stdout, stderr, code) = res
+
+        if code:
+            cs = ' '.join(['hg'] + cmd)
+            if stderr:
+                stderr = '\n' + stderr.rstrip()
+            raise RuntimeError("%s returned %d%s" % (cs, code, stderr))
+
+        return stdout
+
     def getBaseRevision(self):
         upstream = ""
         if self.repository:
