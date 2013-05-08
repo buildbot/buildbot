@@ -49,6 +49,9 @@ class FakeStatus(object):
     def builderAdded(self, name, basedir, category=None, description=None):
         return FakeBuilderStatus()
 
+    def slaveConnected(self, name):
+        pass
+
 
 class FakeBuilderStatus(object):
 
