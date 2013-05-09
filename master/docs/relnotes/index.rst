@@ -30,6 +30,8 @@ Features
 
 * Git source checkout step now supports reference repositories.
 
+* The WebStatus builder page can now filter pending/current/finished builds by property parameters of the form '?property.<name>=<value>'.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
