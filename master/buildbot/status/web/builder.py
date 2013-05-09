@@ -288,8 +288,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 })
 
         numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
+        maxsearch = int(req.args.get('maxsearch', [200])[0])
         recent = cxt['recent'] = []
-        for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
+        for build in b.generateFinishedBuilds(
+                num_builds=int(numbuilds),
+                max_search=maxsearch):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
