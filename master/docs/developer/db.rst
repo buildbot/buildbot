@@ -1561,7 +1561,7 @@ When adding new columns, this may not be necessary, but table refactorings can
 be complex and require caution so as not to lose information.
 
 Create a new script in :bb:src:`master/buildbot/db/migrate/versions`, following
-the numbering scheme already present.  The script should have an ``update``
+the numbering scheme already present.  The script should have an ``upgrade``
 method, which takes an engine as a parameter, and upgrades the database, both
 changing the schema and performing any required data migrations.  The engine
 passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to

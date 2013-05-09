@@ -245,7 +245,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('author', sa.String(256), nullable=False),
 
         # commit comment
-        sa.Column('comments', sa.String(1024), nullable=False),
+        sa.Column('comments', sa.Text, nullable=False),
 
         # old, CVS-related boolean
         sa.Column('is_dir', sa.SmallInteger, nullable=False), # old, for CVS
