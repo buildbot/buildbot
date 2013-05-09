@@ -250,13 +250,29 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def content(self, req, cxt):
         b = self.builder_status
 
+        # Grab all the parameters which are prefixed with 'property.'.
+        # We'll use these to filter the builds and build requests we
+        # show below.
+        props = {}
+        prop_prefix = 'property.'
+        for arg, val in req.args.iteritems():
+            if arg.startswith(prop_prefix):
+                props[arg[len(prop_prefix):]] = val[0]
+        def prop_match(oprops):
+            for key, val in props.iteritems():
+                if key not in oprops or val != str(oprops[key]):
+                    return False
+            return True
+
         cxt['name'] = b.getName()
         cxt['description'] = b.getDescription()
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
+        cxt['current'] = [
+            self.builder(x, req) for x in b.getCurrentBuilds()
+                if prop_match(x.getProperties())]
 
         cxt['pending'] = []
         statuses = yield b.getPendingBuildRequestStatuses()
@@ -269,6 +285,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
             properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
+            if not prop_match(properties):
+                continue
 
             if source.changes:
                 for c in source.changes:
@@ -292,7 +310,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(
                 num_builds=int(numbuilds),
-                max_search=maxsearch):
+                max_search=maxsearch,
+                filter_fn=lambda b: prop_match(b.getProperties())):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
