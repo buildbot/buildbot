@@ -1,1 +1,1 @@
-angular.module 'app', ['ngResource','ngGrid']
+angular.module 'app', ['ngResource']

@@ -38,7 +38,10 @@ _build
 master/setuptools_trial*
 master/buildbot/www/static/js/default/
 www/buildbot_www
-*.haml.js
-www/buildbot.profile.js
+www/buildbot_www_test
+www/.temp
 www/package.json
+www/bower.json
 www/VERSION
+www/node_modules
+www/components

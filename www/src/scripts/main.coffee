@@ -19,11 +19,9 @@ require
         'services/buildbotService':
             deps: ['app']
         'app':
-            deps: ['libs/angular', 'libs/angular-resource', 'libs/ng-grid' ]
-        'libs/ng-grid':
-            deps: ['libs/angular']
+            deps: ['libs/angular', 'libs/angular-resource' ]
         'libs/angular':
-            deps: ['libs/jquery.min']
+            deps: ['libs/jquery']
         'bootstrap':
             deps: ['app']
         'routes':
