@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.python import log
+from twisted.python.failure import Failure
 
 from buildbot.steps.shell import ShellCommand
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
@@ -48,6 +50,12 @@ class Robocopy(ShellCommand):
     """
     renderables = ['source', 'destination', 'files', 'exclude']
 
+    return_flags = {
+                FAILURE: [8, 16],
+                WARNINGS: [2, 4],
+                SUCCESS: [0, 1]
+            }
+
     def __init__(self, source, destination,
         files=None,
         recursive=False,
@@ -64,11 +72,6 @@ class Robocopy(ShellCommand):
         self.move = move
         self.exclude = exclude
         self.verbose = verbose
-        kwargs['decodeRC'] = {
-                0: SUCCESS, 1: SUCCESS,
-                2: WARNINGS, 4: WARNINGS,
-                8: FAILURE, 16: FAILURE
-            }
         ShellCommand.__init__(self, **kwargs)
 
     def start(self):
@@ -89,3 +92,16 @@ class Robocopy(ShellCommand):
         command += ['/TEE', '/UNICODE', '/NP']
         self.setCommand(command)
         ShellCommand.start(self)
+
+    def evaluateCommand(self, cmd):
+        # If we have a "clean" return code, it's good.
+        # Otherwise, look for errors first, warnings second.
+        if cmd.rc == 0 or cmd.rc == 1:
+            return SUCCESS
+        for result in [FAILURE, WARNINGS]:
+            for flag in self.return_flags[result]:
+                if (cmd.rc & flag) == flag:
+                    return result
+
+        log.err(Failure(), "Unknown return code for Robocopy: %s" % cmd.rc)
+        return EXCEPTION
