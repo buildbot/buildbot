@@ -21,6 +21,8 @@ class FakeBotMaster(service.MultiService):
         self.setName("fake-botmaster")
         self.master = master
         self.locks = {}
+        self.builders = {}
+        self.buildsStartedForSlaves = []
 
     def getLockByID(self, lockid):
         if not lockid in self.locks:
@@ -33,3 +35,9 @@ class FakeBotMaster(service.MultiService):
 
     def getLockFromLockAccess(self, access):
         return self.getLockByID(access.lockid)
+
+    def getBuildersForSlave(self, slavename):
+        return self.builders.get(slavename, [])
+
+    def maybeStartBuildsForSlave(self, slavename):
+        self.buildsStartedForSlaves.append(slavename)
