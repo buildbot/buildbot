@@ -77,8 +77,6 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 for i in inserts:
                     self.checkLength(bs_props_tbl.c.property_name,
                                       i['property_name'])
-                    self.checkLength(bs_props_tbl.c.property_value,
-                                      i['property_value'])
 
                 conn.execute(bs_props_tbl.insert(), inserts)
 

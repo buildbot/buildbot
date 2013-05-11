@@ -30,33 +30,25 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildrequests = sa.Table('buildrequests', metadata,
+            sa.Table('masters', metadata,
                 sa.Column('id', sa.Integer,  primary_key=True),
-            )
-            buildrequests.create()
-
-            builders = sa.Table('builders', metadata,
-                sa.Column('id', sa.Integer, primary_key=True),
-            )
-            builders.create()
-
-            masters = sa.Table("masters", metadata,
-                sa.Column('id', sa.Integer, primary_key=True),
-            )
-            masters.create()
-
-            builds = sa.Table('builds', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                sa.Column('number', sa.Integer, nullable=False),
-                sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                    nullable=False),
-                sa.Column('start_time', sa.Integer, nullable=False),
-                sa.Column('finish_time', sa.Integer),
-            )
-            builds.create()
+                # ..
+            ).create()
 
         def verify_thd(conn):
-            r = conn.execute("select * from builds")
-            self.assertEqual(r.fetchall(), [])
+            metadata = sa.MetaData()
+            metadata.bind = conn
 
-        return self.do_test_migration(26, 27, setup_thd, verify_thd)
+            changesources = sa.Table('changesources', metadata, autoload=True)
+            changesource_masters = sa.Table('changesource_masters', metadata,
+                    autoload=True)
+
+            q = sa.select([ changesources.c.id, changesources.c.name,
+                            changesources.c.name_hash ])
+            self.assertEqual(conn.execute(q).fetchall(), [])
+
+            q = sa.select([ changesource_masters.c.changesourceid,
+                            changesource_masters.c.masterid ])
+            self.assertEqual(conn.execute(q).fetchall(), [])
+
+        return self.do_test_migration(29, 30, setup_thd, verify_thd)

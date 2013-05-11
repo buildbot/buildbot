@@ -30,25 +30,16 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            sa.Table('masters', metadata,
+            sa.Table('builds', metadata,
                 sa.Column('id', sa.Integer,  primary_key=True),
-                # ..
             ).create()
 
         def verify_thd(conn):
-            metadata = sa.MetaData()
-            metadata.bind = conn
-
-            changesources = sa.Table('changesources', metadata, autoload=True)
-            changesource_masters = sa.Table('changesource_masters', metadata,
-                    autoload=True)
-
-            q = sa.select([ changesources.c.id, changesources.c.name,
-                            changesources.c.name_hash ])
-            self.assertEqual(conn.execute(q).fetchall(), [])
-
-            q = sa.select([ changesource_masters.c.changesourceid,
-                            changesource_masters.c.masterid ])
-            self.assertEqual(conn.execute(q).fetchall(), [])
+            r = conn.execute("select * from steps")
+            self.assertEqual(r.fetchall(), [])
+            r = conn.execute("select * from logs")
+            self.assertEqual(r.fetchall(), [])
+            r = conn.execute("select * from logchunks")
+            self.assertEqual(r.fetchall(), [])
 
         return self.do_test_migration(28, 29, setup_thd, verify_thd)
