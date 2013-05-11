@@ -22,13 +22,25 @@ def upgrade(migrate_engine):
 
     # Some property values and change comments can get too big
     # for the normal 1024 String limit.
-    changeset.alter_column(
-            sa.Column('property_value', sa.Text, nullable=False),
-            table='buildset_properties',
-            metadata=metadata,
-            engine=migrate_engine)
-    changeset.alter_column(
-            sa.Column('comments', sa.Text, nullable=False),
-            table='changes',
-            metadata=metadata,
-            engine=migrate_engine)
+
+    if migrate_engine.dialect.name == "postgresql":
+        # changeset.alter_column has no effect on postgres, so we do this
+        # with raw sql
+        table_columns = [
+            ('changes', 'comments'),
+            ('buildset_properties', 'property_value'),
+        ]
+        for table, column in table_columns:
+            migrate_engine.execute("alter table %s alter column %s type text"
+                                    % (table, column))
+    else:
+        changeset.alter_column(
+                sa.Column('property_value', sa.Text, nullable=False),
+                table='buildset_properties',
+                metadata=metadata,
+                engine=migrate_engine)
+        changeset.alter_column(
+                sa.Column('comments', sa.Text, nullable=False),
+                table='changes',
+                metadata=metadata,
+                engine=migrate_engine)
