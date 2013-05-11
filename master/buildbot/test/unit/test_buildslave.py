@@ -17,7 +17,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task, reactor
 from buildbot import buildslave, config, locks
-from buildbot.test.fake import fakemaster, pbmanager
+from buildbot.test.fake import fakemaster, pbmanager, fakedb
 from buildbot.test.fake.botmaster import FakeBotMaster
 
 class TestAbstractBuildSlave(unittest.TestCase):
@@ -79,14 +79,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, old_port, new, new_port):
-        master = self.master = fakemaster.make_master()
-        old.master = master
+        old.master = self.master
         if old_port:
             self.old_registration = old.registration = \
-                    pbmanager.FakeRegistration(master.pbmanager, old_port, old.slavename)
+                    pbmanager.FakeRegistration(self.master.pbmanager, old_port, old.slavename)
             old.registered_port = old_port
         old.missing_timer = mock.Mock(name='missing_timer')
-        old.startService()
+        yield old.startService()
 
         new_config = mock.Mock()
         new_config.slavePortnum = new_port
@@ -156,10 +155,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_stopService(self):
-        master = self.master = fakemaster.make_master()
-        slave = self.ConcreteBuildSlave('bot', 'pass')
-        slave.master = master
-        slave.startService()
+        slave = self.createBuildslave()
+        yield slave.startService()
 
         config = mock.Mock()
         config.slavePortnum = "tcp:1234"
@@ -210,7 +207,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.missing_timer, None)
 
     def test_setServiceParent_started(self):
-        master = self.master = fakemaster.make_master()
+        master = self.master
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         bs = self.ConcreteBuildSlave('bot', 'pass')
@@ -222,7 +219,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         """
         http://trac.buildbot.net/ticket/2278
         """
-        master = self.master = fakemaster.make_master()
+        master = self.master
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.MasterLock('masterlock')
@@ -233,7 +230,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         """
         http://trac.buildbot.net/ticket/2278
         """
-        master = self.master = fakemaster.make_master()
+        master = self.master
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.SlaveLock('lock')
@@ -249,6 +246,25 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getHost(), None)
         self.assertEqual(slave.slave_status.getAccessURI(), None)
         self.assertEqual(slave.slave_status.getVersion(), None)
+
+    @defer.inlineCallbacks
+    def test_startService_getSlaveInfo_fromDb(self):
+        self.master.db.insertTestData([
+            fakedb.Buildslave(name='bot', info={ 
+                'admin': 'TheAdmin',
+                'host': 'TheHost',
+                'access_uri': 'TheURI',
+                'version': 'TheVersion'
+            })
+        ])
+        slave = self.createBuildslave()
+
+        yield slave.startService()
+
+        self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
+        self.assertEqual(slave.slave_status.getHost(),    'TheHost')
+        self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
+        self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
     def createRemoteBot(self):
         class Bot():
@@ -369,3 +385,40 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.attached(bot)
 
         self.assertEqual(self.botmaster.buildsStartedForSlaves, ["bot"])
+
+    @defer.inlineCallbacks
+    def test_attached_slaveInfoUpdates(self):
+        # put in stale info:
+        self.master.db.insertTestData([
+            fakedb.Buildslave(name='bot', info={ 
+                'admin': 'WrongAdmin',
+                'host': 'WrongHost',
+                'access_uri': 'WrongURI',
+                'version': 'WrongVersion'
+            })
+        ])
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        bot = self.createRemoteBot()
+        bot.response['getVersion'] = mock.Mock(return_value=defer.succeed("TheVersion"))
+        bot.response['getSlaveInfo'] = mock.Mock(return_value=defer.succeed({
+            'admin':   'TheAdmin',
+            'host':    'TheHost',
+            'access_uri': 'TheURI',
+        }))
+        yield slave.attached(bot)
+
+        self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
+        self.assertEqual(slave.slave_status.getHost(),    'TheHost')
+        self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
+        self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
+
+        # and the db is updated too:
+        buildslave = yield self.master.db.buildslaves.getBuildslaveByName("bot")
+        
+        self.assertEqual(buildslave['slaveinfo']['admin'], 'TheAdmin')
+        self.assertEqual(buildslave['slaveinfo']['host'], 'TheHost')
+        self.assertEqual(buildslave['slaveinfo']['access_uri'], 'TheURI')
+        self.assertEqual(buildslave['slaveinfo']['version'], 'TheVersion')
+

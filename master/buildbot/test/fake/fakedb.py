@@ -106,7 +106,6 @@ class BuildRequestClaim(Row):
 
     required_columns = ('brid', 'objectid', 'claimed_at')
 
-
 class Change(Row):
     table = "changes"
 
@@ -252,6 +251,17 @@ class BuildsetProperty(Row):
 
     required_columns = ( 'buildsetid', )
 
+class Buildslave(Row):
+    table = "buildslaves"
+
+    defaults = dict(
+        id = None,
+        name = 'slave1',
+        info = None,
+    )
+
+    id_column = 'id'
+    required_columns = ('name', )
 
 class Object(Row):
     table = "objects"
@@ -800,6 +810,42 @@ class FakeBuildsetsComponent(FakeDBComponent):
               for br in self.db.buildrequests.reqs.values()
               if is_same_bsid(br) ])
 
+class FakeBuildslavesComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.buildslaves = []
+        self.id_num = 0
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Buildslave):
+                self.buildslaves.append({
+                    'slavename': row.name,
+                    'slaveid':   row.id,
+                    'slaveinfo': row.info
+                })
+
+    def getBuildslaves(self):
+        return defer.succeed([ ])
+
+    def getBuildslaveByName(self, slavename):
+        return defer.succeed(self._getBuildslaveByName(slavename))
+
+    def _getBuildslaveByName(self, slavename):
+        for slave in self.buildslaves:
+            if slave['slavename']==slavename:
+                return slave
+        return None
+
+    def updateBuildslave(self, slavename, slaveinfo):
+        slave = self._getBuildslaveByName(slavename)
+        if slave is None:
+            self.insertTestData([
+                Buildslave(name=slavename, info=slaveinfo)
+            ])
+        else:
+            slave['slaveinfo'] = slaveinfo
+        return defer.succeed(None)
 
 class FakeStateComponent(FakeDBComponent):
 
@@ -1202,6 +1248,8 @@ class FakeDBConnector(object):
         self.sourcestamps = comp = FakeSourceStampsComponent(self, testcase)
         self._components.append(comp)
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
+        self._components.append(comp)
+        self.buildslaves = comp = FakeBuildslavesComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)
