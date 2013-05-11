@@ -56,7 +56,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             ch_tbl = self.db.model.changes
 
             self.check_length(ch_tbl.c.author, author)
-            self.check_length(ch_tbl.c.comments, comments)
             self.check_length(ch_tbl.c.branch, branch)
             self.check_length(ch_tbl.c.revision, revision)
             self.check_length(ch_tbl.c.revlink, revlink)
