@@ -40,6 +40,9 @@ Features
   Depends on txgithub package.
   See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
 
+* The web UI now shows sourcestamp information for builders that use multiple codebases (instead of the generic
+  "multiple rev" placeholder that was shown before).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
