@@ -59,6 +59,10 @@ class FakeStatus(object):
     def getSlaveNames(self):
         return []
 
+    def slaveConnected(self, name):
+        pass
+
+
 class FakeBuilderStatus(object):
 
     def setDescription(self, description):
