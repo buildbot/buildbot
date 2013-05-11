@@ -40,7 +40,10 @@ class Timed(base.BaseScheduler):
     before the service stops.
     """
 
-    def __init__(self, name, builderNames, properties={}, **kwargs):
+    compare_attrs = ('reason',)
+    reason = ''
+
+    def __init__(self, name, builderNames, properties={}, reason='', **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties, 
                                     **kwargs)
 
@@ -53,6 +56,8 @@ class Timed(base.BaseScheduler):
         self.actuateOk = False
         self.actuateAt = None
         self.actuateAtTimer = None
+
+        self.reason = reason % { 'name': name }
 
         self._reactor = reactor # patched by tests
 
@@ -196,16 +201,15 @@ class Periodic(Timed):
     compare_attrs = ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
+            reason="The Periodic scheduler named '%(name)s' triggered this build",
             branch=None, properties={}, onlyImportant=False):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                    properties=properties)
-
+                    properties=properties, reason=reason)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
-        self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -221,9 +225,10 @@ class NightlyBase(Timed):
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
+                 reason='NightlyBase(%(name)s)',
                  properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                properties=properties, codebases=codebases)
+                reason=reason, properties=properties, codebases=codebases)
 
         self.minute = minute
         self.hour = hour
@@ -271,10 +276,11 @@ class Nightly(NightlyBase):
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
                  properties={}, change_filter=None, onlyImportant=False,
+                 reason="The Nightly scheduler named '%(name)s' triggered this build",
                  codebases = base.BaseScheduler.DefaultCodebases):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                 minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
-                properties=properties, codebases=codebases)
+                properties=properties, codebases=codebases, reason=reason)
 
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
@@ -292,7 +298,6 @@ class Nightly(NightlyBase):
         self.fileIsImportant = fileIsImportant
         self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
                 change_filter=change_filter)
-        self.reason = "The Nightly scheduler named '%s' triggered this build" % self.name
 
     def startTimedSchedulerService(self):
         if self.onlyIfChanged:
@@ -346,12 +351,13 @@ class NightlyTriggerable(NightlyBase):
     implements(ITriggerableScheduler)
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
+                 reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
                  properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, codebases=codebases)
+                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason, 
+                codebases=codebases)
 
         self._lastTrigger = None
-        self.reason = "The NightlyTriggerable scheduler named '%s' triggered this build" % self.name
 
     def startService(self):
         NightlyBase.startService(self)

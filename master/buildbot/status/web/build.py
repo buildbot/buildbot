@@ -31,6 +31,8 @@ from buildbot import util, interfaces
 
 class ForceBuildActionResource(ActionResource):
 
+    rebuildString = "The web-page 'rebuild' button was pressed by '%(rebuild_owner)s': %(rebuild_comments)s"
+
     def __init__(self, build_status, builder):
         self.build_status = build_status
         self.builder = builder
@@ -55,8 +57,13 @@ class ForceBuildActionResource(ActionResource):
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             comments.decode(getRequestCharset(req))
-            reason = ("The web-page 'rebuild' button was pressed by "
-                      "'%s': %s\n" % (name, comments))
+
+            reason = self.rebuildString  % {
+                'build_number': b.getNumber(),
+                'owner': b.getInterestedUsers(),
+                'rebuild_owner': name,
+                'rebuild_comments': comments
+            }
 
             useSourcestamp = req.args.get("useSourcestamp", None)
             if useSourcestamp and useSourcestamp==['updated']:
