@@ -23,7 +23,7 @@ from buildslave.scripts import stop
 from buildslave.test.util import misc
 
 
-class TestStopSlave(misc.OpenFileMixin,
+class TestStopSlave(misc.FileIOMixin,
                     misc.StdoutAssertionsMixin,
                     unittest.TestCase):
     """
