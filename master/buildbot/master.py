@@ -258,7 +258,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)
 
-        log.msg("BuildMsater is stopped")
+        log.msg("BuildMaster is stopped")
         self._master_initialized = False
 
     def reconfig(self):
