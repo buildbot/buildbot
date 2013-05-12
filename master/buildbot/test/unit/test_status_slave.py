@@ -131,6 +131,183 @@ class TestSlaveStatus(unittest.TestCase):
 
         self.assertEqual(builds, [])
 
+    def test_getInfo_badKeyReturnsDefault(self):
+        s = self.makeStatus()
+
+        DEFAULT = object()
+        value = s.getInfo('bogus_key', DEFAULT)
+
+        self.assertTrue(value is DEFAULT)
+
+    def test_hasInfo(self):
+        s = self.makeStatus()
+
+        s.updateInfo(number=123)
+
+        self.assertTrue(s.hasInfo('number'))
+        self.assertFalse(s.hasInfo('bogus'))
+
+    def test_updateInfo_number(self):
+        s = self.makeStatus()
+
+        VALUE = 541
+        s.updateInfo(key=VALUE)
+
+        self.assertEqual(s.getInfo('key'), VALUE)
+
+    def test_updateInfo_string(self):
+        s = self.makeStatus()
+
+        VALUE = 'abc'
+        s.updateInfo(key=VALUE)
+
+        self.assertEqual(s.getInfo('key'), VALUE)
+
+    def test_updateInfo_None(self):
+        s = self.makeStatus()
+
+        KEY = 'key'
+        VALUE = None
+        s.updateInfo(key=VALUE)
+
+        # tuples become lists due to JSON restriction
+        self.assertEqual(s.getInfo('key'), VALUE)
+
+    def test_updateInfo_list(self):
+        s = self.makeStatus()
+
+        VALUE = ['abc', None, 1]
+        s.updateInfo(key=VALUE)
+
+        self.assertEqual(s.getInfo('key'), VALUE)
+
+    def test_updateInfo_tuple(self):
+        s = self.makeStatus()
+
+        VALUE = ('abc', None, 1)
+        s.updateInfo(key=VALUE)
+
+        # tuples become lists due to JSON restriction
+        self.assertEqual(s.getInfo('key'), list(VALUE))
+
+    def test_updateInfo_None(self):
+        s = self.makeStatus()
+
+        VALUE = None
+        s.updateInfo(key=VALUE)
+
+        # tuples become lists due to JSON restriction
+        self.assertEqual(s.hasInfo('key'), True)
+        self.assertEqual(s.getInfo('key'), VALUE)
+
+    def test_updateInfo_set_raises(self):
+        s = self.makeStatus()
+
+        FIRST_VALUE = 123
+        s.updateInfo(key=FIRST_VALUE)
+
+        SET_VALUE = set(['abc', None, 1])
+        self.assertRaises(TypeError, s.updateInfo, ('key', SET_VALUE))
+
+        # value didnt change
+        self.assertEqual(s.getInfo('key'), FIRST_VALUE)
+
+    def test_updateInfo_badType(self):
+        s = self.makeStatus()
+
+        FIRST_VALUE = 123
+        s.updateInfo(key=FIRST_VALUE)
+
+        BAD_VALUE = object()
+        self.assertRaises(TypeError, s.updateInfo, ('key', BAD_VALUE))
+
+        # value didnt change
+        self.assertEqual(s.getInfo('key'), FIRST_VALUE)
+
+    def test_addInfoWatcher_noCallsWhenNotChanged(self):
+        s = self.makeStatus()
+        FIRST_VALUE = 123
+        s.updateInfo(key=FIRST_VALUE)
+
+        callbacks = []
+        def callback(info):
+            callbacks.append(info)
+        s.addInfoWatcher(callback)
+
+        # set the same value again
+        s.updateInfo(key=FIRST_VALUE)
+
+        d = eventual.flushEventualQueue()
+
+        @d.addCallback
+        def check(_):
+            self.assertEqual(callbacks, [])
+
+        return d
+
+    def test_addInfoWatcher_called(self):
+        s = self.makeStatus()
+
+        callbacks = []
+        def callback(info):
+            callbacks.append(info)
+        s.addInfoWatcher(callback)
+
+        s.updateInfo(key='value')
+
+        d = eventual.flushEventualQueue()
+
+        @d.addCallback
+        def check(_):
+            self.assertEqual(callbacks, [{ 'key': 'value' }])
+
+        return d
+
+    def test_addInfoWatcher_calledOnceForTwoKeys(self):
+        s = self.makeStatus()
+
+        callbacks = []
+        def callback(info):
+            callbacks.append(info)
+        s.addInfoWatcher(callback)
+
+        s.updateInfo(key='value', key2='value2')
+
+        d = eventual.flushEventualQueue()
+
+        @d.addCallback
+        def check(_):
+            self.assertEqual(callbacks, [{ 'key': 'value', 'key2': 'value2' }])
+
+        return d
+
+    def test_removeInfoWatcher_removeBadObject(self):
+        s = self.makeStatus()
+
+        BOGUS_OBJECT = object()
+        s.removeInfoWatcher(BOGUS_OBJECT)
+
+    def test_removeInfoWatcher(self):
+        s = self.makeStatus()
+
+        callbacks = []
+        def callback(info):
+            callbacks.append(info)
+
+        s.addInfoWatcher(callback)
+        s.removeInfoWatcher(callback)
+
+        s.updateInfo(key='value')
+
+        d = eventual.flushEventualQueue()
+
+        @d.addCallback
+        def check(_):
+            # never called:
+            self.assertEqual(callbacks, [])
+
+        return d
+        
     def test_asDict(self):
         s = self.makeStatus()
 
@@ -138,6 +315,7 @@ class TestSlaveStatus(unittest.TestCase):
         s.setVersion('TheVersion')
         s.setAccessURI('TheUri')
         s.setAdmin('TheAdmin')
+        s.updateInfo(key='value')
 
         slaveDict = s.asDict()
 
@@ -148,5 +326,12 @@ class TestSlaveStatus(unittest.TestCase):
             'admin': 'TheAdmin',
             'runningBuilds': [],
             'name': self.SLAVE_NAME,
-            'connected': False
+            'connected': False,
+            'info': { 
+                'host': 'TheHost',
+                'version': 'TheVersion',
+                'access_uri': 'TheUri',
+                'admin': 'TheAdmin',
+                'key': 'value' 
+            },
         })
