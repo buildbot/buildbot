@@ -354,6 +354,12 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         defer.returnValue(rv)
 
+    def getDefaultCodebase(self, codebase):
+        """
+        Returns codebase parameters for a codebase that does not have a change
+        associated with it.
+        """
+        return self.codebases[codebase]
 
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
@@ -377,9 +383,10 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
-                args['repository'] = self.codebases[codebase]['repository']
-                args['branch'] = self.codebases[codebase].get('branch', None)
-                args['revision'] = self.codebases[codebase].get('revision', None)
+                cb = self.getDefaultCodebase(codebase)
+                args['repository'] = cb['repository']
+                args['branch'] = cb.get('branch', None)
+                args['revision'] = cb.get('revision', None)
                 args['changeids'] = set()
                 args['project'] = ''
             else:

@@ -253,3 +253,51 @@ class AnyBranchScheduler(BaseBasicScheduler):
 
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent
+
+
+class MultiCodebaseScheduler(SingleBranchScheduler):
+    def __init__(self, *args, **kwargs):
+        self._lastCodebases = {}
+        SingleBranchScheduler.__init__(self, *args, **kwargs)
+
+    def setLastCodebase(self, codebase, codebaseDict, update):
+        self._lastCodebases.setdefault(codebase, {})
+
+        if codebaseDict['last_change'] > self._lastCodebases[codebase].get('last_change', -1):
+            self._lastCodebases[codebase] = codebaseDict
+            @defer.inlineCallbacks
+            def updateState(self):
+                yield self.setState('lastCodebases', self._lastCodebases)
+            if update:
+                updateState(self)
+
+    def startService(self, _returnDeferred=False):
+        d = SingleBranchScheduler.startService(self, _returnDeferred)
+
+        if not d:
+            d = defer.succeed(None)
+
+        # load saved codebases
+        d.addCallback(lambda _ : self.getState("lastCodebases", None))
+
+        def setLast(lastCodebases):
+            if isinstance(lastCodebases, dict):
+                for cb in lastCodebases:
+                    self.setLastCodebase(cb, lastCodebases[cb], False)
+        d.addCallback(setLast)
+
+        if _returnDeferred:
+            return d # only used in tests
+
+    def gotChange(self, change, important):
+        codebaseDict = {
+            'repository': change.repository,
+            'branch': change.branch,
+            'revision': change.revision,
+            'last_change': change.number}
+
+        self.setLastCodebase(change.codebase, codebaseDict, True)
+        return SingleBranchScheduler.gotChange(self, change, important)
+
+    def getDefaultCodebase(self, codebase):
+        return self._lastCodebases.get(codebase, self.codebases[codebase])
