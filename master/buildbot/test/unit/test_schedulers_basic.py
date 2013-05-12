@@ -522,6 +522,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(check)
 
         d.addCallback(lambda _ : sched.stopService())
+        return d
 
     def test_gotChange_saveCodebase(self):
         """Check codebase is stored after receiving change."""
@@ -545,7 +546,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(check)
 
         d.addCallback(lambda _ : sched.stopService())
-
+        return d
 
     def test_gotChange_no_treeStableTimer(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
@@ -577,6 +578,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(check2)
 
         d.addCallback(lambda _ : sched.stopService())
+        return d
 
     def test_gotChange_treeStableTimer(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
@@ -627,3 +629,4 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(check3)
 
         d.addCallback(lambda _ : sched.stopService())
+        return d
