@@ -183,19 +183,36 @@ class MercurialExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "hg"
 
+    def _didvc(self, res, cmd):
+        (stdout, stderr, code) = res
+
+        if code:
+            cs = ' '.join(['hg'] + cmd)
+            if stderr:
+                stderr = '\n' + stderr.rstrip()
+            raise RuntimeError("%s returned %d%s" % (cs, code, stderr))
+
+        return stdout
+
+    @defer.inlineCallbacks
     def getBaseRevision(self):
         upstream = ""
         if self.repository:
             upstream = "r'%s'" % self.repository
-        d = self.dovc(["log", "--template", "{node}\\n", "-r", "limit(parents(outgoing(%s) and branch(parents())) or parents(), 1)" % upstream])
-        d.addCallback(self.parseStatus)
-        return d
-
-    def parseStatus(self, output):
+        output = ''
+        try:
+            output = yield self.dovc(["log", "--template", "{node}\\n", "-r",
+                                      "max(::. - outgoing(%s))" % upstream])
+        except RuntimeError:
+            # outgoing() will abort if no default-push/default path is configured
+            if upstream:
+                raise
+            # fall back to current working directory parent
+            output = yield self.dovc(["log", "--template", "{node}\\n", "-r", "p1()"])
         m = re.search(r'^(\w+)', output)
         if not m:
             raise RuntimeError("Revision %r is not in the right format" % (output,))
-            self.baserev = m.group(0)
+        self.baserev = m.group(0)
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-r", self.baserev])
