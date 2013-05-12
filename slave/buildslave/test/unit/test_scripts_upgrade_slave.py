@@ -36,7 +36,7 @@ from buildbot.slave.bot import BuildSlave
 
 class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
                        misc.StdoutAssertionsMixin,
-                       misc.OpenFileMixin,
+                       misc.FileIOMixin,
                        unittest.TestCase):
     """
     Test buildslave.scripts.runner.upgradeSlave()
