@@ -32,6 +32,9 @@ Features
 
 * The ``comments`` field of changes is no longer limited to 1024 characters on MySQL and Postgres.  See :bb:bug:`2367` and :bb:pull:`736`.
 
+* A single branch :py:class:`MultiCodebaseScheduler` has been added for builders that use multiple repositories and keeps track of the last seen revision for each codebase.
+  This ensures that the changes listed in the sourcestamps of a build are the only additions since the previous scheduled build.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

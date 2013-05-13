@@ -329,6 +329,26 @@ The arguments to this scheduler are:
     A list of categories of changes that this scheduler will respond to.  If this
     is specified, then any non-matching changes are ignored.
 
+.. bb:sched:: MultiCodebaseScheduler
+
+.. _MultiCodebaseScheduler:
+
+MultiCodebaseScheduler
+~~~~~~~~~~~~~~~~~~~~~~
+
+This scheduler is a single branch scheduler for builders that use multiple
+repositories. It keeps track of the last revision seen for each codebase. This
+ensures that changes listed in the sourcestamps are the only additions since the
+previous scheduled build.
+
+The arguments to this scheduler are the same as :bb:sched:`SingleBranchScheduler`.
+
+If ``codebase`` is not set, then this scheduler is indistinguishable from
+:class:`SingleBranchScheduler`.
+If ``codebase`` is set, then when a build is triggered the codebases that do not
+have changes will use the last seen revision instead of the latest revision.
+
+
 .. bb:sched:: Dependent
 
 .. _Dependent-Scheduler:
