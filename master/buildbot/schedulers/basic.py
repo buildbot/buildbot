@@ -286,9 +286,7 @@ class MultiCodebaseScheduler(SingleBranchScheduler):
                     d.addCallback(lambda _ : self.setLastCodebase(cb, lastCodebases[cb], False))
             return d
         d.addCallback(setLast)
-
-        if _returnDeferred:
-            return d # only used in tests
+        return d
 
     def gotChange(self, change, important):
         codebaseDict = {

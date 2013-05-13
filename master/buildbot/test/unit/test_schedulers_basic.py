@@ -508,8 +508,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
                 value_json='{"a": {"branch": "master", "repository": "A", "revision": "1234:abc",  "last_change": 13}}')])
 
-        sched.startService()
-        d = defer.succeed(None)
+        d = sched.startService(_returnDeferred=True)
 
         d.addCallback(lambda _ :
                 sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=14), True))
@@ -532,8 +531,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='MultiCodebaseScheduler')])
 
-        sched.startService()
-        d = defer.succeed(None)
+        d = sched.startService(_returnDeferred=True)
 
         d.addCallback(lambda _ :
                 sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True))
@@ -552,8 +550,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    treeStableTimer=None, branch='master',
                                    codebases=self.codebases)
-        sched.startService()
-        d = defer.succeed(None)
+        d = sched.startService(_returnDeferred=True)
 
         # First change in repo:a use change, repo:b use latest
         d.addCallback(lambda _ :
@@ -584,8 +581,7 @@ class MultiCodebaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    treeStableTimer=10, branch='master',
                                    codebases=self.codebases)
-        sched.startService()
-        d = defer.succeed(None)
+        d = sched.startService(_returnDeferred=True)
 
         # First change in repo:a use change, repo:b use latest
         d.addCallback(lambda _ :
