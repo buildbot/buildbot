@@ -4,10 +4,34 @@
 
 {% block content %}
 
-<h1>
-Builder <a href="{{ path_to_builder }}">{{ b.getBuilder().getName() }}</a>
-Build #{{ b.getNumber() }}
+<!--
+<h1 class="builder-head">
+  Builder 
+  <a href="{{ path_to_builder }}">
+    {{ b.getBuilder().getName() }}
+  </a>
+  <span>
+    Build #{{ b.getNumber() }}
+  </span>
 </h1>
+-->
+<ul class="breadcrumbs-nav">
+  <li>
+      <a href="/builder">
+        Builders
+      </a>
+  </li>
+  <li>
+      <a href="{{ path_to_builder }}">
+        {{ b.getBuilder().getName() }}  
+      </a>
+  </li>
+  <li>
+    Build #{{ b.getNumber() }}
+  </li>
+</ul>
+
+<div class="clear"></div>
 
 <div class="column">
 
@@ -35,6 +59,8 @@ Build #{{ b.getNumber() }}
     <h3><a href="{{ tests_link }}"/></h3>
   {% endif %}
 {% endif %}
+
+
 
 <h2>
 {% if sourcestamps|count == 1 %}
@@ -87,7 +113,7 @@ SourceStamps:
  # TODO: turn this into a table, or some other sort of definition-list
  # that doesn't take up quite so much vertical space
  #}
-   
+
 <h2>BuildSlave:</h2>
   
 {% if slave_url %}  
@@ -96,10 +122,14 @@ SourceStamps:
   {{ b.getSlavename()|e }} 
 {% endif %}
 
+<div class="divider"></div>
+
 <h2>Reason:</h2>
 <p>
 {{ b.getReason()|e }}
 </p>
+
+<div class="divider"></div>
 
 <h2>Steps and Logfiles:</h2>
 
@@ -137,11 +167,11 @@ SourceStamps:
 </ol>
 
 </div>
-<div class="column">
+<div class="column last">
 
 <h2>Build Properties:</h2>
 
-<table class="info" width="100%">
+<table class="info rows" width="100%">
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
@@ -169,7 +199,7 @@ SourceStamps:
 {% endfor %}
 </table>
 <h2>Forced Build Properties:</h2>
-<table class="info" width="100%">
+<table class="info rows" width="100%">
 <tr><th>Name</th><th>Label</th><th>Value</th></tr>
 
 {% for p in properties %}
@@ -202,7 +232,7 @@ SourceStamps:
 {% else %}
   <p>no responsible users</p>
 {% endif %}
-
+<div class="divider"></div>
 
 <h2>Timing:</h2>
 <table class="info" width="100%">
@@ -219,8 +249,6 @@ SourceStamps:
   {% endif %}
 
 </div>
-
-<br style="clear:both"/>
   
 {% if has_changes %}
     <div class="column">

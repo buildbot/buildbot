@@ -4,10 +4,16 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<h1>Builder {{ name }}</h1>
+<h1 class="builder-head">
+  Builder 
+  <span>
+    {{ name }}
+  </span>
+</h1>
 
-<p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
-
+<!--
+  <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
+-->
 <div class="column">
 
 {% if current %}
@@ -71,7 +77,7 @@
 {{ build_table(recent) }}
 
 </div>
-<div class="column">
+<div class="column last">
 
 <h2>Buildslaves:</h2>
 <table class="info">
