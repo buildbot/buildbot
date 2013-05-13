@@ -34,6 +34,7 @@ from buildbot.status.web.grid import GridStatusResource
 from buildbot.status.web.grid import TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
+from buildbot.status.web.buildqueue import BuildqueueResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
@@ -359,6 +360,7 @@ class WebStatus(service.MultiService):
                 orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
+        self.putChild("buildqueue", BuildqueueResource()) # has buildqueue
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
