@@ -31,11 +31,24 @@ class CheckArtifactExists(LoggingBuildStep):
                 self.build_sourcestamps.append(
                     {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_sourcestampsetid': ss.sourcestampsetid})
 
+    @defer.inlineCallbacks
+    def findArtifact(self):
+        buildrequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
+
+        print "\n --> buildrequest %s" % buildrequest
+        if buildrequest:
+            self.step_status.setText(["Artifact has been already generated"])
+            # try download it from artifact server ? if its there
+            # update buildrequest
+
 
     def start(self):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
         self.updateSourceStamps()
+
+        self.findArtifact()
+        self.build.result = SUCCESS
 
         return self.finished(SUCCESS)

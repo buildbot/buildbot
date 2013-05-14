@@ -29,6 +29,10 @@ class NotClaimedError(Exception):
 class BrDict(dict):
     pass
 
+def mkdt(epoch):
+    if epoch:
+        return epoch2datetime(epoch)
+
 # private decorator to add a _master_objectid keyword argument, querying from
 # the master
 def with_master_objectid(fn):
@@ -94,6 +98,62 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             return [ self._brdictFromRow(row, _master_objectid)
                      for row in res.fetchall() ]
+        return self.db.pool.do(thd)
+
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
+        def thd(conn):
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db .model.buildsets
+            clauses = []
+
+            # check sourcestampset has same number of row in the sourcestamps table
+            stmt = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                .where(sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id) \
+                .group_by(sourcestamps_tbl.c.sourcestampsetid) \
+                .having(sa.func.count(sourcestamps_tbl.c.id) == len(sourcestamps))
+
+            clauses.append(sourcestampsets_tbl.c.id == stmt)
+            clauses.append(sourcestampsets_tbl.c.id != sourcestamps[0]['b_sourcestampsetid'])
+
+            # check that sourcestampset match all revisions x codebases
+            for ss in sourcestamps:
+                stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                    .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                    .where(sourcestamps_tbl.c.codebase == ss['b_codebase']) \
+                    .where(sourcestamps_tbl.c.revision == ss['b_revision'])
+                clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
+
+            stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+                .where(sa.and_(*clauses))
+
+            stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+            last_br = sa.select(columns=[sa.func.max(buildrequests_tbl.c.id).label("id")])\
+                    .where(buildrequests_tbl.c.buildsetid.in_(stmt3))\
+                    .where(buildrequests_tbl.c.complete == 1)\
+                    .where(buildrequests_tbl.c.results == 0)\
+                    .where(buildrequests_tbl.c.buildername == buildername)\
+                    .where(buildrequests_tbl.c.madebybrid == None)
+
+            q = sa.select(columns=[buildrequests_tbl])\
+                .where(buildrequests_tbl.c.id == last_br)
+
+            res = conn.execute(q)
+            row = res.fetchone()
+            buildrequest = None
+            if row:
+                submitted_at = mkdt(row.submitted_at)
+                complete_at = mkdt(row.complete_at)
+                buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
+                      buildername=row.buildername, priority=row.priority,
+                      complete=bool(row.complete), results=row.results,
+                      submitted_at=submitted_at, complete_at=complete_at, madebybrid=row.madebybrid)
+
+            res.close()
+            return buildrequest
         return self.db.pool.do(thd)
 
     @with_master_objectid
@@ -251,9 +311,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             claimed = True
             mine = row.objectid == master_objectid
 
-        def mkdt(epoch):
-            if epoch:
-                return epoch2datetime(epoch)
         submitted_at = mkdt(row.submitted_at)
         complete_at = mkdt(row.complete_at)
         claimed_at = mkdt(row.claimed_at)
