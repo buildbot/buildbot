@@ -77,6 +77,20 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return ssid
         return self.db.pool.do(thd)
 
+    def updateSourceStamps(self, sourcestamps):
+        def thd(conn):
+            if sourcestamps:
+                sourcestamps_tbl = self.db.model.sourcestamps
+
+                stmt = sourcestamps_tbl.update() \
+                    .where(sourcestamps_tbl.c.sourcestampsetid == sa.bindparam('b_sourcestampsetid')) \
+                    .where(sourcestamps_tbl.c.codebase == sa.bindparam('b_codebase')) \
+                    .values(revision=sa.bindparam('b_revision'))
+                res = conn.execute(stmt, sourcestamps)
+
+                return  res.rowcount
+        return self.db.pool.do(thd)
+
     @base.cached("sssetdicts")
     @defer.inlineCallbacks
     def getSourceStamps(self,sourcestampsetid):
