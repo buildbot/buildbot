@@ -497,6 +497,7 @@ class BuildLineMixin:
                   'buildurl': path_to_build(req, build),
                   'builderurl': path_to_builder(req, build.getBuilder()),
                   'rev_list': rev_list,
+                  'multiple_revs': (len(rev_list) > 1),
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,

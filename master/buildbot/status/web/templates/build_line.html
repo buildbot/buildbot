@@ -1,9 +1,9 @@
 {% macro build_line(b, include_builder=False) %}
   <small>({{ b.time }})</small>
-  Rev: {% if length(b.rev_list)==1 -%}
-          {{ b.rev_list[0]['rev']|shortrev(b.rev_list[0]['repo']) }}
-       {%- else -%}
+  Rev: {% if b.multiple_revs -%}
           multiple rev
+       {%- else -%}
+          {{ b.rev_list[0]['rev']|shortrev(b.rev_list[0]['repo']) }}
        {%- endif %}
   <span class="{{ b.class }}">{{ b.results }}</span>
   {% if include_builder %}
