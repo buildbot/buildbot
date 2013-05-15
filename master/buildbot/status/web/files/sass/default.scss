@@ -44,7 +44,7 @@ h1.logo a {
 	text-decoration: none;
 	opacity: 1;
 	color:#445873;
-	@include transition( opacity .2s ease-in-out);
+	@include transition(opacity .2s ease-in-out);
 }
 
 .logo a:hover {
@@ -81,7 +81,7 @@ h1.logo a {
     text-decoration: none;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
     text-transform: uppercase;
-	@include transition( opacity .2s ease-in-out);
+	@include transition(opacity .2s ease-in-out);
 }
 
 .top-menu li a:hover {
