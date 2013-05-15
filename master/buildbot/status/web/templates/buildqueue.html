@@ -1,13 +1,150 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
+{% from 'build_line.html' import build_table %}
 {% from "box_macros.html" import box %}
 
+
+{% block submenu %}
+  <ul class="breadcrumbs-nav">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      Buildqueue  
+    </li>
+    
+  </ul>
+
+{% endblock %}
+
+
+
 {% block content %}
-<h1>Builders: {{ branches|join(', ')|e }}</h1>
+<h1 class="main-head">
+  Buildqueue
+</h1>
 
-<div class="column-1">
-  sdf
-</div>
+  <table class="table-1">
+    <th>
+      Build Number
+    </th>
+    <th>
+      Branch
+    </th>
+    <th>
+      Builder
+    </th>
+    <th>
+      Estimated Time Until Start
+    </th>
+    <th>
+      Requestor
+    </th>
+    <th>
+      Compatible Slaves
+    </th>
+    <th>
+      <a href="#">
+        Remove
+      </a>
+      <br/>
+      <a href="#">
+        Select all
+      </a>
+    </th>
+    <tr>
+      <td>
+        #18
+      </td>
+      <td>
+        issue/539212
+      </td>
+      <td>
+        <a href="#">
+          Build MacEditor
+        </a>
+      </td>
+      <td>
+        32m
+      </td>
+      <td>
+        Jakob Hunsballe, zBuildVerification
+      </td>
+      <td>
+        <a href="#">
+          37 slaves
+        </a>
+      </td>
+      <td>
+        <a href="#">
+        remove 
+      </a>
+        <input type="checkbox"/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        #18
+      </td>
+      <td>
+        issue/539212
+      </td>
+      <td>
+        <a href="#">
+          Build MacEditor
+        </a>
+      </td>
+      <td>
+        32m
+      </td>
+      <td>
+        Jakob Hunsballe, zBuildVerification
+      </td>
+      <td>
+        <a href="#">
+          37 slaves
+        </a>
+      </td>
+      <td>
+        <a href="#">
+        remove 
+      </a>
+        <input type="checkbox"/>
+      </td>
+    </tr>
+    <tr class="last">
+      <td>
+        #18
+      </td>
+      <td>
+        issue/539212
+      </td>
+      <td>
+        <a href="#">
+          Build MacEditor
+        </a>
+      </td>
+      <td>
+        32m
+      </td>
+      <td>
+        Jakob Hunsballe, zBuildVerification
+      </td>
+      <td>
+        <a href="#">
+          37 slaves
+        </a>
+      </td>
+      <td>
+        <a href="#">
+        remove 
+      </a>
+        <input type="checkbox"/>
+      </td>
+    </tr>
 
+  </table>
 
 {% endblock %}

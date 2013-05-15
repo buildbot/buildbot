@@ -2,34 +2,30 @@
 {% import 'forms.html' as forms %}
 {% from "change_macros.html" import change with context %}
 
-{% block content %}
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/builders">
+          Builders
+        </a>
+    </li>
+    <li>
+        <a href="{{ path_to_builder }}">
+          {{ b.getBuilder().getName() }}  
+        </a>
+    </li>
+    <li>
+      Build #{{ b.getNumber() }}
+    </li>
+  </ul>
+</nav>
+{% endblock %}
 
-<!--
-<h1 class="builder-head">
-  Builder 
-  <a href="{{ path_to_builder }}">
-    {{ b.getBuilder().getName() }}
-  </a>
-  <span>
-    Build #{{ b.getNumber() }}
-  </span>
+{% block content %}
+<h1 class="main-head">
+  Build detailpage
 </h1>
--->
-<ul class="breadcrumbs-nav">
-  <li>
-      <a href="/builders">
-        Builders
-      </a>
-  </li>
-  <li>
-      <a href="{{ path_to_builder }}">
-        {{ b.getBuilder().getName() }}  
-      </a>
-  </li>
-  <li>
-    Build #{{ b.getNumber() }}
-  </li>
-</ul>
 
 <div class="clear"></div>
 

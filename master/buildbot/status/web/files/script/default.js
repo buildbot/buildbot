@@ -43,4 +43,17 @@ $(document).ready(function() {
 	    }
 	});
 
+	//Show / hide
+
+	$('.more-info').click(function(e){
+		e.preventDefault();
+		$(this).next().children().fadeIn('fast');
+	});
+
+	$(document).click(function(e){
+		if (!$(e.target).closest('.more-info-box, .more-info').length) {
+			$('.more-info-box').fadeOut('fast');
+		}
+	}); 
+
 });
