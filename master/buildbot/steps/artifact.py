@@ -2,9 +2,14 @@ from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEP
 from twisted.internet import defer
 from buildbot.steps.shell import ShellCommand
 import re
+from buildbot.util import epoch2datetime
 
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
+
+def mkdt(epoch):
+    if epoch:
+        return epoch2datetime(epoch)
 
 class CheckArtifactExists(ShellCommand):
     name = "CheckArtifactExists"
@@ -12,9 +17,8 @@ class CheckArtifactExists(ShellCommand):
     descriptionDone="CheckArtifactExists finished"
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
-        self.build_sourcestampsetid =None
-        self.build_sourcestamps = []
         self.master = None
+        self.build_sourcestamps = []
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
@@ -30,14 +34,14 @@ class CheckArtifactExists(ShellCommand):
         # every build will generate at least one sourcestamp
         sourcestamps = self.build.build_status.getSourceStamps()
 
-        self.build_sourcestampsetid = sourcestamps[0].sourcestampsetid
+        build_sourcestampsetid = sourcestamps[0].sourcestampsetid
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
 
         if len(sourcestamps_updated) > 0:
             for key, value in sourcestamps_updated.iteritems():
                 self.build_sourcestamps.append(
-                    {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': self.build_sourcestampsetid})
+                    {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': build_sourcestampsetid})
 
             rowsupdated = yield self.master.db.sourcestamps.updateSourceStamps(self.build_sourcestamps)
         else:
@@ -53,7 +57,7 @@ class CheckArtifactExists(ShellCommand):
         for l in stdio:
             m = foundregex.search(l)
             if (m):
-                # update buildrequest (madebybrid)
+                # update buildrequest (madebybrid) with self.artifactBuildrequest
                 artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + self.artifact
                 self.addURL(self.artifact, artifactURL)
                 self.build.result = SUCCESS
@@ -75,16 +79,16 @@ class CheckArtifactExists(ShellCommand):
 
             if self.artifactBuildrequest:
                 self.step_status.setText(["Artifact has been already generated"])
-                self.artifactPath = "%s_%s_%s" % (self.build.builder.config.builddir, self.artifactBuildrequest['brid'], FormatDatetime(self.artifactBuildrequest['submitted_at']))
+                self.artifactPath = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                                  self.artifactBuildrequest['brid'], FormatDatetime(self.artifactBuildrequest['submitted_at']))
 
                 if self.artifactDirectory:
                     self.artifactPath += "/%s" %  self.artifactDirectory
 
                 command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
                                self.artifactPath, "; ls %s" % self.artifact, "; ls"]
-
-                self.setCommand(command)
                 # ssh to the server to check if it artifact is there
+                self.setCommand(command)
                 ShellCommand.start(self)
                 return
 
@@ -96,3 +100,63 @@ class CheckArtifactExists(ShellCommand):
         self.step_status.setText(["Skipping artifact check, making a clean build"])
         self.finished(SKIPPED)
         return
+
+class CreateArtifactDirectory(ShellCommand):
+
+    name = "CreateArtifactDirectory"
+    description="CreateArtifactDirectory"
+    descriptionDone="CreateArtifactDirectory finished"
+
+    def __init__(self,  artifactDirectory=None, artifactServer=None, artifactServerDir=None,  **kwargs):
+        self.artifactDirectory = artifactDirectory
+        self.artifactServer = artifactServer
+        self.artifactServerDir = artifactServerDir
+        ShellCommand.__init__(self, **kwargs)
+
+    def start(self):
+        for b in self.build.builder.building:
+            for br in b.requests:
+                artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                              br.id, FormatDatetime(mkdt(br.submittedAt)))
+                if (self.artifactDirectory):
+                    artifactPath += "/%s" % self.artifactDirectory
+
+
+        command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "mkdir -p ",
+                    artifactPath]
+
+        self.setCommand(command)
+        ShellCommand.start(self)
+
+class UploadArtifact(ShellCommand):
+
+    name = "UploadArtifact"
+    description="UploadArtifact"
+    descriptionDone="UploadArtifact finished"
+
+    def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
+        self.artifact=artifact
+        self.artifactURL = None
+        self.artifactDirectory = artifactDirectory
+        self.artifactServer = artifactServer
+        self.artifactServerDir = artifactServerDir
+        self.artifactServerURL = artifactServerURL
+        ShellCommand.__init__(self, **kwargs)
+
+
+    def start(self):
+        for b in self.build.builder.building:
+            for br in b.requests:
+                artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                              br.id, FormatDatetime(mkdt(br.submittedAt)))
+                if (self.artifactDirectory):
+                    artifactPath += "/%s" % self.artifactDirectory
+
+
+        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
+        command = ["rsync", "-vazr", self.artifact, remotelocation]
+
+        self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
+        self.addURL(self.artifact, self.artifactURL)
+        self.setCommand(command)
+        ShellCommand.start(self)
