@@ -35,7 +35,7 @@ class Triggerable(base.BaseScheduler):
         # loop for polling the db
         self.db_loop = None
 
-    def trigger(self, sourcestamps = None, set_props=None):
+    def trigger(self, sourcestamps = None, set_props=None, triggeredbybsid=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
@@ -45,6 +45,8 @@ class Triggerable(base.BaseScheduler):
         if set_props:
             props.updateFromProperties(set_props)
 
+        self.triggeredbybsid = triggeredbybsid
+
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
@@ -53,10 +55,16 @@ class Triggerable(base.BaseScheduler):
         def setup_waiter((bsid,brids)):
             d = defer.Deferred()
             self._waiters[bsid] = (d, brids)
+            self.updateTriggeredBy(bsid)
             self._updateWaiters()
             return d
         d.addCallback(setup_waiter)
         return d
+
+    @defer.inlineCallbacks
+    def updateTriggeredBy(self, bsid):
+        if self.triggeredbybsid:
+            yield self.master.db.buildsets.updateTriggeredBy(self.triggeredbybsid, bsid)
 
     def stopService(self):
         # cancel any outstanding subscription
