@@ -156,6 +156,19 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return buildrequest
         return self.db.pool.do(thd)
 
+    def reusePreviouslyGeneratedArtifact(self, brid, madebybrid):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+            stmt = buildrequests_tbl.update()\
+                .where(buildrequests_tbl.c.id == brid)\
+                .values(madebybrid=madebybrid)
+
+            res = conn.execute(stmt)
+            return res.rowcount
+
+        return self.db.pool.do(thd)
+
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
                             _master_objectid=None):

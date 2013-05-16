@@ -50,6 +50,7 @@ class CheckArtifactExists(ShellCommand):
                 self.build_sourcestamps.append(
                     {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_sourcestampsetid': ss.sourcestampsetid})
 
+    @defer.inlineCallbacks
     def createSummary(self, log):
         stdio = self.getLog('stdio').readlines()
         foundregex = re.compile(r'(%s)' % self.artifact)
@@ -58,6 +59,8 @@ class CheckArtifactExists(ShellCommand):
             m = foundregex.search(l)
             if (m):
                 # update buildrequest (madebybrid) with self.artifactBuildrequest
+                brid = self.build.builder.building[0].requests[0].id
+                reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
                 artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + self.artifact
                 self.addURL(self.artifact, artifactURL)
                 self.build.result = SUCCESS
