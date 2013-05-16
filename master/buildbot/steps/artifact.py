@@ -3,6 +3,7 @@ from twisted.internet import defer
 from buildbot.steps.shell import ShellCommand
 import re
 from buildbot.util import epoch2datetime
+from buildbot.util import safeTranslate
 
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
@@ -161,5 +162,40 @@ class UploadArtifact(ShellCommand):
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
         self.addURL(self.artifact, self.artifactURL)
+        self.setCommand(command)
+        ShellCommand.start(self)
+
+class DownloadArtifact(ShellCommand):
+    name = "DonwloadArtifact"
+    description="DonwloadArtifact"
+    descriptionDone="DonwloadArtifact finished"
+
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, **kwargs):
+        self.artifactBuilderName = artifactBuilderName
+        self.artifact = artifact
+        self.artifactDirectory = artifactDirectory
+        self.artifactServer = artifactServer
+        self.artifactServerDir = artifactServerDir
+        self.master = None
+        ShellCommand.__init__(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def start(self):
+        if self.master is None:
+            self.master = self.build.builder.botmaster.parent
+
+        #find buildrequest dependency
+        bsid = self.build.builder.building[0].requests[0].bsid
+        br = yield self.master.db.buildrequests.getRelatedBuildRequest(bsid, self.artifactBuilderName)
+
+        artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
+                                      br['brid'], FormatDatetime(br["submitted_at"]))
+        if (self.artifactDirectory):
+            artifactPath += "/%s" % self.artifactDirectory
+
+        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/*"
+
+        print "\n\n-- artifact location %s" % remotelocation
+        command = ["rsync", "-vazr", remotelocation, self.artifactDirectory]
         self.setCommand(command)
         ShellCommand.start(self)
