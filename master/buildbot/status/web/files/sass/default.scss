@@ -10,7 +10,7 @@ body.interface {
 }
 
 .container-inner {
-	width: 962px;
+	width: 960px;
 	margin: 0 auto;
 }
 
@@ -24,15 +24,27 @@ body.interface {
 
 
 .main-head {
-	font-size: 25px;
-    margin: 25px 0;
-    text-transform: uppercase;
+    font-size: 25px;
+    margin: 34px 0 17px;
+    @include text-shadow(1px 1px 0 #FFF);
     span {
 		color: #666666;
 	    font-size: 16px;
 	    font-weight: normal;
 	    text-transform: lowercase;
 	}
+}
+
+.small-head {
+	font-size:12px;
+	font-weight:bold;	
+	display:inline;
+}
+
+.head-2 {
+	margin:0 0 10px 0 ;
+	padding:0;
+	font-size:18px;
 }
 
 h1.logo a {
@@ -60,34 +72,32 @@ h1.logo a {
 	list-style: none;
 	overflow: auto;
 	padding: 0;
+	li {
+		float:left;
+		padding: 0;
+		
+		&:first-child a {
+			padding-left: 0;
+		}
+		a {
+		    color: #FFFFFF;
+		    display: block;
+		    font-size: 11px;
+		    font-weight: bold;
+		    letter-spacing: 0.9px;
+		    padding: 17px 25px;
+		    text-decoration: none;
+		    @include text-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+		    text-transform: uppercase;
+			@include transition(opacity .2s ease-in-out);
+			&:hover {
+				opacity: 0.5;
+				text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+			}
+		}
+	}
 }
 
-.top-menu li {
-	float:left;
-	padding: 0;
-}
-
-.top-menu li:first-child a {
-	padding-left: 0;
-}
-
-.top-menu li a {
-    color: #FFFFFF;
-    display: block;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 0.9px;
-    padding: 17px 12px;
-    text-decoration: none;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
-    text-transform: uppercase;
-	@include transition(opacity .2s ease-in-out);
-}
-
-.top-menu li a:hover {
-	opacity: 0.5;
-	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
-}
 
 // sub-menu
 
@@ -96,6 +106,7 @@ h1.logo a {
     border-bottom: 1px solid #FFFFFF;
     border-top: 1px solid #FFFFFF;
     width: 100%;
+
 }
 
 .breadcrumbs-nav {
@@ -129,7 +140,6 @@ h1.logo a {
 .auth {
 	float: right;
 	margin-top: 25px;
-	width: 317px;
 }
 
 .auth input:first-child {
@@ -512,9 +522,15 @@ div.BuildWaterfall {
 
 /* LastBuild, BuildStep states */
 .success {
-	background-color: #345916;
-    color: #FCFCFC;
+	background-color: #DDE6D6;
+}
 
+.table-1 .success {
+	border-top:1px solid #fff;
+}
+
+.table-1 tr .success:first-child {
+	border-top:none;
 }
 
 .failure {
@@ -654,11 +670,22 @@ div.column-1 {
     border-radius: 10px;
     padding: 6px 20px 20px;
     width: 426px;
-   	font-size: 11px;
+   	font-size: 12px;
 }
 
 div.column-1 {
-	width: 914px;
+	width: 916px;
+	margin-right:0;
+}
+
+.column-2 {
+	width: 430px;	
+	margin: 13px 20px 0px 0;
+	float: left;
+	border-right:1px solid #E6E6E6;
+	&.last {
+		border:none;
+	}
 }
 
 div.welcome-txt {
@@ -726,7 +753,7 @@ li {
 }
 
 .result a {
-	color: #fff;
+	color:#000;
 	text-decoration: underline;;
 }
 
@@ -817,29 +844,27 @@ form.command_forcebuild .force-any .force-text {
 .buildbot-version {}
 
 .table-1 {
-	width:957px;
+	width:100%;
 	background-color:#fff;
 	font-size:12px;
 	border:1px solid #ccc;
 	@include box-shadow(1px 1px 0 #FFFFFF);
 	border-collapse: inherit;
-}
-
-.table-1 th {
-	padding:15px 10px;
-	background-color:#EEF0F5;
-	@include text-shadow(0 1px 0 #fff);
-	border-top:1px solid #FFFFFF;
-}
-
-.table-1 td {
-	padding:15px 10px;		
-	border-bottom:1px solid #DADADA;
-}
-
-.last td {
-	padding-bottom:20px;
-	border-bottom:none;
+	th {
+		padding:15px 10px;
+		background-color:#EEF0F5;
+		@include text-shadow(0 1px 0 #fff);
+		border-top:1px solid #FFFFFF;
+	}
+	td {
+		padding:15px 10px;		
+		//border-bottom:1px solid #DADADA;
+		border-bottom:1px solid #C8C8C8;
+	}
+	.last td {
+		padding-bottom:20px;
+		border-bottom:none;
+	}
 }
 
 .builders-list,
@@ -893,4 +918,29 @@ form.command_forcebuild .force-any .force-text {
 
 .pos-relative {
 	position:relative;
+}
+
+// buttons
+
+.link-button {
+	background:none;
+	border:none;
+	padding:0;
+	text-decoration:underline;
+	font-weight:bold;
+	&:hover {
+		color: #999;	
+	}
+}
+
+// lists
+.list {
+	margin:0;
+	padding:0;
+	list-style:none;
+	li {
+		margin:0 0 10px 0;
+		padding:0;
+		list-style:none;
+	}
 }

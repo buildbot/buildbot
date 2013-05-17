@@ -55,6 +55,7 @@
           <li>
             <a href="{{ path_to_root or '.' }}">Home</a>
           </li>
+          <!--
           <li>
             <a href="{{ path_to_root }}waterfall">Waterfall</a>
           </li>
@@ -67,21 +68,26 @@
           <li>
             <a href="{{ path_to_root }}console">Console</a>
           </li>
+          -->
           <li>
             <a href="{{ path_to_root }}builders">Builders</a>
           </li>
           <li>
             <a href="{{ path_to_root }}buildqueue">Buildqueue</a>
           </li>
+          <!--
           <li>
             <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
           </li>
+          -->
           <li>
             <a href="{{ path_to_root }}buildslaves">Buildslaves</a>
           </li>
+          <!--
           <li>
             <a href="{{ path_to_root }}changes">Changesources</a>
           <li>
+          -->
           {% if authz.advertiseAction('showUsersPage', request) %}
          {% endif %}
          <!--

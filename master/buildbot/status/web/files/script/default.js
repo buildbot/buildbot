@@ -47,6 +47,7 @@ $(document).ready(function() {
 
 	$('.more-info').click(function(e){
 		e.preventDefault();
+		$('.more-info-box').hide();
 		$(this).next().children().fadeIn('fast');
 	});
 

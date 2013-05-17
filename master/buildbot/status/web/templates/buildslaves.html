@@ -9,9 +9,7 @@
         </a>
     </li>
     <li>
-        
-          Buildslaves
-        
+      Buildslaves
     </li>
   </ul>
 </nav>
@@ -27,17 +25,21 @@
 
 <tr>
   <th>Name</th>
-  
-
+  <th>Status</th>
   <th>Last heard from</th>
   <th>Last Message Received</th>
-  <th>Status</th>
+  
 </tr>
 
 {% for s in slaves %}
-  <tr>
+
+  {%- if loop.last or loop.index0 == 0 %}
+      <tr class='last'>
+        {%- else -%}
+      <tr>
+  {%- endif -%}
+
   <td>
-    
       <a href="{{ s.link }}">
         {{ s.name }}
       </a>
@@ -81,23 +83,10 @@
       </div>
       
   </td>
-  
-  
 
-    <td>
-    {%- if s.last_heard_from_age -%}
-      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
-    {%- endif -%}
-    </td>
-    
-    <td>
-        <a href="#">
-          Unzipping External/Mono/builds.zip . . .
-        </a>
-    </td>
-
-  {% if s.connected %}
+{% if s.connected %}
     {% if s.running_builds %}
+      {{ s.running_builds_new }}
       <td class="building">Running {{ s.running_builds }} build(s)</td>
     {% else %}
       <td class="idle">Idle</td>
@@ -106,7 +95,19 @@
   {% else %}
     <td class="offline">Not connected</td>
   {% endif %}
+
+  <td>
+    {%- if s.last_heard_from_age -%}
+      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
+    {%- endif -%}
+  </td>
   
+  <td>
+      <a href="#">
+        Unzipping External/Mono/builds.zip . . .
+      </a>
+  </td>
+
   </tr>
 {% endfor %}
 </table>
