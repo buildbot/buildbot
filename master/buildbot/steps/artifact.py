@@ -199,3 +199,25 @@ class DownloadArtifact(ShellCommand):
         command = ["rsync", "-vazr", remotelocation, self.artifactDirectory]
         self.setCommand(command)
         ShellCommand.start(self)
+
+from buildbot import locks
+
+class AcquireBuildLocks(LoggingBuildStep):
+    name = "AcquireBuilderLocks"
+    description="AcquireBuilderLocks"
+    descriptionDone="AcquireBuilderLocks finished"
+
+    def __init__(self, **kwargs):
+        LoggingBuildStep.__init__(self, **kwargs)
+
+    def start(self):
+        self.step_status.setText(["Acquiring lock to complete build"])
+        self.finished(SUCCESS)
+        self.build.locks = self.locks
+        self.build.releaseLockInstanse = self
+        return
+
+    def releaseLocks(self):
+        return
+
+

@@ -65,6 +65,7 @@ class Build(properties.PropertiesMixin):
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
+        self.releaseLockInstanse = None
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -550,8 +551,11 @@ class Build(properties.PropertiesMixin):
             if lock.isOwner(self, access):
                 lock.release(self, access)
             else:
-                # This should only happen if we've been interrupted
-                assert self.stopped
+                if self.releaseLockInstanse:
+                    lock.release(self.releaseLockInstanse, access)
+                else:
+                    # This should only happen if we've been interrupted
+                    assert self.stopped
 
     # IBuildControl
 
