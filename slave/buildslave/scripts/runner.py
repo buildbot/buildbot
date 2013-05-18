@@ -15,7 +15,9 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, sys, re
+import os
+import sys
+import re
 from twisted.python import usage, reflect
 
 # the create/start/stop commands should all be run as the same user,
@@ -50,19 +52,24 @@ class MakerBase(usage.Options):
     def postOptions(self):
         self['basedir'] = os.path.abspath(self['basedir'])
 
+
 class StartOptions(MakerBase):
     subcommandFunction = "buildslave.scripts.start.startCommand"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildslave start [<basedir>]"
 
+
 class StopOptions(MakerBase):
     subcommandFunction = "buildslave.scripts.stop.stop"
+
     def getSynopsis(self):
         return "Usage:    buildslave stop [<basedir>]"
+
 
 class RestartOptions(MakerBase):
     subcommandFunction = "buildslave.scripts.restart.restart"
@@ -70,8 +77,10 @@ class RestartOptions(MakerBase):
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
+
 
 class UpgradeSlaveOptions(MakerBase):
     subcommandFunction = "buildslave.scripts.upgrade_slave.upgradeSlave"
@@ -104,13 +113,15 @@ class CreateSlaveOptions(MakerBase):
         ["usepty", None, 0,
          "(1 or 0) child processes should be run in a pty (default 0)"],
         ["umask", None, "None",
-         "controls permissions of generated files. Use --umask=022 to be world-readable"],
+         "controls permissions of generated files. "
+         "Use --umask=022 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
         ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
         ["log-count", "l", "10",
-         "limit the number of kept old twisted log files (None for unlimited)"],
+         "limit the number of kept old twisted log files "
+         "(None for unlimited)"],
         ["allow-shutdown", "a", None,
          "Allows the buildslave to initiate a graceful shutdown. One of "
          "'signal' or 'file'"]
@@ -148,19 +159,19 @@ class CreateSlaveOptions(MakerBase):
             master, port = master_arg.split(":")
 
         if len(master) < 1:
-            raise usage.UsageError("invalid <master> argument '%s'" % \
+            raise usage.UsageError("invalid <master> argument '%s'" %
                                    master_arg)
         try:
             port = int(port)
         except ValueError:
-            raise usage.UsageError("invalid master port '%s', "\
+            raise usage.UsageError("invalid master port '%s', "
                                    "needs to be an number" % port)
 
         return master, port
 
-
     def getSynopsis(self):
-        return "Usage:    buildslave create-slave [options] <basedir> <master> <name> <passwd>"
+        return "Usage:    buildslave create-slave " \
+                    "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
         if len(args) != 4:
@@ -179,13 +190,14 @@ class CreateSlaveOptions(MakerBase):
             try:
                 self[argument] = int(self[argument])
             except ValueError:
-                raise usage.UsageError("%s parameter needs to be an number" \
+                raise usage.UsageError("%s parameter needs to be an number"
                                                                     % argument)
 
         if not re.match('^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
             raise usage.UsageError("log-count parameter needs to be an number"
                                    " or None")
+
 
 class Options(usage.Options):
     synopsis = "Usage:    buildslave <command> [command options]"
