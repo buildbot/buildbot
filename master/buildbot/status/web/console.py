@@ -164,10 +164,10 @@ class ConsoleStatusResource(HtmlResource):
         return allChanges                
 
     @defer.inlineCallbacks
-    def getAllChanges(self, request, status, debugInfo):
+    def getAllChanges(self, request, status, numChanges, debugInfo):
         master = request.site.buildbot_service.master
 
-        chdicts = yield master.db.changes.getRecentChanges(25)
+        chdicts = yield master.db.changes.getRecentChanges(numChanges)
 
         # convert those to Change instances
         allChanges = yield defer.gatherResults([
@@ -646,7 +646,7 @@ class ConsoleStatusResource(HtmlResource):
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
-        d = self.getAllChanges(request, status, debugInfo)
+        d = self.getAllChanges(request, status, numRevs, debugInfo)
         def got_changes(allChanges):
             debugInfo["source_all"] = len(allChanges)
 
