@@ -637,12 +637,7 @@ class ConsoleStatusResource(HtmlResource):
 
         # Keep only the revisions we care about.
         # By default we process the last 40 revisions.
-        # If a dev name is passed, we look for the changes by this person in the
-        # last 80 revisions.
         numRevs = int(request.args.get("revs", [40])[0])
-        if devName:
-            numRevs *= 2
-        numBuilds = numRevs
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
@@ -677,7 +672,7 @@ class ConsoleStatusResource(HtmlResource):
                                                     request,
                                                     codebase,
                                                     lastRevision,
-                                                    numBuilds,
+                                                    numRevs,
                                                     categories,
                                                     builders,
                                                     debugInfo)
