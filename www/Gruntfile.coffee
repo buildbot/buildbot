@@ -37,7 +37,16 @@ module.exports = (grunt) ->
                     # Don't include a surrounding Immediately-Invoked Function Expression (IIFE) in the compiled output.
                     # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
                     bare: true
-
+        concat:
+            # concat bower.json files into config.js, to display deps in the UI
+            # we declare a constant in the 'app' module
+            bower_configs:
+                src: ['components/**/bower.json']
+                dest: '.temp/scripts/config.js'
+                options:
+                    separator:','
+                    banner: 'angular.module("app").constant("bower_configs", ['
+                    footer: '])'
         # Copies directories and files from one location to another.
         copy:
             # Copies the contents of the temp directory, except views, to the buildbot_www directory.
@@ -255,6 +264,9 @@ module.exports = (grunt) ->
             firefox:
                 options:
                     browsers: ['Firefox']
+            pjs:
+                options:
+                    browsers: ['PhantomJS']
             ci:
                 options:
                     autoWatch: false
@@ -303,6 +315,7 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-contrib-livereload'
     grunt.loadNpmTasks 'grunt-contrib-requirejs'
     grunt.loadNpmTasks 'grunt-contrib-watch'
+    grunt.loadNpmTasks 'grunt-contrib-concat'
 
 
     # Register grunt tasks supplied by grunt-hustler.
@@ -334,6 +347,10 @@ module.exports = (grunt) ->
     grunt.registerTask 'fftest', [
         'karma:firefox'
     ]
+    # grunt pjstest
+    grunt.registerTask 'pjstest', [
+        'karma:pjs'
+    ]
 
     # Starts a reload server
     # Enter the following command at the command line to execute this task:
@@ -349,6 +366,7 @@ module.exports = (grunt) ->
     # grunt
     grunt.registerTask 'default', [
         'clean:working'
+        'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
         'less'
@@ -372,6 +390,7 @@ module.exports = (grunt) ->
     # grunt prod
     grunt.registerTask 'prod', [
         'clean:working'
+        'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
         'copy:font'

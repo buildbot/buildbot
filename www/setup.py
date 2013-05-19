@@ -65,6 +65,7 @@ package_json = {
         "grunt-contrib-imagemin": "~0.1.3",
         "grunt-contrib-jade": "~0.5.0",
         "grunt-contrib-less": "~0.5.0",
+        "grunt-contrib-concat": "~0.3.0",
         "grunt-contrib-livereload": "~0.1.2",
         "grunt-contrib-requirejs": "~0.4.0",
         "grunt-contrib-watch": "~0.3.1",

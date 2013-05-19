@@ -5,7 +5,7 @@ require
         'directives/topmenu':
             deps: ['app']
         'controllers/homeController':
-            deps: ['app','libs/versions']
+            deps: ['app','config']
         'controllers/buildersController':
             deps: ['app','services/buildbotService']
         'controllers/changesController':
@@ -29,6 +29,8 @@ require
         'run':
             deps: ['app']
         'views':
+            deps: ['app']
+        'config':
             deps: ['app']
     [
         'require'
