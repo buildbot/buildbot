@@ -25,7 +25,7 @@ from buildbot.changes import changes
 
 class DoesNotPassFilter(Exception): pass # Used for filtering revs
 
-def getResultsClass(results, prevResults, inProgress):
+def getResultsClass(results, prevResults, inProgress, inBuilder):
     """Given the current and past results, return the class that will be used
     by the css to display the right color for a box."""
 
@@ -33,7 +33,10 @@ def getResultsClass(results, prevResults, inProgress):
         return "running"
 
     if results is None:
-        return "notstarted"
+        if inBuilder:
+            return "notstarted"
+        else:
+            return "notinbuilder"
 
     if results == builder.SUCCESS:
         return "success"
@@ -370,7 +373,7 @@ class ConsoleStatusResource(HtmlResource):
 
                     if build:
                         s["color"] = getResultsClass(build.getResults(), None,
-                                                      False)
+                                                      False, True)
 
                 slaves[category].append(s)
 
@@ -414,13 +417,16 @@ class ConsoleStatusResource(HtmlResource):
             for builder in builderList[category]:
                 introducedIn = None
                 firstNotIn = None
+                # If there is no builds default to True
+                inBuilder = len(allBuilds[builder]) == 0
 
-                # Find the first build that does not include the revision.
+                # Find the first build that include the revision.
                 for build in allBuilds[builder]:
                     if introducedIn:
                         firstNotIn = build
                         break
                     elif self.isCodebaseInBuild(build, revision.codebase):
+                        inBuilder = True
                         if self.isRevisionInBuild(build, revision):
                             introducedIn = build
 
@@ -457,7 +463,7 @@ class ConsoleStatusResource(HtmlResource):
                 if isRunning:
                     pageTitle += ' ETA: %ds' % (introducedIn.eta or 0)
                     
-                resultsClass = getResultsClass(results, previousResults, isRunning)
+                resultsClass = getResultsClass(results, previousResults, isRunning, inBuilder)
 
                 b = {}                
                 b["url"] = url
