@@ -240,6 +240,13 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
         The singular, lower-cased name of the resource type.
         This becomes the first component in message routing keys.
 
+    .. py:attribute:: plural
+
+        :type: string
+
+        The plural, lower-cased name of the resource type.
+        This becomes the key containing the data in REST responses.
+
     .. py:attribute:: endpoints
 
         :type: list
@@ -318,6 +325,12 @@ See that module's description for details.
 
         If set, then the first path pattern for this endpoint will be included as a link in the root of the API.
         This should be set for any endpoints that begin an explorable tree.
+
+    .. py:attribute:: isCollection
+
+        :type: boolean
+
+        If true, then this endpoint returns collections of resources.
 
     .. py:method:: get(options, resultSpec, kwargs)
 

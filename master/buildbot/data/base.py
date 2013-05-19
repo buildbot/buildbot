@@ -43,6 +43,7 @@ class ResourceType(object):
 class Endpoint(object):
     pathPatterns = ""
     rootLinkName = None
+    isCollection = False
 
     def __init__(self, rtype, master):
         self.rtype = rtype

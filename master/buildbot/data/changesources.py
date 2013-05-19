@@ -54,6 +54,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
 
 class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /changesource
         /master/n:masterid/changesource

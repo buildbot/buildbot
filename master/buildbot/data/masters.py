@@ -30,6 +30,7 @@ def _db2data(master):
 
 class MasterEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /master/n:masterid
         /builder/n:builderid/master/n:masterid
@@ -51,6 +52,7 @@ class MasterEndpoint(base.Endpoint):
 
 class MastersEndpoint(base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /master
         /builder/n:builderid/master
@@ -78,6 +80,7 @@ class MastersEndpoint(base.Endpoint):
 class Master(base.ResourceType):
 
     name = "master"
+    plural = "masters"
     endpoints = [ MasterEndpoint, MastersEndpoint ]
     keyFields = [ 'masterid' ]
 

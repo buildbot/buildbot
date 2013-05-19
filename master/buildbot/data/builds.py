@@ -44,6 +44,7 @@ class Db2DataMixin(object):
 
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /build/n:buildid
         /builder/n:builderid/build/n:number
@@ -63,6 +64,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /build
         /builder/n:builderid/build
@@ -86,6 +88,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 class Build(base.ResourceType):
 
     name = "build"
+    plural = "builds"
     endpoints = [ BuildEndpoint, BuildsEndpoint ]
     keyFields = [ 'builderid', 'buildid' ]
 

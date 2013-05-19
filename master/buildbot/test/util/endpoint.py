@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import mock
+import types
 from twisted.internet import defer
 from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
@@ -75,6 +76,13 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.assertIdentical(endpoint, self.ep)
         d = endpoint.get(resultSpec, kwargs)
         self.assertIsInstance(d, defer.Deferred)
+        @d.addCallback
+        def checkNumber(rv):
+            if self.ep.isCollection:
+                self.assertIsInstance(rv, list)
+            else:
+                self.assertIsInstance(rv, (dict, types.NoneType))
+            return rv
         return d
 
     def callStartConsuming(self, options, kwargs, expected_filter=None):

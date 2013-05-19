@@ -18,6 +18,7 @@ from buildbot.data import base, types
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = False # TODO hmm..
     pathPatterns = """
         /log/n:logid/content
         /step/n:stepid/log/i:log_name/content
@@ -69,6 +70,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 class LogChunk(base.ResourceType):
 
     name = "logchunk"
+    plural = "logchunks"
     endpoints = [ LogChunkEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
 

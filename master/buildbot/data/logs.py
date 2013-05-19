@@ -34,6 +34,7 @@ class EndpointMixin(object):
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /log/n:logid
         /step/n:stepid/log/i:log_name
@@ -63,6 +64,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /step/n:stepid/log
         /build/n:buildid/step/i:step_name/log
@@ -84,6 +86,7 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 class Log(base.ResourceType):
 
     name = "log"
+    plural = "logs"
     endpoints = [ LogEndpoint, LogsEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
 

@@ -43,6 +43,7 @@ def _db2data(ss):
 
 class SourceStampEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /sourcestamp/n:ssid
     """
@@ -56,6 +57,7 @@ class SourceStampEndpoint(base.Endpoint):
 
 class SourceStampsEndpoint(base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /sourcestamp
     """
@@ -74,6 +76,7 @@ class SourceStampsEndpoint(base.Endpoint):
 class SourceStamp(base.ResourceType):
 
     name = "sourcestamp"
+    plural = "sourcestamps"
     endpoints = [ SourceStampEndpoint, SourceStampsEndpoint ]
     keyFields = [ 'ssid' ]
 

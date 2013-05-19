@@ -18,6 +18,7 @@ from buildbot.data import base, types
 
 class BuilderEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /builder/n:builderid
         /master/n:masterid/builder/n:builderid
@@ -42,6 +43,7 @@ class BuilderEndpoint(base.Endpoint):
 
 class BuildersEndpoint(base.Endpoint):
 
+    isCollection = True
     rootLinkName = 'builders'
     pathPatterns = """
         /builder
@@ -66,6 +68,7 @@ class BuildersEndpoint(base.Endpoint):
 class Builder(base.ResourceType):
 
     name = "builder"
+    plural = "builders"
     endpoints = [ BuilderEndpoint, BuildersEndpoint ]
     keyFields = [ 'builderid' ]
 

@@ -39,6 +39,7 @@ class Db2DataMixin(object):
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /step/n:stepid
         /build/n:buildid/step/i:step_name
@@ -67,6 +68,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
 class StepsEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /build/n:buildid/step
         /builder/n:builderid/build/n:build_number/step
@@ -89,6 +91,7 @@ class StepsEndpoint(Db2DataMixin, base.Endpoint):
 class Step(base.ResourceType):
 
     name = "step"
+    plural = "steps"
     endpoints = [ StepEndpoint, StepsEndpoint ]
     keyFields = [ 'builderid', 'stepid' ]
 

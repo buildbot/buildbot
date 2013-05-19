@@ -22,6 +22,7 @@ from buildbot.data import base, types
 class Patch(base.ResourceType):
 
     name = "patch"
+    plural = "patches"
     endpoints = [ ]
     keyFields = [ 'patchid' ]
 

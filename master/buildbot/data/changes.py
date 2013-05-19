@@ -38,6 +38,7 @@ class FixerMixin(object):
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /change/n:changeid
     """
@@ -50,6 +51,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
 class ChangesEndpoint(FixerMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /change
     """
@@ -69,6 +71,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
 class Change(base.ResourceType):
 
     name = "change"
+    plural = "changes"
     endpoints = [ ChangeEndpoint, ChangesEndpoint ]
     keyFields = [ 'changeid' ]
 

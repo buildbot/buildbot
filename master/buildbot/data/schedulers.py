@@ -36,6 +36,7 @@ class Db2DataMixin(object):
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /scheduler/n:schedulerid
         /master/n:masterid/scheduler/n:schedulerid
@@ -54,6 +55,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /scheduler
         /master/n:masterid/scheduler
@@ -77,6 +79,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 class Scheduler(base.ResourceType):
 
     name = "scheduler"
+    plural = "schedulers"
     endpoints = [ SchedulerEndpoint, SchedulersEndpoint ]
     keyFields = [ 'schedulerid' ]
 

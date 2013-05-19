@@ -17,6 +17,7 @@ from twisted.internet import defer
 from buildbot.data import base, types
 
 class RootEndpoint(base.Endpoint):
+    isCollection = True
     pathPatterns = "/"
 
     def get(self, resultSpec, kwargs):
@@ -25,6 +26,7 @@ class RootEndpoint(base.Endpoint):
 
 class Root(base.ResourceType):
     name = "rootlink"
+    plural = "rootlinks"
     endpoints = [ RootEndpoint ]
 
     class EntityType(types.Entity):
