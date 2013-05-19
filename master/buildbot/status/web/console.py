@@ -376,6 +376,10 @@ class ConsoleStatusResource(HtmlResource):
 
         return slaves
 
+    def isCodebaseInBuild(self, build, codebase):
+        """Check if codebase is used in build"""
+        return any(ss.codebase == codebase for ss in build.sourceStamps)
+
     def isRevisionInBuild(self, build, revision):
         """ Check if revision is in changes in build """
         for ss in build.sourceStamps:
@@ -416,9 +420,10 @@ class ConsoleStatusResource(HtmlResource):
                     if introducedIn:
                         firstNotIn = build
                         break
-                    elif self.isRevisionInBuild( build, revision ):
-                        introducedIn = build
-                        
+                    elif self.isCodebaseInBuild(build, revision.codebase):
+                        if self.isRevisionInBuild(build, revision):
+                            introducedIn = build
+
                 # Get the results of the first build with the revision, and the
                 # first build that does not include the revision.
                 results = None
