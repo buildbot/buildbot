@@ -456,12 +456,14 @@ class BuildLineMixin:
             }
 
             # show the most descriptive thing we can
-            if ss.revision:
-                rev['rev'] = ss.revision
-            elif ss.branch:
+            if ss.branch:
                 rev['rev'] = ss.branch
+            elif ss.codebase in all_got_revision:
+                rev['rev'] = all_got_revision[ss.codebase]
+            elif ss.revision:
+                rev['rev'] = ss.revision
             else:
-                rev['rev'] = all_got_revision.get(ss.codebase, "??")
+                rev['rev'] = '??'
 
             rev_list.append(rev)
 
