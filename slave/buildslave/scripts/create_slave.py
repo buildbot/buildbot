@@ -212,7 +212,7 @@ def createSlave(config):
         _makeInfoFiles(basedir, quiet)
     except CreateSlaveError, exception:
         print "%s\nfailed to configure buildslave in %s" % \
-                  (exception.message, config['basedir'])
+                  (exception, config['basedir'])
         return 1
 
     if not quiet:
