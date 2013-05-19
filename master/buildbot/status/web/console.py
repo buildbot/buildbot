@@ -63,6 +63,7 @@ class DevRevision:
     """Helper class that contains all the information we need for a revision."""
 
     def __init__(self, change):
+        self.codebase = change.codebase
         self.revision = change.revision
         self.comments = change.comments
         self.who = change.who
@@ -76,8 +77,7 @@ class DevRevision:
 class DevBuild:
     """Helper class that contains all the information we need for a build."""
 
-    def __init__(self, revision, build, details):
-        self.revision = revision
+    def __init__(self, build, details):
         self.results =  build.getResults()
         self.number = build.getNumber()
         self.isFinished = build.isFinished()
@@ -85,8 +85,7 @@ class DevBuild:
         self.eta = build.getETA()
         self.details = details
         self.when = build.getTimes()[0]
-        #TODO: support multiple sourcestamps
-        self.source = build.getSourceStamps()[0]
+        self.sourceStamps = build.getSourceStamps()
 
 
 class ConsoleStatusResource(HtmlResource):
@@ -227,62 +226,24 @@ class ConsoleStatusResource(HtmlResource):
         build, and we go down until we find a build that was built prior to the
         last change we are interested in."""
 
-        revision = lastRevision 
-
         builds = []
         build = self.getHeadBuild(builder)
         number = 0
         while build and number < numBuilds:
             debugInfo["builds_scanned"] += 1
 
-            got_rev = None
-            sourceStamps = build.getSourceStamps(absolute=True)
-
-            # The console page cannot handle builds that have more than 1 revision
-            if codebase is not None:
-                # Get the last revision in this build for this codebase.
-                for ss in sourceStamps:
-                    if ss.codebase == codebase:
-                        got_rev = ss.revision
-                        break
-            elif len(sourceStamps) == 1:
-                ss = sourceStamps[0]
-                # Get the last revision in this build.
-                got_rev = ss.revision
-                    
-            # We ignore all builds that don't have last revisions.
-            # TODO(nsylvain): If the build is over, maybe it was a problem
-            # with the update source step. We need to find a way to tell the
-            # user that his change might have broken the source update.
-            if got_rev is not None:
-                number += 1
+            # With multiple codebases cannot determine the last required build,
+            # so take them all except forced builds.
+            if len(build.getChanges()):
                 details = self.getBuildDetails(request, builderName, build)
-                devBuild = DevBuild(got_rev, build, details)
+                devBuild = DevBuild(build, details)
                 builds.append(devBuild)
-
-                # Now break if we have enough builds.
-                current_revision = self.getChangeForBuild(
-                    build, revision)
-                if self.comparator.isRevisionEarlier(
-                    devBuild, current_revision):
-                    break
+                number += 1
 
             build = build.getPreviousBuild()
 
         return builds
 
-    def getChangeForBuild(self, build, revision):
-        if not build or not build.getChanges(): # Forced build
-            return DevBuild(revision, build, None)
-        
-        for change in build.getChanges():
-            if change.revision == revision:
-                return change
-
-        # No matching change, return the last change in build.
-        changes = list(build.getChanges())
-        changes.sort(key=self.comparator.getSortingKey())
-        return changes[-1]
     
     def getAllBuildsForRevision(self, status, request, codebase, lastRevision,
                                 numBuilds, categories, builders, debugInfo):
@@ -415,6 +376,15 @@ class ConsoleStatusResource(HtmlResource):
 
         return slaves
 
+    def isRevisionInBuild(self, build, revision):
+        """ Check if revision is in changes in build """
+        for ss in build.sourceStamps:
+            if ss.codebase == revision.codebase:
+                for change in ss.changes:
+                    if change.revision == revision.revision:
+                        return True
+        return False
+
     def displayStatusLine(self, builderList, allBuilds, revision, debugInfo):
         """Display the boxes that represent the status of each builder in the
         first build "revision" was in. Returns an HTML list of errors that
@@ -443,10 +413,10 @@ class ConsoleStatusResource(HtmlResource):
 
                 # Find the first build that does not include the revision.
                 for build in allBuilds[builder]:
-                    if self.comparator.isRevisionEarlier(build, revision):
+                    if introducedIn:
                         firstNotIn = build
                         break
-                    else:
+                    elif self.isRevisionInBuild( build, revision ):
                         introducedIn = build
                         
                 # Get the results of the first build with the revision, and the
