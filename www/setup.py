@@ -72,7 +72,7 @@ package_json = {
         "grunt-express": "~0.3.2",
         "grunt-hustler": "0.11.2",
         "grunt-regarde": "~0.1.1",
-        "grunt-testacular": "~0.3.0",
+        "grunt-karma": "~0.4.4",
         "socket.io": "~0.9.14",
         "bower": "~0.9.2"
     },
@@ -250,7 +250,8 @@ class develop(setuptools.command.develop.develop):
     """
 
     sub_commands = setuptools.command.develop.develop.sub_commands + [
-        ('bower_install', None)
+        ('bower_install', None),
+        ('grunt', None)
     ]
 
     def run(self):

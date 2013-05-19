@@ -207,7 +207,8 @@ Next, install the Buildbot-WWW and Buildbot packages using ``--editable``, which
     pip install --editable master/
 
 This will fetch a number of dependencies from pypi, the Python package repository.
-This will also fetch a bunch a bunch of node.js dependancies used for building the web application.
+This will also fetch a bunch a bunch of node.js dependencies used for building the web application,
+and a bunch of client side js dependencies, with bower
 
 Now you'll need to create a master instance.
 For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
@@ -219,10 +220,10 @@ For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
     buildbot start sandbox/testmaster
 
 If all goes well, the master will start up and begin running in the background.
-Since you haven't yet done a full grunt build, the application will run from ``www/src``.
-If, when the master starts, ``www/built`` exists, then it will run from that directory instead.
+As you just installed www in editable mode (aka 'develop' mode), setup.py did build
+the web site in prod mode, so the everything is minified, making it hard to debug.
 
-When doing web development, you can run:
+When doing web development, you usually run:
 
 .. code-block:: none
 
@@ -248,7 +249,9 @@ Testing Setup
 buildbot_www uses `Karma <http://karma-runner.github.io>`_ to run the coffeescript test suite. This is the official test framework made for angular.js
 We dont run the front-end testsuite inside the python 'trial' test suite, because testing python and JS is technically very different.
 
-Karma needs a browser to run the unit test in. It supports all the major browsers. buildbot www's build script supports two popular browsers. like for the livereload feature, the test-runner works with autowatch mode. You need to use "grunt dev" in parallel from the following commands:
+Karma needs a browser to run the unit test in. It supports all the major browsers. buildbot www's build script supports two popular browsers,
+and PhantomJS which is headless web browser made for unit testing.
+Like for the livereload feature, the test-runner works with autowatch mode. You need to use "grunt dev" in parallel from the following commands:
 
 
 Run the tests in Firefox:
@@ -265,13 +268,23 @@ Run the tests in Chrome:
 
     cd www
     . tosource
-    grunt fftest
+    grunt chrometest
 
-For the purpose of the metabuildbot, a special grunt target is made for running the test suite inside PhantomJS:
+Run the tests in PhantomJS (which you can download at http://phantomjs.org/):
+
+.. code-block:: none
+
+    cd www
+    . tosource
+    grunt pjstest
+
+For the purpose of the metabuildbot, a special grunt target is made for running the test suite inside PhantomJS.
+This special target only runs once, so is not connected to the watch mechanics:
 
 .. code-block:: none
 
     cd www
     . tosource
     grunt ci
+
 
