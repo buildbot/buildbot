@@ -36,4 +36,6 @@
 
           | buildbot-www is using the following open-source JavaScript libraries:
           ul
-             li(ng-repeat='(lib,version) in config.jslibs_versions') {{lib}} : {{version}}
+            li(ng-repeat='module in config.bower_configs')
+              a(href='{{module.http_url}}') {{module.name}}
+              | : {{module.version}}

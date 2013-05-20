@@ -1,0 +1,1 @@
+../../../components/jquery/jquery.js

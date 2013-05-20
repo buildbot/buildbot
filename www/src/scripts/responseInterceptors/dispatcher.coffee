@@ -1,7 +1,6 @@
 angular.module('app').config ['$httpProvider', ($httpProvider) ->
     $httpProvider.responseInterceptors.push
-    ['$log', '$rootScope', '$q',
-        ($log, $rootScope, $q) ->
+    ['$log', '$rootScope', '$q', ($log, $rootScope, $q) ->
         success = (response) ->
             $rootScope.$broadcast "success:#{response.status}", response
 

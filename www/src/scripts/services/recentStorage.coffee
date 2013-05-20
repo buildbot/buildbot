@@ -4,8 +4,7 @@ example)
 ###
 
 angular.module('app').factory 'recentStorage',
-['$log',
-    ($log) ->
+['$log', ($log) ->
     STORAGE_ID = "buildbot-angularjs"
     get: ->
         JSON.parse localStorage.getItem(STORAGE_ID) or "[]"

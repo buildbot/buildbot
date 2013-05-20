@@ -20,7 +20,9 @@ import subprocess
 from setuptools import setup
 import setuptools.command.sdist
 import setuptools.command.install
+import setuptools.command.develop
 from distutils.core import Command
+import json
 
 # This script can run either in a source checkout (e.g., to 'setup.py sdist')
 # or in an sdist tarball (to install)
@@ -38,56 +40,77 @@ else:
     # otherwise, use what the build left us
     version = open('VERSION').read().strip()
 
-package_json = """\
-{
+base_json = {
     "name": "buildbot-www",
-    "version": "VERSION",
+    "version": version,
     "author": {
-        "name": "Pierre Tardy",
-        "email": "tardyp@gmail.com",
-        "url": "https://github.com/tardyp"
+        "name": "Buildbot Team Members",
+        "url": "https://github.com/buildbot"
     },
     "description": "Buildbot UI",
-    "contributors": [
-        {
-        "name": "David Bochenski",
-        "email": "david@bochenski.co.uk",
-        "url": "https://github.com/Bochenski"
-        },
-        {
-        "name": "Cary Landholt",
-        "email": "cary@landholt.com",
-        "url": "https://github.com/CaryLandholt"
-        }
-    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/buildbot/buildbot"
-    },
+    }
+}
+package_json = {
     "dependencies": {
-        "grunt": "~0.3.17",
-        "grunt-hustler": "~0.7.4",
-        "grunt-reload": "~0.2.0",
-        "grunt-jade": "~0.3.9"
-    },
-    "devDependencies": {
-        "coffee-script": "~1.4.0",
-        "testacular": "~0.5.5"
+        "coffee-script": "~1.6.2",
+        "express": "~3.1.1",
+        "grunt": "~0.4.1",
+        "grunt-cli": "~0.1.1",
+        "grunt-contrib-clean": "~0.4.0",
+        "grunt-contrib-coffee": "~0.7.0",
+        "grunt-contrib-copy": "~0.4.1",
+        "grunt-contrib-imagemin": "~0.1.3",
+        "grunt-contrib-jade": "~0.5.0",
+        "grunt-contrib-less": "~0.5.0",
+        "grunt-contrib-concat": "~0.3.0",
+        "grunt-contrib-livereload": "~0.1.2",
+        "grunt-contrib-requirejs": "~0.4.0",
+        "grunt-contrib-watch": "~0.3.1",
+        "grunt-mkdir": "~0.1.1",
+        "grunt-express": "~0.3.2",
+        "grunt-hustler": "0.11.2",
+        "grunt-regarde": "~0.1.1",
+        "grunt-karma": "~0.4.4",
+        "socket.io": "~0.9.14",
+        "bower": "~0.9.2"
     },
     "engines": {
         "node": "0.8.x",
         "npm": "1.1.x"
     }
 }
-""".replace('VERSION', version)
+package_json.update(base_json)
+
+# we take latest angular version until we are stable
+# in a crazy CI fashion
+bower_json = {
+    "dependencies": {
+    "bootstrap": "latest",
+    "font-awesome": "latest",
+    "angular": "latest",
+    "angular-resource": "latest",
+    "html5shiv": "~3.6.2",
+    "jquery": "~2.0.0",
+    "requirejs": "~2.1.5",
+    "json2": "latest",
+    # test deps
+    "jasmine": "~1.3.1",
+    "angular-mocks": "latest"
+    }
+}
+
+bower_json.update(base_json)
 
 ## command classes
 
 cmdclass = {}
+
+
 class npm_install(Command):
-    """
-    Run 'npm install' to install all of the relevant npm modules
-    """
+    description = "Run 'npm install' to install all of the relevant npm modules"
 
     user_options = []
 
@@ -98,16 +121,30 @@ class npm_install(Command):
         pass
 
     def run(self):
-        open("package.json", "w").write(package_json)
+        json.dump(package_json, open("package.json", "w"))
         self.spawn(['npm', 'install'])
 
 cmdclass['npm_install'] = npm_install
 
 
+class bower_install(npm_install):
+    description = "Run 'bower install' to install all of the relevant bower modules"
+
+    sub_commands = [
+        ('npm_install', None)
+    ]
+
+    def run(self):
+        for command in self.get_sub_commands():
+            self.run_command(command)
+        json.dump(bower_json, open("bower.json", "w"))
+        self.spawn(['./node_modules/.bin/bower', 'install'])
+
+cmdclass['bower_install'] = bower_install
+
+
 class grunt(Command):
-    """
-    Run grunt to update buildbot_www/
-    """
+    descripion = "Run grunt to update buildbot_www/"
 
     user_options = [
         ('devel', 'd',
@@ -115,7 +152,7 @@ class grunt(Command):
         ]
 
     sub_commands = [
-        ('npm_install', None)
+        ('bower_install', None)
     ]
 
     def initialize_options(self):
@@ -209,6 +246,23 @@ class install(setuptools.command.install.install):
 
 cmdclass['install'] = install
 
+
+class develop(setuptools.command.develop.develop):
+    """
+    Customize develop to run npm/bower install.
+    """
+
+    sub_commands = setuptools.command.develop.develop.sub_commands + [
+        ('bower_install', None),
+        ('grunt', None)
+    ]
+
+    def run(self):
+        for command in self.get_sub_commands():
+            self.run_command(command)
+        setuptools.command.develop.develop.run(self)
+
+cmdclass['develop'] = develop
 
 setup(
     name='buildbot-www',
