@@ -19,7 +19,7 @@ from twisted.internet import defer
 from twisted.python import reflect
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
-from buildbot.data import connector, base, types, resultspec
+from buildbot.data import connector, base, types, resultspec, exceptions
 
 class Tests(interfaces.InterfaceTests):
 
@@ -30,6 +30,11 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.data.get)
         def get(self, path, filters=None, fields=None,
                     order=None, limit=None, offset=None):
+            pass
+
+    def test_signature_getEndpoint(self):
+        @self.assertArgSpecMatches(self.data.getEndpoint)
+        def getEndpoint(self, path):
             pass
 
     def test_signature_startConsuming(self):
@@ -154,10 +159,14 @@ class DataConnector(unittest.TestCase):
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)
 
-    def test_lookup(self):
+    def test_getEndpoint(self):
         ep = self.patchFooPattern()
-        self.assertEqual(self.data._lookup(('foo', '1', 'bar')),
-                             (ep, dict(fooid=1)))
+        got = self.data.getEndpoint(('foo', '10', 'bar'))
+        self.assertEqual(got, (ep, {'fooid': 10}))
+
+    def test_getEndpoint_missing(self):
+        self.assertRaises(exceptions.InvalidPathError, lambda :
+                self.data.getEndpoint(('xyz',)))
 
     def test_get(self):
         ep = self.patchFooPattern()

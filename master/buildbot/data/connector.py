@@ -93,7 +93,7 @@ class DataConnector(service.Service):
             module = reflect.namedModule(moduleName)
             self._scanModule(module)
 
-    def _lookup(self, path):
+    def getEndpoint(self, path):
         try:
             return self.matcher[path]
         except KeyError:
@@ -104,16 +104,16 @@ class DataConnector(service.Service):
                         limit=None, offset=None):
         resultSpec = resultspec.ResultSpec(filters=filters, fields=fields,
                         order=order, limit=limit, offset=offset)
-        endpoint, kwargs = self._lookup(path)
+        endpoint, kwargs = self.getEndpoint(path)
         rv = yield endpoint.get(resultSpec, kwargs)
         if resultSpec:
             rv = resultSpec.apply(rv)
         defer.returnValue(rv)
 
     def startConsuming(self, callback, options, path):
-        endpoint, kwargs = self._lookup(path)
+        endpoint, kwargs = self.getEndpoint(path)
         return endpoint.startConsuming(callback, options, kwargs)
 
     def control(self, action, args, path):
-        endpoint, kwargs = self._lookup(path)
+        endpoint, kwargs = self.getEndpoint(path)
         return endpoint.control(action, args, kwargs)

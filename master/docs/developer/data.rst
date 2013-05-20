@@ -89,6 +89,16 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
 
+    .. py:method:: getEndpoint(path)
+
+        :param tuple path: A tuple of path elements representing the API path.
+            Numbers can be passed as strings or integers.
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
+        :returns: tuple of endpoint and a dictionary of keyword arguments from the path
+
+        Get the endpoint responsible for the given path, along with any arguments extracted from the path.
+        This can be used by callers that need access to information from the endpoint beyond that returned from ``get``.
+
     .. py:method:: startConsuming(callback, options, kwargs)
 
         :param callback: a function to call for each message
