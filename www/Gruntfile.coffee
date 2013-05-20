@@ -37,6 +37,8 @@ module.exports = (grunt) ->
                     # Don't include a surrounding Immediately-Invoked Function Expression (IIFE) in the compiled output.
                     # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
                     bare: true
+                    sourceMap: true
+                    sourceRoot : '/src'
         concat:
             # concat bower.json files into config.js, to display deps in the UI
             # we declare a constant in the 'app' module
@@ -112,6 +114,15 @@ module.exports = (grunt) ->
                     src: 'scripts/**/*.js'
                     dest: './buildbot_www_test/'
                     expand: true
+                ]
+            # Copies coffee src files to the buildbot_ww directory
+            src:
+                files: [
+                    cwd: './src/'
+                    src: 'scripts/**/*.coffee'
+                    dest: 'buildbot_www/src/'
+                    expand: true
+                    flatten: true
                 ]
             # Copies select files from the temp directory to the buildbot_www directory.
             # In 'prod' minified files are used along with img and libs.
@@ -315,6 +326,7 @@ module.exports = (grunt) ->
                     'coffee:scripts'
                     'copy:js'
                     'copy:scripts'
+                    'copy:src'
                 ]
             styles:
                 files: './src/styles/**/*.less'
@@ -404,6 +416,7 @@ module.exports = (grunt) ->
         'copy:font'
         'jade:dev'
         'copy:dev'
+        'copy:src'
     ]
 
     # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and watches for file changes.

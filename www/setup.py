@@ -60,7 +60,7 @@ package_json = {
         "grunt": "~0.4.1",
         "grunt-cli": "~0.1.1",
         "grunt-contrib-clean": "~0.4.0",
-        "grunt-contrib-coffee": "~0.6.5",
+        "grunt-contrib-coffee": "~0.7.0",
         "grunt-contrib-copy": "~0.4.1",
         "grunt-contrib-imagemin": "~0.1.3",
         "grunt-contrib-jade": "~0.5.0",
