@@ -72,6 +72,7 @@ class StatusPush(StatusReceiverMultiService):
         StatusReceiverMultiService.__init__(self)
 
         # Parameters.
+        self.watched = []
         self.queue = queue
         if self.queue is None:
             self.queue = MemoryQueue()
@@ -206,6 +207,12 @@ class StatusPush(StatusReceiverMultiService):
         defers = filter(None, [d, StatusReceiverMultiService.stopService(self)])
         return defer.DeferredList(defers)
 
+    def disownServiceParent(self):
+        """Unsubscribe from watched builders"""
+        for w in self.watched:
+            w.unsubscribe(self)
+        return StatusReceiverMultiService.disownServiceParent(self)
+
     def push(self, event, **objs):
         """Push a new event.
 
@@ -256,6 +263,7 @@ class StatusPush(StatusReceiverMultiService):
 
     def builderAdded(self, builderName, builder):
         self.push('builderAdded', builderName=builderName, builder=builder)
+        self.watched.append(builder)
         return self
 
     def builderChangedState(self, builderName, state):
