@@ -164,6 +164,10 @@ class BasedirMixin(object):
     """SubcommandOptions Mixin to handle subcommands that take a basedir
     argument"""
 
+    # on tab completion, suggest directories as first argument
+    compData = usage.Completions(
+        extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
+
     def parseArgs(self, *args):
         if len(args) > 0:
             self['basedir'] = args[0]

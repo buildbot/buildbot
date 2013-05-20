@@ -38,6 +38,10 @@ class MakerBase(usage.Options):
     specified).
     """
 
+    # on tab completion, suggest directories as first argument
+    compData = usage.Completions(
+        extraActions=[usage.CompleteDirs(descr="slave base directory")])
+
     opt_h = usage.Options.opt_help
 
     def parseArgs(self, *args):

@@ -527,6 +527,8 @@ class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display error messages or tracebacks"],
     ]
+    # on tab completion, suggest files as first argument
+    compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
     def getSynopsis(self):
         return "Usage:		buildbot checkconfig [configFile]\n" + \
