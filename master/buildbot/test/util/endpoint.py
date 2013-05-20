@@ -16,7 +16,7 @@
 import mock
 import types
 from twisted.internet import defer
-from buildbot.data import resultspec
+from buildbot.data import resultspec, base
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces, validation
 from buildbot.util import pathmatch
@@ -70,6 +70,7 @@ class EndpointMixin(interfaces.InterfaceTests):
     # call methods, with extra checks
 
     def callGet(self, path, resultSpec=None):
+        self.assertIsInstance(path, tuple)
         if resultSpec is None:
             resultSpec = resultspec.ResultSpec()
         endpoint, kwargs = self.matcher[path]
@@ -79,7 +80,7 @@ class EndpointMixin(interfaces.InterfaceTests):
         @d.addCallback
         def checkNumber(rv):
             if self.ep.isCollection:
-                self.assertIsInstance(rv, list)
+                self.assertIsInstance(rv, (list, base.ListResult))
             else:
                 self.assertIsInstance(rv, (dict, types.NoneType))
             return rv

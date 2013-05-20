@@ -83,9 +83,6 @@ class ResultSpec(unittest.TestCase):
         self.assertEqual(
                 resultspec.ResultSpec(fields=['name', 'id']).apply(data),
                 dict(name="clyde", id=14))
-        self.assertEqual(
-                resultspec.ResultSpec(fields=['-name', '-id']).apply(data),
-                dict(favcolor="red"))
 
     def test_apply_collection_fields(self):
         data = mklist(('a', 'b', 'c'),
@@ -97,12 +94,6 @@ class ResultSpec(unittest.TestCase):
         self.assertEqual(
                 resultspec.ResultSpec(fields=['a', 'c']).apply(data),
                 mklist(('a', 'c'), (1, 111), (2, 222)))
-        self.assertEqual(
-                resultspec.ResultSpec(fields=['-b']).apply(data),
-                mklist(('a', 'c'), (1, 111), (2, 222)))
-        self.assertEqual(
-                resultspec.ResultSpec(fields=['-b', '-a']).apply(data),
-                mklist('c', 111, 222))
 
     def test_apply_ordering(self):
         data = mklist('name', 'albert', 'bruce', 'cedric', 'dwayne')

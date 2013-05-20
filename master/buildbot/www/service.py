@@ -76,11 +76,30 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
                 if type(port) is int:
                     port = "tcp:%d" % port
                 self.port_service = strports.service(port, self.site)
+
+                # monkey-patch in some code to get the actual Port object
+                # returned by endpoint.listen().  But only for tests.
+                if port == "tcp:0:interface=127.0.0.1":
+                    old_listen = self.port_service.endpoint.listen
+                    def listen(factory):
+                        d = old_listen(factory)
+                        @d.addCallback
+                        def keep(port):
+                            self._gotPort = port
+                            return port
+                        return d
+                    self.port_service.endpoint.listen = listen
+
                 self.port_service.setServiceParent(self)
 
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
 
+    def getPortnum(self):
+        # for tests, when the configured port is 0 and the kernel selects a
+        # dynamic port.  This will fail if the monkeypatch in reconfigService
+        # was not made.
+        return self._gotPort.getHost().port
 
     def setupSite(self, new_config):
         root = self.apps['base'].resource

@@ -19,8 +19,7 @@ from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 __all__ = [
     'SchedulerAlreadyClaimedError',
     'InvalidPathError',
-    'InvalidOptionException',
-    'InvalidActionException',
+    'InvalidControlException',
 ]
 
 class DataException(Exception):
@@ -30,10 +29,6 @@ class InvalidPathError(DataException):
     "A path argument was invalid or unknown"
     pass
 
-class InvalidOptionException(DataException):
-    "An option was invalid"
-    pass
-
-class InvalidActionException(DataException):
+class InvalidControlException(DataException):
     "Action is not supported"
     pass

@@ -273,6 +273,9 @@ class FakeDataConnector(object) :
         self.realConnector = connector.DataConnector(master)
         self.rtypes = self.realConnector.rtypes
 
+    def _scanModule(self, mod):
+        return self.realConnector._scanModule(mod)
+
     def getEndpoint(self, path):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')

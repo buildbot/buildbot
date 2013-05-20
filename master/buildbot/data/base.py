@@ -16,6 +16,7 @@
 import UserList
 import urllib
 from twisted.internet import defer
+from buildbot.data import exceptions
 
 class ResourceType(object):
     name = None
@@ -54,7 +55,7 @@ class Endpoint(object):
         raise NotImplementedError
 
     def control(self, action, args, kwargs):
-        raise NotImplementedError
+        raise exceptions.InvalidControlException
 
     def startConsuming(self, callback, options, kwargs):
         raise NotImplementedError

@@ -95,18 +95,11 @@ class ResultSpec(object):
             return data
 
         if self.fields:
-            if '-' in [f[0] for f in self.fields]:
-                fields = set(f[1:] for f in self.fields)
-                def excludeFields(d):
-                    return dict((k,v) for k,v in d.iteritems()
-                            if k not in fields)
-                applyFields = excludeFields
-            else:
-                fields = set(self.fields)
-                def includeFields(d):
-                    return dict((k,v) for k,v in d.iteritems()
-                            if k in fields)
-                applyFields = includeFields
+            fields = set(self.fields)
+            def includeFields(d):
+                return dict((k,v) for k,v in d.iteritems()
+                        if k in fields)
+            applyFields = includeFields
         else:
             fields = None
 

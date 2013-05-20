@@ -14,14 +14,27 @@
 # Copyright Buildbot Team Members
 
 import datetime
-import re
+import types
+from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import server
 from buildbot.www import resource
-from buildbot.data import base, exceptions as data_exceptions
+from buildbot.data import base, resultspec
+from buildbot.data import exceptions
 from buildbot.util import json
 from buildbot.status.web.status_json import JsonStatusResource
+
+class BadRequest(Exception):
+    pass
+
+
+class BadJsonRpc2(Exception):
+
+    def __init__(self, message, jsonrpccode):
+        self.message = message
+        self.jsonrpccode = jsonrpccode
+
 
 class RestRootResource(resource.Resource):
     version_classes = {}
@@ -50,6 +63,7 @@ class RestRootResource(resource.Resource):
                              if v > min_vers)
         return json.dumps(dict(api_versions=api_versions))
 
+
 # API version 1 was the 0.8.x status_json.py API
 
 class V1RootResource(JsonStatusResource):
@@ -65,167 +79,294 @@ JSONRPC_CODES = dict(parse_error= -32700,
                      invalid_params= -32602,
                      internal_error= -32603)
 
+
 class V2RootResource(resource.Resource):
+
+    # For GETs, this API follows http://jsonapi.org.  The getter API does not
+    # permit create, update, or delete, so this is limited to reading.
+    #
+    # Data API control methods can be invoked via a POST to the appropriate
+    # URL.  These follow http://www.jsonrpc.org/specification, with a few
+    # limitations:
+    # - params as list is not supported
+    # - rpc call batching is not supported
+    # - jsonrpc2 notifications are not supported (you always get an answer)
+
     # rather than construct the entire possible hierarchy of Rest resources,
     # this is marked as a leaf node, and any remaining path items are parsed
     # during rendering
     isLeaf = True
 
-    knownArgs = set(['as_text', 'filter', 'compact', 'callback'])
-    def decodeUrlEncoding(self, request):
-        # calculate the request options. paging defaults
-        reqOptions = {"start":0,"count":50}
-        for option in set(request.args) - self.knownArgs:
-            reqOptions[option] = request.args[option][0]
-        _range = request.getHeader('X-Range') or request.getHeader('Range') or ""
-        if _range.startswith("items="):
-            try:
-                start, end = map(int,_range.split("=")[1].split("-"))
-                reqOptions["start"] = start
-                reqOptions["count"] = end-start
-            except:
-                raise ValueError("bad Range/X-Range header")
+    def getEndpoint(self, request):
+        # note that trailing slashes are not allowed
+        return self.master.data.getEndpoint(tuple(request.postpath))
 
-        if "sort" in reqOptions:
-            def convert(s):
-                s = s.strip()
-                if s.startswith('+'):
-                    return(s[1:],0)
-                if s.startswith('-'):
-                    return(s[1:],1)
-                return (s,0)
-            reqOptions["sort"] = map(convert,reqOptions['sort'].split(','))
-
-        return reqOptions
-    def decodeJsonRPC2(self, request, reply):
-        """ In the case of json encoding, we choose jsonrpc2 as the encoding:
-        http://www.jsonrpc.org/specification
-        instead of just inventing our own. This allow easier re-use of client side code
-        This implementation is rather simple, and is not supporting all the features of jsonrpc:
-        -> params as list is not supported
-        -> rpc call batch is not supported
-        -> jsonrpc2 notifications are not supported (i.e. you always get an answer)
-       """
-        datastr = request.content.read()
-        def updateError(msg, jsonrpccode,e=None):
-            reply.update(dict(error=dict(code=jsonrpccode,
-                                   message=msg)))
-            if e:
-                raise e
-            else:
-                raise ValueError(msg)
-
+    @contextmanager
+    def handleErrors(self, writeError):
         try:
-            data = json.loads(datastr)
+            yield
+        except exceptions.InvalidPathError, e:
+            writeError(str(e) or "invalid path", errcode=404,
+                    jsonrpccode=JSONRPC_CODES['invalid_request'])
+            return
+        except exceptions.InvalidControlException, e:
+            writeError(str(e) or "invalid control action", errcode=501,
+                    jsonrpccode=JSONRPC_CODES["method_not_found"])
+            return
+        except BadRequest, e:
+            writeError(str(e) or "invalid request", errcode=400,
+                    jsonrpccode=JSONRPC_CODES["method_not_found"])
+            return
+        except BadJsonRpc2, e:
+            writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
+            return
+        except Exception, e:
+            log.err(_why='while handling API request')
+            writeError(repr(e), errcode=500,
+                    jsonrpccode=JSONRPC_CODES["internal_error"])
+            return
+
+    ## JSONRPC2 support
+
+    def decodeJsonRPC2(self, request):
+        # Content-Type is ignored, so that AJAX requests can be sent without
+        # incurring CORS preflight overheads.  The JSONRPC spec does not
+        # suggest a Content-Type anyway.
+        try:
+            data = json.loads(request.content.read())
         except Exception,e:
-            updateError("jsonrpc parse error: %s"%(str(e)), JSONRPC_CODES["parse_error"])
+            raise BadJsonRpc2("JSON parse error: %s" % (str(e),),
+                    JSONRPC_CODES["parse_error"])
+
         if type(data) == list:
-            updateError("jsonrpc call batch is not supported", JSONRPC_CODES["internal_error"])
+            raise BadJsonRpc2("JSONRPC batch requests are not supported",
+                    JSONRPC_CODES["invalid_request"])
         if type(data) != dict:
-            updateError("json root object must be a dictionary: "+datastr, JSONRPC_CODES["parse_error"])
+            raise BadJsonRpc2("JSONRPC root object must be an object",
+                    JSONRPC_CODES["invalid_request"])
 
-        def check(name, _types, _val=None):
-            if not name in data:
-                updateError("need '%s' to be present"%(name), JSONRPC_CODES["invalid_request"])
-            if _types and not type(data[name]) in _types:
-                updateError("need '%s' to be of type %s:%s"%(name, " or ".join(map(str,_types)), json.dumps(data[name])), JSONRPC_CODES["invalid_request"])
-            if _val != None and data[name] != _val:
-                updateError("need '%s' value to be '%s'"%(name, str(_val)), JSONRPC_CODES["invalid_request"])
-        check("jsonrpc", (str,unicode), "2.0")
-        check("method", (str,unicode))
-        check("id", None)
-        check("params", (dict,)) # params can be a list in jsonrpc, but we dont support it.
-        reply["id"] = data["id"]
-        return data["params"], data["method"]
-    def render(self, request):
-        @defer.inlineCallbacks
-        def render():
-            reqPath = request.postpath
-            jsonRpcReply = dict(jsonrpc="2.0",id=None)
-            # strip an empty string from the end (trailing slash)
-            if reqPath and reqPath[-1] == '':
-                reqPath = reqPath[:-1]
+        def check(name, types, typename):
+            if name not in data:
+                raise BadJsonRpc2("missing key '%s'" % (name,),
+                        JSONRPC_CODES["invalid_request"])
+            if not isinstance(data[name], types):
+                raise BadJsonRpc2("'%s' must be %s" % (name, typename),
+                        JSONRPC_CODES["invalid_request"])
+        check("jsonrpc", (str,unicode), "a string")
+        check("method", (str,unicode), "a string")
+        check("id", (str,unicode,int,types.NoneType),
+                "a string, number, or null")
+        check("params", (dict,), "an object")
+        if data['jsonrpc'] != '2.0':
+            raise BadJsonRpc2("only JSONRPC 2.0 is supported",
+                    JSONRPC_CODES['invalid_request'])
+        return data["method"], data["id"], data['params']
 
-            def write_error_default(msg, errcode=404, jsonrpccode=None):
-                request.setResponseCode(errcode)
-                # prefer text/plain here, since this is most likely user error
-                request.setHeader('content-type', 'text/plain')
-                request.write(json.dumps(dict(error=msg)))
+    @defer.inlineCallbacks
+    def renderJsonRpc(self, request):
+        www_cfg = self.master.config.www
+        jsonRpcReply = {'jsonrpc' : "2.0"}
+        def writeError(msg, errcode=399,
+                jsonrpccode=JSONRPC_CODES["internal_error"]):
+            if www_cfg.get('debug'):
+                log.msg("JSONRPC error: %s" % (msg,))
+            request.setResponseCode(errcode)
+            request.setHeader('content-type', JSON_ENCODED)
+            if not "error" in jsonRpcReply: #already filled in by caller
+                jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
+            request.write(json.dumps(jsonRpcReply))
 
-            def write_error_jsonrpc(msg, errcode=400, jsonrpccode=JSONRPC_CODES["internal_error"]):
-                request.setResponseCode(errcode)
-                request.setHeader('content-type', JSON_ENCODED)
-                if not "error" in jsonRpcReply: #already filled in by caller
-                    jsonRpcReply.update(dict(error=dict(code=jsonrpccode,
-                                                        message=msg)))
-                request.write(json.dumps(jsonRpcReply))
-            write_error = write_error_default
-            contenttype = request.getHeader('content-type') or URL_ENCODED
+        with self.handleErrors(writeError):
+            method, id, params = self.decodeJsonRPC2(request)
+            jsonRpcReply['id'] = id
+            ep, kwargs = self.getEndpoint(request)
 
-            if contenttype.startswith(JSON_ENCODED):
-                write_error = write_error_jsonrpc
+            result = yield ep.control(method, params, kwargs)
+            jsonRpcReply['result'] = result
+
+            data = json.dumps(jsonRpcReply, default=self._toJson,
+                                    sort_keys=True, separators=(',',':'))
+
+            request.setHeader('content-type', JSON_ENCODED)
+            if request.method == "HEAD":
+                request.setHeader("content-length", len(data))
+                request.write('')
+            else:
+                request.write(data)
+
+    ## JSONAPI support
+
+    def decodeResultSpec(self, request, endpoint):
+        reqArgs = request.args
+
+        def checkFields(fields, negOk=False):
+            for k in fields:
+                if k[0] == '-' and negOk:
+                    k = k[1:]
+                if k not in entityType.fieldNames:
+                    raise BadRequest("no such field %r" % (k,))
+
+        entityType = endpoint.rtype.entityType
+        limit = offset = order = fields = None
+        filters = []
+        for arg in reqArgs:
+            if arg == 'order':
+                order = reqArgs[arg]
+                checkFields(order, True)
+                continue
+            elif arg == 'field':
+                fields = reqArgs[arg]
+                checkFields(fields, False)
+                continue
+            elif arg == 'limit':
                 try:
-                    reqOptions, action = self.decodeJsonRPC2(request,jsonRpcReply)
-                except ValueError,e:
-                    write_error(str(e), jsonrpccode=JSONRPC_CODES["invalid_request"])
-                    return
-            else:
-                reqOptions = self.decodeUrlEncoding(request)
-                if request.method == "POST":
-                    if not "action" in reqOptions:
-                        write_error("need an action parameter for POST", errcode=400)
-                        return
-                    action = reqOptions["action"]
-                    del reqOptions["action"]
-            # get the value
-            try:
-                if request.method == "POST":
-                    data = yield self.master.data.control(action, reqOptions, tuple(reqPath))
-                else:
-                    data = yield self.master.data.get(tuple(reqPath))
-            except data_exceptions.InvalidPathError,e:
-                write_error(str(e) or "invalid path", errcode=404)
-                return
-            except data_exceptions.InvalidOptionException,e:
-                write_error(str(e) or "invalid option")
-                return
-            except data_exceptions.InvalidActionException,e:
-                write_error(str(e) or "invalid method", errcode=501,jsonrpccode=JSONRPC_CODES["method_not_found"])
-                return
-            except Exception, e:
-                write_error(repr(e), errcode=500,jsonrpccode=JSONRPC_CODES["internal_error"])
-                log.err(e) # make sure we log unknown exception
-                return
-            if data is None and request.method=="GET":
-                write_error("no data")
-                return
-            # format the output based on request parameters
-            as_text = self._booleanArg(request, 'as_text', False)
-            filter = self._booleanArg(request, 'filter', as_text)
-            compact = self._booleanArg(request, 'compact', not as_text)
-            callback = request.args.get('callback', [None])[0]
+                    limit = int(reqArgs[arg][0])
+                except Exception:
+                    raise BadRequest('invalid limit')
+                continue
+            elif arg == 'offset':
+                try:
+                    offset = int(reqArgs[arg][0])
+                except Exception:
+                    raise BadRequest('invalid offset')
+                continue
+            elif arg in entityType.fieldNames:
+                field = entityType.fields[arg]
+                try:
+                    values = [field.valueFromString(v) for v in reqArgs[arg]]
+                except Exception:
+                    raise BadRequest('invalid filter value for %s' % arg)
 
-            if type(data) == list:
-                total = reqOptions["count"] = len(data)
-                if "total" in reqOptions:
-                    total = reqOptions["total"]
-                if reqOptions["count"] != total:
-                    request.setResponseCode(206) # avoid proxy caching!
+                filters.append(resultspec.Filter(arg, 'eq', values))
+                continue
+            elif '__' in arg:
+                field, op = arg.rsplit('__', 1)
+                args = reqArgs[arg]
+                operators = (resultspec.Filter.singular_operators
+                                if len(args) == 1
+                            else resultspec.Filter.plural_operators)
+                if op in operators and field in entityType.fieldNames:
+                    fieldType = entityType.fields[field]
+                    try:
+                        values = [fieldType.valueFromString(v)
+                                for v in reqArgs[arg]]
+                    except Exception:
+                        raise BadRequest('invalid filter value for %s' % arg)
+                    filters.append(resultspec.Filter(field, op, values))
+                    continue
+            raise BadRequest("unrecognized query parameter '%s'" % (arg,))
 
-                request.setHeader("Content-Range", 'items %d-%d/%d'%(reqOptions["start"],
-                                                                     reqOptions["start"]+
-                                                                     reqOptions["count"],
-                                                                     total))
-            # set up the content type
-            if as_text:
-                request.setHeader("content-type", 'text/plain')
+        # if ordering or filtering is on a field that's not in fields, bail
+        # out TODO: test
+        if fields:
+            fieldsSet = set(fields)
+            if order and set(order) - fieldsSet:
+                raise BadRequest("cannot order on un-selected fields")
+            for filter in filters:
+                if filter.field not in fieldsSet:
+                    raise BadRequest("cannot filter on un-selected fields")
+
+        # bulid the result spec
+        rspec = resultspec.ResultSpec(fields=fields, limit=limit,
+                offset=offset, order=order, filters=filters)
+
+        # for singular endpoints, only allow fields
+        if not endpoint.isCollection:
+            if rspec.filters or rspec.limit or rspec.offset:
+                raise BadRequest("this is not a collection")
+
+        return rspec
+
+    @defer.inlineCallbacks
+    def renderRest(self, request):
+        www_cfg = self.master.config.www
+        def writeError(msg, errcode=404, jsonrpccode=None):
+            if www_cfg.get('debug'):
+                log.msg("REST error: %s" % (msg,))
+            request.setResponseCode(errcode)
+            request.setHeader('content-type', 'text/plain; charset=utf-8')
+            request.write(json.dumps(dict(error=msg)))
+
+        with self.handleErrors(writeError):
+            ep, kwargs = self.getEndpoint(request)
+
+            rspec = self.decodeResultSpec(request, ep)
+
+            data = yield ep.get(rspec, kwargs)
+            if data is None:
+                writeError("not found", errcode=404)
+                return
+
+            # post-process any remaining parts of the resultspec
+            data = rspec.apply(data)
+
+            # annotate the result with some metadata
+            meta = {}
+            links = meta['links'] = []
+            ignore = set(['limit', 'offset'])
+            query = [ (k,v)
+                        for (k,vs) in request.args.iteritems()
+                        for v in vs
+                        if k not in ignore ]
+            def mklink(rel, offset, limit):
+                o = [('offset', offset)] if offset else []
+                l = [('limit', limit)] if limit else []
+                links.append({'rel': rel,
+                    'href': base.Link(tuple(request.postpath),
+                                    query + o + l)})
+
+            if ep.isCollection:
+                offset, total, limit = data.offset, data.total, data.limit
+                if offset is None:
+                    offset = 0
+
+                # add total, if known
+                if total is not None:
+                    meta['total'] = total
+
+                links = meta['links'] = []
+
+                # add pagination links
+                mklink('self', offset, limit)
+                if offset != 0:
+                    mklink('first', 0, limit)
+                if limit:
+                    prev = offset - limit
+                    if prev >= 0:
+                        mklink('prev', prev, limit)
+                    elif offset != 0:
+                        mklink('prev', 0, offset)
+                if limit is not None:
+                    if total is None or offset + limit < total:
+                        mklink('next', offset + limit, limit)
+
+                # get the real list instance out of the ListResult
+                data = data.data
             else:
-                request.setHeader("content-type", JSON_ENCODED)
-                request.setHeader("content-disposition",
-                            "attachment; filename=\"%s.json\"" % request.path)
+                mklink('self', None, None)
+                data = [data]
+
+            typeName = ep.rtype.plural
+            data = {
+                typeName: data,
+                'meta': meta
+            }
+
+            # set up the content type and formatting options; if the request
+            # accepts text/html or text/plain, the JSON will be rendered in a
+            # readable, multiline format.
+
+            if 'application/json' in (request.getHeader('accept') or ''):
+                compact = True
+                request.setHeader("content-type",
+                            'application/json; charset=utf-8')
+            else:
+                compact = False
+                request.setHeader("content-type",
+                            'text/plain; charset=utf-8')
 
             # set up caching
-            cache_seconds = self.master.config.www.get('json_cache_seconds', 0)
+            cache_seconds = www_cfg.get('json_cache_seconds', 0)
             if cache_seconds:
                 now = datetime.datetime.utcnow()
                 expires = now + datetime.timedelta(seconds=cache_seconds)
@@ -233,86 +374,94 @@ class V2RootResource(resource.Resource):
                                 expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
                 request.setHeader("Pragma", "no-cache")
 
-            # filter and render the data
-            if filter:
-                data = self._filterEmpty(data)
-
-            # if we are talking jsonrpc, we embed the result in standard encapsulation
-            if jsonRpcReply['id'] is not None:
-                jsonRpcReply.update({"result": data})
-                data = jsonRpcReply
-
+            # filter out blanks if necessary and render the data
             if compact:
-                data = json.dumps(data, default=self._render_links,
+                data = json.dumps(data, default=self._toJson,
                                         sort_keys=True, separators=(',',':'))
             else:
-                data = json.dumps(data, default=self._render_links,
+                data = json.dumps(data, default=self._toJson,
                                         sort_keys=True, indent=2)
 
-            if isinstance(data, unicode):
-                data = data.encode("utf-8")
-
-            if callback:
-                # Only accept things that look like identifiers for now
-                if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
-                    data = '%s(%s);' % (callback, data)
-                request.setHeader("Access-Control-Allow-Origin", "*")
-
-            if isinstance(data, unicode):
-                data = data.encode("utf-8")
             if request.method == "HEAD":
                 request.setHeader("content-length", len(data))
-                request.write('')
             else:
                 request.write(data)
 
-        d = render()
+    def render(self, request):
+        www_cfg = self.master.config.www
+        def writeError(msg, errcode=400):
+            if www_cfg.get('debug'):
+                log.msg("HTTP error: %s" % (msg,))
+            request.setResponseCode(errcode)
+            request.setHeader('content-type', 'text/plain; charset=utf-8')
+            request.write(json.dumps(dict(error=msg)))
+            request.finish()
+
+        # Handle CORS, if necessary.
+        origins = www_cfg.get('allowed_origins')
+        if origins is not None:
+            isPreflight = False
+            reqOrigin = request.getHeader('origin')
+            if reqOrigin:
+                err = None
+                if reqOrigin.lower() not in origins \
+                            and '*' not in origins:
+                    err = "invalid origin"
+                elif request.method == 'OPTIONS':
+                    preflightMethod = request.getHeader(
+                            'access-control-request-method')
+                    if preflightMethod not in ('GET', 'POST', 'HEAD'):
+                        err = 'invalid method'
+                    isPreflight = True
+                if err:
+                    writeError(err)
+                    return server.NOT_DONE_YET
+
+                # If it's OK, then let the browser know we checked it out.  The
+                # Content-Type header is included here because CORS considers
+                # content types other than form data and text/plain to not be
+                # simple.
+                request.setHeader("access-control-allow-origin", reqOrigin)
+                request.setHeader("access-control-allow-headers",
+                                  "Content-Type")
+                request.setHeader("access-control-max-age", '3600')
+
+                # if this was a preflight request, we're done
+                if isPreflight:
+                    request.finish()
+                    return server.NOT_DONE_YET
+
+        # based on the method, this is either JSONRPC or REST
+        if request.method == 'POST':
+            d = self.renderJsonRpc(request)
+        elif request.method in ('GET', 'HEAD'):
+            d = self.renderRest(request)
+        else:
+            writeError("invalid HTTP method")
+            return server.NOT_DONE_YET
+
         @d.addCallback
         def finish(_):
             try:
                 request.finish()
-            except RuntimeError:
+            except RuntimeError: # pragma: no-cover
                 # this occurs when the client has already disconnected; ignore
                 # it (see #2027)
                 log.msg("http client disconnected before results were sent")
 
         @d.addErrback
         def fail(f):
-            log.err(f, 'ugh')
-            request.processingFailed(f)
-            return None
+            log.err(f, 'While rendering resource:')
+            try:
+                writeError('internal error - see logs', errcode=500)
+            except Exception:
+                try:
+                    request.finish()
+                except:
+                    pass
         return server.NOT_DONE_YET
 
-        @d.addErrback
-        def eb(f):
-            request.processingFailed(f)
-            return None
-
-    def _booleanArg(self, request, arg, default):
-        value = request.args.get(arg, [default])[0]
-        if value in (False, True):
-            return value
-        value = value.lower()
-        if value in ('1', 'true'):
-            return True
-        if value in ('0', 'false'):
-            return False
-        # Ignore value.
-        return default
-
-    def _filterEmpty(self, data):
-        empty = ('', False, None, [], {}, ())
-        if isinstance(data, (list, tuple)):
-            filtered = (self._filterEmpty(x) for x in data)
-            return [ x for x in filtered if x not in empty ]
-        elif isinstance(data, dict):
-            filtered = ((k, self._filterEmpty(v))
-                        for (k, v) in data.iteritems())
-            return dict(x for x in filtered if x[1] not in empty)
-        else:
-            return data
-
-    def _render_links(self, obj):
+    def _toJson(self, obj):
         if isinstance(obj, base.Link):
             return obj.makeUrl(self.base_url, self.apiVersion)
 

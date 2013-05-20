@@ -191,35 +191,7 @@ Web Interface
 The HTTP interface is implemented by the :py:mod:`buildbot.www` package, as configured by the user.
 Part of that configuration is a base URL, which is considered a prefix for all paths mentioned here.
 
-This version of the API is rooted at ``api/v2`` [#apiv1]_.
-A GET operation on any path under the root gets a request.
-The following query arguments are available everywhere (with the boolean arguments accepting ``0``, ``false``, ``1``, and ``true``):
-
- * ``as_text`` - if true, the result is returned as type text/plain, and thus easily readable in a web browser.
- * ``filter`` - if true, or if omitted and ``as_text`` is set true, empty values (empty lists and objects, false, null, and the empty string) are omitted from the result.
- * ``compact`` - if true, or if omitted and ``as_text`` is false, the returned JSON will have unnecessary whitespace stripped.
- * ``callback`` - if given, a JSONP response will be returned with this callback name.
-
-Other query arguments are passed to the resource identified by the path, and have the meanings described in :ref:`Data Model`.
-
-The interface is easily used with common tools like curl:
-
-.. code-block:: none
-
-    dustin@cerf ~ $ curl http://euclid.r.igoro.us:8010/api/v2/change/1?as_text=1
-    {
-      "author": "Dustin J. Mitchell <dustin@mozilla.com>",
-      "branch": "master",
-      "changeid": 1,
-      "comments": "changed",
-      "files": [
-        "README.txt"
-      ],
-      "project": "foo",
-      "repository": "/home/dustin/code/buildbot/t/testrepo/",
-      "revision": "5a8a560adade3d3be6c5cb09e6e1581dd307a4bd",
-      "when_timestamp": 1335680458
-    }
+See :ref:`WWW` for more information.
 
 .. _Data Model:
 
@@ -365,7 +337,7 @@ See that module's description for details.
         This should return either a list of dictionaries (for list endpoints), a dictionary, or None (both for details endpoints).
         The endpoint is free to handle any part of the result spec.
         When doing so, it should remove the relevant configuration from the spec.
-        For example, if the endpoint applies a filter expression, it should remove that filter expression from ``resultSpec.filters``.
+        See below.
 
         Any result spec configuration that remains on return will be applied automatically.
 
@@ -385,13 +357,21 @@ Continuing the pub example, a simple endpoint would look like this::
 
     class PubEndpoint(base.Endpoint):
         pathPattern = ( 'pub', 'i:pubid' )
-        def get(self, options, resultSpec, kwargs):
+        def get(self, resultSpec, kwargs):
             return self.master.db.pubs.getPub(kwargs['pubid'])
-
-In a more complex implementation, the options might be used to indicate whether or not the pub's menu should be included in the result.
 
 Endpoint implementations must have unit tests.
 An endpoint's path should be documented in the ``.rst`` file for its resource type.
+
+The initial pass at implementing any endpoint should just ignore the ``resultSpec`` argument to ``get``.
+After that initial pass, the argument can be used to optimize certain types of queries.
+For example, if the resource type has many resources, but most real-life queries use the result spec to filter out all but a few resources from that group, then it makes sense for the endpoint to examine the result spec and allow the underlying DB API to do that filtering.
+
+When an endpoint handles parts of the result spec, it must remove those parts from the spec before it returns.
+See the documentation for :py:class:`~buildbot.data.resultspec.ResultSpec` for methods to do so.
+
+Note that endpoints must be careful not to alter the order of the filtering applied for a result spec.
+For example, if an endpoint implements pagination, then it must also completely implement filtering and ordering, since those operations precede pagination in the result spec application.
 
 Adding Messages
 +++++++++++++++
