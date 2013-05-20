@@ -48,7 +48,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
         return d
 
 
-class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
+class ChangesEndpoint(FixerMixin, base.Endpoint):
 
     pathPatterns = """
         /change
@@ -57,8 +57,7 @@ class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
     maximumCount = 50
 
     @defer.inlineCallbacks
-    def safeGet(self, options, kwargs):
-        options['total'] = yield self.master.db.changes.getChangesCount(options)
+    def get(self, options, kwargs):
         changes = yield self.master.db.changes.getChanges(options)
         changes = [ (yield self._fixChange(ch)) for ch in changes ]
         defer.returnValue(changes)

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import UserList
-from buildbot.data import exceptions
 from twisted.internet import defer
 
 class ResourceType(object):
@@ -130,71 +129,6 @@ class ListResult(UserList.UserList):
         else:
             return list(self) == other
 
-
-# TODO: cruft
-class GetParamsCheckMixin(object):
-    """ a mixin for making generic paramater checks for the get data api"""
-    maximumCount = 0
-    def get(self, options, kwargs):
-        """generic tests for get options
-           currently only test the count is not too large to avoid dos
-        """
-        if "count" in options:
-            try:
-                options["count"] = int(options["count"])
-            except:
-                return defer.fail(exceptions.InvalidOptionException(
-                        "count need to be integer %s"%(
-                            options["count"])))
-            if self.maximumCount > 0 and self.maximumCount < options["count"]:
-                return defer.fail(exceptions.InvalidOptionException(
-                        "to many element requested: %d > %d"%(
-                            options["count"], self.maximumCount)))
-        return self.safeGet(options, kwargs)
-    def safeGet(self, options, kwargs):
-        raise NotImplementedError
-
-# TODO: cruft
-class ControlParamsCheckMixin(object):
-    """ a mixin for making generic paramater checks for the control data api"""
-    action_specs = {}
-    def control(self, action, args, kwargs):
-        if not action in self.action_specs:
-            raise exceptions.InvalidActionException(
-                "'%s' action is not supported. Only %s are"%(action, self.action_specs.keys()))
-        self.checkParams(args,self.action_specs[action])
-        return self.safeControl(action, args, kwargs)
-    def safeControl(self, action, args, kwargs):
-        raise NotImplementedError
-    def checkParams(self, args, specs):
-        """specs is a dict with check descriptions:
-           type: verify the arg is of this type
-           re: verify the arg matches the compiled regex
-           required: verify the arg exist is args
-        """
-        for k, spec in specs.items():
-            if "required" in spec:
-                if not k in args:
-                    raise exceptions.InvalidOptionException("need '%s' param"%(k))
-            if not k in args:
-                continue
-            arg = args[k]
-            if "type" in spec:
-                if spec["type"] != type(arg):
-                    raise exceptions.InvalidOptionException(
-                        "need '%s' param to be a '%s' while its '%s'"%(k,
-                                                                       str(spec["type"]),
-                                                                       arg))
-            if "re" in spec:
-                if not spec["re"].match(arg):
-                    raise exceptions.InvalidOptionException(
-                        "need '%s' param to match regular expression '%s' its '%s'"%(k,
-                                                                       spec["re"].pattern,
-                                                                       arg))
-        for k in args.keys():
-            if not k in specs:
-                    raise exceptions.InvalidOptionException(
-                        "param '%s' is not supported by this api only %s are"%(k, specs.keys()))
 
 class Link(object):
     "A Link points to another resource, specified by path"

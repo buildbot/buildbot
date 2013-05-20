@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import mock, re
+import mock
 from twisted.trial import unittest
-from buildbot.data import base, exceptions
+from buildbot.data import base
 from buildbot.test.util import endpoint
 from buildbot.test.fake import fakemaster
 
@@ -94,54 +94,3 @@ class Link(unittest.TestCase):
         l = base.Link(('a', 'b'))
         self.assertEqual(`l`, "Link(('a', 'b'))")
 
-class ControlParamsCheckMixin(unittest.TestCase):
-    def doTest(self, arg, specs, error, action="act"):
-        class TestedEndpoint(base.ControlParamsCheckMixin):
-            called = False
-            def safeControl(self, action, args, kwargs):
-                self.called = True
-        check = TestedEndpoint()
-        check.action_specs = {"act":specs}
-        try:
-            check.control(action, arg, {})
-        except exceptions.InvalidOptionException,e:
-            self.assertEqual(str(e), error)
-            return
-        except exceptions.InvalidActionException,e:
-            self.assertEqual(str(e), error)
-            return
-        self.assertEqual(error, None)
-        self.assertEqual(check.called, True)
-    def test_re(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(re=re.compile("[a-z]+"))),
-                     "need 'a' param to match regular expression '[a-z]+' its 'Aslkj'")
-    def test_re_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(re=re.compile("[a-z]+"))),
-                     None)
-    def test_type(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(type=dict)),
-                     "need 'a' param to be a '<type 'dict'>' while its 'Aslkj'")
-    def test_type_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(type=str)),
-                     None)
-    def test_required(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(), b=dict(required=True)),
-                     "need 'b' param")
-    def test_required_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(required=True)),
-                     None)
-    def test_unknown(self):
-        self.doTest( dict(a="aslkj", b="bar"),
-                     dict(a=dict(required=True)),
-                     "param 'b' is not supported by this api only ['a'] are")
-    def test_unknown_action(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(required=True)),
-                     "'unknown' action is not supported. Only ['act'] are",
-                     action="unknown")

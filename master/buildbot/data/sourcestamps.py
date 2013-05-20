@@ -54,7 +54,7 @@ class SourceStampEndpoint(base.Endpoint):
         defer.returnValue(_db2data(ssdict) if ssdict else None)
 
 
-class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
+class SourceStampsEndpoint(base.Endpoint):
 
     pathPatterns = """
         /sourcestamp
@@ -62,7 +62,7 @@ class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
     rootLinkName = 'sourcestamps'
 
     @defer.inlineCallbacks
-    def safeGet(self, options, kwargs):
+    def get(self, options, kwargs):
         defer.returnValue([ _db2data(ssdict) for ssdict in
             (yield self.master.db.sourcestamps.getSourceStamps()) ])
 

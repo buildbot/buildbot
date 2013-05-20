@@ -16,7 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
-from buildbot.data import changes, exceptions
+from buildbot.data import changes
 from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
@@ -105,14 +105,6 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.validateData(changes[0])
             self.assertEqual(changes[0]['changeid'], 14)
         return d
-
-    def test_get_invalid_count(self):
-        d = self.callGet(dict(count='ten'), dict())
-        self.assertFailure(d, exceptions.InvalidOptionException)
-
-    def test_get_invalid_count2(self):
-        d = self.callGet(dict(count=50000), dict())
-        self.assertFailure(d, exceptions.InvalidOptionException)
 
     def test_get_sorted(self):
         # invert the default order
