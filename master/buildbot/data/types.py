@@ -16,6 +16,7 @@
 # See "Type Validation" in master/docs/developer/tests.rst
 
 import re
+from buildbot import util
 from buildbot.util import json
 from buildbot.data import base
 
@@ -100,16 +101,7 @@ class Boolean(Instance):
     types = (bool,)
 
     def valueFromString(self, arg):
-        return {
-            'on': True,
-            'true': True,
-            'yes': True,
-            '1': True,
-            'off': False,
-            'false': False,
-            'no': False,
-            '0': False,
-        }[arg.lower()]
+        return util.string2boolean(arg)
 
 
 class Link(Instance):
