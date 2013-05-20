@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import UserList
+import urllib
 from twisted.internet import defer
 
 class ResourceType(object):
@@ -134,18 +135,28 @@ class ListResult(UserList.UserList):
 class Link(object):
     "A Link points to another resource, specified by path"
 
-    __slots__ = [ 'path' ]
+    __slots__ = [ 'path', 'query' ]
 
-    def __init__(self, path):
+    def __init__(self, path, query=[]):
         assert isinstance(path, tuple)
         self.path = path
+        self.query = query
 
     def __repr__(self):
-        return "Link(%r)" % (self.path,)
+        return "Link(%r, %r)" % (self.path, self.query)
 
     def __cmp__(self, other):
         return cmp(self.__class__, other.__class__) \
-                or cmp(self.path, other.path)
+                or cmp(self.path, other.path) \
+                or cmp(self.query, other.query)
+
+    def makeUrl(self, baseUrl, apiVersion):
+        querystr = ''
+        if self.query:
+            querystr = '?' + urllib.urlencode(self.query)
+        base = '/'.join([baseUrl + 'api', 'v%d' % apiVersion]
+                        + list(self.path))
+        return base + querystr
 
 
 def updateMethod(func):

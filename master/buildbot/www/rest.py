@@ -314,8 +314,7 @@ class V2RootResource(resource.Resource):
 
     def _render_links(self, obj):
         if isinstance(obj, base.Link):
-            return "%sapi/v%d/%s" % (self.base_url, self.apiVersion,
-                                    '/'.join(obj.path))
+            return obj.makeUrl(self.base_url, self.apiVersion)
 
 RestRootResource.addApiVersion(1, V1RootResource)
 RestRootResource.addApiVersion(2, V2RootResource)

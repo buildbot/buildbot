@@ -132,7 +132,7 @@ Links
 
 .. py:module:: buildbot.data.base
 
-.. py:class:: Link
+.. py:class:: Link(path, query=[])
 
     A link giving the path for this or another object.
     Instances of this class should be serialized appropriately for the medium, e.g., URLs in an HTTP API.
@@ -140,6 +140,18 @@ Links
     .. py:attribute:: path
 
         The path, represented as a list of path elements.
+
+    .. py:attribute:: query
+
+        Query parameters, given as a list of key/value tuples.
+
+    .. py:method:: makeUrl(baseUrl, apiVersion)
+
+        :param baseUrl: ``/``-terminated base URL
+        :param apiVersion: numeric API version to include in the URL
+        :returns: full URL containing the path and query parameters
+
+        Generate a fully qualified URL for this link.
 
 
 Exceptions
