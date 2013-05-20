@@ -47,6 +47,32 @@ module.exports = (grunt) ->
                     separator:','
                     banner: 'angular.module("app").constant("bower_configs", ['
                     footer: '])'
+
+        # custom task that generates main.js (the require.js main file)
+        # Angular is actually very nice with its dependancy injection system
+        # basically, we just need angular is loaded first,  app second and run last
+        # we should not be modifying this config when the app is growing
+        requiregen:
+            main:
+                cwd: './.temp/scripts/'
+                # require json2 and html5shiv are loaded in the html file
+                src: ['**/*.js','!libs/require.js', '!libs/json2.js', '!libs/html5shiv-printshiv.js']
+                options:
+                    order: [
+                    # order is a list of regular expression matching
+                    # modules, requiregen will generate the correct shim
+                    # to load modules in this order
+                    # if a module has been loaded in previous layers, it wont be loaded again
+                    # so that you can use global regular expression in the end
+                        'libs/jquery'
+                        'libs/angular' # angular needs jquery before or will use internal jqlite
+                        'libs/.*'      # remaining libs before app
+                        'app'          # app needs libs
+                        '(routes|views|config)'
+                        '.*/.*'   # remaining angularjs components
+                        'run'     # run has to be in the end, because it is triggering angular's own DI
+                    ]
+                dest: '.temp/scripts/main.js'
         # Copies directories and files from one location to another.
         copy:
             # Copies the contents of the temp directory, except views, to the buildbot_www directory.
@@ -331,6 +357,8 @@ module.exports = (grunt) ->
     # https://github.com/Dignifiedquire/grunt-karma
     grunt.loadNpmTasks 'grunt-karma'
 
+    grunt.loadTasks 'tasks'
+
     # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
     # Enter the following command at the command line to execute this build task:
     # grunt ci
@@ -369,6 +397,7 @@ module.exports = (grunt) ->
         'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
+        'requiregen:main'
         'less'
         'jade:views'
         'copy:img'
@@ -393,6 +422,7 @@ module.exports = (grunt) ->
         'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
+        'requiregen:main'
         'copy:font'
         'copy:img'
         'less'

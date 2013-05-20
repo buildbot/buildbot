@@ -1,3 +1,4 @@
+# this file has to be loaded last
 angular.module('app').run
 ['$rootScope', '$log', ($rootScope, $log) ->
     # fire an event related to the current route
@@ -5,3 +6,4 @@ angular.module('app').run
         $rootScope.$broadcast "#{currentRoute.controller}$routeChangeSuccess",
                               currentRoute, priorRoute
 ]
+angular.bootstrap document, ['app']
