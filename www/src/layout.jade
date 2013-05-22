@@ -10,22 +10,19 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     script(src='scripts/libs/json2.js')
     script(src='scripts/libs/html5shiv-printshiv.js')
 
-  case self.environment || 'prod'
+  case environment || 'prod'
     when 'prod'
        link(rel='stylesheet', href='styles/styles.min.css?_#{(new Date()).getTime()}')
-       include ../temp/views/views.html
     default
        link(rel='stylesheet', href='styles/styles.css')
-       //- automatic reload support. in "grunt dev" mode, page reload automatically
-       script
-         __reloadServerUrl="ws://#{self.reloadUrl}";
-       script(type='text/javascript', src='//#{self.reloadUrl}/__reload/client.js')
+        // Live-reload support
+       script(src='http://localhost:35729/livereload.js')
 
   body.ng-cloak(ng-cloak='ng-cloak')
     block content
     block footer
 
-  case self.environment || 'prod'
+  case environment || 'prod'
     when 'prod'
        script(src='scripts/scripts.min.js?_#{(new Date()).getTime()}')
     default
