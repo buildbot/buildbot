@@ -780,6 +780,18 @@ li {
 }
 
 .step-list {
+	.not_started {
+	background-color:#eee;
+	&:before {
+		content:"Not startet";
+	}
+	}
+	.retry:before {
+		content:"Retry";	
+	} 
+	.success:before {
+		content:"Succss";	
+	} 
 	li {
 		padding-bottom:9px;
 		margin-bottom:10px;
