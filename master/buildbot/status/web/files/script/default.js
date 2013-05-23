@@ -51,10 +51,24 @@ $(document).ready(function() {
 		$(this).next().children().fadeIn('fast');
 	});
 
-	$(document).click(function(e){
-		if (!$(e.target).closest('.more-info-box, .more-info').length) {
+	$(document, '.close-btn').click(function(e){
+		if (!$(e.target).closest('.more-info-box, .more-info').length || $(e.target).closest('.close-btn').length ) {
 			$('.more-info-box').fadeOut('fast');
 		}
 	}); 
+
+
+	// class on selected menuitem
+
+	function setCurrentItem() {
+		var path = window.location.pathname.split("\/");
+		
+		 $('.top-menu a').each(function(index) {
+		 	var thishref = this.href.split("\/");
+	        if(thishref[thishref.length-1].trim().toLowerCase() == path[1].trim().toLowerCase())
+	            $(this).parent().addClass("selected");
+	    });
+	}
+	setCurrentItem();
 
 });

@@ -1,23 +1,109 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
 {% from "box_macros.html" import box %}
+{% from 'static.html' import force_build_static %}
+
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+          Buildstatus
+    </li>
+  </ul>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>Builders: {{ branches|join(', ')|e }}</h1>
+<h1 class="main-head">
+  Buildstatus
+  <span>
+    {{ branches|join(', ')|e }}
+      Single Project, Single Branch
+  </span>
+</h1>
 
-<table>
+<table class="table-1 first-child">
+<tr>
+  <th class="txt-align-left">Builder</th>
+  <th class="txt-align-left">Current jobs</th>
+  <th class="txt-align-left">Last run</th>
+  <th>Status</th>
+  <th>Build Artifacts</th>
+  <th class="txt-align-right">
+    Force Build
+  </th>
+</tr>
 {% for b in builders %}
   <tr>
-  <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
-  {% if b.build_url %}
-    <td class="LastBuild box {{ b.build_css_class }}">
-        <a href="{{ b.build_url }}">{{ b.build_label }}</a>
-        <br/>{{ b.build_text }}
+    <td class="box txt-align-left">
+      <a href="{{ b.link }}">
+        {{ b.name|e }}
+      </a>
     </td>
-  {% else %}
-    <td class="LastBuild box">no build</td>
-  {% endif %}  
-  {{ box(**b.current_box) }}  
+    <td class="txt-align-left">
+      <a href="#">
+        mac-slave-02
+      </a> 
+      <br />
+      <span class="small-txt">
+        (33% complete)
+      </span>
+    </td>
+    <td class="txt-align-left">
+      
+      <a href="#">
+        20 Changes
+      </a>
+      <br />
+      <span class="small-txt">
+        #710 (5 days ago)
+      </span>
+      
+    </td>
+    {% if b.build_url %}
+      <td class="LastBuild box {{ b.build_css_class }} ">
+          <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+          {{ b.build_text }}
+      </td>
+    {% else %}
+      <td class="LastBuild box small-txt">
+        no build
+      </td>
+    {% endif %}  
+    <td>
+      <a href="#">
+        Download
+      </a>
+    </td>
+    <td class="txt-align-right">
+      <a class="more-info before" href="#">
+        Force build
+      </a>
+      <div class="pos-relative">
+        <div class="more-info-box">
+          <span class="close-btn" href="#">
+          </span>
+          <h3>Overview</h3>
+          
+            {{ force_build_static() }}  
+
+        </div>
+      </div>
+      <br>
+
+      <a href="#">
+        Stop build
+      </a>
+
+    </td>
+    <!--
+      {{ box(**b.current_box) }}  
+    -->
   </tr>
 {% endfor %}
 </table>

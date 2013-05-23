@@ -2,23 +2,51 @@
 {% import 'forms.html' as forms %}
 
 {% extends "layout.html" %}
+
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+        <a href="/builders">
+          Buildstatus
+        </a>
+    </li>
+    <li>
+      {{ name }}
+    </li>
+  </ul>
+</nav>
+{% endblock %}
+
 {% block content %}
 
-<h1 class="builder-head">
-  Builder 
-  <span>
+<h1 class="main-head">
     {{ name }}
-  </span>
 </h1>
 
 <!--
   <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
 -->
+<div class="column-1">
+<div class="column-2">
 
-<div class="column">
+<h2 class="head-2">
+  Build status
 
+</h2>
+<ul class="list">
+<li>
 {% if current %}
-  <h2>Current Builds:</h2>
+
+  
+  <h2 class="small-head">
+    Current job
+  </h2>
   <ul>
   {% for b in current %}
     <li><a href="{{ b.link }}">{{ b.num }}</a>
@@ -35,11 +63,18 @@
   {% endfor %}
   </ul>
 {% else %}
-  <h2>No current builds</h2>
+  <h2 class="small-head">
+     current builds
+  </h2> None
+  
 {% endif %}    
- 
+ </li>
+<li>
 {% if pending %}
-  <h2>Pending Build Requests:</h2>
+
+  <h2 class="small-head">
+    Pending Build Requests:
+  </h2>
   <ul>
   {% for b in pending %}
     <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
@@ -63,6 +98,7 @@
       {% endif %}
     </li>
   {% endfor %}
+  </li>
   </ul>  
   
   {% if authz.advertiseAction('cancelPendingBuild', request) %}
@@ -70,51 +106,95 @@
   {% endif %}    
      
 {% else %}
-  <h2>No Pending Build Requests</h2>
+  <h2 class="small-head">
+    Pending Build Requests
+  </h2> None
 {% endif %}
-
-<h2>Recent Builds:</h2>
-
-{{ build_table(recent) }}
-
+</li>
+  <li>
+    <h2 class="small-head"> 
+      Last Message Received
+    </h2> <a href="#">Unzipping External/Mono/builds.zip...</a>
+  </li>
+</ul>
 </div>
-<div class="column last">
+<div class="column-2 last">
 
-<h2>Buildslaves:</h2>
-<table class="info">
-{% if slaves %}
-<tr>
-  <th>Name</th>
-  <th>Status</th>
-  <th>Admin</th>
-</tr>
-{% endif %}
-{% for s in slaves %}
-  <tr class="{{ loop.cycle('alt', '') }}">
-  <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
-  {% if s.connected %}
-    <td class="idle">connected</td>
-    <td>{{ s.admin|email if s.admin else ""}}</td>
-  {% else %}
-    <td class="offline">offline</td> 
-    <td/>
-  {% endif %}
-  </tr>
-{% else %}
-  <td>no slaves attached</td>
-{% endfor %}
-</table>
+<ul class="btn-list">
+  <li>
+    <a class="more-info grey-btn" href="buildslaves/win-slave-04">
+        Buildslaves
+    </a>
+    <div class="pos-relative">
+        <div class="more-info-box">
+          <span href="#" class="close-btn">
+          </span>
+          <h3>Overview</h3>
+          
+                <table class="table-1">
+                {% if slaves %}
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Admin</th>
+                </tr>
+                {% endif %}
+                {% for s in slaves %}
+                  {%- if loop.last or loop.index0 == 0 %}
+                      <tr class='last'>
+                        {%- else -%}
+                      <tr>
+                  {%- endif -%}
+                  <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
+                  {% if s.connected %}
+                    <td class="idle">connected</td>
+                    <td>{{ s.admin|email if s.admin else ""}}</td>
+                  {% else %}
+                    <td class="offline">offline</td> 
+                    <td/>
+                  {% endif %}
+                  </tr>
+                {% else %}
+                  <td>no slaves attached</td>
+                {% endfor %}
+                </table>
+            </div>
+      </div>
+  </li>
+  <li>
+      <a class="more-info grey-btn" href="buildslaves/win-slave-04">
+        Force build
+      </a>
+      
+      <div class="pos-relative">
+        <div class="more-info-box">
+          <span href="#" class="close-btn">
+          </span>
+          <h3>Force build</h3>
 
+          {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+            {{ forms.force_build(builder_url+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
+          {% endif %}          
+          
+        </div>
+      </div>
+  </li>
+</ul>
+
+<!--
 {% if authz.advertiseAction('pingBuilder', request) %}
   <h2>Ping slaves</h2>
   {{ forms.ping_builder(builder_url+"/ping", authz) }}
 {% endif %}
+-->
 
-{% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-  <h2>Force build</h2>
-  {{ forms.force_build(builder_url+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
-{% endif %}
 
 </div>
+</div>
+<h2 class="head-2">
+  Recent Builds
+</h2>
+
+{{ build_table(recent) }}
 
 {% endblock %}
