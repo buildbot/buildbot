@@ -221,18 +221,17 @@ class AcquireBuildLocks(LoggingBuildStep):
         return
 
 class ReleaseBuildLocks(LoggingBuildStep):
-    name = "AcquireBuilderLocks"
-    description="AcquireBuilderLocks"
-    descriptionDone="AcquireBuilderLocks finished"
+    name = "ReleaseBuilderLocks"
+    description="ReleaseBuilderLocks"
+    descriptionDone="ReleaseBuilderLocks finished"
 
-def __init__(self, **kwargs):
-    self.locks = None
-    self.releaseLockInstanse
-    LoggingBuildStep.__init__(self, **kwargs)
+    def __init__(self, **kwargs):
+        self.releaseLockInstanse
+        LoggingBuildStep.__init__(self, **kwargs)
 
     def start(self):
         self.step_status.setText(["Releasing build locks"])
-        self.finished(SUCCESS)
         self.locks = self.build.locks
         self.releaseLockInstanse = self.build.releaseLockInstanse
+        self.finished(SUCCESS)
         return
