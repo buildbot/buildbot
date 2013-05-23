@@ -209,6 +209,42 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def getBuildRequestTriggered(self, bsid, buildername):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db.model.buildsets
+
+            stmt_bs = sa.select([buildsets_tbl.c.id]) \
+                .where(buildsets_tbl.c.triggeredbybsid == bsid)
+
+            stmt_br = sa.select([buildrequests_tbl]) \
+                .where(buildrequests_tbl.c.buildername == buildername) \
+                .where(buildrequests_tbl.c.buildsetid.in_(stmt_bs) )
+
+            res = conn.execute(stmt_br)
+            row = res.fetchone()
+            buildrequest = None
+            if row:
+                if row.madebybrid:
+                    stmt = sa.select([buildrequests_tbl]) \
+                        .where(buildrequests_tbl.c.id == row.madebybrid)
+                    res = conn.execute(stmt)
+                    br_row = res.fetchone()
+                    if br_row:
+                        row = br_row
+
+                submitted_at = mkdt(row.submitted_at)
+                complete_at = mkdt(row.complete_at)
+                buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
+                                    buildername=row.buildername, priority=row.priority,
+                                    complete=bool(row.complete), results=row.results,
+                                    submitted_at=submitted_at, complete_at=complete_at, madebybrid=row.madebybrid)
+
+            res.close()
+            return buildrequest
+
+        return self.db.pool.do(thd)
+
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
                             _master_objectid=None):

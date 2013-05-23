@@ -170,12 +170,13 @@ class DownloadArtifact(ShellCommand):
     description="DonwloadArtifact"
     descriptionDone="DonwloadArtifact finished"
 
-    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, **kwargs):
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, TriggeredByBuilder = False, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
+        self.TriggeredByBuilder = TriggeredByBuilder
         self.master = None
         ShellCommand.__init__(self, **kwargs)
 
@@ -186,7 +187,13 @@ class DownloadArtifact(ShellCommand):
 
         #find buildrequest dependency
         bsid = self.build.builder.building[0].requests[0].bsid
-        br = yield self.master.db.buildrequests.getRelatedBuildRequest(bsid, self.artifactBuilderName)
+
+        if (self.TriggeredByBuilder):
+            br = yield self.master.db.buildrequests.getBuildRequestTriggered(bsid, self.artifactBuilderName)
+        else:
+            br = yield self.master.db.buildrequests.getRelatedBuildRequest(bsid, self.artifactBuilderName)
+
+        print "\n\n-- got br %s "% br
 
         artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
                                       br['brid'], FormatDatetime(br["submitted_at"]))
@@ -207,8 +214,8 @@ class AcquireBuildLocks(LoggingBuildStep):
     description="AcquireBuilderLocks"
     descriptionDone="AcquireBuilderLocks finished"
 
-    def __init__(self, **kwargs):
-        LoggingBuildStep.__init__(self, **kwargs)
+    def __init__(self, hideStepIf = True, **kwargs):
+        LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, **kwargs)
 
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build"])
@@ -225,9 +232,9 @@ class ReleaseBuildLocks(LoggingBuildStep):
     description="ReleaseBuilderLocks"
     descriptionDone="ReleaseBuilderLocks finished"
 
-    def __init__(self, **kwargs):
+    def __init__(self, hideStepIf = True, **kwargs):
         self.releaseLockInstanse
-        LoggingBuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, hideStepIf=hideStepIf, **kwargs)
 
     def start(self):
         self.step_status.setText(["Releasing build locks"])
