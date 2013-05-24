@@ -34,6 +34,10 @@ Features
 
 * The WebStatus builder page can now filter pending/current/finished builds by property parameters of the form ``?property.<name>=<value>``.
 
+* Build status can be sent to GitHub. Depends on txgithub package.
+  See :bb:status:`GitHubStatus` and
+  `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
