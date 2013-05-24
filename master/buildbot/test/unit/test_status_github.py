@@ -119,23 +119,52 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         self.assertEqual(self.status, result)
 
-    def test_buildStarted_no_properties(self):
+    def test_buildStarted(self):
         """
-        Status sending for buildStarted is skipped if no GitHub specific
+        Will call _sendStartStatus and return `None`.
+        """
+        builder_name = 'builder-name'
+        build = object()
+        self.status._sendStartStatus = Mock()
+
+        result = self.status.buildStarted(builder_name, build)
+
+        self.assertIsNone(result)
+        self.status._sendStartStatus.assert_called_once_with(
+            builder_name, build)
+
+    def test_buildFinished(self):
+        """
+        Will call _sendFinishStatus and return `None`.
+        """
+        builder_name = 'builder-name'
+        build = object()
+        results = object()
+        self.status._sendFinishStatus = Mock()
+
+        result = self.status.buildFinished(builder_name, build, results)
+
+        self.assertIsNone(result)
+        self.status._sendFinishStatus.assert_called_once_with(
+            builder_name, build, results)
+
+    def test_sendStartStatus_no_properties(self):
+        """
+        Status sending for _sendStartStatus is skipped if no GitHub specific
         properties are obtained from _getGitHubRepoProperties.
         """
         self.status._getGitHubRepoProperties = lambda build: {}
 
-        d = self.status.buildStarted('builder-name', None)
+        d = self.status._sendStartStatus('builder-name', None)
 
         result = []
         d.addCallback(result.append)
         self.assertIsNone(result[0])
 
-    def test_buildStarted_ok(self):
+    def test_sendStartStatus_ok(self):
         """
         When _getGitHubRepoProperties return a dict with properties
-        for this build, buildStarted will augment with details for
+        for this build, _sendStartStatus will augment with details for
         start state and send a GitHub API request.
         """
         self.status._getGitHubRepoProperties = lambda build: {
@@ -148,7 +177,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, None)
 
-        d = self.status.buildStarted('builder-name', self.build)
+        d = self.status._sendStartStatus('builder-name', self.build)
 
         result = []
         d.addCallback(result.append)
@@ -169,22 +198,22 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'duration': 'In progress',
             })
 
-    def test_buildFinished_no_properties(self):
+    def test_sendFinishStatus_no_properties(self):
         """
-        Status sending for buildFinished is skipped if no GitHub specific
+        Status sending for _sendFinishStatus is skipped if no GitHub specific
         properties are obtained from _getGitHubRepoProperties.
         """
         self.status._getGitHubRepoProperties = lambda build: {}
 
-        d = self.status.buildFinished('builder-name', None, None)
+        d = self.status._sendFinishStatus('builder-name', None, None)
 
         result = []
         d.addCallback(result.append)
         self.assertIsNone(result[0])
 
-    def test_buildFinished_ok(self):
+    def test_sendFinishStatus_ok(self):
         """
-        When _getGitHubRepoProperties return a dict buildFinished will
+        When _getGitHubRepoProperties return a dict _sendFinishStatus will
         augment it with build result and sent status to GitHub API.
         """
         self.status._getGitHubRepoProperties = lambda build: {
@@ -197,7 +226,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, 3)
 
-        d = self.status.buildFinished('builder-name', self.build, SUCCESS)
+        d = self.status._sendFinishStatus('builder-name', self.build, SUCCESS)
 
         result = []
         d.addCallback(result.append)

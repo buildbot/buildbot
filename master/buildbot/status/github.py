@@ -71,8 +71,17 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         return self
 
-    @defer.inlineCallbacks
     def buildStarted(self, builderName, build):
+        """
+        See: C{IStatusReceiver}.
+        """
+        self._sendStartStatus(builderName, build)
+
+    @defer.inlineCallbacks
+    def _sendStartStatus(self, builderName, build):
+        """
+        Send start status to GitHub.
+        """
         status = yield self._getGitHubRepoProperties(build)
         if not status:
             defer.returnValue(None)
@@ -93,8 +102,17 @@ class GitHubStatus(StatusReceiverMultiService):
         result = yield self._sendGitHubStatus(status)
         defer.returnValue(result)
 
-    @defer.inlineCallbacks
     def buildFinished(self, builderName, build, results):
+        """
+        See: C{IStatusReceiver}.
+        """
+        self._sendFinishStatus(builderName, build, results)
+
+    @defer.inlineCallbacks
+    def _sendFinishStatus(self, builderName, build, results):
+        """
+        Send status to GitHub at end of builder execution.
+        """
         status = yield self._getGitHubRepoProperties(build)
         if not status:
             defer.returnValue(None)
