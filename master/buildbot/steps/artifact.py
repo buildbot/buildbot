@@ -78,32 +78,37 @@ class CheckArtifactExists(ShellCommand):
 
         self.updateSourceStamps()
 
-        if not (self.build.getProperty("clean_build", False)):
-            self.artifactBuildrequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
+        clean_build = self.build.getProperty("clean_build", False)
+        if type(clean_build) != bool:
+            clean_build = clean_build == "True"
 
-            if self.artifactBuildrequest:
-                self.step_status.setText(["Artifact has been already generated"])
-                self.artifactPath = "%s_%s_%s" % (self.build.builder.config.builddir,
-                                                  self.artifactBuildrequest['brid'], FormatDatetime(self.artifactBuildrequest['submitted_at']))
-
-                if self.artifactDirectory:
-                    self.artifactPath += "/%s" %  self.artifactDirectory
-
-                command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
-                               self.artifactPath, "; ls %s" % self.artifact, "; ls"]
-                # ssh to the server to check if it artifact is there
-                self.setCommand(command)
-                ShellCommand.start(self)
-                return
-
-
-            self.step_status.setText(["Artifact not found"])
-            self.finished(SUCCESS)
+        if clean_build:
+            self.step_status.setText(["Skipping artifact check, making a clean build"])
+            self.finished(SKIPPED)
             return
 
-        self.step_status.setText(["Skipping artifact check, making a clean build"])
-        self.finished(SKIPPED)
+        self.artifactBuildrequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
+
+        if self.artifactBuildrequest:
+            self.step_status.setText(["Artifact has been already generated"])
+            self.artifactPath = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                              self.artifactBuildrequest['brid'], FormatDatetime(self.artifactBuildrequest['submitted_at']))
+
+            if self.artifactDirectory:
+                self.artifactPath += "/%s" %  self.artifactDirectory
+
+            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
+                           self.artifactPath, "; ls %s" % self.artifact, "; ls"]
+            # ssh to the server to check if it artifact is there
+            self.setCommand(command)
+            ShellCommand.start(self)
+            return
+
+
+        self.step_status.setText(["Artifact not found"])
+        self.finished(SUCCESS)
         return
+
 
 class CreateArtifactDirectory(ShellCommand):
 
