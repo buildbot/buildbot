@@ -60,7 +60,7 @@ class CheckArtifactExists(ShellCommand):
             m = foundregex.search(l)
             if (m):
                 # update buildrequest (madebybrid) with self.artifactBuildrequest
-                brid = self.build.builder.building[0].requests[0].id
+                brid = self.build.requests[0].id
                 reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
                 artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + self.artifact
                 self.addURL(self.artifact, artifactURL)
@@ -118,12 +118,11 @@ class CreateArtifactDirectory(ShellCommand):
         ShellCommand.__init__(self, **kwargs)
 
     def start(self):
-        for b in self.build.builder.building:
-            for br in b.requests:
-                artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
-                                              br.id, FormatDatetime(mkdt(br.submittedAt)))
-                if (self.artifactDirectory):
-                    artifactPath += "/%s" % self.artifactDirectory
+        br = self.build.requests[0]
+        artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                      br.id, FormatDatetime(mkdt(br.submittedAt)))
+        if (self.artifactDirectory):
+            artifactPath += "/%s" % self.artifactDirectory
 
 
         command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "mkdir -p ",
@@ -149,12 +148,12 @@ class UploadArtifact(ShellCommand):
 
 
     def start(self):
-        for b in self.build.builder.building:
-            for br in b.requests:
-                artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
-                                              br.id, FormatDatetime(mkdt(br.submittedAt)))
-                if (self.artifactDirectory):
-                    artifactPath += "/%s" % self.artifactDirectory
+        br = self.build.requests[0]
+
+        artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
+                                      br.id, FormatDatetime(mkdt(br.submittedAt)))
+        if (self.artifactDirectory):
+            artifactPath += "/%s" % self.artifactDirectory
 
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
@@ -186,14 +185,12 @@ class DownloadArtifact(ShellCommand):
             self.master = self.build.builder.botmaster.parent
 
         #find buildrequest dependency
-        bsid = self.build.builder.building[0].requests[0].bsid
+        bsid = self.build.requests[0].bsid
 
         if (self.TriggeredByBuilder):
             br = yield self.master.db.buildrequests.getBuildRequestTriggered(bsid, self.artifactBuilderName)
         else:
             br = yield self.master.db.buildrequests.getRelatedBuildRequest(bsid, self.artifactBuilderName)
-
-        print "\n\n-- got br %s "% br
 
         artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
                                       br['brid'], FormatDatetime(br["submitted_at"]))
@@ -202,7 +199,6 @@ class DownloadArtifact(ShellCommand):
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/*"
 
-        print "\n\n-- artifact location %s" % remotelocation
         command = ["rsync", "-vazr", remotelocation, self.artifactDirectory]
         self.setCommand(command)
         ShellCommand.start(self)
