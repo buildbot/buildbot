@@ -6,11 +6,6 @@
 <nav class="sub-menu-container">
   <ul class="breadcrumbs-nav container-inner">
     <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
         <a href="/builders">
           Buildstatus
         </a>
@@ -41,7 +36,9 @@
 <div class="column-2">
 
 {% if not b.isFinished() %}
-  <h2>Build In Progress:</h2>
+  <h2 class="head-2">
+    Build In Progress
+  </h2>
 
   {% if when_time %}
     <p>ETA: {{ when_time }} [{{ when }}]</p>
@@ -60,10 +57,12 @@
     Results
   </h2>
 
-  <p class="{{ result_css }} result">   
+  <span class="{{ result_css }} result">   
     {{ b.getText()|join(' ')|capitalize }}
-  </p>
+  </span>
    
+  <div class="divider"></div>
+
   {% if b.getTestResults() %}
     <h3><a href="{{ tests_link }}"/></h3>
   {% endif %}
@@ -189,6 +188,100 @@ SourceStamps
 {{ b.getReason()|e }}
 </p>
 
+</div>
+<div class="column-2 last">
+
+<ul class="btn-list horisontal">
+  <li>
+<a class="more-info grey-btn" href="#">
+  Build Properties
+</a>
+
+<div class="pos-relative">
+  <div class="more-info-box">
+    <span href="#" class="close-btn">
+    </span>
+    <h3>Overview of build properties</h3>
+    
+    <table class="table-2">
+    <tr>
+      <th>Name</th>
+      <th>Value</th>
+      <th>Source</th>
+    </tr>
+
+    {% for p in properties %}
+    {% if p.source != "Force Build Form" %}
+      <tr>
+        <td>{{ p.name|e }}</td>
+        {% if p.short_value %}
+            <td>{{ p.short_value|e }} .. [property value too long]</td>
+        {% else %}
+            {% if p.value is not mapping %}
+                <td>{{ p.value|e }}</td>
+            {% else %}
+                <td>
+                    <table class="info" width="100%">
+                        {%- for key, value in p.value.items() recursive %}
+                            <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
+                        {% endfor %}
+                    </table>
+                </td>
+            {% endif %}
+        {% endif %}
+        <td>{{ p.source|e }}</td>
+      </tr>
+    {% endif %}
+    {% endfor %}
+    </table>
+
+  </div>
+</div>
+</li>
+
+  <li>
+<a class="more-info grey-btn" href="#">
+  Forced build properties
+</a>
+
+<div class="pos-relative">
+  <div class="more-info-box">
+    <span href="#" class="close-btn">
+    </span>
+    <h3>Overview of forced build properties</h3>
+
+    <table class="table-2">
+      <tr>
+        <th>Name</th>
+        <th>Label</th>
+        <th>Value</th>
+      </tr>
+
+      {% for p in properties %}
+          {% if p.source == "Force Build Form" %}
+        <tr>
+          <td>{{ p.name|e }}</td>
+          <td>
+          {% if p.label %}
+          {{ p.label }}
+          {% endif %}    
+          </td>
+          {% if p.text %}
+          <td><textarea readonly cols="{{p.cols}}" rows="{{p.rows}}">{{ p.text|e }}</textarea></td>
+          {% else %}
+          <td>{{ p.value|e }}</td>
+          {% endif %}
+        </tr>
+        {% endif %}    
+      {% endfor %}
+    </table>
+
+  </div>
+</div>
+</li>
+</ul>
+
+
 <div class="divider"></div>
 
 <h2 class="head-2">
@@ -207,89 +300,44 @@ SourceStamps
 <ol class="step-list">
 {% for s in steps %}
   <li>
+    
+    <span class="{{ s.css_class }} result">
+    </span>
+    
     <a class="step-head" href="{{ s.link }}">
       {{ s.name }}
     </a>
-
-    <span class="{{ s.css_class }} result">
-
-    </span>
+  
     <p>
-      {{ s.text }}<span>{{ '( ' + s.time_to_run + ' )' if s.time_to_run else '' }}</span>
+      {{ s.text }}<span>{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
     </p>
-
+    {% if s.logs %}
+      <div class="logs-txt">
+            Logs
+      </div>
+    {% endif %}
     <ul class="log-list">
-      {% set item_class = cycler('alt', '') %}
+      
       {% for l in s.logs %}
         <li><a href="{{ l.link }}">{{ l.name }}</a></li>
       {% else %}
-        <li>- no logs -</li>
+        <li>
+          <span>
+            no logs
+          </span>
+        </li>
       {% endfor %}
     
       {% for u in s.urls %}
         <li><a href="{{ u.url }}">{{ u.logname }}</a></li>
       {% endfor %}
     </ul>  
+    
   </li>
 {% endfor %}
 </ol>
 
-</div>
-<div class="column-2 last">
-
-<h2>Build Properties:</h2>
-
-<table class="info rows" width="100%">
-<tr><th>Name</th><th>Value</th><th>Source</th></tr>
-
-{% for p in properties %}
-{% if p.source != "Force Build Form" %}
-  <tr class="{{ loop.cycle('alt', '') }}">
-    <td class="left">{{ p.name|e }}</td>
-    {% if p.short_value %}
-        <td>{{ p.short_value|e }} .. [property value too long]</td>
-    {% else %}
-        {% if p.value is not mapping %}
-            <td>{{ p.value|e }}</td>
-        {% else %}
-            <td>
-                <table class="info" width="100%">
-                    {%- for key, value in p.value.items() recursive %}
-                        <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
-                    {% endfor %}
-                </table>
-            </td>
-        {% endif %}
-    {% endif %}
-    <td>{{ p.source|e }}</td>
-  </tr>
-{% endif %}
-{% endfor %}
-</table>
-<h2>Forced Build Properties:</h2>
-<table class="info rows" width="100%">
-<tr><th>Name</th><th>Label</th><th>Value</th></tr>
-
-{% for p in properties %}
-    {% if p.source == "Force Build Form" %}
-  <tr class="{{ loop.cycle('alt', '') }}">
-    <td class="left">{{ p.name|e }}</td>
-    <td class="left">
-    {% if p.label %}
-    {{ p.label }}
-    {% endif %}    
-    </td>
-    {% if p.text %}
-    <td><textarea readonly cols="{{p.cols}}" rows="{{p.rows}}">{{ p.text|e }}</textarea></td>
-    {% else %}
-    <td>{{ p.value|e }}</td>
-    {% endif %}
-  </tr>
-  {% endif %}    
-{% endfor %}
-</table>
-
-<h2>Responsible Users:</h2>
+<h2 class="head-2">Responsible Users</h2>
 
 {% if responsible_users %}
   <ol>
@@ -300,7 +348,7 @@ SourceStamps
 {% else %}
   <p>no responsible users</p>
 {% endif %}
-<div class="divider"></div>
+
 
 </div>
 </div>

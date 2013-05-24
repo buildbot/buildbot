@@ -772,19 +772,38 @@ li {
 
 .result {
 	padding: 4px 9px;
+	display:inline-block;
 }
 
 .step-head {
-	font-size:14px;
+	font-size:12px;
 	font-weight:bold;
+	position: relative;
+	text-transform:uppercase;
+	display:block;
+	margin-bottom:3px;
+	&:before {
+		color: #666666;
+	    content: counter(li, decimal);
+	    counter-increment: li;
+	    font-size: 28px;
+	    left: -36px;
+	    position: absolute;
+	    top: -8px;
+	}
 }
 
 .step-list {
+	@include pie-clearfix;
+	counter-reset: li; /* Initiate a counter */
+	list-style: none outside none;
+	margin: 0;
+    padding: 0;
 	.not_started {
 	background-color:#eee;
-	&:before {
-		content:"Not startet";
-	}
+		&:before {
+			content:"Not startet";
+		}
 	}
 	.retry:before {
 		content:"Retry";	
@@ -793,30 +812,66 @@ li {
 		content:"Succss";	
 	} 
 	li {
-		padding-bottom:9px;
-		margin-bottom:10px;
+	   	margin-bottom: 14px;
+    	padding-bottom: 15px;
 	}
 	&> li {
 		border-bottom:1px dotted #ccc;
+		padding-right:0;
+		padding-left: 40px;
+		&:first-child {
+    		padding-top: 15px;
+		}
 	
 	}
+	
 	.result {
 		padding: 2px 7px;
+		float: right;
+		display: inline-block;
 	}	
 	p {
-		margin:0 0 6px;
+		margin:0 60px 11px 0;
 		color: #666;
+		&> span { 
+			color: #666666;
+		    display: block;
+		    font-weight: bold;
+		}
 	}
+}
+
+.logs-txt {
+	display:block;
+	float:left;
+	font-weight:bold;
+	margin-right:8px;
 }
 
 .log-list {
 	list-style:none;
 	padding:0;
 	margin:0;
+	@include pie-clearfix;
+	span {
+	    color: #999999;
+	    display: block;
+	    margin-top: -2px;
+	}
 	li {
 		list-style:none;
 		padding:0;
-		margin:0;
+		margin:0 8px 0 0 ;
+		float: left;
+		&:first-child {
+			//font-weight: bold;		
+		}
+		&:after {
+     		content: ",";
+     	}
+     	&:last-child:after {
+     		content: "";
+     	}
 	}
 }
 
@@ -935,7 +990,7 @@ div.force-text {
 .divider {
  	background-color: #E5E5E5;
     height: 1px;
-    margin: 9px 0;
+    margin: 20px 0;
     overflow: hidden;
 }
 
@@ -991,6 +1046,9 @@ div.force-text {
 		padding-left:15px;
 		font-weight: bold;
 		width: 23%;
+	}
+	tr th:first-child {
+		padding-left:15px;
 	}
 	tr:nth-child(odd) {
 		background-color: #F2F2F2;
@@ -1048,6 +1106,7 @@ a.grey-btn,
 }
 
 .more-info-box {
+	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;
     top: -10px;
@@ -1107,11 +1166,16 @@ a.grey-btn,
 	list-style:none;
 	padding:0;
 	margin:0;
+	display:inline-block;
 		li {
 		list-style:none;
 		padding:0;
 		margin:0;
 		margin-bottom:15px;
+	}
+	&.horisontal li {
+		float: left;
+		margin:0 15px 0 0;
 	}
 }
 
