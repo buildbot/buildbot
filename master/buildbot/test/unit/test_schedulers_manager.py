@@ -48,7 +48,7 @@ class SchedulerManager(unittest.TestCase):
     class Sched(base.BaseScheduler):
 
         # changing sch.attr should make a scheduler look "updated"
-        compare_attrs = base.BaseScheduler.compare_attrs + ( 'attr', )
+        compare_attrs = ( 'attr', )
         already_started = False
         reconfig_count = 0
 

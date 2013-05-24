@@ -44,6 +44,9 @@ class remove_userpassword(unittest.TestCase):
     def test_file_path(self):
         self.assertUrl('/home/me/repos/my-repo', '/home/me/repos/my-repo')
 
+    def test_file_path_with_at_sign(self):
+        self.assertUrl('/var/repos/speci@l', '/var/repos/speci@l')
+
     def test_win32file_path(self):
         self.assertUrl('c:\\repos\\my-repo', 'c:\\repos\\my-repo')
 

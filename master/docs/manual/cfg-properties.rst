@@ -181,7 +181,7 @@ The default value can reference other properties, e.g., ::
 
     command=Property('command', default=Property('default-command'))
 
-.. Index:: single; Properties; Interpolate
+.. index:: single: Properties; Interpolate
 
 .. _Interpolate:
 
@@ -266,7 +266,7 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
   dictionary-style interpolation, not both.  Thus you cannot use a string
   like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
-.. index:: single; Properties; Renderer
+.. index:: single: Properties; Renderer
 
 .. _Renderer:
 
@@ -291,9 +291,22 @@ The function receives an :class:`~buildbot.interfaces.IProperties` object, which
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
-.. index:: single; Properties; WithProperties
+.. index:: single: Properties; WithProperties
 
 .. _WithProperties:
+
+FlattenList
++++++++++++
+
+If nested list should be flatten for some renderables, FlattenList could be used.
+For example::
+
+   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]]))
+
+``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
+This is useful when a list-returning property is used in renderables.
+
+.. note:: ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no need to use ``FlattenList`` for it.
 
 WithProperties
 ++++++++++++++

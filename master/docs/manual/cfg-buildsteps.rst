@@ -348,6 +348,11 @@ The Git step takes the following arguments:
    (optional): instructs git to attempt shallow clones (``--depth 1``).
    This option can be used only in full builds with clobber method.
 
+``reference``
+   (optional): use the specified string as a path to a reference
+   repository on the local machine. Git will try to grab objects from
+   this path first instead of the main repository, if they exist.
+
 ``progress``
    (optional): passes the (``--progress``) flag to (:command:`git
    fetch`). This solves issues of long fetches being killed due to
@@ -830,7 +835,7 @@ This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
 
-.. index:: Properties; Gerrit integration
+.. index:: double: Gerrit integration; Repo Build Step
 
 Gerrit integration can be also triggered using forced build with following properties:
 ``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
@@ -1340,7 +1345,7 @@ This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will automa
 Gerrit's "virtual branch" (``refs/changes/*``) to download the additionnal changes
 introduced by a pending changeset.
 
-.. index:: Properties; Gerrit integration
+.. index:: double: Gerrit integration; Git (Slave-Side) Build Step
 
 Gerrit integration can be also triggered using forced build with ``gerrit_change``
 property with value in format: ``change_number/patchset_number``.
@@ -1406,7 +1411,7 @@ This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
 
-.. index:: Properties; Gerrit integration
+.. index:: double: Gerrit integration; Repo (Slave-Side) Build Step
 
 Gerrit integration can be also triggered using forced build with following properties:
 ``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``

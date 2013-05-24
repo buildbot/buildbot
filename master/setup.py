@@ -120,6 +120,7 @@ setup_args = {
     'packages': ["buildbot",
               "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
               "buildbot.changes",
+              "buildbot.buildslave",
               "buildbot.steps",
               "buildbot.steps.package",
               "buildbot.steps.package.deb",
@@ -158,6 +159,7 @@ setup_args = {
                     "buildbot/status/web/files/templates_readme.txt",
                     "buildbot/status/web/files/favicon.ico",
                 ]),
+                include("buildbot/status/web/files/", '*.png'),
                 include("buildbot/status/web/templates", '*.html'),
                 include("buildbot/status/web/templates", '*.xml'),
                 ("buildbot/scripts", [

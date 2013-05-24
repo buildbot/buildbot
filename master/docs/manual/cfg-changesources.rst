@@ -65,6 +65,8 @@ Mercurial
  * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`buildbot/changes/hgbuildbot.py` run as an in-process 'changegroup'
    hook)
+ * BitBucket change hook (specifically designed for BitBucket notifications,
+    but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
@@ -83,6 +85,8 @@ Git
    from GitHub)
  * :bb:chsrc:`Change Hooks` in WebStatus
  * GitHub change hook (specifically designed for GitHub notifications,
+   but requiring a publicly-accessible WebStatus)
+ * BitBucket change hook (specifically designed for BitBucket notifications,
    but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
