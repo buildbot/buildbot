@@ -170,6 +170,27 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def updateMergedBuildRequest(self, requests):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+            clauses = []
+            mergedrequests = requests[1:]
+            for br in mergedrequests:
+                clauses.append(buildrequests_tbl.c.id == br.id)
+
+            stmt = sa.select([buildrequests_tbl.c.id]).where(sa.or_(*clauses))
+
+            stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(stmt))\
+                .values(madebybrid=requests[0].id)
+
+            res = conn.execute(stmt2)
+            return res.rowcount
+
+        return self.db.pool.do(thd)
+
+
     def getRelatedBuildRequest(self, bsid, buildername):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests

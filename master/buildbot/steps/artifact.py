@@ -155,6 +155,11 @@ class UploadArtifact(ShellCommand):
     def start(self):
         br = self.build.requests[0]
 
+        # this means that we are merging build requests with this one
+        if len(self.build.requests) > 1:
+            master = self.build.builder.botmaster.parent
+            reuse = yield master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
+
         artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
                                       br.id, FormatDatetime(mkdt(br.submittedAt)))
         if (self.artifactDirectory):
@@ -220,9 +225,9 @@ class AcquireBuildLocks(LoggingBuildStep):
 
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build"])
-        self.finished(SUCCESS)
         self.build.locks = self.locks
         self.build.releaseLockInstanse = self
+        self.finished(SUCCESS)
         return
 
     def releaseLocks(self):
