@@ -16,8 +16,9 @@
 import pkg_resources
 from twisted.internet import defer
 from twisted.application import strports, service
-from twisted.web import server
+from twisted.web import server, static
 from buildbot import config
+from buildbot.util import json
 from buildbot.www import rest, ws, sse
 
 class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
@@ -81,9 +82,16 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
 
-
     def setupSite(self, new_config):
         root = self.apps['base'].resource
+        for key, plugin in new_config.www['plugins'].items():
+            if not key in self.apps:
+                raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
+            root.putChild(key, self.apps[key].resource)
+
+        # /config.js
+        root.putChild('config.js', static.Data("this.config = " + json.dumps(new_config.www),
+                                               "text/javascript"))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))

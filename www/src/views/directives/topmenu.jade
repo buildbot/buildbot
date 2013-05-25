@@ -1,3 +1,3 @@
 ul.nav.top-menu
-  li(ng-repeat='tab in tabs', ng-class='{on:tab.selected}')
+  li(ng-repeat='tab in tabs', ng-class='{active:tab.selected}')
     a(href='{{tab.tabhash}}', ng-click='select(tab)') {{tab.caption}}
