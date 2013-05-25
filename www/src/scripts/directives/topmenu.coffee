@@ -1,11 +1,10 @@
 angular.module('app').directive 'topmenu',
-['$log', ($log) ->
+['$log', 'route_config', ($log, route_config) ->
     controller = [
         '$scope', '$element', '$rootScope', ($scope, $element, $rootScope) ->
             $scope.tabs = []
             $scope.select = (tab) ->
                 return if tab.selected is true
-
                 angular.forEach $scope.tabs, (tab) ->
                     tab.selected = false
 
@@ -18,7 +17,7 @@ angular.module('app').directive 'topmenu',
                 if tabId
                     $rootScope.$on "changeTab##{tabId}", ->
                         $scope.select tab
-            for id, tab of window.route_config
+            for id, tab of route_config
                 if tab.caption?
                     @addTab(tab, id)
         ]

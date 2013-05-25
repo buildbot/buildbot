@@ -103,6 +103,7 @@ class MasterConfig(object):
         self.www = dict(
             port=None,
             url='http://localhost:8080/',
+            plugins=dict()
         )
 
     _known_config_keys = set([

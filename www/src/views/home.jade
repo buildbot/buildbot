@@ -21,21 +21,4 @@
   .span8
     .well
       h2 Welcome to buildbot
-      | Probably we should display information about the current config
-      .row-fluid
-        .span4
-          ul
-            li Buildbot version: {{config.bbversion}}
-            li Twisted version: {{config.txversion}}
-        .span4
-          ul
-            li Project Name: {{config.projectname}}
-            li Project Version: {{config.projectversion}}
-            li Project Url: {{config.projecturl}}
-        small.span4
-
-          | buildbot-www is using the following open-source JavaScript libraries:
-          ul
-            li(ng-repeat='module in config.bower_configs')
-              a(href='{{module.http_url}}') {{module.name}}
-              | : {{module.version}}
+      | Probably we should display information about what's going on currently

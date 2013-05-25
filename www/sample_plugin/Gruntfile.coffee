@@ -2,6 +2,7 @@ path = require 'path'
 
 # Build configurations.
 module.exports = (grunt) ->
+    plugin_name =  "sample_plugin"
     grunt.initConfig
         # Deletes buildbot_www and temp directories.
         # The temp directory is used during the build process.
@@ -13,7 +14,6 @@ module.exports = (grunt) ->
                 src: [
                     './buildbot_www/'
                     './buildbot_www_test/'
-                    './.temp/views'
                     './.temp/'
                 ]
 
@@ -21,9 +21,9 @@ module.exports = (grunt) ->
         coffee:
             scripts:
                 files: [
-                    cwd: './src/'
-                    src: 'scripts/**/*.coffee'
-                    dest: './.temp/'
+                    cwd: './src/scripts'
+                    src: './**/*.coffee'
+                    dest: './.temp/'+plugin_name+"/"
                     expand: true
                     ext: '.js'
                 ,
@@ -38,17 +38,7 @@ module.exports = (grunt) ->
                     # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
                     bare: true
                     sourceMap: true
-                    sourceRoot : '/src'
-        concat:
-            # concat bower.json files into config.js, to display deps in the UI
-            # we declare a constant in the 'app' module
-            bower_configs:
-                src: ['components/**/bower.json']
-                dest: '.temp/scripts/config.js'
-                options:
-                    separator:','
-                    banner: 'angular.module("app").constant("bower_configs", ['
-                    footer: '])'
+                    sourceRoot : "/#{plugin_name}/src"
 
         # custom task that generates main.js (the require.js main file)
         # Angular is actually very nice with its dependancy injection system
@@ -56,35 +46,34 @@ module.exports = (grunt) ->
         # we should not be modifying this config when the app is growing
         requiregen:
             main:
-                cwd: './.temp/scripts/'
-                # require json2 and html5shiv are loaded in the html file
-                src: ['**/*.js','!libs/require.js', '!libs/json2.js', '!libs/html5shiv-printshiv.js']
+                cwd: './.temp/'
+                src: ['**/*.js','!libs/require.js']
                 options:
                     order: [
-                    # order is a list of regular expression matching
-                    # modules, requiregen will generate the correct shim
-                    # to load modules in this order
-                    # if a module has been loaded in previous layers, it wont be loaded again
-                    # so that you can use global regular expression in the end
-                        'libs/jquery'
-                        'libs/angular' # angular needs jquery before or will use internal jqlite
-                        'libs/.*'      # remaining libs before app
-                        'app'          # app needs libs
-                        '(routes|views|config)'
-                        '.*/.*'   # remaining angularjs components
-                        'run'     # run has to be in the end, because it is triggering angular's own DI
+                        plugin_name+'/libs/.*'      # remaining libs before app
+                        plugin_name+'/app'          # app needs libs
+                        plugin_name+'/(routes|views|config)'
+                        plugin_name+'/.*/.*'   # remaining angularjs components
                     ]
-                dest: '.temp/scripts/main.js'
+                    define: true
+                dest: '.temp/'+plugin_name+'/main.js'
         # Copies directories and files from one location to another.
         copy:
             # Copies the contents of the temp directory, except views, to the buildbot_www directory.
             # In 'dev' individual files are used.
             dev:
                 files: [
-                    cwd: './.temp/'
+                    cwd: './.temp/'+plugin_name+'/'
                     src: '**'
                     dest: './buildbot_www/'
                     expand: true
+                ,
+                    cwd: './.temp/'
+                    src: 'img/**',
+                    dest: './buildbot_www/'
+                    expand: true
+                ,
+                    './buildbot_www/styles.css':'./.temp/styles/styles.css'
                 ]
             # Copies img directory to temp.
             img:
@@ -94,20 +83,12 @@ module.exports = (grunt) ->
                     dest: './.temp/'
                     expand: true
                 ]
-            # Copies font directory to temp.
-            font:
-                files: [
-                    cwd: './src/'
-                    src: 'font/**/*.*'
-                    dest: './.temp/'
-                    expand: true
-                ]
             # Copies js files to the temp directory
             js:
                 files: [
-                    cwd: './src/'
-                    src: 'scripts/**/*.js'
-                    dest: './.temp/'
+                    cwd: './src/scripts/'
+                    src: '**/*.js'
+                    dest: './.temp/'+plugin_name+'/'
                     expand: true
                 ,
                     cwd: './src/'
@@ -132,19 +113,12 @@ module.exports = (grunt) ->
                     cwd: './.temp/'
                     src: [
                         'img/**/*.*'
-                        'font/**/*.*'
-                        'scripts/libs/html5shiv-printshiv.js'
-                        'scripts/libs/json2.js'
-
-                        'scripts/scripts.min.js'
-                        'styles/styles.min.css'
                     ]
                     dest: './buildbot_www/'
                     expand: true
                 ,
-                    './buildbot_www/index.html': './.temp/index.min.html'
-                ,
-                    './buildbot_www/require.js': './src/scripts/libs/require.js'
+                    './buildbot_www/main.js': '.temp/main.js'
+                    './buildbot_www/styles.css': '.temp/styles/styles.min.css'
                 ]
             # Task is run when the watched index.template file is modified.
             index:
@@ -157,24 +131,20 @@ module.exports = (grunt) ->
             # Task is run when a watched script is modified.
             scripts:
                 files: [
-                    cwd: './.temp/'
-                    src: 'scripts/**'
+                    cwd: "./.temp/#{plugin_name}/"
+                    src: "**"
                     dest: './buildbot_www/'
                     expand: true
                 ]
             # Task is run when a watched style is modified.
             styles:
-                files: [
-                    cwd: './.temp/'
-                    src: 'styles/**'
-                    dest: './buildbot_www/'
-                    expand: true
-                ]
+                files:
+                    './buildbot_www/styles.css':'./.temp/styles/styles.css'
             # Task is run when a watched view is modified.
             views:
                 files: [
-                    cwd: './.temp/'
-                    src: 'views/**'
+                    cwd: "./.temp/#{plugin_name}"
+                    src: "views/**"
                     dest: './buildbot_www/'
                     expand: true
                 ]
@@ -215,8 +185,10 @@ module.exports = (grunt) ->
         # This file is then included in the output automatically.  AngularJS will use it instead of going to the file system for the views, saving requests.  Notice that the view content is actually minified.  :)
         ngTemplateCache:
             views:
-                files:
-                    './.temp/scripts/views.js': './.temp/views/**/*.html'
+                files: [
+                    src: "./.temp/#{plugin_name}/views/**/*.html"
+                    dest: "./.temp/#{plugin_name}/views.js"
+                ]
                 options:
                     trim: './.temp/'
 
@@ -233,21 +205,21 @@ module.exports = (grunt) ->
         requirejs:
             scripts:
                 options:
-                    baseUrl: './.temp/scripts/'
+                    baseUrl: './.temp/'
                     findNestedDependencies: true
-                    logLevel: 0
-                    mainConfigFile: './.temp/scripts/main.js'
-                    name: 'main'
+                    logLevel: 2
+                    mainConfigFile: './.temp/'+plugin_name+'/main.js'
+                    name: plugin_name+'/main'
                     # Exclude main from the final output to avoid the dependency on RequireJS at runtime.
                     onBuildWrite: (moduleName, path, contents) ->
-                        modulesToExclude = ['main']
+                        modulesToExclude = [plugin_name+'/main']
                         shouldExcludeModule = modulesToExclude.indexOf(moduleName) >= 0
 
                         return '' if shouldExcludeModule
 
                         contents
-                    optimize: 'uglify2'
-                    out: './.temp/scripts/scripts.min.js'
+                    optimize: 'uglify'
+                    out: './.temp/main.js'
                     preserveLicenseComments: false
                     skipModuleInsertion: true
                     uglify:
@@ -267,24 +239,11 @@ module.exports = (grunt) ->
             views:
                 files:[
                     src:'**/*.jade'
-                    dest: './.temp/views/'
-                    cwd: './src/views'
+                    dest: "./.temp/#{plugin_name}/views/"
+                    cwd: "./src/views"
                     ext: ".html"
                     expand: true
                 ]
-            dev:
-                files:
-                    './.temp/index.html': './src/index.jade'
-                options:
-                    data:
-                        timestamp: "<%= grunt.template.today() %>"
-                        environment: 'dev'
-            prod:
-                files: '<%= jade.dev.files %>'
-                options:
-                    data:
-                        timestamp: "<%= grunt.template.today() %>"
-                        environment: 'prod'
 
         # Runs unit tests using karma (formerly testacular)
         karma:
@@ -314,12 +273,6 @@ module.exports = (grunt) ->
 
         # Sets up file watchers and runs tasks when watched files are changed.
         watch:
-            index:
-                files: './src/index.jade'
-                tasks: [
-                    'jade:dev'
-                    'copy:index'
-                ]
             scripts:
                 files: './src/scripts/**'
                 tasks: [
@@ -369,7 +322,7 @@ module.exports = (grunt) ->
     # https://github.com/Dignifiedquire/grunt-karma
     grunt.loadNpmTasks 'grunt-karma'
 
-    grunt.loadTasks 'tasks'
+    grunt.loadTasks '../tasks'
 
     # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
     # Enter the following command at the command line to execute this build task:
@@ -406,15 +359,12 @@ module.exports = (grunt) ->
     # grunt
     grunt.registerTask 'default', [
         'clean:working'
-        'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
         'requiregen:main'
         'less'
         'jade:views'
         'copy:img'
-        'copy:font'
-        'jade:dev'
         'copy:dev'
         'copy:src'
     ]
@@ -432,18 +382,14 @@ module.exports = (grunt) ->
     # grunt prod
     grunt.registerTask 'prod', [
         'clean:working'
-        'concat:bower_configs'
         'coffee:scripts'
         'copy:js'
         'requiregen:main'
-        'copy:font'
         'copy:img'
         'less'
         'jade:views'
         'imagemin'
         'ngTemplateCache'
         'requirejs'
-        'jade:prod'
-        'minifyHtml'
         'copy:prod'
     ]

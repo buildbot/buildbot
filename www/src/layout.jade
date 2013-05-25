@@ -22,8 +22,10 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     block content
     block footer
 
+  script(src="config.js")
   case environment || 'prod'
     when 'prod'
+       script(src="require.js")
        script(src='scripts/scripts.min.js?_#{(new Date()).getTime()}')
     default
        script(data-main='scripts/main.js',src="scripts/libs/require.js")
