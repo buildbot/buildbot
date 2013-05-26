@@ -136,6 +136,10 @@ td.idle,td.waiting,td.offline,td.building {
 }
 
 /* Console view styles */
+td.DevStatus > table {
+	table-layout: fixed;
+}
+
 td.DevRev {
 	padding: 4px 8px 4px 8px;
 	color: #333333;
@@ -264,6 +268,10 @@ td.Alt {
 	line-height: 20px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.DevStatusBox a.notinbuilder {
+	border-style: none;
 }
 
 .DevSlaveBox {
