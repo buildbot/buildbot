@@ -34,6 +34,8 @@ Features
 
 * The WebStatus builder page can now filter pending/current/finished builds by property parameters of the form ``?property.<name>=<value>``.
 
+* The Console view now supports codebases.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
