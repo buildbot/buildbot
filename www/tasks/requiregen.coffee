@@ -3,6 +3,7 @@ module.exports = (grunt) ->
     grunt.registerMultiTask 'requiregen', 'generate requirejs dependency tree', ->
         options = @options
                     order: ['.*']
+                    define: false
         for group in @files
             order = options.order # list of regexp matching each layer
             layers = []          # the list of list of modules, ordered by load time
@@ -17,8 +18,9 @@ module.exports = (grunt) ->
                     if matcher.test(s)
                         choosen_modules[s] = 1
                         modules.push(s)
-                layers.push modules
-                grunt.log.writeln('modules "' + modules.join(", ") + '" loaded together.');
+                if modules.length > 0
+                    layers.push modules
+                    grunt.log.writeln('modules "' + modules.join(", ") + '" loaded together.');
             last_layer = []
             shim = {}
             for layer in layers
@@ -27,7 +29,11 @@ module.exports = (grunt) ->
                 last_layer = layer
             shim = JSON.stringify(shim, null, 1)
             last_layer = JSON.stringify(last_layer, null, 1)
-            requirejs_code = "require( { shim: #{shim} }, #{last_layer} )"
+            if options.define
+                requirejs_code = "requirejs.config( { shim: #{shim} }); define(#{last_layer}, function(){})"
+            else
+                requirejs_code = "require( { shim: #{shim} }, #{last_layer} )"
+
             # Write the destination file.
             grunt.file.write(group.dest, requirejs_code);
             # Print a success message.

@@ -1,0 +1,27 @@
+.container-fluid
+ .row-fluid
+  ul.breadcrumb
+    li.active
+      a(href="#/about") About
+  .well
+      h2 About this buildbot
+      .row-fluid
+        .span4
+          ul
+            li Buildbot version: {{config.bbversion}}
+            li Twisted version: {{config.txversion}}
+        .span4
+          ul
+            li Project Name: {{config.projectname}}
+            li Project Version: {{config.projectversion}}
+            li Project Url: {{config.projecturl}}
+      .row-fluid
+        small
+
+          | buildbot-www is configured using:
+          pre {{config.config}}
+          | buildbot-www is using the following open-source JavaScript libraries:
+          ul
+            li(ng-repeat='module in bower_configs')
+              a(href='{{module.http_url}}') {{module.name}}
+              | : {{module.version}}
