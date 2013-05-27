@@ -1,0 +1,49 @@
+{% from 'build_line.html' import build_table %}
+{% import 'forms.html' as forms %}
+
+{% extends "layout.html" %}
+
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      <a href="{{ path_to_root }}buildstatus2">
+          Buildstatus
+      </a>
+    </li>
+    <li>
+          All branches
+    </li>
+    
+  </ul>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="main-head">
+    Buildstatus 
+    <span>
+      all branches
+    </span>
+    </h1>
+
+<table class="table-2">
+  <tr>
+    <th>Branch</th>
+  </tr>
+  <tr>
+    <td>
+      <a href="{{ path_to_root }}builders">
+        Trunk
+      </a>
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

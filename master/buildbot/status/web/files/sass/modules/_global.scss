@@ -1,0 +1,42 @@
+/**
+* Global stylesheet
+* Unity3d
+* @section modules
+* @author Simon Holm
+*/
+
+html {
+	background-color:#fff;
+}
+
+body.interface {
+	margin: 0;
+	padding: 0;
+	background: url(http://dribbble.com/images/noise-f1.gif);
+	font-family: "helvetica neue", sans-serif;
+	font-size: 10px;
+	color: #333;
+}
+
+a:link,a:visited,a:active {
+	color: #2b6194;
+	text-decoration: none;
+}
+
+a:hover {
+
+	color: #BDC9D5;
+}
+
+table {
+	border-spacing: 1px 1px;
+}
+
+table td {
+	padding: 3px 4px 3px 4px;
+	text-align: center;
+}
+
+li {
+	padding: 0.1em 1em 0.1em 1em;
+}

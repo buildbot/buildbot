@@ -1,0 +1,61 @@
+/**
+* Buttons
+* Unity3d
+* @page-elements
+* @author Simon Holm
+*/
+
+// buttons
+
+// buttons
+
+.link-button {
+	background:none;
+	border:none;
+	padding:0;
+	text-decoration:underline;
+	font-weight:bold;
+	&:hover {
+		color: #999;	
+	}
+}
+
+.link-1 a {
+	text-decoration:underline;
+	color:#333;
+	&:hover {
+		color: #999;	
+	}
+}
+
+a.grey-btn,
+.grey-btn {
+	@include background-image(linear-gradient(center bottom , #CED3D7 0%, #FFFFFF 100%)); 
+    border: 1px solid #D9D9D9;
+    @include border-radius(7px);
+    color: #333333;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    padding: 10px;
+    @include text-shadow(0 1px 0 #FFF);
+    text-transform: uppercase;
+    display: inline-block;
+    &:hover {
+		color: #A4A4A4;    	
+    }
+}
+
+.close-btn {
+	position: absolute;
+    right: 10px;
+    top: 4px;
+    cursor: pointer;
+}
+
+.close-btn:after {
+    color: #333333;
+    content: "✖";
+    font-size: 20px;
+    text-shadow: 1px 1px 1px #FFFFFF;
+}

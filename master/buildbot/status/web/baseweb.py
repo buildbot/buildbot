@@ -39,6 +39,8 @@ from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
+from buildbot.status.web.buildstatus2 import BuildStatus2
+from buildbot.status.web.buildstatus_s_project import BuildStatusSingleProject
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginResource, LogoutResource
 from buildbot.status.web.root import RootPage
@@ -368,6 +370,8 @@ class WebStatus(service.MultiService):
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("about", AboutBuildbot())
+        self.putChild("buildstatus2", BuildStatus2())
+        self.putChild("buildstatus_s_project", BuildStatusSingleProject())
         self.putChild("authfail", AuthFailResource())
         self.putChild("authzfail", AuthzFailResource())
         self.putChild("users", UsersResource())

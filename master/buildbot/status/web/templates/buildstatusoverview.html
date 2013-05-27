@@ -1,0 +1,47 @@
+{% from 'build_line.html' import build_table %}
+{% import 'forms.html' as forms %}
+
+{% extends "layout.html" %}
+
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+          Buildstatus
+    </li>
+    
+  </ul>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="main-head">
+    Buildstatus 
+    <span>
+      overview
+    </span>
+</h1>
+
+<table class="table-2">
+  <tr>
+    <th>Project</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>
+      <a href="{{ path_to_root }}buildstatus_s_project">
+        Default project
+      </a>
+    </td>
+    <td>Test project that link to one branch. Trunk
+    </td>
+  </tr>
+</table>
+
+{% endblock %}
