@@ -151,7 +151,7 @@ class UploadArtifact(ShellCommand):
         self.artifactServerURL = artifactServerURL
         ShellCommand.__init__(self, **kwargs)
 
-
+    @defer.inlineCallbacks
     def start(self):
         br = self.build.requests[0]
 
