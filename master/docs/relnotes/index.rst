@@ -36,6 +36,10 @@ Features
 
 * The Console view now supports codebases.
 
+* Build status can be sent to GitHub.
+  Depends on txgithub package.
+  See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
