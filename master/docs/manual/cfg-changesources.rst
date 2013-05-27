@@ -625,6 +625,14 @@ life, it is considered as safe to disable the signal restriction in
 the Apache setting like that ``WSGIRestrictSignal Off``. Refer to the
 documentation of your web server for other way to do the same.
 
+You may also take advantage of the ``shell`` parameter.  Like ``fork``,
+this is also a predicate value, and when enabled, invokes the Buildbot
+``sendchange`` command directly via a shell process, bypassing any
+inconsistencies that may arise by running the hook within the same
+process space as Mercurial.  You may also find that the ``shell``
+parameter may be somewhat more efficient for your situation in terms
+system resource usage compared to the ``fork`` option.
+
 Resulting Changes
 #################
 

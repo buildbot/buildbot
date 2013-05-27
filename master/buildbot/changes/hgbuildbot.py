@@ -20,6 +20,7 @@
 # See the Buildbot manual for configuration instructions.
 
 import os
+import subprocess
 
 from mercurial.node import bin, hex, nullid #@UnresolvedImport
 
@@ -57,6 +58,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         category = ui.config('hgbuildbot', 'category', None)
         project = ui.config('hgbuildbot', 'project', '')
         auth = ui.config('hgbuildbot', 'auth', None)
+        shell = ui.config('hgbuildbot', 'shell', None)
     else:
         ui.write("* You must add a [hgbuildbot] section to .hg/hgrc in "
                  "order to use buildbot hook\n")
@@ -107,10 +109,56 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     repository = strip(repo.root, stripcount)
     repository = baseurl + repository
 
+    def _shell(c):
+        # fix string encodings
+        for key in c:
+            if type(c[key]) == str:
+                c[key] = fromlocal(c[key])
+        c['files'] = list(c['files'])
+        for i, file in enumerate(c.get('files', [])):
+            if type(file) == str:
+                c['files'][i] = fromlocal(file)
+
+        # build command line
+        command = ['buildbot', 'sendchange']
+        command += ['--master', master]
+        command += ['--vc', 'hg']
+        command += ['--branch', c['branch']]
+        command += ['--revision', c['revision']]
+        if ' ' in c['comments']:
+            command += ['--comments', '"%s"' % c['comments']]
+        else:
+            command += ['--comments', c['comments']]
+        command += ['--who', c['username']]
+        command += ['--auth', ':'.join(auth)]
+        if category:
+            command += ['--category', category]
+        if repository:
+            command += ['--repository', repository]
+        if project:
+            command += ['--project', project]
+        if len(c['properties']):
+            command.append('--property')
+            p_str = ''
+            for key in c['properties']:
+                if len(p_str): p_str += ','
+                p_str += '%s:%s' % (key, str(c['properties'][key]))
+            command.append(p_str)
+        command += c['files']
+
+        # execute it
+        result = subprocess.call(' '.join(command), shell=True)
+        if result:
+            ui.status("Buildbot notification failed: %d\n" % result)
+        else:
+            ui.status("rev %s sent\n" % c['revision'])
+        return result
+
     for master in masters:
-        s = sendchange.Sender(master, auth=auth)
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, None)
+        if not shell:
+            s = sendchange.Sender(master, auth=auth)
+            d = defer.Deferred()
+            reactor.callLater(0, d.callback, None)
 
         for rev in xrange(start, end):
             # send changeset
@@ -135,7 +183,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
                 'branch': branch,
                 'properties':properties
             }
-            d.addCallback(_send, s, change)
+
+            if not shell:
+                d.addCallback(_send, s, change)
+            else:
+                _shell(change)
 
     def _printSuccess(res):
         ui.status(s.getSuccessString(res) + '\n')
@@ -143,9 +195,10 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     def _printFailure(why):
         ui.warn(s.getFailureString(why) + '\n')
 
-    d.addCallbacks(_printSuccess, _printFailure)
-    d.addBoth(lambda _ : reactor.stop())
-    reactor.run()
+    if not shell:
+        d.addCallbacks(_printSuccess, _printFailure)
+        d.addBoth(lambda _ : reactor.stop())
+        reactor.run()
 
     if fork:
         os._exit(os.EX_OK)
