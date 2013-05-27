@@ -18,7 +18,9 @@ from buildbot.data import base, types
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
-    isCollection = False # TODO hmm..
+    # Note that this is a singluar endpoint, even though it overrides the
+    # offset/limit query params in ResultSpec
+    isCollection = False
     pathPatterns = """
         /log/n:logid/content
         /step/n:stepid/log/i:log_name/content
@@ -46,6 +48,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
         firstline = resultSpec.offset or 0
         lastline = None if resultSpec.limit is None else firstline + resultSpec.limit - 1
+        resultSpec.removePagination()
 
         # get the number of lines, if necessary
         if lastline is None:
