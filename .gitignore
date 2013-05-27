@@ -35,4 +35,10 @@ common/googlecode_upload.py
 master/docs/tutorial/_build
 _build
 .tox
-/www
+master/setuptools_trial*
+master/buildbot/www/static/js/default/
+www/buildbot_www
+*.haml.js
+www/buildbot.profile.js
+www/package.json
+www/VERSION

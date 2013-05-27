@@ -45,9 +45,9 @@ class Test(unittest.TestCase):
         def prioritizeBuilders(master, builders):
             # simple sort-by-name by default
             return sorted(builders, lambda b1,b2 : cmp(b1.name, b2.name))
-        self.master = self.botmaster.master = mock.Mock(name='master')
+        self.master = self.botmaster.master = fakemaster.make_master(testcase=self,
+                wantData=True, wantDb=True)
         self.master.config.prioritizeBuilders = prioritizeBuilders
-        self.master.db = fakedb.FakeDBConnector(self)
         self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
@@ -313,8 +313,8 @@ class TestMaybeStartBuilds(unittest.TestCase):
     def setUp(self):
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
-        self.master = self.botmaster.master = mock.Mock(name='master')
-        self.master.db = fakedb.FakeDBConnector(self)
+        self.master = self.botmaster.master = fakemaster.make_master(testcase=self,
+                wantData=True, wantDb=True)
         class getCache(object):
             def get_cache(self):
                 return self
@@ -342,9 +342,9 @@ class TestMaybeStartBuilds(unittest.TestCase):
         
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
-            fakedb.SourceStampSet(id=21),
-            fakedb.SourceStamp(id=21, sourcestampsetid=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because'),
+            fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=11),
         ]
 
 
@@ -760,13 +760,13 @@ class TestMaybeStartBuilds(unittest.TestCase):
     def test_claim_race(self):
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.master.db.buildrequests.claimBuildRequests
-        def claimBuildRequests(brids):
+        def claimBuildRequests(brids, claimed_at=None):
             # first, ensure this only happens the first time
             self.master.db.buildrequests.claimBuildRequests = old_claimBuildRequests
             # claim brid 10 for some other master
             assert 10 in brids
             self.master.db.buildrequests.fakeClaimBuildRequest(10, 136000,
-                    objectid=9999) # some other objectid
+                    masterid=9999) # some other masterid
             # ..and fail
             return defer.fail(buildrequests.AlreadyClaimedError())
         self.master.db.buildrequests.claimBuildRequests = claimBuildRequests
@@ -840,7 +840,8 @@ class TestMaybeStartBuilds(unittest.TestCase):
         
         rows = self.base_rows[:]
         for i in range(4):
-            rows.append(fakedb.Buildset(id=100+i, reason='because', sourcestampsetid=21))
+            rows.append(fakedb.Buildset(id=100+i, reason='because'))
+            rows.append(fakedb.BuildsetSourceStamp(buildsetid=100+i, sourcestampid=21))
             rows.append(fakedb.BuildRequest(id=10+i, buildsetid=100+i, buildername="A"))
             self.addSlaves({'test-slave%d'%i:1})
         
@@ -885,78 +886,17 @@ class TestMaybeStartBuilds(unittest.TestCase):
 
     # merge tests
 
-    @defer.inlineCallbacks
-    def test_merge_ordering(self):
-        # (patch_random=True)
-        self.bldr.getMergeRequestsFn = lambda : lambda _, req1, req2: req1.canBeMergedWith(req2)
-
-        self.addSlaves({'test-slave1':1})
-
-        # based on the build in bug #2249
-        rows = [
-            fakedb.SourceStampSet(id=1976),
-            fakedb.SourceStamp(id=1976, sourcestampsetid=1976),
-            fakedb.Buildset(id=1980, reason='scheduler', sourcestampsetid=1976,
-                submitted_at=1332024020.67792),
-            fakedb.BuildRequest(id=42880, buildsetid=1980,
-                submitted_at=1332024020.67792, buildername="A"),
-
-            fakedb.SourceStampSet(id=1977),
-            fakedb.SourceStamp(id=1977, sourcestampsetid=1977),
-            fakedb.Buildset(id=1981, reason='scheduler', sourcestampsetid=1977,
-                submitted_at=1332025495.19141),
-            fakedb.BuildRequest(id=42922, buildsetid=1981,
-                buildername="A", submitted_at=1332025495.19141),
-        ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[42880, 42922],
-                exp_builds=[('test-slave1', [42880, 42922])])
-        
-    @mock.patch('random.choice', nth_slave(0))
-    @defer.inlineCallbacks
-    def test_mergeRequests(self):
-        # set up all of the data required for a BuildRequest object
-        rows = [
-                fakedb.SourceStampSet(id=234),
-                fakedb.SourceStamp(id=234, sourcestampsetid=234),
-                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
-                    submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=19, buildsetid=30, buildername='A',
-                    priority=13, submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=20, buildsetid=30, buildername='A',
-                    priority=13, submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=21, buildsetid=30, buildername='A',
-                    priority=13, submitted_at=1300305712, results=-1),
-            ]
-
-        self.addSlaves({'test-slave1':1, 'test-slave2': 1})
-
-        def mergeRequests_fn(builder, breq, other):
-            # merge evens with evens, odds with odds
-            self.assertIdentical(builder, self.bldr)
-            return breq.id % 2 == other.id % 2
-        self.bldr.getMergeRequestsFn = lambda : mergeRequests_fn
-        
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[19, 20, 21],
-                exp_builds=[
-                    ('test-slave1', [19, 21]),
-                    ('test-slave2', [20])
-                ])
-
-
     @mock.patch('random.choice', nth_slave(0))
     @defer.inlineCallbacks
     def test_mergeRequest_no_other_request(self):
         """ Test if builder test for codebases in requests """
         # set up all of the data required for a BuildRequest object
         rows = [
-                fakedb.SourceStampSet(id=234),
-                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='A'),
-                fakedb.Change(changeid=14, codebase='A'),
-                fakedb.SourceStampChange(sourcestampid=234, changeid=14),
-                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                fakedb.SourceStamp(id=234, codebase='A'),
+                fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+                fakedb.Buildset(id=30, reason='foo',
                     submitted_at=1300305712, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='A',
                     priority=13, submitted_at=1300305712, results=-1),
         ]
@@ -982,18 +922,18 @@ class TestMaybeStartBuilds(unittest.TestCase):
         """ Test if builder test for codebases in requests """
         # set up all of the data required for a BuildRequest object
         rows = [
-                fakedb.SourceStampSet(id=234),
-                fakedb.SourceStamp(id=234, sourcestampsetid=234, codebase='C'),
-                fakedb.Buildset(id=30, sourcestampsetid=234, reason='foo',
+                fakedb.SourceStamp(id=234, codebase='C'),
+                fakedb.Buildset(id=30, reason='foo',
                     submitted_at=1300305712, results=-1),
-                fakedb.SourceStampSet(id=235),
-                fakedb.SourceStamp(id=235, sourcestampsetid=235, codebase='C'),
-                fakedb.Buildset(id=31, sourcestampsetid=235, reason='foo',
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.SourceStamp(id=235, codebase='C'),
+                fakedb.Buildset(id=31, reason='foo',
                     submitted_at=1300305712, results=-1),
-                fakedb.SourceStampSet(id=236),
-                fakedb.SourceStamp(id=236, sourcestampsetid=236, codebase='C'),
-                fakedb.Buildset(id=32, sourcestampsetid=236, reason='foo',
+                fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
+                fakedb.SourceStamp(id=236, codebase='C'),
+                fakedb.Buildset(id=32, reason='foo',
                     submitted_at=1300305712, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
                 fakedb.BuildRequest(id=19, buildsetid=30, buildername='A',
                     priority=13, submitted_at=1300305712, results=-1),
                 fakedb.BuildRequest(id=20, buildsetid=31, buildername='A',

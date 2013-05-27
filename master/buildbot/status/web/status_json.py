@@ -345,10 +345,11 @@ class HelpResource(HtmlResource):
         cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
                 'href="../%sjson' % (self.parent_level * '../'))
-
-        template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
-        return template.render(**cxt)
-
+        if "buildbot_service" in request.site.__dict__:
+            template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
+            return template.render(**cxt)
+        else:
+            return "<p>".join(["<h3>%s</h3>%s"%i for i in cxt.items()])
 class BuilderPendingBuildsJsonResource(JsonResource):
     help = """Describe pending builds for a builder.
 """

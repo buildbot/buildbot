@@ -22,7 +22,7 @@ from twisted.internet import defer
 from buildbot.scripts import upgrade_master
 from buildbot import config as config_module
 from buildbot.db import connector, model
-from buildbot.test.util import dirs, misc, compat
+from buildbot.test.util import dirs, misc, compat, www
 
 def mkconfig(**kwargs):
     config = dict(quiet=False, replace=False, basedir='test')
@@ -98,8 +98,8 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
             self.assertEqual(rv, 1)
         return d
 
-class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                                unittest.TestCase):
+class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
+                                 misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')

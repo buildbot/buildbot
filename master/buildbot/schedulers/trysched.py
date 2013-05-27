@@ -21,7 +21,7 @@ from twisted.protocols import basic
 
 from buildbot import pbutil
 from buildbot.util.maildir import MaildirService
-from buildbot.util import json
+from buildbot.util import json, ascii2unicode
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
@@ -60,11 +60,16 @@ class BadJobfile(Exception):
 
 
 class JobdirService(MaildirService):
-    # NOTE: tightly coupled with Try_Jobdir, below
+    # NOTE: tightly coupled with Try_Jobdir, below. We used to track it as a "parent"
+    # via the MultiService API, but now we just track it as the member "self.scheduler"
+
+    def __init__(self, scheduler, basedir=None):
+        self.scheduler = scheduler
+        MaildirService.__init__(self, basedir)
 
     def messageReceived(self, filename):
         f = self.moveToCurDir(filename)
-        return self.parent.handleJobFile(filename, f)
+        return self.scheduler.handleJobFile(filename, f)
 
 
 class Try_Jobdir(TryBase):
@@ -76,17 +81,41 @@ class Try_Jobdir(TryBase):
         TryBase.__init__(self, name=name, builderNames=builderNames,
                          properties=properties)
         self.jobdir = jobdir
-        self.watcher = JobdirService()
-        self.watcher.setServiceParent(self)
+        self.watcher = JobdirService(scheduler=self)
 
-    def startService(self):
+    # TryBase used to be a MultiService and managed the JobdirService via a parent/child 
+    # relationship. We stub out the addService/removeService and just keep track of 
+    # JobdirService as self.watcher. We'll refactor these things later and remove
+    # the need for this.
+    def addService(self, child):
+        pass
+
+    def removeService(self, child):
+        pass
+
+    # activation handlers
+
+    @defer.inlineCallbacks
+    def activate(self):
+        yield TryBase.activate(self)
+
         # set the watcher's basedir now that we have a master
         jobdir = os.path.join(self.master.basedir, self.jobdir)
         self.watcher.setBasedir(jobdir)
         for subdir in "cur new tmp".split():
             if not os.path.exists(os.path.join(jobdir, subdir)):
                 os.mkdir(os.path.join(jobdir, subdir))
-        TryBase.startService(self)
+
+        # bridge the activate/deactivate to a startService/stopService on the
+        # child service
+        self.watcher.startService()
+
+    @defer.inlineCallbacks
+    def deactivate(self):
+        yield TryBase.deactivate(self)
+        # bridge the activate/deactivate to a startService/stopService on the
+        # child service
+        self.watcher.stopService()
 
     def parseJob(self, f):
         # jobfiles are serialized build requests. Each is a list of
@@ -183,37 +212,28 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        d = self.master.db.sourcestampsets.addSourceStampSet()
+        sourcestamp=dict(branch=parsed_job['branch'],
+            revision=parsed_job['baserev'],
+            patch_body=parsed_job['patch_body'],
+            patch_level=parsed_job['patch_level'],
+            patch_author=who,
+            patch_comment=comment,
+            patch_subdir='',  # TODO: can't set this remotely - #1769
+            project=parsed_job['project'],
+            repository=parsed_job['repository'])
+        reason = u"'try' job"
+        if parsed_job['who']:
+            reason += u" by user %s" % ascii2unicode(parsed_job['who'])
+        properties = parsed_job['properties']
+        requested_props = Properties()
+        requested_props.update(properties, "try build")
 
-        def addsourcestamp(setid):
-            self.master.db.sourcestamps.addSourceStamp(
-                sourcestampsetid=setid,
-                branch=parsed_job['branch'],
-                revision=parsed_job['baserev'],
-                patch_body=parsed_job['patch_body'],
-                patch_level=parsed_job['patch_level'],
-                patch_author=who,
-                patch_comment=comment,
-                patch_subdir='',  # TODO: can't set this remotely - #1769
-                project=parsed_job['project'],
-                repository=parsed_job['repository'])
-            return setid
-
-        d.addCallback(addsourcestamp)
-
-        def create_buildset(setid):
-            reason = "'try' job"
-            if parsed_job['who']:
-                reason += " by user %s" % parsed_job['who']
-            properties = parsed_job['properties']
-            requested_props = Properties()
-            requested_props.update(properties, "try build")
-            return self.addBuildsetForSourceStamp(
-                ssid=None, setid=setid,
-                reason=reason, external_idstring=parsed_job['jobid'],
-                builderNames=builderNames, properties=requested_props)
-        d.addCallback(create_buildset)
-        return d
+        return self.addBuildsetForSourceStamps(
+            sourcestamps=[sourcestamp],
+            reason=reason,
+            external_idstring=ascii2unicode(parsed_job['jobid']),
+            builderNames=builderNames,
+            properties=requested_props)
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
@@ -233,28 +253,25 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if not builderNames:
             return
 
-        reason = "'try' job"
+        reason = u"'try' job"
 
         if who:
-            reason += " by user %s" % who
+            reason += u" by user %s" % ascii2unicode(who)
 
         if comment:
-            reason += " (%s)" % comment
+            reason += u" (%s)" % ascii2unicode(comment)
 
-        sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
-
-        yield db.sourcestamps.addSourceStamp(
+        sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '',
-            sourcestampsetid=sourcestampsetid)
-                    # note: no way to specify patch subdir - #1769
+        )           # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
         requested_props.update(properties, "try build")
-        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamp(
-                setid=sourcestampsetid, reason=reason,
+        (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamps(
+                sourcestamps=[sourcestamp], reason=reason,
                 properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object
@@ -282,8 +299,9 @@ class Try_Userpass(TryBase):
         self.port = port
         self.userpass = userpass
 
-    def startService(self):
-        TryBase.startService(self)
+    @defer.inlineCallbacks
+    def activate(self):
+        yield TryBase.activate(self)
 
         # register each user/passwd with the pbmanager
         def factory(mind, username):
@@ -294,11 +312,8 @@ class Try_Userpass(TryBase):
                 self.master.pbmanager.register(
                     self.port, user, passwd, factory))
 
-    def stopService(self):
-        d = defer.maybeDeferred(TryBase.stopService, self)
-
-        def unreg(_):
-            return defer.gatherResults(
-                [reg.unregister() for reg in self.registrations])
-        d.addCallback(unreg)
-        return d
+    @defer.inlineCallbacks
+    def deactivate(self):
+        yield TryBase.deactivate(self)
+        yield defer.gatherResults(
+            [reg.unregister() for reg in self.registrations])

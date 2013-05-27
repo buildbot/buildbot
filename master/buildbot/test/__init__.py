@@ -13,14 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+from distutils.version import LooseVersion
+
 # apply the same patches the buildmaster does when it starts
 from buildbot import monkeypatches
 monkeypatches.patch_all(for_tests=True)
+
+# we set pedantic mode for the unit tests
+# which will ensure that it is always json-able
+from buildbot.util import namespace
+namespace.pedantic = True
 
 # import mock so we bail out early if it's not installed
 try:
     import mock
     mock = mock
 except ImportError:
-    raise ImportError("Buildbot tests require the 'mock' module; "
-            "try 'pip install mock'")
+    raise ImportError("\nBuildbot tests require the 'mock' module; "
+                         "try 'pip install mock'")
+
+if LooseVersion(mock.__version__) < LooseVersion("0.8"):
+    raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
+                         "higher; try 'pip install -U mock'")

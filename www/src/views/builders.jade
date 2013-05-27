@@ -1,0 +1,32 @@
+.row-fluid
+  ul.breadcrumb
+    li
+      a(href:"#/builders") Builders
+  input(type="checkbox", ng-model="nggrid")
+  |  Use ngGrid for display
+  div(ng-grid="gridOptions",style="height:400px",ng-show="nggrid")
+  table.table.table-hover.table-striped.table-condensed(ng-hide="nggrid")
+    tr
+        td Builder Name
+        td Slaves
+        td Current Builds
+        td Status
+        td Category
+      tr(ng-repeat='builder in builders')
+        td
+          a(href='#/builders/{{ builder.builderid }}')
+            | {{ builder.name }}
+        td
+                      span(ng-repeat="slave in builder.slaves")
+                        a(href="#/buildslaves/{{slave}}")
+                          {{ slave }}
+                        span(ng-hide="$last") ,&nbsp;
+        td
+                    ul
+                      li(data-ng-repeat="build in builder.builds")
+                        a(data-ng-href="#/builders/{{ builder.BuilderName }}/build/{{build}}")
+                          {{ build }}
+        td
+          | pending builds
+        td
+          | {{builder.category}}

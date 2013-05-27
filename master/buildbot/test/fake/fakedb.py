@@ -19,11 +19,14 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
+import copy
 import base64
+import hashlib
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
-from buildbot.db import buildrequests
+from buildbot.db import buildrequests, schedulers, changesources
+from buildbot.test.util import validation
 
 # Fake DB Rows
 
@@ -44,6 +47,9 @@ class Row(object):
     @cvar required_columns: a tuple of columns that must be given in the
     constructor
 
+    @cvar hashedColumns: a tuple of hash column and source columns designating
+    a hash to work around MySQL's inability to do indexing.
+
     @ivar values: the values to be inserted into this row
     """
 
@@ -51,6 +57,9 @@ class Row(object):
     required_columns = ()
     lists = ()
     dicts = ()
+    hashedColumns = []
+
+    _next_id = None
 
     def __init__(self, **kwargs):
         self.values = self.defaults.copy()
@@ -66,15 +75,39 @@ class Row(object):
             setattr(self, col, {})
         for col in kwargs.keys():
             assert col in self.defaults, "%s is not a valid column" % col
+        # cast to unicode
+        for k, v in self.values.iteritems():
+            if isinstance(v, str):
+                self.values[k] = unicode(v)
+        # calculate any necessary hashes
+        for hash_col, src_cols in self.hashedColumns:
+            self.values[hash_col] = self.hashColumns(
+                        *(self.values[c] for c in src_cols))
+
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
+    def __cmp__(self, other):
+        return cmp(self.__class__, other.__class__) \
+                or cmp(self.values, other.values)
+
+    def __repr__(self):
+        return '%s(**%r)' % (self.__class__.__name__, self.values)
+
     def nextId(self):
-        if not hasattr(self.__class__, '_next_id'):
-            self.__class__._next_id = 1000
-        else:
-            self.__class__._next_id += 1
-        return self.__class__._next_id
+        id, Row._next_id = Row._next_id, (Row._next_id or 1)+1
+        return id
+
+    def hashColumns(self, *args):
+        # copied from master/buildbot/db/base.py
+        def encode(x):
+            try:
+                return x.encode('utf8')
+            except AttributeError:
+                if x is None:
+                    return '\xf5'
+                return str(x)
+        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
 
 
 class BuildRequest(Row):
@@ -100,32 +133,56 @@ class BuildRequestClaim(Row):
 
     defaults = dict(
         brid = None,
-        objectid = None,
+        masterid = None,
         claimed_at = None
     )
 
-    required_columns = ('brid', 'objectid', 'claimed_at')
+    required_columns = ('brid', 'masterid', 'claimed_at')
 
+
+class ChangeSource(Row):
+    table = "changesources"
+
+    defaults = dict(
+        id = None,
+        name = 'csname',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
+
+
+class ChangeSourceMaster(Row):
+    table = "changesource_masters"
+
+    defaults = dict(
+        changesourceid = None,
+        masterid = None,
+    )
+
+    required_columns = ( 'changesourceid', 'masterid' )
 
 class Change(Row):
     table = "changes"
 
     defaults = dict(
         changeid = None,
-        author = 'frank',
-        comments = 'test change',
+        author = u'frank',
+        comments = u'test change',
         is_dir = 0,
-        branch = 'master',
-        revision = 'abcd',
-        revlink = 'http://vc/abcd',
+        branch = u'master',
+        revision = u'abcd',
+        revlink = u'http://vc/abcd',
         when_timestamp = 1200000,
-        category = 'cat',
-        repository = 'repo',
-        codebase =  '',
-        project = 'proj',
+        category = u'cat',
+        repository = u'repo',
+        codebase =  u'',
+        project = u'proj',
+        sourcestampid = 92,
     )
 
-    lists = ('files',)
+    lists = ('files','uids')
     dicts = ('properties',)
     id_column = 'changeid'
 
@@ -177,23 +234,6 @@ class Patch(Row):
     id_column = 'id'
 
 
-class SourceStampChange(Row):
-    table = "sourcestamp_changes"
-
-    defaults = dict(
-        sourcestampid = None,
-        changeid = None,
-    )
-
-    required_columns = ('sourcestampid', 'changeid')
-
-class SourceStampSet(Row):
-    table = "sourcestampsets"
-    defaults = dict(
-        id = None,
-    )
-    id_column = 'id'
-
 class SourceStamp(Row):
     table = "sourcestamps"
 
@@ -205,22 +245,48 @@ class SourceStamp(Row):
         repository = 'repo',
         codebase = '',
         project = 'proj',
-        sourcestampsetid = None,
+        created_at = 89834834,
+        ss_hash = None,
     )
 
     id_column = 'id'
+    hashedColumns = [ ( 'ss_hash', ('branch', 'revision', 'repository',
+                                    'project', 'codebase', 'patchid',) ) ]
 
+
+class Scheduler(Row):
+    table = "schedulers"
+
+    defaults = dict(
+        id = None,
+        name = 'schname',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
+
+
+class SchedulerMaster(Row):
+    table = "scheduler_masters"
+
+    defaults = dict(
+        schedulerid = None,
+        masterid = None,
+    )
+
+    required_columns = ( 'schedulerid', 'masterid' )
 
 class SchedulerChange(Row):
     table = "scheduler_changes"
 
     defaults = dict(
-        objectid = None,
+        schedulerid = None,
         changeid = None,
         important = 1,
     )
 
-    required_columns = ( 'objectid', 'changeid' )
+    required_columns = ( 'schedulerid', 'changeid' )
 
 
 class Buildset(Row):
@@ -230,7 +296,6 @@ class Buildset(Row):
         id = None,
         external_idstring = 'extid',
         reason = 'because',
-        sourcestampsetid = None,
         submitted_at = 12345678,
         complete = 0,
         complete_at = None,
@@ -238,7 +303,6 @@ class Buildset(Row):
     )
 
     id_column = 'id'
-    required_columns = ( 'sourcestampsetid', )
 
 
 class BuildsetProperty(Row):
@@ -251,6 +315,19 @@ class BuildsetProperty(Row):
     )
 
     required_columns = ( 'buildsetid', )
+
+
+class BuildsetSourceStamp(Row):
+    table = "buildset_sourcestamps"
+
+    defaults = dict(
+        id = None,
+        buildsetid = None,
+        sourcestampid = None,
+    )
+
+    required_columns = ( 'buildsetid', 'sourcestampid', )
+    id_column = 'id'
 
 
 class Object(Row):
@@ -305,24 +382,192 @@ class Build(Row):
     defaults = dict(
         id = None,
         number = 29,
-        brid = 39,
-        start_time = 1304262222,
-        finish_time = None)
+        buildrequestid = None,
+        builderid = None,
+        slaveid = -1,
+        masterid = None,
+        started_at = 1304262222,
+        complete_at = None,
+        state_strings_json = '["test"]',
+        results = None)
 
     id_column = 'id'
+    required_columns = ( 'buildrequestid', 'masterid' ) # slaveid omitted temporarily
+
+class Step(Row):
+    table = "steps"
+
+    defaults = dict(
+        id = None,
+        number = 29,
+        name = 'step29',
+        buildid = None,
+        started_at = 1304262222,
+        complete_at = None,
+        state_strings_json = '[]',
+        results = None,
+        urls_json = '[]')
+
+    id_column = 'id'
+    required_columns = ( 'buildid', )
+
+class Log(Row):
+    table = "logs"
+
+    defaults = dict(
+        id = None,
+        name = 'step29',
+        stepid = None,
+        complete = 0,
+        num_lines = 0,
+        type = 's')
+
+    id_column = 'id'
+    required_columns = ( 'stepid', )
+
+class LogChunk(Row):
+    table = "logchunks"
+
+    defaults = dict(
+        logid = None,
+        first_line = 0,
+        last_line = 0,
+        content = u'',
+        compressed = 0)
+
+    required_columns = ( 'logid', )
+
+class Master(Row):
+    table = "masters"
+
+    defaults = dict(
+        id = None,
+        name = 'some:master',
+        name_hash = None,
+        active = 1,
+        last_active = 9998999,
+    )
+
+    id_column = 'id'
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
+
+class Builder(Row):
+    table = "builders"
+
+    defaults = dict(
+        id = None,
+        name = 'some:builder',
+        name_hash = None,
+    )
+
+    id_column = 'id'
+    hashedColumns = [ ( 'name_hash', ('name',) ) ]
+
+class BuilderMaster(Row):
+    table = "builder_masters"
+
+    defaults = dict(
+        id = None,
+        builderid = None,
+        masterid = None
+    )
+
+    id_column = 'id'
+    required_columns = ( 'builderid', 'masterid' )
 
 # Fake DB Components
 
-# TODO: test these using the same test methods as are used against the real
-# database
-
 class FakeDBComponent(object):
+    data2db = { }
 
     def __init__(self, db, testcase):
         self.db = db
         self.t = testcase
         self.setUp()
 
+class FakeChangeSourcesComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.changesources = {}
+        self.changesource_masters = {}
+        self.states = {}
+
+    def insertTestData(self, rows):
+        pass
+        for row in rows:
+            if isinstance(row, ChangeSource):
+                self.changesources[row.id] = row.name
+            if isinstance(row, ChangeSourceMaster):
+                self.changesource_masters[row.changesourceid] = row.masterid
+
+    # component methods
+
+    def findChangeSourceId(self, name):
+        for cs_id, cs_name in self.changesources.iteritems():
+            if cs_name == name:
+                return defer.succeed(cs_id)
+        new_id = (max(self.changesources) + 1) if self.changesources else 1
+        self.changesources[new_id] = name
+        return defer.succeed(new_id)
+
+    def getChangeSource(self, changesourceid):
+        if changesourceid in self.changesources:
+            rv = dict(
+                id=changesourceid,
+                name=self.changesources[changesourceid],
+                masterid=None)
+            # only set masterid if the relevant changesource master exists and
+            # is active
+            rv['masterid'] = self.changesource_masters.get(changesourceid)
+            return defer.succeed(rv)
+        else:
+            return None
+
+    def getChangeSources(self, active=None, masterid=None):
+        d = defer.DeferredList([
+            self.getChangeSource(id) for id in self.changesources
+        ])
+        @d.addCallback
+        def filter(results):
+            # filter off the DeferredList results (we know it's good)
+            results = [ r[1] for r in results ]
+            # filter for masterid
+            if masterid is not None:
+                results = [ r for r in results
+                            if r['masterid'] == masterid ]
+            # filter for active or inactive if necessary
+            if active:
+                results = [ r for r in results
+                            if r['masterid'] is not None ]
+            elif active is not None:
+                results = [ r for r in results
+                            if r['masterid'] is None ]
+            return results
+        return d
+
+    def setChangeSourceMaster(self, changesourceid, masterid):
+        current_masterid = self.changesource_masters.get(changesourceid)
+        if current_masterid and masterid is not None:
+            return defer.fail(changesources.ChangeSourceAlreadyClaimedError())
+        self.changesource_masters[changesourceid] = masterid
+        return defer.succeed(None)
+
+    # fake methods
+
+    def fakeChangeSource(self, name, changesourceid):
+        self.changesources[changesourceid] = name
+
+    def fakeChangeSourceMaster(self, changesourceid, masterid):
+        if masterid is not None:
+            self.changesource_masters[changesourceid] = masterid
+        else:
+            del self.changesource_masters[changesourceid]
+
+    # assertions
+
+    def assertChangeSourceMaster(self, changesourceid, masterid):
+        self.t.assertEqual(self.changesource_masters.get(changesourceid),
+                           masterid)
 
 class FakeChangesComponent(FakeDBComponent):
 
@@ -332,34 +577,43 @@ class FakeChangesComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Change):
-                self.changes[row.changeid] = row
+                # copy this since we'll be modifying it (e.g., adding files)
+                ch = self.changes[row.changeid] = copy.deepcopy(row.values)
+                ch['files'] = []
+                ch['properties'] = {}
+                ch['uids'] = []
 
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
-                ch.files.append(row.filename)
+                ch['files'].append(row.filename)
 
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
                 n, vs = row.property_name, row.property_value
                 v, s = json.loads(vs)
-                ch.properties.setProperty(n, v, s)
+                ch['properties'][n] = (v, s)
 
             elif isinstance(row, ChangeUser):
                 ch = self.changes[row.changeid]
-                ch.uid = row.uid
+                ch['uids'].append(row.uid)
 
     # component methods
 
+    @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
             revision=None, when_timestamp=None, branch=None,
             category=None, revlink='', properties={}, repository='',
-            project='', codebase='', uid=None):
+            codebase='', project='', uid=None, _reactor=reactor):
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
             changeid = 500
 
-        self.changes[changeid] = ch = Change(
+        ssid = yield self.db.sourcestamps.findSourceStampId(
+            revision=revision, branch=branch, repository=repository,
+            codebase=codebase, project=project, _reactor=_reactor)
+
+        self.changes[changeid] = ch = dict(
             changeid=changeid,
             author=author,
             comments=comments,
@@ -371,49 +625,66 @@ class FakeChangesComponent(FakeDBComponent):
             revlink=revlink,
             repository=repository,
             project=project,
-            codebase=codebase)
-        ch.files = files
-        ch.properties = properties
+            codebase=codebase,
+            uids=[],
+            files=files,
+            properties=properties,
+            sourcestampid=ssid)
 
-        return defer.succeed(changeid)
+        if uid:
+            ch['uids'].append(uid)
+
+        defer.returnValue(changeid)
 
     def getLatestChangeid(self):
         if self.changes:
             return defer.succeed(max(self.changes.iterkeys()))
         return defer.succeed(None)
 
-    def getChange(self, changeid):
+    def getChange(self, key, no_cache=False):
         try:
-            row = self.changes[changeid]
+            row = self.changes[key]
         except KeyError:
             return defer.succeed(None)
 
-        chdict = dict(
-                changeid=row.changeid,
-                author=row.author,
-                files=row.files,
-                comments=row.comments,
-                is_dir=row.is_dir,
-                revision=row.revision,
-                when_timestamp=epoch2datetime(row.when_timestamp),
-                branch=row.branch,
-                category=row.category,
-                revlink=row.revlink,
-                properties=row.properties,
-                repository=row.repository,
-                codebase=row.codebase,
-                project=row.project)
-
-        return defer.succeed(chdict)
+        return defer.succeed(self._chdict(row))
 
     def getChangeUids(self, changeid):
         try:
-            ch_uids = [self.changes[changeid].uid]
+            ch_uids = self.changes[changeid]['uids']
         except KeyError:
             ch_uids = []
         return defer.succeed(ch_uids)
 
-    # TODO: getRecentChanges
+    def getRecentChanges(self, count):
+        ids = sorted(self.changes.keys())
+        chdicts = [ self._chdict(self.changes[id]) for id in ids[-count:] ]
+        return defer.succeed(chdicts)
+
+    def getChanges(self):
+        chdicts = [ self._chdict(v) for v in self.changes.values() ]
+        return defer.succeed(chdicts)
+
+    def getChangesCount(self):
+        return len(self.changes)
+
+    def _chdict(self, row):
+        chdict = row.copy()
+        del chdict['uids']
+        chdict['when_timestamp'] = epoch2datetime(chdict['when_timestamp'])
+        return chdict
+
+    # assertions
+
+    def assertChange(self, changeid, row):
+        row_only = self.changes[changeid].copy()
+        del row_only['files']
+        del row_only['properties']
+        del row_only['uids']
+        self.t.assertEqual(row_only, row.values)
+
+    def assertChangeUsers(self, changeid, expectedUids):
+        self.t.assertEqual(self.changes[changeid]['uids'], expectedUids)
 
     # fake methods
 
@@ -447,34 +718,40 @@ class FakeChangesComponent(FakeDBComponent):
 class FakeSchedulersComponent(FakeDBComponent):
 
     def setUp(self):
+        self.schedulers = {}
+        self.scheduler_masters = {}
         self.states = {}
         self.classifications = {}
 
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, SchedulerChange):
-                cls = self.classifications.setdefault(row.objectid, {})
+                cls = self.classifications.setdefault(row.schedulerid, {})
                 cls[row.changeid] = row.important
+            if isinstance(row, Scheduler):
+                self.schedulers[row.id] = row.name
+            if isinstance(row, SchedulerMaster):
+                self.scheduler_masters[row.schedulerid] = row.masterid
 
     # component methods
 
-    def classifyChanges(self, objectid, classifications):
-        self.classifications.setdefault(objectid, {}).update(classifications)
+    def classifyChanges(self, schedulerid, classifications):
+        self.classifications.setdefault(schedulerid, {}).update(classifications)
         return defer.succeed(None)
 
-    def flushChangeClassifications(self, objectid, less_than=None):
+    def flushChangeClassifications(self, schedulerid, less_than=None):
         if less_than is not None:
-            classifications = self.classifications.setdefault(objectid, {})
+            classifications = self.classifications.setdefault(schedulerid, {})
             for changeid in classifications.keys():
                 if changeid < less_than:
                     del classifications[changeid]
         else:
-            self.classifications[objectid] = {}
+            self.classifications[schedulerid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, objectid, branch=-1, repository=-1,
+    def getChangeClassifications(self, schedulerid, branch=-1, repository=-1,
                                  project=-1, codebase=-1):
-        classifications = self.classifications.setdefault(objectid, {})
+        classifications = self.classifications.setdefault(schedulerid, {})
 
         sentinel = dict(branch=object(), repository=object(),
                         project=object(), codebase=object())
@@ -505,35 +782,82 @@ class FakeSchedulersComponent(FakeDBComponent):
             
         return defer.succeed(classifications)
 
+    def findSchedulerId(self, name):
+        for sch_id, sch_name in self.schedulers.iteritems():
+            if sch_name == name:
+                return defer.succeed(sch_id)
+        new_id = (max(self.schedulers) + 1) if self.schedulers else 1
+        self.schedulers[new_id] = name
+        return defer.succeed(new_id)
+
+    def getScheduler(self, schedulerid):
+        if schedulerid in self.schedulers:
+            rv = dict(
+                id=schedulerid,
+                name=self.schedulers[schedulerid],
+                masterid=None)
+            # only set masterid if the relevant scheduler master exists and
+            # is active
+            rv['masterid'] = self.scheduler_masters.get(schedulerid)
+            return defer.succeed(rv)
+        else:
+            return None
+
+    def getSchedulers(self, active=None, masterid=None):
+        d = defer.DeferredList([
+            self.getScheduler(id) for id in self.schedulers
+        ])
+        @d.addCallback
+        def filter(results):
+            # filter off the DeferredList results (we know it's good)
+            results = [ r[1] for r in results ]
+            # filter for masterid
+            if masterid is not None:
+                results = [ r for r in results
+                            if r['masterid'] == masterid ]
+            # filter for active or inactive if necessary
+            if active:
+                results = [ r for r in results
+                            if r['masterid'] is not None ]
+            elif active is not None:
+                results = [ r for r in results
+                            if r['masterid'] is None ]
+            return results
+        return d
+
+    def setSchedulerMaster(self, schedulerid, masterid):
+        current_masterid = self.scheduler_masters.get(schedulerid)
+        if current_masterid and masterid is not None:
+            return defer.fail(schedulers.SchedulerAlreadyClaimedError())
+        self.scheduler_masters[schedulerid] = masterid
+        return defer.succeed(None)
+
     # fake methods
 
-    def fakeClassifications(self, objectid, classifications):
+    def fakeClassifications(self, schedulerid, classifications):
         """Set the set of classifications for a scheduler"""
-        self.classifications[objectid] = classifications
+        self.classifications[schedulerid] = classifications
+
+    def fakeScheduler(self, name, schedulerid):
+        self.schedulers[schedulerid] = name
+
+    def fakeSchedulerMaster(self, schedulerid, masterid):
+        if masterid is not None:
+            self.scheduler_masters[schedulerid] = masterid
+        else:
+            del self.scheduler_masters[schedulerid]
 
     # assertions
 
-    def assertClassifications(self, objectid, classifications):
+    def assertClassifications(self, schedulerid, classifications):
         self.t.assertEqual(
-                self.classifications.get(objectid, {}),
+                self.classifications.get(schedulerid, {}),
                 classifications)
 
+    def assertSchedulerMaster(self, schedulerid, masterid):
+        self.t.assertEqual(self.scheduler_masters.get(schedulerid),
+                           masterid)
 
-class FakeSourceStampSetsComponent(FakeDBComponent):
-    def setUp(self):
-        self.sourcestampsets = {}
-
-    def insertTestData(self, rows):
-        for row in rows:
-            if isinstance(row, SourceStampSet):
-                self.sourcestampsets[row.id] = dict()
-
-    def addSourceStampSet(self):
-        id = len(self.sourcestampsets) + 100
-        while id in self.sourcestampsets:
-            id += 1
-        self.sourcestampsets[id] = dict()
-        return defer.succeed(id)
 
 class FakeSourceStampsComponent(FakeDBComponent):
 
@@ -554,26 +878,19 @@ class FakeSourceStampsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, SourceStamp):
                 ss = self.sourcestamps[row.id] = row.values.copy()
-                ss['changeids'] = set()
-
-        for row in rows:
-            if isinstance(row, SourceStampChange):
-                ss = self.sourcestamps[row.sourcestampid]
-                ss['changeids'].add(row.changeid)
+                ss['created_at'] = epoch2datetime(ss['created_at'])
+                del ss['ss_hash']
+                del ss['id']
 
     # component methods
 
-    def addSourceStamp(self, branch, revision, repository, project, sourcestampsetid,
-                          codebase = '', patch_body=None, patch_level=0, patch_author=None,
-                          patch_comment=None, patch_subdir=None, changeids=[]):
-        id = len(self.sourcestamps) + 100
-        while id in self.sourcestamps:
-            id += 1
-
-        changeids = set(changeids)
-
+    def findSourceStampId(self, branch=None, revision=None, repository=None,
+            project=None, codebase=None,
+            patch_body=None, patch_level=None,
+            patch_author=None, patch_comment=None, patch_subdir=None,
+            _reactor=reactor):
         if patch_body:
-            patchid = len(self.patches) + 100
+            patchid = len(self.patches) + 1
             while patchid in self.patches:
                 patchid += 1
             self.patches[patchid] = dict(
@@ -586,47 +903,55 @@ class FakeSourceStampsComponent(FakeDBComponent):
         else:
             patchid = None
 
-        self.sourcestamps[id] = dict(id=id, sourcestampsetid=sourcestampsetid, branch=branch, revision=revision, codebase=codebase,
+        new_ssdict = dict(branch=branch, revision=revision, codebase=codebase,
                 patchid=patchid, repository=repository, project=project,
-                changeids=changeids)
+                created_at=epoch2datetime(_reactor.seconds()))
+        for id, ssdict in self.sourcestamps.iteritems():
+            keys = ['branch', 'revision', 'repository',
+                    'codebase', 'project', 'patchid']
+            if [ ssdict[k] for k in keys ] == [ new_ssdict[k] for k in keys ]:
+                return defer.succeed(id)
+
+        id = len(self.sourcestamps) + 100
+        while id in self.sourcestamps:
+            id += 1
+        self.sourcestamps[id] = new_ssdict
         return defer.succeed(id)
 
-    def getSourceStamp(self, ssid):
-        return defer.succeed(self._getSourceStamp(ssid))
+    def getSourceStamp(self, key, no_cache=False):
+        return defer.succeed(self._getSourceStamp_sync(key))
 
-    def _getSourceStamp(self, ssid):
+    def getSourceStamps(self):
+        return defer.succeed([
+            self._getSourceStamp_sync(ssid)
+            for ssid in self.sourcestamps
+        ])
+
+    def _getSourceStamp_sync(self, ssid):
         if ssid in self.sourcestamps:
             ssdict = self.sourcestamps[ssid].copy()
-            del ssdict['id']
             ssdict['ssid'] = ssid
             patchid = ssdict['patchid']
             if patchid:
                 ssdict.update(self.patches[patchid])
+                ssdict['patchid'] = patchid
             else:
                 ssdict['patch_body'] = None
                 ssdict['patch_level'] = None
                 ssdict['patch_subdir'] = None
                 ssdict['patch_author'] = None
                 ssdict['patch_comment'] = None
-            del ssdict['patchid']
             return ssdict
         else:
             return None
 
-    def getSourceStamps(self, sourcestampsetid):
-        sslist = []
-        for ssdict in self.sourcestamps.itervalues():
-            if ssdict['sourcestampsetid'] == sourcestampsetid:
-                ssdictcpy = self._getSourceStamp(ssdict['id'])
-                sslist.append(ssdictcpy)
-        return defer.succeed(sslist)
 
 class FakeBuildsetsComponent(FakeDBComponent):
 
     def setUp(self):
         self.buildsets = {}
         self.completed_bsids = set()
-        self.buildset_subs = []
+        self.buildset_sourcestamps = {}
 
     def insertTestData(self, rows):
         for row in rows:
@@ -641,6 +966,12 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 v, src = tuple(json.loads(row.property_value))
                 self.buildsets[row.buildsetid]['properties'][n] = (v, src)
 
+        for row in rows:
+            if isinstance(row, BuildsetSourceStamp):
+                assert row.buildsetid in self.buildsets
+                self.buildset_sourcestamps.setdefault(row.buildsetid,
+                        []).append(row.sourcestampid)
+
     # component methods
 
     def _newBsid(self):
@@ -649,8 +980,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+    @defer.inlineCallbacks
+    def addBuildset(self, sourcestamps, reason, properties, builderNames,
+                   external_idstring=None, submitted_at=None,
+                   _reactor=reactor):
         bsid = self._newBsid()
         br_rows = []
         for buildername in builderNames:
@@ -658,19 +991,38 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     BuildRequest(buildsetid=bsid, buildername=buildername))
         self.db.buildrequests.insertTestData(br_rows)
 
+        # calculate submitted at
+        if submitted_at:
+            submitted_at = datetime2epoch(submitted_at)
+        else:
+            submitted_at = _reactor.seconds()
+
         # make up a row and keep its dictionary, with the properties tacked on
-        bsrow = Buildset(sourcestampsetid=sourcestampsetid, reason=reason, external_idstring=external_idstring)
+        bsrow = Buildset(id=bsid, reason=reason,
+                external_idstring=external_idstring,
+                submitted_at=submitted_at)
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
 
-        return defer.succeed((bsid,
+        # add sourcestamps
+        ssids = []
+        for ss in sourcestamps:
+            if type(ss) != type(1):
+                ss = yield self.db.sourcestamps.findSourceStampId(**ss)
+            ssids.append(ss)
+        self.buildset_sourcestamps[bsid] = ssids
+
+        defer.returnValue((bsid,
             dict([ (br.buildername, br.id) for br in br_rows ])))
 
     def completeBuildset(self, bsid, results, complete_at=None,
             _reactor=reactor):
+        if bsid not in self.buildsets or self.buildsets[bsid]['complete']:
+            raise KeyError
         self.buildsets[bsid]['results'] = results
         self.buildsets[bsid]['complete'] = 1
-        self.buildsets[bsid]['complete_at'] = complete_at or _reactor.seconds()
+        self.buildsets[bsid]['complete_at'] = \
+            datetime2epoch(complete_at) if complete_at else _reactor.seconds()
         return defer.succeed(None)
 
     def getBuildset(self, bsid):
@@ -691,6 +1043,35 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 rv.append(self._row2dict(bs))
         return defer.succeed(rv)
 
+    @defer.inlineCallbacks
+    def getRecentBuildsets(self, count=None, branch=None, repository=None,
+                                    complete=None):
+        if not count:
+            defer.returnValue([])
+            return
+        rv = []
+        for bs in (yield self.getBuildsets(complete=complete)):
+            if branch or repository:
+                ok = True
+                if not bs['sourcestamps']:
+                    # no sourcestamps -> no match
+                    ok = False
+                for ssid in bs['sourcestamps']:
+                    ss = yield self.db.sourcestamps.getSourceStamp(ssid)
+                    if branch and ss['branch'] != branch:
+                        ok = False
+                    if repository and ss['repository'] != repository:
+                        ok = False
+            else:
+                ok = True
+
+            if ok:
+                rv.append(bs)
+
+        rv.sort(key=lambda bs : -bs['bsid'])
+
+        defer.returnValue(list(reversed(rv[:count])))
+
     def _row2dict(self, row):
         row = row.copy()
         if row['complete_at']:
@@ -701,13 +1082,15 @@ class FakeBuildsetsComponent(FakeDBComponent):
                              epoch2datetime(row['submitted_at'])
         row['complete'] = bool(row['complete'])
         row['bsid'] = row['id']
+        row['sourcestamps'] = self.buildset_sourcestamps.get(row['id'], [])
         del row['id']
+        del row['properties']
         return row
 
-    def getBuildsetProperties(self, buildsetid):
-        if buildsetid in self.buildsets:
+    def getBuildsetProperties(self, bsid):
+        if bsid in self.buildsets:
             return defer.succeed(
-                    self.buildsets[buildsetid]['properties'])
+                    self.buildsets[bsid]['properties'])
         else:
             return defer.succeed({})
 
@@ -718,44 +1101,21 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildsets[bsid]['results'] = result
         self.completed_bsids.add(bsid)
 
-    def flushBuildsets(self):
-        """
-        Flush the set of buildsets, for example after C{assertBuildset}
-        """
-        self.buildsets = {}
-        self.completed_bsids = set()
-
     # assertions
 
-    def assertBuildsets(self, count):
-        """Assert that exactly COUNT buildsets were added"""
-        self.t.assertEqual(len(self.buildsets), count,
-                    "buildsets are %r" % (self.buildsets,))
+    def assertBuildsetCompletion(self, bsid, complete):
+        """Assert that the completion state of buildset BSID is COMPLETE"""
+        actual = self.buildsets[bsid]['complete']
+        self.t.failUnless((actual and complete) or (not actual and not complete))
 
-    def assertBuildset(self, bsid, expected_buildset, expected_sourcestamps):
-        """Assert that the buildset and its attached sourcestamp look as
-        expected; the ssid parameter of the buildset is omitted.  Properties
-        are converted with asList and sorted.  Sourcestamp patches are inlined
-        (patch_body, patch_level, patch_subdir), and changeids are represented
-        as a set, but omitted if empty.  If bsid is '?', then assert there is
-        only one new buildset, and use that."""
-        if bsid == '?':
-            self.assertBuildsets(1)
-            bsid = self.buildsets.keys()[0]
-        else:
-            self.t.assertIn(bsid, self.buildsets)
-
+    def assertBuildset(self, bsid=None, expected_buildset=None):
+        """Assert that the given buildset looks as expected; the ssid parameter
+        of the buildset is omitted.  Properties are converted with asList and
+        sorted.  Attributes complete, complete_at, submitted_at, and results
+        are ignored if not specified."""
+        self.t.assertIn(bsid, self.buildsets)
         buildset = self.buildsets[bsid].copy()
-
-        dictOfssDict= {}
-        for sourcestamp in self.db.sourcestamps.sourcestamps.itervalues():
-            if sourcestamp['sourcestampsetid'] == buildset['sourcestampsetid']:
-                ssdict = sourcestamp.copy()
-                ss_repository = ssdict['codebase']
-                dictOfssDict[ss_repository] = ssdict
-
-        if 'id' in buildset:
-            del buildset['id']
+        del buildset['id']
 
         # clear out some columns if the caller doesn't care
         for col in 'complete complete_at submitted_at results'.split():
@@ -765,40 +1125,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
 
-        # only add brids if we're expecting them (sometimes they're unknown)
-        if 'brids' in expected_buildset:
-            buildset['brids'] = self.allBuildRequests(bsid)
-
-        if 'builders' in expected_buildset:
-            buildset['builders'] = self.allBuildRequests(bsid).keys()
-
-        for ss in dictOfssDict.itervalues():
-            if 'id' in ss:
-                del ss['id']
-            if not ss['changeids']:
-                del ss['changeids']
-
-            # incorporate patch info if we have it
-            if 'patchid' in ss and ss['patchid']:
-                ss.update(self.db.sourcestamps.patches[ss['patchid']])
-            del ss['patchid']
-
-        self.t.assertEqual(
-            dict(buildset=buildset, sourcestamps=dictOfssDict),
-            dict(buildset=expected_buildset, sourcestamps=expected_sourcestamps))
+        self.t.assertEqual(buildset, expected_buildset)
         return bsid
-
-    def allBuildsetIds(self):
-        return self.buildsets.keys()
-
-    def allBuildRequests(self, bsid=None):
-        if bsid is not None:
-            is_same_bsid = lambda br: br.buildsetid==bsid
-        else:
-            is_same_bsid = lambda br: True
-        return dict([ (br.buildername, br.id)
-              for br in self.db.buildrequests.reqs.values()
-              if is_same_bsid(br) ])
 
 
 class FakeStateComponent(FakeDBComponent):
@@ -946,19 +1274,18 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
-                objectid=self.MASTER_ID, claimed_at=claimed_at)
+                masterid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
     def reclaimBuildRequests(self, brids):
         for brid in brids:
             if brid not in self.claims:
-                print "trying to reclaim brid %d, but it's not claimed" % brid
                 return defer.fail(
                         failure.Failure(buildrequests.AlreadyClaimedError))
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
-                objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
+                masterid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
     def unclaimBuildRequests(self, brids):
@@ -980,7 +1307,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         if claim_row:
             claimed = True
             claimed_at = claim_row.claimed_at
-            mine = claim_row.objectid == self.MASTER_ID
+            mine = claim_row.masterid == self.MASTER_ID
 
         submitted_at = epoch2datetime(row.submitted_at)
         complete_at = epoch2datetime(row.complete_at)
@@ -993,11 +1320,11 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # fake methods
 
-    def fakeClaimBuildRequest(self, brid, claimed_at=None, objectid=None):
-        if objectid is None:
-            objectid = self.MASTER_ID
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, masterid=None):
+        if masterid is None:
+            masterid = self.MASTER_ID
         self.claims[brid] = BuildRequestClaim(brid=brid,
-            objectid=objectid, claimed_at=self._reactor.seconds())
+            masterid=masterid, claimed_at=self._reactor.seconds())
 
     def fakeUnclaimBuildRequest(self, brid):
         del self.claims[brid]
@@ -1007,7 +1334,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
                 [ id for (id, brc) in self.claims.iteritems()
-                  if brc.objectid == self.MASTER_ID ],
+                  if brc.masterid == self.MASTER_ID ],
                 claimed_brids)
 
 
@@ -1019,7 +1346,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Build):
-                self.builds[row.id] = row
+                self.builds[row.id] = row.values.copy()
 
     # component methods
 
@@ -1029,43 +1356,275 @@ class FakeBuildsComponent(FakeDBComponent):
             id += 1
         return id
 
-    def getBuild(self, bid):
-        row = self.builds.get(bid)
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            number=row['number'],
+            buildrequestid=row['buildrequestid'],
+            builderid=row['builderid'],
+            masterid=row['masterid'],
+            slaveid=row['slaveid'],
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
+            state_strings=json.loads(row['state_strings_json']),
+            results=row['results'])
+
+    def getBuild(self, buildid):
+        row = self.builds.get(buildid)
         if not row:
             return defer.succeed(None)
 
-        return defer.succeed(dict(
-            bid=row.id,
-            brid=row.brid,
-            number=row.number,
-            start_time=epoch2datetime(row.start_time),
-            finish_time=epoch2datetime(row.finish_time)))
-    
-    def getBuildsForRequest(self, brid):
+        return defer.succeed(self._row2dict(row))
+
+    def getBuildByNumber(self, builderid, number):
+        for row in self.builds.itervalues():
+            if row['builderid'] == builderid and row['number'] == number:
+                return defer.succeed(self._row2dict(row))
+        return defer.succeed(None)
+
+    def getBuilds(self, builderid=None, buildrequestid=None):
         ret = []
- 
+
         for (id, row) in self.builds.items():
-            if row.brid == brid:
-                ret.append(dict(bid = row.id,
-                                brid=row.brid,
-                                number=row.number,
-                                start_time=epoch2datetime(row.start_time),
-                                finish_time=epoch2datetime(row.finish_time)))
-               
-        return defer.succeed(ret)            
+            if builderid and row['builderid'] != builderid:
+                continue
+            if buildrequestid and row['buildrequestid'] != buildrequestid:
+                continue
+            ret.append(self._row2dict(row))
 
-    def addBuild(self, brid, number, _reactor=reactor):
-        bid = self._newId()
-        self.builds[bid] = Build(id=bid, number=number, brid=brid,
-                start_time=_reactor.seconds, finish_time=None)
-        return bid
+        return defer.succeed(ret)
 
-    def finishBuilds(self, bids, _reactor=reactor):
+    def addBuild(self, builderid, buildrequestid, slaveid, masterid,
+            state_strings, _reactor=reactor):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        id = self._newId()
+        number = max([0] + [r['number'] for r in self.builds.itervalues()
+                            if r['builderid']==builderid]) + 1
+        self.builds[id] = dict(id=id, number=number,
+                buildrequestid=buildrequestid, builderid=builderid,
+                slaveid=slaveid, masterid=masterid,
+                state_strings_json=unicode(json.dumps(state_strings)),
+                started_at=_reactor.seconds(), complete_at=None,
+                results=None)
+        return defer.succeed((id, number))
+
+    def setBuildStateStrings(self, buildid, state_strings):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        b = self.builds.get(buildid)
+        if b:
+            b['state_strings_json'] = unicode(json.dumps(state_strings))
+        return defer.succeed(None)
+
+    def finishBuild(self, buildid, results, _reactor=reactor):
         now = _reactor.seconds()
-        for bid in bids:
-            b = self.builds.get(bid)
-            if b:
-                b.finish_time = now
+        b = self.builds.get(buildid)
+        if b:
+            b['complete_at'] = now
+            b['results'] = results
+        return defer.succeed(None)
+
+
+class FakeStepsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.steps = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Step):
+                self.steps[row.id] = row.values.copy()
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.steps:
+            id += 1
+        return id
+
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            buildid=row['buildid'],
+            number=row['number'],
+            name=row['name'],
+            started_at=epoch2datetime(row['started_at']),
+            complete_at=epoch2datetime(row['complete_at']),
+            state_strings=json.loads(row['state_strings_json']),
+            results=row['results'],
+            urls=json.loads(row['urls_json']))
+
+    def getStep(self, stepid):
+        row = self.steps.get(stepid)
+        if not row:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getStepByBuild(self, buildid, number=None, name=None):
+        if number is None and name is None:
+            return defer.fail(RuntimeError("specify both name and number"))
+        for row in self.steps.itervalues():
+            if row['buildid'] != buildid:
+                continue
+            if number is not None and row['number'] != number:
+                continue
+            if name is not None and row['name'] != name:
+                continue
+            return defer.succeed(self._row2dict(row))
+        return defer.succeed(None)
+
+    def getSteps(self, buildid):
+        ret = []
+
+        for row in self.steps.itervalues():
+            if row['buildid'] != buildid:
+                continue
+            ret.append(self._row2dict(row))
+
+        ret.sort(key = lambda r : r['number'])
+        return defer.succeed(ret)
+
+    def addStep(self, buildid, name, state_strings, _reactor=reactor):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        validation.verifyType(self.t, 'name', name,
+                validation.IdentifierValidator(50))
+        # get a unique name and number
+        build_steps = [r for r in self.steps.itervalues()
+                       if r['buildid'] == buildid]
+        if build_steps:
+            number = max([r['number'] for r in build_steps]) + 1
+            names = set([r['name'] for r in build_steps])
+            if name in names:
+                i = 1
+                while '%s_%d' % (name, i) in names:
+                    i += 1
+                name = '%s_%d' % (name, i)
+        else:
+            number = 0
+
+        id = self._newId()
+        self.steps[id] = {
+            'id': id,
+            'buildid': buildid,
+            'number': number,
+            'name': name,
+            'started_at': _reactor.seconds(),
+            'complete_at': None,
+            'results': None,
+            'state_strings_json': unicode(json.dumps(state_strings)),
+            'urls_json': '[]'}
+
+        return defer.succeed((id, number, name))
+
+    def setStepStateStrings(self, stepid, state_strings):
+        validation.verifyType(self.t, 'state_strings', state_strings,
+                validation.ListValidator(validation.StringValidator()))
+        b = self.steps.get(stepid)
+        if b:
+            b['state_strings_json'] = json.dumps(state_strings)
+        return defer.succeed(None)
+
+    def finishStep(self, stepid, results, _reactor=reactor):
+        now = _reactor.seconds()
+        b = self.steps.get(stepid)
+        if b:
+            b['complete_at'] = now
+            b['results'] = results
+        return defer.succeed(None)
+
+class FakeLogsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.logs = {}
+        self.log_lines = {} # { logid : [ lines ] }
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Log):
+                self.logs[row.id] = row.values.copy()
+        for row in rows:
+            if isinstance(row, LogChunk):
+                lines = self.log_lines.setdefault(row.logid, [])
+                # make sure there are enough slots in the list
+                if len(lines) < row.last_line + 1:
+                    lines.append([None] * (row.last_line + 1 - len(lines)))
+                lines[row.first_line:row.last_line+1] = row.content.split('\n')
+
+    # component methods
+
+    def _newId(self):
+        id = 100
+        while id in self.logs:
+            id += 1
+        return id
+
+    def _row2dict(self, row):
+        return dict(
+            id=row['id'],
+            stepid=row['stepid'],
+            name=row['name'],
+            complete=bool(row['complete']),
+            num_lines=row['num_lines'],
+            type=row['type'])
+
+    def getLog(self, logid):
+        row = self.logs.get(logid)
+        if not row:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getLogByName(self, stepid, name):
+        row = None
+        for row in self.logs.itervalues():
+            if row['name'] == name and row['stepid'] == stepid:
+                break
+        else:
+            return defer.succeed(None)
+        return defer.succeed(self._row2dict(row))
+
+    def getLogs(self, stepid):
+        return defer.succeed([
+                 self._row2dict(row)
+                 for row in self.logs.itervalues()
+                 if row['stepid'] == stepid ])
+
+    def getLogLines(self, logid, first_line, last_line):
+        if logid not in self.logs or first_line > last_line:
+            return defer.succeed('')
+        lines = self.log_lines.get(logid, [])
+        rv = '\n'.join(lines[first_line:last_line+1])
+        return defer.succeed(rv + u'\n' if rv else u'')
+
+    def addLog(self, stepid, name, type):
+        id = self._newId()
+        self.logs[id] = dict(id=id, stepid=stepid,
+                name=name, type=type, complete=0,
+                num_lines=0)
+        return defer.succeed(id)
+
+    def appendLog(self, logid, content):
+        validation.verifyType(self.t, 'logid', logid,
+                validation.IntValidator())
+        validation.verifyType(self.t, 'content', content,
+                validation.StringValidator())
+        self.t.assertEqual(content[-1], u'\n')
+        content = content[:-1].split('\n')
+        lines = self.log_lines[logid]
+        lines.extend(content)
+        num_lines = self.logs[logid]['num_lines'] = len(lines)
+        return defer.succeed((num_lines-len(content), num_lines-1))
+
+    def finishLog(self, logid):
+        if id in self.logs:
+            self.logs['id'].complete = 1
+        return defer.succeed(None)
+
+    def compressLog(self, logid):
+        return defer.succeed(None)
+
 
 class FakeUsersComponent(FakeDBComponent):
 
@@ -1181,6 +1740,123 @@ class FakeUsersComponent(FakeDBComponent):
                 return defer.succeed(uid)
         return defer.succeed(None)
 
+class FakeMastersComponent(FakeDBComponent):
+
+    data2db = { "masterid":"id", "link":"id"}
+    def setUp(self):
+        self.masters = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Master):
+                self.masters[row.id] = dict(
+                        id=row.id,
+                        name=row.name,
+                        active=bool(row.active),
+                        last_active=epoch2datetime(row.last_active))
+
+    def findMasterId(self, name, _reactor=reactor):
+        for m in self.masters.itervalues():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        id = len(self.masters) + 1
+        self.masters[id] = dict(
+            id=id,
+            name=name,
+            active=False,
+            last_active=epoch2datetime(_reactor.seconds()))
+        return defer.succeed(id)
+
+    def setMasterState(self, masterid, active, _reactor=reactor):
+        if masterid in self.masters:
+            was_active = self.masters[masterid]['active']
+            self.masters[masterid]['active'] = active
+            if active:
+                self.masters[masterid]['last_active'] = \
+                    epoch2datetime(_reactor.seconds())
+            return defer.succeed(bool(was_active) != bool(active))
+        else:
+            return defer.succeed(False)
+
+    def getMaster(self, masterid):
+        if masterid in self.masters:
+            return defer.succeed(self.masters[masterid])
+        return defer.succeed(None)
+
+    def getMasters(self):
+        return defer.succeed(sorted(self.masters.values()))
+
+    # test helpers
+
+    def markMasterInactive(self, masterid):
+        if masterid in self.masters:
+            self.masters[masterid]['active'] = False
+        return defer.succeed(None)
+
+
+class FakeBuildersComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.builders = {}
+        self.builder_masters = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Builder):
+                self.builders[row.id] = dict(
+                        id=row.id,
+                        name=row.name)
+            if isinstance(row, BuilderMaster):
+                self.builder_masters[row.id] = \
+                        (row.builderid, row.masterid)
+
+    def findBuilderId(self, name, _reactor=reactor):
+        for m in self.builders.itervalues():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        id = len(self.builders) + 1
+        self.builders[id] = dict(
+            id=id,
+            name=name)
+        return defer.succeed(id)
+
+    def addBuilderMaster(self, builderid=None, masterid=None):
+        if (builderid, masterid) not in self.builder_masters.itervalues():
+            self.insertTestData([
+                BuilderMaster(builderid=builderid, masterid=masterid),
+            ])
+        return defer.succeed(None)
+
+    def removeBuilderMaster(self, builderid=None, masterid=None):
+        for id, tup in self.builder_masters.iteritems():
+            if tup == (builderid, masterid):
+                del self.builder_masters[id]
+                break
+        return defer.succeed(None)
+
+    def getBuilder(self, builderid):
+        if builderid in self.builders:
+            masterids = [ bm[1] for bm in self.builder_masters.itervalues()
+                        if bm[0] == builderid ]
+            bldr = self.builders[builderid].copy()
+            bldr['masterids'] = sorted(masterids)
+            return defer.succeed(bldr)
+        return defer.succeed(None)
+
+    def getBuilders(self, masterid=None):
+        rv = []
+        for builderid, bldr in self.builders.iteritems():
+            masterids = [ bm[1] for bm in self.builder_masters.itervalues()
+                        if bm[0] == builderid ]
+            bldr = bldr.copy()
+            bldr['masterids'] = sorted(masterids)
+            rv.append(bldr)
+        if masterid is not None:
+            rv = [ bd for bd in rv
+                   if masterid in bd['masterids'] ]
+        return defer.succeed(rv)
+
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -1191,13 +1867,17 @@ class FakeDBConnector(object):
     see their documentation for more.
     """
 
-    def __init__(self, testcase):
+    def __init__(self, master, testcase):
+        # reset the id generator, for stable id's
+        Row._next_id = 1000
+        self.master = master
+
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
         self._components.append(comp)
-        self.schedulers = comp = FakeSchedulersComponent(self, testcase)
+        self.changesources = comp = FakeChangeSourcesComponent(self, testcase)
         self._components.append(comp)
-        self.sourcestampsets = comp = FakeSourceStampSetsComponent(self,testcase)
+        self.schedulers = comp = FakeSchedulersComponent(self, testcase)
         self._components.append(comp)
         self.sourcestamps = comp = FakeSourceStampsComponent(self, testcase)
         self._components.append(comp)
@@ -1209,7 +1889,15 @@ class FakeDBConnector(object):
         self._components.append(comp)
         self.builds = comp = FakeBuildsComponent(self, testcase)
         self._components.append(comp)
+        self.steps = comp = FakeStepsComponent(self, testcase)
+        self._components.append(comp)
+        self.logs = comp = FakeLogsComponent(self, testcase)
+        self._components.append(comp)
         self.users = comp = FakeUsersComponent(self, testcase)
+        self._components.append(comp)
+        self.masters = comp = FakeMastersComponent(self, testcase)
+        self._components.append(comp)
+        self.builders = comp = FakeBuildersComponent(self, testcase)
         self._components.append(comp)
 
     def setup(self):

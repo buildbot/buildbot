@@ -40,6 +40,10 @@ Merge Request Functions
 
 .. index:: Builds; merging
 
+.. warning:
+
+    This section is no longer accurate in Buildbot 0.9.x
+
 The logic Buildbot uses to decide which build request can be merged can be
 customized by providing a Python function (a callable) instead of ``True`` or
 ``False`` described in :ref:`Merging-Build-Requests`.
@@ -57,10 +61,12 @@ In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildReques
 In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus
 developers forcing builds for different reasons will see distinct builds.  Note
 the use of the :func:`canBeMergedWith` method to access the source stamp
-compatibility algorithm. ::
+compatibility algorithm.  Note, in particular, that this function returns a Deferred
+as of Buildbot-0.9.0.  ::
 
+    @defer.inlineCallbacks
     def mergeRequests(builder, req1, req2):
-        if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+        if (yield req1.source.canBeMergedWith(req2.source)) and  req1.reason == req2.reason:
            return True
         return False
     c['mergeRequests'] = mergeRequests

@@ -16,10 +16,10 @@
 
 from twisted.python import log
 from twisted.python.failure import Failure
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from twisted.application import service
-
 from buildbot.process import metrics
+from buildbot.util import epoch2datetime, ascii2unicode
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.db.buildrequests import AlreadyClaimedError
 
@@ -224,27 +224,10 @@ class BasicBuildChooser(BuildChooserBase):
                 break
         
         defer.returnValue(nextBuild)
-        
-    @defer.inlineCallbacks
+
     def mergeRequests(self, breq):
-        mergedRequests = [ breq ]
-
-        # short circuit if there is no merging to do
-        if not self.mergeRequestsFn or not self.unclaimedBrdicts:
-            defer.returnValue(mergedRequests)
-            return
-
-        # we'll need BuildRequest objects, so get those first
-        unclaimedBreqs = yield self._getUnclaimedBuildRequests()
-
-        # gather the mergeable requests
-        for req in unclaimedBreqs:
-            canMerge = yield self.mergeRequestsFn(self.bldr, breq, req)
-            if canMerge:
-                mergedRequests.append(req)
-
-        defer.returnValue(mergedRequests)
-
+        # TODO: merging is not supported in nine for the moment
+        return defer.succeed([ breq ])
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
@@ -507,7 +490,7 @@ class BuildRequestDistributor(service.Service):
         self._quiet()
     
     @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr):
+    def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
@@ -520,17 +503,47 @@ class BuildRequestDistributor(service.Service):
             
             # claim brid's
             brids = [ br.id for br in breqs ]
+            claimed_at_epoch = _reactor.seconds()
+            claimed_at = epoch2datetime(claimed_at_epoch)
             try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield self.master.db.buildrequests.claimBuildRequests(brids,
+                                                        claimed_at=claimed_at)
             except AlreadyClaimedError:
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
-            
+
+            # the claim was successful, so publish a message for each brid
+            for brid in brids:
+                # TODO: inefficient..
+                brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+                key = ('buildrequest', str(brdict['buildsetid']),
+                       str(-1), str(brdict['brid']), 'claimed')
+                msg = dict(
+                    bsid=brdict['buildsetid'],
+                    brid=brdict['brid'],
+                    buildername=brdict['buildername'],
+                    builderid=-1,
+                    # TODO:
+                    #claimed_at=claimed_at_epoch,
+                    #masterid=masterid)
+                    )
+                self.master.mq.produce(key, msg)
+
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
             
             if not buildStarted:
                 yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+
+                for breq in breqs:
+                    bsid = breq.bsid
+                    buildername = ascii2unicode(breq.buildername)
+                    brid = breq.id
+                    key = ('buildrequest', str(bsid), str(-1),
+                                                        str(brid), 'unclaimed')
+                    msg = dict(brid=brid, bsid=bsid, buildername=buildername,
+                            builderid=-1)
+                    self.master.mq.produce(key, msg)
     
                 # and try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests

@@ -19,6 +19,7 @@ from buildbot.test.util import change_import
 from buildbot.test.fake import fakemaster
 
 class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
+
     def setUp(self):
         d = self.setUpChangeImport()
         def make_dbc(_):

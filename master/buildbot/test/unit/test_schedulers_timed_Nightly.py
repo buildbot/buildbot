@@ -108,7 +108,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # add a change classification
         self.db.schedulers.fakeClassifications(self.OBJECTID, { 19 : True })
 
-        sched.startService()
+        sched.activate()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
@@ -121,7 +121,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly',
             last_build=1260 + self.localtime_offset)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def test_iterations_simple_with_branch(self):
@@ -129,7 +129,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                 branch='master', minute=[5, 35])
 
-        sched.startService()
+        sched.activate()
 
         self.clock.advance(0)
         while self.clock.seconds() < self.localtime_offset + 10*60:
@@ -138,7 +138,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly',
                 last_build=300 + self.localtime_offset)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def do_test_iterations_onlyIfChanged(self, *changes_at):
@@ -147,7 +147,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                         minute=[5, 25, 45], onlyIfChanged=True,
                         fileIsImportant=fII)
 
-        sched.startService()
+        sched.activate()
 
         # check that the scheduler has started to consume changes
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=None,
@@ -172,7 +172,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.events, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.stopService()
+        return self.sched.deactivate()
 
     def test_iterations_onlyIfChanged_unimp_changes(self):
         self.do_test_iterations_onlyIfChanged(
@@ -181,7 +181,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.events, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.stopService()
+        return self.sched.deactivate()
 
     def test_iterations_onlyIfChanged_off_branch_changes(self):
         self.do_test_iterations_onlyIfChanged(
@@ -190,7 +190,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.events, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.stopService()
+        return self.sched.deactivate()
 
     def test_iterations_onlyIfChanged_mixed_changes(self):
         self.do_test_iterations_onlyIfChanged(
@@ -205,4 +205,4 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.events, [ 'B[3,5,6]@1500' ])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.stopService()
+        return self.sched.deactivate()

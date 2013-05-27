@@ -128,7 +128,9 @@ class FakeBuildSlave2(FakeBuildSlave):
 class TestBotMaster(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+                                            wantData=True)
+        self.master.mq = self.master.mq
         self.botmaster = BotMaster(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()

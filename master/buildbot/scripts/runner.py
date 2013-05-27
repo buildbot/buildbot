@@ -52,6 +52,8 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
@@ -94,6 +96,8 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
         ]
@@ -146,7 +150,6 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
                 self['log-count'] != 'None':
             raise usage.UsageError("log-count parameter needs to be an int "+
                                    " or None")
-
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"
@@ -662,6 +665,14 @@ class UserOptions(base.SubcommandOptions):
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
+class UiTestOption(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.uitestserver.uitestserver"
+    optParameters  = [
+        ['port', 'p', "0", "force port number"],
+        ]
+    def getSynopsis(self):
+        return "Usage:   buildbot ui-test-server [options]"
+
 
 
 class Options(usage.Options):
@@ -697,7 +708,9 @@ class Options(usage.Options):
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
         ['user', None, UserOptions,
-         "Manage users in buildbot's database"]
+         "Manage users in buildbot's database"],
+        ['ui-test-server', None, UiTestOption,
+         "Start a fake master to test the www UI"]
         ]
 
     def opt_version(self):

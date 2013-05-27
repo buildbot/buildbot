@@ -20,7 +20,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.process.users import manual
 
 class ManualUsersMixin(object):
@@ -29,21 +29,8 @@ class ManualUsersMixin(object):
     user managers located in process.users.manual.
     """
 
-    class FakeMaster(object):
-
-        def __init__(self):
-            self.db = fakedb.FakeDBConnector(self)
-            self.slavePortnum = "tcp:9989"
-            self.caches = mock.Mock(name="caches")
-            self.caches.get_cache = self.get_cache
-
-        def get_cache(self, cache_name, miss_fn):
-            c = mock.Mock(name=cache_name)
-            c.get = miss_fn
-            return c
-
     def setUpManualUsers(self):
-        self.master = self.FakeMaster()
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
 
 class TestUsersBase(unittest.TestCase):
     """

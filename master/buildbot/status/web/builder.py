@@ -288,7 +288,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if not prop_match(properties):
                 continue
 
-            if source.changes:
+            if source and source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                      'who' : c.who,

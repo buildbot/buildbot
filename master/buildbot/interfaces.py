@@ -454,15 +454,6 @@ class IBuildStatus(Interface):
         'forced', and 'periodic' are the most likely values. 'try' will be
         added in the future."""
 
-    def getSourceStamps():
-        """Return a list of SourceStamp objects which can be used to re-create
-        the source tree that this build used.
-
-        This method will return None if the source information is no longer
-        available."""
-        # TODO: it should be possible to expire the patch but still remember
-        # that the build was r123+something.
-
     def getChanges():
         """Return a list of Change objects which represent which source
         changes went into the build."""
@@ -993,12 +984,6 @@ class IControl(Interface):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
-    def submitBuildRequest(ss, reason, props=None):
-        """Create a BuildRequest, which will eventually cause a build of the
-        given SourceStamp to be run on this builder. This returns a
-        BuildRequestStatus object via a Deferred, which can be used to keep
-        track of the builds that are performed."""
-
     def rebuildBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a
         BuildRequest to our Builder using the same SourceStamp as the earlier

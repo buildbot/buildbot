@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import types
 import time, re, string
 import datetime
 import calendar
@@ -119,6 +120,11 @@ def none_or_str(x):
         return str(x)
     return x
 
+def ascii2unicode(x):
+    if isinstance(x, (unicode, types.NoneType)):
+        return x
+    return unicode(x, 'ascii')
+
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
 #   http://lists.debian.org/debian-python/2010/02/msg00016.html
@@ -201,8 +207,20 @@ def in_reactor(f):
     wrap._orig = f # for tests
     return wrap
 
+def string2boolean(str):
+    return {
+        'on': True,
+        'true': True,
+        'yes': True,
+        '1': True,
+        'off': False,
+        'false': False,
+        'no': False,
+        '0': False,
+    }[str.lower()]
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists', 'makeList', 'in_reactor' ]
+    'diffLists', 'makeList', 'in_reactor', 'string2boolean' ]

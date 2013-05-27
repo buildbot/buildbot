@@ -26,14 +26,15 @@ class BuilderMixin(object):
     def makeBuilder(self, name="bldr", patch_random=False, **config_kwargs):
         """Set up C{self.bldr}"""
         self.factory = factory.BuildFactory()
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.mq = self.master.mq
+        self.db = self.master.db
         # only include the necessary required config, plus user-requested
         config_args = dict(name=name, slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
-        self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 
@@ -61,9 +62,9 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
-            fakedb.SourceStampSet(id=21),
-            fakedb.SourceStamp(id=21, sourcestampsetid=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because'),
+            fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
         ]
 
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
@@ -183,7 +184,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
     def test_getMergeRequestsFn_builder_function(self):
         self.do_test_getMergeRequestsFn('callable', None, 'callable')
 
-
     # other methods
 
     @defer.inlineCallbacks
@@ -221,7 +221,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
         self.assertEqual(claims, [ (set([10,11,12,15]),) ])
 
-    @defer.inlineCallbacks
     def test_canStartBuild(self):
         yield self.makeBuilder()
 
@@ -295,8 +294,6 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(True, result)
 
-        
-    
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
@@ -304,20 +301,20 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         # a collection of rows that would otherwise clutter up every test
         master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
         self.base_rows = [
-            fakedb.SourceStampSet(id=21),
-            fakedb.SourceStamp(id=21, sourcestampsetid=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because'),
+            fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
             fakedb.BuildRequest(id=111, submitted_at=1000,
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
                         buildername='bldr1', buildsetid=11),
-            fakedb.BuildRequestClaim(brid=222, objectid=master_id,
+            fakedb.BuildRequestClaim(brid=222, masterid=master_id,
                         claimed_at=2001),
             fakedb.BuildRequest(id=333, submitted_at=3000,
                         buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=444, submitted_at=2500,
                         buildername='bldr2', buildsetid=11),
-            fakedb.BuildRequestClaim(brid=444, objectid=master_id,
+            fakedb.BuildRequestClaim(brid=444, masterid=master_id,
                         claimed_at=2501),
         ]
 
@@ -338,75 +335,6 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
             self.assertEqual(rqtime, None)
         d.addCallback(check)
         return d
-
-class TestRebuild(BuilderMixin, unittest.TestCase):
-
-    def makeBuilder(self, name, sourcestamps):
-        d = BuilderMixin.makeBuilder(self, name=name)
-        @d.addCallback
-        def setupBstatus(_):
-            self.bstatus = mock.Mock()
-            bstatus_properties = mock.Mock()
-            bstatus_properties.properties = {}
-            self.bstatus.getProperties.return_value = bstatus_properties
-            self.bstatus.getSourceStamps.return_value = sourcestamps
-            self.master.addBuildset = addBuildset = mock.Mock()
-            addBuildset.return_value = (1, [100])
-        return d
-
-    @defer.inlineCallbacks
-    def do_test_rebuild(self,
-                        sourcestampsetid,
-                        nr_of_sourcestamps):
-
-        # Store combinations of sourcestampId and sourcestampSetId
-        self.sslist = {}
-        self.ssseq = 1
-        def addSourceStampToDatabase(master, sourcestampsetid):
-            self.sslist[self.ssseq] = sourcestampsetid
-            self.ssseq += 1
-            return defer.succeed(sourcestampsetid)
-        def getSourceStampSetId(master):
-            return addSourceStampToDatabase(master, sourcestampsetid = sourcestampsetid)
-
-        sslist = []
-        for x in range(nr_of_sourcestamps):
-            ssx = mock.Mock()
-            ssx.addSourceStampToDatabase = addSourceStampToDatabase
-            ssx.getSourceStampSetId = getSourceStampSetId
-            sslist.append(ssx)
-
-        yield self.makeBuilder(name='bldr1', sourcestamps = sslist)
-        control = mock.Mock(spec=['master'])
-        control.master = self.master
-        self.bldrctrl = builder.BuilderControl(self.bldr, control)
-
-        yield self.bldrctrl.rebuildBuild(self.bstatus, reason = 'unit test', extraProperties = {})
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_no_sourcestamps(self):
-        yield self.do_test_rebuild(101, 0)
-        self.assertEqual(self.sslist, {})
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_single_sourcestamp(self):
-        yield self.do_test_rebuild(101, 1)
-        self.assertEqual(self.sslist, {1:101})
-        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
-                                                          sourcestampsetid=101,
-                                                          reason = 'unit test',
-                                                          properties = {})
-
-
-    @defer.inlineCallbacks
-    def test_rebuild_with_multiple_sourcestamp(self):
-        yield self.do_test_rebuild(101, 3)
-        self.assertEqual(self.sslist, {1:101, 2:101, 3:101})
-        self.master.addBuildset.assert_called_with(builderNames=['bldr1'],
-                                                          sourcestampsetid=101,
-                                                          reason = 'unit test',
-                                                          properties = {})
-
 
 class TestReconfig(BuilderMixin, unittest.TestCase):
     """Tests that a reconfig properly updates all attributes"""
