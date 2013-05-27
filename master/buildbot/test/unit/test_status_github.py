@@ -16,6 +16,8 @@
 Unit tests for GitHubStatus plugin.
 """
 from __future__ import absolute_import
+import datetime
+
 
 from mock import Mock
 from twisted.internet import defer
@@ -23,7 +25,13 @@ from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
 from buildbot.status.builder import SUCCESS, FAILURE
-from buildbot.status.github import GitHubStatus
+try:
+    import txgithub
+    txgithub  # Silence the linter.
+    from buildbot.status.github import GitHubStatus
+except ImportError:
+    txgithub = None
+
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging
 
@@ -41,6 +49,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
     def setUp(self):
         super(TestGitHubStatus, self).setUp()
+        if not txgithub:
+            raise unittest.SkipTest("txgithub not found.")
+
         self.setUpLogging()
         self.build = FakeBuild()
         self.status = GitHubStatus(
@@ -229,6 +240,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, None)
+        startDateTime = datetime.datetime.fromtimestamp(1).isoformat(' ')
 
         d = self.status._sendStartStatus('builder-name', self.build)
         result = self.successResultOf(d)
@@ -244,7 +256,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': 'pending',
             'description': 'Build started.',
             'builderName': 'builder-name',
-            'startDateTime': '1970-01-01 02:00:01',
+            'startDateTime': startDateTime,
             'endDateTime': 'In progress',
             'duration': 'In progress',
             })
@@ -287,6 +299,8 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, 3)
+        startDateTime = datetime.datetime.fromtimestamp(1).isoformat(' ')
+        endDateTime = datetime.datetime.fromtimestamp(3).isoformat(' ')
 
         d = self.status._sendFinishStatus('builder-name', self.build, SUCCESS)
         result = self.successResultOf(d)
@@ -302,8 +316,8 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': 'success',
             'description': 'Build done.',
             'builderName': 'builder-name',
-            'startDateTime': '1970-01-01 02:00:01',
-            'endDateTime': '1970-01-01 02:00:03',
+            'startDateTime': startDateTime,
+            'endDateTime': endDateTime,
             'duration': '2 seconds',
             })
 
