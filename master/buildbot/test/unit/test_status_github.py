@@ -26,11 +26,13 @@ from twisted.trial import unittest
 from buildbot.process.properties import Interpolate
 from buildbot.status.builder import SUCCESS, FAILURE
 try:
+    # Try to import txgithub and skip tests if we fail to import it.
     import txgithub
     txgithub  # Silence the linter.
-    from buildbot.status.github import GitHubStatus
 except ImportError:
     txgithub = None
+else:
+    from buildbot.status.github import GitHubStatus
 
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging
