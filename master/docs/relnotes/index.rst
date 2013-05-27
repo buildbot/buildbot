@@ -36,6 +36,8 @@ Features
 
 * The Console view now supports codebases.
 
+* The ``shell`` predicate parameter has been added as an alternative to the ``fork`` parameter to enable direct invocation of the Buildbot ``sendchange`` command.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
