@@ -1,22 +1,38 @@
 {% extends "layout.html" %}
 {% import 'forms.html' as forms %}
+{% from "box_macros.html" import box %}
 {% from "change_macros.html" import change with context %}
 
 {% block submenu %}
 <nav class="sub-menu-container">
   <ul class="breadcrumbs-nav container-inner">
     <li>
-        <a href="/builders">
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      <a href="{{ path_to_root }}buildstatus2">
           Buildstatus
+      </a>
+    </li>
+    <li>
+      <a href="{{ path_to_root }}buildstatus_s_project">
+          All branches
+      </a>
+    </li>
+    <li>
+        <a href="{{ path_to_root }}builders">
+          Trunk
         </a>
     </li>
     <li>
-        <a href="{{ path_to_builder }}">
-          {{ b.getBuilder().getName() }}  
-        </a>
+      <a href="{{ path_to_root }}builder">
+        Builder name
+      </a>
     </li>
     <li>
-      Build #{{ b.getNumber() }}
+        #{{ b.getNumber() }}
     </li>
   </ul>
 </nav>

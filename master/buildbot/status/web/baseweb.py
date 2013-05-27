@@ -39,8 +39,7 @@ from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
-from buildbot.status.web.buildstatus2 import BuildStatus2
-from buildbot.status.web.buildstatus_s_project import BuildStatusSingleProject
+from buildbot.status.web.buildstatus2 import BuildStatus2, BuildStatusSingleProject
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginResource, LogoutResource
 from buildbot.status.web.root import RootPage
