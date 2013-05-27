@@ -302,7 +302,10 @@ be used to access them.
 :samp:`/builders/${BUILDERNAME}`
     This describes the given :class:`Builder` and provides buttons to force a
     build.  A ``numbuilds=`` argument will control how many build lines
-    are displayed (5 by default).
+    are displayed (5 by default).  This page also accepts property filters
+    of the form ``property.${PROPERTYNAME}=${PROPERTVALUE}``.  When used,
+    only builds and build requests which have properties with matching string
+    representations will be shown.
 
 :samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}`
     This describes a specific Build.
@@ -1568,11 +1571,76 @@ optionally also sending a message when a build is started.
 is ``None``, no review will be sent.
 ``startCB`` should return a message.
 
+.. bb:status:: GitHubStatus
+
+GitHubStatus
+~~~~~~~~~~~~
+
+.. @cindex GitHubStatus
+.. py:class:: buildbot.status.github.GitHubStatus
+
+::
+
+    from buildbot.status.github import GitHubStatus
+
+    repoOwner = Interpolate("%(prop:github_repo_owner)s"
+    repoName = Interpolate("%(prop:github_repo_name)s"
+    sha = Interpolate("%(src::revision)s")
+    gs = GitHubStatus(token='githubAPIToken',
+                      repoOwner=repoOwner,
+                      repoName=repoName)
+                      sha=sha,
+                      startDescription='Build started.',
+                      endDescription='Build done.',
+                      )
+    buildbot_bbtools = BuilderConfig(
+        name='builder-name',
+        slavenames=['slave1'],
+        factory=BuilderFactory(),
+        properties={
+            "github_repo_owner": "buildbot",
+            "github_repo_name": "bbtools",
+            },
+        )
+    c['builders'].append(buildbot_bbtools)
+    c['status'].append(gs)
+
+:class:`GitHubStatus` publishes a build status using
+`GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
+
+It requires `txgithub <https://pypi.python.org/pypi/txgithub>` package to
+allow interaction with GitHub API.
+
+It is configured with at least a GitHub API token, repoOwner and repoName
+arguments.
+
+You can create a token from you own
+`GitHub - Profile - Applications - Register new application
+<https://github.com/settings/applications>`_ or use an external tool to
+generate one.
+
+`repoOwner`, `repoName` are used to inform the plugin where
+to send status for build. This allow using a single :class:`GitHubStatus` for
+multiple projects.
+`repoOwner`, `repoName` can be passes as a static `string` (for single
+project) or :class:`Interpolate` for dynamic substitution in multiple
+project.
+
+`sha` argument is use to define the commit SHA for which to send the status.
+By default `sha` is defined as: `%(src::revision)s`.
+
+In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or
+empty string, the plugin will skip sending the status.
+
+You can define custom start and end build messages using the
+`startDescription` and `endDescription` optional interpolation arguments.
+
+
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
 .. [#] It may even be possible to provide SSL access by using a
     specification like ``"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"``,
     but this is completely untested
-    
+
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 

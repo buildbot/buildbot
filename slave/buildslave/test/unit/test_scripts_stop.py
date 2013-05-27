@@ -23,7 +23,7 @@ from buildslave.scripts import stop
 from buildslave.test.util import misc
 
 
-class TestStopSlave(misc.OpenFileMixin,
+class TestStopSlave(misc.FileIOMixin,
                     misc.StdoutAssertionsMixin,
                     unittest.TestCase):
     """
@@ -86,15 +86,28 @@ class TestStop(misc.IsBuildslaveDirMixin,
     """
     config = {"basedir": "dummy", "quiet": False}
 
-    def setUp(self):
-        # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+    def test_bad_basedir(self):
+        """
+        test calling stop() with invalid basedir path
+        """
+
+        # patch isBuildslaveDir() to fail
+        self.setupUpIsBuildslaveDir(False)
+
+        # call startCommand() and check that correct exit code is returned
+        self.assertEqual(stop.stop(self.config), 1, "unexpected exit code")
+
+        # check that isBuildslaveDir was called with correct argument
+        self.isBuildslaveDir.assert_called_once_with(self.config["basedir"])
 
     def test_no_slave_running(self):
         """
         test calling stop() when no slave is running
         """
         self.setUpStdoutAssertions()
+
+        # patch basedir check to always succeed
+        self.setupUpIsBuildslaveDir(True)
 
         # patch stopSlave() to raise an exception
         mock_stopSlave = mock.Mock(side_effect=stop.SlaveNotRunning())
@@ -107,6 +120,10 @@ class TestStop(misc.IsBuildslaveDirMixin,
         """
         test calling stop() when slave is running
         """
+
+        # patch basedir check to always succeed
+        self.setupUpIsBuildslaveDir(True)
+
         # patch stopSlave() to do nothing
         mock_stopSlave = mock.Mock()
         self.patch(stop, "stopSlave", mock_stopSlave)

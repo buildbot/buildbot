@@ -205,6 +205,9 @@ class RemoteBuild(pb.Referenceable):
             logs[name] = IRemote(log)
         return logs
 
+    def remote_getProperties(self):
+        return self.b.getProperties().asDict()
+
     def remote_subscribe(self, observer, updateInterval=None):
         """The observer will have remote_stepStarted(buildername, build,
         stepname, step), remote_stepFinished(buildername, build, stepname,

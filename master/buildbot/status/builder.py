@@ -337,7 +337,8 @@ class BuilderStatus(styles.Versioned):
                                max_buildnum=None,
                                finished_before=None,
                                results=None,
-                               max_search=200):
+                               max_search=200,
+                               filter_fn=None):
         got = 0
         branches = set(branches)
         for Nb in itertools.count(1):
@@ -363,6 +364,9 @@ class BuilderStatus(styles.Versioned):
                 continue
             if results is not None:
                 if build.getResults() not in results:
+                    continue
+            if filter_fn is not None:
+                if not filter_fn(build):
                     continue
             got += 1
             yield build
