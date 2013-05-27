@@ -75,7 +75,11 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         See: C{IStatusReceiver}.
         """
-        self._sendStartStatus(builderName, build)
+        d = self._sendStartStatus(builderName, build)
+        d.addErrback(
+            log.err,
+            'While sending start status to GitHub for %s.' % (
+                builderName))
 
     @defer.inlineCallbacks
     def _sendStartStatus(self, builderName, build):
@@ -106,7 +110,11 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         See: C{IStatusReceiver}.
         """
-        self._sendFinishStatus(builderName, build, results)
+        d = self._sendFinishStatus(builderName, build, results)
+        d.addErrback(
+            log.err,
+            'While sending finish status to GitHub for %s.' % (
+                builderName))
 
     @defer.inlineCallbacks
     def _sendFinishStatus(self, builderName, build, results):
