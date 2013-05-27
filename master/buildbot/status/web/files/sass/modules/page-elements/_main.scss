@@ -105,8 +105,9 @@
 	padding-left:15px;
 }
 
+
+
 .table-2 {
-	margin-bottom:20px;
 	td,
 	th {
 		text-align:left;	
@@ -129,6 +130,9 @@
 
 	tr:last-child td {
 		border-bottom:none;
+	}
+	&.m-bottom {
+		margin-bottom:25px;
 	}
 }
 

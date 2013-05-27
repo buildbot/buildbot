@@ -28,7 +28,7 @@
     </li>
     <li>
       <a href="{{ path_to_root }}builder">
-        Builder name
+         {{ builder_name }}
       </a>
     </li>
     <li>
@@ -97,7 +97,7 @@
   Timing
 </h2>
 
-<table class="table-2">
+<table class="table-2 m-bottom">
   <tr>
     <td>
       Start
@@ -136,8 +136,8 @@ SourceStamps
 
 {% for ss in sourcestamps %}
 <h3>{{ ss.codebase }}</h3>
-    <table class="table-2">
-    {% set ss_class = cycler('alt','') %}
+    <table class="table-2 m-bottom">
+    
 
     {% if ss.project %}
       <tr>
@@ -151,31 +151,31 @@ SourceStamps
     {% endif %}
 
     {% if ss.repository %}
-      <tr class="{{ ss_class.next() }}"><td>Repository</td><td>{{ ss.repository|repolink }}</td></tr>
+      <tr><td>Repository</td><td>{{ ss.repository|repolink }}</td></tr>
     {% endif %}
 
     {% if ss.branch %}
-      <tr class="{{ ss_class.next() }}"><td>Branch</td><td>{{ ss.branch|e }}</td></tr>
+      <tr><td>Branch</td><td>{{ ss.branch|e }}</td></tr>
     {% endif %}
 
     {% if ss.revision %}
-      <tr class="{{ ss_class.next() }}"><td>Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
+      <tr><td>Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
     {% endif %}
 
     {% if got_revisions[ss.codebase] %}
-      <tr class="{{ ss_class.next() }}"><td>Got Revision</td><td>{{ got_revisions[ss.codebase]|revlink(ss.repository) }}</td></tr>
+      <tr><td>Got Revision</td><td>{{ got_revisions[ss.codebase]|revlink(ss.repository) }}</td></tr>
     {% endif %}
 
     {% if ss.patch %}
-      <tr class="{{ ss_class.next() }}"><td>Patch</td><td>YES</td></tr>
+      <tr><td>Patch</td><td>YES</td></tr>
     {% endif %}
 
     {% if ss.changes %}
-      <tr class="{{ ss_class.next() }}"><td>Changes</td><td><a href="#changes-{{ ss.codebase }}">{{ ss.changes|count }} change{{ 's' if ss.changes|count > 1 else '' }}</a></td></tr>
+      <tr><td>Changes</td><td><a href="#changes-{{ ss.codebase }}">{{ ss.changes|count }} change{{ 's' if ss.changes|count > 1 else '' }}</a></td></tr>
     {% endif %}
 
     {% if not ss.branch and not ss.revision and not ss.patch and not ss.changes %}
-      <tr class="{{ ss_class.next() }}"><td colspan="2">Build of most recent revision</td></tr>
+      <tr><td colspan="2">Build of most recent revision</td></tr>
     {% endif %}
     </table>
 {% endfor %}
