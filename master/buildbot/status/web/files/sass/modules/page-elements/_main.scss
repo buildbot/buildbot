@@ -47,9 +47,8 @@
 }
 
 .running,.waiting,td.building {
-	color: #000;
 	background-color: #FCFACB;
-	border-color: #C5C56D;
+	border-top:1px solid #fff;
 }
 
 .offline,td.offline {
@@ -93,6 +92,9 @@
 		padding:15px 10px;		
 		//border-bottom:1px solid #DADADA;
 		border-bottom:1px solid #C8C8C8;
+		&.buttontd {
+			width: 80px;
+		}
 	}
 	.last td {
 		padding-bottom:20px;
@@ -187,7 +189,20 @@ div.last {
 	} 
 	.success:before {
 		content:"Success";	
-	} 
+	}
+	.running {
+		background-color:#ccc;
+		&:before {
+			content:"Running";		
+		}
+	}
+	.waiting {
+		background-color:#888;
+		&:before {
+			content:"Waiting for locks";		
+		}
+	}
+	
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
@@ -321,16 +336,19 @@ div.force-text {
 	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;
-    top: -10px;
-    left: 79px;
     padding: 23px 20px;
-    position: absolute;
     text-align: left;
-    min-width:280px; 
+    min-width:280px;
+	position:fixed;
+	width:auto;/*can be % px auto*/
+	z-index:200;
+	float:left;
     @include text-shadow(0 1px 0 #FFFFFF);
 	@include border-radius(8px);
     @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
-    @include background-image(linear-gradient(center top, #FFF 0%, #F8F8F9 100%)); 
+    
+    @include background-image(linear-gradient(center top , rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+    //@include background-image(linear-gradient(center top, #FFF 0%, #F8F8F9 100%)); 
     text-align:left;
     p {
     	margin-bottom: 10px;
@@ -354,11 +372,6 @@ div.force-text {
 	    margin: 0 0 19px;
 	    padding: 0;	
     }
-}
-
-.before + .pos-relative .more-info-box {
-	top: -11px;
-    left: -355px;
 }
 
 // lists
@@ -404,10 +417,15 @@ div.force-text {
 	    margin-right: 5px;
 	    padding: 5px 8px;
 	}
-	.grey-btn {
-		padding: 5px 9px;
-	}
+	
 }
+
+.rebuild, 
+.cancelbuild {
+		.grey-btn {
+			padding: 5px 9px;
+		}
+	}
 
 // Typography
 

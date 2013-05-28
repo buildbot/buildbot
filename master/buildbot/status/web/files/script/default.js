@@ -45,10 +45,16 @@ $(document).ready(function() {
 
 	//Show / hide
 
+	$(function centerPopup(){
+		$('.more-info-box').each(function(){
+				$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
+				$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
+		});
+	});
 	$('.more-info').click(function(e){
 		e.preventDefault();
 		$('.more-info-box').hide();
-		$(this).next().children().fadeIn('fast');
+		$(this).next().fadeIn('fast');
 	});
 
 	$(document, '.close-btn').click(function(e){

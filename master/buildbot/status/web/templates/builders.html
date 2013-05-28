@@ -49,7 +49,12 @@
   </th>
 </tr>
 {% for b in builders %}
-  <tr>
+{%- if loop.last  %}
+    <tr class='last'>
+      {%- else -%}
+    <tr>
+{%- endif -%}
+  
     <td class="box txt-align-left">
       <a href="{{ b.link }}">
         {{ b.name|e }}
@@ -90,26 +95,29 @@
         Download
       </a>
     </td>
-    <td class="txt-align-right">
+    <td class="txt-align-right buttontd">
+      
       <a class="more-info before" href="#">
         Force build
       </a>
-      <div class="pos-relative">
         <div class="more-info-box">
           <span class="close-btn" href="#">
           </span>
           <h3>Overview</h3>
-          
-            {{ force_build_static() }}  
+                    
+          {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+            {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
+          {% endif %}
+
 
         </div>
-      </div>
       <br>
-
+    <!--
+      show if build is running
       <a href="#">
         Stop build
       </a>
-
+    -->
     </td>
     <!--
       {{ box(**b.current_box) }}  
@@ -117,23 +125,5 @@
   </tr>
 {% endfor %}
 </table>
-
-{% if num_building > 0 %}
-  {% if authz.advertiseAction('stopAllBuilds', request) or authz.advertiseAction('stopBuild', request) %}
-    <h2>Stop Selected Builds</h2>
-    {{ forms.stop_build(path_to_root+"builders/_selected/stopselected", authz, on_selected=True, builders=builders, label='Selected Builds') }}
-    <h2>Stop All Builds</h2>
-    {{ forms.stop_build(path_to_root+"builders/_all/stopall", authz, on_all=True, label='All Builds') }}
-  {% endif %}
-{% endif %}
-  
-{% if num_online > 0 %}
-  {% if authz.advertiseAction('forceAllBuilds', request) or authz.advertiseAction('forceBuild', request) %}
-    <h2>Force Selected Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, request, on_selected=True, builders=builders, force_schedulers=force_schedulers, default_props=default_props) }}
-    <h2>Force All Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz,request, on_all=True, force_schedulers=force_schedulers, default_props=default_props) }}
-  {% endif %}
-{% endif %}
 
 {% endblock %}

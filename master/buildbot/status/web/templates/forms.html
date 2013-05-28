@@ -13,7 +13,7 @@
       {% endif %}
     {% endif %}
     <input type="hidden" name="id" value="{{ id }}" />
-    <input type="submit" value="Cancel" />
+    <input class="grey-btn" type="submit" value="Cancel" />
   </form>
 {% endmacro %}
 
@@ -145,6 +145,7 @@
   {% endfor %}
 
   <input class="grey-btn" type="submit" value="Force Build" />
+
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
