@@ -323,6 +323,7 @@ class RunProcess:
         self.timer = None
         self.maxTime = maxTime
         self.maxTimer = None
+        self.killTimer = None
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
@@ -723,15 +724,7 @@ class RunProcess:
                     {'header': "process killed by signal %d\n" % sig})
             self.sendStatus({'rc': rc})
         self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         d = self.deferred
         self.deferred = None
         if d:
@@ -742,15 +735,7 @@ class RunProcess:
     def failed(self, why):
         self._sendBuffers()
         log.msg("RunProcess.failed: command failed: %s" % (why,))
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         d = self.deferred
         self.deferred = None
         if d:
@@ -772,15 +757,7 @@ class RunProcess:
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
         self._sendBuffers()
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
@@ -855,15 +832,22 @@ class RunProcess:
         if self.deferred:
             # finished ought to be called momentarily. Just in case it doesn't,
             # set a timer which will abandon the command.
-            self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
+            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
                                        self.doBackupTimeout)
 
     def doBackupTimeout(self):
         log.msg("we tried to kill the process, and it wouldn't die.."
                 " finish anyway")
-        self.timer = None
+        self.killTimer = None
         self.sendStatus({'header': "SIGKILL failed to kill process\n"})
         if self.sendRC:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(RuntimeError("SIGKILL failed to kill process"))
+
+    def _cancelTimers(self):
+        for timerName in ('timer', 'killTimer', 'maxTimer', 'buftimer'):
+            timer = getattr(self, timerName, None)
+            if timer:
+                timer.cancel()
+                setattr(self, timerName, None)
