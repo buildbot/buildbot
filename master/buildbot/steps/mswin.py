@@ -50,6 +50,8 @@ class Robocopy(ShellCommand):
     """
     renderables = ['source', 'destination', 'files', 'exclude']
 
+    # Robocopy exit flags (they are combined to make up the exit code)
+    # See: http://ss64.com/nt/robocopy-exit.html
     return_flags = {
                 FAILURE: [8, 16],
                 WARNINGS: [2, 4],
