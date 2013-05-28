@@ -154,10 +154,6 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 
 The following will need to be rewritten:
 
-### MailNotifier ###
-
-
-### Others ###
 * IRC (words.py) :runner:
 * StatusClient (maybe)
 * WebStatus (already in progress with buildbot-www)
