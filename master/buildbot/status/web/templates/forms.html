@@ -13,7 +13,7 @@
       {% endif %}
     {% endif %}
     <input type="hidden" name="id" value="{{ id }}" />
-    <input type="submit" value="Cancel" />
+    <input class="grey-btn" type="submit" value="Cancel" />
   </form>
 {% endmacro %}
 
@@ -80,6 +80,7 @@
 
 {% macro force_build_scheduler_parameter(f, authz, request, sch, default_props) %}
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
+
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
     {% if 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>
@@ -106,13 +107,15 @@
       {% endfor %}
     {% endif %}
     </div>
-  {% endif %}
+  {% endif %}      
 {% endmacro %}
 
 {% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command_forcebuild">
 
-  <h3>{{ sch.name|e }}</h3>
+  <!--
+    <h3>{{ sch.name|e }}</h3>
+  -->
   {% if on_all %}
      <p>To force a build on <strong>all Builders</strong>, fill out the following fields
           and push the 'Force Build' button</p>
@@ -141,7 +144,8 @@
     {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
   {% endfor %}
 
-  <input type="submit" value="Force Build" />
+  <input class="grey-btn" type="submit" value="Force Build" />
+
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
@@ -154,9 +158,8 @@
 {% macro graceful_shutdown(shutdown_url, authz) %}
   <form method="post" action="{{ shutdown_url }}" class='command graceful_shutdown'>
 
-  <p>To cause this slave to shut down gracefully when it is idle,
-    push the 'Graceful Shutdown' button</p>
-  <input type="submit" value="Graceful Shutdown" />
+  Request slave to <input class="link-button" type="submit" value="shutdown" /> gracefully
+  
  </form>
 {% endmacro %}
 
@@ -181,7 +184,7 @@
 {% macro ping_builder(ping_url, authz) %}
   <form method="post" action="{{ ping_url }}" class='command ping_builder'>
     <p>To ping the buildslave(s), push the 'Ping' button</p>
-    <input type="submit" value="Ping Builder" />
+    <input class="link-button" type="submit" value="Ping Builder" />
   </form>
 {% endmacro %}
 
@@ -213,8 +216,9 @@
    <div class="row">
      <span class="label">Reason for re-running build:</span>
      <input type='text' name='comments' />
+     <input class="grey-btn" type="submit" value="Rebuild" />
    </div>
-   <input type="submit" value="Rebuild" />
+   
  </form>
 {% endmacro %}
 

@@ -1,21 +1,46 @@
-body.interface {
-	margin-left: 30px;
-	margin-right: 30px;
-	margin-top: 20px;
-	margin-bottom: 50px;
-	padding: 0;
-	background: url(bg_gradient.jpg) repeat-x;
-	font-family: Verdana, sans-serif;
-	font-size: 10px;
-	background-color: #fff;
-	color: #333;
-}
+/**
+* Main project stylesheet combiner
+*
+* @section Setup
+* @author rkalms
+*/
+// ---------------------------------------------------------------------------
+// Fonts
 
-.auth {
-position:absolute;
-top:5px;
-right:40px;
-}
+
+// ---------------------------------------------------------------------------
+// Imports
+
+@import "compass";
+
+// ---------------------------------------------------------------------------
+// Framework
+
+@import "modules/framework/framework";
+@import "modules/framework/normalize";
+@import "modules/base"; // old vars.scss
+@import "modules/framework/grid";
+
+// ---------------------------------------------------------------------------
+// Default typography and images for the site
+
+@import "modules/layout/sprites";
+@import "modules/framework/typography"; // Must be imported after base
+@import "modules/global";
+
+// ---------------------------------------------------------------------------
+// Modules
+
+@import "modules/page-elements/siteheader";
+@import "modules/page-elements/sitefooter";
+@import "modules/page-elements/navigation";
+@import "modules/page-elements/buttons";
+@import "modules/page-elements/main";
+
+// ---------------------------------------------------------------------------
+// Basic layout and default typography for the site
+
+@import "modules/layout/layout"; 
 
 .alert {
   color: #c30000;
@@ -27,18 +52,9 @@ right:40px;
   border-color: #c30000;
   font-size: 20px;
 }
-a:link,a:visited,a:active {
-	color: #444;
-}
 
-table {
-	border-spacing: 1px 1px;
-}
 
-table td {
-	padding: 3px 4px 3px 4px;
-	text-align: center;
-}
+
 
 .Project {
 	min-width: 6em;
@@ -124,15 +140,6 @@ td.idle,td.waiting,td.offline,td.building {
 	border-top-left-radius: 0px;
 	-webkit-border-top-left-radius: 0px;
 	-moz-border-radius-topleft: 0px;
-}
-
-.LastBuild {
-	border-top-left-radius: 5px;
-	-webkit-border-top-left-radius: 5px;
-	-moz-border-radius-topleft: 5px;
-	border-top-right-radius: 5px;
-	-webkit-border-top-right-radius: 5px;
-	-moz-border-radius-topright: 5px;
 }
 
 /* Console view styles */
@@ -357,53 +364,6 @@ div.BuildWaterfall {
 }
 
 /* LastBuild, BuildStep states */
-.success {
-	color: #000;
-	background-color: #8d4;
-	border-color: #4F8530;
-}
-
-.failure {
-	color: #000;
-	background-color: #e88;
-	border-color: #A77272;
-}
-
-.warnings {
-	color: #FFFFFF;
-	background-color: #fa3;
-	border-color: #C29D46;
-}
-
-.skipped {
-	color: #000;
-	background: #AADDEE;
-	border-color: #AADDEE;
-}
-
-.exception,.retry {
-	color: #FFFFFF;
-	background-color: #c6c;
-	border-color: #ACA0B3;
-}
-
-.start {
-	color: #000;
-	background-color: #ccc;
-	border-color: #ccc;
-}
-
-.running,.waiting,td.building {
-	color: #000;
-	background-color: #fd3;
-	border-color: #C5C56D;
-}
-
-.offline,td.offline {
-    color: #FFFFFF;
-    background-color: #777777;
-    border-color: #dddddd;
-}
 
 
 .start {
@@ -490,11 +450,13 @@ table.Grid tr td.build {
 	border: 1px gray solid;
 }
 
-/* column container */
-div.column {
-	margin: 0 2em 2em 0;
-	float: left;
-}
+
+
+
+
+
+
+
 
 /* info tables */
 table.info {
@@ -502,17 +464,27 @@ table.info {
 }
 
 table.info td {
-	padding: 0.1em 1em 0.1em 1em;
-	text-align: center;
+	padding: 5px;
+	text-align: left;
+	background: none repeat scroll 0 0 #F6F6F6;
+    border-bottom: 1px solid #FFF;
 }
 
 table.info th {
-	padding: 0.2em 1.5em 0.2em 1.5em;
-	text-align: center;
+	padding: 5px;
+	text-align: left;
 }
 
 table.info td.left {
 	text-align: left
+}
+
+table.info tr td:first-child {
+	font-weight: bold;
+}
+
+table.info.rows tr td:first-child {
+	font-weight: normal;
 }
 
 .alt {
@@ -521,10 +493,6 @@ table.info td.left {
 
 li {
 	padding: 0.1em 1em 0.1em 1em;
-}
-
-.result {
-	padding: 0.3em 1em 0.3em 1em;
 }
 
 /* log view */
@@ -564,14 +532,8 @@ pre.comments>a:active {
 }
 
 form.command_forcebuild {
-    border-top: 1px solid black;
-    padding: .5em;
-    margin: .5em;
-}
-
-form.command_forcebuild > .row {
-    border-top: 1px dotted gray;
-    padding: .5em 0;
+	width: 320px;
+	clear:both;
 }
 
 form.command_forcebuild .force-textarea > .label {
@@ -579,10 +541,9 @@ form.command_forcebuild .force-textarea > .label {
 }
 
 form.command_forcebuild .force-nested > .label {
-    font-weight: bold;
-    display: list-item;
-}
-
-form.command_forcebuild .force-any .force-text {
-    display: inline;
+	font-weight: bold;
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-top:15px;
+    font-size: 14px;
 }

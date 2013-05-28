@@ -302,7 +302,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
-        template = req.site.buildbot_service.templates.get_template("builder.html")
+        template = req.site.buildbot_service.templates.get_template("buildqueue.html")
         defer.returnValue(template.render(**cxt))
 
     def ping(self, req):
@@ -490,7 +490,7 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
         return StopAllBuildsActionResource(self.status, 'selected')
 
 # /builders
-class BuildersResource(HtmlResource):
+class BuildqueueResource(HtmlResource):
     pageTitle = "Builders"
     addSlash = True
 
@@ -519,18 +519,9 @@ class BuildersResource(HtmlResource):
         cxt['branches'] = branches
         bs = cxt['builders'] = []
 
-        schedulers = status.master.allSchedulers()
-        builder_schedulers = {}
-        for sch in schedulers:
-            if isinstance(sch, ForceScheduler):
-                force_schedulers = {}
-                force_schedulers[sch.name] = sch
-                for bn in sch.builderNames:
-                    builder_schedulers[bn] = force_schedulers
-
         building = 0
         online = 0
-        base_builders_url = path_to_root(req) + "builders/"
+        base_builders_url = path_to_root(req) + "buildqueue/"
         for bn in builders:
             bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
                     'name': bn }
@@ -539,14 +530,9 @@ class BuildersResource(HtmlResource):
             builder = status.getBuilder(bn)
             builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
-            bld['force_schedulers'] = {}
-            if bn in builder_schedulers:
-                bld['force_schedulers'] = builder_schedulers[bn]
-
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                
                 label = None
                 all_got_revisions = b.getAllGotRevisions()
                 # If len = 1 then try if revision can be used as label.
@@ -573,7 +559,7 @@ class BuildersResource(HtmlResource):
         cxt['num_building'] = building
         cxt['num_online'] = online
         buildForceContext(cxt, req, self.getBuildmaster(req))
-        template = req.site.buildbot_service.templates.get_template("builders.html")
+        template = req.site.buildbot_service.templates.get_template("buildqueue.html")
         defer.returnValue(template.render(**cxt))
 
     def getChild(self, path, req):

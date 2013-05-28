@@ -6,6 +6,7 @@
 *.patch
 *.orig
 *.rej
+*.DS_Store
 *#
 *~
 MANIFEST
@@ -35,3 +36,8 @@ common/googlecode_upload.py
 master/docs/tutorial/_build
 _build
 .tox
+
+npm-debug.log
+
+master/buildbot/status/web/files/.sass-cache
+master/buildbot/status/web/templates/node

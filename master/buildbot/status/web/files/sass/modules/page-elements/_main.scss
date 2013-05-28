@@ -1,0 +1,445 @@
+/**
+* Main implementation.
+*
+* @section page-elements
+* @author Simon Holm
+*/
+
+.success {
+	background-color: #DDE6D6;
+}
+
+.table-1 .success {
+	border-top:1px solid #fff;
+}
+
+.table-1 tr .success:first-child {
+	border-top:none;
+}
+
+.failure {
+	color: #000;
+	background-color: #e88;
+	border-color: #A77272;
+}
+
+.warnings {
+	color: #FFFFFF;
+	background-color: #fa3;
+	border-color: #C29D46;
+}
+
+.skipped {
+	color: #000;
+	background: #AADDEE;
+	border-color: #AADDEE;
+}
+
+.exception,.retry {
+	background-color: #DDD7DD;
+	border-top: 1px solid #FFFFFF;
+}
+
+.start {
+	color: #000;
+	background-color: #ccc;
+	border-color: #ccc;
+}
+
+.running,.waiting,td.building {
+	background-color: #FCFACB;
+	border-top:1px solid #fff;
+}
+
+.offline,td.offline {
+    background-color: #E7E7E7;
+}
+
+.table-1 .offline  {
+	border-top: 1px solid #FFFFFF;
+}
+
+.result {
+	padding: 4px 9px;
+	display:inline-block;
+}
+
+// tables
+
+// tables
+.table-1,
+.table-2 {
+	width:100%;
+	background-color:#fff;
+	font-size:12px;
+	border:1px solid #ccc;
+	@include box-shadow(1px 1px 0 #FFFFFF);
+	border-collapse: inherit;
+	border-spacing:0;
+	.txt-align-left {
+		text-align:left;	
+	}
+	.txt-align-right {
+	text-align:right;
+}
+	th {
+		padding:15px 10px;
+		background-color:#EEF0F5;
+		@include text-shadow(0 1px 0 #fff);
+		border-top:1px solid #FFFFFF;
+	}
+	td {
+		padding:15px 10px;		
+		//border-bottom:1px solid #DADADA;
+		border-bottom:1px solid #C8C8C8;
+		&.buttontd {
+			width: 80px;
+		}
+	}
+	.last td {
+		padding-bottom:20px;
+		border-bottom:none;
+	}
+}
+
+.table-1.first-child tr td:first-child,
+.table-1.first-child tr th:first-child {
+	padding-left:15px;
+}
+
+
+
+.table-2 {
+	td,
+	th {
+		text-align:left;	
+	}
+	tr td:first-child {
+		padding-left:15px;
+		font-weight: bold;
+		width: 23%;
+	}
+	tr th:first-child {
+		padding-left:15px;
+	}
+	tr:nth-child(odd) {
+		background-color: #F2F2F2;
+	}
+	
+	tr:nth-child(odd) td {
+		border-top:1px solid #fff;
+	}
+
+	tr:last-child td {
+		border-bottom:none;
+	}
+	&.m-bottom {
+		margin-bottom:25px;
+	}
+}
+
+.table-1 .more-info {
+	float:right;
+}
+
+// utilities
+
+.pos-relative {
+	position:relative;
+}
+
+div.last {
+	margin-right: 0;
+}
+
+.clear {clear: both;}
+
+.divider {
+ 	background-color: #E5E5E5;
+    height: 1px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.step-head {
+	position: relative;
+	display:block;
+	margin-bottom:3px;
+	&:before {
+	    left: -36px;
+	    position: absolute;
+	    top: -8px;
+	}
+}
+
+.step-list {
+	@include pie-clearfix;
+	counter-reset: li; /* Initiate a counter */
+	list-style: none outside none;
+	margin: 0;
+    padding: 0;
+	.not_started {
+	background-color:#eee;
+		&:before {
+			content:"Not startet";
+		}
+	}
+	.retry:before {
+		content:"Retry";	
+	} 
+	.success:before {
+		content:"Success";	
+	}
+	.running {
+		background-color:#ccc;
+		&:before {
+			content:"Running";		
+		}
+	}
+	.waiting {
+		background-color:#888;
+		&:before {
+			content:"Waiting for locks";		
+		}
+	}
+	
+	li {
+	   	margin-bottom: 14px;
+    	padding-bottom: 15px;
+	}
+	&> li {
+		border-bottom:1px dotted #ccc;
+		padding-right:0;
+		padding-left: 40px;
+		&:first-child {
+    		padding-top: 15px;
+		}
+	
+	}
+	
+	.result {
+		padding: 2px 7px;
+		float: right;
+		display: inline-block;
+	}	
+	p {
+		margin:0 60px 11px 0;
+		color: #666;
+		&> span { 
+			color: #666666;
+		    display: block;
+		    font-weight: bold;
+		}
+	}
+}
+
+.logs-txt {
+	display:block;
+	float:left;
+	margin-right:8px;
+}
+
+.log-list {
+	list-style:none;
+	padding:0;
+	margin:0;
+	@include pie-clearfix;
+	span {
+	    color: #999999;
+	    display: block;
+	    margin-top: -2px;
+	}
+	li {
+		list-style:none;
+		padding:0;
+		margin:0 8px 0 0 ;
+		float: left;
+		&:first-child {
+			//font-weight: bold;		
+		}
+		&:after {
+     		content: ",";
+     	}
+     	&:last-child:after {
+     		content: "";
+     	}
+	}
+}
+
+.force-list,
+.force-bool {
+		display:block;
+		margin-bottom: 11px;
+		overflow: auto;
+	.label {
+		display:block;
+		float:left;
+		font-weight:bold;
+		width: 84px;
+		color: #333;
+	}
+	.select {
+		display:block;
+		float:left;
+	}
+}
+
+div.force-text {
+	clear: both;
+    margin-bottom: 11px;
+    @include pie-clearfix;
+	input[type="text"] {
+		border: 1px solid #CCC;
+	    @include border-radius(4px);
+	    color: #666;
+	    display: block;
+	    float: left;
+	    padding: 7px;		
+	    width: 220px;
+	}
+	.label {
+		display:block;
+		float:left;
+		font-weight:bold;
+		width: 84px;
+		color: #333;
+		margin-top: 6px;
+	}	
+}
+
+.command_forcebuild .grey-btn {
+	float:right;
+	margin-bottom:23px;
+}
+
+.builders-list,
+.builders-list li {
+	margin:0;
+	padding:0;
+	list-style:none;
+	line-height: 19px;
+}
+
+.more-info:after {
+	content:"▼";
+}
+
+.more-info.before:before {
+	content:"▼";	
+}
+
+.more-info.before:after {
+	content:"";		
+}
+
+// more info box
+.more-info-box {
+	z-index:1;
+  	border: 1px solid #FFFFFF;
+    display: none;
+    padding: 23px 32px 23px 20px;
+    text-align: left;
+    min-width:280px;
+    max-height:690px;
+    overflow-y: auto; 
+	position:fixed;
+	//width:auto;/*can be % px auto*/
+	z-index:200;
+	float:left;
+    @include text-shadow(0 1px 0 #FFFFFF);
+	@include border-radius(8px);
+    @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
+    @include background-image(linear-gradient(center top , rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+    //@include background-image(linear-gradient(center top, #FFF 0%, #F8F8F9 100%)); 
+    text-align:left;
+    p {
+    	margin-bottom: 10px;
+    	margin-top: 0;
+    }
+    span {
+    	color: #8C8C8C;
+    }
+    h4 {
+		display: inline-block;
+	    margin: 0 0 13px 0 ;
+	    padding:0;
+	    &.last {
+			margin-bottom:5px;
+	    }
+    }
+    h3 {
+		display: inline-block;
+	    font-size: 16px;
+	    font-weight: bold;
+	    margin: 0 0 19px;
+	    padding: 0;	
+    }
+}
+
+// lists
+.list {
+	margin:0;
+	padding:0;
+	list-style:none;
+	li {
+		margin:0 0 10px 0;
+		padding:0;
+		list-style:none;
+	}
+}
+
+.btn-list {
+	list-style:none;
+	padding:0;
+	margin:0;
+	display:inline-block;
+		li {
+		list-style:none;
+		padding:0;
+		margin:0;
+		margin-bottom:15px;
+	}
+	&.horisontal li {
+		float: left;
+		margin:0 15px 0 0;
+	}
+}
+
+.rebuild {
+	margin-bottom:20px;
+	.label {
+	    display: block;
+	    font-weight: bold;
+	    margin-bottom: 7px;
+	}
+	input[type="text"] {
+	    border: 1px solid #CCCCCC;
+	    border-radius: 6px;
+	    color: #666666;
+	    margin-right: 5px;
+	    padding: 5px 8px;
+	}
+	
+}
+
+.rebuild, 
+.cancelbuild {
+		.grey-btn {
+			padding: 5px 9px;
+		}
+	}
+
+// Typography
+
+.main-head {
+    margin: 34px 0 17px;
+}
+
+.small-head {
+	display:inline;
+}
+
+.head-2 {
+	margin:0 0 10px 0 ;
+	padding:0;
+}

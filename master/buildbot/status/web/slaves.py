@@ -142,6 +142,7 @@ class BuildSlavesResource(HtmlResource):
             slave = s.getSlave(name)
             slave_status = s.botmaster.slaves[name].slave_status
             info['running_builds'] = len(slave_status.getRunningBuilds())
+            info['running_builds_new'] = slave_status.getRunningBuilds()
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
 

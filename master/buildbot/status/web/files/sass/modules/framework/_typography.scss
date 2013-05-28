@@ -1,0 +1,93 @@
+/**
+* Base typographical setup (vertical rythm etc)
+* Unity3d
+* @section framework
+* @author Simon Holm
+*/
+
+.main-head {
+    font-size: 25px;
+    @include text-shadow(1px 1px 0 #FFF);
+    span {
+		color: #666666;
+	    font-weight: normal;
+	}
+}
+
+.small-head {
+	font-size:12px;
+	font-weight:bold;	
+}
+
+.head-2 {
+	font-size:18px;
+}
+
+h1.logo a {
+	@include text-shadow(1px 1px 0 #FFF);
+	font-family: 'Pacifico';
+    font-size: 45px;
+    font-weight: normal;
+    letter-spacing: 1px;
+	text-decoration: none;
+	opacity: 1;
+	color:#445873;
+	@include transition(opacity .2s ease-in-out);
+}
+
+.logo a:hover {
+	opacity: 0.5;
+}
+
+.link-button {
+	text-decoration:underline;
+	font-weight:bold;
+	&:hover {
+		color: #999;	
+	}
+}
+
+.link-1 a {
+	text-decoration:underline;
+	color:#333;
+	&:hover {
+		color: #999;	
+	}
+}
+
+div.welcome-txt {
+	font-size: 14px;
+	ol {
+		margin: 18px 0 0 21px;
+	    padding: 0;
+	    li {
+			margin: 0 0 18px;
+		    padding: 0;
+		}
+	}
+}
+
+.column h2 {
+ 	font-size: 16px;
+    margin: 20px 0 10px;
+}
+
+.step-head {
+	font-size:12px;
+	font-weight:bold;
+	text-transform:uppercase;
+	&:before {
+		color: #666666;
+	    content: counter(li, decimal);
+	    counter-increment: li;
+	    font-size: 28px;
+	}
+}
+
+.logs-txt {
+	font-weight:bold;
+}
+
+.small-txt {
+	color:#838383;
+}

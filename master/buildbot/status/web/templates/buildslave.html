@@ -2,63 +2,105 @@
 {% import 'forms.html' as forms %}
 
 {% extends "layout.html" %}
-{% block content %}
-<h1>Buildslave: {{ slavename|e }}</h1>
 
-<div class="column">
-
-{% if current %}
-  <h2>Currently building:</h2>
-  <ul>
-  {% for b in current %}
-   <li>{{ build_line(b, True) }}
-     <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
-       <input type="submit" value="Stop Build" />
-       <input type="hidden" name="url" value="{{ this_url }}" />
-     </form>
-   </li>
-  {% endfor %}
+{% block submenu %}
+<nav class="sub-menu-container container-inner">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      <a href="/buildslaves">
+            Buildslaves
+      </a>
+    </li>
+    <li>
+      {{ slavename|e }}
+    </li>
   </ul>
-{% else %}
-  <h2>No current builds</h2>
-{% endif %}
+</nav>
+{% endblock %}
 
-<h2>Recent builds</h2>
-{{ build_table(recent, True) }}
-  
-</div>
-<div class="column">
-{% if access_uri %}
-  <a href="{{ access_uri|e }}">Click to Access Slave</a>
-{% endif %}
 
-{% if admin %}
-  <h2>Administrator</h2>
-  <p>{{ admin|email }}</p>
-{% endif %}
+{% block content %}
+<h1 class="main-head">
+  Buildslave <span>{{ slavename|e }}</span>
+</h1>
 
-{% if host %}
-  <h2>Slave information</h2>
-  Buildbot-Slave {{ slave_version }}
-  <pre>{{ host|e }}</pre>
-{% endif %}
+<div class="column-1">
+  <div class="column-2">
+    <h2 class="head-2">
+      Administration options
+    </h2>
 
-<h2>Connection Status</h2>
-<p>
-{{ connect_count }} connection(s) in the last hour
-{% if not slave.isConnected() %}
-(not currently connected)
-{% else %}
-</p>
-  {% if authz.advertiseAction('gracefulShutdown', request) %}
-    <h2>Graceful Shutdown</h2>
-    {% if slave.getGraceful() %}
-      <p>Slave will shut down gracefully when it is idle.</p>
-    {% else %}
-      {{ forms.graceful_shutdown(shutdown_url, authz) }}
+    
+    
+    
+    <ul class="list">
+      {% if authz.advertiseAction('gracefulShutdown', request) %}
+        
+        {% if slave.getGraceful() %}
+          <li>fds
+            Slave will shut down gracefully when it is idle.
+          </li>
+        {% else %}
+          <li>
+            {{ forms.graceful_shutdown(shutdown_url, authz) }}
+          </li>
+        {% endif %}
+      
     {% endif %}
-  {% endif %}
-{% endif %}
+    <li>
+      Request the slave to <input type="submit" value="reboot" class="link-button" /> remotely.
+    </li>
+    <li>
+      <input type="submit" value="Disable" class="link-button" /> the slave so that it cannot take any jobs.
+    </li>
+    <li>
+        <input type="submit" value="Enable" class="link-button" /> a disabled slave. 
+    </li>
+  </ul>
+
+  </div>
+  <div class="column-2 last">
+    <h2 class="head-2"> 
+      Buildslave information 
+    </h2>
+    {% if current %}
+    <ul class="list">
+    {% for b in current %}
+     <li>
+      <h2 class="small-head">
+        Current job
+      </h2>
+      Running
+      {{ build_line(b, True) }}
+       <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
+         <input class="link-button" type="submit" value="Stop Build" />
+         <input type="hidden" name="url" value="{{ this_url }}" />
+       </form>
+     </li>
+    {% endfor %}
+    <li>
+      <h2 class="small-head">
+        Last Message Received
+      </h2> 
+      <a href="#">
+        Unzipping External/Mono/builds.zip...
+      </a>
+    </li>
+    </ul>
+    {% else %}
+      <h2 class="small-head">
+        No current builds
+      </h2>
+    {% endif %}
+  </div>
+
 </div>
-  
+
+{{ build_table(recent, True) }}
+
 {% endblock %}

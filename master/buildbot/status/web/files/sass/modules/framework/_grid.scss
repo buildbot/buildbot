@@ -1,0 +1,57 @@
+/**
+* Grid implementation.
+* Unity3d
+* @section framework
+* @author Simon Holm
+*/
+
+.container-inner {
+	width: 960px;
+	margin: 0 auto;
+}
+
+/* column container */
+div.column {
+	margin: 0 20px 20px 0;
+	float: left;
+	background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 10px;
+    padding: 6px 20px 20px;
+    width: 426px;
+   	font-size: 12px;
+}
+
+div.column-1 {
+	width: 100%;
+	margin-bottom:35px;
+	position: relative;
+	background-color: #FFFFFF;
+	border-radius: 10px;
+	font-size: 12px;
+	border: 1px solid #CCCCCC;
+	float:left;
+	@include box-shadow(1px 1px 0 #FFFFFF);
+}
+
+.column-2 {
+	margin: 21px 20px 25px 20px;
+    width: 442px;
+    float: left;
+	&.last {
+		border:none;
+	}
+	&:before {
+		background-color: #E7E7E7;
+	    bottom: 0;
+	    content: " ";
+	    margin: 25px 0 25px -20px;
+	    position: absolute;
+	    top: 0;
+	    width: 1px;
+	}
+	&:first-child:before {
+		background: none;	
+	}
+}
+

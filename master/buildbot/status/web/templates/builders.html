@@ -1,43 +1,130 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
 {% from "box_macros.html" import box %}
+{% from 'static.html' import force_build_static %}
+
+{% block submenu %}
+<nav class="sub-menu-container">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      <a href="{{ path_to_root }}builders">
+          Buildstatus
+      </a>
+    </li>
+    <li>
+      <a href="{{ path_to_root }}buildstatus_s_project">
+          All branches
+      </a>
+    </li>
+    <li>
+          Trunk
+    </li>
+  </ul>
+</nav>
+{% endblock %}
 
 {% block content %}
-<h1>Builders: {{ branches|join(', ')|e }}</h1>
+<h1 class="main-head">
+  Buildstatus
+  <span>
+    {{ branches|join(', ')|e }}
+      Single Project, Single Branch
+  </span>
+</h1>
 
-<table>
+<table class="table-1 first-child">
+<tr>
+  <th class="txt-align-left">Builder</th>
+  <th class="txt-align-left">Current jobs</th>
+  <th class="txt-align-left">Last run</th>
+  <th>Status</th>
+  <th>Build Artifacts</th>
+  <th class="txt-align-right">
+    Force Build
+  </th>
+</tr>
 {% for b in builders %}
-  <tr>
-  <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
-  {% if b.build_url %}
-    <td class="LastBuild box {{ b.build_css_class }}">
-        <a href="{{ b.build_url }}">{{ b.build_label }}</a>
-        <br/>{{ b.build_text }}
+{%- if loop.last  %}
+    <tr class='last'>
+      {%- else -%}
+    <tr>
+{%- endif -%}
+  
+    <td class="box txt-align-left">
+      <a href="{{ b.link }}">
+        {{ b.name|e }}
+      </a>
     </td>
-  {% else %}
-    <td class="LastBuild box">no build</td>
-  {% endif %}  
-  {{ box(**b.current_box) }}  
+    <td class="txt-align-left">
+      <a href="#">
+        mac-slave-02
+      </a> 
+      <br />
+      <span class="small-txt">
+        (33% complete)
+      </span>
+    </td>
+    <td class="txt-align-left">
+      
+      <a href="#">
+        20 Changes
+      </a>
+      <br />
+      <span class="small-txt">
+        #710 (5 days ago)
+      </span>
+      
+    </td>
+    {% if b.build_url %}
+      <td class="LastBuild box {{ b.build_css_class }} ">
+          <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+          {{ b.build_text }}
+      </td>
+    {% else %}
+      <td class="LastBuild box small-txt">
+        no build
+      </td>
+    {% endif %}  
+    <td>
+      <a href="#">
+        Download
+      </a>
+    </td>
+    <td class="txt-align-right">
+      {% if b.force_schedulers != {} %}
+      <a class="more-info" href="#">
+        Force build
+      </a>
+        <div class="more-info-box">
+          <span class="close-btn" href="#">
+          </span>
+          <h3>Overview</h3>
+                    
+          {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
+            {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
+          {% endif %}
+
+
+        </div>
+        {% endif %}
+      <br>
+    <!--
+      show if build is running
+      <a href="#">
+        Stop build
+      </a>
+    -->
+    </td>
+    <!--
+      {{ box(**b.current_box) }}  
+    -->
   </tr>
 {% endfor %}
 </table>
-
-{% if num_building > 0 %}
-  {% if authz.advertiseAction('stopAllBuilds', request) or authz.advertiseAction('stopBuild', request) %}
-    <h2>Stop Selected Builds</h2>
-    {{ forms.stop_build(path_to_root+"builders/_selected/stopselected", authz, on_selected=True, builders=builders, label='Selected Builds') }}
-    <h2>Stop All Builds</h2>
-    {{ forms.stop_build(path_to_root+"builders/_all/stopall", authz, on_all=True, label='All Builds') }}
-  {% endif %}
-{% endif %}
-  
-{% if num_online > 0 %}
-  {% if authz.advertiseAction('forceAllBuilds', request) or authz.advertiseAction('forceBuild', request) %}
-    <h2>Force Selected Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, request, on_selected=True, builders=builders, force_schedulers=force_schedulers, default_props=default_props) }}
-    <h2>Force All Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz,request, on_all=True, force_schedulers=force_schedulers, default_props=default_props) }}
-  {% endif %}
-{% endif %}
 
 {% endblock %}

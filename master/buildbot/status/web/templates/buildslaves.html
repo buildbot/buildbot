@@ -1,61 +1,90 @@
 {% extends "layout.html" %}
 
+{% block submenu %}
+<nav class="sub-menu-container container-inner">
+  <ul class="breadcrumbs-nav container-inner">
+    <li>
+        <a href="/">
+          Home
+        </a>
+    </li>
+    <li>
+      Buildslaves
+    </li>
+  </ul>
+</nav>
+{% endblock %}
+
 {% block content %}
 
-<h1>Buildslaves</h1>
+<h1 class="main-head">
+  Buildslaves
+</h1>
 
-<div class="column">
-
-<table class="info">
+<table class="table-1">
 
 <tr>
   <th>Name</th>
-  {%- if show_builder_column %}
-    <th>Builders</th>
-  {%- endif %}
-  <th>BuildBot</th>
-  <th>Admin</th>
-  <th>Last heard from</th>
-  <th>Connects/Hour</th>
   <th>Status</th>
+  <th>Last heard from</th>
+  <th>Last Message Received</th>
+  
 </tr>
 
 {% for s in slaves %}
-  <tr class="{{ loop.cycle('alt','') }}">
-  <td><b><a href="{{ s.link }}">{{ s.name }}</a></b></td>
-  
-  {%- if show_builder_column %}
-    <td>
-    {%- if s.builders %}
-      {%- for b in s.builders %}
-        <a href="{{ b.link }}">{{ b.name }}</a>
-      {%- endfor %}
-    {%- else %}
-      <span class="Warning">no builders</span>
-    {%- endif -%}
-    </td>
-  {%- endif %}
 
-
-  <td>{{ (s.version or '-')|e }}</td>
- 
-  {%- if s.admin -%}
-    <td>{{ s.admin|email }}</td>
-  {%- else -%}
-    <td>-</td>
+  {%- if loop.last or loop.index0 == 0 %}
+      <tr class='last'>
+        {%- else -%}
+      <tr>
   {%- endif -%}
 
-    <td>
-    {%- if s.last_heard_from_age -%}
-      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
-    {%- endif -%}
-    </td>
-    <td>
-    {{ s.connectCount }}
-    </td>
-        
-  {% if s.connected %}
+  <td>
+      <a href="{{ s.link }}">
+        {{ s.name }}
+      </a>
+      <a class="more-info" href="#">
+      </a>
+        <div class="more-info-box">
+          <h3>Additional information</h3>
+          <br/>
+          <h4>Buildbot</h4>
+          <span>
+            {{ (s.version or '-')|e }}
+          </span>
+          <br/>
+            {%- if s.admin -%}
+              <h4>Admin</h4>
+              <span>{{ s.admin|email }}</span>
+            {%- else -%}
+              <span>-</span>
+            {%- endif -%}
+            <br/>
+            {%- if show_builder_column %}
+           
+            {%- if s.builders %}
+            <h4 class="last">Builders</h4>
+              <ul class="builders-list">
+                {%- for b in s.builders %}
+                  <li>
+                    <a href="{{ b.link }}">
+                      {{ b.name }}
+                    </a>
+                  </li>
+                {%- endfor %}
+              </ul>
+            {%- else %}
+              <span class="Warning">no builders</span>
+            {%- endif -%}
+            
+          {%- endif %}
+      </div>
+      
+  </td>
+
+{% if s.connected %}
     {% if s.running_builds %}
+      
       <td class="building">Running {{ s.running_builds }} build(s)</td>
     {% else %}
       <td class="idle">Idle</td>
@@ -64,11 +93,22 @@
   {% else %}
     <td class="offline">Not connected</td>
   {% endif %}
+
+  <td>
+    {%- if s.last_heard_from_age -%}
+      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
+    {%- endif -%}
+  </td>
   
+  <td>
+      <a href="#">
+        Unzipping External/Mono/builds.zip . . .
+      </a>
+  </td>
+
   </tr>
 {% endfor %}
 </table>
 
-</div>
   
 {% endblock %}
