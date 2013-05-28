@@ -84,6 +84,39 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIdentical(self.master, self.ep.master)
 
 
+class ListResult(unittest.TestCase):
+
+    def test_constructor(self):
+        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertEqual(lr.data, [1,2,3])
+        self.assertEqual(lr.offset, 10)
+        self.assertEqual(lr.total, 20)
+        self.assertEqual(lr.limit, 3)
+
+    def test_repr(self):
+        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertTrue(`lr`.startswith('ListResult'))
+
+    def test_eq(self):
+        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        lr2 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
+        lr3 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
+        self.assertEqual(lr2, lr3)
+        self.assertNotEqual(lr1, lr2)
+        self.assertNotEqual(lr1, lr3)
+
+    def test_eq_to_list(self):
+        list = [1,2,3]
+        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertNotEqual(lr1, list)
+        lr2 = base.ListResult([1,2,3], offset=None, total=None, limit=None)
+        self.assertEqual(lr2, list)
+        lr3 = base.ListResult([1,2,3], total=3)
+        self.assertEqual(lr3, list)
+        lr4 = base.ListResult([1,2,3], total=4)
+        self.assertNotEqual(lr4, list)
+
+
 class Link(unittest.TestCase):
 
     def test_path(self):

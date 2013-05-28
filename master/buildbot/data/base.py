@@ -125,12 +125,17 @@ class ListResult(UserList.UserList):
 
     def __eq__(self, other):
         if isinstance(other, ListResult):
-            return list(self) == other \
+            return self.data == other.data \
                 and self.offset == other.offset \
                 and self.total == other.total \
                 and self.limit == other.limit
         else:
-            return list(self) == other
+            return self.data == other \
+                and self.offset == self.limit == None \
+                and (self.total is None or self.total == len(other))
+
+    def __ne__(self, other):
+        return not (self == other)
 
 
 class Link(object):

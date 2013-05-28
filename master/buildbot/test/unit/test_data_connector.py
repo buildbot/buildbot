@@ -185,7 +185,8 @@ class DataConnector(unittest.TestCase):
 
         @d.addCallback
         def check(gotten):
-            self.assertEqual(gotten, [{'val': 900}, {'val': 901}])
+            self.assertEqual(gotten, base.ListResult(
+                [{'val': 900}, {'val': 901}], total=2))
             ep.get.assert_called_once_with(mock.ANY, {})
         return d
 
@@ -197,7 +198,8 @@ class DataConnector(unittest.TestCase):
 
         @d.addCallback
         def check(gotten):
-            self.assertEqual(gotten, [{'val': 919}, {'val': 918}])
+            self.assertEqual(gotten, base.ListResult(
+                [{'val': 919}, {'val': 918}], total=10, limit=2))
             ep.get.assert_called_once_with(mock.ANY, {})
         return d
 
