@@ -173,9 +173,6 @@
       <a class="more-info grey-btn" href="#">
         Force build
       </a>
-
-      
-      <div class="pos-relative">
         <div class="more-info-box">
           <span href="#" class="close-btn">
           </span>
@@ -185,7 +182,6 @@
             {{ forms.force_build(builder_url+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
           {% endif %}          
           
-        </div>
       </div>
   </li>
 </ul>
