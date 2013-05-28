@@ -143,13 +143,13 @@ class Link(object):
 
     __slots__ = [ 'path', 'query' ]
 
-    def __init__(self, path, query=[]):
+    def __init__(self, path, query=None):
         assert isinstance(path, tuple)
         self.path = path
         self.query = query
 
     def __repr__(self):
-        return "Link(%r, %r)" % (self.path, self.query)
+        return "Link(%r, %r)" % (self.path, self.query or [])
 
     def __cmp__(self, other):
         return cmp(self.__class__, other.__class__) \
