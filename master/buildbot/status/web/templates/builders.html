@@ -96,7 +96,7 @@
       </a>
     </td>
     <td class="txt-align-right">
-      
+      {% if b.force_schedulers != {} %}
       <a class="more-info" href="#">
         Force build
       </a>
@@ -105,12 +105,13 @@
           </span>
           <h3>Overview</h3>
                     
-          {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+          {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
             {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
           {% endif %}
 
 
         </div>
+        {% endif %}
       <br>
     <!--
       show if build is running
