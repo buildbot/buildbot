@@ -147,7 +147,7 @@ class Trigger(LoggingBuildStep):
 
         dl = []
         triggered_names = []
-        triggeredbybsid = self.build.builder.building[0].requests[0].bsid
+        triggeredbybsid = self.build.requests[0].bsid
         for sch in triggered_schedulers:
             dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredbybsid=triggeredbybsid))
             triggered_names.append(sch.name)
