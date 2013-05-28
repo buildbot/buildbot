@@ -519,6 +519,15 @@ class BuildersResource(HtmlResource):
         cxt['branches'] = branches
         bs = cxt['builders'] = []
 
+        schedulers = status.master.allSchedulers()
+        builder_schedulers = {}
+        for sch in schedulers:
+            if isinstance(sch, ForceScheduler):
+                force_schedulers = {}
+                force_schedulers[sch.name] = sch
+                for bn in sch.builderNames:
+                    builder_schedulers[bn] = force_schedulers
+
         building = 0
         online = 0
         base_builders_url = path_to_root(req) + "builders/"
@@ -530,6 +539,10 @@ class BuildersResource(HtmlResource):
             builder = status.getBuilder(bn)
             builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
+            bld['force_schedulers'] = {}
+            if bn in builder_schedulers:
+                bld['force_schedulers'] = builder_schedulers[bn]
+
             if builds:
                 b = builds[0]
                 bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
