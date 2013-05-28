@@ -289,9 +289,9 @@ div.force-text {
     margin-bottom: 11px;
     @include pie-clearfix;
 	input[type="text"] {
-		border: 1px solid #CCCCCC;
+		border: 1px solid #CCC;
 	    @include border-radius(4px);
-	    color: #666666;
+	    color: #666;
 	    display: block;
 	    float: left;
 	    padding: 7px;		
@@ -309,6 +309,7 @@ div.force-text {
 
 .command_forcebuild .grey-btn {
 	float:right;
+	margin-bottom:23px;
 }
 
 .builders-list,
@@ -336,17 +337,18 @@ div.force-text {
 	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;
-    padding: 23px 20px;
+    padding: 23px 32px 23px 20px;
     text-align: left;
     min-width:280px;
+    max-height:690px;
+    overflow-y: auto; 
 	position:fixed;
-	width:auto;/*can be % px auto*/
+	//width:auto;/*can be % px auto*/
 	z-index:200;
 	float:left;
     @include text-shadow(0 1px 0 #FFFFFF);
 	@include border-radius(8px);
     @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
-    
     @include background-image(linear-gradient(center top , rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
     //@include background-image(linear-gradient(center top, #FFF 0%, #F8F8F9 100%)); 
     text-align:left;

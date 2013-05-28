@@ -533,6 +533,7 @@ pre.comments>a:active {
 
 form.command_forcebuild {
 	width: 320px;
+	clear:both;
 }
 
 form.command_forcebuild .force-textarea > .label {
@@ -540,10 +541,9 @@ form.command_forcebuild .force-textarea > .label {
 }
 
 form.command_forcebuild .force-nested > .label {
-    font-weight: bold;
-    display: list-item;
-}
-
-form.command_forcebuild .force-any .force-text {
-    display: inline;
+	font-weight: bold;
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-top:15px;
+    font-size: 14px;
 }
