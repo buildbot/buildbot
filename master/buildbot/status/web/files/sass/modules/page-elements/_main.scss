@@ -18,9 +18,8 @@
 }
 
 .failure {
-	color: #000;
-	background-color: #e88;
-	border-color: #A77272;
+	background-color: #EFCFCF;
+	border-top:1px solid #fff;
 }
 
 .warnings {
@@ -76,6 +75,7 @@
 	@include box-shadow(1px 1px 0 #FFFFFF);
 	border-collapse: inherit;
 	border-spacing:0;
+	clear:both;
 	.txt-align-left {
 		text-align:left;	
 	}
@@ -138,8 +138,24 @@
 	}
 }
 
-.table-1 .more-info {
+.table-1 { 
+	.more-info {
+		float:right;
+	}
+	.checkboxes {
+		width:0;
+		padding-right:15px;
+	}
+}
+
+.select-tools {
+	font-size: 12px;
 	float:right;
+	color: #666666;
+    font-size: 12px;
+    margin-top: 50px;
+    padding: 1px;
+    width: 117px;
 }
 
 // utilities
@@ -433,6 +449,7 @@ div.force-text {
 
 .main-head {
     margin: 34px 0 17px;
+    float: left;
 }
 
 .small-head {

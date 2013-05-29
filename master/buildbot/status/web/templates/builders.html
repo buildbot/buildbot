@@ -22,7 +22,7 @@
       </a>
     </li>
     <li>
-          Trunk
+      Trunk
     </li>
   </ul>
 </nav>
@@ -37,15 +37,28 @@
   </span>
 </h1>
 
-<table class="table-1 first-child">
+    <select class="select-tools">
+      <option>
+        With selected
+      </option>
+      <option>
+        Force selected builds
+      </option>
+      <option>
+        Stop selected build
+      </option>
+    </select>
+
+<table id="inputfields" class="table-1 first-child">
+  
 <tr>
   <th class="txt-align-left">Builder</th>
   <th class="txt-align-left">Current jobs</th>
   <th class="txt-align-left">Last run</th>
   <th>Status</th>
   <th>Build Artifacts</th>
-  <th class="txt-align-right">
-    Force Build
+  <th class="txt-align-right checkboxes">
+    <input type="checkbox" id="selectall" />
   </th>
 </tr>
 {% for b in builders %}
@@ -95,25 +108,14 @@
         Download
       </a>
     </td>
-    <td class="txt-align-right">
-      {% if b.force_schedulers != {} %}
-      <a class="more-info" href="#">
-        Force build
-      </a>
-        <div class="more-info-box">
-          <span class="close-btn" href="#">
-          </span>
-          <h3>Overview</h3>
-                    
-          {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
-            {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
-          {% endif %}
 
 
-        </div>
-        {% endif %}
-      <br>
+    <td class="txt-align-right checkboxes">
+      <input type="checkbox" />
+      
+
     <!--
+    <br>
       show if build is running
       <a href="#">
         Stop build
