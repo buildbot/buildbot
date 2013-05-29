@@ -38,6 +38,7 @@ class CheckArtifactExists(ShellCommand):
         build_sourcestampsetid = sourcestamps[0].sourcestampsetid
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
+        self.build.build_status.updateSourceStamps()
 
         if len(sourcestamps_updated) > 0:
             for key, value in sourcestamps_updated.iteritems():

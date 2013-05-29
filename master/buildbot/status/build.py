@@ -114,6 +114,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                     sourcestamps.append(ss.clone())
         return sourcestamps
 
+    def updateSourceStamps(self):
+        all_got_revisions = self.getAllGotRevisions() or {}
+        # always make a new instance
+        for ss in self.sources:
+            if ss.codebase in all_got_revisions:
+                ss.revision = all_got_revisions[ss.codebase]
+
     def getReason(self):
         return self.reason
 
