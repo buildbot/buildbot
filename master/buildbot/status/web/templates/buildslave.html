@@ -96,11 +96,16 @@
       <h2 class="small-head">
         No current builds
       </h2>
+      <br>
+      
     {% endif %}
+    <h2 class="small-head">
+      {{ build_table(recent, True) }}
+    </h2>
   </div>
 
 </div>
 
-{{ build_table(recent, True) }}
+
 
 {% endblock %}

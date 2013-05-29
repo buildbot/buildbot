@@ -29,9 +29,8 @@
 }
 
 .skipped {
-	color: #000;
-	background: #AADDEE;
-	border-color: #AADDEE;
+	background: #CBDCE6;
+	border-top: 1px solid #FFFFFF;
 }
 
 .exception,.retry {
@@ -45,7 +44,7 @@
 	border-color: #ccc;
 }
 
-.running,.waiting,td.building {
+.running,.waiting,td.building, .current-step {
 	background-color: #FCFACB;
 	border-top:1px solid #fff;
 }
@@ -62,8 +61,6 @@
 	padding: 4px 9px;
 	display:inline-block;
 }
-
-// tables
 
 // tables
 .table-1,
@@ -207,7 +204,7 @@ div.last {
 		content:"Success";	
 	}
 	.running {
-		background-color:#ccc;
+		background-color:#FCFACB;
 		&:before {
 			content:"Running";		
 		}
@@ -218,7 +215,17 @@ div.last {
 			content:"Waiting for locks";		
 		}
 	}
-	
+	.failure {
+		background-color:#EE8888;
+		&:before {
+			content:"Failed";				
+		}
+	}
+	.skipped {
+		&:before {
+			content:"Skipped";				
+		}	
+	}
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
@@ -421,7 +428,8 @@ div.force-text {
 	}
 }
 
-.rebuild {
+.rebuild,
+.stopbuild {
 	margin-bottom:20px;
 	.label {
 	    display: block;
@@ -439,7 +447,8 @@ div.force-text {
 }
 
 .rebuild, 
-.cancelbuild {
+.cancelbuild,
+.stopbuild {
 		.grey-btn {
 			padding: 5px 9px;
 		}
