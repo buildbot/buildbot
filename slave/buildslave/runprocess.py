@@ -320,16 +320,16 @@ class RunProcess:
         self.initialStdin = initialStdin
         self.logEnviron = logEnviron
         self.timeout = timeout
-        self.timer = None
+        self.ioTimeoutTimer = None
         self.maxTime = maxTime
-        self.maxTimer = None
+        self.maxTimeoutTimer = None
         self.killTimer = None
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
         self.buffered = deque()
         self.buflen = 0
-        self.buftimer = None
+        self.sendBuffersTimer = None
 
         if usePTY == "slave-config":
             self.usePTY = self.builder.usePTY
@@ -522,10 +522,10 @@ class RunProcess:
         # set up timeouts
 
         if self.timeout:
-            self.timer = self._reactor.callLater(self.timeout, self.doTimeout)
+            self.ioTimeoutTimer = self._reactor.callLater(self.timeout, self.doTimeout)
 
         if self.maxTime:
-            self.maxTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
+            self.maxTimeoutTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
 
         for w in self.logFileWatchers:
             w.start()
@@ -614,7 +614,7 @@ class RunProcess:
         self.sendStatus(msg)
 
     def _bufferTimeout(self):
-        self.buftimer = None
+        self.sendBuffersTimer = None
         self._sendBuffers()
 
     def _sendBuffers(self):
@@ -664,10 +664,10 @@ class RunProcess:
         self.buflen = 0
         if logdata:
             self._sendMessage(msg)
-        if self.buftimer:
-            if self.buftimer.active():
-                self.buftimer.cancel()
-            self.buftimer = None
+        if self.sendBuffersTimer:
+            if self.sendBuffersTimer.active():
+                self.sendBuffersTimer.cancel()
+            self.sendBuffersTimer = None
 
     def _addToBuffers(self, logname, data):
         """
@@ -682,8 +682,8 @@ class RunProcess:
         self.buffered.append((logname, data))
         if self.buflen > self.BUFFER_SIZE:
             self._sendBuffers()
-        elif not self.buftimer:
-            self.buftimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
+        elif not self.sendBuffersTimer:
+            self.sendBuffersTimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
 
     def addStdout(self, data):
         if self.sendStdout:
@@ -691,8 +691,8 @@ class RunProcess:
 
         if self.keepStdout:
             self.stdout += data
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def addStderr(self, data):
         if self.sendStderr:
@@ -700,14 +700,14 @@ class RunProcess:
 
         if self.keepStderr:
             self.stderr += data
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def addLogfile(self, name, data):
         self._addToBuffers( ('log', name), data)
 
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
@@ -744,12 +744,12 @@ class RunProcess:
             log.msg("Hey, command %s finished twice" % self)
 
     def doTimeout(self):
-        self.timer = None
+        self.ioTimeoutTimer = None
         msg = "command timed out: %d seconds without output" % self.timeout
         self.kill(msg)
 
     def doMaxTimeout(self):
-        self.maxTimer = None
+        self.maxTimeoutTimer = None
         msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
@@ -846,7 +846,7 @@ class RunProcess:
         self.failed(RuntimeError("SIGKILL failed to kill process"))
 
     def _cancelTimers(self):
-        for timerName in ('timer', 'killTimer', 'maxTimer', 'buftimer'):
+        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer'):
             timer = getattr(self, timerName, None)
             if timer:
                 timer.cancel()
