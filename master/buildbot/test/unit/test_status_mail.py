@@ -246,7 +246,7 @@ class TestMailNotifier(unittest.TestCase):
                                             "subject":"subject"}
 
         mn.buildsetFinished(99, FAILURE)
-        fakeBuildMessage.assert_called_with("Buildset Complete: testReason",
+        fakeBuildMessage.assert_called_with("(whole buildset)",
                                             [build1, build2], SUCCESS)
 
     def test_buildsetFinished_doesnt_send_email(self):
