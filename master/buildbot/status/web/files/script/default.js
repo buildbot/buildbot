@@ -63,7 +63,6 @@ $(document).ready(function() {
 		}
 	}); 
 
-
 	// class on selected menuitem
 	$(function setCurrentItem(){
 		var path = window.location.pathname.split("\/");
@@ -81,5 +80,17 @@ $(document).ready(function() {
 	        $('#inputfields').find(':checkbox').prop('checked', this.checked);
 	    });
 	});
+
+	// chrome font problem fix
+	$(function chromeWin() {
+		var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+		var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
+		if(is_chrome && isWindows){
+		  $('body').addClass('chrome win');
+
+		}
+	});
+
+
 
 });

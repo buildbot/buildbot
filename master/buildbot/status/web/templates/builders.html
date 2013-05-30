@@ -12,7 +12,7 @@
         </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}builders">
+      <a href="{{ path_to_root }}buildstatus2">
           Buildstatus
       </a>
     </li>
@@ -22,13 +22,14 @@
       </a>
     </li>
     <li>
-      Trunk
+      Default branch
     </li>
   </ul>
 </nav>
 {% endblock %}
 
 {% block content %}
+
 <h1 class="main-head">
   Buildstatus
   <span>
@@ -63,37 +64,41 @@
     </td>
     <td class="txt-align-left">
       <a href="#">
-        mac-slave-02
+        <span class="notimpl"><span class="notimpl">Not implemented</span>
+</span>
+ 
       </a> 
       <br />
       <span class="small-txt">
-        (33% complete)
+        
       </span>
     </td>
     <td class="txt-align-left">
       
       <a href="#">
-        20 Changes
+        <span class="notimpl">Not implemented</span>
+ 
       </a>
       <br />
       <span class="small-txt">
-        #710 (5 days ago)
+        
       </span>
       
     </td>
     {% if b.build_url %}
-      <td class="LastBuild box {{ b.build_css_class }} ">
+      <td class="LastBuild {{ b.build_css_class }} ">
           <a href="{{ b.build_url }}">{{ b.build_label }}</a>
           {{ b.build_text }}
       </td>
     {% else %}
-      <td class="LastBuild box small-txt">
+      <td class="LastBuild small-txt">
         no build
       </td>
     {% endif %}  
     <td>
       <a href="#">
-        Download
+        <span class="notimpl">Not implemented</span>
+ 
       </a>
     </td>
 
@@ -106,25 +111,21 @@
           <span class="close-btn" href="#">
           </span>
           <h3>Overview</h3>
-                    
-          {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
-            {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
-          {% endif %}
-
-
+            {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
+              {{ forms.force_build(b.link+"/force", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
+            {% endif %}
         </div>
         {% endif %}
-      <br>
-
-    <!--
+  
+    <!--    
     <br>
-      show if build is running
-      <a href="#">
+  
+      <a class="more-info" href="#">
         Stop build
       </a>
-    -->
+    
     </td>
-    <!--
+    
       {{ box(**b.current_box) }}  
     -->
   </tr>

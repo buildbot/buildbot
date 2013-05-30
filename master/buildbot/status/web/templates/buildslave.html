@@ -42,24 +42,25 @@
       {% if authz.advertiseAction('gracefulShutdown', request) %}
         
         {% if slave.getGraceful() %}
-          <li>fds
+          <li>
             Slave will shut down gracefully when it is idle.
           </li>
         {% else %}
           <li>
-            {{ forms.graceful_shutdown(shutdown_url, authz) }}
+
+            {{ forms.graceful_shutdown(shutdown_url, authz) }} <span class="notimpl">Not implemented</span>
           </li>
         {% endif %}
       
     {% endif %}
     <li>
-      Request the slave to <input type="submit" value="reboot" class="link-button" /> remotely.
+      Request the slave to <input type="submit" value="reboot" class="link-button" /> remotely. <span class="notimpl">Not implemented</span>
     </li>
     <li>
-      <input type="submit" value="Disable" class="link-button" /> the slave so that it cannot take any jobs.
+      <input type="submit" value="Disable" class="link-button" /> the slave so that it cannot take any jobs. <span class="notimpl">Not implemented</span>
     </li>
     <li>
-        <input type="submit" value="Enable" class="link-button" /> a disabled slave. 
+        <input type="submit" value="Enable" class="link-button" /> a disabled slave. <span class="notimpl">Not implemented</span>
     </li>
   </ul>
 

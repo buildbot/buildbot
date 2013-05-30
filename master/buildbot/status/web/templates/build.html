@@ -316,8 +316,13 @@ SourceStamps
 
 <ol class="step-list">
 {% for s in steps %}
+
   <li>
     
+    <div class="index-count">
+         {{  loop.index }}
+    </div>
+
     <span class="{{ s.css_class }} result">
     </span>
     

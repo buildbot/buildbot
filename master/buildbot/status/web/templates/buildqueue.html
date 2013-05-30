@@ -20,14 +20,19 @@
 </nav>
 {% endblock %}
 
-
-
 {% block content %}
 <h1 class="main-head">
   Buildqueue
 </h1>
-
-  <table class="table-1">
+   <select class="select-tools">
+      <option>
+        With selected
+      </option>
+      <option>
+        Remove
+      </option>
+    </select>
+  <table id="inputfields" class="table-1">
     <th>
       Build Number
     </th>
@@ -47,104 +52,45 @@
       Compatible Slaves
     </th>
     <th>
-      <a href="#">
-        Remove
-      </a>
-      <br/>
-      <a href="#">
-        Select all
-      </a>
+      
+      <input id="selectall" type="checkbox"/>
     </th>
-    <tr>
-      <td>
-        #18
-      </td>
-      <td>
-        issue/539212
-      </td>
-      <td>
-        <a href="#">
-          Build MacEditor
-        </a>
-      </td>
-      <td>
-        32m
-      </td>
-      <td>
-        Jakob Hunsballe, zBuildVerification
-      </td>
-      <td>
-        <a href="#">
-          37 slaves
-        </a>
-      </td>
-      <td>
-        <a href="#">
-        remove 
-      </a>
-        <input type="checkbox"/>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        #18
-      </td>
-      <td>
-        issue/539212
-      </td>
-      <td>
-        <a href="#">
-          Build MacEditor
-        </a>
-      </td>
-      <td>
-        32m
-      </td>
-      <td>
-        Jakob Hunsballe, zBuildVerification
-      </td>
-      <td>
-        <a href="#">
-          37 slaves
-        </a>
-      </td>
-      <td>
-        <a href="#">
-        remove 
-      </a>
-        <input type="checkbox"/>
-      </td>
-    </tr>
     <tr class="last">
       <td>
-        #18
+        <span class="notimpl">Not implxemented</span>
+
+
       </td>
       <td>
-        issue/539212
+       <span class="notimpl">Not implemented</span>
+
       </td>
       <td>
         <a href="#">
-          Build MacEditor
+          <span class="notimpl">Not implemented</span>
+
         </a>
       </td>
       <td>
-        32m
+       <span class="notimpl">Not implemented</span>
+
       </td>
       <td>
-        Jakob Hunsballe, zBuildVerification
+        <span class="notimpl">Not implemented</span>
+
       </td>
       <td>
         <a href="#">
-          37 slaves
+         <span class="notimpl">Not implemented</span>
+
         </a>
       </td>
       <td>
-        <a href="#">
-        remove 
-      </a>
+        
         <input type="checkbox"/>
       </td>
     </tr>
+    
 
   </table>
 

@@ -88,7 +88,13 @@
 	padding-right: 8px;
 	font-size: 9px;
 }
+.chrome.win .breadcrumbs-nav li:before{
+	content: "/";
+	font-weight:bold;
 
-.breadcrumbs-nav li:first-child:before {
+}
+
+.breadcrumbs-nav li:first-child:before,
+.chrome.win .breadcrumbs-nav li:first-child:before {
 	content: none;
 }
