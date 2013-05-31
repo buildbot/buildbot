@@ -63,10 +63,8 @@ $(document).ready(function() {
 		}
 	}); 
 
-
 	// class on selected menuitem
-
-	function setCurrentItem() {
+	$(function setCurrentItem(){
 		var path = window.location.pathname.split("\/");
 		
 		 $('.top-menu a').each(function(index) {
@@ -74,7 +72,25 @@ $(document).ready(function() {
 	        if(thishref[thishref.length-1].trim().toLowerCase() == path[1].trim().toLowerCase())
 	            $(this).parent().addClass("selected");
 	    });
-	}
-	setCurrentItem();
+	});
+
+	// check all in tables
+	$(function selectAll() {
+	    $('#selectall').click(function () {
+	        $('#inputfields').find(':checkbox').prop('checked', this.checked);
+	    });
+	});
+
+	// chrome font problem fix
+	$(function chromeWin() {
+		var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+		var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
+		if(is_chrome && isWindows){
+		  $('body').addClass('chrome win');
+
+		}
+	});
+
+
 
 });

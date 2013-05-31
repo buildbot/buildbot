@@ -28,12 +28,11 @@
   <th>Status</th>
   <th>Last heard from</th>
   <th>Last Message Received</th>
-  
 </tr>
 
 {% for s in slaves %}
 
-  {%- if loop.last or loop.index0 == 0 %}
+  {%- if loop.last %}
       <tr class='last'>
         {%- else -%}
       <tr>
@@ -95,14 +94,15 @@
   {% endif %}
 
   <td>
-    {%- if s.last_heard_from_age -%}
+    {% if s.last_heard_from_age %}
       {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
-    {%- endif -%}
+    {% endif %}
   </td>
   
   <td>
       <a href="#">
-        Unzipping External/Mono/builds.zip . . .
+        <span class="notimpl">Not implemented</span>
+
       </a>
   </td>
 

@@ -23,7 +23,7 @@
     </li>
     <li>
         <a href="{{ path_to_root }}builders">
-          Trunk
+          Default branch
         </a>
     </li>
     <li>
@@ -130,7 +130,7 @@
 </div>
 <div class="column-2 last">
 
-<ul class="btn-list">
+<ul class="btn-list horisontal">
   <li>
     <a class="more-info grey-btn" href="#">
         Buildslaves
@@ -186,6 +186,14 @@
   </li>
 </ul>
 
+<div class="divider"></div>
+
+<h2 class="head-2">
+  Recent Builds
+</h2>
+
+{{ build_table(recent) }}
+
 <!--
 {% if authz.advertiseAction('pingBuilder', request) %}
   <h2>Ping slaves</h2>
@@ -196,10 +204,5 @@
 
 </div>
 </div>
-<h2 class="head-2">
-  Recent Builds
-</h2>
-
-{{ build_table(recent) }}
 
 {% endblock %}

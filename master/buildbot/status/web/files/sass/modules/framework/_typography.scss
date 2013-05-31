@@ -57,12 +57,12 @@ h1.logo a {
 
 div.welcome-txt {
 	font-size: 14px;
-	ol {
+	ul {
 		margin: 18px 0 0 21px;
 	    padding: 0;
 	    li {
 			margin: 0 0 18px;
-		    padding: 0;
+		    padding: 0 0px 0 6px ;
 		}
 	}
 }
@@ -76,12 +76,13 @@ div.welcome-txt {
 	font-size:12px;
 	font-weight:bold;
 	text-transform:uppercase;
-	&:before {
+	/*&:before {
 		color: #666666;
 	    content: counter(li, decimal);
 	    counter-increment: li;
 	    font-size: 28px;
 	}
+	*/
 }
 
 .logs-txt {
