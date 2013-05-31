@@ -52,6 +52,13 @@ Slave
 Features
 ~~~~~~~~
 
+Fixes
+~~~~~
+
+* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for 
+  buildstep wasn't set or was None (see :bb:pull:`753`) thus keeping watched logfiles open
+  (this prevented their removal on Windows in subsequent builds).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
