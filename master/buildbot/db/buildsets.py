@@ -86,13 +86,14 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return (bsid, brids)
         return self.db.pool.do(thd)
 
-    def updateTriggeredBy(self, triggeredbybsid, bsid):
+    def updateTriggeredBy(self, triggeredby, bsid):
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
 
             stmt = buildsets_tbl.update()\
                 .where(buildsets_tbl.c.id == bsid)\
-                .values(triggeredbybsid=triggeredbybsid)
+                .values(triggeredbybsid=triggeredby['bsid'])\
+                .values(triggeredbybrid=triggeredby['brid'])
 
             res = conn.execute(stmt)
             return

@@ -230,13 +230,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getBuildRequestTriggered(self, bsid, buildername):
+    def getBuildRequestTriggered(self, triggeredby, buildername):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db.model.buildsets
 
             stmt_bs = sa.select([buildsets_tbl.c.id]) \
-                .where(buildsets_tbl.c.triggeredbybsid == bsid)
+                .where(buildsets_tbl.c.triggeredbybsid == triggeredby['bsid'])\
+                .where(buildsets_tbl.c.triggeredbybrid == triggeredby['brid'])
 
             stmt_br = sa.select([buildrequests_tbl]) \
                 .where(buildrequests_tbl.c.buildername == buildername) \

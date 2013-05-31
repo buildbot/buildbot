@@ -268,6 +268,9 @@ class MasterConfig(object):
             and not callable(mergeRequests)):
             errors.addError("mergeRequests must be a callable, True, or False")
         else:
+            # defaults to False
+            if mergeRequests is None:
+                mergeRequests = False
             self.mergeRequests = mergeRequests
 
         codebaseGenerator = config_dict.get('codebaseGenerator')
@@ -610,7 +613,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None):
+            properties=None, mergeRequests=False):
 
         errors = ConfigErrors([])
 

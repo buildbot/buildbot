@@ -134,7 +134,8 @@ class Model(base.DBConnectorComponent):
         # buildset belongs to all sourcestamps with setid
         sa.Column('sourcestampsetid', sa.Integer,
             sa.ForeignKey('sourcestampsets.id')),
-        sa.Column('triggeredbybsid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=True)
+        sa.Column('triggeredbybsid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=True),
+        sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('"buildrequests.id"'), nullable=True)
     )
 
     # changes

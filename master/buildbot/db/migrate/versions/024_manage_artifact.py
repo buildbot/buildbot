@@ -39,3 +39,11 @@ def upgrade(migrate_engine):
     cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.triggeredbybsid], [buildsets_tbl.c.id])
     cons.create()
 
+    triggeredbybrid = sa.Column('triggeredbybrid', sa.Integer)
+    triggeredbybrid.create(buildsets_tbl)
+    idx = sa.Index('buildsets_triggeredbybrid', buildsets_tbl.c.triggeredbybrid, unique=False)
+    idx.create()
+    # Data is up to date, now force integrity
+    cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.triggeredbybrid], [buildrequests_tbl.c.id])
+    cons.create()
+

@@ -180,13 +180,12 @@ class DownloadArtifact(ShellCommand):
     description="DonwloadArtifact"
     descriptionDone="DonwloadArtifact finished"
 
-    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, TriggeredByBuilder = False, **kwargs):
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
-        self.TriggeredByBuilder = TriggeredByBuilder
         self.master = None
         ShellCommand.__init__(self, **kwargs)
 
@@ -195,13 +194,9 @@ class DownloadArtifact(ShellCommand):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
-        #find buildrequest dependency
-        bsid = self.build.requests[0].bsid
-
-        if (self.TriggeredByBuilder):
-            br = yield self.master.db.buildrequests.getBuildRequestTriggered(bsid, self.artifactBuilderName)
-        else:
-            br = yield self.master.db.buildrequests.getRelatedBuildRequest(bsid, self.artifactBuilderName)
+        #find artifact dependency
+        triggeredby = {'bsid' : self.build.requests[0].bsid, 'brid' : self.build.requests[0].id}
+        br = yield self.master.db.buildrequests.getBuildRequestTriggered(triggeredby, self.artifactBuilderName)
 
         artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
                                       br['brid'], FormatDatetime(br["submitted_at"]))
