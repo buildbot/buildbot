@@ -86,20 +86,6 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return (bsid, brids)
         return self.db.pool.do(thd)
 
-    def updateTriggeredBy(self, triggeredby, bsid):
-        def thd(conn):
-            buildsets_tbl = self.db.model.buildsets
-
-            stmt = buildsets_tbl.update()\
-                .where(buildsets_tbl.c.id == bsid)\
-                .values(triggeredbybsid=triggeredby['bsid'])\
-                .values(triggeredbybrid=triggeredby['brid'])
-
-            res = conn.execute(stmt)
-            return
-
-        return  self.db.pool.do(thd)
-
     def completeBuildset(self, bsid, results, complete_at=None,
                                 _reactor=reactor):
         if complete_at is not None:

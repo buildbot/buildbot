@@ -60,7 +60,7 @@ class CheckArtifactExists(ShellCommand):
         for l in stdio:
             m = foundregex.search(l)
             if (m):
-                # update buildrequest (madebybrid) with self.artifactBuildrequest
+                # update buildrequest (artifactbrid) with self.artifactBuildrequest
                 brid = self.build.requests[0].id
                 reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
                 artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + self.artifact

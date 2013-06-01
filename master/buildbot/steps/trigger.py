@@ -147,10 +147,14 @@ class Trigger(LoggingBuildStep):
 
         dl = []
         triggered_names = []
-        triggeredby = {'bsid' : self.build.requests[0].bsid, 'brid' : self.build.requests[0].id}
+        triggeredbybrid = None
+        try:
+            triggeredbybrid = self.build.requests[0].id
+        except TypeError as e:
+            log.msg("Warning: check self.build.requests type expecting a list, trigger.py \n%s" % e.message)
 
         for sch in triggered_schedulers:
-            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredby=triggeredby))
+            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredbybrid=triggeredbybrid))
             triggered_names.append(sch.name)
         self.step_status.setText(['triggered'] + triggered_names)
 

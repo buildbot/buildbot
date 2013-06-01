@@ -22,28 +22,19 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     buildrequests_tbl = sa.Table('buildrequests', metadata, autoload=True)
-    madebybrid = sa.Column('madebybrid', sa.Integer)
-    madebybrid.create(buildrequests_tbl)
-    idx = sa.Index('buildrequests_madebybrid', buildrequests_tbl.c.madebybrid, unique=False)
+    artifactbrid = sa.Column('artifactbrid', sa.Integer)
+    artifactbrid.create(buildrequests_tbl)
+    idx = sa.Index('buildrequests_artifactbrid', buildrequests_tbl.c.artifactbrid, unique=False)
     idx.create()
     # Data is up to date, now force integrity
-    cons = constraint.ForeignKeyConstraint([buildrequests_tbl.c.madebybrid], [buildrequests_tbl.c.id])
-    cons.create()
-
-    buildsets_tbl = sa.Table('buildsets', metadata, autoload=True)
-    triggeredbybsid = sa.Column('triggeredbybsid', sa.Integer)
-    triggeredbybsid.create(buildsets_tbl)
-    idx = sa.Index('buildsets_triggeredbybsid', buildsets_tbl.c.triggeredbybsid, unique=False)
-    idx.create()
-    # Data is up to date, now force integrity
-    cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.triggeredbybsid], [buildsets_tbl.c.id])
+    cons = constraint.ForeignKeyConstraint([buildrequests_tbl.c.artifactbrid], [buildrequests_tbl.c.id])
     cons.create()
 
     triggeredbybrid = sa.Column('triggeredbybrid', sa.Integer)
-    triggeredbybrid.create(buildsets_tbl)
-    idx = sa.Index('buildsets_triggeredbybrid', buildsets_tbl.c.triggeredbybrid, unique=False)
+    triggeredbybrid.create(buildrequests_tbl)
+    idx = sa.Index('buildrequests_triggeredbybrid', buildrequests_tbl.c.triggeredbybrid, unique=False)
     idx.create()
     # Data is up to date, now force integrity
-    cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.triggeredbybrid], [buildrequests_tbl.c.id])
+    cons = constraint.ForeignKeyConstraint([buildrequests_tbl.c.triggeredbybrid], [buildrequests_tbl.c.id])
     cons.create()
 

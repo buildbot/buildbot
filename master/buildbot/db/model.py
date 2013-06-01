@@ -72,7 +72,8 @@ class Model(base.DBConnectorComponent):
 
         # time the buildrequest was completed, or NULL
         sa.Column('complete_at', sa.Integer),
-        sa.Column('madebybrid', sa.Integer, sa.ForeignKey("buildrequests.id"), nullable=True),
+        sa.Column('artifactbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
+        sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
     )
 
     # Each row in this table represents a claimed build request, where the
@@ -133,9 +134,7 @@ class Model(base.DBConnectorComponent):
 
         # buildset belongs to all sourcestamps with setid
         sa.Column('sourcestampsetid', sa.Integer,
-            sa.ForeignKey('sourcestampsets.id')),
-        sa.Column('triggeredbybsid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=True),
-        sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('"buildrequests.id"'), nullable=True)
+            sa.ForeignKey('sourcestampsets.id'))
     )
 
     # changes
@@ -405,8 +404,8 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
             unique=True)
-    sa.Index('buildrequests_madebybrid', buildrequests.c.madebybrid, unique=False)
-    sa.Index('buildsets_triggeredbybsid', buildsets.c.triggeredbybsid, unique=False)
+    sa.Index('buildrequests_artifactbrid', buildrequests.c.artifactbrid, unique=False)
+    sa.Index('buildrequests_triggeredbybrid', buildrequests.c.triggeredbybrid, unique=False)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be

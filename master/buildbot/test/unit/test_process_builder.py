@@ -346,8 +346,8 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 buildername="bldr", submitted_at=1332025495.19141),
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[42880, 42922],
-                exp_builds=[('bldr', [42880, 42922])])
+                exp_claims=[42880],
+                exp_builds=[('bldr', [42880])])
 
     # _chooseSlave
 
@@ -489,16 +489,16 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.assertEqual(fn, expected)
 
     def test_getMergeRequestsFn_defaults(self):
-        self.do_test_getMergeRequestsFn(None, None, "default")
+        self.do_test_getMergeRequestsFn(None, None, None)
 
     def test_getMergeRequestsFn_global_True(self):
-        self.do_test_getMergeRequestsFn(None, True, "default")
+        self.do_test_getMergeRequestsFn(None, True, None)
 
     def test_getMergeRequestsFn_global_False(self):
         self.do_test_getMergeRequestsFn(None, False, None)
 
     def test_getMergeRequestsFn_global_function(self):
-        self.do_test_getMergeRequestsFn(None, 'callable', 'callable')
+        self.do_test_getMergeRequestsFn(None, 'callable', None)
 
     def test_getMergeRequestsFn_builder_True(self):
         self.do_test_getMergeRequestsFn(True, False, "default")

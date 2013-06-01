@@ -99,6 +99,7 @@ def upgradeFiles(config):
         if not config['quiet']:
             print "creating public_html"
         os.mkdir(webdir)
+        os.mkdir(os.path.join(webdir, "css"))
 
     templdir = os.path.join(config['basedir'], "templates")
     if not os.path.exists(templdir):
@@ -106,7 +107,7 @@ def upgradeFiles(config):
             print "creating templates"
         os.mkdir(templdir)
 
-    for file in ('bg_gradient.jpg', 'default.css',
+    for file in ('bg_gradient.jpg', 'css/default.css',
                  'robots.txt', 'favicon.ico'):
         source = util.sibpath(__file__, "../status/web/files/%s" % (file,))
         target = os.path.join(webdir, file)

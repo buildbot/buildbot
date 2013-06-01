@@ -52,6 +52,27 @@ global_defaults = dict(
     manhole=None,
 )
 
+load_global_defaults = dict(
+    title='Buildbot',
+    titleURL='http://buildbot.net',
+    buildbotURL='http://localhost:8080/',
+    changeHorizon=None,
+    eventHorizon=50,
+    logHorizon=None,
+    buildHorizon=None,
+    logCompressionLimit=4096,
+    logCompressionMethod='bz2',
+    logMaxTailSize=None,
+    logMaxSize=None,
+    properties=properties.Properties(),
+    mergeRequests=False,
+    prioritizeBuilders=None,
+    slavePortnum=None,
+    multiMaster=False,
+    debugPassword=None,
+    manhole=None,
+    )
+
 
 class FakeChangeSource(changes_base.ChangeSource):
     pass
@@ -309,7 +330,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_defaults(self):
         self.cfg.load_global(self.filename, {}, self.errors)
-        self.assertResults(**global_defaults)
+        self.assertResults(**load_global_defaults)
 
     def test_load_global_string_param_not_string(self):
         self.cfg.load_global(self.filename,
@@ -956,7 +977,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=[],
             env={},
             properties={},
-            mergeRequests=None)
+            mergeRequests=False)
 
     def test_args(self):
         cfg = config.BuilderConfig(

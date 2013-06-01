@@ -136,7 +136,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     .where(buildrequests_tbl.c.complete == 1)\
                     .where(buildrequests_tbl.c.results == 0)\
                     .where(buildrequests_tbl.c.buildername == buildername)\
-                    .where(buildrequests_tbl.c.madebybrid == None)
+                    .where(buildrequests_tbl.c.artifactbrid == None)
 
             q = sa.select(columns=[buildrequests_tbl])\
                 .where(buildrequests_tbl.c.id == last_br)
@@ -150,20 +150,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
                       buildername=row.buildername, priority=row.priority,
                       complete=bool(row.complete), results=row.results,
-                      submitted_at=submitted_at, complete_at=complete_at, madebybrid=row.madebybrid)
+                      submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
 
             res.close()
             return buildrequest
         return self.db.pool.do(thd)
 
-    def reusePreviouslyGeneratedArtifact(self, brid, madebybrid):
+    def reusePreviouslyGeneratedArtifact(self, brid, artifactbrid):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
 
             stmt = buildrequests_tbl.update()\
                 .where(buildrequests_tbl.c.id == brid)\
-                .values(madebybrid=madebybrid)
+                .values(artifactbrid=artifactbrid)
 
             res = conn.execute(stmt)
             return res.rowcount
@@ -183,7 +183,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             stmt2 = buildrequests_tbl.update() \
                 .where(buildrequests_tbl.c.id.in_(stmt))\
-                .values(madebybrid=requests[0].id)
+                .values(artifactbrid=requests[0].id)
 
             res = conn.execute(stmt2)
             return res.rowcount
@@ -210,9 +210,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             buildrequest = None
             if row:
-                if row.madebybrid:
+                if row.artifactbrid:
                     stmt = sa.select([buildrequests_tbl])\
-                                .where(buildrequests_tbl.c.id == row.madebybrid)
+                                .where(buildrequests_tbl.c.id == row.artifactbrid)
                     res = conn.execute(stmt)
                     br_row = res.fetchone()
                     if br_row:
@@ -223,33 +223,28 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
                                     buildername=row.buildername, priority=row.priority,
                                     complete=bool(row.complete), results=row.results,
-                                    submitted_at=submitted_at, complete_at=complete_at, madebybrid=row.madebybrid)
+                                    submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
 
             res.close()
             return buildrequest
 
         return self.db.pool.do(thd)
 
-    def getBuildRequestTriggered(self, triggeredby, buildername):
+    def getBuildRequestTriggered(self, triggeredbybrid, buildername):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
-            buildsets_tbl = self.db.model.buildsets
-
-            stmt_bs = sa.select([buildsets_tbl.c.id]) \
-                .where(buildsets_tbl.c.triggeredbybsid == triggeredby['bsid'])\
-                .where(buildsets_tbl.c.triggeredbybrid == triggeredby['brid'])
 
             stmt_br = sa.select([buildrequests_tbl]) \
                 .where(buildrequests_tbl.c.buildername == buildername) \
-                .where(buildrequests_tbl.c.buildsetid.in_(stmt_bs) )
+                .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid)
 
             res = conn.execute(stmt_br)
             row = res.fetchone()
             buildrequest = None
             if row:
-                if row.madebybrid:
+                if row.artifactbrid:
                     stmt = sa.select([buildrequests_tbl]) \
-                        .where(buildrequests_tbl.c.id == row.madebybrid)
+                        .where(buildrequests_tbl.c.id == row.artifactbrid)
                     res = conn.execute(stmt)
                     br_row = res.fetchone()
                     if br_row:
@@ -260,12 +255,25 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
                                     buildername=row.buildername, priority=row.priority,
                                     complete=bool(row.complete), results=row.results,
-                                    submitted_at=submitted_at, complete_at=complete_at, madebybrid=row.madebybrid)
+                                    submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
 
             res.close()
             return buildrequest
 
         return self.db.pool.do(thd)
+
+    def updateTriggeredBy(self, triggeredbybrid, bsid):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+            stmt = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.bsid == bsid) \
+                .values(triggeredbybrid=triggeredbybrid)
+
+            res = conn.execute(stmt)
+            return
+
+        return  self.db.pool.do(thd)
 
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
