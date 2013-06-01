@@ -190,46 +190,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-
-    def getRelatedBuildRequest(self, bsid, buildername):
-        def thd(conn):
-            buildrequests_tbl = self.db.model.buildrequests
-            buildsets_tbl = self.db.model.buildsets
-
-            stmt  = sa.select([buildsets_tbl.c.triggeredbybsid]) \
-                .where(buildsets_tbl.c.id == bsid)
-
-            stmt_bs = sa.select([buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.triggeredbybsid == stmt)
-
-            stmt_br = sa.select([buildrequests_tbl])\
-                        .where(buildrequests_tbl.c.buildername == buildername)\
-                        .where(buildrequests_tbl.c.buildsetid.in_(stmt_bs) )
-
-            res = conn.execute(stmt_br)
-            row = res.fetchone()
-            buildrequest = None
-            if row:
-                if row.artifactbrid:
-                    stmt = sa.select([buildrequests_tbl])\
-                                .where(buildrequests_tbl.c.id == row.artifactbrid)
-                    res = conn.execute(stmt)
-                    br_row = res.fetchone()
-                    if br_row:
-                        row = br_row
-
-                submitted_at = mkdt(row.submitted_at)
-                complete_at = mkdt(row.complete_at)
-                buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
-                                    buildername=row.buildername, priority=row.priority,
-                                    complete=bool(row.complete), results=row.results,
-                                    submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
-
-            res.close()
-            return buildrequest
-
-        return self.db.pool.do(thd)
-
     def getBuildRequestTriggered(self, triggeredbybrid, buildername):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
