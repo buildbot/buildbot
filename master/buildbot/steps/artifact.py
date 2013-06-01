@@ -195,8 +195,8 @@ class DownloadArtifact(ShellCommand):
             self.master = self.build.builder.botmaster.parent
 
         #find artifact dependency
-        triggeredby = {'bsid' : self.build.requests[0].bsid, 'brid' : self.build.requests[0].id}
-        br = yield self.master.db.buildrequests.getBuildRequestTriggered(triggeredby, self.artifactBuilderName)
+        triggeredbybrid = self.build.requests[0].id
+        br = yield self.master.db.buildrequests.getBuildRequestTriggered(triggeredbybrid, self.artifactBuilderName)
 
         artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
                                       br['brid'], FormatDatetime(br["submitted_at"]))
