@@ -679,8 +679,9 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 ``allowed_origins``
     This gives a list of origins which are allowed to access the Buildbot API (including control via JSONRPC 2.0).
     It implements cross-origin request sharing (CORS), allowing pages at origins other than the Buildbot UI to use the API.
-    This parameter can be set to ``['*']`` to allow access from anywhere, but this configuration invites cross-site request forgeries (CSRF).
-    The Buildbot UI does not require this parameter to be set.
+    Each origin is interpreted as filename match expression, with ``?`` matching one character and ``*`` matching anything.
+    Thus ``['*']`` will match all origins, and ``['https://*.buildbot.net']`` will match secure sites under ``buildbot.net``.
+    The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
 
 .. bb:cfg:: codebaseGenerator
 

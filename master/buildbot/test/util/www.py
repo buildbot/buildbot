@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import cgi
 import urllib
 import pkg_resources
@@ -80,6 +81,7 @@ class WwwTestMixin(object):
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
+        master.www = mock.Mock() # to handle the resourceNeedsReconfigs call
         cfg = dict(url='//', port=None)
         cfg.update(kwargs)
         master.config.www = cfg

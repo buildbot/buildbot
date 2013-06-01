@@ -17,6 +17,10 @@ from twisted.web import resource
 
 class Resource(resource.Resource):
 
+    # if this is true for a class, then instances will have their
+    # reconfigResource(new_config) methods called on reconfig.
+    needsReconfig = False
+
     # as a convenience, subclasses have a ``master`` attribute, a
     # ``base_url`` attribute giving Buildbot's base URL,
     # and ``static_url`` attribute giving Buildbot's static files URL
@@ -28,6 +32,12 @@ class Resource(resource.Resource):
     def __init__(self, master):
         resource.Resource.__init__(self)
         self.master = master
+        if self.needsReconfig:
+            master.www.resourceNeedsReconfigs(self)
+
+    def reconfigResource(self, new_config):
+        raise NotImplementedError
+
 
 class RedirectResource(Resource):
 

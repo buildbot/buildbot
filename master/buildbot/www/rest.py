@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+import fnmatch
 import datetime
 import types
 from contextlib import contextmanager
@@ -48,12 +50,14 @@ class RestRootResource(resource.Resource):
         resource.Resource.__init__(self, master)
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
-        for version, klass in self.version_classes.iteritems():
-            if version >= min_vers:
-                self.putChild('v%d' % version, klass(master))
-
         latest = max(self.version_classes.iterkeys())
-        self.putChild('latest', self.version_classes[latest](master))
+        for version, klass in self.version_classes.iteritems():
+            if version < min_vers:
+                continue
+            child = klass(master)
+            self.putChild('v%d' % version, child)
+            if version == latest:
+                self.putChild('latest', child)
 
     def render(self, request):
         request.setHeader("content-type", 'application/json')
@@ -96,6 +100,9 @@ class V2RootResource(resource.Resource):
     # this is marked as a leaf node, and any remaining path items are parsed
     # during rendering
     isLeaf = True
+
+    # enable reconfigResource calls
+    needsReconfig = True
 
     def getEndpoint(self, request):
         # note that trailing slashes are not allowed
@@ -164,11 +171,10 @@ class V2RootResource(resource.Resource):
 
     @defer.inlineCallbacks
     def renderJsonRpc(self, request):
-        www_cfg = self.master.config.www
         jsonRpcReply = {'jsonrpc' : "2.0"}
         def writeError(msg, errcode=399,
                 jsonrpccode=JSONRPC_CODES["internal_error"]):
-            if www_cfg.get('debug'):
+            if self.debug:
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', JSON_ENCODED)
@@ -279,9 +285,8 @@ class V2RootResource(resource.Resource):
 
     @defer.inlineCallbacks
     def renderRest(self, request):
-        www_cfg = self.master.config.www
         def writeError(msg, errcode=404, jsonrpccode=None):
-            if www_cfg.get('debug'):
+            if self.debug:
                 log.msg("REST error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', 'text/plain; charset=utf-8')
@@ -366,10 +371,9 @@ class V2RootResource(resource.Resource):
                             'text/plain; charset=utf-8')
 
             # set up caching
-            cache_seconds = www_cfg.get('json_cache_seconds', 0)
-            if cache_seconds:
+            if self.cache_seconds:
                 now = datetime.datetime.utcnow()
-                expires = now + datetime.timedelta(seconds=cache_seconds)
+                expires = now + datetime.timedelta(seconds=self.cache_seconds)
                 request.setHeader("Expires",
                                 expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
                 request.setHeader("Pragma", "no-cache")
@@ -387,10 +391,18 @@ class V2RootResource(resource.Resource):
             else:
                 request.write(data)
 
+    def reconfigResource(self, new_config):
+        # pre-translate the origin entries in the config
+        self.origins = [ re.compile(fnmatch.translate(o.lower()))
+                        for o in new_config.www.get('allowed_origins', []) ]
+
+        # and copy some other flags
+        self.debug = new_config.www.get('debug')
+        self.cache_seconds = new_config.www.get('json_cache_seconds', 0)
+
     def render(self, request):
-        www_cfg = self.master.config.www
         def writeError(msg, errcode=400):
-            if www_cfg.get('debug'):
+            if self.debug:
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', 'text/plain; charset=utf-8')
@@ -398,14 +410,14 @@ class V2RootResource(resource.Resource):
             request.finish()
 
         # Handle CORS, if necessary.
-        origins = www_cfg.get('allowed_origins')
+        origins = self.origins
         if origins is not None:
             isPreflight = False
             reqOrigin = request.getHeader('origin')
             if reqOrigin:
                 err = None
-                if reqOrigin.lower() not in origins \
-                            and '*' not in origins:
+                reqOrigin = reqOrigin.lower()
+                if not any(o.match(reqOrigin) for o in self.origins):
                     err = "invalid origin"
                 elif request.method == 'OPTIONS':
                     preflightMethod = request.getHeader(

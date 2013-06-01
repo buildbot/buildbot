@@ -64,6 +64,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         if need_new_site:
             self.setupSite(new_config)
 
+        if self.site:
+            self.reconfigSite(new_config)
+
         if www['port'] != self.port:
             if self.port_service:
                 yield defer.maybeDeferred(lambda :
@@ -102,6 +105,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         return self._gotPort.getHost().port
 
     def setupSite(self, new_config):
+        self.reconfigurableResources = []
         root = self.apps['base'].resource
 
         # /api
@@ -114,3 +118,15 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         root.putChild('sse', sse.EventResource(self.master))
 
         self.site = server.Site(root)
+
+        # convert this to a tuple so it can't be appended anymore (in
+        # case some dynamically created resources try to get reconfigs)
+        self.reconfigurableResources = tuple(self.reconfigurableResources)
+
+    def resourceNeedsReconfigs(self, resource):
+        # flag this resource as needing to know when a reconfig occurs
+        self.reconfigurableResources.append(resource)
+
+    def reconfigSite(self, new_config):
+        for rsrc in self.reconfigurableResources:
+            rsrc.reconfigResource(new_config)

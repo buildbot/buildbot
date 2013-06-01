@@ -46,11 +46,11 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
 
     def test_versions_limited(self):
         master = self.make_master(url='h:/a/b/')
-        master.config.www['rest_minimum_version'] = 3 # start at v3
+        master.config.www['rest_minimum_version'] = 2
         rsrc = rest.RestRootResource(master)
         self.assertEqual(sorted(rsrc.listNames()),
                 sorted([ 'latest' ] +
-                    [ 'v%d' % v for v in range(3, self.maxVersion+1) ]))
+                    [ 'v%d' % v for v in range(2, self.maxVersion+1) ]))
 
 class V2RootResource(www.WwwTestMixin, unittest.TestCase):
 
@@ -58,6 +58,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         self.master = self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
+        self.rsrc.reconfigResource(self.master.config)
 
     def assertSimpleError(self, message, responseCode):
         self.assertRequest(content=json.dumps({'error': message}),
@@ -83,14 +84,15 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.master.config.www['allowed_origins'] = ['h://good']
+        self.rsrc.reconfigResource(self.master.config)
         def renderRest(request):
             request.write('ok')
             return defer.succeed(None)
         self.rsrc.renderRest = renderRest
 
-    def assertOk(self, expectHeaders=True, content='ok'):
+    def assertOk(self, expectHeaders=True, content='ok', origin='h://good'):
         hdrs = {
-            'access-control-allow-origin': ['h://good'],
+            'access-control-allow-origin': [origin],
             'access-control-allow-headers': ['Content-Type'],
             'access-control-max-age': ['3600'],
         } if expectHeaders else {}
@@ -115,8 +117,21 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_cors_origin_match_star(self):
         self.master.config.www['allowed_origins'] = ['*']
+        self.rsrc.reconfigResource(self.master.config)
         yield self.render_resource(self.rsrc, '/', origin='h://good')
         self.assertOk()
+
+    @defer.inlineCallbacks
+    def test_cors_origin_patterns(self):
+        self.master.config.www['allowed_origins'] = ['h://*.good',
+                                                     'hs://*.secure']
+        self.rsrc.reconfigResource(self.master.config)
+        yield self.render_resource(self.rsrc, '/', origin='h://foo.good')
+        self.assertOk(origin='h://foo.good')
+        yield self.render_resource(self.rsrc, '/', origin='hs://x.secure')
+        self.assertOk(origin='hs://x.secure')
+        yield self.render_resource(self.rsrc, '/', origin='h://x.secure')
+        self.assertNotOk('invalid origin')
 
     @defer.inlineCallbacks
     def test_cors_origin_mismatch(self):
@@ -159,6 +174,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.master.config.www['debug'] = True
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
+        self.rsrc.reconfigResource(self.master.config)
 
     def _expLinks(self, links):
         sub = {'self': 'h:/api/v2' + self.request.path}
@@ -462,6 +478,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         self.master = self.make_master(url='h:/')
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
+        self.rsrc.reconfigResource(self.master.config)
 
     def assertJsonRpcError(self, message, responseCode=400, jsonrpccode=None):
         got = {}
