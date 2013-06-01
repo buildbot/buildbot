@@ -1,0 +1,56 @@
+/*
+	Ribbon theme for Shower presentation template: http://github.com/pepelsbey/shower
+	Copyright © 2010–2011 Vadim Makeev, http://pepelsbey.net/
+	Licensed under MIT license: https://github.com/pepelsbey/shower/wiki/License
+*/
+
+@page {
+	margin:0;
+	size:1024px 640px;
+	}
+
+/* List
+---------------------------------------- */
+.list {
+	float:none;
+	padding:0;
+	background:#888;
+	}
+
+/* Caption */
+.list .caption {
+	display:none;
+	}
+
+/* Slide */
+.list .slide {
+	float:none;
+	margin:0;
+	padding:0;
+	}
+	.list .slide > DIV {
+		width:1024px;
+		height:640px;
+		background:none;
+		}
+	.list .slide > div,
+	.list .slide > div:hover {
+		-webkit-box-shadow:none;
+		-moz-box-shadow:none;
+		box-shadow:none;
+		}
+	.list .slide section {
+		-webkit-transform:none;
+		-moz-transform:none;
+		-ms-transform:none;
+		-o-transform:none;
+		transform:none;
+		}
+		.list .slide:after {
+			position:absolute;
+			bottom:85px;
+			left:120px;
+			color:#BBB;
+			line-height:1;
+			text-shadow:none;
+			}
