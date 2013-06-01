@@ -262,8 +262,7 @@ class V2RootResource(resource.Resource):
                     continue
             raise BadRequest("unrecognized query parameter '%s'" % (arg,))
 
-        # if ordering or filtering is on a field that's not in fields, bail
-        # out TODO: test
+        # if ordering or filtering is on a field that's not in fields, bail out
         if fields:
             fieldsSet = set(fields)
             if order and set(order) - fieldsSet:
