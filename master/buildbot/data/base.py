@@ -160,7 +160,7 @@ class Link(object):
         querystr = ''
         if self.query:
             querystr = '?' + urllib.urlencode(self.query)
-        base = '/'.join([baseUrl + 'api', 'v%d' % apiVersion]
+        base = '/'.join([baseUrl + 'api', 'v%d' % (apiVersion,)]
                         + list(self.path))
         return base + querystr
 

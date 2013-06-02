@@ -18,7 +18,7 @@ from buildbot.data import base, types
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
-    # Note that this is a singluar endpoint, even though it overrides the
+    # Note that this is a singular endpoint, even though it overrides the
     # offset/limit query params in ResultSpec
     isCollection = False
     pathPatterns = """

@@ -55,7 +55,7 @@ class RestRootResource(resource.Resource):
             if version < min_vers:
                 continue
             child = klass(master)
-            self.putChild('v%d' % version, child)
+            self.putChild('v%d' % (version,), child)
             if version == latest:
                 self.putChild('latest', child)
 

@@ -145,7 +145,7 @@ class List(Type):
         self.of = of
 
     def validate(self, name, object):
-        if type(object) != list:
+        if type(object) != list: # we want a list, and NOT a subclass
             yield "%s (%r) is not a %s" % (name, object, self.name)
             return
 
@@ -159,7 +159,7 @@ class SourcedProperties(Type):
     name = "sourced-properties"
 
     def validate(self, name, object):
-        if type(object) != dict:
+        if type(object) != dict: # we want a dict, and NOT a subclass
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in object.iteritems():
