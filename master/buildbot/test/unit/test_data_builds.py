@@ -17,12 +17,13 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import builds
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class Build(endpoint.EndpointMixin, unittest.TestCase):
+class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builds.BuildEndpoint
+    resourceTypeClass = builds.Build
 
     def setUp(self):
         self.setUpEndpoint()
@@ -45,34 +46,35 @@ class Build(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        build = yield self.callGet(dict(), dict(buildid=14))
-        validation.verifyData(self, 'build', {}, build)
+        build = yield self.callGet(('build', 14))
+        self.validateData(build)
         self.assertEqual(build['number'], 4)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        build = yield self.callGet(dict(), dict(buildid=9914))
+        build = yield self.callGet(('build', 9999))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_missing_builder_number(self):
-        build = yield self.callGet(dict(), dict(builderid=999, number=4))
+        build = yield self.callGet(('builder', 999, 'build', 4))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_missing_number(self):
-        build = yield self.callGet(dict(), dict(builderid=77, number=44))
+        build = yield self.callGet(('builder', 77, 'build', 44))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_number(self):
-        build = yield self.callGet(dict(), dict(builderid=77, number=5))
-        validation.verifyData(self, 'build', {}, build)
+        build = yield self.callGet(('builder', 77, 'build', 5))
+        self.validateData(build)
         self.assertEqual(build['buildid'], 15)
 
-class Builds(endpoint.EndpointMixin, unittest.TestCase):
+class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builds.BuildsEndpoint
+    resourceTypeClass = builds.Build
 
     def setUp(self):
         self.setUpEndpoint()
@@ -95,33 +97,30 @@ class Builds(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_all(self):
-        builds = yield self.callGet(dict(), dict())
-        [ validation.verifyData(self, 'build', {}, build)
-          for build in builds ]
+        builds = yield self.callGet(('build',))
+        [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]),
                          [3, 4, 5])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
-        builds = yield self.callGet(dict(), dict(builderid=78))
-        [ validation.verifyData(self, 'build', {}, build)
-          for build in builds ]
+        builds = yield self.callGet(('builder', 78, 'build'))
+        [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]), [5])
 
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
-        builds = yield self.callGet(dict(), dict(buildrequestid=82))
-        [ validation.verifyData(self, 'build', {}, build)
-          for build in builds ]
+        builds = yield self.callGet(('buildrequest', 82, 'build'))
+        [ self.validateData(build) for build in builds ]
         self.assertEqual(sorted([ b['number'] for b in builds ]), [3, 4])
 
 
-class BuildResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Build(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = builds.BuildsResourceType(self.master)
+        self.rtype = builds.Build(self.master)
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
             exp_kwargs=None, *args, **kwargs):

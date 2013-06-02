@@ -86,22 +86,6 @@ class DBConnectorComponent(object):
                 return thd(conn, no_recurse=True)
         return self.db.pool.do(thd)
 
-    def dataOptionsToSelectOptions(self, opts):
-        r = {}
-        if 'start' in opts and opts['start'] != 0:
-            r["offset"] = int(opts['start'])
-        if 'count' in opts and opts['count'] != 0:
-            r["limit"] = int(opts['count'])
-        if 'sort' in opts and opts['sort'] != "":
-            def convert((k,r)):
-                if k in self.data2db:
-                    k = self.data2db[k]
-                if r:
-                    return sa.desc(k)
-                return sa.asc(k)
-            r["order_by"] = map(convert,opts['sort'])
-        return r
-
     def hashColumns(self, *args):
         """
         Hash the given values in a consistent manner: None is represented as

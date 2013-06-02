@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import exceptions
+import UserList
+import urllib
 from twisted.internet import defer
+from buildbot.data import exceptions
 
 class ResourceType(object):
-    type = None
+    name = None
     endpoints = []
     keyFields = []
 
@@ -34,7 +36,7 @@ class ResourceType(object):
         return endpoints
 
     def produceEvent(self, msg, event):
-        routingKey = (self.type,) \
+        routingKey = (self.name,) \
              + tuple(str(msg[k]) for k in self.keyFields) \
              + (event,)
         self.master.mq.produce(routingKey, msg)
@@ -43,16 +45,17 @@ class ResourceType(object):
 class Endpoint(object):
     pathPatterns = ""
     rootLinkName = None
+    isCollection = False
 
     def __init__(self, rtype, master):
         self.rtype = rtype
         self.master = master
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         raise NotImplementedError
 
     def control(self, action, args, kwargs):
-        raise NotImplementedError
+        raise exceptions.InvalidControlException
 
     def startConsuming(self, callback, options, kwargs):
         raise NotImplementedError
@@ -95,84 +98,71 @@ class BuildNestingMixin(object):
             defer.returnValue(dbdict['id'])
 
 
-class GetParamsCheckMixin(object):
-    """ a mixin for making generic paramater checks for the get data api"""
-    maximumCount = 0
-    def get(self, options, kwargs):
-        """generic tests for get options
-           currently only test the count is not too large to avoid dos
-        """
-        if "count" in options:
-            try:
-                options["count"] = int(options["count"])
-            except:
-                return defer.fail(exceptions.InvalidOptionException(
-                        "count need to be integer %s"%(
-                            options["count"])))
-            if self.maximumCount > 0 and self.maximumCount < options["count"]:
-                return defer.fail(exceptions.InvalidOptionException(
-                        "to many element requested: %d > %d"%(
-                            options["count"], self.maximumCount)))
-        return self.safeGet(options, kwargs)
-    def safeGet(self, options, kwargs):
-        raise NotImplementedError
+class ListResult(UserList.UserList):
 
-class ControlParamsCheckMixin(object):
-    """ a mixin for making generic paramater checks for the control data api"""
-    action_specs = {}
-    def control(self, action, args, kwargs):
-        if not action in self.action_specs:
-            raise exceptions.InvalidActionException(
-                "'%s' action is not supported. Only %s are"%(action, self.action_specs.keys()))
-        self.checkParams(args,self.action_specs[action])
-        return self.safeControl(action, args, kwargs)
-    def safeControl(self, action, args, kwargs):
-        raise NotImplementedError
-    def checkParams(self, args, specs):
-        """specs is a dict with check descriptions:
-           type: verify the arg is of this type
-           re: verify the arg matches the compiled regex
-           required: verify the arg exist is args
-        """
-        for k, spec in specs.items():
-            if "required" in spec:
-                if not k in args:
-                    raise exceptions.InvalidOptionException("need '%s' param"%(k))
-            if not k in args:
-                continue
-            arg = args[k]
-            if "type" in spec:
-                if spec["type"] != type(arg):
-                    raise exceptions.InvalidOptionException(
-                        "need '%s' param to be a '%s' while its '%s'"%(k,
-                                                                       str(spec["type"]),
-                                                                       arg))
-            if "re" in spec:
-                if not spec["re"].match(arg):
-                    raise exceptions.InvalidOptionException(
-                        "need '%s' param to match regular expression '%s' its '%s'"%(k,
-                                                                       spec["re"].pattern,
-                                                                       arg))
-        for k in args.keys():
-            if not k in specs:
-                    raise exceptions.InvalidOptionException(
-                        "param '%s' is not supported by this api only %s are"%(k, specs.keys()))
+    __slots__ = [ 'offset', 'total', 'limit']
+
+    # if set, this is the index in the overall results of the first element of
+    # this list
+    offset = None
+
+    # if set, this is the total number of results
+    total = None
+
+    # if set, this is the limit, either from the user or the implementation
+    limit = None
+
+    def __init__(self, values,
+            offset=None, total=None, limit=None):
+        UserList.UserList.__init__(self, values)
+        self.offset = offset
+        self.total = total
+        self.limit = limit
+
+    def __repr__(self):
+        return "ListResult(%r, offset=%r, total=%r, limit=%r)" % \
+                (self.data, self.offset, self.total, self.limit)
+
+    def __eq__(self, other):
+        if isinstance(other, ListResult):
+            return self.data == other.data \
+                and self.offset == other.offset \
+                and self.total == other.total \
+                and self.limit == other.limit
+        else:
+            return self.data == other \
+                and self.offset == self.limit == None \
+                and (self.total is None or self.total == len(other))
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class Link(object):
     "A Link points to another resource, specified by path"
 
-    __slots__ = [ 'path' ]
+    __slots__ = [ 'path', 'query' ]
 
-    def __init__(self, path):
+    def __init__(self, path, query=None):
         assert isinstance(path, tuple)
         self.path = path
+        self.query = query
 
     def __repr__(self):
-        return "Link(%r)" % (self.path,)
+        return "Link(%r, %r)" % (self.path, self.query or [])
 
     def __cmp__(self, other):
         return cmp(self.__class__, other.__class__) \
-                or cmp(self.path, other.path)
+                or cmp(self.path, other.path) \
+                or cmp(self.query, other.query)
+
+    def makeUrl(self, baseUrl, apiVersion):
+        querystr = ''
+        if self.query:
+            querystr = '?' + urllib.urlencode(self.query)
+        base = '/'.join([baseUrl + 'api', 'v%d' % (apiVersion,)]
+                        + list(self.path))
+        return base + querystr
 
 
 def updateMethod(func):

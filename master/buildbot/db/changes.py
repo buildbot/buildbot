@@ -163,12 +163,11 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d.addCallback(get_changes)
         return d
 
-    def getChanges(self, opts={}):
+    def getChanges(self):
         def thd(conn):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = sa.select([changes_tbl.c.changeid],
-                          **self.dataOptionsToSelectOptions(opts))
+            q = sa.select([changes_tbl.c.changeid])
             rp = conn.execute(q)
             changeids = [ row.changeid for row in rp ]
             rp.close()
@@ -182,7 +181,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d.addCallback(get_changes)
         return d
 
-    def getChangesCount(self, opts):
+    def getChangesCount(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
             q = sa.select([changes_tbl.c.changeid]).count()

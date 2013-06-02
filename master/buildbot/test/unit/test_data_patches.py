@@ -13,22 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-# copy some exceptions from the DB layer
-from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+from twisted.trial import unittest
+from buildbot.data import patches
+from buildbot.test.fake import fakemaster
 
-__all__ = [
-    'SchedulerAlreadyClaimedError',
-    'InvalidPathError',
-    'InvalidControlException',
-]
+class Patch(unittest.TestCase):
 
-class DataException(Exception):
-    pass
+    def setUp(self):
+        self.master = fakemaster.make_master(wantMq=True, wantDb=True,
+                                            wantData=True, testcase=self)
+        self.rtype = patches.Patch(self.master)
 
-class InvalidPathError(DataException):
-    "A path argument was invalid or unknown"
-    pass
-
-class InvalidControlException(DataException):
-    "Action is not supported"
-    pass
+    # no update methods -> nothing to test

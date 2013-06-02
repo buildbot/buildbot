@@ -19,9 +19,6 @@ Source Stamps
 
     Note that, depending on the underlying version-control system, the same revision may describe different code in different branches (e.g., SVN) or may be independent of the branch (e.g., Git).
 
-    The patch, if given, is an object with keys ``level``, ``subdir``, ``author``, ``comment``, and ``body``.
-    The body is a binary string, not unicode.
-
     The ``created_at`` timestamp can be used to indicate the first time a sourcestamp was seen by Buildbot.
     This provides a reasonable default ordering for sourcestamps when more reliable information is not available.
 

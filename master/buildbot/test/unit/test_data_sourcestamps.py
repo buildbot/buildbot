@@ -15,12 +15,13 @@
 
 from twisted.trial import unittest
 from buildbot.data import sourcestamps
-from buildbot.test.util import validation, endpoint
+from buildbot.test.util import endpoint
 from buildbot.test.fake import fakedb
 
-class SourceStamp(endpoint.EndpointMixin, unittest.TestCase):
+class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = sourcestamps.SourceStampEndpoint
+    resourceTypeClass = sourcestamps.SourceStamp
 
     def setUp(self):
         self.setUpEndpoint()
@@ -36,21 +37,22 @@ class SourceStamp(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(ssid=13))
+        d = self.callGet(('sourcestamp', 13))
         @d.addCallback
         def check(sourcestamp):
-            validation.verifyData(self, 'sourcestamp', {}, sourcestamp)
+            self.validateData(sourcestamp)
             self.assertEqual(sourcestamp['branch'], u'oak')
             self.assertEqual(sourcestamp['patch'], None)
         return d
 
     def test_get_existing_patch(self):
-        d = self.callGet(dict(), dict(ssid=14))
+        d = self.callGet(('sourcestamp', 14))
         @d.addCallback
         def check(sourcestamp):
-            validation.verifyData(self, 'sourcestamp', {}, sourcestamp)
+            self.validateData(sourcestamp)
             self.assertEqual(sourcestamp['branch'], u'poplar')
             self.assertEqual(sourcestamp['patch'], {
+                'patchid': 99,
                 'author': u'bar',
                 'body': 'hello, world',
                 'comment': u'foo',
@@ -60,16 +62,17 @@ class SourceStamp(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(ssid=99))
+        d = self.callGet(('sourcestamp', 99))
         @d.addCallback
         def check(sourcestamp):
             self.assertEqual(sourcestamp, None)
         return d
 
 
-class SourceStamps(endpoint.EndpointMixin, unittest.TestCase):
+class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = sourcestamps.SourceStampsEndpoint
+    resourceTypeClass = sourcestamps.SourceStamp
 
     def setUp(self):
         self.setUpEndpoint()
@@ -82,10 +85,10 @@ class SourceStamps(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('sourcestamp',))
         @d.addCallback
         def check(sourcestamps):
-            [ validation.verifyData(self, 'sourcestamp', {}, m) for m in sourcestamps ]
+            [ self.validateData(m) for m in sourcestamps ]
             self.assertEqual(sorted([m['ssid'] for m in sourcestamps]),
                              [13, 14])
         return d
@@ -95,6 +98,6 @@ class SourceStamps(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('sourcestamp', None, None))
 
 
-class SourceStampResourceType(unittest.TestCase):
+class SourceStamp(unittest.TestCase):
 
     pass

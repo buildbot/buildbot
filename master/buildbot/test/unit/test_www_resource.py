@@ -17,10 +17,29 @@ from buildbot.www import resource
 from buildbot.test.util import www
 from twisted.trial import unittest
 
-class Test(www.WwwTestMixin, unittest.TestCase):
+class ResourceSubclass(resource.Resource):
 
-    def test_RedirectResource(self):
+    needsReconfig = True
+
+
+class Resource(www.WwwTestMixin, unittest.TestCase):
+
+    def test_base_url(self):
+        master = self.make_master(url='h:/a/b/')
+        rsrc = resource.Resource(master)
+        self.assertEqual(rsrc.base_url, 'h:/a/b/')
+
+    def test_reconfigResource_registration(self):
+        master = self.make_master(url='h:/a/b/')
+        rsrc = ResourceSubclass(master)
+        master.www.resourceNeedsReconfigs.assert_called_with(rsrc)
+
+
+class RedirectResource(www.WwwTestMixin, unittest.TestCase):
+
+    def test_redirect(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = resource.RedirectResource(master, 'foo')
-        self.render_resource(rsrc, [''])
+        self.render_resource(rsrc, '/')
         self.assertEqual(self.request.redirected_to, 'h:/a/b/foo')
+

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, masters
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 
 class Db2DataMixin(object):
@@ -23,7 +23,7 @@ class Db2DataMixin(object):
     def db2data(self, dbdict):
         master = None
         if dbdict['masterid'] is not None:
-            master = yield self.master.data.get({},
+            master = yield self.master.data.get(
                                     ('master', dbdict['masterid']))
         data = {
             'schedulerid': dbdict['id'],
@@ -36,13 +36,14 @@ class Db2DataMixin(object):
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /scheduler/n:schedulerid
         /master/n:masterid/scheduler/n:schedulerid
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.schedulers.getScheduler(
                                                         kwargs['schedulerid'])
         if 'masterid' in kwargs:
@@ -54,6 +55,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /scheduler
         /master/n:masterid/scheduler
@@ -61,7 +63,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'schedulers'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(
                                 masterid=kwargs.get('masterid'))
         schdicts = yield defer.DeferredList(
@@ -74,11 +76,19 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
                 ('scheduler', None, None))
 
 
-class SchedulerResourceType(base.ResourceType):
+class Scheduler(base.ResourceType):
 
-    type = "scheduler"
+    name = "scheduler"
+    plural = "schedulers"
     endpoints = [ SchedulerEndpoint, SchedulersEndpoint ]
     keyFields = [ 'schedulerid' ]
+
+    class EntityType(types.Entity):
+        schedulerid = types.Integer()
+        name = types.String()
+        master = types.NoneOk(masters.Master.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def findSchedulerId(self, name):

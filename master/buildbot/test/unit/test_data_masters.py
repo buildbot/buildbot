@@ -16,17 +16,18 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import task, defer
-from buildbot.data import masters, builders
+from buildbot.data import masters, builders, changesources
 from buildbot.util import epoch2datetime
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
 SOMETIME = 1349016870
 OTHERTIME = 1249016870
 
-class Master(endpoint.EndpointMixin, unittest.TestCase):
+class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = masters.MasterEndpoint
+    resourceTypeClass = masters.Master
 
     def setUp(self):
         self.setUpEndpoint()
@@ -47,25 +48,25 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(masterid=14))
+        d = self.callGet(('master', 14))
         @d.addCallback
         def check(master):
-            validation.verifyData(self, 'master', {}, master)
+            self.validateData(master)
             self.assertEqual(master['name'], 'other:master')
         return d
 
 
     def test_get_builderid_existing(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=23))
+        d = self.callGet(('builder', 23, 'master', 13))
         @d.addCallback
         def check(master):
-            validation.verifyData(self, 'master', {}, master)
+            self.validateData(master)
             self.assertEqual(master['name'], 'some:master')
         return d
 
 
     def test_get_builderid_no_match(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=24))
+        d = self.callGet(('builder', 24, 'master', 13))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -73,7 +74,7 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_builderid_missing(self):
-        d = self.callGet(dict(), dict(masterid=13, builderid=25))
+        d = self.callGet(('builder', 25, 'master', 13))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -81,16 +82,17 @@ class Master(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(masterid=99))
+        d = self.callGet(('master', 99))
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
         return d
 
 
-class Masters(endpoint.EndpointMixin, unittest.TestCase):
+class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = masters.MastersEndpoint
+    resourceTypeClass = masters.Master
 
     def setUp(self):
         self.setUpEndpoint()
@@ -110,25 +112,25 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('master',))
         @d.addCallback
         def check(masters):
-            [ validation.verifyData(self, 'master', {}, m) for m in masters ]
+            [ self.validateData(m) for m in masters ]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13, 14])
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(dict(), dict(builderid=22))
+        d = self.callGet(('builder', 22, 'master'))
         @d.addCallback
         def check(masters):
-            [ validation.verifyData(self, 'master', {}, m) for m in masters ]
+            [ self.validateData(m) for m in masters ]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13])
         return d
 
     def test_get_builderid_missing(self):
-        d = self.callGet(dict(), dict(builderid=23))
+        d = self.callGet(('builder', 23, 'master'))
         @d.addCallback
         def check(masters):
             self.assertEqual(masters, [])
@@ -139,28 +141,28 @@ class Masters(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('master', None, None))
 
 
-class MasterResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Master(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
-        # mock out builders' and schedulers' _masterDeactivated
+        # mock out the _masterDeactivated methods this will call
         self.master.data.rtypes.builder = mock.Mock(
-                                    spec=builders.BuildersResourceType)
+                                    spec=builders.Builder)
         self.master.data.rtypes.builder._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
         self.master.data.rtypes.scheduler = mock.Mock(
-                                    spec=builders.BuildersResourceType)
+                                    spec=builders.Builder)
         self.master.data.rtypes.scheduler._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
         self.master.data.rtypes.changesources = mock.Mock(
-                                    spec=builders.BuildersResourceType)
+                                    spec=changesources.ChangeSource)
         self.master.data.rtypes.changesources._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
-        self.rtype = masters.MasterResourceType(self.master)
+        self.rtype = masters.Master(self.master)
 
     def test_signature_masterActive(self):
         @self.assertArgSpecMatches(

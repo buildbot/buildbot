@@ -13,23 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.data import base, types
+from buildbot.data import root, base
+from buildbot.test.util import endpoint
 
-class RootEndpoint(base.Endpoint):
-    isCollection = True
-    pathPatterns = "/"
+class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    def get(self, resultSpec, kwargs):
-        return defer.succeed(self.master.data.rootLinks)
+    endpointClass = root.RootEndpoint
+    resourceTypeClass = root.Root
+
+    def setUp(self):
+        self.setUpEndpoint()
+        self.master.data.rootLinks = [
+            {'name': u'abc', 'link': base.Link(('abc',))},
+        ]
+
+    def tearDown(self):
+        self.tearDownEndpoint()
 
 
-class Root(base.ResourceType):
-    name = "rootlink"
-    plural = "rootlinks"
-    endpoints = [ RootEndpoint ]
-
-    class EntityType(types.Entity):
-        name = types.String()
-        link = types.Link()
-    entityType = EntityType(name)
+    @defer.inlineCallbacks
+    def test_get(self):
+        rootlinks = yield self.callGet(('',))
+        [ self.validateData(root) for root in rootlinks ]
+        self.assertEqual(rootlinks, [
+            {'name': u'abc', 'link': base.Link(('abc',))},
+        ])

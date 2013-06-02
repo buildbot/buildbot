@@ -69,10 +69,15 @@ Within the buildmaster process, the root of the data API is available at `self.m
     The ``path`` arguments to these methods should always be tuples.  Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
     Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
-    .. py:method:: get(options, kwargs)
+    .. py:method:: get(path, filters=None, fields=None, order=None, limit=None, offset=None):
 
-        :param options: dictionary containing model-specific options
-        :param kwargs: a dictionary describing the resource to get, extracted from the path
+        :param tuple path: A tuple of path elements representing the API path to fetch.
+            Numbers can be passed as strings or integers.
+        :param filters: result spec filters
+        :param fields: result spec fields
+        :param order: result spec order
+        :param limit: result spec limit
+        :param offset: result spec offset
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
@@ -80,20 +85,19 @@ Within the buildmaster process, the root of the data API is available at `self.m
         Depending on the path, it will return a single resource or a list of resources.
         If a single resource is not specified, it returns ``None``.
 
-        The options argument can be used to filter lists of resources, or to affect the amount of associated data returned with a single resource.
-
-        Several options are defined, and are available for all getter returning a list of data items:
-          - `sort`: list of tuples: [ ( key, descending ), .. ].
-          - `start`: skip the `start` first results of query
-          - `count`: return only `count` items of query
-          - TBD: `filter`: list of TBD generic filter (would be nice to have some kind of db backed match expression langage)
-
-        The goal of those generic querying options is to be able to access the buildbot data, and make heavy use of the db query performance. Doing the sorting/filtering in
-        buildbot is to be avoided in order to have maximum scalability.
-
-        Those query options are handled by generic functions in the BaseConnector classes (db and fakedb).
+        The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the :py:class:`~buildbot.data.resultspec.ResultSpec` constructor.
 
         The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
+
+    .. py:method:: getEndpoint(path)
+
+        :param tuple path: A tuple of path elements representing the API path.
+            Numbers can be passed as strings or integers.
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
+        :returns: tuple of endpoint and a dictionary of keyword arguments from the path
+
+        Get the endpoint responsible for the given path, along with any arguments extracted from the path.
+        This can be used by callers that need access to information from the endpoint beyond that returned from ``get``.
 
     .. py:method:: startConsuming(callback, options, kwargs)
 
@@ -138,7 +142,7 @@ Links
 
 .. py:module:: buildbot.data.base
 
-.. py:class:: Link
+.. py:class:: Link(path, query=[])
 
     A link giving the path for this or another object.
     Instances of this class should be serialized appropriately for the medium, e.g., URLs in an HTTP API.
@@ -146,6 +150,18 @@ Links
     .. py:attribute:: path
 
         The path, represented as a list of path elements.
+
+    .. py:attribute:: query
+
+        Query parameters, given as a list of key/value tuples.
+
+    .. py:method:: makeUrl(baseUrl, apiVersion)
+
+        :param baseUrl: ``/``-terminated base URL
+        :param apiVersion: numeric API version to include in the URL
+        :returns: full URL containing the path and query parameters
+
+        Generate a fully qualified URL for this link.
 
 
 Exceptions
@@ -175,35 +191,7 @@ Web Interface
 The HTTP interface is implemented by the :py:mod:`buildbot.www` package, as configured by the user.
 Part of that configuration is a base URL, which is considered a prefix for all paths mentioned here.
 
-This version of the API is rooted at ``api/v2`` [#apiv1]_.
-A GET operation on any path under the root gets a request.
-The following query arguments are available everywhere (with the boolean arguments accepting ``0``, ``false``, ``1``, and ``true``):
-
- * ``as_text`` - if true, the result is returned as type text/plain, and thus easily readable in a web browser.
- * ``filter`` - if true, or if omitted and ``as_text`` is set true, empty values (empty lists and objects, false, null, and the empty string) are omitted from the result.
- * ``compact`` - if true, or if omitted and ``as_text`` is false, the returned JSON will have unnecessary whitespace stripped.
- * ``callback`` - if given, a JSONP response will be returned with this callback name.
-
-Other query arguments are passed to the resource identified by the path, and have the meanings described in :ref:`Data Model`.
-
-The interface is easily used with common tools like curl:
-
-.. code-block:: none
-
-    dustin@cerf ~ $ curl http://euclid.r.igoro.us:8010/api/v2/change/1?as_text=1
-    {
-      "author": "Dustin J. Mitchell <dustin@mozilla.com>",
-      "branch": "master",
-      "changeid": 1,
-      "comments": "changed",
-      "files": [
-        "README.txt"
-      ],
-      "project": "foo",
-      "repository": "/home/dustin/code/buildbot/t/testrepo/",
-      "revision": "5a8a560adade3d3be6c5cb09e6e1581dd307a4bd",
-      "when_timestamp": 1335680458
-    }
+See :ref:`WWW` for more information.
 
 .. _Data Model:
 
@@ -225,19 +213,33 @@ You can also follow an existing file, like :bb:src:`master/buildbot/data/changes
 In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
 
     from buildbot.data import base
-    class PubResourceType(base.ResourceType):
-        type = "pub"
+    class Pub(base.ResourceType):
+        name = "pub"
         endpoints = []
         keyFields = [ 'pubid' ]
 
+        class EntityType(types.Entity):
+            pubid = types.Integer()
+            name = types.String()
+            num_taps = types.Integer()
+            closes_at = types.Integer()
+        entityType = EntityType(name)
+
 .. py:class:: ResourceType
 
-    .. py:attribute:: type
+    .. py:attribute:: name
 
         :type: string
 
         The singular, lower-cased name of the resource type.
         This becomes the first component in message routing keys.
+
+    .. py:attribute:: plural
+
+        :type: string
+
+        The plural, lower-cased name of the resource type.
+        This becomes the key containing the data in REST responses.
 
     .. py:attribute:: endpoints
 
@@ -249,9 +251,18 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 
         :type: list
 
-        This attribute should list the message fields hose values will comprise the fields in the message routing key between the type and the event.
+        This attribute should list the message fields whose values will comprise the fields in the message routing key between the type and the event.
 
         In the example above, a call to ``produceEvent({ 'pubid' : 10, 'name' : 'Winchester' }, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
+
+    .. py:attribute:: entityType
+
+        :type: :py:class:`buildbot.data.types.Entity`
+
+        The entity type describes the types of all of the fields in this particular resource type.
+        See :py:class:`buildbot.data.types.Entity` and :ref:`Adding-Fields-To-Resource-Types`.
+
+    The parent class provides the following methods
 
     .. py:method:: getEndpoints()
 
@@ -273,10 +284,7 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 Like all Buildbot source files, every resource type module must have corresponding tests.
 These should thoroughly exercise all update methods.
 
-All resource types must be documented in the Buildbot documentation, linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
-
-All resource types must have corresponding type verification information.
-See :ref:`Adding-Fields-to-Resource-Types` for details.
+All resource types must be documented in the Buildbot documentation and linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
 
 Adding Endpoints
 ++++++++++++++++
@@ -312,10 +320,26 @@ See that module's description for details.
         If set, then the first path pattern for this endpoint will be included as a link in the root of the API.
         This should be set for any endpoints that begin an explorable tree.
 
-    .. py:method:: get(options, kwargs)
+    .. py:attribute:: isCollection
 
-        :param options: dictionary containing model-specific options
-        :param kwargs: fields extracted from the path
+        :type: boolean
+
+        If true, then this endpoint returns collections of resources.
+
+    .. py:method:: get(options, resultSpec, kwargs)
+
+        :param dict options: model-specific options
+        :param resultSpec: a :py:class:`~buildbot.data.resultspec.ResultSpec` instance describing the desired results
+        :param dict kwargs: fields extracted from the path
+        :returns: data via Deferred
+
+        Get data from the endpoint.
+        This should return either a list of dictionaries (for list endpoints), a dictionary, or None (both for details endpoints).
+        The endpoint is free to handle any part of the result spec.
+        When doing so, it should remove the relevant configuration from the spec.
+        See below.
+
+        Any result spec configuration that remains on return will be applied automatically.
 
     .. py:method:: startConsuming(callback, options, kwargs)
 
@@ -333,13 +357,31 @@ Continuing the pub example, a simple endpoint would look like this::
 
     class PubEndpoint(base.Endpoint):
         pathPattern = ( 'pub', 'i:pubid' )
-        def get(self, options, kwargs):
+        def get(self, resultSpec, kwargs):
             return self.master.db.pubs.getPub(kwargs['pubid'])
-
-In a more complex implementation, the options might be used to indicate whether or not the pub's menu should be included in the result.
 
 Endpoint implementations must have unit tests.
 An endpoint's path should be documented in the ``.rst`` file for its resource type.
+
+The initial pass at implementing any endpoint should just ignore the ``resultSpec`` argument to ``get``.
+After that initial pass, the argument can be used to optimize certain types of queries.
+For example, if the resource type has many resources, but most real-life queries use the result spec to filter out all but a few resources from that group, then it makes sense for the endpoint to examine the result spec and allow the underlying DB API to do that filtering.
+
+When an endpoint handles parts of the result spec, it must remove those parts from the spec before it returns.
+See the documentation for :py:class:`~buildbot.data.resultspec.ResultSpec` for methods to do so.
+
+Note that endpoints must be careful not to alter the order of the filtering applied for a result spec.
+For example, if an endpoint implements pagination, then it must also completely implement filtering and ordering, since those operations precede pagination in the result spec application.
+
+Adding Messages
++++++++++++++++
+
+Message types are defined in :bb:src:`master/buildbot/test/util/validation.py`, via the ``message`` module-level value.
+This is a dictionary of ``MessageValidator`` objects, one for each message type.
+The message type is determined from the first atom of its routing key.
+The ``events`` dictionary lists the possible last atoms of the routing key.
+The ``keyFields`` argument lists the message fields whose values will comprise the fields in the message routing key between the type and the event.
+It should be identical to the attribute of the ResourceType with the same name.
 
 Adding Update Methods
 +++++++++++++++++++++
@@ -379,19 +421,112 @@ That fake implementation should be tested to match the real implementation in :b
 Adding Fields to Resource Types
 +++++++++++++++++++++++++++++++
 
+.. py:module:: buildbot.data.types
+
 The details of the fields of a resource type are rigorously enforced at several points in the Buildbot tests.
-This enforcement is performed by modules under :bb:src:`master/buildbot/test/util/types`, one per resource type.
+The enforcement is performed by the :py:mod:`buildbot.data.types` module.
 
-There are three types of verification performed: messages, database dictionaries, and getter return values (data).
-For each type, a verifier is listed in :bb:src:`master/buildbot/test/util/types/__init__.py`, by object name, with  prefix of ``buildbot.test.util.types`` assumed.
+The module provides a number of type classes for basic and compound types.
+Each resource type class defines its entity type in its :py:attr:`~buildbot.data.base.ResourceType.entityType` class attribute.
+Other resource types may refer to this class attribute if they embed an entity of that type.
 
-Message verifiers take a routing key and message, and should check both for well-formedness.
-Database dictionary verifiers take a type (e.g., ``chdict``) and the value to be verified (a dictionary).
-Data verifiers take a type (e.g., ``change``), options, and the value to be verified (a dictionary).
-They should consult the options to determine which variant is expected.
+The types are used both for tests, and by the REST interface to properly decode user-supplied query parameters.
 
-The module :py:mod:`buildbot.test.util.verifier` provides useful utility methods for all three types of verification.
-Consult this module and the existing verifier modules for more details.
+Basic Types
+...........
+
+.. py:class:: Integer()
+
+    An integer. ::
+
+        myid = types.Integer()
+
+.. py:class:: String()
+
+    A string.
+    Strings must always be Unicode. ::
+
+        name = types.String()
+
+.. py:class:: Binary()
+
+    A binary bytestring. ::
+
+        data = types.Binary()
+
+.. py:class:: Boolean()
+
+    A boolean value. ::
+
+        complete = types.Boolean()
+
+.. py:class:: Link()
+
+    A REST link. ::
+
+        link = types.Link()
+
+.. py:class:: Identifier(length)
+
+    An identifier; see :ref:`Identifier <type-identifier>`.
+    The constructor argument specifies the maximum length. ::
+
+        ident = types.Identifier(25)
+
+Compound Types
+..............
+
+.. py:class:: NoneOk(nestedType)
+
+    Either the nested type, or None. ::
+
+        category = types.NoneOk(types.String())
+
+.. py:class:: List(of)
+
+    An list of objects.
+    The named constructor argument ``of`` specifies the type of the list elements. ::
+
+        tags = types.List(of=types.String())
+
+.. py:class:: SourcedProperties()
+
+    A data structure representing properties with their sources, in the form ``{name: (value, source)}``.
+    The property name and source must be Unicode, and the value must be JSON-able. ::
+
+        props = types.SourcedProperties()
+
+Entity Type
+...........
+
+.. py:class:: Entity(name)
+
+    A data resource is represented by a dictionary with well-known keys.
+    To define those keys and their values, subclass the :py:class:`Entity` class within your ResourceType class and include each field as an attribute::
+
+        class MyStuff(base.ResourceType):
+            name = "mystuff"
+            # ...
+            class EntityType(types.Entity):
+                myid = types.Integer()
+                name = types.String()
+                data = types.Binary()
+                complete = types.Boolean()
+                link = types.Link()
+                ident = types.Identifier(25)
+                category = types.NoneOk(types.String())
+                tags = types.List(of=types.String())
+                props = types.SourcedProperties()
+
+    Then instantiate the class with the resource type name ::
+
+        entityType = EntityType(name)
+
+    To embed another entity type, reference its entityType class attribute::
+
+        class EntityType(types.Entity):
+            # ...
+            master = masters.Master.entityType
 
 Data Model
 ----------
@@ -425,6 +560,7 @@ All strings in the data model are unicode strings.
     rtype-master
     rtype-builder
     rtype-sourcestamp
+    rtype-patch
     rtype-scheduler
     rtype-build
     rtype-step

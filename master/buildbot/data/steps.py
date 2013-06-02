@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch
 
 class Db2DataMixin(object):
@@ -39,16 +39,17 @@ class Db2DataMixin(object):
 
 class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /step/n:stepid
-        /build/n:buildid/step/i:name
+        /build/n:buildid/step/i:step_name
         /build/n:buildid/step/n:step_number
-        /builder/n:builderid/build/n:build_number/step/i:name
+        /builder/n:builderid/build/n:build_number/step/i:step_name
         /builder/n:builderid/build/n:build_number/step/n:step_number
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
             defer.returnValue((yield self.db2data(dbdict))
@@ -60,20 +61,21 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             return
 
         dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                number=kwargs.get('step_number'), name=kwargs.get('name'))
+                number=kwargs.get('step_number'), name=kwargs.get('step_name'))
         defer.returnValue((yield self.db2data(dbdict))
                             if dbdict else None)
 
 
 class StepsEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /build/n:buildid/step
         /builder/n:builderid/build/n:build_number/step
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'buildid' in kwargs:
             buildid = kwargs['buildid']
         else:
@@ -86,11 +88,27 @@ class StepsEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in steps ])
 
 
-class StepsResourceType(base.ResourceType):
+class Step(base.ResourceType):
 
-    type = "step"
+    name = "step"
+    plural = "steps"
     endpoints = [ StepEndpoint, StepsEndpoint ]
     keyFields = [ 'builderid', 'stepid' ]
+
+    class EntityType(types.Entity):
+        stepid = types.Integer()
+        number = types.Integer()
+        name = types.Identifier(50)
+        buildid = types.Integer()
+        build_link = types.Link()
+        started_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer())
+        results = types.NoneOk(types.Integer())
+        state_strings = types.List(of=types.String())
+        urls = types.List(of=types.String())
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newStep(self, buildid, name):

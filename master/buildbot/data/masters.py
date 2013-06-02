@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer, reactor
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch, epoch2datetime
 
 # time, in minutes, after which a master that hasn't checked in will be
@@ -30,13 +30,14 @@ def _db2data(master):
 
 class MasterEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /master/n:masterid
         /builder/n:builderid/master/n:masterid
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         # if a builder is given, only return the master if it's associated with
         # this builder
         if 'builderid' in kwargs:
@@ -49,8 +50,9 @@ class MasterEndpoint(base.Endpoint):
         defer.returnValue(_db2data(m) if m else None)
 
 
-class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
+class MastersEndpoint(base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /master
         /builder/n:builderid/master
@@ -58,9 +60,8 @@ class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
     rootLinkName = 'masters'
 
     @defer.inlineCallbacks
-    def safeGet(self, options, kwargs):
-        masterlist = yield self.master.db.masters.getMasters(options)
-        # filter by builder if requested
+    def get(self, resultSpec, kwargs):
+        masterlist = yield self.master.db.masters.getMasters()
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(
                     builderid=kwargs['builderid'])
@@ -76,11 +77,20 @@ class MastersEndpoint(base.GetParamsCheckMixin, base.Endpoint):
                 ('master', None, None))
 
 
-class MasterResourceType(base.ResourceType):
+class Master(base.ResourceType):
 
-    type = "master"
+    name = "master"
+    plural = "masters"
     endpoints = [ MasterEndpoint, MastersEndpoint ]
     keyFields = [ 'masterid' ]
+
+    class EntityType(types.Entity):
+        masterid = types.Integer()
+        name = types.String()
+        active = types.Boolean()
+        last_active = types.Integer()
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

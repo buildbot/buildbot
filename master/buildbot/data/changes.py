@@ -16,7 +16,7 @@
 import copy
 from twisted.internet import defer, reactor
 from twisted.python import log
-from buildbot.data import base
+from buildbot.data import base, types, sourcestamps
 from buildbot.process import metrics
 from buildbot.process.users import users
 from buildbot.util import datetime2epoch, epoch2datetime
@@ -32,34 +32,34 @@ class FixerMixin(object):
             change['link'] = base.Link(('change', str(change['changeid'])))
 
             sskey = ('sourcestamp', str(change['sourcestampid']))
-            change['sourcestamp'] = yield self.master.data.get({}, sskey)
+            change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
         defer.returnValue(change)
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /change/n:changeid
     """
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         d = self.master.db.changes.getChange(kwargs['changeid'])
         d.addCallback(self._fixChange)
         return d
 
 
-class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
+class ChangesEndpoint(FixerMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /change
     """
     rootLinkName = 'change'
-    maximumCount = 50
 
     @defer.inlineCallbacks
-    def safeGet(self, options, kwargs):
-        options['total'] = yield self.master.db.changes.getChangesCount(options)
-        changes = yield self.master.db.changes.getChanges(options)
+    def get(self, resultSpec, kwargs):
+        changes = yield self.master.db.changes.getChanges()
         changes = [ (yield self._fixChange(ch)) for ch in changes ]
         defer.returnValue(changes)
 
@@ -68,11 +68,30 @@ class ChangesEndpoint(FixerMixin, base.GetParamsCheckMixin, base.Endpoint):
                 ('change', None, 'new'))
 
 
-class ChangeResourceType(base.ResourceType):
+class Change(base.ResourceType):
 
-    type = "change"
+    name = "change"
+    plural = "changes"
     endpoints = [ ChangeEndpoint, ChangesEndpoint ]
     keyFields = [ 'changeid' ]
+
+    class EntityType(types.Entity):
+        changeid = types.Integer()
+        author = types.String()
+        files = types.List(of=types.String())
+        comments = types.String()
+        revision = types.NoneOk(types.String())
+        when_timestamp  = types.Integer()
+        branch = types.NoneOk(types.String())
+        category = types.NoneOk(types.String())
+        revlink = types.NoneOk(types.String())
+        properties = types.SourcedProperties()
+        repository = types.String()
+        project = types.String()
+        codebase = types.String()
+        sourcestamp = sourcestamps.SourceStamp.entityType
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -117,7 +136,7 @@ class ChangeResourceType(base.ResourceType):
         else:
             codebase = codebase or u''
 
-        # add the Change to the database 
+        # add the Change to the database
         changeid = yield self.master.db.changes.addChange(
             author=author,
             files=files,
@@ -135,7 +154,7 @@ class ChangeResourceType(base.ResourceType):
             _reactor=_reactor)
 
         # get the change and munge the result for the notification
-        change = yield self.master.data.get({}, ('change', str(changeid)))
+        change = yield self.master.data.get(('change', str(changeid)))
         change = copy.deepcopy(change)
         del change['link']
         del change['sourcestamp']['link']

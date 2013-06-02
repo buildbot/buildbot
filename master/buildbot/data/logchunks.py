@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
+    # Note that this is a singular endpoint, even though it overrides the
+    # offset/limit query params in ResultSpec
+    isCollection = False
     pathPatterns = """
         /log/n:logid/content
         /step/n:stepid/log/i:log_name/content
@@ -28,7 +31,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         # calculate the logid
         if 'logid' in kwargs:
             logid = kwargs['logid']
@@ -43,8 +46,9 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
                 return
             logid = dbdict['id']
 
-        firstline = options.get('firstline', 0)
-        lastline = options.get('lastline', None)
+        firstline = resultSpec.offset or 0
+        lastline = None if resultSpec.limit is None else firstline + resultSpec.limit - 1
+        resultSpec.removePagination()
 
         # get the number of lines, if necessary
         if lastline is None:
@@ -66,11 +70,18 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
             'content': logLines})
 
 
-class LogsResourceType(base.ResourceType):
+class LogChunk(base.ResourceType):
 
-    type = "logchunk"
+    name = "logchunk"
+    plural = "logchunks"
     endpoints = [ LogChunkEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
+
+    class EntityType(types.Entity):
+        logid = types.Integer()
+        firstline = types.Integer()
+        content = types.String()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def appendLog(self, logid, content):

@@ -8,7 +8,7 @@ BaseScheduler
     This is the base class for all Buildbot schedulers.
     See :ref:`Writing-Schedulers` for information on writing new schedulers.
 
-    .. py:method:: __init__(name, builderNames, properties={}, codebases={':{}})
+    .. py:method:: __init__(name, builderNames, properties={}, codebases={'':{}})
 
         :param name: (positional) the scheduler name
         :param builderName: (positional) a list of builders, by name, for which this scheduler can queue builds

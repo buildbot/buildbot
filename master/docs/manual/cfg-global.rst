@@ -682,7 +682,16 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
             plugins={'waterfall': {'num_builds': 50}}
         }
 
-.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+``debug``
+    If true, then debugging information will be output to the browser.
+    This is best set to false (the default) on production systems, to avoid the possibility of information leakage.
+
+``allowed_origins``
+    This gives a list of origins which are allowed to access the Buildbot API (including control via JSONRPC 2.0).
+    It implements cross-origin request sharing (CORS), allowing pages at origins other than the Buildbot UI to use the API.
+    Each origin is interpreted as filename match expression, with ``?`` matching one character and ``*`` matching anything.
+    Thus ``['*']`` will match all origins, and ``['https://*.buildbot.net']`` will match secure sites under ``buildbot.net``.
+    The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
 
 .. bb:cfg:: codebaseGenerator
 
@@ -711,3 +720,6 @@ If changes come from different repositories, extra processing will be needed to 
 This codebase will then be a logical name for the combination of repository and or branch etc.
 
 The `codebaseGenerator` accepts a change dictionary as produced by the :py:class:`buildbot.db.changes.ChangesConnectorComponent <changes connector component>`, with a changeid equal to `None`.
+
+.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+

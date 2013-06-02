@@ -13,16 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import mock, re
+import mock
 from twisted.trial import unittest
-from buildbot.data import base, exceptions
+from buildbot.data import base
 from buildbot.test.util import endpoint
 from buildbot.test.fake import fakemaster
 
 class ResourceType(unittest.TestCase):
 
     def makeResourceTypeSubclass(self, **attributes):
-        attributes.setdefault('type', 'thing')
+        attributes.setdefault('name', 'thing')
         return type('ThingResourceType', (base.ResourceType,), attributes)
 
     def test_sets_master(self):
@@ -49,7 +49,7 @@ class ResourceType(unittest.TestCase):
 
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-                type='singular',
+                name='singular',
                 keyFields=('fooid', 'barid'))
         master = fakemaster.make_master(testcase=self, wantMq=True)
         master.mq.verifyMessages = False # since this is a pretend message
@@ -63,12 +63,16 @@ class ResourceType(unittest.TestCase):
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 
+    class MyResourceType(base.ResourceType):
+        name = "my"
+
     class MyEndpoint(base.Endpoint):
         pathPatterns = """
             /my/pattern
         """
 
     endpointClass = MyEndpoint
+    resourceTypeClass = MyResourceType
 
     def setUp(self):
         self.setUpEndpoint()
@@ -80,6 +84,39 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertIdentical(self.master, self.ep.master)
 
 
+class ListResult(unittest.TestCase):
+
+    def test_constructor(self):
+        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertEqual(lr.data, [1,2,3])
+        self.assertEqual(lr.offset, 10)
+        self.assertEqual(lr.total, 20)
+        self.assertEqual(lr.limit, 3)
+
+    def test_repr(self):
+        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertTrue(`lr`.startswith('ListResult'))
+
+    def test_eq(self):
+        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        lr2 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
+        lr3 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
+        self.assertEqual(lr2, lr3)
+        self.assertNotEqual(lr1, lr2)
+        self.assertNotEqual(lr1, lr3)
+
+    def test_eq_to_list(self):
+        list = [1,2,3]
+        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        self.assertNotEqual(lr1, list)
+        lr2 = base.ListResult([1,2,3], offset=None, total=None, limit=None)
+        self.assertEqual(lr2, list)
+        lr3 = base.ListResult([1,2,3], total=3)
+        self.assertEqual(lr3, list)
+        lr4 = base.ListResult([1,2,3], total=4)
+        self.assertNotEqual(lr4, list)
+
+
 class Link(unittest.TestCase):
 
     def test_path(self):
@@ -88,56 +125,29 @@ class Link(unittest.TestCase):
 
     def test_repr(self):
         l = base.Link(('a', 'b'))
-        self.assertEqual(`l`, "Link(('a', 'b'))")
+        self.assertEqual(`l`, "Link(('a', 'b'), [])")
 
-class ControlParamsCheckMixin(unittest.TestCase):
-    def doTest(self, arg, specs, error, action="act"):
-        class TestedEndpoint(base.ControlParamsCheckMixin):
-            called = False
-            def safeControl(self, action, args, kwargs):
-                self.called = True
-        check = TestedEndpoint()
-        check.action_specs = {"act":specs}
-        try:
-            check.control(action, arg, {})
-        except exceptions.InvalidOptionException,e:
-            self.assertEqual(str(e), error)
-            return
-        except exceptions.InvalidActionException,e:
-            self.assertEqual(str(e), error)
-            return
-        self.assertEqual(error, None)
-        self.assertEqual(check.called, True)
-    def test_re(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(re=re.compile("[a-z]+"))),
-                     "need 'a' param to match regular expression '[a-z]+' its 'Aslkj'")
-    def test_re_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(re=re.compile("[a-z]+"))),
-                     None)
-    def test_type(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(type=dict)),
-                     "need 'a' param to be a '<type 'dict'>' while its 'Aslkj'")
-    def test_type_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(type=str)),
-                     None)
-    def test_required(self):
-        self.doTest( dict(a="Aslkj"),
-                     dict(a=dict(), b=dict(required=True)),
-                     "need 'b' param")
-    def test_required_pass(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(required=True)),
-                     None)
-    def test_unknown(self):
-        self.doTest( dict(a="aslkj", b="bar"),
-                     dict(a=dict(required=True)),
-                     "param 'b' is not supported by this api only ['a'] are")
-    def test_unknown_action(self):
-        self.doTest( dict(a="aslkj"),
-                     dict(a=dict(required=True)),
-                     "'unknown' action is not supported. Only ['act'] are",
-                     action="unknown")
+    def test_cmp(self):
+        self.failUnless(base.Link(('a', 'b'))
+                      < base.Link(('b', 'b')))
+        self.failUnless(base.Link(('a',), [('f', 1)])
+                      < base.Link(('a',), [('g', 1)]))
+
+    def test_makeUrl(self):
+        self.assertEqual(
+            base.Link(('a', 'b'))
+                    .makeUrl('//h/', 3),
+            '//h/api/v3/a/b')
+
+    def test_makeUrl_root(self):
+        self.assertEqual(
+            base.Link(())
+                    .makeUrl('//h/', 3),
+            '//h/api/v3') # note no trailing /
+
+    def test_makeUrl_query(self):
+        self.assertEqual(
+            base.Link(('a', 'b'), [('x', '10'), ('y', '20')])
+                    .makeUrl('//h/', 3),
+            '//h/api/v3/a/b?x=10&y=20')
+

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 from buildbot.util import datetime2epoch
 
 class Db2DataMixin(object):
@@ -44,13 +44,14 @@ class Db2DataMixin(object):
 
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /build/n:buildid
         /builder/n:builderid/build/n:number
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'buildid' in kwargs:
             dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
         else:
@@ -63,6 +64,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /build
         /builder/n:builderid/build
@@ -71,7 +73,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'builds'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         builds = yield self.master.db.builds.getBuilds(
                                 builderid=kwargs.get('builderid'),
                                 buildrequestid=kwargs.get('buildrequestid'))
@@ -83,11 +85,31 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
                 ('build', None, None, None))
 
 
-class BuildsResourceType(base.ResourceType):
+class Build(base.ResourceType):
 
-    type = "build"
+    name = "build"
+    plural = "builds"
     endpoints = [ BuildEndpoint, BuildsEndpoint ]
     keyFields = [ 'builderid', 'buildid' ]
+
+    class EntityType(types.Entity):
+        buildid = types.Integer()
+        number = types.Integer()
+        builderid = types.Integer()
+        builder_link = types.Link()
+        buildrequestid = types.Integer()
+        buildrequest_link = types.Link()
+        slaveid = types.Integer()
+        slave_link = types.Link()
+        masterid = types.Integer()
+        master_link = types.Link()
+        started_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer)
+        results = types.NoneOk(types.Integer())
+        state_strings = types.List(of=types.String())
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newBuild(self, builderid, buildrequestid, slaveid):

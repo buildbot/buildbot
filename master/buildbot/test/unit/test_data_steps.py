@@ -17,16 +17,17 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import steps, base
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
 TIME1 = 2001111
 TIME2 = 2002222
 TIME3 = 2003333
 
-class Step(endpoint.EndpointMixin, unittest.TestCase):
+class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = steps.StepEndpoint
+    resourceTypeClass = steps.Step
 
     def setUp(self):
         self.setUpEndpoint()
@@ -51,8 +52,8 @@ class Step(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        step = yield self.callGet(dict(), dict(stepid=72))
-        validation.verifyData(self, 'step', {}, step)
+        step = yield self.callGet(('step', 72))
+        self.validateData(step)
         self.assertEqual(step, {
             'build_link': base.Link(('build', '30')),
             'buildid': 30,
@@ -69,39 +70,38 @@ class Step(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_name(self):
-        step = yield self.callGet(dict(), dict(buildid=30, name=u'two'))
-        validation.verifyData(self, 'step', {}, step)
+        step = yield self.callGet(('build', 30, 'step', 'two'))
+        self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_number(self):
-        step = yield self.callGet(dict(), dict(buildid=30, step_number=1))
-        validation.verifyData(self, 'step', {}, step)
+        step = yield self.callGet(('build', 30, 'step', 1))
+        self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_name(self):
-        step = yield self.callGet(dict(),
-                dict(builderid=77, build_number=7, name=u'two'))
-        validation.verifyData(self, 'step', {}, step)
+        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 'two'))
+        self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_number(self):
-        step = yield self.callGet(dict(),
-                dict(builderid=77, build_number=7, step_number=1))
-        validation.verifyData(self, 'step', {}, step)
+        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 1))
+        self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        step = yield self.callGet(dict(), dict(stepid=9914))
+        step = yield self.callGet(('step', 9999))
         self.assertEqual(step, None)
 
 
-class Steps(endpoint.EndpointMixin, unittest.TestCase):
+class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = steps.StepsEndpoint
+    resourceTypeClass = steps.Step
 
     def setUp(self):
         self.setUpEndpoint()
@@ -131,25 +131,23 @@ class Steps(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildid(self):
-        steps = yield self.callGet(dict(), dict(buildid=30))
-        [ validation.verifyData(self, 'step', {}, step)
-          for step in steps ]
+        steps = yield self.callGet(('build', 30, 'step'))
+        [ self.validateData(step) for step in steps ]
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
 
     @defer.inlineCallbacks
     def xtest_get_builder(self):
-        steps = yield self.callGet(dict(), dict(builderid=77, build_number=7))
-        [ validation.verifyData(self, 'step', {}, step)
-          for step in steps ]
+        steps = yield self.callGet(('builder', 77, 'build', 7, 'step'))
+        [ self.validateData(step) for step in steps ]
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
 
 
-class StepResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Step(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = steps.StepsResourceType(self.master)
+        self.rtype = steps.Step(self.master)
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
             exp_kwargs=None, *args, **kwargs):

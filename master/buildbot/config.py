@@ -532,6 +532,14 @@ class MasterConfig(object):
         if 'www' not in config_dict:
             return
         www_cfg = config_dict['www']
+        allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
+                       'rest_minimum_version', 'allowed_origins', 'jsonp',
+                       'plugins'])
+        unknown = set(www_cfg.iterkeys()) - allowed
+        if unknown:
+            error("unknown www configuration parameter(s) %s" %
+                                            (', '.join(unknown),))
+
         self.www.update(www_cfg)
 
         # invent an appropriate URL given the port
@@ -540,6 +548,12 @@ class MasterConfig(object):
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
+
+        # convert allowed_origins to a lowercased set for faster membership
+        # checks
+        if 'allowed_origins' in www_cfg:
+            self.www['allowed_origins'] = set(o.lower()
+                                for o in self.www['allowed_origins'])
 
 
     def check_single_master(self):

@@ -22,7 +22,6 @@ the real connector components.
 import copy
 import base64
 import hashlib
-from operator import itemgetter
 from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
@@ -486,18 +485,6 @@ class FakeDBComponent(object):
         self.t = testcase
         self.setUp()
 
-    def applyDataOptions(self, l, opts):
-        if 'sort' in opts:
-            for k,r in reversed(opts['sort']):
-                if k in self.data2db:
-                    k = self.data2db[k]
-                l.sort(key=itemgetter(k), reverse = r)
-        if 'start' in opts and opts['start'] != 0:
-            l = l[int(opts['start']):]
-        if 'count' in opts and opts['count'] != 0:
-            l = l[:int(opts['count'])]
-        return l
-
 class FakeChangeSourcesComponent(FakeDBComponent):
 
     def setUp(self):
@@ -674,10 +661,11 @@ class FakeChangesComponent(FakeDBComponent):
         chdicts = [ self._chdict(self.changes[id]) for id in ids[-count:] ]
         return defer.succeed(chdicts)
 
-    def getChanges(self, opts={}):
+    def getChanges(self):
         chdicts = [ self._chdict(v) for v in self.changes.values() ]
-        return defer.succeed(self.applyDataOptions(chdicts,opts))
-    def getChangesCount(self, opts={}):
+        return defer.succeed(chdicts)
+
+    def getChangesCount(self):
         return len(self.changes)
 
     def _chdict(self, row):
@@ -902,7 +890,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
             patch_author=None, patch_comment=None, patch_subdir=None,
             _reactor=reactor):
         if patch_body:
-            patchid = len(self.patches) + 100
+            patchid = len(self.patches) + 1
             while patchid in self.patches:
                 patchid += 1
             self.patches[patchid] = dict(
@@ -946,13 +934,13 @@ class FakeSourceStampsComponent(FakeDBComponent):
             patchid = ssdict['patchid']
             if patchid:
                 ssdict.update(self.patches[patchid])
+                ssdict['patchid'] = patchid
             else:
                 ssdict['patch_body'] = None
                 ssdict['patch_level'] = None
                 ssdict['patch_subdir'] = None
                 ssdict['patch_author'] = None
                 ssdict['patch_comment'] = None
-            del ssdict['patchid']
             return ssdict
         else:
             return None
@@ -1795,8 +1783,8 @@ class FakeMastersComponent(FakeDBComponent):
             return defer.succeed(self.masters[masterid])
         return defer.succeed(None)
 
-    def getMasters(self, opts = {}):
-        return defer.succeed(self.applyDataOptions(self.masters.values(), opts))
+    def getMasters(self):
+        return defer.succeed(sorted(self.masters.values()))
 
     # test helpers
 

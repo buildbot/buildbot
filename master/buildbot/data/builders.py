@@ -14,17 +14,18 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class BuilderEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /builder/n:builderid
         /master/n:masterid/builder/n:builderid
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         builderid = kwargs['builderid']
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
@@ -42,6 +43,7 @@ class BuilderEndpoint(base.Endpoint):
 
 class BuildersEndpoint(base.Endpoint):
 
+    isCollection = True
     rootLinkName = 'builders'
     pathPatterns = """
         /builder
@@ -49,7 +51,7 @@ class BuildersEndpoint(base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
                 masterid=kwargs.get('masterid', None))
         defer.returnValue([
@@ -63,13 +65,18 @@ class BuildersEndpoint(base.Endpoint):
                 ('builder', None, None))
 
 
-class BuildersResourceType(base.ResourceType):
+class Builder(base.ResourceType):
 
-    type = "builder"
-    endpoints = [
-        BuilderEndpoint, BuildersEndpoint,
-    ]
+    name = "builder"
+    plural = "builders"
+    endpoints = [ BuilderEndpoint, BuildersEndpoint ]
     keyFields = [ 'builderid' ]
+
+    class EntityType(types.Entity):
+        builderid = types.Integer()
+        name = types.String()
+        link = types.Link()
+    entityType = EntityType(name)
 
     def __init__(self, master):
         base.ResourceType.__init__(self, master)

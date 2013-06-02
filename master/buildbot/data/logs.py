@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types
 
 class EndpointMixin(object):
 
@@ -34,6 +34,7 @@ class EndpointMixin(object):
 
 class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /log/n:logid
         /step/n:stepid/log/i:log_name
@@ -44,7 +45,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
             defer.returnValue((yield self.db2data(dbdict))
@@ -63,6 +64,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /step/n:stepid/log
         /build/n:buildid/step/i:step_name/log
@@ -72,7 +74,7 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         stepid = yield self.getStepid(kwargs)
         if not stepid:
             defer.returnValue([])
@@ -81,11 +83,23 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in logs ])
 
 
-class LogsResourceType(base.ResourceType):
+class Log(base.ResourceType):
 
-    type = "log"
+    name = "log"
+    plural = "logs"
     endpoints = [ LogEndpoint, LogsEndpoint ]
     keyFields = [ 'stepid', 'logid' ]
+
+    class EntityType(types.Entity):
+        logid = types.Integer()
+        name = types.Identifier(50)
+        stepid = types.Integer()
+        step_link = types.Link()
+        complete = types.Boolean()
+        num_lines = types.Integer()
+        type = types.Identifier(1)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def newLog(self, stepid, name, type):

@@ -31,10 +31,7 @@ Changes
 
     .. bb:rpath:: /change
 
-        :opt count: number of changes to return (maximum 50)
-
-        This path lists changes, sorted by ID.
-        The ``count`` option can be used to limit the number of changes.
+        This path lists changes.
 
         Consuming from this path selects :bb:event:`change.$changeid.new` events.
 

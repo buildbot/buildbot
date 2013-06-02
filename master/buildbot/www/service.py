@@ -65,6 +65,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         if need_new_site:
             self.setupSite(new_config)
 
+        if self.site:
+            self.reconfigSite(new_config)
+
         if www['port'] != self.port:
             if self.port_service:
                 yield defer.maybeDeferred(lambda :
@@ -77,12 +80,33 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
                 if type(port) is int:
                     port = "tcp:%d" % port
                 self.port_service = strports.service(port, self.site)
+
+                # monkey-patch in some code to get the actual Port object
+                # returned by endpoint.listen().  But only for tests.
+                if port == "tcp:0:interface=127.0.0.1":
+                    old_listen = self.port_service.endpoint.listen
+                    def listen(factory):
+                        d = old_listen(factory)
+                        @d.addCallback
+                        def keep(port):
+                            self._gotPort = port
+                            return port
+                        return d
+                    self.port_service.endpoint.listen = listen
+
                 self.port_service.setServiceParent(self)
 
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
 
+    def getPortnum(self):
+        # for tests, when the configured port is 0 and the kernel selects a
+        # dynamic port.  This will fail if the monkeypatch in reconfigService
+        # was not made.
+        return self._gotPort.getHost().port
+
     def setupSite(self, new_config):
+        self.reconfigurableResources = []
         root = self.apps['base'].resource
         for key, plugin in new_config.www.get('plugins', {}).items():
             if not key in self.apps:
@@ -104,3 +128,15 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
         root.putChild('sse', sse.EventResource(self.master))
 
         self.site = server.Site(root)
+
+        # convert this to a tuple so it can't be appended anymore (in
+        # case some dynamically created resources try to get reconfigs)
+        self.reconfigurableResources = tuple(self.reconfigurableResources)
+
+    def resourceNeedsReconfigs(self, resource):
+        # flag this resource as needing to know when a reconfig occurs
+        self.reconfigurableResources.append(resource)
+
+    def reconfigSite(self, new_config):
+        for rsrc in self.reconfigurableResources:
+            rsrc.reconfigResource(new_config)

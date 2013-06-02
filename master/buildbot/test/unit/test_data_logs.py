@@ -17,12 +17,13 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.data import logs, base
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
 
-class Log(endpoint.EndpointMixin, unittest.TestCase):
+class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = logs.LogEndpoint
+    resourceTypeClass = logs.Log
 
     def setUp(self):
         self.setUpEndpoint()
@@ -44,8 +45,8 @@ class Log(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        log = yield self.callGet(dict(), dict(logid=60))
-        validation.verifyData(self, 'log', {}, log)
+        log = yield self.callGet(('log', 60))
+        self.validateData(log)
         self.assertEqual(log, {
             'logid': 60,
             'name': u'stdio',
@@ -59,42 +60,41 @@ class Log(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        log = yield self.callGet(dict(), dict(logid=62))
+        log = yield self.callGet(('log', 62))
         self.assertEqual(log, None)
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
-        log = yield self.callGet(dict(), dict(stepid=50, log_name='errors'))
-        validation.verifyData(self, 'log', {}, log)
+        log = yield self.callGet(('step', 50, 'log', 'errors'))
+        self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
-        log = yield self.callGet(dict(),
-                dict(buildid=13, step_number=5, log_name='errors'))
-        validation.verifyData(self, 'log', {}, log)
+        log = yield self.callGet(('build', 13, 'step', 5, 'log', 'errors'))
+        self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder(self):
-        log = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_number=5,
-                     log_name='errors'))
-        validation.verifyData(self, 'log', {}, log)
+        log = yield self.callGet(
+                ('builder', '77', 'build', 3, 'step', 5, 'log', 'errors'))
+        self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
-        log = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_name='make',
-                     log_name='errors'))
-        validation.verifyData(self, 'log', {}, log)
+        log = yield self.callGet(
+                ('builder', '77', 'build', 3, 'step', 'make',
+                 'log', 'errors'))
+        self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
 
-class Logs(endpoint.EndpointMixin, unittest.TestCase):
+class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = logs.LogsEndpoint
+    resourceTypeClass = logs.Log
 
     def setUp(self):
         self.setUpEndpoint()
@@ -119,65 +119,64 @@ class Logs(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_stepid(self):
-        logs = yield self.callGet(dict(), dict(stepid=50))
-        [ validation.verifyData(self, 'log', {}, log)
+        logs = yield self.callGet(('step', 50, 'log'))
+        [ self.validateData(log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
                          ['errors', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_stepid_empty(self):
-        logs = yield self.callGet(dict(), dict(stepid=52))
+        logs = yield self.callGet(('step', 52, 'log'))
         self.assertEqual(logs, [])
 
     @defer.inlineCallbacks
     def test_get_stepid_missing(self):
-        logs = yield self.callGet(dict(), dict(stepid=99))
+        logs = yield self.callGet(('step', 99, 'log'))
         self.assertEqual(logs, [])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_name(self):
-        logs = yield self.callGet(dict(),
-                dict(buildid=13, step_name='make_install'))
-        [ validation.verifyData(self, 'log', {}, log)
+        logs = yield self.callGet(
+                ('build', 13, 'step', 'make_install', 'log'))
+        [ self.validateData(log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
                          ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_number(self):
-        logs = yield self.callGet(dict(),
-                dict(buildid=13, step_number=10))
-        [ validation.verifyData(self, 'log', {}, log)
+        logs = yield self.callGet(('build', 13, 'step', 10, 'log'))
+        [ self.validateData(log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
                          ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_name(self):
-        logs = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_name='make'))
-        [ validation.verifyData(self, 'log', {}, log)
+        logs = yield self.callGet(
+                ('builder', 77, 'build', 3, 'step', 'make', 'log'))
+        [ self.validateData(log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
                          ['errors', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_number(self):
-        logs = yield self.callGet(dict(),
-                dict(builderid=77, build_number=3, step_number=10))
-        [ validation.verifyData(self, 'log', {}, log)
+        logs = yield self.callGet(
+                ('builder', 77, 'build', 3, 'step', 10, 'log'))
+        [ self.validateData(log)
           for log in logs ]
         self.assertEqual(sorted([ b['name'] for b in logs ]),
                          ['results_html', 'stdio'])
 
 
-class LogResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Log(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                 wantMq=True, wantDb=True, wantData=True)
-        self.rtype = logs.LogsResourceType(self.master)
+        self.rtype = logs.Log(self.master)
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
             exp_kwargs=None, *args, **kwargs):

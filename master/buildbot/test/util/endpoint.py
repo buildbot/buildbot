@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 
 import mock
+import types
 from twisted.internet import defer
+from buildbot.data import resultspec, base
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import interfaces
+from buildbot.test.util import interfaces, validation
+from buildbot.util import pathmatch
 
 class EndpointMixin(interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
@@ -24,8 +27,8 @@ class EndpointMixin(interfaces.InterfaceTests):
     # class being tested
     endpointClass = None
 
-    # if necessary, the corresponding resource type - this will
-    # be instantiated at self.data.rtypes[rtype.type] and self.rtype
+    # the corresponding resource type - this will be instantiated at
+    # self.data.rtypes[rtype.type] and self.rtype
     resourceTypeClass = None
 
     def setUpEndpoint(self):
@@ -34,12 +37,10 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
+        self.matcher = pathmatch.Matcher()
 
-        if self.resourceTypeClass:
-            rtype = self.rtype = self.resourceTypeClass(self.master)
-            self.data.rtypes = { rtype.type : rtype }
-        else:
-            rtype = None
+        rtype = self.rtype = self.resourceTypeClass(self.master)
+        setattr(self.data.rtypes, rtype.name, rtype)
 
         self.ep = self.endpointClass(rtype, self.master)
 
@@ -47,13 +48,14 @@ class EndpointMixin(interfaces.InterfaceTests):
         # trailing comma
         pathPatterns = self.ep.pathPatterns.split()
         for pp in pathPatterns:
-            assert pp.startswith('/') and not pp.endswith('/'), \
-                    "invalid pattern %r" % (pp,)
+            if pp == '/':
+                continue
+            if not pp.startswith('/') or pp.endswith('/'):
+                raise AssertionError("invalid pattern %r" % (pp,))
         pathPatterns = [ tuple(pp.split('/')[1:])
                             for pp in pathPatterns ]
         for pp in pathPatterns:
-            if pp is not None:
-                self.assertIsInstance(pp, tuple)
+            self.matcher[pp] = self.ep
 
         self.pathArgs = [
             set([ arg.split(':', 1)[1] for arg in pp if ':' in arg ])
@@ -62,12 +64,26 @@ class EndpointMixin(interfaces.InterfaceTests):
     def tearDownEndpoint(self):
         pass
 
+    def validateData(self, object):
+        validation.verifyData(self, self.rtype.entityType, {}, object)
+
     # call methods, with extra checks
 
-    def callGet(self, options, kwargs):
-        self.assertIn(set(kwargs), self.pathArgs)
-        d = self.ep.get(options, kwargs)
+    def callGet(self, path, resultSpec=None):
+        self.assertIsInstance(path, tuple)
+        if resultSpec is None:
+            resultSpec = resultspec.ResultSpec()
+        endpoint, kwargs = self.matcher[path]
+        self.assertIdentical(endpoint, self.ep)
+        d = endpoint.get(resultSpec, kwargs)
         self.assertIsInstance(d, defer.Deferred)
+        @d.addCallback
+        def checkNumber(rv):
+            if self.ep.isCollection:
+                self.assertIsInstance(rv, (list, base.ListResult))
+            else:
+                self.assertIsInstance(rv, (dict, types.NoneType))
+            return rv
         return d
 
     def callStartConsuming(self, options, kwargs, expected_filter=None):
@@ -89,7 +105,7 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     def test_get_spec(self):
         @self.assertArgSpecMatches(self.ep.get)
-        def get(self, options, kwargs):
+        def get(self, resultSpec, kwargs):
             pass
 
     def test_startConsuming_spec(self):

@@ -13,22 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-# copy some exceptions from the DB layer
-from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+from buildbot.data import base, types
 
-__all__ = [
-    'SchedulerAlreadyClaimedError',
-    'InvalidPathError',
-    'InvalidControlException',
-]
 
-class DataException(Exception):
-    pass
+# NOTE: patches are not available via endpoints
 
-class InvalidPathError(DataException):
-    "A path argument was invalid or unknown"
-    pass
 
-class InvalidControlException(DataException):
-    "Action is not supported"
-    pass
+class Patch(base.ResourceType):
+
+    name = "patch"
+    plural = "patches"
+    endpoints = [ ]
+    keyFields = [ 'patchid' ]
+
+    class EntityType(types.Entity):
+        patchid = types.Integer()
+        body = types.Binary()
+        level = types.Integer()
+        subdir = types.String()
+        author = types.String()
+        comment = types.String()
+    entityType = EntityType(name)

@@ -776,6 +776,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=20, url='http://foo/',
                                     plugins={}))
 
+    def test_load_www_unknown(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(foo="bar")))
+        self.assertConfigError(self.errors,
+            "unknown www configuration parameter(s) foo")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 

@@ -144,6 +144,16 @@ package.
     If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
     If given a unicode string, it returns it directly.
 
+.. py:function:: string2boolean(str):
+
+    :param str: string
+    :raises KeyError:
+    :returns: boolean
+
+    This function converts a string to a boolean.
+    It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
+    It raises :py:exc:`KeyError` if the value is not recognized.
+
 .. py:data:: NotABranch
 
     This is a sentinel value used to indicate that no branch is specified.  It

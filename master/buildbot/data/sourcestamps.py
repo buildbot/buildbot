@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, patches
 from buildbot.util import datetime2epoch
 
 def _db2data(ss):
@@ -31,6 +31,7 @@ def _db2data(ss):
     }
     if ss['patch_body']:
         data['patch'] = {
+            'patchid': ss['patchid'],
             'level' : ss['patch_level'],
             'subdir' : ss['patch_subdir'],
             'author' : ss['patch_author'],
@@ -42,26 +43,28 @@ def _db2data(ss):
 
 class SourceStampEndpoint(base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /sourcestamp/n:ssid
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(
                                                         kwargs['ssid'])
         defer.returnValue(_db2data(ssdict) if ssdict else None)
 
 
-class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
+class SourceStampsEndpoint(base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /sourcestamp
     """
     rootLinkName = 'sourcestamps'
 
     @defer.inlineCallbacks
-    def safeGet(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         defer.returnValue([ _db2data(ssdict) for ssdict in
             (yield self.master.db.sourcestamps.getSourceStamps()) ])
 
@@ -70,8 +73,21 @@ class SourceStampsEndpoint(base.GetParamsCheckMixin, base.Endpoint):
                 ('sourcestamp', None, None))
 
 
-class SourceStampResourceType(base.ResourceType):
+class SourceStamp(base.ResourceType):
 
-    type = "sourcestamp"
+    name = "sourcestamp"
+    plural = "sourcestamps"
     endpoints = [ SourceStampEndpoint, SourceStampsEndpoint ]
     keyFields = [ 'ssid' ]
+
+    class EntityType(types.Entity):
+        ssid = types.Integer()
+        revision = types.NoneOk(types.String())
+        branch = types.NoneOk(types.String())
+        repository = types.String()
+        project = types.String()
+        codebase = types.String()
+        patch = types.NoneOk(patches.Patch.entityType)
+        created_at = types.Integer()
+        link = types.Link()
+    entityType = EntityType(name)

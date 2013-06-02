@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from buildbot.data import base
+from buildbot.data import base, types, masters
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
 class Db2DataMixin(object):
@@ -23,7 +23,7 @@ class Db2DataMixin(object):
     def db2data(self, dbdict):
         master = None
         if dbdict['masterid'] is not None:
-            master = yield self.master.data.get({},
+            master = yield self.master.data.get(
                                     ('master', dbdict['masterid']))
         data = {
             'changesourceid': dbdict['id'],
@@ -42,7 +42,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
     """
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.changesources.getChangeSource(
                                                         kwargs['changesourceid'])
         if 'masterid' in kwargs:
@@ -54,6 +54,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
 
 class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /changesource
         /master/n:masterid/changesource
@@ -61,7 +62,7 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
     rootLinkName = 'changesources'
 
     @defer.inlineCallbacks
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         changesources = yield self.master.db.changesources.getChangeSources(
                                 masterid=kwargs.get('masterid'))
         csdicts = yield defer.DeferredList(
@@ -74,11 +75,18 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
                 ('changesource', None, None))
 
 
-class ChangeSourceResourceType(base.ResourceType):
+class ChangeSource(base.ResourceType):
 
-    type = "changesource"
+    name = "changesource"
     endpoints = [ ChangeSourceEndpoint, ChangeSourcesEndpoint ]
     keyFields = [ 'changesourceid' ]
+
+    class EntityType(types.Entity):
+        changesourceid = types.Integer()
+        name = types.String()
+        master = types.NoneOk(masters.Master.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     def findChangeSourceId(self, name):

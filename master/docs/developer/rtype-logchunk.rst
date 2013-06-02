@@ -9,7 +9,7 @@ Logchunks
 
     A logchunk represents a contiguous sequence of lines in a logfile.
     Logs are not individually addressible in the data API; instead, they must be requested by line number range.
-    Many logchunk resources will contain the same line.
+    In a strict REST sense, many logchunk resources will contain the same line.
 
     The chunk contents is represented as a single unicode string.
     This string is the concatenation of each newline terminated-line.
@@ -24,13 +24,11 @@ Logchunks
 
     In the stream type, each line is prefixed by a character giving the stream type for that line.
     The types are ``i`` for input, ``o`` for stdout, ``e`` for stderr, and ``h`` for header.
-    The first three correspond to normal UNIX standard streams, while the header stream contains metadata produced by buildbot itself.
+    The first three correspond to normal UNIX standard streams, while the header stream contains metadata produced by Buildbot itself.
 
-    All paths below take ``firstline`` and ``lastline`` indexes to select the desired first and last lines.
-    If ``firstline`` is omitted, it is assumed to be 0.
-    If ``lastline`` is omitted, it is assumed to be the last line in the log.
-    If ``lastline`` is beyond the current end of the log, then the results will be truncated.
-    If ``firstline`` and ``lastline`` are invalid, nothing will be returned.
+    The ``offset`` and ``limit`` parameters can be used to select the desired lines.
+    These are specified as query parameters via the REST interface, or as arguments to the :py:meth:`~buildbot.data.connector.DataConnector.get` method in Python.
+    The result will begin with line ``offset`` (so the resulting ``firstline`` will be equal to the given ``offset``), and will contain up to ``limit`` lines.
 
     .. todo::
 
@@ -39,35 +37,35 @@ Logchunks
             A new chunk has been added to the end of the indicated log.
             The message body does not have a ``content`` key, but does havea ``lastline`` key.
 
-    .. bb:rpath:: /log/:logid/content?firstline=..&lastline=..
+    .. bb:rpath:: /log/:logid/content
 
         :pathkey integer logid: the ID of the log
 
-    .. bb:rpath:: /step/:stepid/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /step/:stepid/log/:log_name/content
 
         :pathkey integer stepid: the ID of the step
         :pathkey integer log_name: the name of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_name/content
 
         :pathkey integer buildid: the ID of the build
         :pathkey identifier step_name: the name of the step within the build
         :pathkey identifier log_name: the name of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_name/content
 
         :pathkey integer buildid: the ID of the build
         :pathkey integer step_number: the number of the step within the build
         :pathkey identifier log_name: the name of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_name/content
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
         :pathkey identifier name: the name of the step within the build
         :pathkey identifier log_name: the name of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_name/content?firstline=..&lastline=..
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_name/content
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder

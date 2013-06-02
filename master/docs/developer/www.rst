@@ -1,3 +1,5 @@
+.. _WWW:
+
 WWW
 ===
 
@@ -21,18 +23,19 @@ Design Overview
 The ``www`` service exposes three pieces via HTTP:
 
  * A REST interface wrapping :ref:`Data_API`;
- * A WebSocket (and other Comet-related protocoles) wrapping the :ref:`Messaging_and_Queues` interface; and
- * Static JavaScript and resources implementing the client-side UI.
+ * HTTP-based messaging protocols wrapping the :ref:`Messaging_and_Queues` interface; and
+ * Static resources implementing the client-side UI.
 
 The REST interface is a very thin wrapper: URLs are translated directly into Data API paths, and results are returned directly, in JSON format.
-Control calls are handled with JSONRPC.
+It is based on `JSON API <http://jsonapi.org/>`_.
+Control calls are handled with a simplified form of `JSONRPC 2.0 <http://www.jsonrpc.org/specification>`_.
 
 The message interface is also a thin wrapper around Buildbot's MQ mechanism.
 Clients can subscribe to messages, and receive copies of the messages, in JSON, as they are received by the buildmaster.
 
-The client-side UI is also a thin wrapper around a typical AngularJS application.
+The client-side UI is an AngularJS application.
 Buildbot uses the Python setuptools entry-point mechanism to allow multiple packages to be combined into a single client-side experience.
-This allows developers and users to build custom components for the web UI without hacking Buildbot itself.
+This allows frontend developers and users to build custom components for the web UI without hacking Buildbot itself.
 
 Python development and AngularJS development are very different processes, requiring different environment requirements and skillsets.
 To maimize hackability, Buildbot separates the two cleanly.
@@ -43,21 +46,16 @@ URLs
 ~~~~
 
 The Buildbot web interface is rooted at its base URL, as configured by the user.
-It is entirely possible for this base URL to contain path components, e.g., ``http://build.myorg.net/buildbot``, if hosted behind an HTTP proxy.
+It is entirely possible for this base URL to contain path components, e.g., ``http://build.myorg.net/buildbot/``, if hosted behind an HTTP proxy.
 To accomplish this, all URLs are generated relative to the base URL.
 
 Overall, the space under the base URL looks like this:
 
-* ``/`` -- the HTML document that loads the UI
-* ``/api/v$V`` -- the root of the REST APIs, each versioned numerically.
+* ``/`` -- The HTML document that loads the UI
+* ``/api/v{version}`` -- The root of the REST APIs, each versioned numerically.
   Users should, in general, use the latest version.
-* ``/ws`` -- the websocket endpoint to subscribe to messages from the mq system.
-  websocket is full-fledge protocol for arbitrary messaging to and from browser. Being an http extension, the protocol is not yet well
-  supported by all http proxy technologies, and thus not well suited for enterprise.
-  Only one connection needed per browser
-* ``/sse`` -- the server-sent-event endpoint to subscribe to messages from the mq system.
-  sse is a simpler protocol, that is more REST compliant, only using chunk-encoding http feature
-  to stream the events. Potencially one connection to server per event type.
+* ``/ws`` -- The WebSocket endpoint to subscribe to messages from the mq system.
+* ``/sse`` -- The `server sent event <http://en.wikipedia.org/wiki/Server-sent_events>`_ endpoint where clients can subscribe to messages from the mq system.
 
 REST API
 --------
@@ -65,41 +63,147 @@ REST API
 The REST API is a thin wrapper around the data API's "Getter" and "Control" sections.
 It is also designed, in keeping with REST principles, to be discoverable.
 As such, the details of the paths and resources are not documented here.
-See the :ref:`Data_API` documentation instead.
+Begin at the root URL, and see the :ref:`Data_API` documentation for more information.
 
 Getting
 ~~~~~~~
 
 To get data, issue a GET request to the appropriate path.
-For example, with a base URL of ``http://build.myorg.net/buildbot``, the list of masters for builder 9 is available at ``http://build.myorg.net/buildbot/api/v2/builder/9/master/``.
+For example, with a base URL of ``http://build.myorg.net/buildbot``, the list of masters for builder 9 is available at ``http://build.myorg.net/buildbot/api/v2/builder/9/master``.
 
-The following query arguments can be added to the request to alter the format of the response:
+Results are formatted in keeping with the `JSON API <http://jsonapi.org/>`_ specification.
+The top level of every response is an object.
+Its keys are the plural names of the resource types, and the values are lists of objects, even for a single-resource request.
+For example::
 
- * ``as_text`` -- (boolean) return content-type ``text/plain``, for ease of use in a browser
- * ``filter`` -- (boolean) filter out empty or false-ish values
- * ``compact`` -- (boolean) return compact JSON, rather than pretty-printed
- * ``callback`` -- if given, return a JSONP-encoded response with this callback
+    {
+      "meta": {
+        "links": [
+          {
+            "href": "http://build.my.org/api/v2/scheduler",
+            "rel": "self"
+          }
+        ],
+        "total": 2
+      },
+      "schedulers": [
+        {
+          "link": "http://build.my.org/api/v2/scheduler/1",
+          "master": null,
+          "name": "smoketest",
+          "schedulerid": 1
+        },
+        {
+          "link": "http://build.my.org/api/v2/scheduler/4",
+          "master": {
+            "active": true,
+            "last_active": 1369604067,
+            "link": "http://build.my.org/api/v2/master/1",
+            "masterid": 1,
+            "name": "master3:/BB/master"
+          },
+          "name": "goaheadtryme",
+          "schedulerid": 2
+        }
+      ]
+    }
+
+A response may optionally contain extra, related resources beyond those requested.
+The ``meta`` key contains metadata about the response, including navigation links and the total count of resources in a collection.
+
+Several query parameters may be used to affect the results of a request.
+These parameters are applied in the order described (so, it is not possible to sort on a field that is not selected, for example).
+
+Field Selection
+...............
+
+If only certain fields of each resource are required, the ``field`` query parameter can be used to select them.
+For example, the following will select just the names and id's of all schedulers:
+
+ * ``http://build.my.org/api/v2/scheduler?field=name&field=schedulerid``
+
+Field selection can be used for either detail (single-entity) or collection (multi-entity) requests.
+The remaining options only apply to collection requests.
+
+Filtering
+.........
+
+Collection responses may be filtered on any simple top-level field.
+
+To select records with a specific value use the query parameter ``{field}={value}``.
+For example, ``http://build.my.org/api/v2/scheduler?name=smoketest`` selects the scheduler named "smoketest".
+
+Filters can use any of the operators listed below, with query parameters of the form ``{field}__{operator}={value}``.
+
+ * ``eq`` - equality, or with the same parameter appearing multiple times, set membership
+ * ``ne`` - inequality, or set exclusion
+ * ``lt`` - select resources where the field's value is less than ``{value}``
+ * ``le`` - select resources where the field's value is less than or equal to ``{value}``
+ * ``gt`` - select resources where the field's value is greater than ``{value}``
+ * ``ge`` - select resources where the field's value is greater than or equal to ``{value}``
+
+For example:
+
+ * ``http://build.my.org/api/v2/builder?name__lt=cccc``
+ * ``http://build.my.org/api/v2/buildsets?complete__eq=false``
+
+Boolean values can be given as ``on``/``off``, ``true``/``false``, ``yes``/``no``, or ``1``/``0``.
+
+Sorting
+.......
+
+Collection responses may be ordered with the ``order`` query parameter.
+This parameter takes a field name to sort on, optionally prefixed with ``-`` to reverse the sort.
+The parameter can appear multiple times, and will be sorted lexically with the fields arranged in the given order.
+For example:
+
+ * ``http://build.my.org/api/v2/buildrequest?order=builderid&order=buildrequestid``
+
+Pagination
+..........
+
+Collection responses may be paginated with the ``offset`` and ``limit`` query parameters.
+The offset is the 0-based index of the first result to included, after filtering and sorting.
+The limit is the maximum number of results to return.
+Some resource types may impose a maximum on the limit parameter; be sure to check the resulting links to determine whether further data is available.
+For example:
+
+ * ``http://build.my.org/api/v2/buildrequest?order=builderid&limit=10``
+ * ``http://build.my.org/api/v2/buildrequest?order=builderid&offset=20&limit=10``
 
 Controlling
 ~~~~~~~~~~~
 
-Data API control operations are handled by POST requests.
-The request body content type can be either ``application/x-www-form-urlencoded`` or, better, ``application/json``.
+Data API control operations are handled by POST requests using a simplified form of `JSONRPC 2.0 <http://www.jsonrpc.org/specification>`_.
+The JSONRPC "method" is mapped to the data API "action", and the parameters are passed to that application.
 
-If encoded in ``application/x-www-form-urlencoded`` options are retrived in the form request args, and transmitted to
-the control data api, special ``action`` parameter is removed, and transmitted to control data api, in its ``action``
-argument. Response is transmitted json encoded in the same format as GET
+The following parts of the protocol are not supported:
 
-If encoded in ``application/json``, JSON-RPC2 encodding is used: ``http://www.jsonrpc.org/specification``, where
-jsonrpc's ``method`` is mapped to ``action``, and jsonrpc's ``params`` is mapped to options.
-This allows to leverage existing client implementation of jsonrpc: ``http://en.wikipedia.org/wiki/JSON-RPC#Implementations``
+ * positional parameters
+ * batch requests
 
+Requests are sent as an HTTP POST, containing the request JSON in the body.
+The content-type header is ignored; for compatibility with simple CORS requests (avoiding preflight checks), use ``text/plain``.
+
+A simple example::
+
+    POST http://build.my.org/api/v2/scheduler/4
+    --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
+    <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
 Message API
 -----------
 
-Currently messages are implemented with an experimental WebSockets implementation at ``ws://$baseurl/ws``.
+Currently messages are implemented with two protocols: WebSockets and `server sent event <http://en.wikipedia.org/wiki/Server-sent_events>`_.
 This will likely change or be supplemented with other mechanisms before release.
+
+WebSocket is a protocol for arbitrary messaging to and from browser.
+As an HTTP extension, the protocol is not yet well supported by all HTTP proxy technologies, and thus not well suited for enterprise.
+Only one WebSocket connection is needed per browser.
+
+SSE is a simpler protocol than WebSockets and is more REST compliant.
+It uses the chunk-encoding HTTP feature to stream the events.
+It may use one connection to server per event type.
 
 JavaScript Application
 ----------------------

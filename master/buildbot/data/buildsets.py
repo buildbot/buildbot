@@ -18,7 +18,7 @@ from twisted.python import log
 from twisted.internet import defer, reactor
 from buildbot.util import datetime2epoch, epoch2datetime
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.data import base
+from buildbot.data import base, types, sourcestamps
 
 class Db2DataMixin(object):
 
@@ -33,7 +33,7 @@ class Db2DataMixin(object):
         sourcestamps = []
         @defer.inlineCallbacks
         def getSs(ssid):
-            ss = yield self.master.data.get({}, ('sourcestamp', str(ssid)))
+            ss = yield self.master.data.get(('sourcestamp', str(ssid)))
             sourcestamps.append(ss)
         yield defer.DeferredList([ getSs(id)
                                    for id in buildset['sourcestamps'] ],
@@ -49,11 +49,12 @@ class Db2DataMixin(object):
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = False
     pathPatterns = """
         /buildset/n:bsid
     """
 
-    def get(self, options, kwargs):
+    def get(self, resultSpec, kwargs):
         d = self.master.db.buildsets.getBuildset(kwargs['bsid'])
         d.addCallback(self.db2data)
         return d
@@ -65,15 +66,14 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
+    isCollection = True
     pathPatterns = """
         /buildset
     """
     rootLinkName = 'buildset'
 
-    def get(self, options, kwargs):
-        complete = None
-        if 'complete' in options:
-            complete = bool(options['complete']) # TODO: booleans from strings?
+    def get(self, resultSpec, kwargs):
+        complete = resultSpec.popBooleanFilter('complete')
         d = self.master.db.buildsets.getBuildsets(complete=complete)
         @d.addCallback
         def db2data(buildsets):
@@ -90,11 +90,25 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
                 ('buildset', None, 'new'))
 
 
-class BuildsetResourceType(base.ResourceType):
+class Buildset(base.ResourceType):
 
-    type = "buildset"
+    name = "buildset"
+    plural = "buildsets"
     endpoints = [ BuildsetEndpoint, BuildsetsEndpoint ]
     keyFields = [ 'bsid' ]
+
+    class EntityType(types.Entity):
+        bsid = types.Integer()
+        external_idstring = types.NoneOk(types.String())
+        reason = types.String()
+        submitted_at = types.Integer()
+        complete = types.Boolean()
+        complete_at = types.NoneOk(types.Integer())
+        results = types.NoneOk(types.Integer())
+        sourcestamps = types.List(
+                of=sourcestamps.SourceStamp.entityType)
+        link = types.Link()
+    entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -111,7 +125,7 @@ class BuildsetResourceType(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            (yield self.master.data.get({}, ('sourcestamp', str(ssid)))).copy()
+            (yield self.master.data.get(('sourcestamp', str(ssid)))).copy()
             for ssid in bsdict['sourcestamps'] ]
 
         # strip the links from those sourcestamps
@@ -195,7 +209,7 @@ class BuildsetResourceType(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            copy.deepcopy((yield self.master.data.get({},
+            copy.deepcopy((yield self.master.data.get(
                                             ('sourcestamp', str(ssid)))))
             for ssid in bsdict['sourcestamps'] ]
 

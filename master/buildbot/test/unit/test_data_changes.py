@@ -16,14 +16,15 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
-from buildbot.data import changes, exceptions
-from buildbot.test.util import validation, endpoint, interfaces
+from buildbot.data import changes
+from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
 
-class Change(endpoint.EndpointMixin, unittest.TestCase):
+class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = changes.ChangeEndpoint
+    resourceTypeClass = changes.Change
 
     def setUp(self):
         self.setUpEndpoint()
@@ -40,25 +41,26 @@ class Change(endpoint.EndpointMixin, unittest.TestCase):
 
 
     def test_get_existing(self):
-        d = self.callGet(dict(), dict(changeid=13))
+        d = self.callGet(('change', '13'))
         @d.addCallback
         def check(change):
-            validation.verifyData(self, 'change', {}, change)
+            self.validateData(change)
             self.assertEqual(change['project'], 'world-domination')
         return d
 
 
     def test_get_missing(self):
-        d = self.callGet(dict(), dict(changeid=99))
+        d = self.callGet(('change', '99'))
         @d.addCallback
         def check(change):
             self.assertEqual(change, None)
         return d
 
 
-class Changes(endpoint.EndpointMixin, unittest.TestCase):
+class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = changes.ChangesEndpoint
+    resourceTypeClass = changes.Change
 
     def setUp(self):
         self.setUpEndpoint()
@@ -78,49 +80,13 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(dict(), dict())
+        d = self.callGet(('change',))
         @d.addCallback
         def check(changes):
-            validation.verifyData(self, 'change', {}, changes[0])
+            self.validateData(changes[0])
             self.assertEqual(changes[0]['changeid'], 13)
-            validation.verifyData(self, 'change', {}, changes[1])
+            self.validateData(changes[1])
             self.assertEqual(changes[1]['changeid'], 14)
-        return d
-
-    def test_get_fewer(self):
-        d = self.callGet(dict(count='1'), dict())
-        @d.addCallback
-        def check(changes):
-            self.assertEqual(len(changes), 1)
-            validation.verifyData(self, 'change', {}, changes[0])
-            self.assertEqual(changes[0]['changeid'], 13)
-        return d
-    def test_get_paging(self):
-        d = self.callGet(dict(count='1',start=1), dict())
-        @d.addCallback
-        def check(changes):
-            self.assertEqual(len(changes), 1)
-            validation.verifyData(self, 'change', {}, changes[0])
-            self.assertEqual(changes[0]['changeid'], 14)
-        return d
-
-    def test_get_invalid_count(self):
-        d = self.callGet(dict(count='ten'), dict())
-        self.assertFailure(d, exceptions.InvalidOptionException)
-
-    def test_get_invalid_count2(self):
-        d = self.callGet(dict(count=50000), dict())
-        self.assertFailure(d, exceptions.InvalidOptionException)
-
-    def test_get_sorted(self):
-        # invert the default order
-        d = self.callGet(dict(sort=[('changeid',1)]), dict())
-        @d.addCallback
-        def check(changes):
-            validation.verifyData(self, 'change', {}, changes[1])
-            self.assertEqual(changes[1]['changeid'], 13)
-            validation.verifyData(self, 'change', {}, changes[0])
-            self.assertEqual(changes[0]['changeid'], 14)
         return d
 
     def test_startConsuming(self):
@@ -128,12 +94,12 @@ class Changes(endpoint.EndpointMixin, unittest.TestCase):
                 expected_filter=('change', None, 'new'))
 
 
-class ChangeResourceType(interfaces.InterfaceTests, unittest.TestCase):
+class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                             wantData=True, testcase=self)
-        self.rtype = changes.ChangeResourceType(self.master)
+        self.rtype = changes.Change(self.master)
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(

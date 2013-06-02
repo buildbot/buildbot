@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+import mock
+import cgi
+import urllib
 import pkg_resources
-from urlparse import urljoin
 from buildbot.util import json
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.web import server
 from buildbot.test.fake import fakemaster
-from twisted.python import failure, log
 from cStringIO import StringIO
 from uuid import uuid1
 
@@ -33,13 +33,22 @@ class FakeRequest(object):
     path = '/req.path'
     responseCode = 200
 
-    def __init__(self, postpath=None, args={}):
+    def __init__(self, path=None):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-        self.postpath = postpath or []
+
+        x = path.split(b'?', 1)
+        if len(x) == 1:
+            self.path = path
+            self.args = {}
+        else:
+            path, argstring = x
+            self.path = path
+            self.args = cgi.parse_qs(argstring, 1)
+        self.postpath = list(map(urllib.unquote, path[1:].split(b'/')))
+
         self.deferred = defer.Deferred()
-        self.args = args
 
     def write(self, data):
         self.written = self.written + data
@@ -56,48 +65,58 @@ class FakeRequest(object):
 
     def setHeader(self, hdr, value):
         self.headers.setdefault(hdr, []).append(value)
-    def getHeader(self, key, default=None):
-        return self.input_headers.get(key, default)
+
+    def getHeader(self, key):
+        return self.input_headers.get(key)
+
     def processingFailed(self, f):
         self.deferred.errback(f)
 
 
 class WwwTestMixin(object):
+    UUID = str(uuid1())
+
     if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
         skip = 'builbot-www not installed'
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
+        master.www = mock.Mock() # to handle the resourceNeedsReconfigs call
         cfg = dict(url='//', port=None)
         cfg.update(kwargs)
         master.config.www = cfg
         return master
 
-    def make_request(self, postpath=None, args={}):
-        self.request = FakeRequest(postpath=postpath, args=args)
+    def make_request(self, path=None, method='GET'):
+        self.request = FakeRequest(path)
+        self.request.method = method
         return self.request
 
-    def render_resource(self, rsrc, postpath=None, args={}, request=None):
-        # pass *either* a request or postpath (and optionally args)
-        if not request:
-            request = self.make_request(postpath=postpath, args=args)
+    def render_resource(self, rsrc, path='/', accept=None, method='GET',
+            origin=None, access_control_request_method=None):
+        request = self.make_request(path, method=method)
+        if accept:
+            request.input_headers['accept'] = accept
+        if origin:
+            request.input_headers['origin'] = origin
+        if access_control_request_method:
+            request.input_headers['access-control-request-method'] = \
+                    access_control_request_method
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
             return defer.succeed(rv)
         return request.deferred
 
-    def render_control_resource(self, rsrc, postpath=None, args={}, action="notfound",
-                                request=None, jsonRpc=True):
-        # pass *either* a request or postpath (and optionally args)
-        _id = str(uuid1())
-        if not request:
-            request = self.make_request(postpath=postpath, args=args)
-            request.method = "POST"
-            if jsonRpc:
-                request.content = StringIO(json.dumps(
-                    { "jsonrpc": "2.0", "method": action, "params": args, "id": _id}))
-                request.input_headers = {'content-type': 'application/json'}
+    def render_control_resource(self, rsrc, path='/', params={},
+            requestJson=None, action="notfound", id=None):
+        # pass *either* a request or postpath
+        id = id or self.UUID
+        request = self.make_request(path)
+        request.method = "POST"
+        request.content = StringIO(requestJson or json.dumps(
+            {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
+        request.input_headers = {'content-type': 'application/json'}
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
             d = defer.succeed(rv)
@@ -105,17 +124,17 @@ class WwwTestMixin(object):
             d = request.deferred
         @d.addCallback
         def check(_json):
-            if jsonRpc:
-                res = json.loads(_json)
-                self.assertIn("jsonrpc",res)
+            res = json.loads(_json)
+            self.assertIn("jsonrpc",res)
+            self.assertEqual(res["jsonrpc"], "2.0")
+            if not requestJson:
+                # requestJson is used for invalid requests, so don't expect ID
                 self.assertIn("id",res)
-                self.assertEqual(res["jsonrpc"], "2.0")
-                self.assertEqual(res["id"], _id)
-            return json
+                self.assertEqual(res["id"], id)
         return d
 
     def assertRequest(self, content=None, contentJson=None, contentType=None,
-            responseCode=None, contentDisposition=None, errorJsonRpcCode=None):
+            responseCode=None, contentDisposition=None, headers={}):
         got, exp = {}, {}
         if content is not None:
             got['content'] = self.request.written
@@ -123,74 +142,13 @@ class WwwTestMixin(object):
         if contentJson is not None:
             got['contentJson'] = json.loads(self.request.written)
             exp['contentJson'] = contentJson
-        if errorJsonRpcCode is not None:
-            jsonrpc = json.loads(self.request.written)
-            self.assertIn("error", jsonrpc)
-            self.assertIn("code", jsonrpc["error"])
-            got['errorJsonRpcCode'] = jsonrpc["error"]["code"]
-            exp['errorJsonRpcCode'] = errorJsonRpcCode
         if contentType is not None:
             got['contentType'] =  self.request.headers['content-type']
             exp['contentType'] = [ contentType ]
         if responseCode is not None:
             got['responseCode'] =  self.request.responseCode
             exp['responseCode'] = responseCode
-        if contentDisposition is not None:
-            got['contentDisposition'] =  self.request.headers.get(
-                                    'content-disposition')
-            exp['contentDisposition'] = [ contentDisposition ]
+        for header, value in headers.iteritems():
+            got[header] = self.request.headers.get(header)
+            exp[header] = value
         self.assertEqual(got, exp)
-try:
-    from buildbot.test.util.txghost import Ghost
-    has_ghost= Ghost != None
-except ImportError:
-    no_ghost_message = "Need Ghost.py to run most of www_ui tests"
-    has_ghost=False
-    # if $REQUIRE_GHOST is set, then fail if it's not found
-    if os.environ.get('REQUIRE_GHOST'):
-        raise
-
-if not has_ghost and os.environ.get('REQUIRE_GHOST'):
-            raise Exception(no_ghost_message)
-
-
-class WwwGhostTestMixin(object):
-    if not has_ghost:
-        skip = no_ghost_message
-
-    @defer.inlineCallbacks
-    def setUp(self):
-        ## workaround twisted bug  http://twistedmatrix.com/trac/ticket/2386
-        import twisted
-        twisted.web.http._logDateTimeUsers = 1
-        twisted.internet.base.DelayedCall.debug = True
-        ## we cannot use self.patch, as _logDateTimeUsers is not present in all versions of twisted
-        self.master = yield fakemaster.make_master_for_uitest(0)
-        self.url = self.master.config.www["url"]
-        log.msg("listening on "+self.url)
-        self.ghost = Ghost()
-
-    @defer.inlineCallbacks
-    def tearDown(self):
-        from  twisted.internet.tcp import Server
-        del self.ghost
-        # webkit has the bad habbit on not closing the persistent
-        # connections, so we need to hack them away to make trial happy
-        for reader in reactor.getReaders():
-            if isinstance(reader, Server):
-                f = failure.Failure(Exception("test end"))
-                reader.connectionLost(f)
-        yield self.master.www.stopService()
-
-    @defer.inlineCallbacks
-    def doDohPageLoadRunnerTests(self, doh_tests="../../dojo/tests/colors"):
-        self.ghost.wait_timeout = 200
-        yield self.ghost.open(urljoin(self.url,"app/base/bb/tests/runner.html#"+doh_tests))
-        result_selector = "#testListContainer table tfoot tr.inProgress"
-        yield self.ghost.wait_for_selector(result_selector)
-        result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" .failure'),function(a){return a.textContent;});")
-        errors, failures = map(int,result)
-        self.assertEqual(errors, 0,"there is at least one testsuite error")
-        self.assertEqual(failures, 0,"there is at least one testsuite failure")
-        result, _ = self.ghost.evaluate("dojo.map(dojo.query('"+result_selector+" td'),function(a){return a.textContent;});")
-        print "\n",str(result[1]).strip(),
