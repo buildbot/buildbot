@@ -64,7 +64,7 @@ class Triggerable(base.BaseScheduler):
     @defer.inlineCallbacks
     def updateTriggeredBy(self, bsid):
         if self.triggeredbybrid:
-            yield self.master.db.buildsets.updateTriggeredBy(self.triggeredbybrid, bsid)
+            yield self.master.db.buildrequests.updateTriggeredBy(self.triggeredbybrid, bsid)
 
     def stopService(self):
         # cancel any outstanding subscription

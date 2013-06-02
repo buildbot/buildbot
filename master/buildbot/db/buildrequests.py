@@ -227,7 +227,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             buildrequests_tbl = self.db.model.buildrequests
 
             stmt = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.bsid == bsid) \
+                .where(buildrequests_tbl.c.buildsetid == bsid) \
                 .values(triggeredbybrid=triggeredbybrid)
 
             res = conn.execute(stmt)
