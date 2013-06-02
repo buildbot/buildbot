@@ -200,6 +200,10 @@ Testing javascript and json api interaction is tricky. Few design principles:
 * Return dates as strings :runner:
 * Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change. :runner:
 
+### Documentation ###
+
+* Document writing plugins, and create an example plugin project on GitHub.
+
 ### Localization ###
 
 Need to figure out how to do this!

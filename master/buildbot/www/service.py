@@ -84,14 +84,15 @@ class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
 
     def setupSite(self, new_config):
         root = self.apps['base'].resource
-        for key, plugin in new_config.www['plugins'].items():
+        for key, plugin in new_config.www.get('plugins', {}).items():
             if not key in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
             root.putChild(key, self.apps[key].resource)
 
         # /config.js
-        root.putChild('config.js', static.Data("this.config = " + json.dumps(new_config.www),
-                                               "text/javascript"))
+        root.putChild('config.js', static.Data("this.config = "
+                                        + json.dumps(new_config.www),
+                            "text/javascript"))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))

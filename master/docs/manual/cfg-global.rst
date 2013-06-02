@@ -672,6 +672,16 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     Any versions less than this value will not be available.
     This can be used to ensure that no clients are depending on API versions that will soon be removed from Buildbot.
 
+``plugins``
+    This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
+    These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-www-waterfall``.
+    For example ::
+
+        c['www'] = {
+            # ...
+            plugins={'waterfall': {'num_builds': 50}}
+        }
+
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
 
 .. bb:cfg:: codebaseGenerator

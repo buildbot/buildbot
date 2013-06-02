@@ -142,10 +142,7 @@ modules we may or may not want to include:
 Extensibility
 ~~~~~~~~~~~~~
 
-The Buildbot UI should be designed to support plug-ins to the web UI, allowing users and developers to create customized views without modifying Buildbot code.
-
-How we can do that with angular is TBD
-
+TODO: document writing plugins
 
 .. _Routing:
 
