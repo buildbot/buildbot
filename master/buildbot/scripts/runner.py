@@ -25,7 +25,11 @@ from twisted.python import usage, reflect
 import re
 import sys
 
+from buildbot import monkeypatches
+monkeypatches.patch_all(for_scripts=True)
+
 from buildbot.scripts import base
+
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
 # fact, they are interchanged several times.  Caveat legator.

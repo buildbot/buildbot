@@ -19,6 +19,9 @@ import os
 import sys
 import re
 from twisted.python import usage, reflect
+from buildslave import monkeypatches
+
+monkeypatches.patch_all(for_scripts=True)
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
