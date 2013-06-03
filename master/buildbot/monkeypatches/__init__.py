@@ -67,6 +67,14 @@ def patch_gatherResults():
         from buildbot.monkeypatches import gatherResults
         gatherResults.patch()
 
+def patch_twisted_completions():
+    """
+    Shell completion support was introduced in twisted 11.1.0. Add dummy
+    completions definitions for older twisted.
+    """
+    if twisted.version < versions.Version('twisted', 11, 1, 0):
+        from buildbot.monkeypatches import twisted_completions
+        twisted_completions.patch()
 
 def patch_all(for_tests=False):
     patch_bug4881()
