@@ -262,6 +262,41 @@ class SingleBranchScheduler(CommonStuffMixin,
 
     OBJECTID = 245
 
+    codebases = {'a': {'repository': "", 'branch': 'master'},
+                 'b': {'repository': "", 'branch': 'master'}}
+
+    def makeFullScheduler(self, **kwargs):
+        sched = self.attachScheduler(basic.SingleBranchScheduler(**kwargs),
+                                     self.OBJECTID)
+
+        # add a Clock to help checking timing issues
+        self.clock = sched._reactor = task.Clock()
+        return sched
+
+    def mkbs(self, **kwargs):
+        # create buildset for expected_buildset in assertBuildset.
+        bs = dict(reason='scheduler', external_idstring=None, sourcestampsetid=100,
+                  properties=[('scheduler', ('test', 'Scheduler'))])
+        bs.update(kwargs)
+        return bs
+
+    def mkss(self, **kwargs):
+        # create sourcestamp for expected_sourcestamps in assertBuildset.
+        ss = dict(branch='master', project='', repository='', sourcestampsetid=100)
+        ss.update(kwargs)
+        return ss
+
+    def mkch(self, **kwargs):
+        # create changeset and insert in database.
+        chd = dict(branch='master', project='', repository='')
+        chd.update(kwargs)
+        ch = self.makeFakeChange(**chd)
+        # fakedb.Change requires changeid instead of number
+        chd['changeid'] = chd['number']
+        del chd['number']
+        self.db.insertTestData([fakedb.Change(**chd)])
+        return ch
+
     def setUp(self):
         self.setUpScheduler()
 
@@ -296,6 +331,127 @@ class SingleBranchScheduler(CommonStuffMixin,
         d.addCallback(check)
 
         d.addCallback(lambda _ : sched.stopService())
+
+
+    def test_startService_createAbsoluteSourceStamps_loadCodebase(self):
+        # check codebase is loaded and used on startup.
+        sched = self.makeFullScheduler(name='test', builderNames=['test'],
+                                   treeStableTimer=None, branch='master',
+                                   codebases=self.codebases,
+                                   createAbsoluteSourceStamps=True)
+        self.db.insertTestData([
+            fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler'),
+            fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
+                value_json='{"a": {"branch": "master", "repository": "A", "revision": "1234:abc",  "lastChange": 13}}')])
+
+        d = sched.startService(_returnDeferred=True)
+
+        d.addCallback(lambda _ :
+                sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=14), True))
+        def check((bsid,brids)):
+            self.db.buildsets.assertBuildset(bsid=bsid,
+                expected_buildset = self.mkbs(brids=brids),
+                expected_sourcestamps = {
+                    'a': self.mkss(codebase='a', revision='1234:abc', repository='A'),
+                    'b': self.mkss(codebase='b', revision='2345:bcd', repository='B', changeids=set([14]))})
+        d.addCallback(check)
+
+        d.addCallback(lambda _ : sched.stopService())
+        return d
+
+    def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
+        # check codebase is stored after receiving change.
+        sched = self.makeFullScheduler(name='test', builderNames=['test'],
+                                   treeStableTimer=None, branch='master',
+                                   codebases=self.codebases,
+                                   createAbsoluteSourceStamps=True)
+        self.db.insertTestData([
+            fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')])
+
+        d = sched.startService(_returnDeferred=True)
+
+        d.addCallback(lambda _ :
+                sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True))
+        d.addCallback(lambda _ :
+                sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True))
+        def check(_):
+            self.db.state.assertState(self.OBJECTID, lastCodebases={
+                    'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
+                    'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
+        d.addCallback(check)
+
+        d.addCallback(lambda _ : sched.stopService())
+        return d
+
+
+    def do_test_gotChange_buildsets(self, abs_ss=False, treeStableTimer=None):
+        # test combination of createAbsoluteSourceStamps and treeStableTimer
+        # for multiple codebases.
+        sched = self.makeFullScheduler(name='test', builderNames=['test'],
+                                   treeStableTimer=treeStableTimer,
+                                   branch='master',
+                                   codebases=self.codebases,
+                                   createAbsoluteSourceStamps=abs_ss)
+        d = sched.startService(_returnDeferred=True)
+
+        # first change in repo:a use change, repo:b use latest
+        d.addCallback(lambda _ :
+                sched.gotChange(self.mkch(codebase='a', revision='1234:abc', number=13), True))
+        if treeStableTimer:
+            d.addCallback(lambda _ : self.clock.advance(treeStableTimer))
+        def check1(_):
+            self.db.buildsets.assertBuildset(bsid='?',
+                expected_buildset = self.mkbs(),
+                expected_sourcestamps = {
+                    'a': self.mkss(codebase='a', revision='1234:abc', changeids=set([13])),
+                    'b': self.mkss(codebase='b', revision=None)})
+            self.db.buildsets.flushBuildsets()
+        d.addCallback(check1)
+
+        # next change in repo:b, use change, repo:a use revision above (abs_ss) or None (no abs_ss)
+        d.addCallback(lambda _ :
+                sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', number=14), True))
+        if treeStableTimer:
+            d.addCallback(lambda _ : self.clock.advance(treeStableTimer))
+        def check2(_):
+            self.db.buildsets.assertBuildset(bsid='?',
+                expected_buildset = self.mkbs(sourcestampsetid=101),
+                expected_sourcestamps = {
+                    'a': self.mkss(codebase='a', revision='1234:abc' if abs_ss else None, sourcestampsetid=101),
+                    'b': self.mkss(codebase='b', revision='2345:bcd', sourcestampsetid=101, changeids=set([14]))})
+            self.db.buildsets.flushBuildsets()
+        d.addCallback(check2)
+
+        if treeStableTimer:
+            # change in both repos, use both changes
+            d.addCallback(lambda _ :
+                    sched.gotChange(self.mkch(codebase='a', revision='3456:cde', number=15), True))
+            d.addCallback(lambda _ :
+                    sched.gotChange(self.mkch(codebase='b', revision='4567:def', number=16), True))
+            d.addCallback(lambda _ : self.clock.advance(treeStableTimer))
+            def check3(_):
+                self.db.buildsets.assertBuildset(bsid='?',
+                    expected_buildset = self.mkbs(sourcestampsetid=102),
+                    expected_sourcestamps = {
+                        'a': self.mkss(codebase='a', revision='3456:cde', sourcestampsetid=102, changeids=set([15])),
+                        'b': self.mkss(codebase='b', revision='4567:def', sourcestampsetid=102, changeids=set([16]))})
+                self.db.buildsets.flushBuildsets()
+            d.addCallback(check3)
+
+        d.addCallback(lambda _ : sched.stopService())
+        return d
+
+    def test_gotChange_no_createAbsoluteSourceStamps_no_treeStableTimer(self):
+        return self.do_test_gotChange_buildsets()
+
+    def test_gotChange_no_createAbsoluteSourceStamps_treeStableTimer(self):
+        return self.do_test_gotChange_buildsets(treeStableTimer=10)
+
+    def test_gotChange_createAbsoluteSourceStamps_no_treeStableTimer(self):
+        return self.do_test_gotChange_buildsets(abs_ss=True)
+
+    def test_gotChange_createAbsoluteSourceStamps_treeStableTimer(self):
+        return self.do_test_gotChange_buildsets(abs_ss=True, treeStableTimer=10)
 
 
 class AnyBranchScheduler(CommonStuffMixin,

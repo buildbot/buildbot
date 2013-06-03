@@ -67,12 +67,19 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
 
+    def preStartConsumingChanges(self):
+        # Hook for subclasses to setup before startConsumingChanges().
+        return defer.succeed(True)
+
     def startService(self, _returnDeferred=False):
         base.BaseScheduler.startService(self)
 
-        d = self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+        d = self.preStartConsumingChanges()
+
+        d.addCallback(lambda _ :
+            self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                        change_filter=self.change_filter,
-                                       onlyImportant=self.onlyImportant)
+                                       onlyImportant=self.onlyImportant))
 
         # if treeStableTimer is False, then we don't care about classified
         # changes, so get rid of any hanging around from previous
@@ -201,6 +208,46 @@ class BaseBasicScheduler(base.BaseScheduler):
         return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
 class SingleBranchScheduler(BaseBasicScheduler):
+    def __init__(self, name, shouldntBeSet=BaseBasicScheduler.NotSet,
+                 createAbsoluteSourceStamps=False, **kwargs):
+        BaseBasicScheduler.__init__(self, name, shouldntBeSet, **kwargs)
+        self._lastCodebases = {}
+        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
+
+    def preStartConsumingChanges(self):
+        # load saved codebases
+        d = self.getState("lastCodebases", {})
+        def setLast(lastCodebases):
+            self._lastCodebases = lastCodebases
+        d.addCallback(setLast)
+        return d
+
+    def gotChange(self, change, important):
+        self._lastCodebases.setdefault(change.codebase, {})
+        lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+
+        codebaseDict = dict(repository=change.repository,
+                            branch=change.branch,
+                            revision=change.revision,
+                            lastChange=change.number)
+
+        d = defer.succeed(None)
+
+        if change.number > lastChange:
+            self._lastCodebases[change.codebase] = codebaseDict
+            d.addCallback(lambda _ :
+                    self.setState('lastCodebases', self._lastCodebases))
+
+        d.addCallback(lambda _ :
+                BaseBasicScheduler.gotChange(self, change, important))
+        return d
+
+    def getCodebaseDict(self, codebase):
+        if self.createAbsoluteSourceStamps:
+            return self._lastCodebases.get(codebase, self.codebases[codebase])
+        else:
+            return self.codebases[codebase]
+
     def getChangeFilter(self, branch, branches, change_filter, categories):
         if branch is NotABranch and not change_filter:
             config.error(
