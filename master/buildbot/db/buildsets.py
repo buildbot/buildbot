@@ -112,6 +112,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                                & (tbl.c.complete==1) & (tbl.c.complete_at != None)))
                 res = conn.execute(q)
                 row = res.fetchone()
+                res.close()
                 if not row:
                     raise KeyError
                     
