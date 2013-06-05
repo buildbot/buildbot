@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.application import internet
 from twisted.internet import task, reactor
 from buildbot.status import words
-from buildbot.test.util import compat
+from buildbot.test.util import compat, config
 
 class TestIrcContactChannel(unittest.TestCase):
 
@@ -530,7 +530,7 @@ class TestIrcStatusFactory(unittest.TestCase):
         self.assertTrue(f.shuttingDown)
 
 
-class TestIRC(unittest.TestCase):
+class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
 
     def makeIRC(self, **kwargs):
         kwargs.setdefault('host', 'localhost')
@@ -593,6 +593,22 @@ class TestIRC(unittest.TestCase):
                 useColors=False,
                 useRevisions=True,
                 showBlameList=False)
+
+    def test_allowForce_notBool(self):
+        """
+        When L{IRCClient} is called with C{allowForce} not a boolean,
+        a config error is reported.
+        """
+        self.assertRaisesConfigError("allowForce must be boolean, not",
+                lambda: self.makeIRC(allowForce=object()))
+
+    def test_allowShutdown_notBool(self):
+        """
+        When L{IRCClient} is called with C{allowShutdown} not a boolean,
+        a config error is reported.
+        """
+        self.assertRaisesConfigError("allowShutdown must be boolean, not",
+                lambda: self.makeIRC(allowShutdown=object()))
 
     def test_service(self):
         irc = self.makeIRC()

@@ -68,4 +68,3 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.patch(start, 'start', lambda config : 0)
         self.assertEqual(restart.restart(mkconfig(quiet=True, clean=True)), 0)
         self.assertWasQuiet()
-

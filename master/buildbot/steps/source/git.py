@@ -403,7 +403,7 @@ class Git(Source):
         return d
 
     def _fullCloneOrFallback(self):
-        """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure 
+        """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
            is set to True remove the build directory and try a full clone again.
         """
 

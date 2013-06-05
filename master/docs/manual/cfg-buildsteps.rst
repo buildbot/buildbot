@@ -2622,7 +2622,7 @@ be substituted using :ref:`Interpolate`.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
-   
+
 .. bb:step:: LogRenderable
 
 LogRenderable

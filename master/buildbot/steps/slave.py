@@ -156,7 +156,7 @@ class CopyDirectory(SlaveBuildStep):
         desc = desc[:]
         desc.extend([self.src, "to", self.dest])
         return desc
-        
+
 class RemoveDirectory(SlaveBuildStep):
     """
     Remove a directory tree on the slave.

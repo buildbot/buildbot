@@ -390,7 +390,7 @@ class Trial(ShellCommand):
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
         output_observer = OutputProgressObserver('test.log')
-        
+
         if self.jobs is not None:
             self.jobs = int(self.jobs)
             self.command.append("--jobs=%d" % self.jobs)

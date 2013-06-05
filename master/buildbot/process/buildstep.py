@@ -532,11 +532,11 @@ class BuildStep(object, properties.PropertiesMixin):
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access) 
+        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
                         for access in self.locks ]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) 
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la)
                         for l, la in self.locks ]
 
         for l, la in self.locks:
