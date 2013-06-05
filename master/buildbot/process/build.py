@@ -224,7 +224,7 @@ class Build(properties.PropertiesMixin):
         slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
 
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder.slave), a) 
+        self.locks = [(l.getLock(self.slavebuilder.slave), a)
                         for l, a in self.locks ]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)

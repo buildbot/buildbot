@@ -82,7 +82,7 @@ Features
 
 * The Mercurial hook now supports multiple masters.  See :bb:pull:`436`.
 
-* There's a new poller for Mercurial: :bb:chsrc:`HgPoller`. 
+* There's a new poller for Mercurial: :bb:chsrc:`HgPoller`.
 
 * The new ``HTPasswdAprAuth`` uses libaprutil (through ctypes) to validate
   the password against the hash from the .htpasswd file. This adds support for
@@ -104,7 +104,7 @@ Features
   * new HTML/CSS customization points. Each parameter is contained in a ``row`` with multiple
     'class' attributes associated with them (eg, 'force-string' and 'force-nested') as well as a unique
     id to use with Javascript. Explicit line-breaks have been removed from the HTML generator and
-    are now controlled using CSS. 
+    are now controlled using CSS.
 
 * The :bb:chsrc:`SVNPoller` now supports multiple projects and codebases.
   See :bb:pull:`443`.

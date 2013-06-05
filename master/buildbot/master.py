@@ -83,7 +83,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.db_loop = None
         # db configured values
         self.configured_db_url = None
-        self.configured_poll_interval = None        
+        self.configured_poll_interval = None
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
@@ -172,7 +172,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
-                
+
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
                 for msg in e.errors:

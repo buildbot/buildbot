@@ -484,25 +484,25 @@ class FakeSchedulersComponent(FakeDBComponent):
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
-            
+
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
-            
+
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['project'] == project )
-            
+
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
-            
+
         return defer.succeed(classifications)
 
     # fake methods
@@ -968,8 +968,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             except KeyError:
                 print "trying to unclaim brid %d, but it's not claimed" % brid
                 return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))                
-            
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+
         return defer.succeed(None)
 
     # Code copied from buildrequests.BuildRequestConnectorComponent

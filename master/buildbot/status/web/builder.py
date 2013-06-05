@@ -176,7 +176,7 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
     pname = "%s.%s"%(sch.name, field.fullName)
     
     default = field.default
-    
+
     if "list" in field.type:
         choices = field.getChoices(master, sch, buildername)
         if choices:
@@ -189,7 +189,7 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
     elif isinstance(default, unicode):
         # filter out unicode chars, and html stuff
         default = html.escape(default.encode('utf-8','ignore'))
-    
+
     default_props[pname] = default
         
     if "nested" in field.type:

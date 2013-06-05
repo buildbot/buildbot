@@ -66,9 +66,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             ch_tbl = self.db.model.changes
 
             wc = (sch_ch_tbl.c.objectid == objectid)
-                        
+
             # may need to filter further based on branch, etc
-            extra_wheres = [] 
+            extra_wheres = []
             if branch is not self.Thunk:
                 extra_wheres.append(ch_tbl.c.branch == branch)
             if repository is not self.Thunk:
