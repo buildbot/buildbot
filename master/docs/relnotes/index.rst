@@ -85,6 +85,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``workdir`` build property has been renamed to ``builddir``.
   This change accurately reflects its content; the term "workdir" means something different.
+  ``workdir`` is currently still supported for backwards compatability, but will be removed eventually.
 
 * The ``Blocker`` step has been removed.
 
