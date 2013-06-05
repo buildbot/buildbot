@@ -40,6 +40,8 @@ Features
   Depends on txgithub package.
   See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
 
+* Added zsh and bash tab-completions support for 'buildbot' command.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -51,6 +53,8 @@ Slave
 
 Features
 ~~~~~~~~
+
+* Added zsh and bash tab-completions support for 'buildslave' command.
 
 Fixes
 ~~~~~
