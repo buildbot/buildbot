@@ -43,3 +43,12 @@ viewcvspoll.py: a standalone script which loops every 60 seconds and polls a
 css/*.css: alternative HTML stylesheets to make the Waterfall display look
            prettier. Copy them somewhere, then pass the filename to the
            css= argument of the Waterfall() constructor.
+
+zsh/_buildbot: zsh tab-completion file for 'buildbot' command. Put it in one
+               of the directories appearing in $fpath to enable tab-completion
+               in zsh.
+
+bash/buildslave: bash tab-completion file for 'buildbot' command. Source this
+                 file to enable completions in your bash session. This is
+                 typically accomplished by placing the file into the
+                 appropriate 'bash_completion.d' directory.

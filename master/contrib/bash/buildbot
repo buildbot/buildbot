@@ -1,0 +1,59 @@
+#
+# This file installs BASH completions for 'buildbot' command.
+#
+
+_buildbot()
+{
+    local buildbot_subcommands="
+        create-master upgrade-master start stop restart reconfig sighup user
+        sendchange debugclient statuslog statusgui try tryserver checkconfig"
+
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local subcommand=
+    local subcommand_args=
+    local i=1
+
+    #
+    # 'parse' the command line so far
+    # figure out if we have subcommand specified and any arguments to it
+    #
+
+    # skip global options
+    while [[ "${COMP_WORDS[$i]}" == -* ]];
+    do
+        i=$(($i+1))
+    done
+
+    # save subcommand
+    subcommand=${COMP_WORDS[$i]}
+    i=$(($i+1))
+
+    # skip subcommand options
+    while [[ "${COMP_WORDS[$i]}" == -* ]];
+    do
+        i=$(($i+1))
+    done
+
+    # save subcommand arguments
+    subcommand_args=${COMP_WORDS[@]:$i:${#COMP_WORDS[@]}}
+
+    if [ "$cur" == "$subcommand" ]; then
+        # suggest buildbot subcommands
+        COMPREPLY=( $(compgen -W "$buildbot_subcommands" $cur) )
+    elif [ "$cur" == "$subcommand_args" ]; then
+        # we are at first subcommand argument
+        case $subcommand in
+            # these command take base directory as first argument,
+            # suggest directories
+            upgrade-master|create-master|start|stop|restart|reconfig|sighup)
+                COMPREPLY=( $(compgen -A directory $cur) )
+                ;;
+            # checkconfig takes a filename or directory as first argument
+            checkconfig)
+                COMPREPLY=( $(compgen -A file $cur) )
+                ;;
+        esac
+    fi
+}
+
+complete -F _buildbot buildbot
