@@ -251,7 +251,7 @@ class TestMailNotifier(unittest.TestCase):
         @d.addCallback
         def check(_):
             fakeBuildMessage.assert_called_with(
-                    "Buildset Complete: testReason",
+                    "(whole buildset)",
                     [build1, build2], SUCCESS)
         return d
 

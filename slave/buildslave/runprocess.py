@@ -320,15 +320,16 @@ class RunProcess:
         self.initialStdin = initialStdin
         self.logEnviron = logEnviron
         self.timeout = timeout
-        self.timer = None
+        self.ioTimeoutTimer = None
         self.maxTime = maxTime
-        self.maxTimer = None
+        self.maxTimeoutTimer = None
+        self.killTimer = None
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
         self.buffered = deque()
         self.buflen = 0
-        self.buftimer = None
+        self.sendBuffersTimer = None
 
         if usePTY == "slave-config":
             self.usePTY = self.builder.usePTY
@@ -521,10 +522,10 @@ class RunProcess:
         # set up timeouts
 
         if self.timeout:
-            self.timer = self._reactor.callLater(self.timeout, self.doTimeout)
+            self.ioTimeoutTimer = self._reactor.callLater(self.timeout, self.doTimeout)
 
         if self.maxTime:
-            self.maxTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
+            self.maxTimeoutTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
 
         for w in self.logFileWatchers:
             w.start()
@@ -613,7 +614,7 @@ class RunProcess:
         self.sendStatus(msg)
 
     def _bufferTimeout(self):
-        self.buftimer = None
+        self.sendBuffersTimer = None
         self._sendBuffers()
 
     def _sendBuffers(self):
@@ -663,10 +664,10 @@ class RunProcess:
         self.buflen = 0
         if logdata:
             self._sendMessage(msg)
-        if self.buftimer:
-            if self.buftimer.active():
-                self.buftimer.cancel()
-            self.buftimer = None
+        if self.sendBuffersTimer:
+            if self.sendBuffersTimer.active():
+                self.sendBuffersTimer.cancel()
+            self.sendBuffersTimer = None
 
     def _addToBuffers(self, logname, data):
         """
@@ -681,8 +682,8 @@ class RunProcess:
         self.buffered.append((logname, data))
         if self.buflen > self.BUFFER_SIZE:
             self._sendBuffers()
-        elif not self.buftimer:
-            self.buftimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
+        elif not self.sendBuffersTimer:
+            self.sendBuffersTimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
 
     def addStdout(self, data):
         if self.sendStdout:
@@ -690,8 +691,8 @@ class RunProcess:
 
         if self.keepStdout:
             self.stdout += data
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def addStderr(self, data):
         if self.sendStderr:
@@ -699,14 +700,14 @@ class RunProcess:
 
         if self.keepStderr:
             self.stderr += data
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def addLogfile(self, name, data):
         self._addToBuffers( ('log', name), data)
 
-        if self.timer:
-            self.timer.reset(self.timeout)
+        if self.ioTimeoutTimer:
+            self.ioTimeoutTimer.reset(self.timeout)
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
@@ -723,15 +724,7 @@ class RunProcess:
                     {'header': "process killed by signal %d\n" % sig})
             self.sendStatus({'rc': rc})
         self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         d = self.deferred
         self.deferred = None
         if d:
@@ -742,15 +735,7 @@ class RunProcess:
     def failed(self, why):
         self._sendBuffers()
         log.msg("RunProcess.failed: command failed: %s" % (why,))
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         d = self.deferred
         self.deferred = None
         if d:
@@ -759,12 +744,12 @@ class RunProcess:
             log.msg("Hey, command %s finished twice" % self)
 
     def doTimeout(self):
-        self.timer = None
+        self.ioTimeoutTimer = None
         msg = "command timed out: %d seconds without output" % self.timeout
         self.kill(msg)
 
     def doMaxTimeout(self):
-        self.maxTimer = None
+        self.maxTimeoutTimer = None
         msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
@@ -772,15 +757,7 @@ class RunProcess:
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
         self._sendBuffers()
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
-        if self.maxTimer:
-            self.maxTimer.cancel()
-            self.maxTimer = None
-        if self.buftimer:
-            self.buftimer.cancel()
-            self.buftimer = None
+        self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
@@ -855,15 +832,22 @@ class RunProcess:
         if self.deferred:
             # finished ought to be called momentarily. Just in case it doesn't,
             # set a timer which will abandon the command.
-            self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
+            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
                                        self.doBackupTimeout)
 
     def doBackupTimeout(self):
         log.msg("we tried to kill the process, and it wouldn't die.."
                 " finish anyway")
-        self.timer = None
+        self.killTimer = None
         self.sendStatus({'header': "SIGKILL failed to kill process\n"})
         if self.sendRC:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(RuntimeError("SIGKILL failed to kill process"))
+
+    def _cancelTimers(self):
+        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer'):
+            timer = getattr(self, timerName, None)
+            if timer:
+                timer.cancel()
+                setattr(self, timerName, None)

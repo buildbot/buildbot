@@ -99,6 +99,9 @@ Features
   Depends on txgithub package.
   See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
 
+* The web UI now shows sourcestamp information for builders that use multiple codebases (instead of the generic
+  "multiple rev" placeholder that was shown before).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -110,6 +113,13 @@ Slave
 
 Features
 ~~~~~~~~
+
+Fixes
+~~~~~
+
+* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for 
+  buildstep wasn't set or was None (see :bb:pull:`753`) thus keeping watched logfiles open
+  (this prevented their removal on Windows in subsequent builds).
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
