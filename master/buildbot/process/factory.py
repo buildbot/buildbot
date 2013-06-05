@@ -87,25 +87,25 @@ class GNUAutoconf(BuildFactory):
             else:
                 assert isinstance(configure, (list, tuple))
                 command = configure + configureFlags
-            self.addStep(Configure, command=command, env=configureEnv)
+            self.addStep(Configure(command=command, env=configureEnv))
         if compile is not None:
-            self.addStep(Compile, command=compile)
+            self.addStep(Compile(command=compile))
         if test is not None:
-            self.addStep(Test, command=test)
+            self.addStep(Test(command=test))
 
 class CPAN(BuildFactory):
     def __init__(self, source, perl="perl"):
         BuildFactory.__init__(self, [source])
-        self.addStep(Configure, command=[perl, "Makefile.PL"])
-        self.addStep(Compile, command=["make"])
-        self.addStep(PerlModuleTest, command=["make", "test"])
+        self.addStep(Configure(command=[perl, "Makefile.PL"]))
+        self.addStep(Compile(command=["make"]))
+        self.addStep(PerlModuleTest(command=["make", "test"]))
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
         BuildFactory.__init__(self, [source])
-        self.addStep(Compile, command=[python, "./setup.py", "build"])
+        self.addStep(Compile(command=[python, "./setup.py", "build"]))
         if test is not None:
-            self.addStep(Test, command=test)
+            self.addStep(Test(command=test))
 
 class Trial(BuildFactory):
     """Build a python module that uses distutils and trial. Set 'tests' to
@@ -137,15 +137,15 @@ class Trial(BuildFactory):
 
         from buildbot.steps.python_twisted import Trial
         buildcommand = buildpython + ["./setup.py", "build"]
-        self.addStep(Compile, command=buildcommand, env=env)
-        self.addStep(Trial,
+        self.addStep(Compile(command=buildcommand, env=env))
+        self.addStep(Trial(
                      python=trialpython, trial=self.trial,
                      testpath=testpath,
                      tests=tests, testChanges=useTestCaseNames,
                      randomly=self.randomly,
                      recurse=self.recurse,
                      env=env,
-                     )
+                     ))
 
 
 # compatibility classes, will go away. Note that these only offer
