@@ -75,6 +75,8 @@ Features
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
+* GNUAutoconf and other pre-defined factories now work correctly (:bb:bug:`2402`)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
