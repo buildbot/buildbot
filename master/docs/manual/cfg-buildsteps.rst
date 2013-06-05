@@ -1944,6 +1944,60 @@ Here is a similar example using "msbuild"::
         MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
                 workdir="trunk"))
 
+
+.. bb:step:: Robocopy
+
+Robocopy
+++++++++
+
+.. py:class:: buildbot.steps.mswin.Robocopy
+
+This step runs ``robocopy`` on Windows::
+
+    from buildbot.steps.mswin import Robocopy
+
+    f.addStep(Robocopy(
+                name='deploy_binaries',
+                description='Deploying binaries...',
+                descriptionDone='Deployed binaries.',
+                source=Interpolate('Build\\Bin\\%(prop:configuration)s'),
+                destination=Interpolate('%(prop:deploy_dir)\\Bin\\%(prop:configuration)s'),
+                mirror=True
+            ))
+
+Available constructor arguments are:
+
+``source``
+    The path to the source directory (mandatory).
+
+``destination``
+    The path to the destination directory (mandatory).
+
+``files``
+    An array of file names or patterns to copy.
+
+``recursive``
+    Copy files and directories recursively (``/E`` parameter).
+
+``mirror``
+    Mirror the source directory in the destination directory,
+    including removing files that don't exist anymore (``/MIR`` parameter).
+
+``move``
+    Delete the source directory after the copy is complete (``/MOVE`` parameter).
+
+``exclude``
+    An array of file names or patterns to exclude from the copy (``/XF`` parameter).
+
+``verbose``
+    Whether to output verbose information (``/V /TS /TP`` parameters).
+
+Note that parameters ``/TEE /UNICODE /NP`` will always be appended to the
+command to signify, respectively, to output logging to the console, use
+Unicode logging, and not print any percentage progress information for
+each file.
+
+
 .. bb:step:: Test
 
 Test
