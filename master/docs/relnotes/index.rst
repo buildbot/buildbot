@@ -73,6 +73,8 @@ Features
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
   See :bb:pull:`596`.
 
+* Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -131,7 +133,7 @@ Details
 For a more detailed description of the changes made in this version, see the
 git log itself::
 
-   git log v0.8.7..master
+   git log v0.8.7..v0.8.8
 
 Older Versions
 --------------
