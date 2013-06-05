@@ -425,6 +425,58 @@ def abbreviate_age(age):
 class BuildLineMixin:
     LINE_TIME_FORMAT = "%b %d %H:%M"
 
+    def get_rev_list(self, build):
+        ss_list = build.getSourceStamps()
+        all_got_revision = build.getAllGotRevisions() or {}
+
+        if not ss_list:
+            return [{
+                'repo': 'unknown, no information in build', 
+                'codebase': '',
+                'rev': 'unknown'
+            }]
+        
+        if len(ss_list)==1:
+            return [{
+                'repo': ss_list[0].repository,
+                'codebase': ss_list[0].codebase,
+                'rev': all_got_revision.get(ss_list[0].codebase, "??")
+            }]
+
+        # multiple-codebase configuration
+        rev_list = []
+        for ss in ss_list:
+            # skip codebases with no sourcestamp spec
+            if not ss.branch and not ss.revision and not ss.patch and not ss.changes:
+                continue
+
+            rev = {
+                'repo': ss.repository,
+                'codebase': ss.codebase
+            }
+
+            # show the most descriptive thing we can
+            if ss.branch:
+                rev['rev'] = ss.branch
+            elif ss.codebase in all_got_revision:
+                rev['rev'] = all_got_revision[ss.codebase]
+            elif ss.revision:
+                rev['rev'] = ss.revision
+            else:
+                rev['rev'] = '??'
+
+            rev_list.append(rev)
+
+        # if all sourcestamps were empty, then this is a "most recent" kind of build
+        if not rev_list:
+            rev_list = [{
+                'repo': 'unknown, no information in build', 
+                'codebase': '',
+                'rev': 'most recent'
+            }]
+
+        return rev_list
+
     def get_line_values(self, req, build, include_builder=True):
         '''
         Collect the data needed for each line display
@@ -432,23 +484,11 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
-        all_got_revision = build.getAllGotRevisions()
         css_class = css_classes.get(results, "")
-        ss_list = build.getSourceStamps()
-        if ss_list:
-            repo = ss_list[0].repository
-            if all_got_revision:
-                if len(ss_list) == 1:
-                    rev = all_got_revision.get(ss_list[0].codebase, "??")
-                else:
-                    rev = "multiple rev."
-            else:
-                rev = "??"
-        else:
-            repo = 'unknown, no information in build'
-            rev = 'unknown'
+        
+        rev_list = self.get_rev_list(build)
 
-        if type(text) == list:
+        if isinstance(text, list):
             text = " ".join(text)
 
         values = {'class': css_class,
@@ -458,8 +498,8 @@ class BuildLineMixin:
                   'text': " ".join(build.getText()),
                   'buildurl': path_to_build(req, build),
                   'builderurl': path_to_builder(req, build.getBuilder()),
-                  'rev': rev,
-                  'rev_repo' : repo,
+                  'rev_list': rev_list,
+                  'multiple_revs': (len(rev_list) > 1),
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,
