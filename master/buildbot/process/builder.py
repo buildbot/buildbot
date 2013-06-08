@@ -20,7 +20,7 @@ from twisted.python import log, failure
 from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer, reactor
-from buildbot.util import epoch2datetime, ascii2unicode
+from buildbot.util import epoch2datetime
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
@@ -120,8 +120,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # additional locking around this function.
         if self._builderid:
             return defer.succeed(self._builderid)
-        name = ascii2unicode(self.name)
-        d = self.master.data.updates.findBuilderId(name)
+        d = self.master.data.updates.findBuilderId(self.name)
         @d.addCallback
         def keep(builderid):
             self._builderid = builderid
