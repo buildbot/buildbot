@@ -102,6 +102,12 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
+        # if we have any slavebuilders attached which are no longer configured,
+        # drop them.
+        new_slavenames = set(builder_config.slavenames)
+        self.slaves = [ s for s in self.slaves
+                        if s.slave.slavename in new_slavenames ]
+
         return defer.succeed(None)
 
     def stopService(self):
