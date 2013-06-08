@@ -21,7 +21,7 @@ import sys
 import warnings
 from buildbot.util import safeTranslate
 from buildbot import interfaces
-from buildbot import locks
+from buildbot import locks, util
 from buildbot.revlinks import default_revlink_matcher
 from twisted.python import log, failure
 from twisted.internet import defer
@@ -665,7 +665,10 @@ class BuilderConfig:
             name = '<unknown>'
         elif name[0] == '_':
             error("builder names must not start with an underscore: '%s'" % name)
-        self.name = name
+        try:
+            self.name = util.ascii2unicode(name)
+        except UnicodeDecodeError:
+            error("builder names must be unicode or ASCII")
 
         # factory is required
         if factory is None:

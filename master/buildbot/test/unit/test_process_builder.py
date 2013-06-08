@@ -57,7 +57,7 @@ class BuilderMixin(object):
         mastercfg.builders = [ self.builder_config ]
         return self.bldr.reconfigService(mastercfg)
 
-class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
+class TestBuilder(BuilderMixin, unittest.TestCase):
 
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
@@ -294,6 +294,25 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(True, result)
 
+    @defer.inlineCallbacks
+    def test_getBuilderId(self):
+        self.factory = factory.BuildFactory()
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        # only include the necessary required config, plus user-requested
+        self.bldr = builder.Builder('bldr', _addServices=False)
+        self.bldr.master = self.master
+        self.master.data.updates.findBuilderId = fbi = mock.Mock()
+        fbi.return_value = defer.succeed(13)
+
+        builderid = yield self.bldr.getBuilderId()
+        self.assertEqual(builderid, 13)
+        fbi.assert_called_with('bldr')
+        fbi.reset_mock()
+
+        builderid = yield self.bldr.getBuilderId()
+        self.assertEqual(builderid, 13)
+        fbi.assert_not_called()
+
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
@@ -353,3 +372,6 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
                     category=self.bldr.builder_status.getCategory()),
                 dict(description="New",
                     category="NewCat"))
+
+        # check that the reconfig grabbed a buliderid
+        self.assertNotEqual(self.bldr._builderid, None)

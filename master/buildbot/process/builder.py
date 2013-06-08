@@ -46,6 +46,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
+        self._builderid = None # filled in by getBuilderId
 
         # this is created the first time we get a good build
         self.expectations = None
@@ -77,6 +78,7 @@ class Builder(config.ReconfigurableServiceMixin,
                                             self.updateBigStatus)
             self.updateStatusService.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # find this builder in the config
         for builder_config in new_config.builders:
@@ -95,12 +97,15 @@ class Builder(config.ReconfigurableServiceMixin,
 
         self.config = builder_config
 
+        # allocate  builderid now, so that the builder is visible in the web
+        # UI; without this, the bulider wouldn't appear until it preformed a
+        # build.
+        yield self.getBuilderId()
+
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
-
-        return defer.succeed(None)
 
     def stopService(self):
         d = defer.maybeDeferred(lambda :
@@ -109,6 +114,18 @@ class Builder(config.ReconfigurableServiceMixin,
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
+
+    def getBuilderId(self):
+        # since findBuilderId is idempotent, there's no reason to add
+        # additional locking around this function.
+        if self._builderid:
+            return defer.succeed(self._builderid)
+        d = self.master.data.updates.findBuilderId(self.name)
+        @d.addCallback
+        def keep(builderid):
+            self._builderid = builderid
+            return builderid
+        return d
 
     @defer.inlineCallbacks
     def getOldestRequestTime(self):
@@ -291,6 +308,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # status based on any other cleanup
         cleanups.append(lambda : self.updateBigStatus())
 
+        builderid = yield self.getBuilderId()
+
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
         log.msg("starting build %s using slave %s" % (build, slavebuilder))
@@ -373,7 +392,8 @@ class Builder(config.ReconfigurableServiceMixin,
             bids = []
             req = build.requests[-1]
             # TODO: get id's for builder, slave
-            bid, number = yield self.master.db.builds.addBuild(builderid=-1,
+            bid, number = yield self.master.db.builds.addBuild(
+                    builderid=builderid,
                     buildrequestid=req.id, slaveid=-1,
                     masterid=self.master.masterid, state_strings=['created'])
             bids.append(bid)
@@ -470,7 +490,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # send a message for each request
         for br in requests:
             bsid = br.bsid
-            builderid = -1 # br.buildername - TODO
+            builderid = yield self.getBuilderId()
             brid = br.id
             key = ('buildrequest', str(bsid), str(builderid),
                                                 str(brid), 'complete')
