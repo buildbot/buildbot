@@ -105,6 +105,10 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
 
+* Repo step parameters changed to camelCase. ``repo_downloads``, and ``manifest_override_url`` properties
+  are no more used in favor of the flexible renderable parameters mechanism, renderable are used in favor
+  of callables for ``syncAllBranches`` and ``updateTarball``
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
