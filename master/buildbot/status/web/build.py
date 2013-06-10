@@ -51,6 +51,7 @@ class ForceBuildActionResource(ActionResource):
 
             b = self.build_status
             builder_name = urllib.quote(self.builder.getName(), safe='')
+            builder_name_link = urllib.quote(self.builder.getName(), safe='')
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
@@ -138,6 +139,7 @@ class StatusResourceBuild(HtmlResource):
         req.setHeader('Cache-Control', 'no-cache')
         
         cxt['builder_name'] = self.build_status.getBuilder().getName()
+        cxt['builder_name_limk'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
         cxt['b'] = b
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
 
