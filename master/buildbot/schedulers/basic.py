@@ -69,7 +69,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     def preStartConsumingChanges(self):
         # Hook for subclasses to setup before startConsumingChanges().
-        return defer.succeed(True)
+        return defer.succeed(None)
 
     def startService(self, _returnDeferred=False):
         base.BaseScheduler.startService(self)
@@ -208,11 +208,10 @@ class BaseBasicScheduler(base.BaseScheduler):
         return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
 class SingleBranchScheduler(BaseBasicScheduler):
-    def __init__(self, name, shouldntBeSet=BaseBasicScheduler.NotSet,
-                 createAbsoluteSourceStamps=False, **kwargs):
+    def __init__(self, name, createAbsoluteSourceStamps=False, **kwargs):
         self._lastCodebases = {}
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
-        BaseBasicScheduler.__init__(self, name, shouldntBeSet, **kwargs)
+        BaseBasicScheduler.__init__(self, name, **kwargs)
 
     def preStartConsumingChanges(self):
         if self.createAbsoluteSourceStamps:
