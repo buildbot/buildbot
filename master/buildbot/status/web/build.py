@@ -139,7 +139,7 @@ class StatusResourceBuild(HtmlResource):
         req.setHeader('Cache-Control', 'no-cache')
         
         cxt['builder_name'] = self.build_status.getBuilder().getName()
-        cxt['builder_name_limk'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
+        cxt['builder_name_link'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
         cxt['b'] = b
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
 
