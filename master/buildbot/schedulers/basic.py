@@ -210,33 +210,37 @@ class BaseBasicScheduler(base.BaseScheduler):
 class SingleBranchScheduler(BaseBasicScheduler):
     def __init__(self, name, shouldntBeSet=BaseBasicScheduler.NotSet,
                  createAbsoluteSourceStamps=False, **kwargs):
-        BaseBasicScheduler.__init__(self, name, shouldntBeSet, **kwargs)
         self._lastCodebases = {}
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
+        BaseBasicScheduler.__init__(self, name, shouldntBeSet, **kwargs)
 
     def preStartConsumingChanges(self):
-        # load saved codebases
-        d = self.getState("lastCodebases", {})
-        def setLast(lastCodebases):
-            self._lastCodebases = lastCodebases
-        d.addCallback(setLast)
-        return d
+        if self.createAbsoluteSourceStamps:
+            # load saved codebases
+            d = self.getState("lastCodebases", {})
+            def setLast(lastCodebases):
+                self._lastCodebases = lastCodebases
+            d.addCallback(setLast)
+            return d
+        else:
+            return defer.succeed(None)
 
     def gotChange(self, change, important):
-        self._lastCodebases.setdefault(change.codebase, {})
-        lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
-
-        codebaseDict = dict(repository=change.repository,
-                            branch=change.branch,
-                            revision=change.revision,
-                            lastChange=change.number)
-
         d = defer.succeed(None)
 
-        if change.number > lastChange:
-            self._lastCodebases[change.codebase] = codebaseDict
-            d.addCallback(lambda _ :
-                    self.setState('lastCodebases', self._lastCodebases))
+        if self.createAbsoluteSourceStamps:
+            self._lastCodebases.setdefault(change.codebase, {})
+            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+
+            codebaseDict = dict(repository=change.repository,
+                                branch=change.branch,
+                                revision=change.revision,
+                                lastChange=change.number)
+
+            if change.number > lastChange:
+                self._lastCodebases[change.codebase] = codebaseDict
+                d.addCallback(lambda _ :
+                        self.setState('lastCodebases', self._lastCodebases))
 
         d.addCallback(lambda _ :
                 BaseBasicScheduler.gotChange(self, change, important))
