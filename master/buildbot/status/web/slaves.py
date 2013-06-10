@@ -149,7 +149,7 @@ class BuildSlavesResource(HtmlResource):
             if show_builder_column:
                 info['builders'] = []
                 for b in used_by_builder.get(name, []):
-                    info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
+                    info['builders'].append(dict(link=request.childLink("../builders/%s" % urllib.quote(b, safe='')), name=b))
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()

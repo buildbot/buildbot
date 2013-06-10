@@ -50,7 +50,7 @@ class ForceBuildActionResource(ActionResource):
             bc = c.getBuilder(self.builder.getName())
 
             b = self.build_status
-            builder_name = self.builder.getName()
+            builder_name = urllib.quote(self.builder.getName(), safe='')
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
