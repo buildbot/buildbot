@@ -21,7 +21,7 @@ import errno
 import signal
 from buildbot.scripts import base
 
-def stop(config, signame="TERM", wait=False):
+def stop(config, signame="TERM", wait=True):
     basedir = config['basedir']
     quiet = config['quiet']
 
@@ -65,7 +65,7 @@ def stop(config, signame="TERM", wait=False):
     # poll once per second until twistd.pid goes away, up to 10 seconds,
     # unless we're doing a clean stop, in which case wait forever
     count = 0
-    while count < 10 or config['clean']:
+    while count < int(config['timeout']) or config['clean']:
         try:
             os.kill(pid, 0)
         except OSError:
