@@ -155,8 +155,21 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
         ["quiet", "q", "Do not emit the commands being run"],
         ["clean", "c", "Clean shutdown master"],
         ]
+    optParameters = [
+        ['timeout', 't', 10, "timeout in seconds"],
+        ]
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
+
+    def postOptions(self):
+      try:
+        timeout = int(self['timeout'])
+      except ValueError:
+        raise usage.UsageError('timeout parameter has must be an integer. '
+                               'Received: ' + str(self['timeout']))
+      if timeout < 0:
+        raise usage.UsageError('timeout parameter must be a non-negative '
+                               'integer. Received: %d' % timeout)
 
 
 class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
