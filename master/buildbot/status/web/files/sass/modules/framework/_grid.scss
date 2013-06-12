@@ -5,9 +5,16 @@
 * @author Simon Holm
 */
 
+ 
+//forthcoming mediaqueries
+ $bkpt-small: 370px;
+
+
 .container-inner {
 	width: 960px;
 	margin: 0 auto;
+	//@include breakpoint($bkpt-small) {
+	//content: yellow; }
 }
 
 /* column container */
@@ -54,4 +61,6 @@ div.column-1 {
 		background: none;	
 	}
 }
+
+
 
