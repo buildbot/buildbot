@@ -20,6 +20,8 @@ class CheckArtifactExists(ShellCommand):
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
         self.master = None
         self.build_sourcestamps = []
+        if not isinstance(artifact, list):
+            artifact = [artifact]
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
@@ -54,20 +56,26 @@ class CheckArtifactExists(ShellCommand):
 
     @defer.inlineCallbacks
     def createSummary(self, log):
+        artifactlist = list(self.artifact)
         stdio = self.getLog('stdio').readlines()
-        foundregex = re.compile(r'(%s)' % self.artifact)
-
         for l in stdio:
-            m = foundregex.search(l)
-            if (m):
-                # update buildrequest (artifactbrid) with self.artifactBuildrequest
-                brid = self.build.requests[0].id
-                reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
-                artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + self.artifact
-                self.addURL(self.artifact, artifactURL)
-                self.build.result = SUCCESS
-                self.build.allStepsDone()
-                return
+            if len(artifactlist) == 0:
+                break
+            for a in artifactlist:
+                foundregex = re.compile(r'(%s)' % a)
+                m = foundregex.search(l)
+                if (m):
+                    artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + a
+                    self.addURL(a, artifactURL)
+                    artifactlist.remove(a)
+
+        if len(artifactlist) == 0:
+            # update buildrequest (artifactbrid) with self.artifactBuildrequest
+            brid = self.build.requests[0].id
+            reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
+            self.build.result = SUCCESS
+            self.build.allStepsDone()
+            return
 
         self.descriptionDone = ["Artifact not found on server %s" % self.artifactServerURL]
         return
@@ -98,8 +106,12 @@ class CheckArtifactExists(ShellCommand):
             if self.artifactDirectory:
                 self.artifactPath += "/%s" %  self.artifactDirectory
 
+            search_artifact = ""
+            for a in self.artifact:
+                search_artifact += "; ls %s" % a
+
             command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
-                           self.artifactPath, "; ls %s" % self.artifact, "; ls"]
+                           self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
             self.setCommand(command)
             ShellCommand.start(self)
