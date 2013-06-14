@@ -261,6 +261,12 @@ The arguments to this scheduler are:
     .. note:: ``None`` is a keyword, not a string, so write ``None``
        and not ``"None"``.
 
+``createAbsoluteSourceStamps``
+    This option only has effect when using multiple codebases. When ``True``, it
+    uses the last seen revision for each codebase that does not have a change.
+    When ``False``, the default value, codebases without changes will use the
+    revision from the ``codebases`` argument.
+
 
 Example::
 

@@ -47,6 +47,8 @@ Features
 
 * An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
 
+* A new argument ``createAbsoluteSourceStamps`` has been added to ``SingleBranchScheduler`` for use with multiple codebases.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
