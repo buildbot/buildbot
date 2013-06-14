@@ -43,6 +43,8 @@ Features
 * The web UI now shows sourcestamp information for builders that use multiple codebases (instead of the generic
   "multiple rev" placeholder that was shown before).
 
+* Added zsh and bash tab-completions support for 'buildbot' command.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -54,6 +56,8 @@ Slave
 
 Features
 ~~~~~~~~
+
+* Added zsh and bash tab-completions support for 'buildslave' command.
 
 Fixes
 ~~~~~

@@ -67,14 +67,20 @@ def patch_gatherResults():
         from buildbot.monkeypatches import gatherResults
         gatherResults.patch()
 
+def patch_twisted_completions():
+    """
+    Shell completion support was introduced in twisted 11.1.0. Add dummy
+    completions definitions for older twisted.
+    """
+    if twisted.version < versions.Version('twisted', 11, 1, 0):
+        from buildbot.monkeypatches import twisted_completions
+        twisted_completions.patch()
 
-def patch_all(for_tests=False):
-    patch_bug4881()
-    patch_bug4520()
-    patch_bug5079()
-    patch_sqlalchemy2364()
-    patch_sqlalchemy2189()
-    patch_gatherResults()
+def patch_all(for_scripts=False, for_tests=False):
+    if for_scripts:
+        # only apply twisted completions patch, skip the rest
+        patch_twisted_completions()
+        return
 
     if for_tests:
         from buildbot.monkeypatches import servicechecks
@@ -83,3 +89,10 @@ def patch_all(for_tests=False):
         testcase_patch.patch_testcase_patch()
         from buildbot.monkeypatches import testcase_synctest
         testcase_synctest.patch_testcase_synctest()
+
+    patch_bug4881()
+    patch_bug4520()
+    patch_bug5079()
+    patch_sqlalchemy2364()
+    patch_sqlalchemy2189()
+    patch_gatherResults()

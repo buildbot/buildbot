@@ -20,6 +20,7 @@ import copy
 import stat
 from twisted.python import usage, runtime
 
+
 def isBuildmasterDir(dir):
     def print_error(error_message):
         print "%s\ninvalid buildmaster directory '%s'" % (error_message, dir)
@@ -28,7 +29,7 @@ def isBuildmasterDir(dir):
     try:
         contents = open(buildbot_tac).read()
     except IOError, exception:
-        print_error("error reading '%s': %s" % \
+        print_error("error reading '%s': %s" %
                        (buildbot_tac, exception.strerror))
         return False
 
@@ -37,6 +38,7 @@ def isBuildmasterDir(dir):
         return False
 
     return True
+
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
     configFile = os.path.abspath(os.path.join(basedir, defaultName))
@@ -51,6 +53,7 @@ def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
         return tacGlobals["configfile"]
     # No config file found; return default location and fail elsewhere
     return configFile
+
 
 class SubcommandOptions(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
@@ -112,9 +115,9 @@ class SubcommandOptions(usage.Options):
             searchpath.append(os.path.join(here, ".buildbot"))
             next = os.path.dirname(here)
             if next == here:
-                break # we've hit the root
+                break  # we've hit the root
             here = next
-            toomany -= 1 # just in case
+            toomany -= 1  # just in case
             if toomany == 0:
                 print ("I seem to have wandered up into the infinite glories "
                        "of the heavens. Oops.")
@@ -129,7 +132,7 @@ class SubcommandOptions(usage.Options):
                 if runtime.platformType != 'win32':
                     if os.stat(d)[stat.ST_UID] != os.getuid():
                         print "skipping %s because you don't own it" % d
-                        continue # security, skip other people's directories
+                        continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
                     try:
@@ -147,7 +150,7 @@ class SubcommandOptions(usage.Options):
         return localDict
 
     def postOptions(self):
-        missing = [ k for k in self.requiredOptions if self[k] is None ]
+        missing = [k for k in self.requiredOptions if self[k] is None]
         if missing:
             if len(missing) > 1:
                 msg = 'Required arguments missing: ' + ', '.join(missing)
@@ -155,10 +158,15 @@ class SubcommandOptions(usage.Options):
                 msg = 'Required argument missing: ' + missing[0]
             raise usage.UsageError(msg)
 
+
 class BasedirMixin(object):
 
     """SubcommandOptions Mixin to handle subcommands that take a basedir
     argument"""
+
+    # on tab completion, suggest directories as first argument
+    compData = usage.Completions(
+        extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
 
     def parseArgs(self, *args):
         if len(args) > 0:
