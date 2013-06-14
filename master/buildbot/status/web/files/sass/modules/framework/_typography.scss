@@ -22,7 +22,7 @@
 .head-2 {
 	font-size:18px;
 }
-
+ 
 h1.logo a {
 	@include text-shadow(1px 1px 0 #FFF);
 	font-family: 'Pacifico';
@@ -33,6 +33,10 @@ h1.logo a {
 	opacity: 1;
 	color:#445873;
 	@include transition(opacity .2s ease-in-out);
+	span {
+		font-family:'Leckerli One', cursive;
+		font-size: 43px;
+	}
 }
 
 .logo a:hover {
