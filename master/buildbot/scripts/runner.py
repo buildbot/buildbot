@@ -24,10 +24,6 @@ from __future__ import with_statement
 from twisted.python import usage, reflect
 import re
 import sys
-
-from buildbot import monkeypatches
-monkeypatches.patch_all(for_scripts=True)
-
 from buildbot.scripts import base
 
 
@@ -531,8 +527,10 @@ class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display error messages or tracebacks"],
     ]
+
     # on tab completion, suggest files as first argument
-    compData = usage.Completions(extraActions=[usage.CompleteFiles()])
+    if hasattr(usage, 'Completions'):
+        compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
     def getSynopsis(self):
         return "Usage:		buildbot checkconfig [configFile]\n" + \

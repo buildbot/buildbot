@@ -19,9 +19,6 @@ import os
 import sys
 import re
 from twisted.python import usage, reflect
-from buildslave import monkeypatches
-
-monkeypatches.patch_all(for_scripts=True)
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -42,8 +39,9 @@ class MakerBase(usage.Options):
     """
 
     # on tab completion, suggest directories as first argument
-    compData = usage.Completions(
-        extraActions=[usage.CompleteDirs(descr="slave base directory")])
+    if hasattr(usage, 'Completions'):
+        compData = usage.Completions(
+            extraActions=[usage.CompleteDirs(descr="slave base directory")])
 
     opt_h = usage.Options.opt_help
 

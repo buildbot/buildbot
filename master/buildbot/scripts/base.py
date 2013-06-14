@@ -165,8 +165,9 @@ class BasedirMixin(object):
     argument"""
 
     # on tab completion, suggest directories as first argument
-    compData = usage.Completions(
-        extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
+    if hasattr(usage, 'Completions'):
+        compData = usage.Completions(
+            extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
 
     def parseArgs(self, *args):
         if len(args) > 0:

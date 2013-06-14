@@ -42,21 +42,7 @@ def patch_testcase_assert_raises_regexp():
         from buildslave.monkeypatches import testcase_assert
         testcase_assert.patch()
 
-def patch_twisted_completions():
-    """
-    Shell completion support was introduced in twisted 11.1.0. Add dummy
-    completions definitions for older twisted.
-    """
-    if twisted.version < versions.Version('twisted', 11, 1, 0):
-        from buildslave.monkeypatches import twisted_completions
-        twisted_completions.patch()
-
-def patch_all(for_scripts=False, for_tests=False):
-    if for_scripts:
-        # only apply twisted completions patch, skip the rest
-        patch_twisted_completions()
-        return
-
+def patch_all(for_tests=False):
     if for_tests:
         patch_testcase_assert_raises_regexp()
 
