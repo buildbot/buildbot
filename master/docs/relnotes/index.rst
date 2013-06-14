@@ -45,6 +45,8 @@ Features
 
 * Added zsh and bash tab-completions support for 'buildbot' command.
 
+* An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
