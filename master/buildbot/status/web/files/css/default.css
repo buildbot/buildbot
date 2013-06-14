@@ -540,54 +540,59 @@ h1.logo a {
   -o-transition: opacity 0.2s ease-in-out;
   transition: opacity 0.2s ease-in-out;
 }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000336}}
+h1.logo a span {
+  font-family: 'Leckerli One', cursive;
+  font-size: 43px;
+}
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000338}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000342}}
 .logo a:hover {
   opacity: 0.5;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000342}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000346}}
 .link-button {
   text-decoration: underline;
   font-weight: bold;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000345}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000349}}
 .link-button:hover {
   color: #999;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000350}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000354}}
 .link-1 a {
   text-decoration: underline;
   color: #333;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000353}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000357}}
 .link-1 a:hover {
   color: #999;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000358}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000362}}
 div.welcome-txt {
   font-size: 14px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000360}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000364}}
 div.welcome-txt ul {
   margin: 18px 0 0 21px;
   padding: 0;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000363}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000367}}
 div.welcome-txt ul li {
   margin: 0 0 18px;
   padding: 0 0px 0 6px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000370}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000374}}
 .column h2 {
   font-size: 16px;
   margin: 20px 0 10px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000375}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000379}}
 .step-head {
   font-size: 12px;
   font-weight: bold;
@@ -601,12 +606,12 @@ div.welcome-txt ul li {
   */
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000388}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000392}}
 .logs-txt {
   font-weight: bold;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000392}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000396}}
 .small-txt {
   color: #838383;
 }
