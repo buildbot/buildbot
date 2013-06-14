@@ -115,16 +115,6 @@ Source Stamp Attributes
 
     This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
 
-``has_patch``
-``patch_level``
-``patch_body``
-``patch_subdir``
-``patch_author``
-``patch_comment``
-
-    These attributes are set if the source stamp was created by a :ref:`try scheduler<Try-Schedulers>`.
-
-
 Using Properties in Steps
 -------------------------
 
