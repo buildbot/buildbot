@@ -530,6 +530,8 @@ class CheckConfigOptions(base.SubcommandOptions):
 
     # on tab completion, suggest files as first argument
     if hasattr(usage, 'Completions'):
+        # only set completion suggestion if running with
+        # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
     def getSynopsis(self):

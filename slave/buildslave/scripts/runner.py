@@ -40,6 +40,8 @@ class MakerBase(usage.Options):
 
     # on tab completion, suggest directories as first argument
     if hasattr(usage, 'Completions'):
+        # only set completion suggestion if running with
+        # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(
             extraActions=[usage.CompleteDirs(descr="slave base directory")])
 
