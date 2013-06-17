@@ -13,12 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-
 import os
 from zope.interface import Interface, Attribute, implements
 from buildbot.status.web.base import HtmlResource, ActionResource
 from buildbot.status.web.base import path_to_authfail
-
 from buildbot.process.users import users
 
 class IAuth(Interface):
@@ -31,8 +29,23 @@ class IAuth(Interface):
 
     master = Attribute('master', "Link to BuildMaster, set when initialized")
 
-    def authenticate(self, user, passwd):
-            """Check whether C{user} / C{passwd} are valid."""
+    def authenticate(self, request):
+        """
+        Process a login request. Return the username of the authenticated user,
+        optionally in a deferred, if the login should proceed. Otherwise return
+        None if the login can not be authenticated.
+
+        To support legacy implementations, you may return True if login should
+        proceed or False if it should not. In this case the username will be
+        automatically parsed from the request.
+        """
+
+    def getLoginUrl(self):
+        """
+        Returns the login URL. Usually you will just return None to use the
+        default login form, but you will likely want to customize this if
+        you're using an external authentication service.
+        """
 
     def getUserInfo(self, user):
             """return dict with user info.
@@ -42,9 +55,13 @@ class IAuth(Interface):
     def errmsg(self):
             """Get the reason authentication failed."""
 
+
 class AuthBase:
     master = None  # set in status.web.baseweb
     err = ""
+
+    def getLoginUrl(self):
+        return None
 
     def errmsg(self):
         return self.err
@@ -52,6 +69,15 @@ class AuthBase:
     def getUserInfo(self, user):
         """default dummy impl"""
         return dict(userName=user, fullName=user, email=user+"@localhost", groups=[ user ])
+
+    def parseUsername(self, request):
+        """Convenience method to retrieve a username from a login request."""
+        return request.args.get("username", ["<unknown>"])[0]
+
+    def parsePassword(self, request):
+        """Convenience method to retrieve a password from a login request."""
+        return request.args.get("passwd", ["<no-password>"])[0]
+
 
 class BasicAuth(AuthBase):
     implements(IAuth)
@@ -69,17 +95,19 @@ class BasicAuth(AuthBase):
             assert isinstance(p, str)
         self.userpass = userpass
 
-    def authenticate(self, user, passwd):
+    def authenticate(self, request):
         """Check that C{user}/C{passwd} is a valid user/pass tuple."""
         if not self.userpass:
             self.err = "Bad self.userpass data"
-            return False
+            return None
         for u, p in self.userpass:
-            if user == u and passwd == p:
+            if (self.parseUsername(request) == u and
+                self.parsePassword(request) == p):
                 self.err = ""
-                return True
+                return u
         self.err = "Invalid username or password"
-        return False
+        return None
+
 
 class HTPasswdAuth(AuthBase):
     implements(IAuth)
@@ -93,27 +121,27 @@ class HTPasswdAuth(AuthBase):
         assert os.path.exists(file)
         self.file = file
 
-    def authenticate(self, user, passwd):
+    def authenticate(self, request):
         """Authenticate C{user} and C{passwd} against an .htpasswd file"""
         if not os.path.exists(self.file):
             self.err = "No such file: " + self.file
-            return False
+            return None
         # Fetch each line from the .htpasswd file and split it into a
         # [user, passwd] array.
         lines = [l.rstrip().split(':', 1)
                  for l in file(self.file).readlines()]
         # Keep only the line for this login
-        lines = [l for l in lines if l[0] == user]
+        lines = [l for l in lines if l[0] == self.parseUsername(request)]
         if not lines:
             self.err = "Invalid user/passwd"
-            return False
+            return None
         hash = lines[0][1]
-        res = self.validatePassword(passwd, hash)
-        if res:
-            self.err = ""
-        else:
+        res = self.validatePassword(self.parsePassword(request), hash)
+        if not res:
             self.err = "Invalid user/passwd"
-        return res
+            return None
+        self.err = ""
+        return lines[0][0]
 
     def validatePassword(self, passwd, hash):
         # This is the DES-hash of the password. The first two characters are
@@ -155,7 +183,7 @@ class UsersAuth(AuthBase):
     """Implement authentication against users in database"""
     implements(IAuth)
 
-    def authenticate(self, user, passwd):
+    def authenticate(self, request):
         """
         It checks for a matching uid in the database for the credentials
         and return True if a match is found, False otherwise.
@@ -168,13 +196,15 @@ class UsersAuth(AuthBase):
 
         @returns: boolean via deferred.
         """
+        user = self.parseUsername(request)
+        passwd = self.parsePassword(request)
         d = self.master.db.users.getUserByUsername(user)
         def check_creds(user):
             if user:
                 if users.check_passwd(passwd, user['bb_password']):
-                    return True
+                    return user
             self.err = "no user found with those credentials"
-            return False
+            return None
         d.addCallback(check_creds)
         return d
 

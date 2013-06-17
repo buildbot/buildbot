@@ -48,7 +48,12 @@ class Authz(object):
             assert IAuth.providedBy(auth)
 
         self.useHttpHeader = useHttpHeader
-        self.httpLoginUrl = httpLoginUrl
+        if httpLoginUrl:
+            self.httpLoginUrl = httpLoginUrl
+        elif auth is not None:
+            self.httpLoginUrl = auth.getLoginUrl()
+        else:
+            self.httpLoginUrl = None
 
         self.config = dict( (a, default_action) for a in self.knownActions )
         for act in self.knownActions:
@@ -159,21 +164,28 @@ class Authz(object):
         if self.authenticated(request):
             return defer.succeed(False)
 
-        user = request.args.get("username", ["<unknown>"])[0]
-        passwd = request.args.get("passwd", ["<no-password>"])[0]
-        if user == "<unknown>" or passwd == "<no-password>":
-            return defer.succeed(False)
         if not self.auth:
             return defer.succeed(False)
-        d = defer.maybeDeferred(self.auth.authenticate, user, passwd)
+        d = defer.maybeDeferred(self.auth.authenticate, request)
+
         def check_authenticate(res):
-            if res:
-                cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
-                request.received_cookies = {COOKIE_KEY:cookie}
-                return cookie
-            else:
+            if res is False or res is None:
                 return False
+
+            if res is True:
+                user = request.args.get("username", ["<unknown>"])[0]
+                if user == "<unknown>":
+                    return False
+            else:
+                user = res
+
+            cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
+            request.addCookie(COOKIE_KEY,
+                              cookie,
+                              expires=s.getExpiration(),path="/")
+            request.received_cookies = {COOKIE_KEY:cookie}
+            return cookie
+
         d.addBoth(check_authenticate)
         return d
 

@@ -25,11 +25,10 @@ shabuildslave:{SHA}sNA10GbdONwGJ+a8VGRNtEyWd9I=
 shabuildbot:{SHA}TwEDa5Q31ZhI4GLmIbE1VrrAkpk=
 """
 
-
 from twisted.trial import unittest
-
 from buildbot.status.web.auth import HTPasswdAprAuth
 from buildbot.test.util import compat
+from buildbot.test.unit.test_status_web_authz_Authz import StubRequest
 
 class TestHTPasswdAprAuth(unittest.TestCase):
 
@@ -37,39 +36,43 @@ class TestHTPasswdAprAuth(unittest.TestCase):
 
     @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_des(self):
-        for key in ('buildmaster','buildslave','buildbot'):                
-            if self.htpasswd.authenticate('des'+key, key) == False:
-                self.fail("authenticate failed for '%s'" % ('des'+key))
+        for key in ('buildmaster','buildslave','buildbot'):
+            user = "des" + key
+            if self.htpasswd.authenticate(StubRequest(user, key)) == None:
+                self.fail("authenticate failed for '%s'" % (user))
 
     def test_authenticate_md5(self):
         if not self.htpasswd.apr:
             raise unittest.SkipTest("libaprutil-1 not found")
         for key in ('buildmaster','buildslave','buildbot'):                
-            if self.htpasswd.authenticate('md5'+key, key) == False:
-                self.fail("authenticate failed for '%s'" % ('md5'+key))
+            user = "md5" + key
+            if self.htpasswd.authenticate(StubRequest(user, key)) == None:
+                self.fail("authenticate failed for '%s'" % (user))
 
     def test_authenticate_sha(self):
         if not self.htpasswd.apr:
             raise unittest.SkipTest("libaprutil-1 not found")
         for key in ('buildmaster','buildslave','buildbot'):                
-            if self.htpasswd.authenticate('sha'+key, key) == False:
-                self.fail("authenticate failed for '%s'" % ('sha'+key))
+            user = "sha" + key
+            if self.htpasswd.authenticate(StubRequest(user, key)) == None:
+                self.fail("authenticate failed for '%s'" % (user))
 
     def test_authenticate_unknown(self):
-        if self.htpasswd.authenticate('foo', 'bar') == True:
+        if self.htpasswd.authenticate(StubRequest('foo', 'bar')) == "foo":
             self.fail("authenticate succeed for 'foo:bar'")
 
     @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wopassword(self):
         for algo in ('des','md5','sha'):
-            if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
-                self.fail("authenticate succeed for %s w/o password"
-                                        % (algo+'buildmaster'))
+            user = algo + "buildmaster"
+            if self.htpasswd.authenticate(StubRequest(user, '')) == user:
+                self.fail("authenticate succeed for %s w/o password" % (user))
 
     @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wrongpassword(self):
         for algo in ('des','md5','sha'):
-            if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
+            user = algo + "buildmaster"
+            if self.htpasswd.authenticate(StubRequest(user, algo)) == user:
                 self.fail("authenticate succeed for %s w/ wrong password"
-                                        % (algo+'buildmaster'))
+                                        % (user))
 
