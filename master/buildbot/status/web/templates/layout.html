@@ -22,6 +22,7 @@
     {% block header -%}
     <div class="header">    
         <a href="{{ path_to_root or '.' }}">Home</a>
+        {% if authz.advertiseAction('view', request) %}
         - <a href="{{ path_to_root }}waterfall">Waterfall</a>
         <a href="{{ path_to_root }}grid">Grid</a>
         <a href="{{ path_to_root }}tgrid">T-Grid</a>
@@ -35,6 +36,7 @@
         {% endif %}
         - <a href="{{ path_to_root }}json/help">JSON API</a>
         - <a href="{{ path_to_root }}about">About</a>
+        {% endif %}
     <div class="auth">    
     {% if authz.authenticated(request) %}
     {{ authz.getUsernameHTML(request) }}
