@@ -18,6 +18,7 @@
 
 <div class="column">
 
+{% if authz.advertiseAction('view', request) %}
 <ul>
   {% set item_class=cycler('alt', '') %}
   
@@ -53,6 +54,7 @@ Master is shutting down<br/>
 {{ forms.clean_shutdown(shutdown_url, authz) }}
 {%- endif -%}
 {%- endif -%}
+{% endif %}
 
 <p><i>This and other pages can be overridden and customized.</i></p>
 
