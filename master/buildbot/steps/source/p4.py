@@ -19,12 +19,11 @@ import os
 
 from twisted.python import log
 from twisted.internet import defer
-from buildbot import interfaces
+from buildbot import interfaces, config
 from buildbot.process import buildstep
 from buildbot.steps.source import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process.properties import Interpolate
-from buildbot.config import ConfigErrors
 from types import StringType
 
 
@@ -72,30 +71,26 @@ class P4(Source):
 
         Source.__init__(self, **kwargs)
 
-        errors = []
         if self.mode not in self.possible_modes:
-            errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
+            config.error("mode %s is not one of %s" % (self.mode, self.possible_modes))
 
         if not p4viewspec and p4base is None:
-            errors.append("You must provide p4base or p4viewspec")
+            config.error("You must provide p4base or p4viewspec")
 
         if p4viewspec and (p4base or p4branch or p4extra_views):
-            errors.append("Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
+            config.error("Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
 
         if p4viewspec and type(p4viewspec) is StringType:
-            errors.append("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
+            config.error("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 
         if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
-            errors.append('p4base should not end with a trailing / [p4base = %s]' % p4base)
+            config.error('p4base should not end with a trailing / [p4base = %s]' % p4base)
 
         if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):
-            errors.append('p4branch should not end with a trailing / [p4branch = %s]' % p4branch)
+            config.error('p4branch should not end with a trailing / [p4branch = %s]' % p4branch)
 
         if (p4branch or p4extra_views) and not p4base:
-            errors.append('If you specify either p4branch or p4extra_views you must also specify p4base')
-
-        if errors:
-            raise ConfigErrors(errors)
+            config.error('If you specify either p4branch or p4extra_views you must also specify p4base')
 
     def startVC(self, branch, revision, patch):
         if debug_logging:
