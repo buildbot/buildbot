@@ -23,7 +23,7 @@ import textwrap
 import cStringIO
 from twisted.trial import unittest
 from buildbot.test.util import dirs, compat
-from buildbot.scripts import checkconfig
+from buildbot.scripts import base, checkconfig
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
@@ -157,3 +157,13 @@ class TestCheckconfig(unittest.TestCase):
         self.assertEqual(checkconfig.checkconfig(config), 3)
         self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=True)
 
+    def test_checkconfig_syntaxError_quiet(self):
+        """
+        When C{base.getConfigFileFromTac} raises L{SyntaxError},
+        C{checkconfig.checkconfig} return an error.
+        """
+        mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac,
+                side_effect=SyntaxError)
+        self.patch(checkconfig, 'getConfigFileFromTac', mockGetConfig)
+        config = dict(configFile='.', quiet=True)
+        self.assertEqual(checkconfig.checkconfig(config), 1)
