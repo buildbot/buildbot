@@ -1,7 +1,8 @@
-# use the 'requests' lib: http://python-request.org
+# use the 'requests' lib: http://python-requests.org
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
+from buildbot import config
 
 import requests
 
@@ -13,17 +14,28 @@ class HTTPStep(BuildStep):
   descriptionDone = 'Requested'
   renderables = ['url', 'params', 'method', 'data', 'headers']
 
-  def __init__(self, url, params={}, method='POST', data={}, headers={},
-               description = '', descriptionDone='', **kwargs):
+  def __init__(self, url, params=None, method='POST', data=None, headers=None,
+               description=None, descriptionDone=None, **kwargs):
     BuildStep.__init__(self, **kwargs)
     self.url = url
-    self.params = params
+    if params is None:
+      self.params = {}
+    else:
+      self.params = params
     self.method = method.upper()
-    self.data = data
-    self.headers = headers
-    if description:
+    if self.method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
+      config.error("Wrong method given: '%s' is not known" % self.method)
+    if data is None:
+      self.data = {}
+    else:
+      self.data = data
+    if headers is None:
+      self.headers = {}
+    else:
+      self.headers = headers
+    if description is not None:
       self.description = description
-    if descriptionDone:
+    if descriptionDone is not None:
       self.descriptionDone = descriptionDone
 
   def start(self):
