@@ -19,7 +19,7 @@ import time
 from twisted.internet import defer, threads
 from twisted.python import log
 
-from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot.buildslave.base import AbstractLatentBuildSlave
 from buildbot import config, interfaces
 
 try:

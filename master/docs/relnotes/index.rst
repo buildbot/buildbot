@@ -103,6 +103,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``SetProperty`` step in ``buildbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
 
+* The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

@@ -257,7 +257,7 @@ machines).
 Here is the simplest example of configuring an EC2 latent buildslave. It
 specifies all necessary remaining values explicitly in the instantiation. ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        ami='ami-12345',
                                        identifier='publickey',
@@ -282,7 +282,7 @@ The first line of that file should be your access key id; the second line
 should be your secret access key id. Then you can instantiate the build slave
 as follows. ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        ami='ami-12345')]
 
@@ -301,7 +301,7 @@ One available filter is to specify the acceptable AMI owners, by AWS account
 number (the 12 digit number, usually rendered in AWS with hyphens like
 "1234-5678-9012", should be entered as in integer). ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                valid_ami_owners=[11111111111,
                                                  22222222222],
@@ -312,7 +312,7 @@ number (the 12 digit number, usually rendered in AWS with hyphens like
 The other available filter is to provide a regular expression string that
 will be matched against each AMI's location (the S3 bucket and manifest name). ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
@@ -321,7 +321,7 @@ will be matched against each AMI's location (the S3 bucket and manifest name). :
 The regular expression can specify a group, which will be preferred for the
 sorting.  Only the first group is used; subsequent groups are ignored. ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
@@ -330,7 +330,7 @@ sorting.  Only the first group is used; subsequent groups are ignored. ::
 If the group can be cast to an integer, it will be.  This allows 10 to sort
 after 1, for instance. ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
@@ -342,7 +342,7 @@ specific IP can connect as slaves.  This is possible with AWS EC2 by using
 the Elastic IP feature.  To configure, generate a Elastic IP in AWS, and then
 specify it in your configuration using the ``elastic_ip`` argument. ::
 
-    from buildbot.ec2buildslave import EC2LatentBuildSlave
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        'ami-12345',
                                        identifier='publickey',
@@ -435,7 +435,7 @@ set the username to ``minion1``, the password to ``sekrit``. The base image is c
 and a copy of it will be made for the duration of the VM's life. That copy will be thrown
 away every time a build is complete. ::
 
-    from buildbot.libvirtbuildslave import LibVirtSlave, Connection
+    from buildbot.buildslave.libvirt import LibVirtSlave, Connection
     c['slaves'] = [LibVirtSlave('minion1', 'sekrit', Connection("qemu:///session"),
                                 '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
 
