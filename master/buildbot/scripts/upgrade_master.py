@@ -159,7 +159,7 @@ def upgradeMaster(config, _noMonkey=False):
 
     os.chdir(config['basedir'])
 
-    configFile = base.getConfigFileWithFallback(config['basedir'])
+    configFile = base.getConfigFileFromTac(config['basedir'])
     master_cfg = loadConfig(config, configFile)
     if not master_cfg:
         defer.returnValue(1)
