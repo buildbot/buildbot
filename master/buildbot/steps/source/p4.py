@@ -98,7 +98,7 @@ class P4(Source):
 
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkP4()
 
@@ -130,10 +130,7 @@ class P4(Source):
         yield self._dovccmd(['sync', '#none'])
 
         # Then remove directory.
-        # NOTE: Not using CompositeStepMixin's runRmdir() as it requires self.rc_log
-        #       to be defined and ran into issues where setting that in _dovccmd would
-        #       yield multiple logs named 'stdio' in the waterfall report..
-        yield self._rmdir(self.workdir)
+        cmd = yield self.runRmdir(self.workdir)
 
         # Then we need to sync the client
         if self.revision:
@@ -355,13 +352,3 @@ class P4(Source):
             return None
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
-
-    @defer.inlineCallbacks
-    def _rmdir(self, dir):
-        cmd = buildstep.RemoteCommand('rmdir',
-                                      {'dir': dir,
-                                       'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-        if cmd.rc != 0:
-            raise buildstep.BuildStepFailed()
