@@ -820,7 +820,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, Buildslave):
                 self.buildslaves.append({
-                    'slavename': row.name,
+                    'name': row.name,
                     'slaveid':   row.id,
                     'slaveinfo': row.info
                 })
@@ -828,20 +828,20 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def getBuildslaves(self):
         return defer.succeed([ ])
 
-    def getBuildslaveByName(self, slavename):
-        return defer.succeed(self._getBuildslaveByName(slavename))
+    def getBuildslaveByName(self, name):
+        return defer.succeed(self._getBuildslaveByName(name))
 
-    def _getBuildslaveByName(self, slavename):
+    def _getBuildslaveByName(self, name):
         for slave in self.buildslaves:
-            if slave['slavename']==slavename:
+            if slave['name']==name:
                 return slave
         return None
 
-    def updateBuildslave(self, slavename, slaveinfo):
-        slave = self._getBuildslaveByName(slavename)
+    def updateBuildslave(self, name, slaveinfo):
+        slave = self._getBuildslaveByName(name)
         if slave is None:
             self.insertTestData([
-                Buildslave(name=slavename, info=slaveinfo)
+                Buildslave(name=name, info=slaveinfo)
             ])
         else:
             slave['slaveinfo'] = slaveinfo

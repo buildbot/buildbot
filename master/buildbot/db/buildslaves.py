@@ -28,17 +28,17 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             if rows:
                 for row in rows:
                     dicts.append({
-                        'slaveid':   row.id, 
-                        'slavename': row.name
+                        'slaveid': row.id, 
+                        'name': row.name
                     })
             return dicts
         d = self.db.pool.do(thd)
         return d
 
-    def getBuildslaveByName(self, slavename):
+    def getBuildslaveByName(self, name):
         def thd(conn):
             tbl = self.db.model.buildslaves
-            res = conn.execute(tbl.select(whereclause=(tbl.c.name == slavename)))
+            res = conn.execute(tbl.select(whereclause=(tbl.c.name == name)))
             row = res.fetchone()
 
             rv = None
@@ -48,14 +48,14 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def updateBuildslave(self, slavename, slaveinfo, _race_hook=None):
+    def updateBuildslave(self, name, slaveinfo, _race_hook=None):
         def thd(conn):
             transaction = conn.begin()
 
             tbl = self.db.model.buildslaves
 
             # first try update, then try insert
-            q = tbl.update(whereclause=(tbl.c.name == slavename))
+            q = tbl.update(whereclause=(tbl.c.name == name))
             res = conn.execute(q, info=slaveinfo)
 
             if res.rowcount == 0:
@@ -65,7 +65,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                 try:
                     q = tbl.insert()
                     res = conn.execute(q,
-                            name=slavename,
+                            name=name,
                             info=slaveinfo)
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     # someone else beat us to the punch inserting this row;
@@ -78,7 +78,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
 
     def _bdictFromRow(self, row):
         return {
-            'slaveid':   row.id, 
-            'slavename': row.name,
+            'slaveid': row.id, 
+            'name': row.name,
             'slaveinfo': row.info
         }

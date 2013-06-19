@@ -189,7 +189,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             'version': self.slave_status.getVersion(),
         }
         return self.master.db.buildslaves.updateBuildslave(
-            slavename=self.slavename,
+            name=self.slavename,
             slaveinfo=slaveinfo,
         )
 

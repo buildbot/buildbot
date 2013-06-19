@@ -401,7 +401,7 @@ buildslaves
     information is returned as a dictionary:
 
     * ``slaveid``
-    * ``slavename`` (the name of the buildslave)
+    * ``name`` (the name of the buildslave)
     * ``slaveinfo`` (buildslave information as dictionary)
 
     The 'slaveinfo' dictionary has the following keys:
@@ -417,19 +417,19 @@ buildslaves
 
         Get the entire list of buildslaves. Only id and name are returned.
 
-    .. py:method:: getBuildslaveByName(slavename)
+    .. py:method:: getBuildslaveByName(name)
 
-        :param slavename: the name of the buildslave to retrieve
-        :type slavename: string
+        :param name: the name of the buildslave to retrieve
+        :type name: string
         :returns: info dictionary or None, via deferred
 
-        Looks up the buildslave with the slavename, returning the information or
+        Looks up the buildslave with the name, returning the information or
         ``None`` if no matching buildslave is found.
 
-    .. py:method:: updateBuildslave(slavename, slaveinfo)
+    .. py:method:: updateBuildslave(name, slaveinfo)
 
-        :param slavename: the name of the buildslave to update
-        :type slavename: string
+        :param name: the name of the buildslave to update
+        :type name: string
         :param slaveinfo: the full buildslave dictionary
         :type slaveinfo: dict
         :returns: Deferred

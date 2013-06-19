@@ -72,7 +72,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def check(res):
             self.assertEqual(res['slaveid'],   self.BS1_ID)
-            self.assertEqual(res['slavename'], self.BS1_NAME)
+            self.assertEqual(res['name'], self.BS1_NAME)
             self.assertEqual(res['slaveinfo'], self.BS1_INFO)
 
         return d
@@ -98,10 +98,10 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
             self.assertEqual(len(res), 2)
             
             self.assertEqual(res[0]['slaveid'],   self.BS1_ID)
-            self.assertEqual(res[0]['slavename'], self.BS1_NAME)
+            self.assertEqual(res[0]['name'], self.BS1_NAME)
 
             self.assertEqual(res[1]['slaveid'],   self.BS2_ID)
-            self.assertEqual(res[1]['slavename'], self.BS2_NAME)
+            self.assertEqual(res[1]['name'], self.BS2_NAME)
 
         return d
 
@@ -113,7 +113,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def update(_):
             return self.db.buildslaves.updateBuildslave(
-                    slavename= self.BS1_NAME,
+                    name= self.BS1_NAME,
                     slaveinfo= NEW_INFO
                 )
         
@@ -124,7 +124,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def check(res):
             self.assertEqual(res['slaveid'],   self.BS1_ID)
-            self.assertEqual(res['slavename'], self.BS1_NAME)
+            self.assertEqual(res['name'], self.BS1_NAME)
             self.assertEqual(res['slaveinfo'], NEW_INFO)
 
         return d
@@ -136,7 +136,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def update(_):
             return self.db.buildslaves.updateBuildslave(
-                    slavename= self.BS2_NAME,
+                    name= self.BS2_NAME,
                     slaveinfo= self.BS2_INFO
                 )
         
@@ -147,7 +147,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def check(res):
             self.assertIsNotNone(res['slaveid'])
-            self.assertEqual(res['slavename'], self.BS2_NAME)
+            self.assertEqual(res['name'], self.BS2_NAME)
             self.assertEqual(res['slaveinfo'], self.BS2_INFO)
 
         return d
@@ -165,7 +165,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
                 info=RACE_INFO)
 
         d = self.db.buildslaves.updateBuildslave(
-            slavename=self.BS1_NAME,
+            name=self.BS1_NAME,
             slaveinfo=self.BS1_INFO,
             _race_hook=race_thd)
         
@@ -176,7 +176,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def check(res):
             self.assertIsNotNone(res['slaveid'])
-            self.assertEqual(res['slavename'], self.BS1_NAME)
+            self.assertEqual(res['name'], self.BS1_NAME)
             self.assertEqual(res['slaveinfo'], RACE_INFO) # race wins
 
         return d
@@ -190,7 +190,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
                 'key': object(),  # something json wont serialize
             }
             return self.db.buildslaves.updateBuildslave(
-                slavename=self.BS1_NAME,
+                name=self.BS1_NAME,
                 slaveinfo=BAD_JSON)
 
         @d.addBoth
