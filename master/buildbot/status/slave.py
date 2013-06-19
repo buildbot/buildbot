@@ -17,6 +17,7 @@ import time
 from zope.interface import implements
 from buildbot import interfaces
 from buildbot.util.eventual import eventually
+from buildbot.util import ascii2unicode
 
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
@@ -59,9 +60,9 @@ class SlaveStatus:
         return len([ t for t in self.connect_times if t > then ])
 
     def setAdmin(self, admin):
-        self.admin = admin
+        self.admin = ascii2unicode(admin)
     def setHost(self, host):
-        self.host = host
+        self.host = ascii2unicode(host)
     def setAccessURI(self, access_uri):
         self.access_uri = access_uri
     def setVersion(self, version):

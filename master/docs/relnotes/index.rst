@@ -49,6 +49,9 @@ Features
 
 * A new argument ``createAbsoluteSourceStamps`` has been added to ``SingleBranchScheduler`` for use with multiple codebases.
 
+* Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
+  the slave is not connected.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
