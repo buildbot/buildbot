@@ -54,30 +54,66 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertWasQuiet()
 
 class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
+    """
+    Tests for L{base.getConfigFileFromTac}.
+    """
 
     def setUp(self):
+        """
+        Create a base directory.
+        """
         self.basedir = os.path.abspath('basedir')
-        self.stdout = cStringIO.StringIO()
-        self.filename = 'master.cfg'
         return self.setUpDirs('basedir')
 
-    def test_tacFallback_location_from_tac(self):
-        tacfile = os.path.join(self.basedir, "buildbot.tac")
-        otherConfigFile = os.path.join(self.basedir, "other.cfg")
-        with open(tacfile, "wt") as f:
-            f.write("configfile = '%s'" % otherConfigFile)
-        with open(otherConfigFile, "wt") as f:
-            f.write("#dummy")
-        self.filename = base.getConfigFileWithFallback(self.basedir)
-        self.assertEqual(self.filename, otherConfigFile)
+    def _createBuildbotTac(self, configfile=None):
+        """
+        Create a C{buildbot.tac} that points to a given C{configfile}
+        and create that file.
 
-    def test_tacFallback_noFallback(self):
-        defaultFilename = self.filename
-        with open(self.filename, "wt") as f:
-            f.write("#dummy")
-        self.filename = base.getConfigFileWithFallback(self.basedir)
-        self.assertEqual(self.filename,
-                         os.path.join(self.basedir, defaultFilename))
+        @param configfile: Config file to point at and create.
+        @type configfile: L{str}
+        """
+        tacfile = os.path.join(self.basedir, "buildbot.tac")
+        with open(tacfile, "wt") as f:
+            if configfile is not None:
+                f.write("configfile = %r" % configfile)
+            else:
+                f.write("#dummy")
+
+
+    def test_getConfigFileFromTac(self):
+        """
+        When L{getConfigFileFromTac} is passed a C{basedir}
+        containing a C{buildbot.tac}, it reads the location
+        of the config file from there.
+        """
+        self._createBuildbotTac("other.cfg")
+        foundConfigFile = base.getConfigFileFromTac(
+                basedir=self.basedir)
+        self.assertEqual(foundConfigFile, "other.cfg")
+
+    def test_getConfigFileFromTac_fallback(self):
+        """
+        When L{getConfigFileFromTac} is passed a C{basedir}
+        which doesn't contain a C{buildbot.tac},
+        it returns C{master.cfg}
+        """
+        foundConfigFile = base.getConfigFileFromTac(
+                basedir=self.basedir)
+        self.assertEqual(foundConfigFile, 'master.cfg')
+
+
+    def test_getConfigFileFromTac_tacWithoutConfigFile(self):
+        """
+        When L{getConfigFileFromTac} is passed a C{basedir}
+        containing a C{buildbot.tac}, but C{buildbot.tac} doesn't
+        define C{configfile}, L{getConfigFileFromTac} returns C{master.cfg}
+        """
+        self._createBuildbotTac()
+        foundConfigFile = base.getConfigFileFromTac(
+                basedir=self.basedir)
+        self.assertEqual(foundConfigFile, 'master.cfg')
+
 
 
 class TestSubcommandOptions(unittest.TestCase):

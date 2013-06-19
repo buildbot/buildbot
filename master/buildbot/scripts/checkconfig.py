@@ -16,35 +16,41 @@
 import sys
 import os
 from buildbot import config
-from buildbot.scripts.base import getConfigFileWithFallback
+from buildbot.scripts.base import getConfigFileFromTac
 
-class ConfigLoader(object):
-    def __init__(self, basedir=os.getcwd(), configFileName='master.cfg'):
-        self.basedir = os.path.abspath(basedir)
-        self.configFileName = getConfigFileWithFallback(basedir, configFileName)
-
-    def load(self, quiet=False):
-        try:
-            config.MasterConfig.loadConfig(
-                    self.basedir, self.configFileName)
-        except config.ConfigErrors, e:
-            if not quiet:
-                print >> sys.stderr, "Configuration Errors:"
-                for e in e.errors:
-                    print >> sys.stderr, "  " + e
-            return 1
-
+def _loadConfig(basedir, configFile, quiet):
+    try:
+        config.MasterConfig.loadConfig(
+                basedir, configFile)
+    except config.ConfigErrors, e:
         if not quiet:
-            print "Config file is good!"
-        return 0
+            print >> sys.stderr, "Configuration Errors:"
+            for e in e.errors:
+                print >> sys.stderr, "  " + e
+        return 1
+
+    if not quiet:
+        print "Config file is good!"
+    return 0
+
 
 def checkconfig(config):
     quiet = config.get('quiet')
-    configFileName = config.get('configFile')
+    configFile = config.get('configFile')
 
-    if os.path.isdir(configFileName):
-        cl = ConfigLoader(basedir=configFileName)
+    if os.path.isdir(configFile):
+        basedir = configFile
+        try:
+            configFile = getConfigFileFromTac(basedir)
+        except (SyntaxError, ImportError) as e:
+            if not quiet:
+                print "Unable to load 'buildbot.tac' from '%s':" % basedir
+                print e
+            return 1
     else:
-        cl = ConfigLoader(configFileName=configFileName)
+        basedir = os.getcwd()
 
-    return cl.load(quiet=quiet)
+    return _loadConfig(basedir=basedir, configFile=configFile, quiet=quiet)
+
+
+__all__ = ['checkconfig']
