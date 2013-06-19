@@ -42,7 +42,7 @@ def checkconfig(config):
         basedir = configFile
         try:
             configFile = getConfigFileFromTac(basedir)
-        except (SyntaxError, ImportError) as e:
+        except (SyntaxError, ImportError), e:
             if not quiet:
                 print "Unable to load 'buildbot.tac' from '%s':" % basedir
                 print e

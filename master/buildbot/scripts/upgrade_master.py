@@ -161,7 +161,7 @@ def upgradeMaster(config, _noMonkey=False):
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError) as e:
+    except (SyntaxError, ImportError), e:
         print "Unable to load 'buildbot.tac' from '%s':" % config['basedir']
         print e
         defer.returnValue(1)
