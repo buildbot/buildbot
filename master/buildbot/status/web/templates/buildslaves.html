@@ -21,28 +21,24 @@
   Buildslaves
 </h1>
 
-<table class="table-1">
-
+<table class="table-1 tablesorter">
+<thead>
 <tr>
   <th>Name</th>
   <th>Status</th>
   <th>Last heard from</th>
   <th>Last Message Received</th>
 </tr>
-
+</thead>
+<tbody>
 {% for s in slaves %}
 
-  {%- if loop.last %}
-      <tr class='last'>
-        {%- else -%}
-      <tr>
-  {%- endif -%}
-
+<tr>
   <td>
       <a href="{{ s.link }}">
         {{ s.name }}
       </a>
-      <a class="more-info" href="#">
+      <a class="more-info fl-right popup-btn-js" href="#">
       </a>
         <div class="more-info-box">
           <h3>Additional information</h3>
@@ -108,6 +104,7 @@
 
   </tr>
 {% endfor %}
+</tbody>
 </table>
 
   

@@ -12,18 +12,18 @@
         </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}buildstatus2">
-          Buildstatus
+      <a href="{{ path_to_root }}projects">
+          Projects
       </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}buildstatus_s_project">
-          Default project
+      <a href="{{ path_to_root }}codebases">
+          Codebases
       </a>
     </li>
     <li>
         <a href="{{ path_to_root }}builders">
-            Default branch
+            Builders
         </a>
     </li>
     <li>
@@ -215,7 +215,7 @@ SourceStamps
 
 <ul class="btn-list horisontal">
   <li>
-<a class="more-info grey-btn" href="#">
+<a class="dropdown-info grey-btn popup-btn-js" href="#">
   Build Properties
 </a>
 
@@ -260,7 +260,7 @@ SourceStamps
 </li>
 
   <li>
-<a class="more-info grey-btn" href="#">
+<a class="dropdown-info grey-btn popup-btn-js" href="#">
   Forced build properties
 </a>
 
@@ -342,7 +342,7 @@ SourceStamps
     <ul class="log-list">
       
       {% for l in s.logs %}
-        <li><a href="{{ l.link }}">{{ l.name }}</a></li>
+        <li><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
       {% else %}
         <li>
           <span>
@@ -352,7 +352,7 @@ SourceStamps
       {% endfor %}
     
       {% for u in s.urls %}
-        <li><a href="{{ u.url }}">{{ u.logname }}</a></li>
+        <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
       {% endfor %}
     </ul>  
     

@@ -21,8 +21,10 @@ import twisted
 import sys
 import jinja2
 
-class BuildStatus2(HtmlResource):
-    pageTitle = "Build status overview"
+
+
+class ProjectsResource(HtmlResource):
+    pageTitle = "Projects overview"
 
     def content(self, request, cxt):
         cxt.update(dict(buildbot=buildbot.version, 
@@ -31,12 +33,15 @@ class BuildStatus2(HtmlResource):
                                python=sys.version,
                                platform=sys.platform))
 
-        template = request.site.buildbot_service.templates.get_template("buildstatusoverview.html")
+        template = request.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True
         return template.render(**cxt)
+    
 
-class BuildStatusSingleProject(HtmlResource):
-    pageTitle = "Build status single project"
+class CodeBasesResource(HtmlResource):
+    pageTitle = "Codebases overview"
+
+    
 
     def content(self, request, cxt):
         cxt.update(dict(buildbot=buildbot.version, 
@@ -45,6 +50,8 @@ class BuildStatusSingleProject(HtmlResource):
                                python=sys.version,
                                platform=sys.platform))
 
-        template = request.site.buildbot_service.templates.get_template("buildstatus_s_project.html")
+        template = request.site.buildbot_service.templates.get_template("codebases.html")
         template.autoescape = True
         return template.render(**cxt)
+
+

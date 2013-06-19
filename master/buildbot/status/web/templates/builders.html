@@ -12,17 +12,17 @@
         </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}buildstatus2">
-          Buildstatus
+      <a href="{{ path_to_root }}projects">
+          Projects
       </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}buildstatus_s_project">
-          Default project
+      <a href="{{ path_to_root }}codebases">
+          Codebases
       </a>
     </li>
     <li>
-      Default branch
+      Builders
     </li>
   </ul>
 </nav>
@@ -38,24 +38,25 @@
   </span>
 </h1>
 
-<table class="table-1 first-child">
-  
+<table class="table-1 first-child tablesorter">
+  <thead>
 <tr>
   <th class="txt-align-left">Builder</th>
   <th class="txt-align-left">Current jobs</th>
   <th class="txt-align-left">Last run</th>
-  <th>Status</th>
+  <th>
+    Status
+  </th>
   <th>Build Artifacts</th>
-  <th class="txt-align-right">
-    Select
+  <th >
+    Force build
   </th>
 </tr>
+</thead>
+<tbody>
 {% for b in builders %}
-{%- if loop.last  %}
-    <tr class='last'>
-      {%- else -%}
+
     <tr>
-{%- endif -%}
   
     <td class="box txt-align-left">
       <a href="{{ b.link }}">
@@ -63,26 +64,17 @@
       </a>
     </td>
     <td class="txt-align-left">
-      <a href="#">
-        <span class="notimpl"><span class="notimpl">Not implemented</span>
-</span>
- 
-      </a> 
-      <br />
-      <span class="small-txt">
-        
-      </span>
+      
+      <span class="notimpl small-txt">Not implemented</span>
+      
     </td>
     <td class="txt-align-left">
       
       <a href="#">
-        <span class="notimpl">Not implemented</span>
+        <span class="notimpl small-txt">Not implemented</span>
  
       </a>
-      <br />
-      <span class="small-txt">
-        
-      </span>
+      
       
     </td>
     {% if b.build_url %}
@@ -102,13 +94,12 @@
       </a>
     </td>
 
-    <td class="txt-align-right">
+    <td >
       {% if b.force_schedulers != {} %}
-      <a class="more-info" href="#">
-        Force build
+      <a class="more-info popup-btn-js" href="#">
       </a>
         <div class="more-info-box">
-          <span class="close-btn" href="#">
+          <span class="close-btn">
           </span>
           <h3>Overview</h3>
             {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
@@ -116,7 +107,7 @@
             {% endif %}
         </div>
         {% endif %}
-  
+    </td>
     <!--    
     <br>
   
@@ -130,6 +121,7 @@
     -->
   </tr>
 {% endfor %}
+</tbody>
 </table>
 
 {% endblock %}
