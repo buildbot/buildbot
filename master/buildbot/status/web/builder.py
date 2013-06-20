@@ -204,6 +204,33 @@ def buildForceContext(cxt, req, master, buildername=None):
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
 
+
+def builder_info(build, req):
+    b = {}
+
+    b['num'] = build.getNumber()
+    b['link'] = path_to_build(req, build)
+
+    when = build.getETA()
+    if when is not None:
+        b['when'] = util.formatInterval(when)
+        b['when_time'] = time.strftime("%H:%M:%S",
+                                       time.localtime(time.time() + when))
+
+    step = build.getCurrentStep()
+    # TODO: is this necessarily the case?
+    if not step:
+        b['current_step'] = "[waiting for Lock]"
+    else:
+        if step.isWaitingForLocks():
+            b['current_step'] = "%s [waiting for Lock]" % step.getName()
+        else:
+            b['current_step'] = step.getName()
+
+    b['stop_url'] = path_to_build(req, build) + '/stop'
+
+    return b
+
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
@@ -215,32 +242,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def getPageTitle(self, request):
         return "Buildbot: %s" % self.builder_status.getName()
 
-    def builder(self, build, req):
-        b = {}
-
-        b['num'] = build.getNumber()
-        b['link'] = path_to_build(req, build)
-
-        when = build.getETA()
-        if when is not None:
-            b['when'] = util.formatInterval(when)
-            b['when_time'] = time.strftime("%H:%M:%S",
-                                      time.localtime(time.time() + when))
-
-        step = build.getCurrentStep()
-        # TODO: is this necessarily the case?
-        if not step:
-            b['current_step'] = "[waiting for Lock]"
-        else:
-            if step.isWaitingForLocks():
-                b['current_step'] = "%s [waiting for Lock]" % step.getName()
-            else:
-                b['current_step'] = step.getName()
-
-        b['stop_url'] = path_to_build(req, build) + '/stop'
-
-        return b
-
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
@@ -250,7 +251,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
+        cxt['current'] = [builder_info(x, req) for x in b.getCurrentBuilds()]
 
         cxt['pending'] = []
         statuses = yield b.getPendingBuildRequestStatuses()
@@ -542,6 +543,11 @@ class BuildersResource(HtmlResource):
             bld['force_schedulers'] = {}
             if bn in builder_schedulers:
                 bld['force_schedulers'] = builder_schedulers[bn]
+
+            for x in builder.getCurrentBuilds():
+                print "\n\n %s " % x
+
+            bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds()]
 
             if builds:
                 b = builds[0]
