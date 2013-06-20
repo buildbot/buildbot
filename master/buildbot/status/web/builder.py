@@ -545,6 +545,34 @@ class BuildersResource(HtmlResource):
                 bld['force_schedulers'] = builder_schedulers[bn]
 
             bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds()]
+            bld['pending'] = []
+            statuses = yield builder.getPendingBuildRequestStatuses()
+            for pb in statuses:
+                changes = []
+
+                source = yield pb.getSourceStamp()
+                submitTime = yield pb.getSubmitTime()
+                bsid = yield pb.getBsid()
+
+                properties = yield \
+                    pb.master.db.buildsets.getBuildsetProperties(bsid)
+
+                if source.changes:
+                    for c in source.changes:
+                        changes.append({ 'url' : path_to_change(req, c),
+                                         'who' : c.who,
+                                         'revision' : c.revision,
+                                         'repo' : c.repository })
+
+                bld['pending'].append({
+                    'when': time.strftime("%b %d %H:%M:%S",
+                                          time.localtime(submitTime)),
+                    'delay': util.formatInterval(util.now() - submitTime),
+                    'id': pb.brid,
+                    'changes' : changes,
+                    'num_changes' : len(changes),
+                    'properties' : properties,
+                    })
 
             if builds:
                 b = builds[0]

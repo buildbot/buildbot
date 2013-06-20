@@ -90,6 +90,41 @@
                 None
                 {% endif %}
             </li>
+            <li>
+                {% if b.pending %}
+
+                <h2 class="small-head">
+                    Pending Build Requests:
+                </h2>
+                <ul>
+                    {% for cb in b.pending %}
+                    <li><small>({{ cb.when }}, waiting {{ cb.delay }})</small>
+
+                        {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                        {{ forms.cancel_pending_build(b.link +"/cancelbuild", authz, short=True, id=cb.id) }}
+                        {% endif %}
+
+                        {% if cb.num_changes < 4 %}
+                        {% for c in cb.changes %}{{ c.revision|shortrev(c.repo) }}
+                        (<a href="{{ c.url }}">{{ c.who|email }}</a>){% if not loop.last %},{% endif %}
+                        {% endfor %}
+                        {% else %}
+                        ({{ cb.num_changes }} changes)
+                        {% endif %}
+
+                        {% if 'owner' in cb.properties %}
+                        <b>Forced build</b>
+                        by {{cb.properties['owner'][0]}}
+                        <small>{{cb.properties['reason'][0]}}</small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                    </ul>
+                 {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                    {{ forms.cancel_pending_build(b.link+"/cancelbuild", authz, short=False, id='all') }}
+                {% endif %}
+            {% endif %}
+        </li>
         </ul>
     </td>
     <td class="txt-align-left">
