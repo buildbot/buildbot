@@ -64,9 +64,33 @@
       </a>
     </td>
     <td class="txt-align-left">
-      
-      <span class="notimpl small-txt">Not implemented</span>
-      
+        <ul class="list">
+            <li>
+                {% if b.current %}
+
+                <h2 class="small-head">
+                    Current job:
+                </h2>
+                <ul>
+                    {% for cb in b.current %}
+                    <li><a href="{{ cb.link }}">{{ cb.num }}</a>
+                        {% if cb.when %}
+                        ETA: {{ cb.when_time }} [{{ cb.when }}]
+                        {% endif %}
+
+                        {{ cb.current_step }}
+
+                        {% if authz.advertiseAction('stopBuild', request) %}
+                        {{ forms.stop_build(cb.stop_url, authz, on_all=False, short=True, label='Build') }}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                None
+                {% endif %}
+            </li>
+        </ul>
     </td>
     <td class="txt-align-left">
       
