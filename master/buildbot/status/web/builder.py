@@ -20,7 +20,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_change, \
+    path_to_build, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource, \
     getRequestCharset
@@ -166,7 +166,11 @@ class ForceBuildActionResource(ActionResource):
                 break
 
         # send the user back to the builder page
-        defer.returnValue((path_to_builder(req, self.builder_status), msg))
+        returnbuilders = args.get("returnbuilders", None)
+        if returnbuilders is None:
+            defer.returnValue((path_to_builder(req, self.builder_status), msg))
+        else:
+            defer.returnValue((path_to_builders(req), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
@@ -360,8 +364,12 @@ class CancelChangeResource(ActionResource):
                         return
                     if not cancel_all:
                         break
-
-        defer.returnValue(path_to_builder(req, self.builder_status))
+        args = req.args.copy()
+        returnbuilders = args.get("returnbuilders", None)
+        if returnbuilders is None:
+            defer.returnValue((path_to_builder(req, self.builder_status)))
+        else:
+            defer.returnValue(path_to_builders(req))
 
 class StopChangeMixin(object):
 

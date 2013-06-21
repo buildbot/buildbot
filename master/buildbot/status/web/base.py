@@ -120,6 +120,9 @@ def path_to_root(request):
     root = "../" * segs
     return root
 
+def path_to_builders(request):
+    return (path_to_root(request) + "builders")
+
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
 
