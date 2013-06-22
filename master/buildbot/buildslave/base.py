@@ -192,9 +192,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             if buildslave is None:
                 return
 
-            self.slave_status.updateInfo(**buildslave['slaveinfo'])
+            self.updateSlaveInfo(**buildslave['slaveinfo'])
 
         return d
+
+    def updateSlaveInfo(self, **kwargs):
+        self.slave_status.updateInfo(**kwargs)
+
+    def getSlaveInfo(self, key, default=None):
+        return self.slave_status.getInfo(key, default)
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
