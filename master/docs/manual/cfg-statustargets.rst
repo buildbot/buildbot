@@ -442,6 +442,9 @@ buildmaster.  However, there are a number of supported activities that can
 be enabled, and Buildbot can also perform rudimentary username/password
 authentication.  The actions are:
 
+``view``
+    view buildbot web status
+
 ``forceBuild``
     force a particular builder to begin building, optionally with a specific revision, branch, etc.
 
