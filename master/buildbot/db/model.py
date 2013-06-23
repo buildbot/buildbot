@@ -371,7 +371,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
             buildset_properties.c.buildsetid)
-    sa.Index('buildslaves_name', buildslaves.c.name)
+    sa.Index('buildslaves_name', buildslaves.c.name, unique=True)
     sa.Index('changes_branch', changes.c.branch)
     sa.Index('changes_revision', changes.c.revision)
     sa.Index('changes_author', changes.c.author)

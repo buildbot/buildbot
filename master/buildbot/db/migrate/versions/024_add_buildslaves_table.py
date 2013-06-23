@@ -28,6 +28,6 @@ def upgrade(migrate_engine):
     )
     buildslaves.create()
 
-    idx = sa.Index('buildslaves_name', buildslaves.c.name)
+    idx = sa.Index('buildslaves_name', buildslaves.c.name, unique=True)
     idx.create()
 

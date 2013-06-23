@@ -40,11 +40,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertEqual(res.fetchall(), [])
 
             # and buildslave name is unique, so we'll get an error here
-            q = buildslaves.insert()
-            self.assertRaises(sa.exc.IntegrityError, lambda :
-                conn.execute(q,
-                    dict(name='bs1'),
-                    dict(name='bs1'),
+            dialect = conn.dialect.name
+            exc = (sa.exc.ProgrammingError if dialect == 'postgresql'
+                   else sa.exc.IntegrityError)
+            self.assertRaises(exc, lambda :
+                    conn.execute(buildslaves.insert(),
+                        dict(name='bs1', info='{}'),
+                        dict(name='bs1', info='{}'),
             ))
 
         return self.do_test_migration(23, 24, setup_thd, verify_thd)

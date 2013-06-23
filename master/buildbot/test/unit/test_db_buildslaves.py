@@ -33,16 +33,16 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
-    # sample buildslave data
+    # sample buildslave data, with id's avoiding the postgres id sequence
 
     BOGUS_NAME = 'bogus'
 
-    BS1_NAME, BS1_ID, BS1_INFO = 'bs1', 1, { 'a': 1 }
+    BS1_NAME, BS1_ID, BS1_INFO = 'bs1', 100, { 'a': 1 }
     buildslave1_rows = [
         fakedb.Buildslave(id=BS1_ID, name=BS1_NAME, info=BS1_INFO),
     ]
 
-    BS2_NAME, BS2_ID, BS2_INFO = 'bs2', 2, { 'a': 1, 'b': 2 }
+    BS2_NAME, BS2_ID, BS2_INFO = 'bs2', 200, { 'a': 1, 'b': 2 }
     buildslave2_rows = [
         fakedb.Buildslave(id=BS2_ID, name=BS2_NAME, info=BS2_INFO),
     ]
@@ -156,11 +156,10 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         RACE_INFO = { 'race': 'yep' }
 
         def race_thd(conn):
-            # note that this assumes that two inserts can happen "at once".
-            # This is the case for DB engines that support transactions, but
-            # not for MySQL.  so this test does not detect the potential MySQL
-            # failure, which will generally result in a spurious failure.
-            conn.execute(self.db.model.buildslaves.insert(),
+            # generate a new connection, since the passed connection will be
+            # rolled back as a result of the conflicting insert
+            newConn = conn.engine.connect()
+            newConn.execute(self.db.model.buildslaves.insert(),
                 name=self.BS1_NAME, 
                 info=RACE_INFO)
 
