@@ -55,8 +55,9 @@ class StubAuth(AuthBase):
     def __init__(self, user):
         self.user = user
 
-    def authenticate(self, user, pw):
-        return user == self.user
+    def authenticate(self, request):
+        return self.user if self.parseUsername(request) == self.user else None
+
 class TestAuthz(unittest.TestCase):
 
     def test_actionAllowed_Defaults(self):

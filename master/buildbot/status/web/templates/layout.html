@@ -41,7 +41,7 @@
     {% if authz.authenticated(request) %}
     {{ authz.getUsernameHTML(request) }}
     |<a href="{{ path_to_root }}logout">Logout</a>
-    {% elif authz.useHttpHeader and authz.httpLoginUrl %}
+    {% elif authz.httpLoginUrl %}
     <a href="{{ authz.httpLoginUrl }}">Login</a>
     {% elif authz.auth %}
     <form method="post" name="login" action="{{ path_to_root }}login">
