@@ -146,7 +146,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         
         @d.addCallback
         def check(res):
-            self.assertIsNotNone(res['slaveid'])
+            self.failIfIdentical(res['slaveid'], None)
             self.assertEqual(res['name'], self.BS2_NAME)
             self.assertEqual(res['slaveinfo'], self.BS2_INFO)
 
@@ -175,7 +175,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         
         @d.addCallback
         def check(res):
-            self.assertIsNotNone(res['slaveid'])
+            self.failIfIdentical(res['slaveid'], None)
             self.assertEqual(res['name'], self.BS1_NAME)
             self.assertEqual(res['slaveinfo'], RACE_INFO) # race wins
 
