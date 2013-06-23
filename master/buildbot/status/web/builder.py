@@ -323,7 +323,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             s['name'] = slave.getName()
             c = s['connected'] = slave.isConnected()
             s['paused'] = slave.isPaused()
-            s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
+            s['admin'] = slave.getAdmin() or u''
             if c:
                 connected_slaves += 1
         cxt['connected_slaves'] = connected_slaves

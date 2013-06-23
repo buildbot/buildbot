@@ -388,6 +388,54 @@ buildsets
         Note that this method does not distinguish a nonexistent buildset from
         a buildset with no properties, and returns ``{}`` in either case.
 
+buildslaves
+~~~~~~~~~~~
+
+.. py:module:: buildbot.db.buildslaves
+
+.. index:: double: BuildSlaves; DB Connector Component
+
+.. py:class:: BuildslavesConnectorComponent
+
+    This class handles Buildbot's notion of buildslaves. The buildslave 
+    information is returned as a dictionary:
+
+    * ``slaveid``
+    * ``name`` (the name of the buildslave)
+    * ``slaveinfo`` (buildslave information as dictionary)
+
+    The 'slaveinfo' dictionary has the following keys:
+
+    * ``admin`` (the admin information)
+    * ``host`` (the name of the host)
+    * ``access_uri`` (the access URI)
+    * ``version`` (the version on the buildslave)
+
+    .. py:method:: getBuildslaves()
+
+        :returns: list of partial information via Deferred
+
+        Get the entire list of buildslaves. Only id and name are returned.
+
+    .. py:method:: getBuildslaveByName(name)
+
+        :param name: the name of the buildslave to retrieve
+        :type name: string
+        :returns: info dictionary or None, via deferred
+
+        Looks up the buildslave with the name, returning the information or
+        ``None`` if no matching buildslave is found.
+
+    .. py:method:: updateBuildslave(name, slaveinfo)
+
+        :param name: the name of the buildslave to update
+        :type name: string
+        :param slaveinfo: the full buildslave dictionary
+        :type slaveinfo: dict
+        :returns: Deferred
+
+        Update information about the given buildslave.
+
 changes
 ~~~~~~~
 

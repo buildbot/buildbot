@@ -17,6 +17,7 @@
 import time, re, string
 import datetime
 import calendar
+import types
 from twisted.python import reflect 
 
 from buildbot.util.misc import deferredLocked, SerializedInvocation
@@ -118,6 +119,11 @@ def none_or_str(x):
     if x is not None and not isinstance(x, str):
         return str(x)
     return x
+
+def ascii2unicode(x):
+    if isinstance(x, (unicode, types.NoneType)):
+        return x
+    return unicode(x, 'ascii')
 
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
