@@ -108,6 +108,7 @@ $(document).ready(function() {
 			 	"sSearch": "Filter"
 			 },
 			"bStateSave": true
-			
+
 		});
+
 });
