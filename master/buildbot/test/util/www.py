@@ -38,7 +38,7 @@ class FakeRequest(object):
         self.input_headers = {}
         self.prepath = []
 
-        x = path.split(b'?', 1)
+        x = path.split('?', 1)
         if len(x) == 1:
             self.path = path
             self.args = {}
@@ -46,7 +46,7 @@ class FakeRequest(object):
             path, argstring = x
             self.path = path
             self.args = cgi.parse_qs(argstring, 1)
-        self.postpath = list(map(urllib.unquote, path[1:].split(b'/')))
+        self.postpath = list(map(urllib.unquote, path[1:].split('/')))
 
         self.deferred = defer.Deferred()
 
