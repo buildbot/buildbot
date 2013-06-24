@@ -323,13 +323,15 @@ example, you need to change::
 
     trunkchanged = SingleBranchScheduler(name = "trunkchanged",
                                          change_filter = filter.ChangeFilter(branch = None),
-    ...
+                                         # ...
+                                         )
 
 to e.g.::
 
     trunkchanged = SingleBranchScheduler(name = "trunkchanged",
                                          change_filter = filter.ChangeFilter(project = "coolproject", branch = None),
-    ...
+                                         # ...
+                                         )
 
 else coolproject will be built when there's a change in superproject.
 

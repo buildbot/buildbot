@@ -374,7 +374,7 @@ LoggingBuildStep
          Subclasses should override :meth:`~buildbot.process.buildstep.BuildStep.start` and, after setting up an appropriate command, call this method. ::
 
             def start(self):
-                cmd = RemoteShellCommand(..)
+                cmd = RemoteShellCommand(...)
                 self.startCommand(cmd, warnings)
 
     To refine the status output, override one or more of the following methods.

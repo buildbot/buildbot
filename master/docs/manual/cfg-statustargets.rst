@@ -102,7 +102,7 @@ If that isn't enough you can also provide additional Jinja2 template loaders::
         ]
 
     c['status'].append(html.WebStatus(
-        …,
+        # ...
         jinja_loaders = myloaders,
     ))
 
@@ -724,7 +724,7 @@ GitHub hook
 
 The GitHub hook is simple and takes no options. ::
 
-    c['status'].append(html.WebStatus(..
+    c['status'].append(html.WebStatus(...,
                        change_hook_dialects={ 'github' : True }))
 
 With this set up, add a Post-Receive URL for the project in the GitHub
@@ -746,7 +746,7 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
 
-    c['status'].append(html.WebStatus(..
+    c['status'].append(html.WebStatus(...,
                                       change_hook_auth=('user', 'password')))
 
 Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
@@ -758,7 +758,7 @@ BitBucket hook
 
 The BitBucket hook is as simple as GitHub one and it also takes no options. ::
 
-    c['status'].append(html.WebStatus(..
+    c['status'].append(html.WebStatus(...,
                        change_hook_dialects={ 'bitbucket' : True }))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket``
@@ -780,7 +780,7 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
 
-  c['status'].append(html.WebStatus(..
+  c['status'].append(html.WebStatus(...,
                                     change_hook_auth=('user', 'password')))
 
 Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
@@ -795,7 +795,7 @@ for the "Post-Commit Authentication Key" used to check if the request is
 legitimate::
 
     c['status'].append(html.WebStatus(
-        …,
+        # ...
         change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
     ))
 
@@ -831,7 +831,7 @@ Suppose you have a poller configured like this::
 And you configure your WebStatus to enable this hook::
 
     c['status'].append(html.WebStatus(
-        …,
+        # ...
         change_hook_dialects={'poller': True}
     ))
 
@@ -847,7 +847,7 @@ You can restrict which pollers the webhook has access to using the ``allowed``
 option::
 
     c['status'].append(html.WebStatus(
-        …,
+        # ...
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
 
@@ -1586,12 +1586,12 @@ GitHubStatus
 
     from buildbot.status.github import GitHubStatus
 
-    repoOwner = Interpolate("%(prop:github_repo_owner)s"
-    repoName = Interpolate("%(prop:github_repo_name)s"
+    repoOwner = Interpolate("%(prop:github_repo_owner)s")
+    repoName = Interpolate("%(prop:github_repo_name)s")
     sha = Interpolate("%(src::revision)s")
     gs = GitHubStatus(token='githubAPIToken',
                       repoOwner=repoOwner,
-                      repoName=repoName)
+                      repoName=repoName,
                       sha=sha,
                       startDescription='Build started.',
                       endDescription='Build done.',

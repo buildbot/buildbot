@@ -244,7 +244,7 @@ Example ::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Interpolate
-   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s')
+   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s'),
                                     'dist' ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
@@ -277,7 +277,7 @@ The function receives an :class:`~buildbot.interfaces.IProperties` object, which
             command += [ '-j', '2' ]
         command += [ 'all' ]
         return command
-   f.addStep(ShellCommand(command=makeCommand))
+    f.addStep(ShellCommand(command=makeCommand))
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
@@ -291,7 +291,7 @@ FlattenList
 If nested list should be flatten for some renderables, FlattenList could be used.
 For example::
 
-   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]]))
+   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]])))
 
 ``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
 This is useful when a list-returning property is used in renderables.
@@ -378,7 +378,7 @@ For example::
 
     class DetermineFoo(object):
         implements(IRenderable)
-        def getRenderingFor(self, props)
+        def getRenderingFor(self, props):
             if props.hasProperty('bar'):
                 return props['bar']
             elif props.hasProperty('baz'):
@@ -390,7 +390,7 @@ or, more practically, ::
 
     class Now(object):
         implements(IRenderable)
-        def getRenderingFor(self, props)
+        def getRenderingFor(self, props):
             return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=Now())])
 
