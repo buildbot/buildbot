@@ -84,13 +84,19 @@ class Www(db.RealDatabaseMixin, unittest.TestCase):
 
         self.master = master
 
-        # build an HTTP agent
-        self.pool = client.HTTPConnectionPool(reactor)
-        self.agent = client.Agent(reactor, pool=self.pool)
+        # build an HTTP agent, using an explicit connection pool if Twisted
+        # supports it (Twisted 13.0.0 and up)
+        if hasattr(client, 'HTTPConnectionPool'):
+            self.pool = client.HTTPConnectionPool(reactor)
+            self.agent = client.Agent(reactor, pool=self.pool)
+        else:
+            self.pool = None
+            self.agent = client.Agent(reactor)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.pool.closeCachedConnections()
+        if self.pool:
+            yield self.pool.closeCachedConnections()
         if self.master:
             yield self.master.www.stopService()
 
