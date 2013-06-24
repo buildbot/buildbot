@@ -18,7 +18,6 @@ import types
 import time, re, string
 import datetime
 import calendar
-import types
 from twisted.python import reflect 
 
 from buildbot.util.misc import deferredLocked, SerializedInvocation
