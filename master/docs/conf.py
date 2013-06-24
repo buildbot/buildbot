@@ -233,3 +233,52 @@ man_pages = [
     ('index', 'buildbot', u'BuildBot Documentation',
      [u'Brian Warner'], 1)
 ]
+
+
+# Monkey-patch Sphinx to treat unhiglighted code as error.
+from sphinx.errors import SphinxWarning
+import sphinx.highlighting
+
+# This simple monkey-patch allows either fail on first unhighlighted block or
+# print all unhighlighted blocks and don't fail at all.
+# First behaviour is useful for testing that all code is highlighted, second ---
+# for fixing lots of unhighlighted code.
+fail_on_first_unhighlighted = True
+
+orig_unhiglighted = sphinx.highlighting.PygmentsBridge.unhighlighted
+
+def patched_unhighlighted(self, source):
+    indented_source = '    ' + '\n    '.join(source.split('\n'))
+
+    if fail_on_first_unhighlighted:
+        msg = textwrap.dedent(u"""\
+            Block not highlighted:
+
+            %s
+
+            If it should be unhighlighted, please specify explicitly language of
+            this block as "none":
+
+            .. code-block:: none
+
+                ...
+
+            If this block is Python example, then it probably contains syntax
+            errors, such as unmatched brackets or invalid indentation.
+
+            Note that in most places you can use "..." in Python code as valid
+            anonymous expression.
+            """) % indented_source
+        raise SphinxWarning(msg)
+    else:
+        msg = textwrap.dedent(u"""\
+            Unhighlighted block:
+
+            %s
+
+            """) % indented_source
+        sys.stderr.write(msg.encode('ascii', 'ignore'))
+
+        return orig_unhiglighted(self, source)
+
+sphinx.highlighting.PygmentsBridge.unhighlighted = patched_unhighlighted
