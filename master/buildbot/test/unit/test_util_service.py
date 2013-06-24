@@ -112,7 +112,7 @@ class ClusteredService(unittest.TestCase):
 
     def test_create_HasNoServiceIdYet(self):
         # has no service id at first
-        self.assertIsNone(self.svc.serviceid)
+        self.assertIdentical(self.svc.serviceid, None)
 
     def test_start_UnclaimableSoNotActiveYet(self):
         self.svc.startService()
