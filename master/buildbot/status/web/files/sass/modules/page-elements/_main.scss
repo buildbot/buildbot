@@ -8,7 +8,7 @@
 .success {
 	background-color: #DDE6D6;
 }
-
+ 
 .table-1 .success {
 	border-top:1px solid #fff;
 }
@@ -225,10 +225,6 @@
 	}
 }
 
-.more-info.before:before {
-	content:"▼";	
-}
-
 
 .select-tools {
 	font-size: 12px;
@@ -438,6 +434,10 @@ div.force-text {
 	line-height: 19px;
 }
 
+.mod-1.more-info:after {
+	margin-left:5px;
+}
+
 .more-info:after {
 	@include background-image (linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
     border: 1px solid #C4C4C4;
@@ -474,7 +474,7 @@ div.force-text {
 	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;
-    padding: 23px 32px 23px 20px;
+    padding: 23px 20px 23px 20px;
     text-align: left;
     min-width:280px;
     max-height:690px;
@@ -518,10 +518,67 @@ div.force-text {
 	margin:0;
 	padding:0;
 	list-style:none;
-	li {
+	> ul {
+		margin:0;
+		padding:0;
+		list-style:none;
+	}
+	> li {
 		margin:0 0 10px 0;
 		padding:0;
 		list-style:none;
+	}
+}
+
+.pending-job-list { 
+	list-style:none;
+    margin: 0;
+    padding: 0;
+    background-color:#F4F4F4;
+    border: 1px solid #D9D9D9;
+    padding: 11px;
+    @include border-radius (7px);
+    .more-info-box & {
+		background-color: #FFF;
+	    padding: 21px;
+	    width: 345px;
+    	li {
+    		padding: 15px 0;
+    		border-top:1px solid #e5e5e5;
+    	}
+    }
+    li {
+		width: 100%;
+		display:table;
+		padding: 4px 0;
+    	@include pie-clearfix;
+    	input {
+			vertical-align: text-top;
+    	}
+    	form {
+    		display:table-cell;
+    		vertical-align: middle;    	
+    		text-align: right;
+    	}
+    	&:first-child {
+    	 	border-top:none;
+    	 	padding-top:0;
+    	}
+    	&:last-child {
+    		padding-bottom:0;
+    	}
+	
+    }
+}
+
+.curent-job-list {
+	margin:0;
+	padding:0;
+	list-style:none;
+	li {
+		margin:0 0 10px 0;
+		padding:0;
+		list-style:none;	
 	}
 }
 
@@ -530,7 +587,7 @@ div.force-text {
 	padding:0;
 	margin:0;
 	display:inline-block;
-		li {
+	li {
 		list-style:none;
 		padding:0;
 		margin:0;
@@ -540,6 +597,13 @@ div.force-text {
 		float: left;
 		margin:0 15px 0 0;
 	}
+}
+
+.txt-cont {
+	padding-right:10px;	
+	display:table-cell;
+	margin-bottom:0;
+	vertical-align: middle;
 }
 
 .rebuild,
@@ -576,7 +640,8 @@ div.force-text {
 }
 
 .small-head {
-	display:inline;
+	display:inline-block;
+	margin-bottom:5px;
 }
 
 .head-2 {

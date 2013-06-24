@@ -64,14 +64,13 @@
       </a>
     </td>
     <td class="txt-align-left">
-        <ul class="list">
-            <li>
+        
                 {% if b.current %}
 
                 <h2 class="small-head">
-                    Current job:
+                    Current job
                 </h2>
-                <ul>
+                <ul class="list">
                     {% for cb in b.current %}
                     <li><a href="{{ cb.link }}">{{ cb.num }}</a>
                         {% if cb.when %}
@@ -86,46 +85,65 @@
                     </li>
                     {% endfor %}
                 </ul>
-                {% else %}
-                None
                 {% endif %}
-            </li>
-            <li>
                 {% if b.pending %}
+                
+                 <a class="more-info popup-btn-js mod-1" href="#">
+                  Pending jobs
+                </a>
+                 <div class="more-info-box">
+                  <span class="close-btn">
+                  </span>
+                  <h3>Pending Build Requests</h3>
+                  <ul class="pending-job-list">
 
-                <h2 class="small-head">
-                    Pending Build Requests:
-                </h2>
-                <ul>
-                    {% for cb in b.pending %}
-                    <li><small>({{ cb.when }}, waiting {{ cb.delay }})</small>
-
+                    {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                      <li>
+                        <p class="txt-cont">
+                            Cancel all builds
+                        </p>
                         {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                        {{ forms.cancel_pending_build(b.link +"/cancelbuild?returnbuilders=true", authz, short=True, id=cb.id) }}
+                          {{ forms.cancel_pending_build(b.link+"/cancelbuild?returnbuilders=true", authz, short=False, id='all') }}
                         {% endif %}
+                      </li>
+                    {% endif %}
+
+                    {% for cb in b.pending %}
+                    <li>
+                      <p class="txt-cont">
+                        {{ cb.when }}, waiting {{ cb.delay }}
 
                         {% if cb.num_changes < 4 %}
                         {% for c in cb.changes %}{{ c.revision|shortrev(c.repo) }}
-                        (<a href="{{ c.url }}">{{ c.who|email }}</a>){% if not loop.last %},{% endif %}
+                        <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
                         {% endfor %}
                         {% else %}
                         ({{ cb.num_changes }} changes)
                         {% endif %}
-
+                        <br>
                         {% if 'owner' in cb.properties %}
-                        <b>Forced build</b>
+                        Forced build
                         by {{cb.properties['owner'][0]}}
-                        <small>{{cb.properties['reason'][0]}}</small>
+                        {{cb.properties['reason'][0]}}
                         {% endif %}
+                       </p>
+                      {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                        {{ forms.cancel_pending_build(b.link +"/cancelbuild?returnbuilders=true", authz, short=True, id=cb.id) }}
+                        {% endif %}
+
                     </li>
                     {% endfor %}
                     </ul>
-                 {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                    {{ forms.cancel_pending_build(b.link+"/cancelbuild?returnbuilders=true", authz, short=False, id='all') }}
-                {% endif %}
+               </div>
+
             {% endif %}
-        </li>
-        </ul>
+            {% if not b.pending and not b.current %}
+                <span class="small-txt">
+                  No jobs
+                </span>
+            {% endif %}
+          
+        
     </td>
     <td class="txt-align-left">
       

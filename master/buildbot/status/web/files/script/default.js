@@ -106,6 +106,8 @@ $(document).ready(function() {
 			"aaSorting": [],
 			"oLanguage": {
 			 	"sSearch": "Filter"
-			 }
+			 },
+			"bStateSave": true
+			
 		});
 });

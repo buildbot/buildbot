@@ -58,9 +58,10 @@
   <h2 class="small-head">
     Current job
   </h2>
-  <ul>
+  <ul class="pending-job-list">
   {% for b in current %}
-    <li><a href="{{ b.link }}">{{ b.num }}</a>
+    <li>
+      <a href="{{ b.link }}">{{ b.num }}</a>
     {% if b.when %}
       ETA: {{ b.when_time }} [{{ b.when }}]
     {% endif %}
@@ -84,37 +85,44 @@
 {% if pending %}
 
   <h2 class="small-head">
-    Pending Build Requests:
+    Pending Build Requests
   </h2>
-  <ul>
+  <ul class="pending-job-list">
+    <li>
+      <p class="txt-cont">
+        Cancel all builds
+      </p>
+      {% if authz.advertiseAction('cancelPendingBuild', request) %}
+        {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=False, id='all') }}
+      {% endif %}    
+    </li>
   {% for b in pending %}
-    <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
-    
-    {% if authz.advertiseAction('cancelPendingBuild', request) %}
-      {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
-    {% endif %}    
-     
-    {% if b.num_changes < 4 %}
-        {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
-        (<a href="{{ c.url }}">{{ c.who|email }}</a>){% if not loop.last %},{% endif %}
-        {% endfor %}
-    {% else %}
-        ({{ b.num_changes }} changes)
-    {% endif %}    
 
+    <li>
+    <p class="txt-cont">
+      {{ b.when }}, waiting {{ b.delay }}
+     
+      {% if b.num_changes < 4 %}
+          {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
+          <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
+          {% endfor %}
+      {% else %}
+          {{ b.num_changes }} changes
+      {% endif %}    
+      <br>
       {% if 'owner' in b.properties %}
         <b>Forced build</b>
         by {{b.properties['owner'][0]}}
-        <small>{{b.properties['reason'][0]}}</small>
+       {{b.properties['reason'][0]}}
       {% endif %}
+    </p>
+    {% if authz.advertiseAction('cancelPendingBuild', request) %}
+      {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
+    {% endif %}    
     </li>
   {% endfor %}
   </li>
   </ul>  
-  
-  {% if authz.advertiseAction('cancelPendingBuild', request) %}
-    {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=False, id='all') }}
-  {% endif %}    
      
 {% else %}
   <h2 class="small-head">
