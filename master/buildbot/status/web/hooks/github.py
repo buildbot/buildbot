@@ -26,7 +26,7 @@ except ImportError:
 
 def getChanges(request, options=None):
     """
-    Reponds only to POST events and starts the build process
+    Responds only to POST events and starts the build process
 
     :arguments:
         request
