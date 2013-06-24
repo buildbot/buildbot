@@ -71,9 +71,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             ch_tbl = self.db.model.changes
 
             wc = (sch_ch_tbl.c.schedulerid == schedulerid)
-                        
+
             # may need to filter further based on branch, etc
-            extra_wheres = [] 
+            extra_wheres = []
             if branch != -1:
                 extra_wheres.append(ch_tbl.c.branch == branch)
             if repository != -1:

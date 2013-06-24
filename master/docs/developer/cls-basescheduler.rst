@@ -12,7 +12,7 @@ BaseScheduler
 
         :param name: (positional) the scheduler name
         :param builderName: (positional) a list of builders, by name, for which this scheduler can queue builds
-        :param properties: a dictionary of properties to be adqed to queued builds
+        :param properties: a dictionary of properties to be added to queued builds
         :param codebases: the codebase configuration for this scheduler (see user documentation)
 
         Initializes a new scheduler.

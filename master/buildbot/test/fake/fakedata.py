@@ -112,8 +112,9 @@ class FakeUpdates(object):
         self.testcase.assertIsInstance(scheduler, unicode)
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
-            if not isinstance(ss, int) or isinstance(ss, dict):
-                self.fail("%s is not an integer or a dictionary")
+            if not isinstance(ss, int) and not isinstance(ss, dict):
+                self.testcase.fail("%s (%s) is not an integer or a dictionary"
+                                        % (ss, type(ss)))
         del ss # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)

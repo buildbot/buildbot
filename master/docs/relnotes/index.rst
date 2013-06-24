@@ -102,6 +102,17 @@ Features
 * The web UI now shows sourcestamp information for builders that use multiple codebases (instead of the generic
   "multiple rev" placeholder that was shown before).
 
+* Added zsh and bash tab-completions support for 'buildbot' command.
+
+* An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
+
+* A new argument ``createAbsoluteSourceStamps`` has been added to ``SingleBranchScheduler`` for use with multiple codebases.
+
+* The WebStatus :ref:`Authorization` support now includes a ``view`` action which can be used to restrict read-only access to the Buildbot instance.
+
+* Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
+  the slave is not connected.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -113,6 +124,8 @@ Slave
 
 Features
 ~~~~~~~~
+
+* Added zsh and bash tab-completions support for 'buildslave' command.
 
 Fixes
 ~~~~~

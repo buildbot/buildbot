@@ -317,6 +317,19 @@ class BuildsetProperty(Row):
     required_columns = ( 'buildsetid', )
 
 
+class Buildslave(Row):
+    table = "buildslaves"
+
+    defaults = dict(
+        id = None,
+        name = 'slave1',
+        info = None,
+    )
+
+    id_column = 'id'
+    required_columns = ('name', )
+
+
 class BuildsetSourceStamp(Row):
     table = "buildset_sourcestamps"
 
@@ -761,25 +774,25 @@ class FakeSchedulersComponent(FakeDBComponent):
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
-            
+
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
-            
+
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['project'] == project )
-            
+
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
                     if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
-            
+
         return defer.succeed(classifications)
 
     def findSchedulerId(self, name):
@@ -1129,6 +1142,43 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
 
+class FakeBuildslavesComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.buildslaves = []
+        self.id_num = 0
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Buildslave):
+                self.buildslaves.append({
+                    'name': row.name,
+                    'slaveid':   row.id,
+                    'slaveinfo': row.info
+                })
+
+    def getBuildslaves(self):
+        return defer.succeed([ ])
+
+    def getBuildslaveByName(self, name):
+        return defer.succeed(self._getBuildslaveByName(name))
+
+    def _getBuildslaveByName(self, name):
+        for slave in self.buildslaves:
+            if slave['name']==name:
+                return slave
+        return None
+
+    def updateBuildslave(self, name, slaveinfo):
+        slave = self._getBuildslaveByName(name)
+        if slave is None:
+            self.insertTestData([
+                Buildslave(name=name, info=slaveinfo)
+            ])
+        else:
+            slave['slaveinfo'] = slaveinfo
+        return defer.succeed(None)
+
 class FakeStateComponent(FakeDBComponent):
 
     def setUp(self):
@@ -1295,8 +1345,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             except KeyError:
                 print "trying to unclaim brid %d, but it's not claimed" % brid
                 return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))                
-            
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+
         return defer.succeed(None)
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
@@ -1882,6 +1932,8 @@ class FakeDBConnector(object):
         self.sourcestamps = comp = FakeSourceStampsComponent(self, testcase)
         self._components.append(comp)
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
+        self._components.append(comp)
+        self.buildslaves = comp = FakeBuildslavesComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)

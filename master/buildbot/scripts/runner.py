@@ -24,14 +24,15 @@ from __future__ import with_statement
 from twisted.python import usage, reflect
 import re
 import sys
-
 from buildbot.scripts import base
+
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
 # fact, they are interchanged several times.  Caveat legator.
 
-def validate_master_option(master):
-    """Validate master (-m, --master) command line option.
+def validateMasterOption(master):
+    """
+    Validate master (-m, --master) command line option.
 
     Checks that option is a string of the 'hostname:port' form, otherwise
     raises an UsageError exception.
@@ -110,6 +111,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
@@ -148,7 +150,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int "+
+            raise usage.UsageError("log-count parameter needs to be an int " +
                                    " or None")
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -157,6 +159,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
         ["quiet", "q", "Do not emit the commands being run"],
         ["clean", "c", "Clean shutdown master"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
 
@@ -168,6 +171,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ["clean", "c", "Clean shutdown master"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
 
@@ -178,6 +182,7 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
 
@@ -187,6 +192,7 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
+
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
 
@@ -199,10 +205,10 @@ class DebugClientOptions(base.SubcommandOptions):
         ["passwd", "p", None, "Debug password to use"],
         ]
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'debugMaster', 'master' ],
+        ['master', 'master'],
+        ['debugMaster', 'master'],
         ]
-    requiredOptions = [ 'master', 'passwd' ]
+    requiredOptions = ['master', 'passwd']
 
     def getSynopsis(self):
         return "Usage:    buildbot debugclient [options]"
@@ -217,7 +223,7 @@ class DebugClientOptions(base.SubcommandOptions):
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
 
 class BaseStatusClientOptions(base.SubcommandOptions):
@@ -227,14 +233,15 @@ class BaseStatusClientOptions(base.SubcommandOptions):
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's status port (host:port)"],
-        ["username", "u", "statusClient", "Username performing the trial build"],
+        ["username", "u", "statusClient",
+         "Username performing the trial build"],
         ["passwd", 'p', "clientpw", "password for PB authentication"],
         ]
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'masterstatus', 'master' ],
+        ['master', 'master'],
+        ['masterstatus', 'master'],
     ]
-    requiredOptions = [ 'master' ]
+    requiredOptions = ['master']
 
     def parseArgs(self, *args):
         if len(args) > 0:
@@ -244,24 +251,26 @@ class BaseStatusClientOptions(base.SubcommandOptions):
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
-        validate_master_option(self.get('master'))
-
+        validateMasterOption(self.get('master'))
 
 
 class StatusLogOptions(BaseStatusClientOptions):
     subcommandFunction = "buildbot.scripts.statuslog.statuslog"
+
     def getSynopsis(self):
         return "Usage:    buildbot statuslog [options]"
 
 
 class StatusGuiOptions(BaseStatusClientOptions):
     subcommandFunction = "buildbot.scripts.statusgui.statusgui"
+
     def getSynopsis(self):
         return "Usage:    buildbot statusgui [options]"
 
 
 class SendChangeOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.sendchange.sendchange"
+
     def __init__(self):
         base.SubcommandOptions.__init__(self)
         self['properties'] = {}
@@ -295,14 +304,14 @@ class SendChangeOptions(base.SubcommandOptions):
         ]
 
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'who', 'who' ],
-        [ 'branch', 'branch' ],
-        [ 'category', 'category' ],
-        [ 'vc', 'vc' ],
+        ['master', 'master'],
+        ['who', 'who'],
+        ['branch', 'branch'],
+        ['category', 'category'],
+        ['vc', 'vc'],
     ]
 
-    requiredOptions = [ 'who', 'master' ]
+    requiredOptions = ['who', 'master']
 
     def getSynopsis(self):
         return "Usage:    buildbot sendchange [options] filenames.."
@@ -311,14 +320,14 @@ class SendChangeOptions(base.SubcommandOptions):
         self['files'] = args
 
     def opt_property(self, property):
-        name,value = property.split(':', 1)
+        name, value = property.split(':', 1)
         self['properties'][name] = value
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
 
         if self.get("revision_file"):
-            with open(self["revision_file"],"r") as f:
+            with open(self["revision_file"], "r") as f:
                 self['revision'] = f.read()
 
         if self.get('when'):
@@ -351,7 +360,8 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('vc') and self.get('vc') not in vcs:
             raise usage.UsageError("vc must be one of %s" % (', '.join(vcs)))
 
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
+
 
 class TryOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.trycmd.trycmd"
@@ -429,28 +439,28 @@ class TryOptions(base.SubcommandOptions):
 
     # Mapping of .buildbot/options names to command-line options
     buildbotOptions = [
-        [ 'try_connect', 'connect' ],
+        ['try_connect', 'connect'],
         #[ 'try_builders', 'builders' ], <-- handled in postOptions
-        [ 'try_vc', 'vc' ],
-        [ 'try_branch', 'branch' ],
-        [ 'try_repository', 'repository' ],
-        [ 'try_topdir', 'topdir' ],
-        [ 'try_topfile', 'topfile' ],
-        [ 'try_host', 'host' ],
-        [ 'try_username', 'username' ],
-        [ 'try_jobdir', 'jobdir' ],
-        [ 'try_buildbotbin', 'buildbotbin' ],
-        [ 'try_passwd', 'passwd' ],
-        [ 'try_master', 'master' ],
-        [ 'try_who', 'who' ],
-        [ 'try_comment', 'comment' ],
+        ['try_vc', 'vc'],
+        ['try_branch', 'branch'],
+        ['try_repository', 'repository'],
+        ['try_topdir', 'topdir'],
+        ['try_topfile', 'topfile'],
+        ['try_host', 'host'],
+        ['try_username', 'username'],
+        ['try_jobdir', 'jobdir'],
+        ['try_buildbotbin', 'buildbotbin'],
+        ['try_passwd', 'passwd'],
+        ['try_master', 'master'],
+        ['try_who', 'who'],
+        ['try_comment', 'comment'],
         #[ 'try_wait', 'wait' ], <-- handled in postOptions
         #[ 'try_quiet', 'quiet' ], <-- handled in postOptions
 
         # Deprecated command mappings from the quirky old days:
-        [ 'try_masterstatus', 'master' ],
-        [ 'try_dir', 'jobdir' ],
-        [ 'try_password', 'passwd' ],
+        ['try_masterstatus', 'master'],
+        ['try_dir', 'jobdir'],
+        ['try_password', 'passwd'],
     ]
 
     def __init__(self):
@@ -462,9 +472,10 @@ class TryOptions(base.SubcommandOptions):
         self['builders'].append(option)
 
     def opt_properties(self, option):
-        # We need to split the value of this option into a dictionary of properties
+        # We need to split the value of this option
+        # into a dictionary of properties
         propertylist = option.split(",")
-        for i in range(0,len(propertylist)):
+        for i in range(0, len(propertylist)):
             splitproperty = propertylist[i].split("=", 1)
             self['properties'][splitproperty[0]] = splitproperty[1]
 
@@ -494,9 +505,9 @@ class TryOptions(base.SubcommandOptions):
 
         if self['connect'] == 'pb':
             if not self['master']:
-                raise usage.UsageError("master location must be specified" \
+                raise usage.UsageError("master location must be specified"
                                        "for 'pb' connections")
-            validate_master_option(self['master'])
+            validateMasterOption(self['master'])
 
 
 class TryServerOptions(base.SubcommandOptions):
@@ -504,7 +515,7 @@ class TryServerOptions(base.SubcommandOptions):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
-    requiredOptions = [ 'jobdir' ]
+    requiredOptions = ['jobdir']
 
     def getSynopsis(self):
         return "Usage:    buildbot tryserver [options]"
@@ -519,6 +530,12 @@ class CheckConfigOptions(base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display error messages or tracebacks"],
     ]
+
+    # on tab completion, suggest files as first argument
+    if hasattr(usage, 'Completions'):
+        # only set completion suggestion if running with
+        # twisted version (>=11.1.0) that supports it
+        compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
     def getSynopsis(self):
         return "Usage:		buildbot checkconfig [configFile]\n" + \
@@ -557,12 +574,12 @@ class UserOptions(base.SubcommandOptions):
          "Note that 'update' requires --info=id:type=value..."]
     ]
     buildbotOptions = [
-        [ 'master', 'master' ],
-        [ 'user_master', 'master' ],
-        [ 'user_username', 'username' ],
-        [ 'user_passwd', 'passwd' ],
+        ['master', 'master'],
+        ['user_master', 'master'],
+        ['user_username', 'username'],
+        ['user_passwd', 'passwd'],
         ]
-    requiredOptions = [ 'master' ]
+    requiredOptions = ['master']
 
     longdesc = """
     Currently implemented types for --info= are:\n
@@ -616,7 +633,7 @@ class UserOptions(base.SubcommandOptions):
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
 
-        validate_master_option(self.get('master'))
+        validateMasterOption(self.get('master'))
 
         op = self.get('op')
         if not op:

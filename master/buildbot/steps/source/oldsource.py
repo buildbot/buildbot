@@ -172,11 +172,6 @@ class BK(SlaveSource):
         self.extra_args = extra_args
 
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(bkurl=bkurl,
-                                 baseURL=baseURL,
-                                 directory=directory,
-                                 extra_args=extra_args,
-                                 )
 
         if bkurl and baseURL:
             raise ValueError("you must use exactly one of bkurl and baseURL")

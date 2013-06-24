@@ -37,7 +37,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         self.tearDownDirs()
 
     # tests
-    
+
     @defer.inlineCallbacks
     def test_start_stop_repeatedly(self):
         self.svc = maildir.MaildirService(self.maildir)
@@ -46,7 +46,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         self.svc.startService()
         yield self.svc.stopService()
         self.assertEqual(len(list(self.svc)), 0)
-      
+
 
     def test_messageReceived(self):
         self.svc = maildir.MaildirService(self.maildir)

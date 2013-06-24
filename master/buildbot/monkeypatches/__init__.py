@@ -67,15 +67,7 @@ def patch_gatherResults():
         from buildbot.monkeypatches import gatherResults
         gatherResults.patch()
 
-
 def patch_all(for_tests=False):
-    patch_bug4881()
-    patch_bug4520()
-    patch_bug5079()
-    patch_sqlalchemy2364()
-    patch_sqlalchemy2189()
-    patch_gatherResults()
-
     if for_tests:
         from buildbot.monkeypatches import servicechecks
         servicechecks.patch_servicechecks()
@@ -85,3 +77,10 @@ def patch_all(for_tests=False):
         decorators.patch()
         from buildbot.monkeypatches import testcase_synctest
         testcase_synctest.patch_testcase_synctest()
+
+    patch_bug4881()
+    patch_bug4520()
+    patch_bug5079()
+    patch_sqlalchemy2364()
+    patch_sqlalchemy2189()
+    patch_gatherResults()

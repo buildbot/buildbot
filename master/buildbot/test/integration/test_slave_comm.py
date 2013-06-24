@@ -109,7 +109,7 @@ class TestSlaveComm(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self, wantMq=True,
-                                             wantData=True)
+                                             wantData=True, wantDb=True)
 
         # set the slave port to a loopback address with unspecified
         # port

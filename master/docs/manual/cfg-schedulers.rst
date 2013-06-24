@@ -277,6 +277,12 @@ The arguments to this scheduler are:
     .. note:: ``None`` is a keyword, not a string, so write ``None``
        and not ``"None"``.
 
+``createAbsoluteSourceStamps``
+    This option only has effect when using multiple codebases. When ``True``, it
+    uses the last seen revision for each codebase that does not have a change.
+    When ``False``, the default value, codebases without changes will use the
+    revision from the ``codebases`` argument.
+
 
 Example::
 
@@ -1100,10 +1106,10 @@ ChoiceStringParameter
 This parameter type lets the user choose between several choices (e.g the list
 of branches you are supporting, or the test campaign to run).  If ``multiple``
 is false, then its result is a string - one of the choices.  If ``multiple`` is
-true, then the result is a list of strings from the choices.  
+true, then the result is a list of strings from the choices.
 
-Note that for some use cases, the choices need to be generated dynamically. This can 
-be done via subclassing and overiding the 'getChoices' member function. An example 
+Note that for some use cases, the choices need to be generated dynamically. This can
+be done via subclassing and overiding the 'getChoices' member function. An example
 of this is provided by the source for the :py:class:`InheritBuildParameter` class.
 
 Its arguments, in addition to the common options, are:

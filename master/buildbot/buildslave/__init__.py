@@ -172,6 +172,39 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             return # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
+    def _applySlaveInfo(self, info):
+        if not info:
+            return
+
+        self.slave_status.setAdmin(info.get("admin"))
+        self.slave_status.setHost(info.get("host"))
+        self.slave_status.setAccessURI(info.get("access_uri"))
+        self.slave_status.setVersion(info.get("version"))
+
+    def _saveSlaveInfoDict(self):
+        slaveinfo = {
+            'admin': self.slave_status.getAdmin(),
+            'host': self.slave_status.getHost(),
+            'access_uri': self.slave_status.getAccessURI(),
+            'version': self.slave_status.getVersion(),
+        }
+        return self.master.db.buildslaves.updateBuildslave(
+            name=self.slavename,
+            slaveinfo=slaveinfo,
+        )
+
+    def _getSlaveInfo(self):
+        d = self.master.db.buildslaves.getBuildslaveByName(self.slavename)
+
+        @d.addCallback
+        def applyInfo(buildslave):
+            if buildslave is None:
+                return
+
+            self._applySlaveInfo(buildslave.get('slaveinfo'))
+
+        return d
+
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
         self.botmaster = parent
@@ -181,7 +214,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
-        return service.MultiService.startService(self)
+        d = self._getSlaveInfo()
+        d.addCallback(lambda _: service.MultiService.startService(self))
+        return d
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -372,12 +407,14 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
 
         d = defer.succeed(None)
+
+        @d.addCallback
         def _log_attachment_on_slave(res):
             d1 = bot.callRemote("print", "attached")
             d1.addErrback(lambda why: None)
             return d1
-        d.addCallback(_log_attachment_on_slave)
 
+        @d.addCallback
         def _get_info(res):
             d1 = bot.callRemote("getSlaveInfo")
             def _got_info(info):
@@ -396,10 +433,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 log.err(why)
             d1.addCallbacks(_got_info, _info_unavailable)
             return d1
-        d.addCallback(_get_info)
-        self.startKeepaliveTimer()
 
-        def _get_version(res):
+        d.addCallback(lambda _: self.startKeepaliveTimer())
+
+        @d.addCallback
+        def _get_version(_):
             d = bot.callRemote("getVersion")
             def _got_version(version):
                 state["version"] = version
@@ -409,9 +447,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 state["version"] = '(unknown)'
             d.addCallbacks(_got_version, _version_unavailable)
             return d
-        d.addCallback(_get_version)
 
-        def _get_commands(res):
+        @d.addCallback
+        def _get_commands(_):
             d1 = bot.callRemote("getCommands")
             def _got_commands(commands):
                 state["slave_commands"] = commands
@@ -423,14 +461,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 log.err(why)
             d1.addCallbacks(_got_commands, _commands_unavailable)
             return d1
-        d.addCallback(_get_commands)
 
+        @d.addCallback
         def _accept_slave(res):
-            self.slave_status.setAdmin(state.get("admin"))
-            self.slave_status.setHost(state.get("host"))
-            self.slave_status.setAccessURI(state.get("access_uri"))
-            self.slave_status.setVersion(state.get("version"))
             self.slave_status.setConnected(True)
+
+            self._applySlaveInfo(state)
+            
             self.slave_commands = state.get("slave_commands")
             self.slave_environ = state.get("slave_environ")
             self.slave_basedir = state.get("slave_basedir")
@@ -447,8 +484,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.stopMissingTimer()
             self.master.status.slaveConnected(self.slavename)
 
-            return self.updateSlave()
-        d.addCallback(_accept_slave)
+        d.addCallback(lambda _: self._saveSlaveInfoDict())
+        
+        d.addCallback(lambda _: self.updateSlave())
+
         d.addCallback(lambda _:
                 self.botmaster.maybeStartBuildsForSlave(self.slavename))
 
@@ -974,7 +1013,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def disconnect(self):
         # This returns a Deferred but we don't use it
-        self._soft_disconnect() 
+        self._soft_disconnect()
         # this removes the slave from all builders.  It won't come back
         # without a restart (or maybe a sighup)
         self.botmaster.slaveLost(self)

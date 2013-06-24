@@ -23,7 +23,8 @@ class Authz(object):
 
     knownActions = [
     # If you add a new action here, be sure to also update the documentation
-    # at docs/cfg-statustargets.texinfo
+    # at docs/manual/cfg-statustargets.rst.
+            'view',
             'gracefulShutdown',
             'forceBuild',
             'forceAllBuilds',

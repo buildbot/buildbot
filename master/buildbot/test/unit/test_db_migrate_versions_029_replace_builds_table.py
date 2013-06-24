@@ -30,16 +30,33 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            sa.Table('builds', metadata,
+            buildrequests = sa.Table('buildrequests', metadata,
                 sa.Column('id', sa.Integer,  primary_key=True),
-            ).create()
+            )
+            buildrequests.create()
+
+            builders = sa.Table('builders', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+            )
+            builders.create()
+
+            masters = sa.Table("masters", metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+            )
+            masters.create()
+
+            builds = sa.Table('builds', metadata,
+                sa.Column('id', sa.Integer,  primary_key=True),
+                sa.Column('number', sa.Integer, nullable=False),
+                sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                    nullable=False),
+                sa.Column('start_time', sa.Integer, nullable=False),
+                sa.Column('finish_time', sa.Integer),
+            )
+            builds.create()
 
         def verify_thd(conn):
-            r = conn.execute("select * from steps")
-            self.assertEqual(r.fetchall(), [])
-            r = conn.execute("select * from logs")
-            self.assertEqual(r.fetchall(), [])
-            r = conn.execute("select * from logchunks")
+            r = conn.execute("select * from builds")
             self.assertEqual(r.fetchall(), [])
 
         return self.do_test_migration(28, 29, setup_thd, verify_thd)

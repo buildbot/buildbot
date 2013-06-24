@@ -7,4 +7,3 @@ See the following user-contributed tutorials for other highlights and ideas:
    :maxdepth: 2
 
    fiveminutes
-

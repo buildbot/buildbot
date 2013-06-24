@@ -20,7 +20,7 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot import config 
+from buildbot import config
 
 class ValidationError(ValueError):
     pass
@@ -249,10 +249,10 @@ class InheritBuildParameter(ChoiceStringParameter):
 class BuildslaveChoiceParameter(ChoiceStringParameter):
     """A parameter that lets the buildslave name be explicitly chosen.
 
-    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave', 
+    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave',
     which should be added as the 'canStartBuild' parameter to the Builder.
 
-    The "anySentinel" parameter represents the sentinel value to specify that 
+    The "anySentinel" parameter represents the sentinel value to specify that
     there is no buildslave preference.
     """
     anySentinel = '-any-'
@@ -524,8 +524,8 @@ class ForceScheduler(base.BaseScheduler):
             self.reason = reason
         else:
             config.error("ForceScheduler reason must be a StringParameter: %r" %
-                         reason) 
- 
+                         reason)
+
         if not self.checkIfListOfType(properties, BaseParameter):
             config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
                          properties)
@@ -534,7 +534,7 @@ class ForceScheduler(base.BaseScheduler):
             self.username = username
         else:
             config.error("ForceScheduler username must be a StringParameter: %r" %
-                         username) 
+                         username)
         
         self.forcedProperties = []
         
@@ -575,7 +575,7 @@ class ForceScheduler(base.BaseScheduler):
 
         if properties:
             self.forcedProperties.extend(properties)
-            
+
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
@@ -584,13 +584,13 @@ class ForceScheduler(base.BaseScheduler):
         return isinstance(obj, chkType)
 
     def checkIfListOfType(self, obj, chkType):
-        isListOfType = True 
+        isListOfType = True
 
         if self.checkIfType(obj, list):
            for item in obj:
                if not self.checkIfType(item, chkType):
                   isListOfType = False
-                  break 
+                  break
         else:
            isListOfType = False
 

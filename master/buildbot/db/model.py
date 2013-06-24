@@ -19,6 +19,7 @@ import migrate.versioning.schema
 import migrate.versioning.repository
 from twisted.python import util, log
 from buildbot.db import base
+from buildbot.db.types.json import JsonObject
 
 try:
     from migrate.versioning import exceptions
@@ -205,6 +206,13 @@ class Model(base.DBConnectorComponent):
             nullable=False, primary_key=True),
         sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             nullable=False),
+    )
+
+    # buildslaves
+    buildslaves = sa.Table("buildslaves", metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String(256), nullable=False),
+        sa.Column("info", JsonObject, nullable=False),
     )
 
     # changes
@@ -503,6 +511,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
             buildset_properties.c.buildsetid)
+    sa.Index('buildslaves_name', buildslaves.c.name, unique=True)
     sa.Index('changes_branch', changes.c.branch)
     sa.Index('changes_revision', changes.c.revision)
     sa.Index('changes_author', changes.c.author)

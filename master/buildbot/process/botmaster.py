@@ -334,7 +334,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     def maybeStartBuildsForAllBuilders(self):
         """
-        Call this when something suggests that this would be a good time to 
+        Call this when something suggests that this would be a good time to
         start some builds, but nothing more specific.
         """
         self.brd.maybeStartBuildsOn(self.builderNames)

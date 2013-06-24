@@ -226,4 +226,4 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 {u'buildsetid': 511, u'sourcestampid': new_ssids[211]}
             ]))
 
-        return self.do_test_migration(26, 27, setup_thd, verify_thd)
+        return self.do_test_migration(27, 28, setup_thd, verify_thd)

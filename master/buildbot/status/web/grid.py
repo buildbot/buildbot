@@ -206,7 +206,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamps(absolute=True)
                 key = self.getSourceStampKey(ss)
-                
+
                 for i, sstamp in enumerate(stamps):
                     if key == self.getSourceStampKey(sstamp) and builds[i] is None:
                         builds[i] = build
@@ -278,7 +278,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 #TODO: support multiple sourcestamps
                 ss = build.getSourceStamps(absolute=True)
                 key = self.getSourceStampKey(ss)
-                
+
                 for i, sstamp in enumerate(stamps):
                     if key == self.getSourceStampKey(sstamp) and builds[i] is None:
                         builds[i] = build

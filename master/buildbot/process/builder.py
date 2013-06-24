@@ -521,8 +521,8 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def maybeStartBuild(self, slavebuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
-        # start a set of buildrequests on a slave. Do not call this method 
-        # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of 
+        # start a set of buildrequests on a slave. Do not call this method
+        # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
         # the other similar methods if more appropriate
 
         # first, if we're not running, then don't start builds; stopService

@@ -133,12 +133,12 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         pause_url = pause_url,
                         authz = self.getAuthz(request),
                         this_url = "../../../" + path_to_slave(request, slave),
-                        access_uri = slave.getAccessURI()),
-                        admin = unicode(slave.getAdmin() or '', 'utf-8'),
-                        host = unicode(slave.getHost() or '', 'utf-8'),
+                        access_uri = slave.getAccessURI(),
+                        admin = slave.getAdmin() or u'',
+                        host = slave.getHost() or u'',
                         slave_version = slave.getVersion(),
                         show_builder_column = True,
-                        connect_count = connect_count)
+                        connect_count = connect_count))
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
@@ -184,7 +184,7 @@ class BuildSlavesResource(HtmlResource):
             info['connectCount'] = slave.getConnectCount()
             info['paused'] = slave.isPaused()
             
-            info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
+            info['admin'] = slave.getAdmin() or u''
             last = slave.lastMessageReceived()
             if last:
                 info['last_heard_from_age'] = abbreviate_age(time.time() - last)

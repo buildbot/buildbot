@@ -78,7 +78,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                     dict(name='master', active=1, last_active=1),
             ))
 
-        return self.do_test_migration(23, 24, setup_thd, verify_thd)
+        return self.do_test_migration(24, 25, setup_thd, verify_thd)
 
     def test_migration_with_data(self):
         def setup_thd(conn):
@@ -135,4 +135,4 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 (23, None, 1349444479),
             ])
 
-        return self.do_test_migration(23, 24, setup_thd, verify_thd)
+        return self.do_test_migration(24, 25, setup_thd, verify_thd)

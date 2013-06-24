@@ -100,10 +100,10 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_maybeStartBuild_builder_stopped(self):
         yield self.makeBuilder()
-        
+
         # this will cause an exception if maybeStartBuild tries to start
         self.bldr.slaves = None
-        
+
         # so we just hope this does not fail
         yield self.bldr.stopService()
         started = yield self.bldr.maybeStartBuild(None, [])
@@ -227,7 +227,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         # by default, it returns True
         startable = yield self.bldr.canStartBuild('slave', 100)
         self.assertEqual(startable, True)
-        
+
         startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, True)
 
@@ -237,11 +237,11 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
             record.append((bldr, slave, breq))
             return (slave,breq)==('slave',100)
         self.bldr.config.canStartBuild = canStartBuild
-        
+
         startable = yield self.bldr.canStartBuild('slave', 100)
         self.assertEqual(startable, True)
         self.assertEqual(record, [(self.bldr, 'slave', 100)])
-        
+
         startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, False)
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
@@ -253,11 +253,11 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
             return (slave,breq)==('slave',100)
             return defer.succeed((slave,breq)==('slave',100))
         self.bldr.config.canStartBuild = canStartBuild_deferred
-        
+
         startable = yield self.bldr.canStartBuild('slave', 100)
         self.assertEqual(startable, True)
         self.assertEqual(record, [(self.bldr, 'slave', 100)])
-        
+
         startable = yield self.bldr.canStartBuild('slave', 101)
         self.assertEqual(startable, False)
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])

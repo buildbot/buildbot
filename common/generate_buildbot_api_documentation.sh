@@ -19,4 +19,3 @@ tar -xzf buildbot-slave-0.8.7.tar.gz
 git clone https://github.com/buildbot/buildbot.git
 cd buildbot/apidocs
 PYTHONPATH="/tmp/epydoc-3.0.1:/tmp/buildbot-0.8.7:/tmp/buildbot-slave-0.8.7${PYTHONPATH:+:}${PYTHONPATH}" make
-

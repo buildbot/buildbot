@@ -29,7 +29,6 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def setup_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-
             sa.Table('masters', metadata,
                 sa.Column('id', sa.Integer,  primary_key=True),
                 # ..
@@ -39,16 +38,16 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            changesources = sa.Table('changesources', metadata, autoload=True)
-            changesource_masters = sa.Table('changesource_masters', metadata,
+            builders = sa.Table('builders', metadata, autoload=True)
+            builder_masters = sa.Table('builder_masters', metadata,
                     autoload=True)
 
-            q = sa.select([ changesources.c.id, changesources.c.name,
-                            changesources.c.name_hash ])
+            q = sa.select([ builders.c.id, builders.c.name,
+                            builders.c.name_hash ])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-            q = sa.select([ changesource_masters.c.changesourceid,
-                            changesource_masters.c.masterid ])
+            q = sa.select([ builder_masters.c.builderid,
+                            builder_masters.c.masterid ])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-        return self.do_test_migration(29, 30, setup_thd, verify_thd)
+        return self.do_test_migration(26, 27, setup_thd, verify_thd)

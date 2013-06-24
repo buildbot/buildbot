@@ -80,4 +80,4 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                             scheduler_changes.c.important ])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-        return self.do_test_migration(24, 25, setup_thd, verify_thd)
+        return self.do_test_migration(25, 26, setup_thd, verify_thd)

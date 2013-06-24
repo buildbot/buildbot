@@ -189,7 +189,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
-                
+
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
                 for msg in e.errors:

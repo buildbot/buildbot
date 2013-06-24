@@ -27,12 +27,12 @@ import random
 
 class BuildChooserBase(object):
     #
-    # WARNING: This API is experimental and in active development. 
+    # WARNING: This API is experimental and in active development.
     #
-    # This internal object selects a new build+slave pair. It acts as a 
+    # This internal object selects a new build+slave pair. It acts as a
     # generator, initializing its state on creation and offering up new
     # pairs until exhaustion. The object can be destroyed at any time
-    # (eg, before the list exhausts), and can be "restarted" by abandoning 
+    # (eg, before the list exhausts), and can be "restarted" by abandoning
     # an old instance and creating a new one.
     #
     # The entry point is:
@@ -58,48 +58,48 @@ class BuildChooserBase(object):
         if not slave or not breq:
             defer.returnValue((None, None))
             return
-        
+
         breqs = yield self.mergeRequests(breq)
         for b in breqs:
                 self._removeBuildRequest(b)
-                
+
         defer.returnValue((slave, breqs))
-    
+
 
     # Must be implemented by subclass
     def popNextBuild(self):
         # Pick the next (slave, breq) pair; note this is pre-merge, so
         # it's just one breq
         raise NotImplementedError("Subclasses must implement this!")
-    
+
     # Must be implemented by subclass
     def mergeRequests(self, breq):
         # Merge the chosen breq with any other breqs that are compatible
         # Returns a list of the breqs chosen (and should include the
         # original breq as well!)
         raise NotImplementedError("Subclasses must implement this!")
-    
+
 
     # - Helper functions that are generally useful to all subclasses -
-    
+
     @defer.inlineCallbacks
     def _fetchUnclaimedBrdicts(self):
         # Sets up a cache of all the unclaimed brdicts. The cache is
-        # saved at self.unclaimedBrdicts cache. If the cache already 
-        # exists, this function does nothing. If a refetch is desired, set 
+        # saved at self.unclaimedBrdicts cache. If the cache already
+        # exists, this function does nothing. If a refetch is desired, set
         # the self.unclaimedBrdicts to None before calling."""
-        
+
         if self.unclaimedBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed=False)         
+                        buildername=self.bldr.name, claimed=False)
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd : brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
         defer.returnValue(self.unclaimedBrdicts)
-    
+
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
-        # Turn a brdict into a BuildRequest into a brdict. This is useful 
+        # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
         breq = self.breqCache.get(brdict['brid'])
@@ -110,12 +110,12 @@ class BuildChooserBase(object):
         defer.returnValue(breq)
 
     def _getBrdictForBuildRequest(self, breq):
-        # Turn a BuildRequest back into a brdict. This operates from the 
+        # Turn a BuildRequest back into a brdict. This operates from the
         # cache, which must be set up once via _fetchUnclaimedBrdicts
 
         if breq is None:
             return None
-        
+
         brid = breq.id
         for brdict in self.unclaimedBrdicts:
             if brid == brdict['brid']:
@@ -128,7 +128,7 @@ class BuildChooserBase(object):
 
         if breq is None:
             return
-        
+
         brdict = self._getBrdictForBuildRequest(breq)
         if brdict is not None:
             self.unclaimedBrdicts.remove(brdict)
@@ -141,7 +141,7 @@ class BuildChooserBase(object):
         return defer.gatherResults([
             self._getBuildRequestForBrdict(brdict)
               for brdict in self.unclaimedBrdicts ])
-            
+
 class BasicBuildChooser(BuildChooserBase):
     # BasicBuildChooser generates build pairs via the configuration points:
     #   * config.nextSlave  (or random.choice if not set)
@@ -151,14 +151,14 @@ class BasicBuildChooser(BuildChooserBase):
     # returns a slave that cannot satisfy the build chosen by nextBuild,
     # it will search for a slave that can satisfy the build. If one is found,
     # the slaves that cannot be used are "recycled" back into a list
-    # to be tried, in order, for the next chosen build. 
+    # to be tried, in order, for the next chosen build.
     #
     # There are two tests performed on the slave:
     #   * can the slave start a generic build for the Builder?
     #   * if so, can the slave start the chosen build on the Builder?
-    # Slaves that cannot meet the first criterion are saved into the 
+    # Slaves that cannot meet the first criterion are saved into the
     # self.rejectedSlaves list and will be used as a last resort. An example
-    # of this test is whether the slave can grab the Builder's locks. 
+    # of this test is whether the slave can grab the Builder's locks.
     #
     # If all slaves fail the first test, then the algorithm will assign the
     # slaves in the order originally generated. By setting self.rejectedSlaves
@@ -171,30 +171,30 @@ class BasicBuildChooser(BuildChooserBase):
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
             self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
-            
+
         self.slavepool = self.bldr.getAvailableSlaves()
 
-        # Pick slaves one at a time from the pool, and if the Builder says 
-        # they're usable (eg, locks can be satisfied), then prefer those slaves; 
-        # otherwise they go in the 'last resort' bucket, and we'll use them if 
+        # Pick slaves one at a time from the pool, and if the Builder says
+        # they're usable (eg, locks can be satisfied), then prefer those slaves;
+        # otherwise they go in the 'last resort' bucket, and we'll use them if
         # we need to. (Setting rejectedSlaves to None disables that feature)
         self.preferredSlaves = []
         self.rejectedSlaves = []
 
         self.nextBuild = self.bldr.config.nextBuild
-        
+
         self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
-        
+
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
-        
+
         while 1:
             #  1. pick a slave
             slave = yield self._popNextSlave()
             if not slave:
                 break
-            
+
             #  2. pick a build
             breq = yield self._getNextUnclaimedBuildRequest()
             if not breq:
@@ -212,17 +212,17 @@ class BasicBuildChooser(BuildChooserBase):
                 # try a different slave
                 recycledSlaves.append(slave)
                 slave = yield self._popNextSlave()
-                
+
             # recycle the slaves that we didnt use to the head of the queue
             # this helps ensure we run 'nextSlave' only once per slave choice
-            if recycledSlaves:    
+            if recycledSlaves:
                 self._unpopSlaves(recycledSlaves)
-                
+
             #  4. done? otherwise we will try another build
             if slave:
                 nextBuild = (slave, breq)
                 break
-        
+
         defer.returnValue(nextBuild)
 
     def mergeRequests(self, breq):
@@ -245,7 +245,7 @@ class BasicBuildChooser(BuildChooserBase):
                 if nextBreq not in breqs:
                     nextBreq = None
             except Exception:
-                nextBreq = None            
+                nextBreq = None
         else:
             # otherwise just return the first build
             brdict = self.unclaimedBrdicts[0]
@@ -260,24 +260,24 @@ class BasicBuildChooser(BuildChooserBase):
             slave = self.preferredSlaves.pop(0)
             defer.returnValue(slave)
             return
-        
+
         while self.slavepool:
             try:
                 slave = yield self.nextSlave(self.bldr, self.slavepool)
             except Exception:
                 slave = None
-            
+
             if not slave or slave not in self.slavepool:
                 # bad slave or no slave returned
                 break
 
             self.slavepool.remove(slave)
-            
+
             canStart = yield self.bldr.canStartWithSlavebuilder(slave)
             if canStart:
                 defer.returnValue(slave)
                 return
-            
+
             # save as a last resort, just in case we need them later
             if self.rejectedSlaves is not None:
                 self.rejectedSlaves.append(slave)
@@ -287,7 +287,7 @@ class BasicBuildChooser(BuildChooserBase):
             slave = self.rejectedSlaves.pop(0)
             defer.returnValue(slave)
             return
-        
+
         defer.returnValue(None)
 
     def _unpopSlaves(self, slaves):
@@ -311,7 +311,7 @@ class BuildRequestDistributor(service.Service):
     """
 
     BuildChooser = BasicBuildChooser
-    
+
     def __init__(self, botmaster):
         self.botmaster = botmaster
         self.master = botmaster.master
@@ -373,7 +373,7 @@ class BuildRequestDistributor(service.Service):
         @defer.inlineCallbacks
         def resetPendingBuildersList(new_builders):
             try:
-                # re-fetch existing_pending, in case it has changed 
+                # re-fetch existing_pending, in case it has changed
                 # while acquiring the lock
                 existing_pending = set(self._pending_builders)
 
@@ -477,7 +477,7 @@ class BuildRequestDistributor(service.Service):
                 # get the actual builder object
                 bldr = self.botmaster.builders.get(bldr_name)
                 if bldr:
-                    yield self._maybeStartBuildsOnBuilder(bldr) 
+                    yield self._maybeStartBuildsOnBuilder(bldr)
             except Exception:
                 log.err(Failure(),
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))
@@ -488,19 +488,19 @@ class BuildRequestDistributor(service.Service):
 
         self.active = False
         self._quiet()
-    
+
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
         bc = self.createBuildChooser(bldr, self.master)
-    
+
         while 1:
             slave, breqs = yield bc.chooseNextBuild()
             if not slave or not breqs:
                 break
-            
+
             # claim brid's
             brids = [ br.id for br in breqs ]
             claimed_at_epoch = _reactor.seconds()
@@ -531,7 +531,7 @@ class BuildRequestDistributor(service.Service):
                 self.master.mq.produce(key, msg)
 
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
-            
+
             if not buildStarted:
                 yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
@@ -544,15 +544,15 @@ class BuildRequestDistributor(service.Service):
                     msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                             builderid=-1)
                     self.master.mq.produce(key, msg)
-    
+
                 # and try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests
                 self.botmaster.maybeStartBuildsForBuilder(self.name)
-            
+
     def createBuildChooser(self, bldr, master):
         # just instantiate the build chooser requested
         return self.BuildChooser(bldr, master)
-            
+
     def _quiet(self):
         # shim for tests
         pass # pragma: no cover

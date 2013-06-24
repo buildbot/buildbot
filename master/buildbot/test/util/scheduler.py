@@ -179,7 +179,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
     def fake_addBuildsetForChanges(self, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
-        properties = properties.asDict()
+        properties = properties.asDict() if properties is not None else None
         self.addBuildsetCalls.append(('addBuildsetForChanges', locals()))
         self.addBuildsetCalls[-1][1].pop('self')
         return self._addBuildsetReturnValue(builderNames)
