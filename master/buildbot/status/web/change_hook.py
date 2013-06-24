@@ -43,14 +43,14 @@ class ChangeHookResource(resource.Resource):
 
     def render_GET(self, request):
         """
-        Reponds to events and starts the build process
+        Responds to events and starts the build process
           different implementations can decide on what methods they will accept
         """
         return self.render_POST(request)
 
     def render_POST(self, request):
         """
-        Reponds to events and starts the build process
+        Responds to events and starts the build process
           different implementations can decide on what methods they will accept
         
         :arguments:

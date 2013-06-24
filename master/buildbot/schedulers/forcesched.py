@@ -283,7 +283,7 @@ class BuildslaveChoiceParameter(ChoiceStringParameter):
 
 
 class NestedParameter(BaseParameter):
-    """A 'parent' parameter for a set of related parameters. This provices a
+    """A 'parent' parameter for a set of related parameters. This provides a
        logical grouping for the child parameters.
        
        Typically, the 'fullName' of the child parameters mix in the parent's
