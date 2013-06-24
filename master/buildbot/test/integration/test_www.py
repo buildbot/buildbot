@@ -17,7 +17,7 @@ from twisted.internet import defer, reactor, protocol
 from twisted.trial import unittest
 from twisted.web import client
 from buildbot.util import json
-from buildbot.test.util import db
+from buildbot.test.util import db, www
 from buildbot.test.fake import fakemaster, fakedb
 from buildbot.db import connector as dbconnector
 from buildbot.mq import connector as mqconnector
@@ -46,7 +46,7 @@ class BodyReader(protocol.Protocol):
             self.finishedDeferred.errback(reason)
 
 
-class Www(db.RealDatabaseMixin, unittest.TestCase):
+class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     master = None
 

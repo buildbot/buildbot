@@ -15,6 +15,7 @@
 
 import mock
 import cgi
+import os
 import urllib
 import pkg_resources
 from buildbot.util import json
@@ -73,11 +74,19 @@ class FakeRequest(object):
         self.deferred.errback(f)
 
 
-class WwwTestMixin(object):
-    UUID = str(uuid1())
+class RequiresWwwMixin(object):
+    # mix this into a TestCase to skip if buildbot-www is not installed
 
     if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):
-        skip = 'builbot-www not installed'
+        if 'BUILDBOT_TEST_REQUIRE_WWW' in os.environ:
+            raise RuntimeError('$BUILDBOT_TEST_REQUIRE_WWW is set but '
+                               'buildbot-www is not installed')
+        else:
+            skip = 'buildbot-www not installed'
+
+
+class WwwTestMixin(RequiresWwwMixin):
+    UUID = str(uuid1())
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)

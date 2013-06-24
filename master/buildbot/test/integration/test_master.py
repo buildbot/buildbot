@@ -19,9 +19,9 @@ from twisted.internet import defer, reactor
 from twisted.trial import unittest
 from buildbot import config
 from buildbot.master import BuildMaster
-from buildbot.test.util import dirs
+from buildbot.test.util import dirs, www
 
-class RunMaster(dirs.DirsMixin, unittest.TestCase):
+class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basdir')
