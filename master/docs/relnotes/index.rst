@@ -82,7 +82,9 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself::
+git log itself:
+
+.. code-block:: bash
 
    git log v0.8.8..master
 

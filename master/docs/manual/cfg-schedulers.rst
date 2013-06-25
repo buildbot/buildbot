@@ -1123,7 +1123,6 @@ Example::
             choices = [ "test_builder1",
                         "test_builder2",
                         "test_builder3" ])
-        ])
 
         # .. and later base the schedulers to trigger off this property:
 
@@ -1199,15 +1198,16 @@ Example::
                 builds.append(builder+"/"+str(b.getNumber()))
         return builds
 
-        # ...
+    # ...
 
-            properties=[
-                InheritBuildParameter(
-                    name="inherit",
-                    label="promote a build for merge",
-                    compatible_builds=get_compatible_builds,
-                    required = True),
-                    ])
+    sched = Scheduler(...,
+        properties=[
+            InheritBuildParameter(
+                name="inherit",
+                label="promote a build for merge",
+                compatible_builds=get_compatible_builds,
+                required = True),
+                ])
 
 .. bb:sched:: BuildslaveChoiceParameter
 
@@ -1224,18 +1224,18 @@ Example::
     from buildbot.process.builder import enforceChosenSlave
 
     # schedulers:
-        ForceScheduler(
-          # ...
-          properties=[
+    ForceScheduler(
+        # ...
+        properties=[
             BuildslaveChoiceParameter(),
-          ]
-        )
+        ]
+    )
 
     # builders:
-        BuilderConfig(
-          # ...
-          canStartBuild=enforceChosenSlave,
-        )
+    BuilderConfig(
+        # ...
+        canStartBuild=enforceChosenSlave,
+    )
 
 AnyPropertyParameter
 ####################

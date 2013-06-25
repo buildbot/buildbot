@@ -22,11 +22,11 @@ following will generate a builder for each of a range of supported versions of
 Python::
 
     pythons = [ 'python2.4', 'python2.5', 'python2.6', 'python2.7',
-                'python3.2', python3.3' ]
+                'python3.2', 'python3.3' ]
     pytest_slaves = [ "slave%s" % n for n in range(10) ]
     for python in pythons:
         f = BuildFactory()
-        f.addStep(SVN(..))
+        f.addStep(SVN(...))
         f.addStep(ShellCommand(command=[ python, 'test.py' ]))
         c['builders'].append(BuilderConfig(
                 name="test-%s" % python,
@@ -457,7 +457,8 @@ create a build class that dynamically determines which steps to run.  The
 skeleton of such a project would look like::
 
     class DynamicBuild(Build):
-        # .. override some methods
+        # override some methods
+        ...
 
     f = factory.BuildFactory()
     f.buildClass = DynamicBuild
@@ -569,7 +570,7 @@ The whole thing looks like this::
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
-                **kwargs)
+                **kwargs):
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
 
@@ -705,7 +706,7 @@ your :class:`~buildbot.process.buildstep.BuildStep.BuildStep` can retrieve it
 by using :meth:`~buildbot.process.buildstep.BuildStep.getLog()`::
 
     class MyBuildStep(ShellCommand):
-        logfiles = @{ "nodelog": "_test/node.log" @}
+        logfiles = { "nodelog": "_test/node.log" }
 
         def evaluateCommand(self, cmd):
             nodelog = self.getLog("nodelog")
@@ -953,7 +954,7 @@ definition itself will look something like this::
     
         def __init__(self, **kwargs):
             ShellCommand.__init__(self, **kwargs)   # always upcall!
-            counter = FNURRRGHCounter())
+            counter = FNURRRGHCounter()
             self.addLogObserver('stdio', counter)
             self.progressMetrics += ('tests',)
 
