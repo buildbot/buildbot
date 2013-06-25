@@ -43,6 +43,7 @@ class Authz(object):
             auth=None,
             useHttpHeader=False,
             httpLoginUrl=False,
+            view=True,
             **kwargs):
         self.auth = auth
         if auth:
@@ -52,6 +53,7 @@ class Authz(object):
         self.httpLoginUrl = httpLoginUrl
 
         self.config = dict( (a, default_action) for a in self.knownActions )
+        self.config['view'] = view
         for act in self.knownActions:
             if act in kwargs:
                 self.config[act] = kwargs[act]
