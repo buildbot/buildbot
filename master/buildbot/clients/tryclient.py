@@ -676,11 +676,8 @@ class Try(pb.Referenceable):
         # may emit status messages while we wait
         wait = bool(self.getopt("wait"))
         if not wait:
-            # TODO: emit the URL where they can follow the builds. This
-            # requires contacting the Status server over PB and doing
-            # getURLForThing() on the BuildSetStatus. To get URLs for
-            # individual builds would require we wait for the builds to
-            # start
+            # contacts the status port.
+            # prints out the url of the build then exits.
             d = self.running = defer.Deferred()
             if self.buildsetStatus:
                 self._getUrl_1()
@@ -726,8 +723,8 @@ class Try(pb.Referenceable):
         d.addCallback( self._getUrl_2)
 
     def _getUrl_2(self, res):
-        print "Build URLs: \n %s" % res
-        return
+        self.announce( "Build URLs: \n %s" % res )
+        self.running.callback(0)
 
     def _getStatus_ssh_1(self, remote):
         # find a remotereference to the corresponding BuildSetStatus object
