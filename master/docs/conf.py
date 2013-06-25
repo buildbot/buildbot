@@ -246,6 +246,10 @@ import sphinx.highlighting
 fail_on_first_unhighlighted = True
 
 orig_unhiglighted = sphinx.highlighting.PygmentsBridge.unhighlighted
+orig_highlight_block = sphinx.highlighting.PygmentsBridge.highlight_block
+
+class UnhighlightedError(SphinxWarning):
+    pass
 
 def patched_unhighlighted(self, source):
     indented_source = '    ' + '\n    '.join(source.split('\n'))
@@ -269,7 +273,7 @@ def patched_unhighlighted(self, source):
             Note that in most places you can use "..." in Python code as valid
             anonymous expression.
             """) % indented_source
-        raise SphinxWarning(msg)
+        raise UnhighlightedError(msg)
     else:
         msg = textwrap.dedent(u"""\
             Unhighlighted block:
@@ -281,4 +285,15 @@ def patched_unhighlighted(self, source):
 
         return orig_unhiglighted(self, source)
 
+def patched_highlight_block(self, source, lang, warn=None, force=False, **kw):
+    try:
+        return orig_highlight_block(self, source, lang, warn, force, **kw)
+    except UnhighlightedError, ex:
+        msg = ex.args[0]
+        if warn:
+            warn(msg)
+
+        raise
+
 sphinx.highlighting.PygmentsBridge.unhighlighted = patched_unhighlighted
+sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
