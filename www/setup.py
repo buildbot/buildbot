@@ -22,7 +22,17 @@ import setuptools.command.sdist
 import setuptools.command.install
 import setuptools.command.develop
 from distutils.core import Command
-import json
+try:
+    import simplejson as json
+    assert json
+except ImportError:
+    try:
+        import json
+        assert json
+    except ImportError:
+        # a fresh python-2.5 environment may have neither json nor simplejson
+        # luckily it's only required for building from source
+        json = None
 
 # This script can run either in a source checkout (e.g., to 'setup.py sdist')
 # or in an sdist tarball (to install)
@@ -121,6 +131,7 @@ class npm_install(Command):
         pass
 
     def run(self):
+        assert json, "Install 'json' or 'simplejson' first"
         json.dump(package_json, open("package.json", "w"))
         self.spawn(['npm', 'install'])
 
@@ -137,6 +148,7 @@ class bower_install(npm_install):
     def run(self):
         for command in self.get_sub_commands():
             self.run_command(command)
+        assert json, "Install 'json' or 'simplejson' first"
         json.dump(bower_json, open("bower.json", "w"))
         self.spawn(['./node_modules/.bin/bower', 'install'])
 
@@ -274,6 +286,7 @@ setup(
     license='GNU GPL',
     py_modules=['buildbot_www'],
     cmdclass=cmdclass,
+    install_requires=['simplejson'], # for setup.py
     entry_points="""
         [buildbot.www]
         base = buildbot_www:ep
