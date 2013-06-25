@@ -678,11 +678,12 @@ class Try(pb.Referenceable):
         if not wait:
             # contacts the status port.
             # prints out the url of the build then exits.
+            self.announce("Not waiting for builds to finish")
+            self.announce("for more information visit the url below")
             d = self.running = defer.Deferred()
             if self.buildsetStatus:
                 self._getUrl_1()
                 return self.running
-            print "not waiting for builds to finish"
             master  = master.geOpt("master")
             host, port = master.split(":")
             port = 5050

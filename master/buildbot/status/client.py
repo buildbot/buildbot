@@ -63,12 +63,6 @@ class RemoteBuildSet(pb.Referenceable):
         return d
 
     def remote_getURL(self):
-        master = self.b.master
-        bsid = self.b.id
-        urls = []
-        #print self.b.master.status.master.__class__.__dict__
-        #print self.b.bsdict.__class__.__dict__
-        print self.b.status.__class__.__dict__
         d = self.b.getBuilderNames()
         d.addCallback( self._getUrl_1 )
         return d
