@@ -360,7 +360,6 @@ class WebStatus(service.MultiService):
         self.putChild("console", ConsoleStatusResource(
                 orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
-        self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("buildqueue", BuildqueueResource()) # has buildqueue
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
@@ -369,8 +368,7 @@ class WebStatus(service.MultiService):
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("about", AboutBuildbot())
-        self.putChild("projects", ProjectsResource())
-        self.putChild("codebases", CodeBasesResource())
+        self.putChild("projects", ProjectsResource()) # has builds & builds/steps/logs
         self.putChild("authfail", AuthFailResource())
         self.putChild("authzfail", AuthzFailResource())
         self.putChild("users", UsersResource())

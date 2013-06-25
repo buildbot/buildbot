@@ -16,42 +16,31 @@
 
 
 from buildbot.status.web.base import HtmlResource
-import buildbot
-import twisted
-import sys
-import jinja2
-
-
+from buildbot.status.web.builder import BuildersResource
 
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
 
-    def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
-                               twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
-                               python=sys.version,
-                               platform=sys.platform))
-
-        template = request.site.buildbot_service.templates.get_template("projects.html")
+    def content(self, req, cxt):
+        template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True
         return template.render(**cxt)
+
+    def getChild(self, path, req):
+        if path == "codebases":
+            return CodeBasesResource()
     
 
 class CodeBasesResource(HtmlResource):
     pageTitle = "Katana - Codebases"
 
-    
-
     def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
-                               twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
-                               python=sys.version,
-                               platform=sys.platform))
-
         template = request.site.buildbot_service.templates.get_template("codebases.html")
         template.autoescape = True
         return template.render(**cxt)
+
+    def getChild(self, path, req):
+        if path == "builders":
+            return BuildersResource()
 
 

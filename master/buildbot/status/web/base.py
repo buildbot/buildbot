@@ -120,8 +120,14 @@ def path_to_root(request):
     root = "../" * segs
     return root
 
+def path_to_projects(request):
+    return path_to_root(request) + "projects"
+
+def path_to_codebases(request):
+    return path_to_projects(request) + "/codebases"
+
 def path_to_builders(request):
-    return (path_to_root(request) + "builders")
+    return (path_to_codebases(request) + "/builders")
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -130,8 +136,8 @@ def path_to_authzfail(request):
     return path_to_root(request) + "authzfail"
 
 def path_to_builder(request, builderstatus):
-    return (path_to_root(request) +
-            "builders/" +
+    return (path_to_builders(request) +
+            "/" +
             urllib.quote(builderstatus.getName(), safe=''))
 
 def path_to_build(request, buildstatus):
