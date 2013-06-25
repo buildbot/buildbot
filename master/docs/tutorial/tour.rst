@@ -29,7 +29,9 @@ Let's start simple by looking at where you would customize the buildbot's projec
 
 We continue where we left off in the :ref:`first-run-label` tutorial.
 
-Open a new terminal, and first enter the same sandbox you created before (where ``$EDITOR`` is your editor of choice like vim, gedit, or emacs)::
+Open a new terminal, and first enter the same sandbox you created before (where ``$EDITOR`` is your editor of choice like vim, gedit, or emacs):
+
+.. code-block:: bash
 
   cd
   cd tmp/buildbot
@@ -49,7 +51,9 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
 
 If you want, you can change either of these links to anything you want to see what happens when you change them. 
 
-After making a change go into the terminal and type::
+After making a change go into the terminal and type:
+
+.. code-block:: bash
 
   buildbot reconfig master
 
@@ -98,7 +102,9 @@ single quote in the two lines you changed, so they read::
   c['title'] = "Pyflakes"
   c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
-This creates a Python SyntaxError.  Now go ahead and reconfig the buildmaster::
+This creates a Python SyntaxError.  Now go ahead and reconfig the buildmaster:
+
+.. code-block:: bash
 
   buildbot reconfig master
 
@@ -178,7 +184,9 @@ below the WebStatus line in master.cfg::
   c['status'].append(words.IRC(host="irc.freenode.org", nick="bbtest",
                                channels=["#buildbot-test"]))
 
-Reconfigure the build master then do::
+Reconfigure the build master then do:
+
+.. code-block:: bash
 
   grep -i irc master/twistd.log
 
@@ -291,7 +299,9 @@ exposes full access to the buildmaster's account (including the ability to
 modify and delete files), so it should not be enabled with a weak or easily
 guessable password. 
 
-To use this you will need to install an additional package or two to your virtualenv::
+To use this you will need to install an additional package or two to your virtualenv:
+
+.. code-block:: bash
 
   cd
   cd tmp/buildbot
@@ -309,7 +319,9 @@ Insert the following to enable debugging mode with manhole::
   from buildbot import manhole
   c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
 
-After restarting the master, you can ssh into the master and get an interactive Python shell::
+After restarting the master, you can ssh into the master and get an interactive Python shell:
+
+.. code-block:: bash
 
   ssh -p1234 admin@127.0.0.1
   # enter passwd at prompt
@@ -317,13 +329,15 @@ After restarting the master, you can ssh into the master and get an interactive 
 .. note::
     The pyasn1-0.1.1 release has a bug which results in an exception similar to
     this on startup:
-    
+
     .. code-block:: none
 
         exceptions.TypeError: argument 2 must be long, not int
 
     If you see this, the temporary solution is to install the previous version
-    of pyasn1::
+    of pyasn1:
+
+    .. code-block:: bash
 
         pip install pyasn1-0.0.13b
 
@@ -354,14 +368,18 @@ To set this up, add the following lines to master.cfg::
 Then you can submit changes using the :bb:cmdline:`try` command.
 
 Let's try this out by making a one-line change to pyflakes, say,
-to make it trace the tree by default::
+to make it trace the tree by default:
+
+.. code-block:: bash
 
   git clone git://github.com/buildbot/pyflakes.git pyflakes-git
   cd pyflakes-git/pyflakes
   $EDITOR checker.py
   # change "traceTree = False" on line 185 to "traceTree = True"
 
-Then run buildbot's ``try`` command as follows::
+Then run buildbot's ``try`` command as follows:
+
+.. code-block:: bash
 
   source ~/tmp/buildbot/sandbox/bin/activate
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git

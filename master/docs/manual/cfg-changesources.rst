@@ -343,7 +343,9 @@ Configuration of CVS and buildbot_cvs_mail.py
 CVS must be configured to invoke the buildbot_cvs_mail.py script when files
 are checked in. This is done via the CVS loginfo configuration file.
 
-To update this, first do::
+To update this, first do:
+
+.. code-block:: bash
 
     cvs checkout CVSROOT
 

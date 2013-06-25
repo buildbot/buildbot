@@ -49,7 +49,9 @@ easy_install will need to download other projects from the Internet.
     Buildbot does not require root access.  Run the commands in this tutorial
     as a normal, unprivileged user.
 
-Let's dive in by typing at the terminal::
+Let's dive in by typing at the terminal:
+
+.. code-block:: bash
 
   cd
   mkdir -p tmp/buildbot
@@ -66,12 +68,16 @@ Let's dive in by typing at the terminal::
 Creating a master
 -----------------
 
-At the terminal, type::
+At the terminal, type:
+
+.. code-block:: bash
 
   buildbot create-master master
   mv master/master.cfg.sample master/master.cfg
 
-Now start it::
+Now start it:
+
+.. code-block:: bash
 
   buildbot start master
   tail -f master/twistd.log
@@ -95,31 +101,43 @@ You should see lines like this:
 Creating a slave
 ----------------
 
-Open a new terminal and enter the same sandbox you created before::
+Open a new terminal and enter the same sandbox you created before:
+
+.. code-block:: bash
 
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
 
-Install the ``buildslave`` command::
+Install the ``buildslave`` command:
+
+.. code-block:: bash
 
    easy_install buildbot-slave
 
-Now, create the slave::
+Now, create the slave:
+
+.. code-block:: bash
 
   buildslave create-slave slave localhost:9989 example-slave pass
 
 The user:host pair, username, and password should be the same as the ones in
 master.cfg; verify this is the case by looking at the section for ``c['slaves']``
-and ``c['slavePortnum']``::
+and ``c['slavePortnum']``:
+
+.. code-block:: bash
 
   cat master/master.cfg
 
-Now, start the slave::
+Now, start the slave:
+
+.. code-block:: bash
 
   buildslave start slave
 
-Check the slave's log::
+Check the slave's log:
+
+.. code-block:: bash
 
   tail -f slave/twistd.log
 

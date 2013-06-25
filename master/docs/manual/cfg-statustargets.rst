@@ -836,7 +836,9 @@ And you configure your WebStatus to enable this hook::
     ))
 
 Then you will be able to trigger a poll of the SVN repository by poking the
-``/change_hook/poller`` URL from a commit hook like this::
+``/change_hook/poller`` URL from a commit hook like this:
+
+.. code-block:: bash
 
     curl http://yourbuildbot/change_hook/poller?poller=https%3A%2F%2Famanda.svn.sourceforge.net%2Fsvnroot%2Famanda%2Famanda
 
