@@ -680,9 +680,22 @@ class Try(pb.Referenceable):
             # requires contacting the Status server over PB and doing
             # getURLForThing() on the BuildSetStatus. To get URLs for
             # individual builds would require we wait for the builds to
-            # start.
+            # start
+            d = self.running = defer.Deferred()
+            if self.buildsetStatus:
+                self._getUrl_1()
+                return self.running
             print "not waiting for builds to finish"
-            return
+            master  = master.geOpt("master")
+            host, port = master.split(":")
+            port = 5050
+            self.announce("contacting the status port at %s:%d" % (host, port))
+            f = pb.PBClientFactory()
+            creds = credentials.UsernamePassword("statusClient", "clientpw")
+            d = f.login(creds)
+            reactor.connectTCP(host, port, f)
+            d.addCallback( self._getUrl_ssh_1)
+            return d
         d = self.running = defer.Deferred()
         if self.buildsetStatus:
             self._getStatus_1()
@@ -699,6 +712,22 @@ class Try(pb.Referenceable):
         reactor.connectTCP(host, port, f)
         d.addCallback(self._getStatus_ssh_1)
         return self.running
+
+    def _getUrl_ssh_1(self, remote):
+        self.announce("waiting for job to be accepted")
+        g = BuildSetStatusGrabber(remote, self.bsid)
+        d = g.grab()
+        d.addCallback( self._getUrl_1)
+
+    def _getUrl_1(self, res=None):
+        if res:
+            self.buildsetStatus = res
+        d = self.buildsetStatus.callRemote("getURL")
+        d.addCallback( self._getUrl_2)
+
+    def _getUrl_2(self, res):
+        print "Build URLs: \n %s" % res
+        return
 
     def _getStatus_ssh_1(self, remote):
         # find a remotereference to the corresponding BuildSetStatus object
