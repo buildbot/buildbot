@@ -53,7 +53,9 @@ After making a change go into the terminal and type::
 
   buildbot reconfig master
 
-You will see a handful of lines of output from the master log, much like this::
+You will see a handful of lines of output from the master log, much like this:
+
+.. code-block:: none
 
     2011-12-04 10:11:09-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
     2011-12-04 10:11:09-0600 [-] configuration update started
@@ -100,7 +102,9 @@ This creates a Python SyntaxError.  Now go ahead and reconfig the buildmaster::
 
   buildbot reconfig master
 
-This time, the output looks like::
+This time, the output looks like:
+
+.. code-block:: none
 
     2011-12-04 10:12:28-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
     2011-12-04 10:12:28-0600 [-] configuration update started
@@ -178,22 +182,30 @@ Reconfigure the build master then do::
 
   grep -i irc master/twistd.log
 
-The log output should contain a line like this::
+The log output should contain a line like this:
+
+.. code-block:: none
 
   2009-08-01 15:35:20+0200 [-] adding IStatusReceiver <buildbot.status.words.IRC instance at 0x300d290>
 
 You should see the bot now joining in your IRC client.
-In your IRC channel, type::
+In your IRC channel, type:
+
+.. code-block:: none
 
   bbtest: commands
 
 to get a list of the commands the bot supports.
 
-Let's tell the bot to notify certain events, to learn which EVENTS we can notify on::
+Let's tell the bot to notify certain events, to learn which EVENTS we can notify on:
+
+.. code-block:: none
 
   bbtest: help notify
 
-Now let's set some event notifications::
+Now let's set some event notifications:
+
+.. code-block:: none
 
   bbtest: notify on started
   bbtest: notify on finished
@@ -215,7 +227,9 @@ Notice how the bot tells you about the start and finish of this build::
   < bbtest> build #1 of runtests started, including []
   < bbtest> build #1 of runtests is complete: Success [build successful]  Build details are at http://localhost:8010/builders/runtests/builds/1
 
-You can also use the bot to force a build::
+You can also use the bot to force a build:
+
+.. code-block:: none
 
   bbtest: force build runtests test build
 
@@ -302,7 +316,9 @@ After restarting the master, you can ssh into the master and get an interactive 
 
 .. note::
     The pyasn1-0.1.1 release has a bug which results in an exception similar to
-    this on startup::
+    this on startup:
+    
+    .. code-block:: none
 
         exceptions.TypeError: argument 2 must be long, not int
 

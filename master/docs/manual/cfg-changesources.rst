@@ -235,7 +235,9 @@ slash, so something like ``~/MAILDIR/``\. qmail and postfix are
 maildir-capable MTAs, and procmail is a maildir-capable MDA (Mail
 Delivery Agent).
 
-Here is an example procmail config, located in :file:`~/.procmailrc`::
+Here is an example procmail config, located in :file:`~/.procmailrc`:
+
+.. code-block:: none
 
     # .procmailrc
     # routes incoming mail to appropriate mailboxes
@@ -249,7 +251,9 @@ Here is an example procmail config, located in :file:`~/.procmailrc`::
     new
 
 If procmail is not setup on a system wide basis, then the following one-line
-:file:`.forward` file will invoke it. ::
+:file:`.forward` file will invoke it.
+
+.. code-block:: none
 
     !/usr/bin/procmail
 
@@ -343,7 +347,9 @@ To update this, first do::
 
     cvs checkout CVSROOT
 
-cd to the CVSROOT directory and edit the file loginfo, adding a line like::
+cd to the CVSROOT directory and edit the file loginfo, adding a line like:
+
+.. code-block:: none
 
     SomeModule /cvsroot/CVSROOT/buildbot_cvs_mail.py --cvsroot :ext:example.com:/cvsroot -e buildbot -P SomeModule %@{sVv@}
 

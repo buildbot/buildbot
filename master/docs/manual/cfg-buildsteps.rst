@@ -718,7 +718,9 @@ You can specify the client spec in two different ways. You can use the ``p4base`
 ``p4branch``, and (optionally) ``p4extra_views`` to build up the viewspec, or you can utilize
 the ``p4viewspec`` to specify the whole viewspec as a set of tuples.
 
-Using p4viewspec will allow you to add lines such as::
+Using p4viewspec will allow you to add lines such as:
+
+.. code-block:: none
 
     //depot/branch/mybranch/...             //<p4client>/...
     -//depot/branch/mybranch/notthisdir/... //<p4client>/notthisdir/...

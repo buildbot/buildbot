@@ -77,7 +77,9 @@ Now start it::
   tail -f master/twistd.log
 
 You will now see all of the log information from the master in this terminal.
-You should see lines like this::
+You should see lines like this:
+
+.. code-block:: none
 
     2011-12-04 10:04:40-0600 [-] Starting factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36638>
     2011-12-04 10:04:40-0600 [-] Setting up http.log rotating 10 files of 10000000 bytes each
@@ -121,13 +123,17 @@ Check the slave's log::
 
   tail -f slave/twistd.log
 
-You should see lines like the following at the end of the worker log::
+You should see lines like the following at the end of the worker log:
+
+.. code-block:: none
 
   2009-07-29 20:59:18+0200 [Broker,client] message from master: attached
   2009-07-29 20:59:18+0200 [Broker,client] SlaveBuilder.remote_print(buildbot-full): message from master: attached
   2009-07-29 20:59:18+0200 [Broker,client] sending application-level keepalives every 600 seconds
 
-Meanwhile, in the other terminal, in the master log, if you tail the log you should see lines like this::
+Meanwhile, in the other terminal, in the master log, if you tail the log you should see lines like this:
+
+.. code-block:: none
 
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] slave 'example-slave' attaching from IPv4Address(TCP, '127.0.0.1', 41306)
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] Got slaveinfo from 'example-slave'
