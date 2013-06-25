@@ -237,7 +237,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_getChangesHugeCount(self):
         d = self.insertTestData([
-            fakedb.Change(changeid=i) for i in xrange(100)])
+            fakedb.Change(changeid=i) for i in xrange(2, 102)])
         d.addCallback(lambda _ :
                 self.db.changes.getChangesCount())
         def check(n):

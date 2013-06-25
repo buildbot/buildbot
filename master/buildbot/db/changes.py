@@ -184,7 +184,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChangesCount(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            q = sa.select([changes_tbl.c.changeid]).count()
+            q = sa.select([sa.func.count()]).select_from(changes_tbl)
             rp = conn.execute(q)
             r = 0
             for row in rp:
