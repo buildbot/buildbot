@@ -38,27 +38,29 @@
   <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
 -->
-
+<p>
+  To get started click one of the buttons in the navigation bar at the top
+</p>
 <ul>
-<li>
-  To get started click one of the buttons in the navigation bar at the top.
-</li>
-
 <li>
 The <b><a href="/projects">Projects</a></b> link will allow you to navigate to the current build status of a specific project (you can then bookmark that page for future reference).
 </li>
 <li>
 The <b><a href="/buildslaves">Build Slaves</a></b> link will tell you what the build slaves are currently up to.
+</li>
+
+<li>
 The <b><a href="/buildqueue">Build Queue</a></b> link will show you what is currently queued.
 </li>
-<li>
-From each of these pages, we believe navigation should be self-explanatory.
-</li>
-<li>
-Happy Building,
-<b>Unity’s Build Engineering Team</b>
-</li>
 </ul>
+<p>
+From each of these pages, we believe navigation should be self-explanatory.
+</p>
+
+Happy Building,<br>
+<b>Unity’s Build Engineering Team</b>
+
+
 {%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
 Master is shutting down<br/>

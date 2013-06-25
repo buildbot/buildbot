@@ -20,7 +20,7 @@ from buildbot.status.web.base import HtmlResource, path_to_authzfail
 from buildbot.util.eventual import eventually
 
 class RootPage(HtmlResource):
-    pageTitle = "Buildbot"
+    pageTitle = "Katana"
 
     @defer.inlineCallbacks
     def content(self, request, cxt):

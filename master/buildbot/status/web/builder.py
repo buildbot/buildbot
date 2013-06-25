@@ -244,7 +244,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         self.builder_status = builder_status
 
     def getPageTitle(self, request):
-        return "Buildbot: %s" % self.builder_status.getName()
+        return "Katana - %s" % self.builder_status.getName()
 
     @defer.inlineCallbacks
     def content(self, req, cxt):
@@ -500,7 +500,7 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
 
 # /builders
 class BuildersResource(HtmlResource):
-    pageTitle = "Builders"
+    pageTitle = "Katana - Builders"
     addSlash = True
 
     @defer.inlineCallbacks
@@ -539,9 +539,9 @@ class BuildersResource(HtmlResource):
 
         building = 0
         online = 0
-        base_builders_url = path_to_root(req) + "builders/"
+        base_builders_url = path_to_builders(req)
         for bn in builders:
-            bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
+            bld = { 'link': base_builders_url +"/"+ urllib.quote(bn, safe=''),
                     'name': bn }
             bs.append(bld)
 

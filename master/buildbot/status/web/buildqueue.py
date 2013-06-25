@@ -213,7 +213,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         self.builder_status = builder_status
 
     def getPageTitle(self, request):
-        return "Buildbot: %s" % self.builder_status.getName()
+        return "Katana - %s" % self.builder_status.getName()
 
     def builder(self, build, req):
         b = {}
@@ -491,7 +491,7 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
 
 # /builders
 class BuildqueueResource(HtmlResource):
-    pageTitle = "Builders"
+    pageTitle = "Katana - Build queue"
     addSlash = True
 
     @defer.inlineCallbacks
