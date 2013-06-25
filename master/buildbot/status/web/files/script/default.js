@@ -90,25 +90,37 @@ $(document).ready(function() {
 
 		}
 	});
-	
-		$('.tablesorter').dataTable({
-			"bPaginate": false,
-			"bLengthChange": false,
-			"bFilter": true,
-			"bSort": true,
-			"bInfo": false,
-			"bAutoWidth": false,
-			"bRetrieve": false,
-			"asSorting": true,
-			"bSearchable": true,
-			"bSortable": true,
-			//"oSearch": {"sSearch": " "}
-			"aaSorting": [],
-			"oLanguage": {
-			 	"sSearch": "Filter"
-			 },
-			"bStateSave": true
 
-		});
+	// sort and filter tables
+	$('.tablesorter').dataTable({
+		"bPaginate": false,
+		"bLengthChange": false,
+		"bFilter": true,
+		"bSort": true,
+		"bInfo": false,
+		"bAutoWidth": false,
+		"bRetrieve": false,
+		"asSorting": true,
+		"bSearchable": true,
+		"bSortable": true,
+		//"oSearch": {"sSearch": " "}
+		"aaSorting": [],
+		"oLanguage": {
+		 	"sSearch": "Filter"
+		 },
+		"bStateSave": true
+	});
+
+	// parse url and make breadcrumb navigation
+
+	
+	var locSplit = window.location.href.split("/");
+	
+	console.log(locSplit.length-1)
+	//console.log(locSplit);
+	$(locSplit).each(function(i) {
+		console.log(i)
+
+	});
 
 });
