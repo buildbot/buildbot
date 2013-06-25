@@ -69,7 +69,9 @@ although sometimes the resulting builders can be quite complex.
 
 So to perform a manual build of our project we would type this from
 the command line (assuming we are at the root of the local copy of
-the repository)::
+the repository):
+
+.. code-block:: bash
 
     $ make clean    # clean remnants of previous builds
     ...
@@ -323,13 +325,15 @@ example, you need to change::
 
     trunkchanged = SingleBranchScheduler(name = "trunkchanged",
                                          change_filter = filter.ChangeFilter(branch = None),
-    ...
+                                         # ...
+                                         )
 
 to e.g.::
 
     trunkchanged = SingleBranchScheduler(name = "trunkchanged",
                                          change_filter = filter.ChangeFilter(project = "coolproject", branch = None),
-    ...
+                                         # ...
+                                         )
 
 else coolproject will be built when there's a change in superproject.
 

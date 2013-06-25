@@ -252,7 +252,9 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-Git log itself::
+Git log itself:
+
+.. code-block:: bash
 
    git log v0.8.6..v0.8.7
 

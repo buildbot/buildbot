@@ -233,3 +233,80 @@ man_pages = [
     ('index', 'buildbot', u'BuildBot Documentation',
      [u'Brian Warner'], 1)
 ]
+
+
+# Monkey-patch Sphinx to treat unhiglighted code as error.
+from sphinx.errors import SphinxWarning
+import sphinx
+import sphinx.highlighting
+from pkg_resources import parse_version
+
+# Versions of Sphinx below changeset 3400:15074817c66f (before v1.1 release)
+# won't work due to different PygmentsBridge interface.
+sphinx_version_supported = parse_version(sphinx.__version__) >= parse_version('1.1')
+
+# This simple monkey-patch allows either fail on first unhighlighted block or
+# print all unhighlighted blocks and don't fail at all.
+# First behaviour is useful for testing that all code is highlighted, second ---
+# for fixing lots of unhighlighted code.
+fail_on_first_unhighlighted = True
+
+class UnhighlightedError(SphinxWarning):
+    pass
+
+def patched_unhighlighted(self, source):
+    indented_source = '    ' + '\n    '.join(source.split('\n'))
+
+    if fail_on_first_unhighlighted:
+        msg = textwrap.dedent(u"""\
+            Block not highlighted:
+
+            %s
+
+            If it should be unhighlighted, please specify explicitly language of
+            this block as "none":
+
+            .. code-block:: none
+
+                ...
+
+            If this block is Python example, then it probably contains syntax
+            errors, such as unmatched brackets or invalid indentation.
+
+            Note that in most places you can use "..." in Python code as valid
+            anonymous expression.
+            """) % indented_source
+        raise UnhighlightedError(msg)
+    else:
+        msg = textwrap.dedent(u"""\
+            Unhighlighted block:
+
+            %s
+
+            """) % indented_source
+        sys.stderr.write(msg.encode('ascii', 'ignore'))
+
+        return orig_unhiglighted(self, source)
+
+def patched_highlight_block(self, source, lang, warn=None, force=False, **kw):
+    try:
+        return orig_highlight_block(self, source, lang, warn, force, **kw)
+    except UnhighlightedError, ex:
+        msg = ex.args[0]
+        if warn:
+            warn(msg)
+
+        raise
+
+if sphinx_version_supported:
+    orig_unhiglighted = sphinx.highlighting.PygmentsBridge.unhighlighted
+    orig_highlight_block = sphinx.highlighting.PygmentsBridge.highlight_block
+
+    sphinx.highlighting.PygmentsBridge.unhighlighted = patched_unhighlighted
+    sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
+else:
+    msg = textwrap.dedent("""\
+        WARNING: Your Sphinx version %s is too old and will not work with
+        monkey-patch for checking unhighlighted code. Check disabled.
+        """) % (sphinx.__version__)
+    sys.stderr.write(msg)
