@@ -237,16 +237,19 @@ man_pages = [
 
 # Monkey-patch Sphinx to treat unhiglighted code as error.
 from sphinx.errors import SphinxWarning
+import sphinx
 import sphinx.highlighting
+from pkg_resources import parse_version
+
+# Versions of Sphinx below changeset 3400:15074817c66f (before v1.1 release)
+# won't work due to different PygmentsBridge interface.
+sphinx_version_supported = parse_version(sphinx.__version__) >= parse_version('1.1')
 
 # This simple monkey-patch allows either fail on first unhighlighted block or
 # print all unhighlighted blocks and don't fail at all.
 # First behaviour is useful for testing that all code is highlighted, second ---
 # for fixing lots of unhighlighted code.
 fail_on_first_unhighlighted = True
-
-orig_unhiglighted = sphinx.highlighting.PygmentsBridge.unhighlighted
-orig_highlight_block = sphinx.highlighting.PygmentsBridge.highlight_block
 
 class UnhighlightedError(SphinxWarning):
     pass
@@ -295,5 +298,15 @@ def patched_highlight_block(self, source, lang, warn=None, force=False, **kw):
 
         raise
 
-sphinx.highlighting.PygmentsBridge.unhighlighted = patched_unhighlighted
-sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
+if sphinx_version_supported:
+    orig_unhiglighted = sphinx.highlighting.PygmentsBridge.unhighlighted
+    orig_highlight_block = sphinx.highlighting.PygmentsBridge.highlight_block
+
+    sphinx.highlighting.PygmentsBridge.unhighlighted = patched_unhighlighted
+    sphinx.highlighting.PygmentsBridge.highlight_block = patched_highlight_block
+else:
+    msg = textwrap.dedent("""\
+        WARNING: Your Sphinx version %s is too old and will not work with
+        monkey-patch for checking unhighlighted code. Check disabled.
+        """) % (sphinx.__version__)
+    sys.stderr.write(msg)
