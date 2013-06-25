@@ -219,7 +219,9 @@ Now let's set some event notifications:
   bbtest: notify on finished
   bbtest: notify on failure
 
-The bot should have responded to each of the commands::
+The bot should have responded to each of the commands:
+
+.. code-block:: irc
 
     <@lsblakk> bbtest: notify on started
     <bbtest> The following events are being notified: ['started']
@@ -230,7 +232,9 @@ The bot should have responded to each of the commands::
 
 Now, go back to the web interface and force another build.
 
-Notice how the bot tells you about the start and finish of this build::
+Notice how the bot tells you about the start and finish of this build:
+
+.. code-block:: irc
 
   < bbtest> build #1 of runtests started, including []
   < bbtest> build #1 of runtests is complete: Success [build successful]  Build details are at http://localhost:8010/builders/runtests/builds/1
@@ -250,7 +254,9 @@ configuration::
 
 This time, the bot is giving you more output, as it's specifically responding
 to your direct request to force a build, and explicitly tells you when the
-build finishes::
+build finishes:
+
+.. code-block:: irc
 
   <@lsblakk> bbtest: force build runtests test build
   < bbtest> build #2 of runtests started, including []
