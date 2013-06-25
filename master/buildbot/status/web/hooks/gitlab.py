@@ -13,9 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 from twisted.python import log
-from dateutil.parser import parse as dateparse
+from buildbot.status.web.hooks.github import process_change
 
 try:
     import json
@@ -43,53 +42,3 @@ def getChanges(request, options=None):
     changes = process_change(payload, user, repo, repo_url, project)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')
-
-
-def process_change(payload, user, repo, repo_url, project):
-    """
-    Consumes the JSON as a python object and actually starts the build.
-
-    :arguments:
-        payload
-            Python Object that represents the JSON sent by GitLab Service
-            Hook.
-    """
-    changes = []
-    newrev = payload['after']
-    refname = payload['ref']
-
-    # We only care about regular heads, i.e. branches
-    match = re.match(r"^refs\/heads\/(.+)$", refname)
-    if not match:
-        log.msg("Ignoring refname `%s': Not a branch" % refname)
-    else:
-        branch = match.group(1)
-        if re.match(r"^0*$", newrev):
-            log.msg("Branch `%s' deleted, ignoring" % branch)
-        else:
-            for commit in payload['commits']:
-                files = []
-                if 'added' in commit:
-                    files.extend(commit['added'])
-                if 'modified' in commit:
-                    files.extend(commit['modified'])
-                if 'removed' in commit:
-                    files.extend(commit['removed'])
-                when_timestamp = dateparse(commit['timestamp'])
-
-                log.msg("New revision: %s" % commit['id'][:8])
-                changes.append({
-                    'author': '%s <%s>' % (
-                        commit['author']['name'], commit['author']['email']
-                    ),
-                    'files': files,
-                    'comments': commit['message'],
-                    'revision': commit['id'],
-                    'when_timestamp': when_timestamp,
-                    'branch': branch,
-                    'revlink': commit['url'],
-                    'repository': repo_url,
-                    'project': project
-                })
-
-    return changes

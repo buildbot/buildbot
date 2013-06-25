@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from mock import Mock
+from StringIO import StringIO
 
 from twisted.internet import defer
 from twisted.web import server
@@ -30,10 +31,11 @@ class FakeRequest(Mock):
     redirected_to = None
     failure = None
 
-    def __init__(self, args={}):
+    def __init__(self, args={}, content=''):
         Mock.__init__(self)
 
         self.args = args
+        self.content = StringIO(content)
         self.site = Mock()
         self.site.buildbot_service = Mock()
         master = self.site.buildbot_service.master = Mock()
