@@ -129,7 +129,7 @@ class StatusResourceBuild(HtmlResource):
         self.build_status = build_status
 
     def getPageTitle(self, request):
-        return ("Buildbot: %s Build #%d" %
+        return ("Katana - %s Build #%d" %
                 (self.build_status.getBuilder().getName(),
                  self.build_status.getNumber()))
 

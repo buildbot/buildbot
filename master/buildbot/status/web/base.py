@@ -264,7 +264,7 @@ class ActionResource(resource.Resource, AccessorMixin):
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
-    pageTitle = "Buildbot"
+    pageTitle = "Katana"
     addSlash = False # adapted from Nevow
 
     def getChild(self, path, request):
@@ -365,7 +365,7 @@ class DirectoryLister(static.DirectoryLister, ContextMixin):
     """This variant of the static.DirectoryLister uses a template
     for rendering."""
 
-    pageTitle = 'BuildBot'
+    pageTitle = 'Katana'
 
     def render(self, request):
         cxt = self.getContext(request)

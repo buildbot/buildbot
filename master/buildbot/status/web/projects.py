@@ -24,7 +24,7 @@ import jinja2
 
 
 class ProjectsResource(HtmlResource):
-    pageTitle = "Projects overview"
+    pageTitle = "Katana - Projects"
 
     def content(self, request, cxt):
         cxt.update(dict(buildbot=buildbot.version, 
@@ -39,7 +39,7 @@ class ProjectsResource(HtmlResource):
     
 
 class CodeBasesResource(HtmlResource):
-    pageTitle = "Codebases overview"
+    pageTitle = "Katana - Codebases"
 
     
 

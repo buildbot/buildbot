@@ -313,7 +313,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
+        text = "katana working for '%s'\n" % status.getTitle()
         text += ("has noticed that the buildslave named %s went away\n" %
                  self.slavename)
         text += "\n"
@@ -324,9 +324,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         text += "was '%s'.\n" % self.slave_status.getAdmin()
         text += "\n"
         text += "Sincerely,\n"
-        text += " The Buildbot\n"
+        text += " Katana\n"
         text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: buildslave %s was lost" % self.slavename
+        subject = "Katana: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 
 
@@ -858,7 +858,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
         buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
+        text = "Katana working for '%s'\n" % status.getTitle()
         text += ("has noticed that the latent buildslave named %s \n" %
                  self.slavename)
         text += "never substantiated after a request\n"
@@ -869,7 +869,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: buildslave %s never substantiated" % self.slavename
+        subject = "Katana: buildslave %s never substantiated" % self.slavename
         return self._mail_missing_message(subject, text)
 
     def canStartBuild(self):

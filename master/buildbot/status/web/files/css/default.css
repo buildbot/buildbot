@@ -1649,7 +1649,7 @@ div.force-text .label {
 .pending-job-list li {
   width: 100%;
   display: table;
-  padding: 4px 0;
+  padding: 8px 0;
   *zoom: 1;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Library\/Ruby\/Gems\/1\.8\/gems\/compass-0\.12\.2\/frameworks\/compass\/stylesheets\/compass\/utilities\/general\/_clearfix\.scss}line{font-family:\0000338}}
