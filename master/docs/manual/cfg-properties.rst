@@ -250,7 +250,9 @@ Example ::
 In addition, ``Interpolate`` supports using positional string interpolation.
 Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
 
-.. note:
+  TODO
+
+.. note::
 
   Like Python, you can use either positional interpolation *or*
   dictionary-style interpolation, not both.  Thus you cannot use a string

@@ -160,7 +160,7 @@ Loading the Config File
 The config file is only read at specific points in time. It is first
 read when the buildmaster is launched.
 
-.. note: If the configuration is invalid, the master will display the errors in
+.. note:: If the configuration is invalid, the master will display the errors in
     the console output, but will not exit.
 
 Reloading the Config File (reconfig)
