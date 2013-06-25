@@ -133,6 +133,7 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.db",
+              "buildbot.db.types",
               "buildbot.db.migrate.versions",
               "buildbot.util",
               "buildbot.test",
