@@ -212,6 +212,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(chdict2change)
         return d
 
+    def getProjects(self):
+        return  self.master.getProjects()
+
     def getSchedulers(self):
         return self.master.allSchedulers()
 

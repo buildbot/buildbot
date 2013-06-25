@@ -26,14 +26,12 @@ import jinja2
 class ProjectsResource(HtmlResource):
     pageTitle = "Projects overview"
 
-    def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
-                               twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
-                               python=sys.version,
-                               platform=sys.platform))
-
-        template = request.site.buildbot_service.templates.get_template("projects.html")
+    def content(self, req, cxt):
+        status = self.getStatus(req)
+        print "\n\n --"
+        print status.getProjects()
+        print "\n\n --"
+        template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True
         return template.render(**cxt)
     
@@ -43,14 +41,9 @@ class CodeBasesResource(HtmlResource):
 
     
 
-    def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
-                               twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
-                               python=sys.version,
-                               platform=sys.platform))
+    def content(self, req, cxt):
 
-        template = request.site.buildbot_service.templates.get_template("codebases.html")
+        template = req.site.buildbot_service.templates.get_template("codebases.html")
         template.autoescape = True
         return template.render(**cxt)
 

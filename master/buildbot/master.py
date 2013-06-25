@@ -323,6 +323,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     ## informational methods
 
+    def getProjects(self):
+        return self.config.projects
+
     def allSchedulers(self):
         return list(self.scheduler_manager)
 

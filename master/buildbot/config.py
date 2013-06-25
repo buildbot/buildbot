@@ -98,6 +98,7 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.projects = []
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -105,7 +106,7 @@ class MasterConfig(object):
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
-        "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
+        "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation"
     ])
@@ -192,6 +193,7 @@ class MasterConfig(object):
         config.load_db(filename, config_dict, errors)
         config.load_metrics(filename, config_dict, errors)
         config.load_caches(filename, config_dict, errors)
+        config.load_projects(filename, config_dict, errors)
         config.load_schedulers(filename, config_dict, errors)
         config.load_builders(filename, config_dict, errors)
         config.load_slaves(filename, config_dict, errors)
@@ -382,6 +384,17 @@ class MasterConfig(object):
                 errors.addError(msg)
             self.caches['Changes'] = config_dict['changeCacheSize']
 
+    def load_projects(self, filename, config_dict, errors):
+        projects = config_dict['projects']
+
+        for p in projects:
+            print "\n\n loading project %s \n" % p
+            seen_names = set()
+            if p in seen_names:
+                errors.addError("project name '%s' used multiple times" %
+                                p)
+        self.projects =  projects
+
 
     def load_schedulers(self, filename, config_dict, errors):
         if 'schedulers' not in config_dict:
@@ -406,6 +419,7 @@ class MasterConfig(object):
                 errors.addError("scheduler name '%s' used multiple times" %
                                 s.name)
             seen_names.add(s.name)
+
 
         self.schedulers = dict((s.name, s) for s in schedulers)
 
