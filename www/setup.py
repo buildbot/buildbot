@@ -17,6 +17,7 @@
 
 import os
 import subprocess
+import sys
 from setuptools import setup
 import setuptools.command.sdist
 import setuptools.command.install
@@ -276,6 +277,13 @@ class develop(setuptools.command.develop.develop):
 
 cmdclass['develop'] = develop
 
+py_26 = (sys.version_info[0] > 2 or
+         (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
+
+install_requires = []
+if not py_26:
+    install_requires.append('simplejson') # for setup.py itself, actually
+
 setup(
     name='buildbot-www',
     version=version,
@@ -286,7 +294,7 @@ setup(
     license='GNU GPL',
     py_modules=['buildbot_www'],
     cmdclass=cmdclass,
-    install_requires=['simplejson'], # for setup.py
+    install_requires=install_requires,
     entry_points="""
         [buildbot.www]
         base = buildbot_www:ep
