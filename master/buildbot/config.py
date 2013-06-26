@@ -385,15 +385,24 @@ class MasterConfig(object):
             self.caches['Changes'] = config_dict['changeCacheSize']
 
     def load_projects(self, filename, config_dict, errors):
+        if 'projects' not in config_dict:
+            return
         projects = config_dict['projects']
 
+        if not isinstance(projects, (list, tuple)):
+            errors.addError("c['projects'] must be a list")
+            return
+
         for p in projects:
+            if not isinstance(p, ProjectConfig):
+                errors.addError("c['projects'] must be a list of ProjectConfig")
+                return
             print "\n\n loading project %s \n" % p
             seen_names = set()
-            if p in seen_names:
+            if p.name in seen_names:
                 errors.addError("project name '%s' used multiple times" %
                                 p)
-        self.projects =  projects
+        self.projects =  dict((p.name, p) for p in projects)
 
 
     def load_schedulers(self, filename, config_dict, errors):
@@ -621,13 +630,27 @@ class MasterConfig(object):
             errors.addError(
                     "debug client is configured, but no slavePortnum is set")
 
+class ProjectConfig:
+
+    def __init__(self, name=None, codebases = None):
+        self.name = name
+        self.codebases = codebases
+
+        errors = ConfigErrors([])
+
+        if not name or type(name) not in (str, unicode):
+            errors.addError("project's name is required")
+            name = '<unknown>'
+        self.name = name
+        if errors:
+            raise errors
 
 class BuilderConfig:
 
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=False):
+            properties=None, mergeRequests=False, project=None):
 
         errors = ConfigErrors([])
 
@@ -700,6 +723,7 @@ class BuilderConfig:
             errors.addError("builder's env must be a dictionary")
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
+        self.project = project
 
         if errors:
             raise errors

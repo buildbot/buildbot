@@ -23,22 +23,22 @@
 {% block content %}
 
 <h1 class="main-head">
-    
       Projects
-    
-    </h1>
+</h1>
 
 <table class="table-2">
   <tr>
-    <th>Branch</th>
+    <th>Name</th>
   </tr>
-  <tr>
-    <td>
-      <a href="{{ path_to_root }}projects/codebases">
-        Default project
-      </a>
-    </td>
-  </tr>
+   {% for project in projects %}
+    <tr>
+        <td>
+          <a href="{{path_to_root}}projects/{{ project|urlencode }}">
+        {{ project }}
+          </a>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
 
 {% endblock %}

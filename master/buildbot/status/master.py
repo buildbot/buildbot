@@ -230,6 +230,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                 l.append(name)
         return util.naturalSort(l)
 
+    def getBuilderNamesByProject(self, projectName):
+        l = []
+        for name in self.botmaster.builderNames:
+            bldr = self.botmaster.builders[name]
+            if projectName in bldr.config.project:
+                l.append(name)
+        return util.naturalSort(l)
+
     def getBuilder(self, name):
         """
         @rtype: L{BuilderStatus}
