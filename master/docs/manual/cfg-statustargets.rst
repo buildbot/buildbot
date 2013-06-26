@@ -853,6 +853,39 @@ option::
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
 
+GitLab hook
+###########
+
+The GitLab hook is as simple as GitHub one and it also takes no options. ::
+
+    c['status'].append(html.WebStatus(
+        # ...
+        change_hook_dialects={ 'gitlab' : True }
+    ))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab``
+relative to the root of the web status. For example, it the grid URL is
+``http://builds.mycompany.com/bbot/grid``, then point GitLab to
+``http://builds.mycompany.com/change_hook/gitlab``. To specify a project associated
+to the repository, append ``?project=name`` to the URL.
+
+.. warning::
+
+    As in the previous case, the incoming HTTP requests for this hook are not
+    authenticated bu default. Anyone who can access the web status can "fake"
+    a request from your GitLab server, potentially causing the buildmaster to run
+    arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+    c['status'].append(html.WebStatus(
+        # ...
+        change_hook_auth=('user', 'password')
+    ))
+
+Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+
+Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
 .. bb:status:: MailNotifier
 
