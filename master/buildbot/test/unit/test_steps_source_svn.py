@@ -334,6 +334,38 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
+    def test_mode_incremental_repourl_canonical(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/trunk/test app',
+                        mode='incremental'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml',
+                                 '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                stdout="""<?xml version="1.0"?><url>http://svn.local/trunk/test%20app</url>""")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=self.svn_info_stdout_xml)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+    
     def test_mode_incremental_repourl_not_updatable(self):
         self.setupStep(
                 svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
@@ -1475,3 +1507,64 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
 
+
+    def _makeSUCTest(input, exp):
+        return lambda self : self.assertEqual(
+                svn.SVN.svnUriCanonicalize(input), exp)
+
+    test_svnUriCanonicalize_empty = _makeSUCTest(
+        "", "")
+    test_svnUriCanonicalize_canonical = _makeSUCTest(
+        "http://foo.com/bar", "http://foo.com/bar")
+    test_svnUriCanonicalize_lc_scheme = _makeSUCTest(
+        "hTtP://foo.com/bar", "http://foo.com/bar")
+    test_svnUriCanonicalize_trailing_dot = _makeSUCTest(
+        "http://foo.com./bar", "http://foo.com/bar")
+    test_svnUriCanonicalize_lc_hostname = _makeSUCTest(
+        "http://foO.COm/bar", "http://foo.com/bar")
+    test_svnUriCanonicalize_lc_hostname_with_user = _makeSUCTest(
+        "http://Jimmy@fOO.Com/bar", "http://Jimmy@foo.com/bar")
+    test_svnUriCanonicalize_lc_hostname_with_user_pass = _makeSUCTest(
+        "http://Jimmy:Sekrit@fOO.Com/bar", "http://Jimmy:Sekrit@foo.com/bar")
+    test_svnUriCanonicalize_trailing_slash = _makeSUCTest(
+        "http://foo.com/bar/", "http://foo.com/bar")
+    test_svnUriCanonicalize_trailing_slash_scheme = _makeSUCTest(
+        "http://", "http://")
+    test_svnUriCanonicalize_trailing_slash_hostname = _makeSUCTest(
+        "http://foo.com/", "http://foo.com")
+    test_svnUriCanonicalize_trailing_double_slash = _makeSUCTest(
+        "http://foo.com/x//", "http://foo.com/x")
+    test_svnUriCanonicalize_double_slash = _makeSUCTest(
+        "http://foo.com/x//y", "http://foo.com/x/y")
+    test_svnUriCanonicalize_slash = _makeSUCTest(
+        "/", "/")
+    test_svnUriCanonicalize_dot = _makeSUCTest(
+        "http://foo.com/x/./y", "http://foo.com/x/y")
+    test_svnUriCanonicalize_dot_dot = _makeSUCTest(
+        "http://foo.com/x/../y", "http://foo.com/y")
+    test_svnUriCanonicalize_double_dot_dot = _makeSUCTest(
+        "http://foo.com/x/y/../../z", "http://foo.com/z")
+    test_svnUriCanonicalize_dot_dot_root = _makeSUCTest(
+        "http://foo.com/../x/y", "http://foo.com/x/y")
+    test_svnUriCanonicalize_quote_spaces = _makeSUCTest(
+        "svn+ssh://user@host:123/My Stuff/file.doc",
+        "svn+ssh://user@host:123/My%20Stuff/file.doc")
+    test_svnUriCanonicalize_remove_port_80 = _makeSUCTest(
+        "http://foo.com:80/bar", "http://foo.com/bar")
+    test_svnUriCanonicalize_dont_remove_port_80 = _makeSUCTest(
+        "https://foo.com:80/bar", "https://foo.com:80/bar") # not http
+    test_svnUriCanonicalize_remove_port_443 = _makeSUCTest(
+        "https://foo.com:443/bar", "https://foo.com/bar")
+    test_svnUriCanonicalize_dont_remove_port_443 = _makeSUCTest(
+        "svn://foo.com:443/bar", "svn://foo.com:443/bar") # not https
+    test_svnUriCanonicalize_remove_port_3690 = _makeSUCTest(
+        "svn://foo.com:3690/bar", "svn://foo.com/bar")
+    test_svnUriCanonicalize_dont_remove_port_3690 = _makeSUCTest(
+        "http://foo.com:3690/bar", "http://foo.com:3690/bar") # not svn
+    test_svnUriCanonicalize_dont_remove_port_other = _makeSUCTest(
+        "https://foo.com:2093/bar", "https://foo.com:2093/bar")
+    test_svnUriCanonicalize_quote_funny_chars = _makeSUCTest(
+        "http://foo.com/\x10\xe6%", "http://foo.com/%10%E6%25")
+    test_svnUriCanonicalize_overquoted = _makeSUCTest(
+        "http://foo.com/%68%65%6c%6c%6f%20%77%6f%72%6c%64",
+        "http://foo.com/hello%20world")
