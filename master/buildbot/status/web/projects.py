@@ -27,7 +27,6 @@ class ProjectsResource(HtmlResource):
 
         projects = req.args.get("projects", status.getProjects())
         cxt['projects'] = util.naturalSort(projects.keys())
-        print "\n\n projects %s \n" % cxt['projects']
 
         template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True

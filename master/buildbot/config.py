@@ -397,7 +397,7 @@ class MasterConfig(object):
             if not isinstance(p, ProjectConfig):
                 errors.addError("c['projects'] must be a list of ProjectConfig")
                 return
-            print "\n\n loading project %s \n" % p
+
             seen_names = set()
             if p.name in seen_names:
                 errors.addError("project name '%s' used multiple times" %
