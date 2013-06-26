@@ -66,17 +66,18 @@ class TestAuthz(unittest.TestCase):
         self.dl = []
         for a in Authz.knownActions:
             md = z.actionAllowed(a, StubRequest('foo', 'bar'))
-            def check(res):
-                if res:
-                    self.failedActions.append(a)
+            def check(res, expected):
+                if res != expected:
+                    self.failedActions.append((a, expected))
                 return
-            md.addCallback(check)
+            md.addCallback(check, a == 'view')
             self.dl.append(md)
         d = defer.DeferredList(self.dl)
         def check_failed(_):
             if self.failedActions:
-                raise unittest.FailTest("action(s) %s do not default to False"
-                                        % (self.failedActions,))
+                msgs = '; '.join('%s action authz did not default to %s' % f
+                                 for f in self.failedActions)
+                raise unittest.FailTest(msgs)
         d.addCallback(check_failed)
         return d
 
