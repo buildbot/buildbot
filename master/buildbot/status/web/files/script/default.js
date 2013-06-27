@@ -43,6 +43,7 @@ $(document).ready(function() {
 	    }
 	});
 
+
 	//Show / hide
 
 	$(function centerPopup(){
@@ -54,11 +55,19 @@ $(document).ready(function() {
 	$('.popup-btn-js').click(function(e){
 		e.preventDefault();
 		$('.more-info-box').hide();
-		$(this).next().fadeIn('fast');
+		$('.command_forcebuild').removeClass('form-open');
+		$(this).next().fadeIn('fast', function (){
+			$('.command_forcebuild', this).addClass('form-open')
+
+			validateForm();
+			
+		});
+
 	});
 
 	$(document, '.close-btn').click(function(e){
 		if (!$(e.target).closest('.more-info-box, .popup-btn-js').length || $(e.target).closest('.close-btn').length ) {
+			$('.command_forcebuild').removeClass('form-open');
 			$('.more-info-box').fadeOut('fast');
 		}
 	}); 
@@ -113,14 +122,55 @@ $(document).ready(function() {
 
 	// parse url and make breadcrumb navigation
 
+	var dict = {
+	  "test" : "testing",
+	  "test1" : "testing1",
+	};
 	
-	var locSplit = window.location.href.split("/");
+	var path = "";
+	var href = document.location.href;
+	var s = href.split("/");
 	
-	console.log(locSplit.length-1)
-	//console.log(locSplit);
-	$(locSplit).each(function(i) {
-		console.log(i)
+	for (var i=2;i<(s.length-1);i++) {
+	path+="<li><a HREF=\""+href.substring(0,href.indexOf("/"+s[i])+s[i].length+1)+"/\">"+s[i]+"</a></li>";
+	}
+	i=s.length-1;	
+	path+= '<li>' + s[i] + '</li>';
+	
+		$('.breadcrumbs-nav').html(path)
+	
 
-	});
+	// validate the form
+	function validateForm() {
+
+			$('.form-open .grey-btn').click(function(e) {
+
+				var allInputs = $('.form-open input').not(':button, :hidden, :checkbox, :submit')
+				var empty = allInputs.filter(function() {
+					return this.value === "";
+				});
+				 if (empty.length === 0) {
+        			alert('all is filled')
+
+        			e.preventDefault();
+    			} else if (empty.length == allInputs.length) {
+    				alert('All is  blank')
+
+        			e.preventDefault();
+    			} else if (empty.length < allInputs.length) {
+    				alert('At least one input is empty')
+    				allInputs.each(function(){
+        				if ($(this).val() != "") {
+    						$(this).addClass('not-valid')
+    					}
+        			});
+    				e.preventDefault();
+    			}
+    		});
+		}
+
+	
+
+    
 
 });

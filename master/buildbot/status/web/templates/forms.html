@@ -87,7 +87,10 @@
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
     {% if 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>
-       <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
+       <!--
+          {{default_props[sch.name+"."+f.fullName]}}
+      -->
+       <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='' />
     {% elif 'bool' in f.type%}
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
        <span class="label">{{f.label}}</span>
