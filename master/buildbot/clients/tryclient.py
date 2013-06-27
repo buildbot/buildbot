@@ -541,6 +541,9 @@ class Try(pb.Referenceable):
         self.project = self.getopt('project', '')
         self.who = self.getopt('who')
         self.comment = self.getopt('comment')
+        self.urls = {}
+        self.exitcode = 0
+        self.pending = []
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -735,6 +738,7 @@ class Try(pb.Referenceable):
         for n, br in res:
             self.builderNames.append(n)
             self.buildRequests[n] = br
+            self.pending.append(n)
             br.callRemote("subscribe", self)
 
     def _printUrl(self, url):
@@ -788,6 +792,7 @@ class Try(pb.Referenceable):
             self.results[n] = [None, None]
             self.currentStep[n] = None
             self.ETA[n] = None
+            self.pending.append(n)
             # get new Builds for this buildrequest. We follow each one until
             # it finishes or is interrupted.
             br.callRemote("subscribe", self)
@@ -798,20 +803,30 @@ class Try(pb.Referenceable):
             self.printloop = task.LoopingCall(self.printStatus)
             self.printloop.start(3, now=False)
 
+    def setUrl(self, url, buildername):
+        self.urls[buildername] = url
+        self.pending.remove(buildername)
+        wait = self.getopt('wait')
+        #we have all the urls and we are not waiting.
+        if (not self.pending) and (not wait):
+            self.ending()
+
     # these methods are invoked by the status objects we've subscribed to
 
     def remote_newbuild(self, bs, builderName):
+        print "started"
         wait = bool(self.getopt("wait"))
-        # This if is only hit when --url is set and --wait is not. The only way we get
-        # in here is if --url or --wait was set. And if wait is not set then
-        # url must be set so we are going to call get url righ away. Otherwise we
-        # will wait until the end to print the url.
-        if not wait:
-            self.announce("started")
-            d = bs.callRemote("getUrl")
-            d.addCallback(self._printUrl)
-            return d
+        d = bs.callRemote("getUrl")
+        d.addCallback(self.remote_newbuild_1, bs, builderName)
+        return d
 
+    def remote_newbuild_1(self, url, bs, builderName):
+        self.setUrl(url, builderName)
+        wait = self.getopt('wait')
+        if wait:
+            self.remote_newbuild_2(bs, builderName)
+
+    def remote_newbuild_2(self, bs, builderName):
         if self.builds[builderName]:
             self.builds[builderName].callRemote("unsubscribe", self)
         self.builds[builderName] = bs
@@ -845,16 +860,10 @@ class Try(pb.Referenceable):
         d.addCallback(self._build_finished_3, bs , builderName)
         return d
 
-    def _build_finished_3(self, text, bs, buildrname):
-        self.results[buildrname][1] = text
-        d = bs.callRemote("getUrl")
-        d.addCallback(self._build_finished_4 , buildrname)
-        return d
+    def _build_finished_3(self, text, bs, buildrName):
+        self.results[buildrName][1] = text
 
-    def _build_finished_4(self, url, builderName):
-        self.urls[builderName] = url
-
-        self.outstanding.remove(builderName)
+        self.outstanding.remove(buildrName)
         if not self.outstanding:
             # all done
             return self.statusDone()
@@ -898,15 +907,23 @@ class Try(pb.Referenceable):
             if code != builder.SUCCESS:
                 happy = False
 
-        url = self.getopt("url")
-        if url:
-            for url in self.urls:
-                print self.urls[url]
         if happy:
             self.exitcode = 0
         else:
             self.exitcode = 1
+        self.ending()
+
+
+    def ending(self):
+        self.printURL()
         self.running.callback(self.exitcode)
+
+    def printURL(self):
+        url = self.getopt('url')
+        if url:
+            self.announce("Urls:")
+            for name in self.urls.keys():
+                self.announce(self.urls[name])
 
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
