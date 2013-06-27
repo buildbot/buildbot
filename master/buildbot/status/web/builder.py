@@ -154,6 +154,7 @@ class ForceBuildActionResource(ActionResource):
         for cb in args.get("checkbox", []):
             args[cb] = True
 
+        print "\n\n - force sch args %s - \n\n" % args
         builder_name = self.builder_status.getName()
 
         for sch in master.allSchedulers():
@@ -511,6 +512,9 @@ class BuildersResource(HtmlResource):
     def content(self, req, cxt):
         status = self.getStatus(req)
         encoding = getRequestCharset(req)
+
+        args = req.args.copy()
+        print "\n\n builders args %s \n\n " % args
 
         builders = req.args.get("builder", status.getBuilderNamesByProject(self.project.name))
         branches = [ b.decode(encoding)

@@ -32,9 +32,10 @@
     </span>
 </h1>
 
-<a href="/projects/{{selectedproject|urlencode}}/builders" class="grey-btn var-1">
-  Go      
-</a>
+
+
+<form method="post" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
+    <input value="Go" class="grey-btn var-1" type="submit" />
 
 <table class="table-2 no-bg">
    <thead>
@@ -56,7 +57,7 @@
       {{codebase['repository']}}
     </td>
     <td>
-      <select class="select-tools var-1">
+      <select name='{{cbkey}}_branch' class="select-tools var-1">
          {% for b in codebase['branch'] %}
             <option>
             {{ b }}
@@ -68,5 +69,5 @@
  {% endfor %}
 {% endfor %}
 </table>
-
+</form>
 {% endblock %}
