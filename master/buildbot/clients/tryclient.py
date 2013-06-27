@@ -741,9 +741,6 @@ class Try(pb.Referenceable):
             self.pending.append(n)
             br.callRemote("subscribe", self)
 
-    def _printUrl(self, url):
-        print url
-        self.running.callback(0)
 
     def _getStatus_ssh_1(self, remote):
         # find a remotereference to the corresponding BuildSetStatus object
@@ -814,7 +811,6 @@ class Try(pb.Referenceable):
     # these methods are invoked by the status objects we've subscribed to
 
     def remote_newbuild(self, bs, builderName):
-        print "started"
         wait = bool(self.getopt("wait"))
         d = bs.callRemote("getUrl")
         d.addCallback(self.remote_newbuild_1, bs, builderName)
