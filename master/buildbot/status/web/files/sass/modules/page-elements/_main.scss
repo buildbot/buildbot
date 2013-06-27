@@ -197,11 +197,12 @@
 		color:#fff;
 		@include text-shadow (0 -1px 0 #666);
 		&:after {
-			content:"▲";
+			margin-top: 12px;
+			@include transform (rotate(180deg));
+			content:"▾";
 			color:rgba(255, 255, 255, 0.59);
 			@include text-shadow (none);
 		}
-
 	}
 }
 
@@ -300,7 +301,7 @@ div.last {
 	.not_started {
 		background-color:#eee;
 		&:before {
-			content:"Not startet";
+			content:"Not started";
 		}
 	}
 	.retry:before {
