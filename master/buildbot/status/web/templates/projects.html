@@ -26,10 +26,13 @@
       Projects
 </h1>
 
-<table class="table-2">
+<table class="table-2 tablesorter dataTable">
+    <thead>
   <tr>
     <th>Name</th>
   </tr>
+    </thead>
+    <body>
    {% for project in projects %}
     <tr>
         <td>
@@ -39,6 +42,7 @@
         </td>
     </tr>
     {% endfor %}
+    </body>
 </table>
 
 {% endblock %}
