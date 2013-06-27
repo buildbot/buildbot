@@ -158,22 +158,5 @@ $(document).ready(function() {
 		});
 	}
 
-		// parse url and make breadcrumb navigation
 
-	var dict = {
-	  "test" : "testing",
-	  "test1" : "testing1",
-	};
-	
-	var path = "";
-	var href = document.location.href;
-	var s = href.split("/");
-	
-	for (var i=2;i<(s.length-1);i++) {
-	path+="<li><a HREF=\""+href.substring(0,href.indexOf("/"+s[i])+s[i].length+1)+"/\">"+s[i]+"</a></li>";
-	}
-	i=s.length-1;	
-	path+= '<li>' + s[i] + '</li>';
-	
-		$('.breadcrumbs-nav').html(path)
 });
