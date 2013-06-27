@@ -127,12 +127,17 @@ $(document).ready(function() {
 		$('.grey-btn', formEl).click(function(e) {
 
 			var allInputs = $('input', formEl).not(excludeFields)
-			var empty = allInputs.filter(function() {
+			var rev = allInputs.filter(function() {
+				return this.name === "fmod_revision";
+			});
+
+			var emptyRev = rev.filter(function() {
 				return this.value === "";
 			});
-			  if (empty.length < allInputs.length) {
+
+			  if (emptyRev.length > 0 && emptyRev.length < rev.length) {
 				
-				allInputs.each(function(){
+				rev.each(function(){
     				if ($(this).val() === "") {
 						$(this).addClass('not-valid');
 					} else {
@@ -141,15 +146,34 @@ $(document).ready(function() {
     			});
     			$('.form-message', formEl).hide();
     			if (!$('.error-input', formEl).length) {
-    				$(formEl).prepend('<div class="error-input">Fill out the empty fields or clear all before submitting</div>');
-    			}
+    				$(formEl).prepend('<div class="error-input">Fill out the empty revisionfields or clear all before submitting</div>');
+    			} 
 				e.preventDefault();
 			}
 
 		});
 		$(".clear-btn", formEl).click(function (e) {
-			$('input',formEl).not(excludeFields).val("").removeClass('not-valid');
+			$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
 			e.preventDefault();
 		});
 	}
+
+		// parse url and make breadcrumb navigation
+
+	var dict = {
+	  "test" : "testing",
+	  "test1" : "testing1",
+	};
+	
+	var path = "";
+	var href = document.location.href;
+	var s = href.split("/");
+	
+	for (var i=2;i<(s.length-1);i++) {
+	path+="<li><a HREF=\""+href.substring(0,href.indexOf("/"+s[i])+s[i].length+1)+"/\">"+s[i]+"</a></li>";
+	}
+	i=s.length-1;	
+	path+= '<li>' + s[i] + '</li>';
+	
+		$('.breadcrumbs-nav').html(path)
 });
