@@ -21,7 +21,7 @@ from twisted.web.resource import NoResource
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder
 from buildbot import util
 
 class ShutdownActionResource(ActionResource):
@@ -133,7 +133,7 @@ class BuildSlavesResource(HtmlResource):
                 slavename = bs.getName()
                 if slavename not in used_by_builder:
                     used_by_builder[slavename] = []
-                used_by_builder[slavename].append(bname)
+                used_by_builder[slavename].append(b)
 
         slaves = ctx['slaves'] = []
         for name in util.naturalSort(s.getSlaveNames()):
@@ -149,7 +149,7 @@ class BuildSlavesResource(HtmlResource):
             if show_builder_column:
                 info['builders'] = []
                 for b in used_by_builder.get(name, []):
-                    info['builders'].append(dict(link=request.childLink("../builders/%s" % urllib.quote(b, safe='')), name=b))
+                    info['builders'].append(dict(link=path_to_builder(request, b), name=b.getName()))
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
