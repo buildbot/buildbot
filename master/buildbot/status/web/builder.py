@@ -170,7 +170,7 @@ class ForceBuildActionResource(ActionResource):
         if returnbuilders is None:
             defer.returnValue((path_to_builder(req, self.builder_status), msg))
         else:
-            defer.returnValue((path_to_builders(req), msg))
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
@@ -249,7 +249,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
-
+        cxt['selectedproject'] =  b.getProject()
         cxt['name'] = b.getName()
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
@@ -369,7 +369,7 @@ class CancelChangeResource(ActionResource):
         if returnbuilders is None:
             defer.returnValue((path_to_builder(req, self.builder_status)))
         else:
-            defer.returnValue(path_to_builders(req))
+            defer.returnValue(path_to_builders(req, self.builder_status.getProject()))
 
 class StopChangeMixin(object):
 
@@ -503,12 +503,16 @@ class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
     addSlash = True
 
+    def __init__(self, project):
+        HtmlResource.__init__(self)
+        self.project = project
+
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
         encoding = getRequestCharset(req)
 
-        builders = req.args.get("builder", status.getBuilderNames())
+        builders = req.args.get("builder", status.getBuilderNamesByProject(self.project.name))
         branches = [ b.decode(encoding)
                 for b in req.args.get("branch", [])
                 if b ]
@@ -525,6 +529,7 @@ class BuildersResource(HtmlResource):
             brstatus_ds.append(d)
         yield defer.gatherResults(brstatus_ds)
 
+        cxt['selectedproject'] = self.project.name
         cxt['branches'] = branches
         bs = cxt['builders'] = []
 
@@ -539,7 +544,7 @@ class BuildersResource(HtmlResource):
 
         building = 0
         online = 0
-        base_builders_url = path_to_builders(req)
+        base_builders_url = path_to_builders(req, self.project.name)
         for bn in builders:
             bld = { 'link': base_builders_url +"/"+ urllib.quote(bn, safe=''),
                     'name': bn }

@@ -17,17 +17,17 @@
       </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}projects/codebases">
+      <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}">
           Codebases
       </a>
     </li>
     <li>
-        <a href="{{ path_to_root }}projects/codebases/builders">
+        <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}/builders">
             Builders
         </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}projects/codebases/builders/{{ builder_name_link }}">
+      <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}/builders/{{ builder_name_link }}">
          {{ builder_name }}
       </a>
     </li>

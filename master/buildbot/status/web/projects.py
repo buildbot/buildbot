@@ -17,30 +17,47 @@
 
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.builder import BuildersResource
+from buildbot import util
 
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
 
     def content(self, req, cxt):
+        status = self.getStatus(req)
+
+        projects = req.args.get("projects", status.getProjects())
+        cxt['projects'] = util.naturalSort(projects.keys())
+
         template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True
         return template.render(**cxt)
 
     def getChild(self, path, req):
-        if path == "codebases":
-            return CodeBasesResource()
+        status = self.getStatus(req)
+        projects = status.getProjects()
+
+        if path in projects:
+            return CodeBasesResource(projects[path])
+        return HtmlResource.getChild(self, path, req)
     
 
 class CodeBasesResource(HtmlResource):
     pageTitle = "Katana - Codebases"
 
+    def __init__(self, project):
+        HtmlResource.__init__(self)
+        self.project = project
+
     def content(self, request, cxt):
+        cxt['codebases'] = self.project.codebases
+        cxt['selectedproject'] = self.project.name
         template = request.site.buildbot_service.templates.get_template("codebases.html")
         template.autoescape = True
         return template.render(**cxt)
 
     def getChild(self, path, req):
         if path == "builders":
-            return BuildersResource()
+            return BuildersResource(self.project)
+        return HtmlResource.getChild(self, path, req)
 
 

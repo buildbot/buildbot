@@ -32,47 +32,41 @@
     </span>
 </h1>
 
-<!--
-<a href="builders" class="grey-btn var-1">
+<a href="/projects/{{selectedproject|urlencode}}/builders" class="grey-btn var-1">
   Go      
 </a>
--->
+
 <table class="table-2 no-bg">
    <thead>
   <tr>
     <th>Codebase</th>
-    <!--
+
     <th>Url</th>
     <th>Branches</th>
-    -->
   </tr>
 </thead>
+
+{% for cb in codebases %}
+    {% for cbkey, codebase in cb.iteritems() %}
   <tr>
     <td>
-      <a href="/projects/codebases/builders">
-        Default codebase
-      </a>
+        {{cbkey}}
     </td>
-    <!--
     <td width="100%">
-      http://mercurial-mirror/all-uni
+      {{codebase['repository']}}
     </td>
     <td>
       <select class="select-tools var-1">
-        <option>
-          Default
-        </option>
-        <option>
-          Trunk
-        </option>
-        <option>
-          Android
-        </option>
+         {% for b in codebase['branch'] %}
+            <option>
+            {{ b }}
+            </option>
+          {% endfor %}
       </select>
     </td>
-  -->
   </tr>
-  
+ {% endfor %}
+{% endfor %}
 </table>
 
 {% endblock %}

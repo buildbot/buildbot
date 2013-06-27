@@ -98,6 +98,7 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.projects = []
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -105,7 +106,7 @@ class MasterConfig(object):
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
-        "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
+        "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation"
     ])
@@ -192,6 +193,7 @@ class MasterConfig(object):
         config.load_db(filename, config_dict, errors)
         config.load_metrics(filename, config_dict, errors)
         config.load_caches(filename, config_dict, errors)
+        config.load_projects(filename, config_dict, errors)
         config.load_schedulers(filename, config_dict, errors)
         config.load_builders(filename, config_dict, errors)
         config.load_slaves(filename, config_dict, errors)
@@ -382,6 +384,26 @@ class MasterConfig(object):
                 errors.addError(msg)
             self.caches['Changes'] = config_dict['changeCacheSize']
 
+    def load_projects(self, filename, config_dict, errors):
+        if 'projects' not in config_dict:
+            return
+        projects = config_dict['projects']
+
+        if not isinstance(projects, (list, tuple)):
+            errors.addError("c['projects'] must be a list")
+            return
+
+        for p in projects:
+            if not isinstance(p, ProjectConfig):
+                errors.addError("c['projects'] must be a list of ProjectConfig")
+                return
+
+            seen_names = set()
+            if p.name in seen_names:
+                errors.addError("project name '%s' used multiple times" %
+                                p)
+        self.projects =  dict((p.name, p) for p in projects)
+
 
     def load_schedulers(self, filename, config_dict, errors):
         if 'schedulers' not in config_dict:
@@ -406,6 +428,7 @@ class MasterConfig(object):
                 errors.addError("scheduler name '%s' used multiple times" %
                                 s.name)
             seen_names.add(s.name)
+
 
         self.schedulers = dict((s.name, s) for s in schedulers)
 
@@ -607,13 +630,27 @@ class MasterConfig(object):
             errors.addError(
                     "debug client is configured, but no slavePortnum is set")
 
+class ProjectConfig:
+
+    def __init__(self, name=None, codebases = None):
+        self.name = name
+        self.codebases = codebases
+
+        errors = ConfigErrors([])
+
+        if not name or type(name) not in (str, unicode):
+            errors.addError("project's name is required")
+            name = '<unknown>'
+        self.name = name
+        if errors:
+            raise errors
 
 class BuilderConfig:
 
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=False):
+            properties=None, mergeRequests=False, project=None):
 
         errors = ConfigErrors([])
 
@@ -686,6 +723,7 @@ class BuilderConfig:
             errors.addError("builder's env must be a dictionary")
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
+        self.project = project
 
         if errors:
             raise errors

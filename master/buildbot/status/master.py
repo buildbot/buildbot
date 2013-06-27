@@ -212,6 +212,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(chdict2change)
         return d
 
+    def getProjects(self):
+        return  self.master.getProjects()
+
     def getSchedulers(self):
         return self.master.allSchedulers()
 
@@ -224,6 +227,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         for name in self.botmaster.builderNames:
             bldr = self.botmaster.builders[name]
             if bldr.config.category in categories:
+                l.append(name)
+        return util.naturalSort(l)
+
+    def getBuilderNamesByProject(self, projectName):
+        l = []
+        for name in self.botmaster.builderNames:
+            bldr = self.botmaster.builders[name]
+            if projectName in bldr.config.project:
                 l.append(name)
         return util.naturalSort(l)
 

@@ -137,10 +137,12 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         status = self.getStatus(req)
         req.setHeader('Cache-Control', 'no-cache')
-        
-        cxt['builder_name'] = self.build_status.getBuilder().getName()
+
+        builder = self.build_status.getBuilder()
+        cxt['builder_name'] = builder.getName()
         cxt['builder_name_link'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
         cxt['b'] = b
+        cxt['selectedproject'] = builder.getProject()
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
 
         if not b.isFinished():

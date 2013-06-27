@@ -123,11 +123,11 @@ def path_to_root(request):
 def path_to_projects(request):
     return path_to_root(request) + "projects"
 
-def path_to_codebases(request):
-    return path_to_projects(request) + "/codebases"
+def path_to_codebases(request, projectName):
+    return path_to_projects(request) + "/" + urllib.quote(projectName, safe='')
 
-def path_to_builders(request):
-    return (path_to_codebases(request) + "/builders")
+def path_to_builders(request, projectName):
+    return (path_to_codebases(request, projectName) + "/builders")
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -136,7 +136,7 @@ def path_to_authzfail(request):
     return path_to_root(request) + "authzfail"
 
 def path_to_builder(request, builderstatus):
-    return (path_to_builders(request) +
+    return (path_to_builders(request, builderstatus.getProject()) +
             "/" +
             urllib.quote(builderstatus.getName(), safe=''))
 

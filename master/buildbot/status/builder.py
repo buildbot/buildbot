@@ -66,6 +66,7 @@ class BuilderStatus(styles.Versioned):
         self.name = buildername
         self.category = category
         self.master = master
+        self.project = None
 
         self.slavenames = []
         self.events = []
@@ -301,6 +302,12 @@ class BuilderStatus(styles.Versioned):
 
     def getCategory(self):
         return self.category
+
+    def setProject(self, project):
+        self.project = project
+
+    def getProject(self):
+        return self.project
 
     def getBuild(self, number):
         if number < 0:
@@ -538,6 +545,7 @@ class BuilderStatus(styles.Versioned):
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
+        result['project'] = self.project
         result['slaves'] = self.slavenames
         result['schedulers'] = [ s.name
                 for s in self.status.master.allSchedulers()
