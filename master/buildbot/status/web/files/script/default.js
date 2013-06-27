@@ -129,7 +129,7 @@ $(document).ready(function() {
 			var allInputs = $('input', formEl).not(excludeFields);
 			
 			var rev = allInputs.filter(function() {
-				return this.name.indexOf("revision") >=;
+				return this.name.indexOf("revision") >= 0;
 			});
 			
 
