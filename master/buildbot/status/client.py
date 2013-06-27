@@ -63,17 +63,19 @@ class RemoteBuildSet(pb.Referenceable):
         return d
 
     def remote_getURL(self):
-        d = self.b.getBuilderNames()
+        print self.b.id
+        
+        d = self.b.master.db.builds.getBuildsForRequest( self.b.id-1)
         d.addCallback( self._getUrl_1 )
         return d
 
-    def _getUrl_1(self, buildernames):
+    def _getUrl_1(self, builds):
         prefix = self.b.status.getBuildbotURL()
-        buildnum = self.b.id - 1
-        res = ""
-        for buildername in buildernames:
-            res += "%sbuilders/%s/builds/%d \n" %( prefix, buildername, buildnum)
-        return res
+        buildnum = self.b.id
+        print builds[0]
+        #for buildername in buildernames:
+        #    res += "%sbuilders/%s/builds/%d \n" %( prefix, buildername, buildnum)
+        #return res
 
     def remote_isFinished(self):
         return self.b.isFinished()
@@ -220,6 +222,15 @@ class RemoteBuild(pb.Referenceable):
 
     def remote_getProperties(self):
         return self.b.getProperties().asDict()
+
+    def remote_getUrl(self):
+        print self.__class__.__dict__
+        print self.b.__class__.__dict__
+        properties = self.b.getProperties().asDict()
+        print properties
+        return "%s" %self.b.master.status.getURLForBuild(
+            properties['buildername'][0], properties['buildnumber'][0])
+
 
     def remote_subscribe(self, observer, updateInterval=None):
         """The observer will have remote_stepStarted(buildername, build,

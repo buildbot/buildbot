@@ -432,6 +432,10 @@ class TryOptions(base.SubcommandOptions):
          "Only supported for 'pb' connections."],
         ["quiet", "q",
          "Don't print status of current builds while waiting."],
+        ["url", None,
+         "wait until the builds have started and print build url. If "
+         "this is used with --wait we will wait until the build starts "
+         "then exit"],
     ]
 
     # Mapping of .buildbot/options names to command-line options

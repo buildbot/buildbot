@@ -675,16 +675,18 @@ class Try(pb.Referenceable):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
         wait = bool(self.getopt("wait"))
-        if not wait:
+        url = bool(self.getopt("url"))
+        if ((not wait) and url):
             # contacts the status port.
             # prints out the url of the build then exits.
             self.announce("Not waiting for builds to finish")
             self.announce("for more information visit the url below")
+            self.announce("waiting for build to start...")
             d = self.running = defer.Deferred()
             if self.buildsetStatus:
                 self._getUrl_1()
                 return self.running
-            master  = master.geOpt("master")
+            master = master.geOpt("master")
             host, port = master.split(":")
             port = 5050
             self.announce("contacting the status port at %s:%d" % (host, port))
@@ -692,8 +694,11 @@ class Try(pb.Referenceable):
             creds = credentials.UsernamePassword("statusClient", "clientpw")
             d = f.login(creds)
             reactor.connectTCP(host, port, f)
-            d.addCallback( self._getUrl_ssh_1)
+            d.addCallback(self._getUrl_ssh_1)
             return d
+        if not wait:
+            self.announce("Not waiting for builds to start")
+            return
         d = self.running = defer.Deferred()
         if self.buildsetStatus:
             self._getStatus_1()
@@ -715,16 +720,25 @@ class Try(pb.Referenceable):
         self.announce("waiting for job to be accepted")
         g = BuildSetStatusGrabber(remote, self.bsid)
         d = g.grab()
-        d.addCallback( self._getUrl_1)
+        d.addCallback(self._getUrl_1)
 
     def _getUrl_1(self, res=None):
         if res:
             self.buildsetStatus = res
-        d = self.buildsetStatus.callRemote("getURL")
-        d.addCallback( self._getUrl_2)
+        d = self.buildsetStatus.callRemote("getBuildRequests")
+        d.addCallback(self._getUrl_2)
 
     def _getUrl_2(self, res):
-        self.announce( "Build URLs: \n %s" % res )
+        self.builderNames = []
+        self.buildRequests = {}
+
+        for n, br in res:
+            self.builderNames.append(n)
+            self.buildRequests[n] = br
+            br.callRemote("subscribe", self)
+
+    def _printUrl(self, url):
+        print url
         self.running.callback(0)
 
     def _getStatus_ssh_1(self, remote):
@@ -745,6 +759,7 @@ class Try(pb.Referenceable):
     def _getStatus_2(self, brs):
         self.builderNames = []
         self.buildRequests = {}
+        self.urls = {}
 
         # self.builds holds the current BuildStatus object for each one
         self.builds = {}
@@ -786,6 +801,17 @@ class Try(pb.Referenceable):
     # these methods are invoked by the status objects we've subscribed to
 
     def remote_newbuild(self, bs, builderName):
+        wait = bool(self.getopt("wait"))
+        # This if is only hit when --url is set and --wait is not. The only way we get
+        # in here is if --url or --wait was set. And if wait is not set then
+        # url must be set so we are going to call get url righ away. Otherwise we
+        # will wait until the end to print the url.
+        if not wait:
+            self.announce("started")
+            d = bs.callRemote("getUrl")
+            d.addCallback(self._printUrl)
+            return d
+
         if self.builds[builderName]:
             self.builds[builderName].callRemote("unsubscribe", self)
         self.builds[builderName] = bs
@@ -806,7 +832,7 @@ class Try(pb.Referenceable):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
         # everything we want.
-        self.builds[builderName] = None
+        #self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
         d = bs.callRemote("getResults")
@@ -816,11 +842,17 @@ class Try(pb.Referenceable):
     def _build_finished_2(self, results, bs, builderName):
         self.results[builderName][0] = results
         d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, builderName)
+        d.addCallback(self._build_finished_3, bs , builderName)
         return d
 
-    def _build_finished_3(self, text, builderName):
-        self.results[builderName][1] = text
+    def _build_finished_3(self, text, bs, buildrname):
+        self.results[buildrname][1] = text
+        d = bs.callRemote("getUrl")
+        d.addCallback(self._build_finished_4 , buildrname)
+        return d
+
+    def _build_finished_4(self, url, builderName):
+        self.urls[builderName] = url
 
         self.outstanding.remove(builderName)
         if not self.outstanding:
@@ -866,6 +898,10 @@ class Try(pb.Referenceable):
             if code != builder.SUCCESS:
                 happy = False
 
+        url = self.getopt("url")
+        if url:
+            for url in self.urls:
+                print self.urls[url]
         if happy:
             self.exitcode = 0
         else:
