@@ -169,10 +169,12 @@
 .tablesorter {
 	th {
 		&:after {
-			content:"▼";
+			content:"▾";
 			float: right;			
-			font-size: 11px;
+			font-size: 20px;
+    		line-height: 0;
 			color: #B5B5B5;
+			margin-top: 6px;
 		}
 		&:hover {
 			background-color: #E5E7EB;

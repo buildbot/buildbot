@@ -126,16 +126,18 @@ $(document).ready(function() {
 		var excludeFields = ':button, :hidden, :checkbox, :submit';
 		$('.grey-btn', formEl).click(function(e) {
 
-			var allInputs = $('input', formEl).not(excludeFields)
+			var allInputs = $('input', formEl).not(excludeFields);
+			
 			var rev = allInputs.filter(function() {
-				return this.name === "fmod_revision";
+				return this.name.indexOf("revision") >=;
 			});
+			
 
 			var emptyRev = rev.filter(function() {
 				return this.value === "";
 			});
 
-			  if (emptyRev.length > 0 && emptyRev.length < rev.length) {
+			if (emptyRev.length > 0 && emptyRev.length < rev.length) {
 				
 				rev.each(function(){
     				if ($(this).val() === "") {
@@ -144,7 +146,9 @@ $(document).ready(function() {
 						$(this).removeClass('not-valid');
 					}
     			});
+
     			$('.form-message', formEl).hide();
+
     			if (!$('.error-input', formEl).length) {
     				$(formEl).prepend('<div class="error-input">Fill out the empty revisionfields or clear all before submitting</div>');
     			} 
@@ -152,10 +156,12 @@ $(document).ready(function() {
 			}
 
 		});
-		$(".clear-btn", formEl).click(function (e) {
-			$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
-			e.preventDefault();
-		});
+		/* You you want a clear button here it is
+			$(".clear-btn", formEl).click(function (e) {
+				$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
+				e.preventDefault();
+			});
+		*/
 	}
 
 
