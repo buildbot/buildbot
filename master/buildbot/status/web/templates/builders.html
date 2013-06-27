@@ -29,6 +29,7 @@
 {% endblock %}
 
 {% block content %}
+
 <ul id="breadCrumb">
   
 </ul>
@@ -180,7 +181,7 @@
         <div class="more-info-box">
           <span class="close-btn">
           </span>
-          <h3>Overview</h3>
+          <h3>Force build</h3>
             {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
               {{ forms.force_build(b.link+"/force?returnbuilders=true", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
             {% endif %}

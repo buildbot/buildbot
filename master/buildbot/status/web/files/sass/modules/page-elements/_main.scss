@@ -421,9 +421,15 @@ div.force-text {
 	}	
 }
 
-.command_forcebuild .grey-btn {
-	float:right;
-	margin-bottom:23px;
+.command_forcebuild {
+	.grey-btn, .clear-btn {
+		float:right;
+		margin-bottom:23px;	
+	}
+	.clear-btn {
+		margin-right:15px;
+	}
+
 }
 
 .builders-list,
@@ -569,6 +575,19 @@ div.force-text {
     	}
 	
     }
+}
+
+.error-input {
+ 	background-color: rgba(238, 206, 206, 0.42);
+    border: 1px solid #DDC0C0;
+    border-radius: 4px 4px 4px 4px;
+    font-weight: bold;
+    padding: 8px;
+    margin-bottom:15px;
+}
+
+div.force-text input.not-valid {
+	border:1px solid #E42323;
 }
 
 .curent-job-list {

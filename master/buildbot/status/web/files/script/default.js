@@ -120,57 +120,36 @@ $(document).ready(function() {
 		"bStateSave": true
 	});
 
-	// parse url and make breadcrumb navigation
-
-	var dict = {
-	  "test" : "testing",
-	  "test1" : "testing1",
-	};
-	
-	var path = "";
-	var href = document.location.href;
-	var s = href.split("/");
-	
-	for (var i=2;i<(s.length-1);i++) {
-	path+="<li><a HREF=\""+href.substring(0,href.indexOf("/"+s[i])+s[i].length+1)+"/\">"+s[i]+"</a></li>";
-	}
-	i=s.length-1;	
-	path+= '<li>' + s[i] + '</li>';
-	
-		$('.breadcrumbs-nav').html(path)
-	
-
 	// validate the form
 	function validateForm() {
+		var formEl = $('.form-open');
+		var excludeFields = ':button, :hidden, :checkbox, :submit';
+		$('.grey-btn', formEl).click(function(e) {
 
-			$('.form-open .grey-btn').click(function(e) {
-
-				var allInputs = $('.form-open input').not(':button, :hidden, :checkbox, :submit')
-				var empty = allInputs.filter(function() {
-					return this.value === "";
-				});
-				 if (empty.length === 0) {
-        			alert('all is filled')
-
-        			e.preventDefault();
-    			} else if (empty.length == allInputs.length) {
-    				alert('All is  blank')
-
-        			e.preventDefault();
-    			} else if (empty.length < allInputs.length) {
-    				alert('At least one input is empty')
-    				allInputs.each(function(){
-        				if ($(this).val() != "") {
-    						$(this).addClass('not-valid')
-    					}
-        			});
-    				e.preventDefault();
+			var allInputs = $('input', formEl).not(excludeFields)
+			var empty = allInputs.filter(function() {
+				return this.value === "";
+			});
+			  if (empty.length < allInputs.length) {
+				
+				allInputs.each(function(){
+    				if ($(this).val() === "") {
+						$(this).addClass('not-valid');
+					} else {
+						$(this).removeClass('not-valid');
+					}
+    			});
+    			$('.form-message', formEl).hide();
+    			if (!$('.error-input', formEl).length) {
+    				$(formEl).prepend('<div class="error-input">Fill out the empty fields or clear all before submitting</div>');
     			}
-    		});
-		}
+				e.preventDefault();
+			}
 
-	
-
-    
-
+		});
+		$(".clear-btn", formEl).click(function (e) {
+			$('input',formEl).not(excludeFields).val("").removeClass('not-valid');
+			e.preventDefault();
+		});
+	}
 });

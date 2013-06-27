@@ -87,10 +87,8 @@
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
     {% if 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>
-       <!--
-          {{default_props[sch.name+"."+f.fullName]}}
-      -->
-       <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='' />
+       
+       <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
     {% elif 'bool' in f.type%}
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
        <span class="label">{{f.label}}</span>
@@ -142,15 +140,17 @@
      </table>
 
   {% else %}
-     <p>To force a build, fill out the following fields and
+     <p class="form-message">Fill out ALL or none of the fields and
         push the 'Force Build' button</p>
+        
   {% endif %}
   <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
   {% for f in sch.all_fields %}
     {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
   {% endfor %}
-
+  
   <input class="grey-btn" type="submit" value="Force Build" />
+  <button class="clear-btn">Clear all</button>
 
  </form>
 {% endmacro %}
