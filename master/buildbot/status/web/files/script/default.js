@@ -150,7 +150,7 @@ $(document).ready(function() {
     			$('.form-message', formEl).hide();
 
     			if (!$('.error-input', formEl).length) {
-    				$(formEl).prepend('<div class="error-input">Fill out the empty revisionfields or clear all before submitting</div>');
+    				$(formEl).prepend('<div class="error-input">Fill out the empty revision fields or clear all before submitting</div>');
     			} 
 				e.preventDefault();
 			}
