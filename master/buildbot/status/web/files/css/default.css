@@ -832,6 +832,7 @@ li {
   border-bottom: 1px solid #FFFFFF;
   border-top: 1px solid #FFFFFF;
   width: 100%;
+  margin-bottom: 30px;
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\0000370}}
@@ -1211,7 +1212,7 @@ a.grey-btn:hover,
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003209}}
 .dataTables_filter {
   float: right;
-  margin-top: 41px;
+  margin-bottom: 15px;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003212}}
 .dataTables_filter label {
