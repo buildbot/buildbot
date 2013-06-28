@@ -287,7 +287,7 @@ class HgPoller(base.PollingChangeSource):
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')
         log.err(f)
-        # eat the failure to continue along the defered chain - we still want to catch up
+        # eat the failure to continue along the deferred chain - we still want to catch up
         return None
 
     def _convertNonZeroToFailure(self, res):
