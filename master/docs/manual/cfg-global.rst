@@ -328,7 +328,7 @@ Prioritizing Builders
 .. code-block:: python
 
    def prioritizeBuilders(buildmaster, builders):
-       # ...
+       ...
    c['prioritizeBuilders'] = prioritizeBuilders
 
 By default, buildbot will attempt to start builds on builders in order, beginning with the builder with the oldest pending request.
