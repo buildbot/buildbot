@@ -241,9 +241,11 @@ import sphinx
 import sphinx.highlighting
 from pkg_resources import parse_version
 
-# Versions of Sphinx below changeset 3400:15074817c66f (before v1.1 release)
+# Versions of Sphinx below changeset 1860:19b394207746 (before v0.6.6 release)
 # won't work due to different PygmentsBridge interface.
-sphinx_version_supported = parse_version(sphinx.__version__) >= parse_version('1.1')
+required_sphinx_version = '0.6.6'
+sphinx_version_supported = \
+    parse_version(sphinx.__version__) >= parse_version(required_sphinx_version)
 
 # This simple monkey-patch allows either fail on first unhighlighted block or
 # print all unhighlighted blocks and don't fail at all.
@@ -254,6 +256,8 @@ fail_on_first_unhighlighted = True
 class UnhighlightedError(SphinxWarning):
     pass
 
+# PygmentsBridge.unhighlighted() added in Sphinx in changeset 574:f1c885fdd6ad
+# (0.5 release).
 def patched_unhighlighted(self, source):
     indented_source = '    ' + '\n    '.join(source.split('\n'))
 
@@ -288,13 +292,15 @@ def patched_unhighlighted(self, source):
 
         return orig_unhiglighted(self, source)
 
-def patched_highlight_block(self, source, lang, warn=None, force=False, **kw):
+# Compatible with PygmentsBridge.highlight_block since Sphinx'
+# 1860:19b394207746 changeset (v0.6.6 release)
+def patched_highlight_block(self, *args, **kwargs):
     try:
-        return orig_highlight_block(self, source, lang, warn, force, **kw)
+        return orig_highlight_block(self, *args, **kwargs)
     except UnhighlightedError, ex:
         msg = ex.args[0]
-        if warn:
-            warn(msg)
+        if 'warn' in kwargs:
+            kwargs['warn'](msg)
 
         raise
 
@@ -307,6 +313,7 @@ if sphinx_version_supported:
 else:
     msg = textwrap.dedent("""\
         WARNING: Your Sphinx version %s is too old and will not work with
-        monkey-patch for checking unhighlighted code. Check disabled.
-        """) % (sphinx.__version__)
+        monkey-patch for checking unhighlighted code.  Minimal required version
+        of Sphinx is %s.  Check disabled.
+        """) % (sphinx.__version__, required_sphinx_version)
     sys.stderr.write(msg)
