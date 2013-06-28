@@ -99,7 +99,11 @@
        <span class="select">
        <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
          {% for c in f.choices %}
-         <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
+            {% if request.args|length == 0 %}
+                <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
+            {% elif f.fullName in request.args.keys() %}
+                <option {{(c in request.args[f.fullName]) and "selected" or ""}}>{{c}}</option>
+           {% endif %}
          {% endfor %}
        </select>
        </span>
