@@ -30,14 +30,6 @@
 
 {% block content %}
 
-<h1 class="main-head">
-  Buildstatus
-  <span>
-    {{ branches|join(', ')|e }}
-      Single Project, Single Branch
-  </span>
-</h1>
-
 <table class="table-1 first-child tablesorter">
   <thead>
 <tr>
@@ -178,11 +170,12 @@
         <div class="more-info-box">
           <span class="close-btn">
           </span>
-          <h3>Overview</h3>
+          <h3>Force build</h3>
             {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
               {{ forms.force_build(b.link+"/force?returnbuilders=true", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
             {% endif %}
         </div>
+        
         {% endif %}
     </td>
     <!--    

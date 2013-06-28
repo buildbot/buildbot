@@ -169,10 +169,12 @@
 .tablesorter {
 	th {
 		&:after {
-			content:"▼";
+			content:"▾";
 			float: right;			
-			font-size: 11px;
+			font-size: 20px;
+    		line-height: 0;
 			color: #B5B5B5;
+			margin-top: 6px;
 		}
 		&:hover {
 			background-color: #E5E7EB;
@@ -195,17 +197,18 @@
 		color:#fff;
 		@include text-shadow (0 -1px 0 #666);
 		&:after {
-			content:"▲";
+			margin-top: 11px;
+			@include transform (rotate(180deg));
+			content:"▾";
 			color:rgba(255, 255, 255, 0.59);
 			@include text-shadow (none);
 		}
-
 	}
 }
 
 .dataTables_filter {
 	float: right;
-	margin-top: 41px;
+	margin-bottom: 15px;
 	label {
 		font-size: 12px;
 		font-weight: bold;
@@ -298,7 +301,7 @@ div.last {
 	.not_started {
 		background-color:#eee;
 		&:before {
-			content:"Not startet";
+			content:"Not started";
 		}
 	}
 	.retry:before {
@@ -421,9 +424,15 @@ div.force-text {
 	}	
 }
 
-.command_forcebuild .grey-btn {
-	float:right;
-	margin-bottom:23px;
+.command_forcebuild {
+	.grey-btn, .clear-btn {
+		float:right;
+		margin-bottom:23px;	
+	}
+	.clear-btn {
+		margin-right:15px;
+	}
+
 }
 
 .builders-list,
@@ -451,6 +460,13 @@ div.force-text {
     padding: 1px 7px 5px;
     @include text-shadow (1px 0 0 #FFFFFF);
     @include transform (rotate(90deg));
+    .chrome.win & {
+    	content: "▾";
+    	@include transform (none);
+    	font-size: 18px;
+    	line-height: 13px;
+    	padding: 2px 5px 4px;
+    }
 }
 
 .more-info:hover:after {
@@ -569,6 +585,19 @@ div.force-text {
     	}
 	
     }
+}
+
+.error-input {
+ 	background-color: rgba(238, 206, 206, 0.42);
+    border: 1px solid #DDC0C0;
+    border-radius: 4px 4px 4px 4px;
+    font-weight: bold;
+    padding: 8px;
+    margin-bottom:15px;
+}
+
+div.force-text input.not-valid {
+	border:1px solid #E42323;
 }
 
 .curent-job-list {

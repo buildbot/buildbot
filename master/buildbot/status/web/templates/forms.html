@@ -139,15 +139,17 @@
      </table>
 
   {% else %}
-     <p>To force a build, fill out the following fields and
+     <p class="form-message">Fill out revision fields for ALL codebases or none of the revision fields and
         push the 'Force Build' button</p>
+        
   {% endif %}
   <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
   {% for f in sch.all_fields %}
     {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
   {% endfor %}
-
+  
   <input class="grey-btn" type="submit" value="Force Build" />
+  
 
  </form>
 {% endmacro %}

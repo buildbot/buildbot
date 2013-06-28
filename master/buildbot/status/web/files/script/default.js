@@ -43,6 +43,7 @@ $(document).ready(function() {
 	    }
 	});
 
+
 	//Show / hide
 
 	$(function centerPopup(){
@@ -54,11 +55,19 @@ $(document).ready(function() {
 	$('.popup-btn-js').click(function(e){
 		e.preventDefault();
 		$('.more-info-box').hide();
-		$(this).next().fadeIn('fast');
+		$('.command_forcebuild').removeClass('form-open');
+		$(this).next().fadeIn('fast', function (){
+			$('.command_forcebuild', this).addClass('form-open')
+
+			validateForm();
+			
+		});
+
 	});
 
 	$(document, '.close-btn').click(function(e){
 		if (!$(e.target).closest('.more-info-box, .popup-btn-js').length || $(e.target).closest('.close-btn').length ) {
+			$('.command_forcebuild').removeClass('form-open');
 			$('.more-info-box').fadeOut('fast');
 		}
 	}); 
@@ -90,25 +99,69 @@ $(document).ready(function() {
 
 		}
 	});
-	
-		$('.tablesorter').dataTable({
-			"bPaginate": false,
-			"bLengthChange": false,
-			"bFilter": true,
-			"bSort": true,
-			"bInfo": false,
-			"bAutoWidth": false,
-			"bRetrieve": false,
-			"asSorting": true,
-			"bSearchable": true,
-			"bSortable": true,
-			//"oSearch": {"sSearch": " "}
-			"aaSorting": [],
-			"oLanguage": {
-			 	"sSearch": "Filter"
-			 },
-			"bStateSave": true
+
+	// sort and filter tables
+	$('.tablesorter').dataTable({
+		"bPaginate": false,
+		"bLengthChange": false,
+		"bFilter": true,
+		"bSort": true,
+		"bInfo": false,
+		"bAutoWidth": false,
+		"bRetrieve": false,
+		"asSorting": true,
+		"bSearchable": true,
+		"bSortable": true,
+		//"oSearch": {"sSearch": " "}
+		"aaSorting": [],
+		"oLanguage": {
+		 	"sSearch": "Filter"
+		 },
+		"bStateSave": true
+	});
+
+	// validate the form
+	function validateForm() {
+		var formEl = $('.form-open');
+		var excludeFields = ':button, :hidden, :checkbox, :submit';
+		$('.grey-btn', formEl).click(function(e) {
+
+			var allInputs = $('input', formEl).not(excludeFields);
+			
+			var rev = allInputs.filter(function() {
+				return this.name.indexOf("revision") >= 0;
+			});
+			
+
+			var emptyRev = rev.filter(function() {
+				return this.value === "";
+			});
+
+			if (emptyRev.length > 0 && emptyRev.length < rev.length) {
+				
+				rev.each(function(){
+    				if ($(this).val() === "") {
+						$(this).addClass('not-valid');
+					} else {
+						$(this).removeClass('not-valid');
+					}
+    			});
+
+    			$('.form-message', formEl).hide();
+
+    			if (!$('.error-input', formEl).length) {
+    				$(formEl).prepend('<div class="error-input">Fill out the empty revision fields or clear all before submitting</div>');
+    			} 
+				e.preventDefault();
+			}
 
 		});
+		/* You you want a clear button here it is
+			$(".clear-btn", formEl).click(function (e) {
+				$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
+				e.preventDefault();
+			});
+		*/
+	}
 
 });
