@@ -1197,7 +1197,7 @@ a.grey-btn:hover,
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003199}}
 .tablesorter th.sorting_desc:after {
-  margin-top: 12px;
+  margin-top: 11px;
   -webkit-transform: rotate(180deg);
   -moz-transform: rotate(180deg);
   -ms-transform: rotate(180deg);

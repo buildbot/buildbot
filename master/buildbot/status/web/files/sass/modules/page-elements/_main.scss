@@ -197,7 +197,7 @@
 		color:#fff;
 		@include text-shadow (0 -1px 0 #666);
 		&:after {
-			margin-top: 12px;
+			margin-top: 11px;
 			@include transform (rotate(180deg));
 			content:"▾";
 			color:rgba(255, 255, 255, 0.59);
