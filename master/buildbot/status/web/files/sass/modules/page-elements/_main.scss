@@ -460,6 +460,13 @@ div.force-text {
     padding: 1px 7px 5px;
     @include text-shadow (1px 0 0 #FFFFFF);
     @include transform (rotate(90deg));
+    .chrome.win & {
+    	content: "▾";
+    	@include transform (none);
+    	font-size: 18px;
+    	line-height: 13px;
+    	padding: 2px 5px 4px;
+    }
 }
 
 .more-info:hover:after {
