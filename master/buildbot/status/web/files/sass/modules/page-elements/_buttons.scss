@@ -7,8 +7,6 @@
 
 // buttons
 
-// buttons
-
 .link-button {
 	background:none;
 	border:none;
@@ -50,8 +48,8 @@ a.grey-btn,
 .grey-btn.var-1 {
     float: right;
     font-size: 12px;
-    margin-top: 36px;
     margin-left:15px;
+    margin-bottom: 15px;
     &:after {
         content:"❯";    
         font-size: 13px;

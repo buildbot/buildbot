@@ -132,7 +132,6 @@ $(document).ready(function() {
 				return this.name.indexOf("revision") >= 0;
 			});
 			
-
 			var emptyRev = rev.filter(function() {
 				return this.value === "";
 			});
