@@ -689,14 +689,7 @@ class Try(pb.Referenceable):
             if self.buildsetStatus:
                 self._getUrl()
                 return self.running
-            master = master.geOpt("master")
-            host, port = master.split(":")
-            port = 5050
-            self.announce("contacting the status port at %s:%d" % (host, port))
-            f = pb.PBClientFactory()
-            creds = credentials.UsernamePassword("statusClient", "clientpw")
-            d = f.login(creds)
-            reactor.connectTCP(host, port, f)
+            d = self._connectStatusClient(d)
             d.addCallback(self._getUrl_ssh_1)
             return d
         if not wait:
@@ -708,16 +701,20 @@ class Try(pb.Referenceable):
             return self.running
         # contact the status port
         # we're probably using the ssh style
-        master = self.getopt("master")
-        host, port = master.split(":")
-        port = int(port)
-        self.announce("contacting the status port at %s:%d" % (host, port))
+        d = self._connectStatusClient(d)
+        d.addCallback(self._getStatus_ssh_1)
+        return self.running
+
+    def _connectStatusClient(self, d):
+        master = master.getopt("master")
+        host, port = masater.split(":")
+        port = 5050
+        self.announce("Connecting to the status port at %s:%d" % (host, port))
         f = pb.PBClientFactory()
         creds = credentials.UsernamePassword("statusClient", "clientpw")
         d = f.login(creds)
-        reactor.connectTCP(host, port, f)
-        d.addCallback(self._getStatus_ssh_1)
-        return self.running
+        reactor.connectTcp(host, port, f)
+        return d
 
     def _getUrl_ssh_1(self, remote):
         self.announce("waiting for job to be accepted")
