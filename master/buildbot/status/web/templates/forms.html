@@ -105,6 +105,7 @@
          {% endfor %}
            {% else %}
             <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
+           <input type="hidden" name='{{f.fullName}}' value='{{ ' '.join(request.args[f.fullName])}}' />
           {% endif %}
        </select>
        </span>
