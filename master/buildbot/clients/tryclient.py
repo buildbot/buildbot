@@ -856,10 +856,10 @@ class Try(pb.Referenceable):
         d.addCallback(self._build_finished_3, bs , builderName)
         return d
 
-    def _build_finished_3(self, text, bs, buildrName):
-        self.results[buildrName][1] = text
+    def _build_finished_3(self, text, bs, builderName):
+        self.results[builderName][1] = text
 
-        self.outstanding.remove(buildrName)
+        self.outstanding.remove(builderName)
         if not self.outstanding:
             # all done
             return self.statusDone()
@@ -919,7 +919,7 @@ class Try(pb.Referenceable):
         if url:
             self.announce("Urls:")
             for name in self.urls.keys():
-                self.announce(self.urls[name])
+                self.announce("    %s"%self.urls[name])
 
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
