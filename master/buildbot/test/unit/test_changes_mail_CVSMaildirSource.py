@@ -128,7 +128,7 @@ class TestCVSMaildirSource(unittest.TestCase):
             self.fail('Expect ValueError.')
 
     def test_CVSMaildirSource_create_change_with_bad_cvsmode(self):
-        # Branch is indicated afer 'Tag:' in modified file list
+        # Branch is indicated after 'Tag:' in modified file list
         msg = cvs1_11_msg.replace('Cvsmode: 1.11', 'Cvsmode: 9.99')
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
@@ -140,7 +140,7 @@ class TestCVSMaildirSource(unittest.TestCase):
             self.fail('Expected ValueError')
 
     def test_CVSMaildirSource_create_change_with_branch(self):
-        # Branch is indicated afer 'Tag:' in modified file list
+        # Branch is indicated after 'Tag:' in modified file list
         msg = cvs1_11_msg.replace('        GNUmakefile',
                                   '      Tag: Test_Branch\n      GNUmakefile')
         m = message_from_string(msg)
