@@ -593,7 +593,7 @@ class RunProcess:
     def _collapseMsg(self, msg):
         """
         Take msg, which is a dictionary of lists of output chunks, and
-        concatentate all the chunks into a single string
+        concatenate all the chunks into a single string
         """
         retval = {}
         for log in msg:

@@ -178,4 +178,4 @@ touching the configuration.
 
 You've got a taste now, but you're probably curious for more.  Let's step it
 up a little in the second tutorial by changing the configuration and doing
-an actual build. Continue on to :ref:`quick-tour-label`
+an actual build. Continue on to :ref:`quick-tour-label`.
