@@ -63,7 +63,7 @@ First, an admonition: do not create extra class methods that represent the conti
         d = ...
         d.addCallback(self._myMethod_2) # BAD!
     def _myMethod_2(self, res):         # BAD!
-        # ...
+        ...
 
 Invariably, this extra method gets separated from its parent as the code
 evolves, and the result is completely unreadable. Instead, include all of the
@@ -181,7 +181,7 @@ use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.inte
             return res.strip()
         rev_parse_d.addCallback(parse_rev_parse)
 
-        log_d = utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ]))
+        log_d = utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
         def parse_log(res):
             return res.strip()
         log_d.addCallback(parse_log)

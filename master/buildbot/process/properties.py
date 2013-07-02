@@ -30,7 +30,7 @@ class Properties(util.ComparableMixin):
     strings in buildsteps.
 
     @ivar properties: dictionary mapping property values to tuples
-        (value, source), where source is a string identifing the source
+        (value, source), where source is a string identifying the source
         of the property.
 
     Objects of this class can be read like a dictionary -- in this case,

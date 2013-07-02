@@ -536,7 +536,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
         """Another variant that:
-         * returns Defered types,
+         * returns Deferred types,
          * use 'canStartWithSlavebuilder' to reject one of the slaves
          * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
 
@@ -546,7 +546,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         def _canStartWithSlavebuilder(slavebuilder):
             slaves_attempted.append(slavebuilder.name)
             allowed = slavebuilder.name in ['test-slave2', 'test-slave1']
-            return defer.succeed(allowed)   # a defered here!
+            return defer.succeed(allowed)   # a deferred here!
         self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
 
         pairs_tested = []

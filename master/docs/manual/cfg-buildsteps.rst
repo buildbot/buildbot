@@ -718,7 +718,9 @@ You can specify the client spec in two different ways. You can use the ``p4base`
 ``p4branch``, and (optionally) ``p4extra_views`` to build up the viewspec, or you can utilize
 the ``p4viewspec`` to specify the whole viewspec as a set of tuples.
 
-Using p4viewspec will allow you to add lines such as::
+Using p4viewspec will allow you to add lines such as:
+
+.. code-block:: none
 
     //depot/branch/mybranch/...             //<p4client>/...
     -//depot/branch/mybranch/notthisdir/... //<p4client>/notthisdir/...
@@ -1815,8 +1817,8 @@ left again. For this, specify regexps for the arguments
 entered into in the first matched group. The defaults, which are suitable for
 .. GNU Make, are these::
 
-..     directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
-..     directoryLeavePattern = "make.*: Leaving directory"
+    directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
+    directoryLeavePattern = "make.*: Leaving directory"
 
 (TODO: this step needs to be extended to look for GCC error messages
 as well, and collect them into a separate logfile, along with the
@@ -2732,7 +2734,7 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
     from buildbot.steps.shell import Compile
 
     f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
-    f.addStep(Compile(commands=[Interpolate("%(prop:JAVAC)s"), "-cp", Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")))
+    f.addStep(Compile(commands=[Interpolate("%(prop:JAVAC)s"), "-cp", Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")]))
 
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
@@ -2755,7 +2757,7 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties={ 'quick' : False })
+                      set_properties={ 'quick' : False }))
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that

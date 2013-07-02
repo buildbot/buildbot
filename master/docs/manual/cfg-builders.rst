@@ -186,7 +186,7 @@ called on to start their builds.  The details of writing such a function are in
 Such a function can be provided to the BuilderConfig as follows::
 
     def pickNextBuild(builder, requests):
-        # ...
+        ...
     c['builders'] = [
         BuilderConfig(name='test', factory=f,
             nextBuild=pickNextBuild,

@@ -388,9 +388,13 @@ class MasterConfig(object):
                 error("c['caches'] must be a dictionary")
             else:
                 valPairs = caches.items()
-                for (x, y) in valPairs:
-                    if not isinstance(y, int):
-                        error("value for cache size '%s' must be an integer" % x)
+                for (name, value) in valPairs:
+                    if not isinstance(value, int):
+                        error("value for cache size '%s' must be an integer"
+                              % name)
+                    if value < 1:
+                        error("'%s' cache size must be at least 1, got '%s'"
+                              % (name, value))
                 self.caches.update(caches)
 
         if 'buildCacheSize' in config_dict:

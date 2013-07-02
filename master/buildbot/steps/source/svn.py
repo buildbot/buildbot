@@ -15,6 +15,9 @@
 
 import xml.dom.minidom
 import xml.parsers.expat
+import re, urllib
+from urlparse import urlparse, urlunparse
+from string import lower
 
 from twisted.python import log
 from twisted.internet import defer
@@ -251,7 +254,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(extractedurl == self.repourl)
+        defer.returnValue(extractedurl == self.svnUriCanonicalize(self.repourl))
         return
 
     @defer.inlineCallbacks
@@ -379,3 +382,46 @@ class SVN(Source):
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
 
+
+    @staticmethod
+    def svnUriCanonicalize(uri):
+        collapse = re.compile('([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
+        server_authority = re.compile('^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
+        default_port = {   'http': '80',
+                           'https': '443',
+                           'svn': '3690'}
+        
+        relative_schemes = ['http', 'https', 'svn']
+        quote = lambda uri: urllib.quote(uri, "!$&'()*+,-./:=@_~")
+
+        if len(uri) == 0 or uri == '/':
+            return uri
+
+        (scheme, authority, path, parameters, query, fragment) = urlparse(uri)
+        scheme = lower(scheme)
+        if authority:
+            userinfo, host, port = server_authority.match(authority).groups()
+            if host[-1] == '.':
+                host = host[:-1]
+            authority = lower(host)
+            if userinfo:
+                authority = "%s@%s" % (userinfo, authority)
+            if port and port != default_port.get(scheme, None):
+                authority = "%s:%s" % (authority, port)
+        
+        if scheme in relative_schemes:
+            last_path = path
+            while 1:
+                path = collapse.sub('/', path, 1)
+                if last_path == path:
+                    break
+                last_path = path
+
+        path = quote(urllib.unquote(path))
+        canonical_uri = urlunparse((scheme, authority, path, parameters, query, fragment))
+        if canonical_uri =='/':
+            return canonical_uri
+        elif canonical_uri[-1] == '/' and canonical_uri[-2] != '/':
+            return canonical_uri[:-1]
+        else:
+            return canonical_uri

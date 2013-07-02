@@ -62,7 +62,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
-            # transaction does not buy atomicitiy - other database users may
+            # transaction does not buy atomicity - other database users may
             # still come across a change without its files, properties,
             # etc.  That's OK, since we don't announce the change until it's
             # all in the database, but beware.

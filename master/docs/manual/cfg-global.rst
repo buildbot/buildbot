@@ -25,7 +25,7 @@ All keys are optional::
 The ``db_url`` key indicates the database engine to use.
 The format of this parameter is completely documented at http://www.sqlalchemy.org/docs/dialects/, but is generally of the form::
 
-     driver://[username:password@]host:port/database[?args]
+     "driver://[username:password@]host:port/database[?args]"
 
 These parameters can be specified directly in the configuration dictionary, as ``c['db_url']`` and ``c['db_poll_interval']``, although this method is deprecated.
 
@@ -358,7 +358,7 @@ Prioritizing Builders
 .. code-block:: python
 
    def prioritizeBuilders(buildmaster, builders):
-       # ...
+       ...
    c['prioritizeBuilders'] = prioritizeBuilders
 
 By default, buildbot will attempt to start builds on builders in order, beginning with the builder with the oldest pending request.

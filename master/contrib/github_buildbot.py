@@ -38,7 +38,7 @@ class GitHubBuildBot(resource.Resource):
     
     def render_POST(self, request):
         """
-        Reponds only to POST events and starts the build process
+        Responds only to POST events and starts the build process
         
         :arguments:
             request
@@ -147,7 +147,7 @@ class GitHubBuildBot(resource.Resource):
 
     def connected(self, remote, changes):
         """
-        Reponds to the connected event.
+        Responds to the connected event.
         """
         return self.addChange(None, remote, changes.__iter__())
 

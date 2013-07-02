@@ -82,6 +82,8 @@ Features
 
 * The web hooks now include support for Bitbucket.
 
+* The web hooks now include support for GitLab.
+
 * The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to 
   rebuild from exact revisions or from the same sourcestamps (ie, update branch references)
 
@@ -141,7 +143,9 @@ Details
 -------
 
 For a more detailed description of the changes made in this version, see the
-git log itself::
+git log itself:
+
+.. code-block:: bash
 
    git log v0.8.8..master
 
