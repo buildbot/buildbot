@@ -95,7 +95,7 @@
                             Cancel all builds
                         </p>
                         {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                          {{ forms.cancel_pending_build(b.link+"/cancelbuild?returnbuilders=true", authz, short=False, id='all') }}
+                          {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+b.builder_arg, authz, short=False, id='all') }}
                         {% endif %}
                       </li>
                     {% endif %}
@@ -120,7 +120,7 @@
                         {% endif %}
                        </p>
                       {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                        {{ forms.cancel_pending_build(b.link +"/cancelbuild?returnbuilders=true", authz, short=True, id=cb.id) }}
+                        {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+b.builder_arg, authz, short=True, id=cb.id) }}
                         {% endif %}
 
                     </li>
@@ -172,7 +172,7 @@
           </span>
           <h3>Force build</h3>
             {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
-              {{ forms.force_build(b.link+"/force?returnbuilders=true", authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
+              {{ forms.force_build(b.builder_url+"/force"+b.builder_arg, authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
             {% endif %}
         </div>
         

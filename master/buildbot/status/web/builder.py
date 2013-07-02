@@ -170,7 +170,8 @@ class ForceBuildActionResource(ActionResource):
         if returnbuilders is None:
             defer.returnValue((path_to_builder(req, self.builder_status), msg))
         else:
-            defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
+            codebases_arg = getCodebasesArg(request=req)
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg, msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
@@ -369,7 +370,8 @@ class CancelChangeResource(ActionResource):
         if returnbuilders is None:
             defer.returnValue((path_to_builder(req, self.builder_status)))
         else:
-            defer.returnValue(path_to_builders(req, self.builder_status.getProject()))
+            codebases_arg = getCodebasesArg(request=req)
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg))
 
 class StopChangeMixin(object):
 
@@ -498,6 +500,18 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
     def stopselected(self, req):
         return StopAllBuildsActionResource(self.status, 'selected')
 
+def getCodebasesArg(codebases={}, request=None):
+    codebases_arg=''
+    for key, val in request.args.iteritems():
+        if '_branch' in key:
+            codebases[key[0:key.find('_')]] = ''.join(val)
+            if len(codebases_arg) > 0:
+                codebases_arg += "&"
+            else:
+                codebases_arg += "?"
+            codebases_arg += "%s=%s" % (key, ''.join(val))
+    return codebases_arg
+
 # /builders
 class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
@@ -518,9 +532,13 @@ class BuildersResource(HtmlResource):
                 if b ]
 
         codebases = {}
-        for key, val in req.args.iteritems():
-            if '_branch' in key:
-                codebases[key[0:key.find('_')]] = val
+        codebases_arg = getCodebasesArg(codebases=codebases, request=req)
+        print "\n getCodebasesArg(codebases %s, codebases_arg %s) \n" % (codebases, codebases_arg)
+
+        if len(codebases_arg) > 0:
+            builder_arg = codebases_arg + "&returnbuilders=true"
+        else:
+            builder_arg = "?returnbuilders=true"
 
         # get counts of pending builds for each builder
         brstatus_ds = []
@@ -550,10 +568,11 @@ class BuildersResource(HtmlResource):
 
         building = 0
         online = 0
-        base_builders_url = path_to_builders(req, self.project.name)
+        path_builders = path_to_builders(req, self.project.name)
         for bn in builders:
-            bld = { 'link': base_builders_url +"/"+ urllib.quote(bn, safe=''),
-                    'name': bn }
+            builder_url = path_builders+"/"+urllib.quote(bn, safe='')
+            bld = { 'link': builder_url + codebases_arg,
+                    'name': bn, 'builder_url': builder_url, 'builder_arg' : builder_arg }
             bs.append(bld)
 
             builder = status.getBuilder(bn)
@@ -599,7 +618,7 @@ class BuildersResource(HtmlResource):
 
             if builds:
                 b = builds[0]
-                bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
+                bld['build_url'] = (builder_url + "/builds/%d" % b.getNumber()) + codebases_arg
                 
                 label = None
                 all_got_revisions = b.getAllGotRevisions()
