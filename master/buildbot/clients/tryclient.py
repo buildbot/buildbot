@@ -31,6 +31,7 @@ from twisted.internet import utils
 from twisted.python import log
 from twisted.python.procutils import which
 from twisted.spread import pb
+from twisted.spread.flavors import NoSuchMethod
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
@@ -809,10 +810,23 @@ class Try(pb.Referenceable):
     # these methods are invoked by the status objects we've subscribed to
 
     def remote_newbuild(self, bs, builderName):
-        wait = bool(self.getopt("wait"))
         d = bs.callRemote("getUrl")
         d.addCallback(self.remote_newbuild_1, bs, builderName)
+        d.addErrback(self.remote_newbuild_geturlerr, bs, builderName)
         return d
+
+    # This is called if the method getUrl is not fouond on the remote
+    # This method will exit the program if there wait has not been set
+    def remote_newbuild_geturlerr(self, failure, bs, builderName):
+        quiet = self.getopt("quiet")
+        self.announce("Error while getting the url")
+        self.announce("make sure the build master is up to date")
+        wait = self.getopt("wait")
+        failure.trap(NoSuchMethod)
+        if wait:
+            self.remote_newbuild_2(bs, builderName)
+        else:
+            self.ending()
 
     def remote_newbuild_1(self, url, bs, builderName):
         self.setUrl(url, builderName)
@@ -841,7 +855,6 @@ class Try(pb.Referenceable):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
         # everything we want.
-        #self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
         d = bs.callRemote("getResults")
@@ -917,7 +930,7 @@ class Try(pb.Referenceable):
         if url:
             self.announce("Urls:")
             for name in self.urls.keys():
-                self.announce("    %s"%self.urls[name])
+                self.announce("\t%s"%self.urls[name])
 
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
