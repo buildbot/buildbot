@@ -58,7 +58,7 @@ else:
 # The full version, including alpha/beta/rc tags.
 release = version
 
-# add a loud note for anyone loking at the latest docs
+# add a loud note for anyone looking at the latest docs
 if release == 'latest':
     rst_prolog = textwrap.dedent("""\
     .. caution:: This page documents the latest, unreleased version of

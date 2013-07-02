@@ -30,7 +30,7 @@ Tests are divided into a few suites:
   and execute a lot of code.  As such, use of integration tests is limited to a
   few, broad tests to act as a failsafe for the unit and interface tests.
 
-* Regression tests (``buildbot.test.regrssions``) - these test to prevent
+* Regression tests (``buildbot.test.regressions``) - these test to prevent
   re-occurrence of historical bugs.  In most cases, a regression is better
   tested by a test in the other suites, or unlike to recur, so this suite tends
   to be small.

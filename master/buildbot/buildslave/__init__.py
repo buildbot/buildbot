@@ -476,7 +476,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             if self.slave_system == "nt":
                 self.path_module = namedModule("ntpath")
             else:
-                # most eveything accepts / as separator, so posix should be a
+                # most everything accepts / as separator, so posix should be a
                 # reasonable fallback
                 self.path_module = namedModule("posixpath")
             log.msg("bot attached")
