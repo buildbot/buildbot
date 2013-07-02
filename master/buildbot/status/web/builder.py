@@ -154,7 +154,6 @@ class ForceBuildActionResource(ActionResource):
         for cb in args.get("checkbox", []):
             args[cb] = True
 
-        print "\n\n - force sch args %s - \n\n" % args
         builder_name = self.builder_status.getName()
 
         for sch in master.allSchedulers():
@@ -513,13 +512,15 @@ class BuildersResource(HtmlResource):
         status = self.getStatus(req)
         encoding = getRequestCharset(req)
 
-        args = req.args.copy()
-        print "\n\n builders args %s \n\n " % args
-
         builders = req.args.get("builder", status.getBuilderNamesByProject(self.project.name))
         branches = [ b.decode(encoding)
                 for b in req.args.get("branch", [])
                 if b ]
+
+        codebases = {}
+        for key, val in req.args.iteritems():
+            if '_branch' in key:
+                codebases[key[0:key.find('_')]] = val
 
         # get counts of pending builds for each builder
         brstatus_ds = []
@@ -528,6 +529,7 @@ class BuildersResource(HtmlResource):
             brcounts[builderName] = len(statuses)
         for builderName in builders:
             builder_status = status.getBuilder(builderName)
+            #get pending build status x branch
             d = builder_status.getPendingBuildRequestStatuses()
             d.addCallback(keep_count, builderName)
             brstatus_ds.append(d)
@@ -555,7 +557,11 @@ class BuildersResource(HtmlResource):
             bs.append(bld)
 
             builder = status.getBuilder(bn)
-            builds = list(builder.generateFinishedBuilds(map_branches(branches),
+            if len(codebases) > 0:
+                builds = list(builder.generateFinishedBuilds(codebases=codebases,
+                                                             num_builds=1))
+            else:
+                builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
             bld['force_schedulers'] = {}
             if bn in builder_schedulers:

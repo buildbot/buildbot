@@ -330,14 +330,15 @@ class BuilderStatus(styles.Versioned):
         return set([ ss.branch
             for ss in build.getSourceStamps() ])
 
-    def generateFinishedBuilds(self, branches=[],
+    def generateFinishedBuilds(self, branches=[], codebases={},
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
                                results=None,
-                               max_search=200):
+                               max_search=2000):
         got = 0
         branches = set(branches)
+        codebases = codebases
         for Nb in itertools.count(1):
             if Nb > self.nextBuildNumber:
                 break
@@ -357,7 +358,15 @@ class BuilderStatus(styles.Versioned):
                     continue
             # if we were asked to filter on branches, and none of the
             # sourcestamps match, skip this build
-            if branches and not branches & self._getBuildBranches(build):
+            if len(codebases) > 0:
+                build_sourcestamps = build.getSourceStamps()
+                foundcodebases = []
+                for ss in build_sourcestamps:
+                    if ss.codebase in codebases.keys() and ss.branch in codebases[ss.codebase]:
+                            foundcodebases.append(ss)
+                if len(foundcodebases) != len(build_sourcestamps):
+                    continue
+            elif branches and not branches & self._getBuildBranches(build):
                 continue
             if results is not None:
                 if build.getResults() not in results:

@@ -96,15 +96,16 @@
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
     {% elif 'list' in f.type %}
        <span class="label">{{f.label}}</span>
+        {% if request.args|length == 0 %}
        <span class="select">
        <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
          {% for c in f.choices %}
-            {% if request.args|length == 0 %}
                 <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
-            {% elif f.fullName in request.args.keys() %}
-                <option {{(c in request.args[f.fullName]) and "selected" or ""}}>{{c}}</option>
-           {% endif %}
+
          {% endfor %}
+           {% else %}
+            <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
+          {% endif %}
        </select>
        </span>
     {% elif 'nested' in f.type %}
