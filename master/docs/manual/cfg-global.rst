@@ -678,8 +678,7 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     For example ::
 
         c['www'] = {
-            # ...
-            plugins={'waterfall': {'num_builds': 50}}
+            'plugins': {'waterfall': {'num_builds': 50}}
         }
 
 ``debug``

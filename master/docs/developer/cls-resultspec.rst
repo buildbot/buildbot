@@ -3,7 +3,7 @@ ResultSpecs
 
 .. py:module:: buildbot.data.resultspec
 
-Result specifications are used by the :ref:`Data-API` to describe the desired results of a :py:meth:`~buildbot.data.connector.DataConnector.get` call.
+Result specifications are used by the :ref:`Data_API` to describe the desired results of a :py:meth:`~buildbot.data.connector.DataConnector.get` call.
 They can be used to filter, sort and paginate the contents of collections, and to limit the fields returned for each item.
 
 Python calls to :py:meth:`~buildbot.data.connector.DataConnector.get` call can pass a :py:class:`ResultSpec` instance directly.

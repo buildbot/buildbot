@@ -185,7 +185,9 @@ The following parts of the protocol are not supported:
 Requests are sent as an HTTP POST, containing the request JSON in the body.
 The content-type header is ignored; for compatibility with simple CORS requests (avoiding preflight checks), use ``text/plain``.
 
-A simple example::
+A simple example:
+
+.. code-block:: none
 
     POST http://build.my.org/api/v2/scheduler/4
     --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
