@@ -585,11 +585,22 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(caches=dict(foo=1)))
         self.assertResults(caches=dict(Changes=10, Builds=15, foo=1))
 
-    def test_load_caches_entries_test(self):
+    def test_load_caches_not_int_err(self):
+        """
+        Test that non-integer cache sizes are not allowed.
+        """
         self.cfg.load_caches(self.filename,
                 dict(caches=dict(foo="1")))
         self.assertConfigError(self.errors,
                                "value for cache size 'foo' must be an integer")
+
+    def test_load_caches_to_small_err(self):
+        """
+        Test that cache sizes less then 1 are not allowed.
+        """
+        self.cfg.load_caches(self.filename, dict(caches=dict(Changes=-12)))
+        self.assertConfigError(self.errors,
+                        "'Changes' cache size must be at least 1, got '-12'")
 
     def test_load_schedulers_defaults(self):
         self.cfg.load_schedulers(self.filename, {})
