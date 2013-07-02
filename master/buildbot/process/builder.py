@@ -576,7 +576,7 @@ class BuilderControl:
             sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
             dl = []
             for ss in ssList[1:]:
-                # add defered to the list
+                # add deferred to the list
                 dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
             yield defer.gatherResults(dl)
 
