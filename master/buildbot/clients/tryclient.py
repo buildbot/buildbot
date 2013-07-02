@@ -687,7 +687,7 @@ class Try(pb.Referenceable):
             self.announce("waiting for build to start...")
             d = self.running = defer.Deferred()
             if self.buildsetStatus:
-                self._getUrl_1()
+                self._getUrl()
                 return self.running
             master = master.geOpt("master")
             host, port = master.split(":")
@@ -725,21 +725,22 @@ class Try(pb.Referenceable):
         d = g.grab()
         d.addCallback(self._getUrl_1)
 
-    def _getUrl_1(self, res=None):
+    def _getUrl(self, res=None):
         if res:
             self.buildsetStatus = res
         d = self.buildsetStatus.callRemote("getBuildRequests")
-        d.addCallback(self._getUrl_2)
 
-    def _getUrl_2(self, res):
-        self.builderNames = []
-        self.buildRequests = {}
+        def _getUrl_parse(res):
+            self.builderNames = []
+            self.buildRequests = {}
 
-        for n, br in res:
-            self.builderNames.append(n)
-            self.buildRequests[n] = br
-            self.pending.append(n)
-            br.callRemote("subscribe", self)
+            for n,br in res:
+                self.builderNames.append(n)
+                self.buildRequests[n] = br
+                self.pending.append(n)
+                br.callRemote("subscribe", self)
+        d.addCallback(_getUrl_parse)
+
 
 
     def _getStatus_ssh_1(self, remote):
