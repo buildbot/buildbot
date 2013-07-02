@@ -287,8 +287,24 @@ class BuilderStatus(styles.Versioned):
         d.addCallback(make_statuses)
         return d
 
-    def getCurrentBuilds(self):
-        return self.currentBuilds
+    def foundCodebasesInBuild(self, build, codebases):
+        if len(codebases) > 0:
+            build_sourcestamps = build.getSourceStamps()
+            foundcodebases = []
+            for ss in build_sourcestamps:
+                if ss.codebase in codebases.keys() and ss.branch in codebases[ss.codebase]:
+                    foundcodebases.append(ss)
+            return len(foundcodebases) == len(build_sourcestamps)
+
+    def getCurrentBuilds(self, codebases={}):
+        if len(codebases) == 0:
+            return self.currentBuilds
+
+        currentBuildsCodebases = []
+        for build in self.currentBuilds:
+                if self.foundCodebasesInBuild(build, codebases):
+                    currentBuildsCodebases.append(build)
+        return currentBuildsCodebases
 
     def getLastFinishedBuild(self):
         b = self.getBuild(-1)
@@ -359,12 +375,7 @@ class BuilderStatus(styles.Versioned):
             # if we were asked to filter on branches, and none of the
             # sourcestamps match, skip this build
             if len(codebases) > 0:
-                build_sourcestamps = build.getSourceStamps()
-                foundcodebases = []
-                for ss in build_sourcestamps:
-                    if ss.codebase in codebases.keys() and ss.branch in codebases[ss.codebase]:
-                            foundcodebases.append(ss)
-                if len(foundcodebases) != len(build_sourcestamps):
+                if not self.foundCodebasesInBuild(build, codebases):
                     continue
             elif branches and not branches & self._getBuildBranches(build):
                 continue

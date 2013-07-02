@@ -533,7 +533,6 @@ class BuildersResource(HtmlResource):
 
         codebases = {}
         codebases_arg = getCodebasesArg(codebases=codebases, request=req)
-        print "\n getCodebasesArg(codebases %s, codebases_arg %s) \n" % (codebases, codebases_arg)
 
         if len(codebases_arg) > 0:
             builder_arg = codebases_arg + "&returnbuilders=true"
@@ -586,19 +585,29 @@ class BuildersResource(HtmlResource):
             if bn in builder_schedulers:
                 bld['force_schedulers'] = builder_schedulers[bn]
 
-            bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds()]
+            bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds(codebases=codebases)]
             bld['pending'] = []
             statuses = yield builder.getPendingBuildRequestStatuses()
             for pb in statuses:
                 changes = []
 
                 source = yield pb.getSourceStamp()
+                sources = yield pb.getSourceStamps()
+                foundcodebases = []
+                for key, ss in sources.iteritems():
+                    if key in codebases.keys() and ss.branch in codebases[key]:
+                        foundcodebases.append(ss)
+
+                if len(foundcodebases) != len(sources):
+                    continue
+
                 submitTime = yield pb.getSubmitTime()
                 bsid = yield pb.getBsid()
 
                 properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
 
+                ## this should use sources instead
                 if source.changes:
                     for c in source.changes:
                         changes.append({ 'url' : path_to_change(req, c),
