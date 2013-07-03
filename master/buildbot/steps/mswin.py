@@ -23,30 +23,8 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 class Robocopy(ShellCommand):
     """ Robocopy build step.
 
-    Note that parameters `/TEE /UNICODE /NP` will always be appended to the
-    command to signify, respectively, to output logging to the console, use
-    Unicode logging, and not print any percentage progress information for
-    each file.
-
-    @ivar source: the path to the source directory.
-
-    @ivar destination: the path to the destination directory.
-
-    @ivar files: an array of file names or patterns to copy.
-
-    @ivar recursive: copy files and directories recursively (`/E` parameter).
-
-    @ivar mirror: mirror the source directory in the destination directory,
-        including removing files that don't exist anymore (`/MIR` parameter).
-
-    @ivar move: delete the source directory after the copy is complete
-        (`/MOVE` parameter).
-
-    @ivar exclude: an array of file names or patterns to exclude from the copy
-        (`/XF` parameter).
-
-    @ivar verbose: whether to output verbose information
-        (`/V /TS /TP` parameters).
+    This is just a wrapper around the standard shell command that
+	will handle arguments and return codes accordingly for Robocopy.
     """
     renderables = ['source', 'destination', 'files', 'exclude']
 
