@@ -767,7 +767,14 @@ depot for changes. It accepts the following arguments:
 
 ``encoding``
     The character encoding of ``p4``\'s output.  This defaults to "utf8", but
-    if your commit messages are in another encoding, specify that here.
+    if your commit messages are in another encoding, specify that here. For example,
+    if you're using Perforce on Windows, you may need to use "cp437" as the
+    encoding if "utf8" generates errors in your master log.
+
+``server_tz``
+    The timezone of the Perforce server, using the usual timezone format
+    (e.g: ``Europe/Stockholm``) in case it's in a different timezone than the
+    buildbot master.
 
 Example
 +++++++
