@@ -940,7 +940,7 @@ class Try(pb.Referenceable):
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(user, passwd))
             reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._getBuilderNames, self._getBuilderNames2)
+            d.addCallback(self._getBuilderNames)
             return d
         if self.connect == "ssh":
             print "Cannot get availble builders over ssh."
@@ -948,7 +948,7 @@ class Try(pb.Referenceable):
         raise RuntimeError(
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
-    def _getBuilderNames(self, remote, output):
+    def _getBuilderNames(self, remote):
         # Older schedulers won't support the properties argument, so only
         # attempt to send them when necessary.
         properties = self.config.get('properties', {})
