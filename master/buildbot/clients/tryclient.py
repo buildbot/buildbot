@@ -595,20 +595,21 @@ class Try(pb.Referenceable):
             else:
                 treedir = os.getcwd()
             d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
-        d.addCallback(self._createJob_1)
-        return d
 
-    def _createJob_1(self, ss):
-        self.sourcestamp = ss
-        if self.connect == "ssh":
-            patchlevel, diff = ss.patch
-            revspec = ss.revision
-            if revspec is None:
-                revspec = ""
-            self.jobfile = createJobfile(
-                self.bsid, ss.branch or "", revspec, patchlevel, diff,
-                ss.repository, self.project, self.who, self.comment,
-                self.builderNames, self.config.get('properties', {}))
+        def createJob_jobfile(ss):
+            self.sourcestamp = ss
+            if self.connect == "ssh":
+                patchlevel, diff = ss.patch
+                revspec = ss.revision
+                if revspec is None:
+                    revspec = ""
+                self.jobfile = createJobfile(
+                    self.bsid, ss.branch or "", revspec, patchlevel, diff,
+                    ss.repository, self.project, self.who, self.comment,
+                    self.builderNames, self.config.get('properties', {}))
+
+        d.addCallback(createJob_jobfile)
+        return d
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
