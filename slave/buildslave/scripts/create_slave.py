@@ -23,7 +23,7 @@ from twisted.application import service
 from buildslave.bot import BuildSlave
 
 basedir = %(basedir)r
-rotateLength = %(log-size)s
+rotateLength = %(log-size)d
 maxRotatedFiles = %(log-count)s
 
 # if this is a relocatable tac file, get the directory containing the TAC
