@@ -15,12 +15,7 @@
 
 from twisted.python import log
 from buildbot.status.web.hooks.github import process_change
-
-try:
-    import json
-    assert json
-except ImportError:
-    import simplejson as json
+from buildbot.util import json
 
 
 def getChanges(request, options=None):
@@ -31,7 +26,10 @@ def getChanges(request, options=None):
         request
             the http request object
     """
-    payload = json.load(request.content)
+    try:
+        payload = json.load(request.content)
+    except Exception, e:
+        raise ValueError("Error loading JSON: " + str(e))
     user = payload['user_name']
     repo = payload['repository']['name']
     repo_url = payload['repository']['url']

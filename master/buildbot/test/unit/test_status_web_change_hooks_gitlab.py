@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 import calendar
-
+import mock
 import buildbot.status.web.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 
@@ -112,10 +112,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            expected = "No JSON object could be decoded"
             self.assertEquals(len(self.request.addedChanges), 0)
-            self.assertEqual(self.request.written, expected)
-            self.request.setResponseCode.assert_called_with(400, expected)
+            self.assertIn("Error loading JSON:", self.request.written)
+            self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
         d.addCallback(check_changes)
         return d
