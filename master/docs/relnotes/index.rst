@@ -60,6 +60,8 @@ Nine
 * The debug client no longer supports requesting builds (the ``requestBuild`` method has been removed).
   If you have been using this method in production, consider instead creating a new change source, using the :bb:sched:`ForceScheduler`, or using one of the try schedulers.
 
+* SQLAlchemy-Migrate-0.6.1 is no longer supported.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
