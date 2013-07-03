@@ -22,7 +22,7 @@ import os
 from twisted.application import service
 from buildslave.bot import BuildSlave
 
-basedir = r'%(basedir)s'
+basedir = %(basedir)r
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
