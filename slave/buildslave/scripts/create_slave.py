@@ -47,10 +47,10 @@ except ImportError:
   pass
 """,
 """
-buildmaster_host = '%(host)s'
+buildmaster_host = %(host)r
 port = %(port)d
-slavename = '%(name)s'
-passwd = '%(passwd)s'
+slavename = %(name)r
+passwd = %(passwd)r
 keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
@@ -199,7 +199,7 @@ def createSlave(config):
 
     asd = config['allow-shutdown']
     if asd:
-        config['allow-shutdown'] = "'%s'" % asd
+        config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
