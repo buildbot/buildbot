@@ -668,12 +668,13 @@ class Try(pb.Referenceable):
                               self.who,
                               self.comment,
                               self.config.get('properties', {}))
-        d.addCallback(self._deliverJob_pb2)
-        return d
+        
+        def _deliverJob_pbstatus(status):
+            self.buildsetStatus = status
+            return status
 
-    def _deliverJob_pb2(self, status):
-        self.buildsetStatus = status
-        return status
+        d.addCallback(_deliverJob_pbstatus)
+        return d
 
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
@@ -721,7 +722,7 @@ class Try(pb.Referenceable):
         self.announce("waiting for job to be accepted")
         g = BuildSetStatusGrabber(remote, self.bsid)
         d = g.grab()
-        d.addCallback(self._getUrl_1)
+        d.addCallback(self._getUrl)
 
     def _getUrl(self, res=None):
         if res:
