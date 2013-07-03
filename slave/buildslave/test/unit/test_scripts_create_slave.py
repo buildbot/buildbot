@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import mock
 from twisted.trial import unittest
@@ -540,6 +542,76 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # check that correct info message was printed
         self.assertStdoutEqual("buildslave configured in bdir\n")
+
+    def assertTACFileContents(self, options):
+        """
+        Check that TAC file generated with provided options is valid Python
+        script and does typical for TAC file logic.
+        """
+
+        # import modules for mocking
+        import twisted.application.service
+        import twisted.python.logfile
+        import buildslave.bot
+
+        # mock service.Application class
+        application_mock = mock.Mock()
+        application_class_mock = mock.Mock(return_value=application_mock)
+        self.patch(twisted.application.service, "Application",
+                   application_class_mock)
+
+        # mock logging stuff
+        logfile_mock = mock.Mock()
+        self.patch(twisted.python.logfile.LogFile, "fromFullPath",
+                   logfile_mock)
+
+        # mock BuildSlave class
+        buildslave_mock = mock.Mock()
+        buildslave_class_mock = mock.Mock(return_value=buildslave_mock)
+        self.patch(buildslave.bot, "BuildSlave", buildslave_class_mock)
+
+        expected_tac_contents = \
+            "".join(create_slave.slaveTACTemplate) % options
+
+        # Executed .tac file with mocked functions with side effect.
+        # This will raise exception if .tac file is not valid Python file.
+        glb = {}
+        exec(expected_tac_contents, glb, glb)
+
+        # only one Application must be created in .tac
+        application_class_mock.assert_called_once_with("buildslave")
+
+        # check that BuildSlave created with passed options
+        buildslave_class_mock.assert_called_once_with(
+            options["host"],
+            options["port"],
+            options["name"],
+            options["passwd"],
+            options["basedir"],
+            options["keepalive"],
+            options["usepty"],
+            umask=options["umask"],
+            maxdelay=options["maxdelay"],
+            allow_shutdown=options["allow-shutdown"])
+
+        # check that BuildSlave instance attached to application
+        self.assertEqual(buildslave_mock.method_calls,
+                         [mock.call.setServiceParent(application_mock)])
+
+        # .tac file must define global variable "application", instance of
+        # Application
+        self.assertTrue('application' in glb,
+            ".tac file doesn't define \"application\" variable")
+        self.assertTrue(glb['application'] is application_mock,
+            "defined \"application\" variable in .tac file is not "
+            "Application instance")
+
+    def testDefaultTACContents(self):
+        """
+        test that with default options generated TAC file is valid.
+        """
+
+        self.assertTACFileContents(self.options)
 
     def testNoLogRotate(self):
         """
