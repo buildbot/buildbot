@@ -17,12 +17,12 @@
       </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}">
+      <a href="{{ path_to_root }}projects/{{selectedproject|urlencode+codebases_arg}}">
           Codebases
       </a>
     </li>
     <li>
-        <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}/builders">
+        <a href="{{ path_to_root }}projects/{{selectedproject|urlencode}}/builders{{codebases_arg}}">
           Builders
         </a>
     </li>
@@ -90,7 +90,7 @@
         Cancel all builds
       </p>
       {% if authz.advertiseAction('cancelPendingBuild', request) %}
-        {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+builder_arg, authz, short=False, id='all') }}
+        {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=False, id='all') }}
       {% endif %}    
     </li>
   {% for b in pending %}
@@ -114,7 +114,7 @@
       {% endif %}
     </p>
     {% if authz.advertiseAction('cancelPendingBuild', request) %}
-      {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=b.id) }}
+      {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=True, id=b.id) }}
     {% endif %}    
     </li>
   {% endfor %}
@@ -185,7 +185,7 @@
           <h3>Force build</h3>
 
           {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-            {{ forms.force_build(builder_url+"/force"+builder_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
+            {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
           {% endif %}          
           
       </div>

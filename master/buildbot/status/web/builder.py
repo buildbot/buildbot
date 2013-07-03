@@ -20,7 +20,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
+    path_to_build, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, \
     map_branches, path_to_authzfail, ActionResource, \
     getRequestCharset
@@ -167,11 +167,10 @@ class ForceBuildActionResource(ActionResource):
 
         # send the user back to the builder page
         returnbuilders = args.get("returnbuilders", None)
-        codebases_arg = getCodebasesArg(request=req)
         if returnbuilders is None:
-            defer.returnValue((path_to_builder(req, self.builder_status) + codebases_arg, msg))
+            defer.returnValue((path_to_builder(req, self.builder_status, codebases=True), msg))
         else:
-            defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg, msg))
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject(), codebases=True), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
@@ -210,11 +209,11 @@ def buildForceContext(cxt, req, master, buildername=None):
     cxt['default_props'] = default_props
 
 
-def builder_info(build, req):
+def builder_info(build, req, codebases=False):
     b = {}
 
     b['num'] = build.getNumber()
-    b['link'] = path_to_build(req, build)
+    b['link'] = path_to_build(req, build, codebases=codebases)
 
     when = build.getETA()
     if when is not None:
@@ -252,6 +251,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b = self.builder_status
         cxt['selectedproject'] =  b.getProject()
         cxt['name'] = b.getName()
+
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
@@ -318,7 +318,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
-        cxt['builder_arg'] = codebases_arg
+        cxt['codebases_arg'] = codebases_arg
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         defer.returnValue(template.render(**cxt))
@@ -379,11 +379,10 @@ class CancelChangeResource(ActionResource):
                         break
         args = req.args.copy()
         returnbuilders = args.get("returnbuilders", None)
-        codebases_arg = getCodebasesArg(request=req)
         if returnbuilders is None:
-            defer.returnValue((path_to_builder(req, self.builder_status) + codebases_arg))
+            defer.returnValue((path_to_builder(req, self.builder_status, codebases=True)))
         else:
-            defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg))
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject(), codebases=True)))
 
 class StopChangeMixin(object):
 
@@ -555,8 +554,9 @@ class BuildersResource(HtmlResource):
 
         codebases = {}
         codebases_arg = getCodebasesArg(codebases=codebases, request=req)
+        codebases_in_args = len(codebases_arg) > 0
 
-        if len(codebases_arg) > 0:
+        if codebases_in_args:
             builder_arg = codebases_arg + "&returnbuilders=true"
         else:
             builder_arg = "?returnbuilders=true"
@@ -575,6 +575,8 @@ class BuildersResource(HtmlResource):
         yield defer.gatherResults(brstatus_ds)
 
         cxt['selectedproject'] = self.project.name
+        cxt['builder_arg'] = builder_arg
+        cxt['path_to_codebases'] = path_to_codebases(req, self.project.name, codebases=codebases_in_args)
         cxt['branches'] = branches
         bs = cxt['builders'] = []
 
@@ -589,25 +591,23 @@ class BuildersResource(HtmlResource):
 
         building = 0
         online = 0
-        path_builders = path_to_builders(req, self.project.name)
+
         for bn in builders:
-            builder_url = path_builders+"/"+urllib.quote(bn, safe='')
-            bld = { 'link': builder_url + codebases_arg,
-                    'name': bn, 'builder_url': builder_url, 'builder_arg' : builder_arg }
+            builder = status.getBuilder(bn)
+
+            bld = { 'link': path_to_builder(req, builder, codebases=codebases_in_args),
+                    'name': bn, 'builder_url': path_to_builder(req, builder) }
+
             bs.append(bld)
 
-            builder = status.getBuilder(bn)
-            if len(codebases) > 0:
-                builds = list(builder.generateFinishedBuilds(codebases=codebases,
-                                                             num_builds=1))
-            else:
-                builds = list(builder.generateFinishedBuilds(map_branches(branches),
+            builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                         codebases=codebases,
                                                          num_builds=1))
             bld['force_schedulers'] = {}
             if bn in builder_schedulers:
                 bld['force_schedulers'] = builder_schedulers[bn]
 
-            bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds(codebases=codebases)]
+            bld['current'] = [builder_info(x, req, codebases=codebases_in_args) for x in builder.getCurrentBuilds(codebases=codebases)]
             bld['pending'] = []
             statuses = yield builder.getPendingBuildRequestStatuses()
             for pb in statuses:
@@ -615,7 +615,7 @@ class BuildersResource(HtmlResource):
 
                 source = yield pb.getSourceStamp()
 
-                if len(codebases) > 0:
+                if codebases_in_args:
                     found = yield foundCodebasesInPendingBuild(pb, codebases)
                     if not found:
                         continue
@@ -646,7 +646,8 @@ class BuildersResource(HtmlResource):
 
             if builds:
                 b = builds[0]
-                bld['build_url'] = (builder_url + "/builds/%d" % b.getNumber()) + codebases_arg
+
+                bld['build_url'] = path_to_build(req, b, codebases=codebases_in_args)
                 
                 label = None
                 all_got_revisions = b.getAllGotRevisions()

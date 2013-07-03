@@ -50,7 +50,11 @@
     <td>
       <select name='{{cbkey}}_branch' class="select-tools var-1">
          {% for b in codebase['branch'] %}
+          {% if request.args|length > 0 %}
+            <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
+          {% else %}
             <option>
+          {% endif %}
             {{ b }}
             </option>
           {% endfor %}

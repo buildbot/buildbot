@@ -123,11 +123,28 @@ def path_to_root(request):
 def path_to_projects(request):
     return path_to_root(request) + "projects"
 
-def path_to_codebases(request, projectName):
-    return path_to_projects(request) + "/" + urllib.quote(projectName, safe='')
+def getCodebasesArg(request=None):
+    codebases_arg=''
+    for key, val in request.args.iteritems():
+        if '_branch' in key:
+            if len(codebases_arg) > 0:
+                codebases_arg += "&"
+            else:
+                codebases_arg += "?"
+            codebases_arg += "%s=%s" % (key, ''.join(val))
+    return codebases_arg
 
-def path_to_builders(request, projectName):
-    return (path_to_codebases(request, projectName) + "/builders")
+def path_to_codebases(request, projectName, codebases=False):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request)
+    return path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + codebases_arg
+
+def path_to_builders(request, projectName, codebases=False):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request)
+    return (path_to_codebases(request, projectName) + "/builders" + codebases_arg)
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -135,18 +152,30 @@ def path_to_authfail(request):
 def path_to_authzfail(request):
     return path_to_root(request) + "authzfail"
 
-def path_to_builder(request, builderstatus):
+def path_to_builder(request, builderstatus, codebases=False):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request)
+
     return (path_to_builders(request, builderstatus.getProject()) +
             "/" +
-            urllib.quote(builderstatus.getName(), safe=''))
+            urllib.quote(builderstatus.getName(), safe='') + codebases_arg)
 
-def path_to_build(request, buildstatus):
+def path_to_build(request, buildstatus, codebases=False):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request)
+
     return (path_to_builder(request, buildstatus.getBuilder()) +
-            "/builds/%d" % buildstatus.getNumber())
+            "/builds/%d" % buildstatus.getNumber() + codebases_arg)
 
-def path_to_step(request, stepstatus):
+def path_to_step(request, stepstatus, codebases = False):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request)
+
     return (path_to_build(request, stepstatus.getBuild()) +
-            "/steps/%s" % urllib.quote(stepstatus.getName(), safe=''))
+            "/steps/%s" % urllib.quote(stepstatus.getName(), safe='') + codebases_arg)
 
 def path_to_slave(request, slave):
     return (path_to_root(request) +
