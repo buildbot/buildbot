@@ -91,7 +91,7 @@ class Authz(object):
         return request.args.get("username", ["<unknown>"])[0]
 
     def getUsernameHTML(self, request):
-        """Get the user formatated in html (with possible link to email)"""
+        """Get the user formatted in html (with possible link to email)"""
         if self.useHttpHeader:
             return request.getUser()
         s = self.session(request)
