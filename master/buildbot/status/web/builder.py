@@ -249,7 +249,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
-        cxt['selectedproject'] =  b.getProject()
+        project = cxt['selectedproject'] =  b.getProject()
         cxt['name'] = b.getName()
 
         req.setHeader('Cache-Control', 'no-cache')
@@ -258,8 +258,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         codebases = {}
         codebases_arg = getCodebasesArg(codebases=codebases, request=req)
-
-        cxt['current'] = [builder_info(x, req) for x in b.getCurrentBuilds(codebases=codebases)]
+        codebases_in_args = len(codebases_arg) > 0
+        cxt['current'] = [builder_info(x, req, codebases_in_args) for x in b.getCurrentBuilds(codebases=codebases)]
 
         cxt['pending'] = []
         statuses = yield b.getPendingBuildRequestStatuses()
@@ -319,6 +319,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
         cxt['codebases_arg'] = codebases_arg
+        cxt['path_to_codebases'] = path_to_codebases(req, project, codebases=codebases_in_args)
+        cxt['path_to_builders'] = path_to_builders(req, project, codebases=codebases_in_args)
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         defer.returnValue(template.render(**cxt))
