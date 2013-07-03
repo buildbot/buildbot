@@ -613,6 +613,32 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         self.assertTACFileContents(self.options)
 
+    def testBackslashInBasedir(self):
+        """
+        test that using backslash (typical for Windows platform) in basedir
+        won't break generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"}):
+            self.assertTACFileContents(self.options)
+
+    def testQuotesInBasedir(self):
+        """
+        test that using quotes in basedir won't break generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"Buildbot's \"dir"}):
+            self.assertTACFileContents(self.options)
+
+    def testDoubleQuotesInBasedir(self):
+        """
+        test that using double quotes at begin and end of basedir won't break
+        generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"}):
+            self.assertTACFileContents(self.options)
+
     def testNoLogRotate(self):
         """
         test that when --no-logrotate options is used, correct tac file
