@@ -71,7 +71,7 @@ class Tests(interfaces.InterfaceTests):
     def test_setChangeSourceMaster_inactive_but_linked(self):
         """Inactive changesource but already claimed by an active master"""
         d = self.insertTestData([
-            self.cs42,
+            self.cs87,
             self.master13, self.master14,
             self.cs87master14,
         ])
@@ -272,7 +272,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'changesources', 'masters',
-                         'changesource_masters' ])
+                         'patches', 'sourcestamps', 'changesource_masters' ])
 
         def finish_setup(_):
             self.db.changesources = \

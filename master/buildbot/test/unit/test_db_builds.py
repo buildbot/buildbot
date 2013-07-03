@@ -32,7 +32,9 @@ class Tests(interfaces.InterfaceTests):
     backgroundData = [
         fakedb.Buildset(id=20),
         fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
-        fakedb.Builder(id=77),
+        fakedb.BuildRequest(id=42, buildsetid=20, buildername='b2'),
+        fakedb.Builder(id=77, name="b1"),
+        fakedb.Builder(id=88, name="b2"),
         fakedb.Master(id=88),
     ]
     threeBuilds = [

@@ -29,10 +29,11 @@ class Tests(interfaces.InterfaceTests):
     # common sample data
 
     change13_rows = [
+        fakedb.SourceStamp(id=92, branch="thirteen"),
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
             is_dir=0, branch="master", revision="deadbeef",
             when_timestamp=266738400, revlink=None, category=None,
-            repository='', codebase='', project=''),
+            repository='', codebase='', project='', sourcestampid=92),
 
         fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
@@ -42,11 +43,12 @@ class Tests(interfaces.InterfaceTests):
     ]
 
     change14_rows = [
+        fakedb.SourceStamp(id=233, branch="fourteen"),
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
             category='devel', repository='git://warner', codebase='mainapp',
-            project='Buildbot', sourcestampid=234),
+            project='Buildbot', sourcestampid=233),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -66,7 +68,7 @@ class Tests(interfaces.InterfaceTests):
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
-        'sourcestampid': 234,
+        'sourcestampid': 233,
     }
 
     # tests
@@ -175,6 +177,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_getChangeUids_found(self):
         d = self.insertTestData(self.change14_rows + [
+                fakedb.SourceStamp(id=92),
                 fakedb.User(uid=1),
                 fakedb.ChangeUser(changeid=14, uid=1),
             ])
@@ -209,11 +212,12 @@ class Tests(interfaces.InterfaceTests):
             pass
     def insert7Changes(self):
         return self.insertTestData([
-            fakedb.Change(changeid=8),
-            fakedb.Change(changeid=9),
-            fakedb.Change(changeid=10),
-            fakedb.Change(changeid=11),
-            fakedb.Change(changeid=12),
+            fakedb.SourceStamp(id=922),
+            fakedb.Change(changeid=8, sourcestampid=922),
+            fakedb.Change(changeid=9, sourcestampid=922),
+            fakedb.Change(changeid=10, sourcestampid=922),
+            fakedb.Change(changeid=11, sourcestampid=922),
+            fakedb.Change(changeid=12, sourcestampid=922),
         ] + self.change13_rows + self.change14_rows)
 
     def test_getRecentChanges_subset(self):
@@ -237,6 +241,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_getChangesHugeCount(self):
         d = self.insertTestData([
+            fakedb.SourceStamp(id=92),
+        ] + [
             fakedb.Change(changeid=i) for i in xrange(2, 102)])
         d.addCallback(lambda _ :
                 self.db.changes.getChangesCount())
@@ -556,7 +562,9 @@ class RealTests(Tests):
 
     def test_pruneChanges_lots(self):
         d = self.insertTestData([
-            fakedb.Change(changeid=n)
+            fakedb.SourceStamp(id=29),
+        ] + [
+            fakedb.Change(changeid=n, sourcestampid=29)
             for n in xrange(1, 151)
         ])
 

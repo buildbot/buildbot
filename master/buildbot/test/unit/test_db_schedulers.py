@@ -23,6 +23,7 @@ class Tests(interfaces.InterfaceTests):
 
     # test data
 
+    ss92 = fakedb.SourceStamp(id=92)
     change3 = fakedb.Change(changeid=3)
     change4 = fakedb.Change(changeid=4)
     change5 = fakedb.Change(changeid=5)
@@ -45,8 +46,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_classifyChanges(self):
-        yield self.insertTestData([ self.change3, self.change4,
-                                  self.scheduler24 ])
+        yield self.insertTestData([self.ss92, self.change3, self.change4,
+                    self.scheduler24])
         yield self.db.schedulers.classifyChanges(24,
                                 { 3 : False, 4: True })
         res = yield self.db.schedulers.getChangeClassifications(24)
@@ -57,6 +58,7 @@ class Tests(interfaces.InterfaceTests):
         # test reclassifying changes, which may happen during some timing
         # conditions
         yield self.insertTestData([
+            self.ss92,
             self.change3,
             self.scheduler24,
             fakedb.SchedulerChange(schedulerid=24, changeid=3, important=0),
@@ -73,8 +75,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications(self):
-        yield self.insertTestData([ self.change3, self.change4,
-                                  self.change5, self.scheduler24 ])
+        yield self.insertTestData([self.ss92, self.change3, self.change4,
+                    self.change5, self.scheduler24])
         yield self.addClassifications(24,
                             (3, 1), (4, 0), (5, 1))
         res = yield self.db.schedulers.getChangeClassifications(24)
@@ -85,8 +87,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications_less_than(self):
-        yield self.insertTestData([ self.change3, self.change4,
-                                  self.change5, self.scheduler24 ])
+        yield self.insertTestData([self.ss92, self.change3,
+                    self.change4, self.change5, self.scheduler24])
         yield self.addClassifications(24,
                             (3, 1), (4, 0), (5, 1))
         yield self.db.schedulers.flushChangeClassifications(24, less_than=5)
@@ -101,8 +103,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeClassifications(self):
-        yield self.insertTestData([ self.change3, self.change4, self.change5,
-                                  self.change6, self.scheduler24 ])
+        yield self.insertTestData([self.ss92, self.change3, self.change4,
+                    self.change5, self.change6, self.scheduler24])
         yield self.addClassifications(24,
                 (3, 1), (4, 0), (5, 1), (6, 1))
         res = yield self.db.schedulers.getChangeClassifications(24)
@@ -110,8 +112,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeClassifications_branch(self):
-        yield self.insertTestData([ self.change3, self.change4, self.change5,
-                                  self.change6, self.scheduler24 ])
+        yield self.insertTestData([self.ss92, self.change3, self.change4,
+                    self.change5, self.change6, self.scheduler24])
         yield self.addClassifications(24,
                 (3, 1), (4, 0), (5, 1), (6, 1))
         res = yield self.db.schedulers.getChangeClassifications(24,
@@ -339,7 +341,8 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'schedulers', 'masters',
-                         'scheduler_masters', 'scheduler_changes' ])
+                         'sourcestamps', 'patches', 'scheduler_masters',
+                         'scheduler_changes' ])
 
         def finish_setup(_):
             self.db.schedulers = \
