@@ -837,27 +837,6 @@ class Try(pb.Referenceable):
         d.addErrback(remote_newbuild_geturlerr, bs, builderName)
         return d
 
-    # This is called if the method getUrl is not fouond on the remote
-    # This method will exit the program if there wait has not been set
-    #def remote_newbuild_geturlerr(self, failure, bs, builderName):
-    #    quiet = self.getopt("quiet")
-    """  
-
-    def remote_newbuild_1(self, url, bs, builderName):
-        self.setUrl(url, builderName)
-        wait = self.getopt('wait')
-        if wait:
-            self.remote_newbuild_2(bs, builderName)
-
-    def remote_newbuild_2(self, bs, builderName):
-        if self.builds[builderName]:
-            self.builds[builderName].callRemote("unsubscribe", self)
-        self.builds[builderName] = bs
-        bs.callRemote("subscribe", self, 20)
-        d = bs.callRemote("waitUntilFinished")
-        d.addCallback(self._build_finished, builderName)
-    """
-
     def remote_stepStarted(self, buildername, build, stepname, step):
         self.currentStep[buildername] = stepname
 
@@ -874,22 +853,21 @@ class Try(pb.Referenceable):
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
         d = bs.callRemote("getResults")
-        d.addCallback(self._build_finished_2, bs, builderName)
+
+        def _build_finished_getText( results, bs, builderName):
+            self.results[builderName][0] = results
+            d = bs.callRemote("getText")
+            d.addCallback(_build_finished_remove, bs, builderName)
+            return d
+
+        def _build_finished_remove( text, bs, builderNames):
+            self.results[builderName][1] = text
+            self.outstanding.remove(builderName)
+            if not self.outstanding:
+                return self.statusDone()
+
+        d.addCallback(_build_finished_getText, bs, builderName)
         return d
-
-    def _build_finished_2(self, results, bs, builderName):
-        self.results[builderName][0] = results
-        d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, bs , builderName)
-        return d
-
-    def _build_finished_3(self, text, bs, builderName):
-        self.results[builderName][1] = text
-
-        self.outstanding.remove(builderName)
-        if not self.outstanding:
-            # all done
-            return self.statusDone()
 
     def printStatus(self):
         try:
