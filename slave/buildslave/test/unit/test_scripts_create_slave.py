@@ -639,6 +639,22 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         with mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"}):
             self.assertTACFileContents(self.options)
 
+    def testSpecialCharactersInOptions(self):
+        """
+        test that using special characters in options strings won't break
+        generated TAC file.
+        """
+
+        test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
+            " \x07 \" \\\" ' \\' ''")
+        with mock.patch.dict(self.options, {
+                "basedir": test_string,
+                "host": test_string,
+                "passwd": test_string,
+                "name": test_string,
+                }):
+            self.assertTACFileContents(self.options)
+
     def testNoLogRotate(self):
         """
         test that when --no-logrotate options is used, correct tac file
