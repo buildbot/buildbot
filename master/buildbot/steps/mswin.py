@@ -24,7 +24,7 @@ class Robocopy(ShellCommand):
     """ Robocopy build step.
 
     This is just a wrapper around the standard shell command that
-	will handle arguments and return codes accordingly for Robocopy.
+    will handle arguments and return codes accordingly for Robocopy.
     """
     renderables = ['source', 'destination', 'files', 'exclude']
 
