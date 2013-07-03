@@ -740,8 +740,6 @@ class Try(pb.Referenceable):
                 br.callRemote("subscribe", self)
         d.addCallback(_getUrl_parse)
 
-
-
     def _getStatus_ssh_1(self, remote):
         # find a remotereference to the corresponding BuildSetStatus object
         self.announce("waiting for job to be accepted")
@@ -812,22 +810,38 @@ class Try(pb.Referenceable):
 
     def remote_newbuild(self, bs, builderName):
         d = bs.callRemote("getUrl")
-        d.addCallback(self.remote_newbuild_1, bs, builderName)
-        d.addErrback(self.remote_newbuild_geturlerr, bs, builderName)
+
+        def remote_newbuild_geturlerr( failure, bs, builderName):
+            self.announce("Error while getting the url")
+            self.announce("make sure the build master is up to date")
+            wait = self.getopt("wait")
+            failure.trap(NoSuchMethod)
+            if wait:
+                self.remote_newbuild_2(bs, builderName)
+            else:
+                self.ending()
+
+        def remote_newbuild_subscribe(url, bs, builderName):
+            self.setUrl( url, builderName)
+            wait = self.getopt('wait')
+            if not wait:
+                return
+            if self.builds[builderName]:
+                self.builds[buildName].callRemote("unsubscribe", self)
+            self.builds[builderName] = bs
+            bs.callRemote("subscribe", self, 20)
+            d = bs.callRemote("waitUntilFinished")
+            d.addCallback(self._build_finished, builderName) 
+
+        d.addCallback(remote_newbuild_subscribe, bs, builderName)
+        d.addErrback(remote_newbuild_geturlerr, bs, builderName)
         return d
 
     # This is called if the method getUrl is not fouond on the remote
     # This method will exit the program if there wait has not been set
-    def remote_newbuild_geturlerr(self, failure, bs, builderName):
-        quiet = self.getopt("quiet")
-        self.announce("Error while getting the url")
-        self.announce("make sure the build master is up to date")
-        wait = self.getopt("wait")
-        failure.trap(NoSuchMethod)
-        if wait:
-            self.remote_newbuild_2(bs, builderName)
-        else:
-            self.ending()
+    #def remote_newbuild_geturlerr(self, failure, bs, builderName):
+    #    quiet = self.getopt("quiet")
+    """  
 
     def remote_newbuild_1(self, url, bs, builderName):
         self.setUrl(url, builderName)
@@ -842,6 +856,7 @@ class Try(pb.Referenceable):
         bs.callRemote("subscribe", self, 20)
         d = bs.callRemote("waitUntilFinished")
         d.addCallback(self._build_finished, builderName)
+    """
 
     def remote_stepStarted(self, buildername, build, stepname, step):
         self.currentStep[buildername] = stepname
