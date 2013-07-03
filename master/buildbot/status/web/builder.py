@@ -167,10 +167,10 @@ class ForceBuildActionResource(ActionResource):
 
         # send the user back to the builder page
         returnbuilders = args.get("returnbuilders", None)
+        codebases_arg = getCodebasesArg(request=req)
         if returnbuilders is None:
-            defer.returnValue((path_to_builder(req, self.builder_status), msg))
+            defer.returnValue((path_to_builder(req, self.builder_status) + codebases_arg, msg))
         else:
-            codebases_arg = getCodebasesArg(request=req)
             defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg, msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
@@ -256,7 +256,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [builder_info(x, req) for x in b.getCurrentBuilds()]
+        codebases = {}
+        codebases_arg = getCodebasesArg(codebases=codebases, request=req)
+
+        cxt['current'] = [builder_info(x, req) for x in b.getCurrentBuilds(codebases=codebases)]
 
         cxt['pending'] = []
         statuses = yield b.getPendingBuildRequestStatuses()
@@ -264,12 +267,19 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             changes = []
 
             source = yield pb.getSourceStamp()
+
+            if len(codebases) > 0:
+                found = yield foundCodebasesInPendingBuild(pb, codebases)
+                if not found:
+                    continue
+
             submitTime = yield pb.getSubmitTime()
             bsid = yield pb.getBsid()
 
             properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
 
+            ## this should use sources instead
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
@@ -287,9 +297,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties' : properties,
                 })
 
-        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
+        numbuilds = int(req.args.get('numbuilds', ['15'])[0])
         recent = cxt['recent'] = []
-        for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
+
+        for build in b.generateFinishedBuilds(codebases=codebases, num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
@@ -307,6 +318,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)
+        cxt['builder_arg'] = codebases_arg
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         defer.returnValue(template.render(**cxt))
@@ -367,10 +379,10 @@ class CancelChangeResource(ActionResource):
                         break
         args = req.args.copy()
         returnbuilders = args.get("returnbuilders", None)
+        codebases_arg = getCodebasesArg(request=req)
         if returnbuilders is None:
-            defer.returnValue((path_to_builder(req, self.builder_status)))
+            defer.returnValue((path_to_builder(req, self.builder_status) + codebases_arg))
         else:
-            codebases_arg = getCodebasesArg(request=req)
             defer.returnValue((path_to_builders(req, self.builder_status.getProject()) + codebases_arg))
 
 class StopChangeMixin(object):
@@ -512,6 +524,16 @@ def getCodebasesArg(codebases={}, request=None):
             codebases_arg += "%s=%s" % (key, ''.join(val))
     return codebases_arg
 
+@defer.inlineCallbacks
+def foundCodebasesInPendingBuild(pendingbuild, codebases):
+    sources = yield pendingbuild.getSourceStamps()
+    foundcodebases = []
+    for key, ss in sources.iteritems():
+        if key in codebases.keys() and ss.branch in codebases[key]:
+            foundcodebases.append(ss)
+    found = len(foundcodebases) == len(sources)
+    defer.returnValue(found)
+
 # /builders
 class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
@@ -592,14 +614,11 @@ class BuildersResource(HtmlResource):
                 changes = []
 
                 source = yield pb.getSourceStamp()
-                sources = yield pb.getSourceStamps()
-                foundcodebases = []
-                for key, ss in sources.iteritems():
-                    if key in codebases.keys() and ss.branch in codebases[key]:
-                        foundcodebases.append(ss)
 
-                if len(foundcodebases) != len(sources):
-                    continue
+                if len(codebases) > 0:
+                    found = yield foundCodebasesInPendingBuild(pb, codebases)
+                    if not found:
+                        continue
 
                 submitTime = yield pb.getSubmitTime()
                 bsid = yield pb.getBsid()
