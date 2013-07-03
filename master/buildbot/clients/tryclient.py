@@ -956,13 +956,14 @@ class Try(pb.Referenceable):
             d = remote.callRemote("getAvailableBuilderNames", properties)
         else:
             d = remote.callRemote("getAvailableBuilderNames")
-        d.addCallback(self._getBuilderNames2)
-        return d
 
-    def _getBuilderNames2(self, buildernames):
-        print "The following builders are available for the try scheduler: "
-        for buildername in buildernames:
-            print buildername
+        def _getBuilderNames_print(buildernames):
+            print "The following builders are available for the try scheduler: "
+            for buildername in buildernames:
+                print buildername
+
+        d.addCallback(_getBuilderNames_print)
+        return d
 
     def announce(self, message):
         if not self.quiet:
