@@ -1952,7 +1952,13 @@ Robocopy
 
 .. py:class:: buildbot.steps.mswin.Robocopy
 
-This step runs ``robocopy`` on Windows::
+This step runs ``robocopy`` on Windows.
+
+`Robocopy <http://technet.microsoft.com/en-us/library/cc733145.aspx>`_ is available in versions
+of Windows starting with Windows Vista and Windows Server 2008. For previous versions of Windows,
+it's available as part of the `Windows Server 2003 Resource Kit Tools <http://www.microsoft.com/en-us/download/details.aspx?id=17657>`_.
+
+::
 
     from buildbot.steps.mswin import Robocopy
 
