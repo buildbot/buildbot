@@ -69,7 +69,7 @@ class Robocopy(ShellCommand):
             command += self.exclude
         if self.verbose:
             command.append('/V /TS /FP')
-        command += ['/TEE', '/UNICODE', '/NP']
+        command += ['/TEE', '/NP']
         self.setCommand(command)
         ShellCommand.start(self)
 

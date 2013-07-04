@@ -42,7 +42,7 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
         command = ['robocopy', source, destination]
         if expected_args:
             command += expected_args
-        command += ['/TEE', '/UNICODE', '/NP']
+        command += ['/TEE', '/NP']
         self.expectCommands(
                 ExpectShell(
                         workdir='wkdir',
