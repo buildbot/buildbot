@@ -22,7 +22,7 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-    path_to_codebases, path_to_builders, path_to_step, \
+    path_to_codebases, path_to_builders, path_to_step, getCodebasesArg, \
      getAndCheckProperties, ActionResource, path_to_authzfail, \
      getRequestCharset
 from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
@@ -141,12 +141,13 @@ class StatusResourceBuild(HtmlResource):
 
         builder = self.build_status.getBuilder()
         cxt['builder_name'] = builder.getName()
+        cxt['build_number'] = b.getNumber()
         cxt['builder_name_link'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
         cxt['b'] = b
         project = cxt['selectedproject'] = builder.getProject()
-        cxt['path_to_builder'] = path_to_builder(req, b.getBuilder(), codebases=True)
-        cxt['path_to_builders'] = path_to_builders(req, project, codebases=True)
-        cxt['path_to_codebases'] = path_to_codebases(req, project, codebases=True)
+        cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
+        cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt['path_to_codebases'] = path_to_codebases(req, project)
 
         if not b.isFinished():
             step = b.getCurrentStep()
@@ -204,7 +205,7 @@ class StatusResourceBuild(HtmlResource):
 
             cxt['steps'].append(step)
 
-            step['link'] = path_to_step(req, s, codebases=True)
+            step['link'] = path_to_step(req, s)
             step['text'] = " ".join(s.getText())
             step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
 
@@ -261,7 +262,8 @@ class StatusResourceBuild(HtmlResource):
             has_changes = has_changes or ss.changes
         cxt['exactly'] = (exactly) or b.getChanges()
         cxt['has_changes'] = has_changes
-        cxt['build_url'] = path_to_build(req, b)
+        cxt['build_url'] = path_to_build(req, b, False)
+        cxt['codebases_arg'] = getCodebasesArg(request=req)
         cxt['authz'] = self.getAuthz(req)
 
         template = req.site.buildbot_service.templates.get_template("build.html")

@@ -123,10 +123,11 @@ def path_to_root(request):
 def path_to_projects(request):
     return path_to_root(request) + "projects"
 
-def getCodebasesArg(request=None):
+def getCodebasesArg(request=None, codebases={}):
     codebases_arg=''
     for key, val in request.args.iteritems():
         if '_branch' in key:
+            codebases[key[0:key.find('_')]] = ''.join(val)
             if len(codebases_arg) > 0:
                 codebases_arg += "&"
             else:
@@ -134,17 +135,17 @@ def getCodebasesArg(request=None):
             codebases_arg += "%s=%s" % (key, ''.join(val))
     return codebases_arg
 
-def path_to_codebases(request, projectName, codebases=False):
+def path_to_codebases(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:
-        codebases_arg = getCodebasesArg(request)
+        codebases_arg = getCodebasesArg(request=request)
     return path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + codebases_arg
 
-def path_to_builders(request, projectName, codebases=False):
+def path_to_builders(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:
-        codebases_arg = getCodebasesArg(request)
-    return (path_to_codebases(request, projectName) + "/builders" + codebases_arg)
+        codebases_arg = getCodebasesArg(request=request)
+    return (path_to_codebases(request, projectName, codebases=False) + "/builders" + codebases_arg)
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -152,29 +153,29 @@ def path_to_authfail(request):
 def path_to_authzfail(request):
     return path_to_root(request) + "authzfail"
 
-def path_to_builder(request, builderstatus, codebases=False):
+def path_to_builder(request, builderstatus, codebases=True):
     codebases_arg = ''
     if codebases:
-        codebases_arg = getCodebasesArg(request)
+        codebases_arg = getCodebasesArg(request=request)
 
-    return (path_to_builders(request, builderstatus.getProject()) +
+    return (path_to_builders(request, builderstatus.getProject(), False) +
             "/" +
             urllib.quote(builderstatus.getName(), safe='') + codebases_arg)
 
-def path_to_build(request, buildstatus, codebases=False):
+def path_to_build(request, buildstatus, codebases=True):
     codebases_arg = ''
     if codebases:
-        codebases_arg = getCodebasesArg(request)
+        codebases_arg = getCodebasesArg(request=request)
 
-    return (path_to_builder(request, buildstatus.getBuilder()) +
+    return (path_to_builder(request, buildstatus.getBuilder(), False) +
             "/builds/%d" % buildstatus.getNumber() + codebases_arg)
 
-def path_to_step(request, stepstatus, codebases = False):
+def path_to_step(request, stepstatus, codebases = True):
     codebases_arg = ''
     if codebases:
-        codebases_arg = getCodebasesArg(request)
+        codebases_arg = getCodebasesArg(request=request)
 
-    return (path_to_build(request, stepstatus.getBuild()) +
+    return (path_to_build(request, stepstatus.getBuild(), False) +
             "/steps/%s" % urllib.quote(stepstatus.getName(), safe='') + codebases_arg)
 
 def path_to_slave(request, slave):
@@ -494,8 +495,8 @@ class BuildLineMixin:
                   'buildnum': build.getNumber(),
                   'results': css_class,
                   'text': " ".join(build.getText()),
-                  'buildurl': path_to_build(req, build, codebases=True),
-                  'builderurl': path_to_builder(req, build.getBuilder(), codebases=True),
+                  'buildurl': path_to_build(req, build),
+                  'builderurl': path_to_builder(req, build.getBuilder()),
                   'rev': rev,
                   'rev_repo' : repo,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
