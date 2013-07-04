@@ -305,21 +305,7 @@
 	         <xsl:apply-templates select="./error"/>
 			 <xsl:apply-templates select="./reason"/>
          </td>
-         <td class="FailureDetail">
-	         <xsl:apply-templates select="./failure"/>
-	         <xsl:apply-templates select="./error"/>
-			 <xsl:apply-templates select="./reason"/>
-         </td>
-         <td class="FailureDetail">
-	         <xsl:apply-templates select="./failure"/>
-	         <xsl:apply-templates select="./error"/>
-			 <xsl:apply-templates select="./reason"/>
-         </td>
-         <td class="FailureDetail">
-	         <xsl:apply-templates select="./failure"/>
-	         <xsl:apply-templates select="./error"/>
-			 <xsl:apply-templates select="./reason"/>
-         </td>
+         
 
 
       </tr>
