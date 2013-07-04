@@ -85,16 +85,16 @@
     Pending Build Requests
   </h2>
   <ul class="pending-job-list">
+      {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys()) %}
     <li>
       <p class="txt-cont">
         Cancel all builds
       </p>
-      {% if authz.advertiseAction('cancelPendingBuild', request) %}
         {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=False, id='all') }}
-      {% endif %}    
     </li>
-  {% for b in pending %}
+      {% endif %}
 
+      {% for b in pending %}
     <li>
     <p class="txt-cont">
       {{ b.when }}, waiting {{ b.delay }}

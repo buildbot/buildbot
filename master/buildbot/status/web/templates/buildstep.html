@@ -14,27 +14,27 @@
       </a>
     </li>
     <li>
-      <a href="{{ path_to_root }}codebases">
+      <a href="{{ path_to_codebases }}">
           Codebases
       </a>
     </li>
     <li>
-        <a href="{{ path_to_root }}builders">
+        <a href="{{ path_to_builders }}">
             Builders
         </a>
     </li>
     <li>
-      <a href="{{ builder_link }}">
-         {{ b.getBuilder().getName() }}
+      <a href="{{ path_to_builder }}">
+         {{ name}}
       </a>
     </li>
     <li>
-      <a href="{{ build_link }}">
-        #{{ b.getNumber() }}
+      <a href="{{ path_to_build }}">
+        #{{ build_number }}
       </a>
     </li>
     <li>
-        {{ s.getName() }}
+        {{ step_name }}
     </li>
   </ul>
 </nav>

@@ -88,8 +88,7 @@
                   </span>
                   <h3>Pending Build Requests</h3>
                   <ul class="pending-job-list">
-
-                    {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                    {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys())  %}
                       <li>
                         <p class="txt-cont">
                             Cancel all builds
