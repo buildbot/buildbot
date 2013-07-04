@@ -413,7 +413,7 @@ class ForceScheduler(base.BaseScheduler):
 
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
-            reason=StringParameter(name="Reason", default="", length=20),
+            reason=StringParameter(name="reason", label="Reason", default="", length=20),
 
             codebases=None,
             
