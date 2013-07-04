@@ -101,7 +101,7 @@ $(document).ready(function() {
 	});
 
 	// sort and filter tables
-	$('.tablesorter').dataTable({
+	$('.tablesorter-js').dataTable({
 		"bPaginate": false,
 		"bLengthChange": false,
 		"bFilter": true,
@@ -118,6 +118,77 @@ $(document).ready(function() {
 		 	"sSearch": "Filter"
 		 },
 		"bStateSave": true
+	});
+
+	// sort and filter tables logs
+	$(document).one('click', function(e){
+
+	
+
+			var oTable = $('.tablesorter-log-js').dataTable({
+			"bPaginate": false,
+			"bLengthChange": false,
+			"bFilter": true,
+			"bSort": true,
+			"bInfo": false,
+			"bAutoWidth": false,
+			"bRetrieve": false,
+			"asSorting": true,
+			"bSortable": true,
+			//"oSearch": {"sSearch": " "}
+			"aaSorting": [],
+			
+			"bStateSave": true
+		});
+
+				$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
+		    var settings = $.fn.dataTableSettings;
+		     
+		    for ( var i=0 ; i<settings.length ; i++ ) {
+		      settings[i].oInstance.fnFilter( sInput, iColumn, bRegex, bSmart);
+		    }
+		};
+
+		jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function (oSettings) {
+		    var _that = this;
+		  
+		    this.each(function (i) {
+		        $.fn.dataTableExt.iApiIndex = i;
+		        var $this = this;
+		        var anControl = $('input', _that.fnSettings().aanFeatures.f);
+		        anControl.unbind('keyup').bind('keypress', function (e) {
+		            if (e.which == 13) {
+		                $.fn.dataTableExt.iApiIndex = i;
+		                _that.fnFilter(anControl.val());
+		            }
+		        });
+		        return this;
+		    });
+		    return this;
+		};
+
+
+		//var oTable = $('.tablesorter-log-js').dataTable();
+ 		
+		$("#filterinput").keydown(function(event) {
+		// Filter on the column (the index) of this element
+		var e = (window.event) ? window.event : event;
+		if(e.keyCode == 13){
+		    //var fnct = $(this).attr('onenter');
+		    //eval(fnct);
+		   
+		    oTable.fnFilterAll(this.value);
+		  }
+		
+		});
+
+		$('#submitFilter').click(function(){
+			oTable.fnFilterAll($("#filterinput").val());
+		});
+		$('#clearFilter').click(function(){
+			$("#filterinput").val("");
+			oTable.fnFilterAll($("#filterinput").val());
+		});
 	});
 
 	// validate the form
@@ -155,12 +226,84 @@ $(document).ready(function() {
 			}
 
 		});
-		/* You you want a clear button here it is
+		/* clear all button
 			$(".clear-btn", formEl).click(function (e) {
 				$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
 				e.preventDefault();
 			});
 		*/
 	}
+/*
+$(document).ready(function () {
+    $.ajax({
+        url: 'http://localhost:8001/test.xml',
+        type: 'GET',
+        dataType: "xml",
+        success: function(data) {
+           parseXml(data);
+        }
+    });
+});
+
+
+
+
+function parseXml(xml) {
+	
+	$(xml).find('test-case').parent().parent('test-suite').each(function(i){
+
+		if (i < 5) {
+			
+			var name = $(this).attr('name');
+
+			var testNum = $('test-case',this).length;
+
+			$("#results").append('<ul class="summary-list"><li><span>Tests </span>'+ testNum +'</li><li>'+  +'</li></ul>');
+			$("#results").append('<h1 class="main-head"> ' + name + '</h1>');
+			$("#results").append('<table class="table-1 first-child tablesorter tablesorter-log-js"><thead><th>Name</th><th>Executed</th><th>Time</th></thead><tbody>');
+			
+
+			
+			
+
+			$('test-case',this).each(function(){
+				var name = $(this).attr('name');			
+				var success = $(this).attr('success');			
+				var time = $(this).attr('time');			
+				$("#results table").append('<tr><td class="txt-align-left">' + name +'</td><td>' + success +'</td><td>' + time +'</td></tr>');
+				//console.log(name)
+			});
+
+			$("#results").append('</tbody></table>')
+			//$("#results").append('<div>fsdfdsf</div>');
+		}
+
+	})
+}
+		/*
+		$('<div class="items" id="link_'+id+'"></div>').html('<a href="'+url+'">'+title+'</a>').appendTo('#page-wrap');
+		
+		$(this).find('desc').each(function(){
+			var brief = $(this).find('brief').text();
+			var long = $(this).find('long').text();
+			$('<div class="brief"></div>').html(brief).appendTo('#link_'+id);
+			$('<div class="long"></div>').html(long).appendTo('#link_'+id);
+		});
+		$(xml).find('test-case').each(function(){
+		var time = $(this).attr('time');
+		var name = $(this).attr('name');
+		var success = $(this).attr('success');
+		var asserts = $(this).attr('asserts');			
+		var executed = $(this).attr('executed');			
+		$("#results").append(time, name, success, executed);
+	});
+	
+	});
+
+	
+}
+*/
+
+   
 
 });

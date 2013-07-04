@@ -1,0 +1,170 @@
+{% extends 'log-layout.html' %}
+{% block submenu %}
+	<nav class="sub-menu-container">
+	<div class="container-inner">
+		<div class="dataTables_filter">
+			<label>Global filter 
+				<input type="text" id="filterinput" placeholder="filter text"/>
+				<button id="submitFilter" class="grey-btn">Filter</button>
+				<button id="clearFilter" class="grey-btn">Clear</button>
+			</label>
+		</div>
+		<h1 class="logo">
+          <a href="/">
+            <span>K</span>atana
+          </a>
+        </h1>
+		<h1 class="main-head big">
+			Unit Tests Results - NUnitReport
+		</h1>
+	</div>
+	
+
+
+	</nav>
+{% endblock %}
+{% block content %}
+
+<div id="results">
+</div>
+<h1 class="main-head">
+	Summary
+</h1>
+<table class="table-1 first-child">
+  <thead>
+	<tr>
+	  <th class="txt-align-left">Tests</th>
+	  <th class="txt-align-left">Failures</th>
+	  <th class="txt-align-left">Not run</th>
+	  <th class="txt-align-left">Successrate</th>
+	  <th class="txt-align-left">Time(s)</th>
+	</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="txt-align-left">
+				638
+			</td>
+			<td class="txt-align-left">
+				0
+			</td>
+			<td class="txt-align-left">
+				35
+			</td>
+			<td class="txt-align-left">
+				94.80 %
+			</td>
+			<td class="txt-align-left">
+				5287.320
+			</td>
+		</tr>
+		
+	</tbody>
+</table>
+
+{% for number in range(1) %}
+<ul class="summary-list">
+	<li>
+		<span>Tests</span>
+		2
+	</li>
+	<li>
+		<span>Not Run</span>
+		0
+	</li>
+	<li>
+		<span>Failures</span>
+		0
+	</li>
+	<li>
+		<span>Time(s)</span>
+		24.870
+	</li>
+</ul>
+<h1 class="main-head">
+	TestSuite AdditiveSceneLoading
+</h1>
+<table class="table-1 first-child tablesorter tablesorter-log-js">
+  <thead>
+	<tr>
+	  <th class="txt-align-left">Name</th>
+	  <th >Status</th>
+	  <th >Time(s)</th>
+	</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="txt-align-left">
+				LightmapsGetAppended
+			</td>
+			<td class="success">
+				Pass
+			</td>
+			<td>
+				16.111
+			</td>
+		</tr>
+		<tr>
+			<td class="txt-align-left">
+				LightmapsGetAppended
+			</td>
+			<td class="failure">
+				Failed
+			</td>
+			<td>
+				15.111
+			</td>
+		</tr>
+		<tr>
+			<td class="txt-align-left">
+				LightmapsGetAppended
+			</td>
+			<td class="success">
+				Pass
+			</td>
+			<td>
+				13.111
+			</td>
+		</tr>
+	</tbody>
+</table>
+{% endfor %}
+<h1 class="main-head">
+	Enviroment information
+</h1>
+<table class="table-1 first-child"> <thead>
+	<tr>
+	  <th class="txt-align-left">Property</th>
+	  <th class="txt-align-left">Value</th>
+	</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="txt-align-left">
+				NAnt Location
+			</td>
+			<td class="txt-align-left">
+				file:///C:/nant-0.90/bin/NAnt.Core.DLL
+			</td>
+		</tr>
+		<tr>
+			<td class="txt-align-left">
+				NAnt Version
+			</td>
+			<td class="txt-align-left">
+					0.90.3780.0
+			</td>
+	
+		</tr>
+		<tr>
+			<td class="txt-align-left">
+				NAnt Version
+			</td>
+			<td class="txt-align-left">
+				file:///C:/nunit/NUnit2ReportV1.2.2/TestReport/test.build
+			</td>
+	
+		</tr>
+	</tbody>
+</table>
+{% endblock %}

@@ -30,6 +30,7 @@ from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 import collections
+import collections
 
 class ForceAllBuildsActionResource(ActionResource):
 

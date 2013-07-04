@@ -1,0 +1,65 @@
+{%- block doctype -%}
+<!DOCTYPE html>
+{% endblock %}
+<html>
+  <head>
+    {% block head %}
+    <meta charset="utf-8">
+    {% if metatags %}
+      {{ metatags }}
+    {% endif %}
+    {% if refresh %}
+      <meta http-equiv="refresh" content="{{ refresh|e }}"/>
+    {% endif %}
+    <title>{{ pageTitle|e }}</title>
+    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Pacifico&subset=latin' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=EB+Garamond&subset=latin' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&subset=latin' rel='stylesheet' type='text/css'>
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
+    <script type="text/javascript" src="/script/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="/script/default.js"></script>
+    {% endblock %}
+  </head>
+  <body class="interface log-main">
+  	{% block submenu -%}
+    {%- endblock -%}
+  	{%- block barecontent -%}
+	  	<div class="content container-inner">
+	      {%- block content -%}     
+	      {%- endblock -%}
+	    </div>
+    {%- endblock -%}
+{%- block footer -%} 
+    <footer class="footer">
+      <div class="container-inner">
+        <h3 class="buildbot-version">
+          <a href="http://buildbot.net/">BuildBot</a> 
+          <span>
+            ({{version}})
+          </span>
+          {% if title -%}
+        
+          - working for the &nbsp;
+          {%- if title_url -%}
+            <a href="{{ title_url }}">{{ title }}</a>
+
+          {%- else -%}
+            {{ title }}
+          {%- endif -%}
+          &nbsp;project.
+        
+        {%- endif -%}
+        </h3>
+        
+      
+        <h3 class="page-build-txt">
+          Page built: <b>{{ time }}</b> ({{ tz }})
+        </h3>
+      </div>
+    </footer>
+{% endblock -%}
+  </body>
+</html>
