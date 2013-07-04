@@ -82,7 +82,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         try:
             max_builds = int(request.args.get('numbuilds')[0])
         except:
-            max_builds = 10
+            max_builds = 15
            
         recent_builds = []    
         n = 0

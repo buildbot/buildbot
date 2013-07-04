@@ -181,7 +181,7 @@ class UserNameParameter(StringParameter):
     size = 30
     need_email = True
 
-    def __init__(self, name="username", label="Your name:", **kw):
+    def __init__(self, name="username", label="Your name", **kw):
         BaseParameter.__init__(self, name, label, **kw)
 
     def parse_from_arg(self, s):
@@ -372,13 +372,13 @@ class CodebaseParameter(NestedParameter):
             label = "Codebase: " + codebase
 
         if branch is DefaultField:
-            branch = StringParameter(name='branch', label="Branch:")
+            branch = StringParameter(name='branch', label="Branch")
         if revision is DefaultField:
-            revision = StringParameter(name='revision', label="Revision:")
+            revision = StringParameter(name='revision', label="Revision")
         if repository is DefaultField:
-            repository = StringParameter(name='repository', label="Repository:")
+            repository = StringParameter(name='repository', label="Repository")
         if project is DefaultField:
-            project = StringParameter(name='project', label="Project:")
+            project = StringParameter(name='project', label="Project")
 
         fields = filter(None, [branch, revision, repository, project])
 
@@ -413,7 +413,7 @@ class ForceScheduler(base.BaseScheduler):
 
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
-            reason=StringParameter(name="reason", default="force build", length=20),
+            reason=StringParameter(name="reason", label="Reason", default="", length=20),
 
             codebases=None,
             

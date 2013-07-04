@@ -393,15 +393,17 @@ class MasterConfig(object):
             errors.addError("c['projects'] must be a list")
             return
 
+        seen_names = set()
         for p in projects:
             if not isinstance(p, ProjectConfig):
                 errors.addError("c['projects'] must be a list of ProjectConfig")
                 return
 
-            seen_names = set()
             if p.name in seen_names:
                 errors.addError("project name '%s' used multiple times" %
-                                p)
+                                p.name)
+            seen_names.add(p.name)
+
         self.projects =  dict((p.name, p) for p in projects)
 
 

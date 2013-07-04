@@ -20,8 +20,8 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
-    path_to_root, ICurrentBox, build_get_class, \
+    path_to_build, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
+    path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
     getRequestCharset
 from buildbot.schedulers.forcesched import ForceScheduler
@@ -209,7 +209,7 @@ def buildForceContext(cxt, req, master, buildername=None):
     cxt['default_props'] = default_props
 
 
-def builder_info(build, req):
+def builder_info(build, req, codebases_arg={}):
     b = {}
 
     b['num'] = build.getNumber()
@@ -231,7 +231,7 @@ def builder_info(build, req):
         else:
             b['current_step'] = step.getName()
 
-    b['stop_url'] = path_to_build(req, build) + '/stop'
+    b['stop_url'] = path_to_build(req, build, False) + '/stop' + codebases_arg
 
     return b
 
@@ -249,13 +249,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
-        cxt['selectedproject'] =  b.getProject()
+        project = cxt['selectedproject'] =  b.getProject()
         cxt['name'] = b.getName()
+
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [builder_info(x, req) for x in b.getCurrentBuilds()]
+        codebases = {}
+        codebases_arg = getCodebasesArg(request=req, codebases=codebases)
+        codebases_in_args = len(codebases_arg) > 0
+        cxt['current'] = [builder_info(x, req, codebases_arg) for x in b.getCurrentBuilds(codebases=codebases)]
 
         cxt['pending'] = []
         statuses = yield b.getPendingBuildRequestStatuses()
@@ -263,12 +267,19 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             changes = []
 
             source = yield pb.getSourceStamp()
+
+            if len(codebases) > 0:
+                found = yield foundCodebasesInPendingBuild(pb, codebases)
+                if not found:
+                    continue
+
             submitTime = yield pb.getSubmitTime()
             bsid = yield pb.getBsid()
 
             properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
 
+            ## this should use sources instead
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
@@ -286,9 +297,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties' : properties,
                 })
 
-        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
+        numbuilds = int(req.args.get('numbuilds', ['15'])[0])
         recent = cxt['recent'] = []
-        for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
+
+        for build in b.generateFinishedBuilds(codebases=codebases, num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
@@ -305,7 +317,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['connected_slaves'] = connected_slaves
 
         cxt['authz'] = self.getAuthz(req)
-        cxt['builder_url'] = path_to_builder(req, b)
+        cxt['builder_url'] = path_to_builder(req, b, codebases=False)
+        cxt['codebases_arg'] = codebases_arg
+        cxt['path_to_codebases'] = path_to_codebases(req, project)
+        cxt['path_to_builders'] = path_to_builders(req, project)
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         defer.returnValue(template.render(**cxt))
@@ -369,7 +384,7 @@ class CancelChangeResource(ActionResource):
         if returnbuilders is None:
             defer.returnValue((path_to_builder(req, self.builder_status)))
         else:
-            defer.returnValue(path_to_builders(req, self.builder_status.getProject()))
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
 
 class StopChangeMixin(object):
 
@@ -498,6 +513,16 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
     def stopselected(self, req):
         return StopAllBuildsActionResource(self.status, 'selected')
 
+@defer.inlineCallbacks
+def foundCodebasesInPendingBuild(pendingbuild, codebases):
+    sources = yield pendingbuild.getSourceStamps()
+    foundcodebases = []
+    for key, ss in sources.iteritems():
+        if key in codebases.keys() and ss.branch in codebases[key]:
+            foundcodebases.append(ss)
+    found = len(foundcodebases) == len(sources)
+    defer.returnValue(found)
+
 # /builders
 class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
@@ -517,6 +542,15 @@ class BuildersResource(HtmlResource):
                 for b in req.args.get("branch", [])
                 if b ]
 
+        codebases = {}
+        codebases_arg = getCodebasesArg(request=req, codebases=codebases)
+        codebases_in_args = len(codebases_arg) > 0
+
+        if codebases_in_args:
+            builder_arg = codebases_arg + "&returnbuilders=true"
+        else:
+            builder_arg = "?returnbuilders=true"
+
         # get counts of pending builds for each builder
         brstatus_ds = []
         brcounts = {}
@@ -524,12 +558,15 @@ class BuildersResource(HtmlResource):
             brcounts[builderName] = len(statuses)
         for builderName in builders:
             builder_status = status.getBuilder(builderName)
+            #get pending build status x branch
             d = builder_status.getPendingBuildRequestStatuses()
             d.addCallback(keep_count, builderName)
             brstatus_ds.append(d)
         yield defer.gatherResults(brstatus_ds)
 
         cxt['selectedproject'] = self.project.name
+        cxt['builder_arg'] = builder_arg
+        cxt['path_to_codebases'] = path_to_codebases(req, self.project.name)
         cxt['branches'] = branches
         bs = cxt['builders'] = []
 
@@ -544,32 +581,42 @@ class BuildersResource(HtmlResource):
 
         building = 0
         online = 0
-        base_builders_url = path_to_builders(req, self.project.name)
+
         for bn in builders:
-            bld = { 'link': base_builders_url +"/"+ urllib.quote(bn, safe=''),
-                    'name': bn }
+            builder = status.getBuilder(bn)
+
+            bld = { 'link': path_to_builder(req, builder),
+                    'name': bn, 'builder_url': path_to_builder(req, builder, False) }
+
             bs.append(bld)
 
-            builder = status.getBuilder(bn)
-            builds = list(builder.generateFinishedBuilds(map_branches(branches),
+            builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                         codebases=codebases,
                                                          num_builds=1))
             bld['force_schedulers'] = {}
             if bn in builder_schedulers:
                 bld['force_schedulers'] = builder_schedulers[bn]
 
-            bld['current'] = [builder_info(x, req) for x in builder.getCurrentBuilds()]
+            bld['current'] = [builder_info(x, req, codebases_arg=codebases_arg) for x in builder.getCurrentBuilds(codebases=codebases)]
             bld['pending'] = []
             statuses = yield builder.getPendingBuildRequestStatuses()
             for pb in statuses:
                 changes = []
 
                 source = yield pb.getSourceStamp()
+
+                if codebases_in_args:
+                    found = yield foundCodebasesInPendingBuild(pb, codebases)
+                    if not found:
+                        continue
+
                 submitTime = yield pb.getSubmitTime()
                 bsid = yield pb.getBsid()
 
                 properties = yield \
                     pb.master.db.buildsets.getBuildsetProperties(bsid)
 
+                ## this should use sources instead
                 if source.changes:
                     for c in source.changes:
                         changes.append({ 'url' : path_to_change(req, c),
@@ -589,7 +636,8 @@ class BuildersResource(HtmlResource):
 
             if builds:
                 b = builds[0]
-                bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
+
+                bld['build_url'] = path_to_build(req, b)
                 
                 label = None
                 all_got_revisions = b.getAllGotRevisions()

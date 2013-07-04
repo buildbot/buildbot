@@ -298,7 +298,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         email = "test <test@buildbot.net>"
         self.do_ParameterTest(value=email, expect=email,
                 klass=UserNameParameter(),
-                name="username", label="Your name:")
+                name="username", label="Your name")
 
 
     def test_UserNameParameterError(self):
@@ -307,7 +307,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                     expect=ValidationError,
                     expectKind=Exception,
                     klass=UserNameParameter(debug=False),
-                    name="username", label="Your name:")
+                    name="username", label="Your name")
 
 
     def test_ChoiceParameter(self):

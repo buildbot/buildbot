@@ -16,7 +16,9 @@
 
 import urllib
 from buildbot.status.web.base import HtmlResource, path_to_builder, \
-     path_to_build, css_classes
+    path_to_build, css_classes, \
+    path_to_codebases, path_to_builders, path_to_step
+
 from buildbot.status.web.logs import LogsResource
 from buildbot import util
 from time import ctime
@@ -34,6 +36,15 @@ class StatusResourceBuildStep(HtmlResource):
     def content(self, req, cxt):
         s = self.step_status
         b = s.getBuild()
+        builderstatus = b.getBuilder()
+        project = builderstatus.getProject()
+        cxt['name'] = builderstatus.getName()
+        cxt['path_to_builder'] = path_to_builder(req, builderstatus)
+        cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt['path_to_codebases'] = path_to_codebases(req, project)
+        cxt['path_to_build'] = path_to_build(req, b)
+        cxt['build_number'] = b.getNumber()
+        cxt['step_name'] = s.getName()
 
         logs = cxt['logs'] = []        
         for l in s.getLogs():
@@ -62,9 +73,7 @@ class StatusResourceBuildStep(HtmlResource):
                 cxt['end'] = "Not Finished"
                 cxt['elapsed'] = util.formatInterval(util.now() - start)
                 
-        cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
-                        build_link = path_to_build(req, b),
-                        b = b,
+        cxt.update(dict(b = b,
                         s = s,
                         result_css = css_classes[s.getResults()[0]]))
         
