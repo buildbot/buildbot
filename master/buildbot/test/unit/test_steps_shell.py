@@ -495,6 +495,25 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
 
+class SetPropertyDeprecation(unittest.TestCase):
+    """
+    Tests for L{shell.SetProperty}
+    """
+
+    def test_deprecated(self):
+        """
+        Accessing L{shell.SetProperty} reports a deprecation error.
+        """
+        shell.SetProperty
+        warnings = self.flushWarnings([self.test_deprecated])
+        self.assertEqual(len(warnings), 1)
+        self.assertIdentical(warnings[0]['category'], DeprecationWarning)
+        self.assertEqual(warnings[0]['message'],
+                "buildbot.steps.shell.SetProperty was deprecated in Buildbot 0.8.8: "
+                "It has been renamed to SetPropertyFromCommand"
+                )
+
+
 class Configure(unittest.TestCase):
 
     def test_class_attrs(self):

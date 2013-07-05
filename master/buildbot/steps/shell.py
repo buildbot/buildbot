@@ -18,6 +18,8 @@ import re
 import inspect
 from twisted.python import log, failure
 from twisted.spread import pb
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
@@ -350,14 +352,12 @@ class SetPropertyFromCommand(ShellCommand):
             # let ShellCommand describe
             return ShellCommand.getText(self, cmd, results)
 
-class SetProperty(SetPropertyFromCommand):
-    "alias for SetPropertyFromCommand"
-    def __init__(self, *args, **kwargs):
-        log.msg("WARNING: the name 'SetProperty' has been renamed to SetPropertyFromCommand; use " +
-                "buildbot.steps.slave.SetPropertyFromCommand instead " +
-                "(note that this may require you to change your import " +
-                "statement)")
-        SetPropertyFromCommand.__init__(self, *args, **kwargs)
+
+SetProperty = SetPropertyFromCommand
+deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
+        "It has been renamed to SetPropertyFromCommand",
+        "buildbot.steps.shell", "SetProperty")
+
 
 class Configure(ShellCommand):
 

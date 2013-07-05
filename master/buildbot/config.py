@@ -530,6 +530,10 @@ class MasterConfig(object):
 
 
     def check_schedulers(self):
+        # don't perform this check in multiMaster mode
+        if self.multiMaster:
+            return
+
         all_buildernames = set([ b.name for b in self.builders ])
 
         for s in self.schedulers.itervalues():

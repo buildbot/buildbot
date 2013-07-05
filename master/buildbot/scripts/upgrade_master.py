@@ -159,7 +159,13 @@ def upgradeMaster(config, _noMonkey=False):
 
     os.chdir(config['basedir'])
 
-    configFile = base.getConfigFileWithFallback(config['basedir'])
+    try:
+        configFile = base.getConfigFileFromTac(config['basedir'])
+    except (SyntaxError, ImportError), e:
+        print "Unable to load 'buildbot.tac' from '%s':" % config['basedir']
+        print e
+        defer.returnValue(1)
+        return
     master_cfg = loadConfig(config, configFile)
     if not master_cfg:
         defer.returnValue(1)
