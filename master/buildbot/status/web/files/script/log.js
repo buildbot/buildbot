@@ -1,8 +1,4 @@
-$(document).ready(function() {
-
-
 // sort and filter tables logs
-
 
 		var th = $('.table-holder');
 		$("#filterinput").val("");
@@ -43,8 +39,7 @@ $(document).ready(function() {
 			"bSort": true,
 			"bInfo": false,
 			"bSortable": true,
-			"aaSorting": [],
-			"bStateSave": true
+			"aaSorting": []
 		});
 
 		//var oTable = $('.tablesorter-log-js').dataTable();
@@ -72,4 +67,3 @@ $(document).ready(function() {
 
 		});
 	
-});

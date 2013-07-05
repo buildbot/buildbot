@@ -299,18 +299,16 @@
 	         <xsl:apply-templates select="./failure"/> 
 	         <xsl:apply-templates select="./error"/>
 			 <xsl:apply-templates select="./reason"/>
-
          </td>
          <td>
          	<span class="results-con">
+         		&#160;
          		<xsl:value-of select="$result"/>
          	</span>
          </td>
          <td>
+         	&#160;
          </td>
-         
-
-
       </tr>
 	</xsl:if>
 </xsl:template>

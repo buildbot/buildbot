@@ -36,9 +36,8 @@
 	    <link href='http://fonts.googleapis.com/css?family=Leckerli+One' rel='stylesheet' type='text/css' />
 		<link rel="stylesheet" href="/css/default.css" type="text/css" />
 		<link rel="stylesheet" href="/css/log.css" type="text/css" />
-	    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
-	    <script type="text/javascript" src="/script/jquery.dataTables.js"></script>
-	    <script type="text/javascript" src="/script/log.js"></script>
+	    
+	    
 		<script language="JavaScript"><![CDATA[   
 	  function Toggle(id) {
 	  var element = document.getElementById(id);
@@ -93,6 +92,9 @@
         
       </div>
     </footer>
+    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
+	<script type="text/javascript" src="/script/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="/script/log.js"></script>
 		</body>
 	</HTML>
 </xsl:template>
@@ -179,5 +181,5 @@
   </xsl:template>
 
 
-  
+
 </xsl:stylesheet>

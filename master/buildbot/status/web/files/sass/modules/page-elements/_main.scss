@@ -106,6 +106,9 @@
 		padding-bottom:20px;
 		border-bottom:none;
 	}
+	tr:first-child td {
+		border-top:none;
+	}
 }
 
 .table-1.first-child tr td:first-child,
