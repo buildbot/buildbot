@@ -20,6 +20,14 @@ from buildslave.scripts import create_slave
 from buildslave.test.util import misc
 
 
+def _regexp_path(name, *names):
+    """
+    Join two or more path components and create a regexp that will match that
+    path.
+    """
+    return os.path.join(name, *names).replace("\\", "\\\\")
+
+
 class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
     """
     Test buildslave.scripts.create_slave._makeBaseDir()
@@ -122,6 +130,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.chmod = mock.Mock()
         self.patch(os, "chmod", self.chmod)
 
+        # generate OS specific relative path to buildbot.tac inside basedir
+        self.tac_file_path = _regexp_path("bdir", "buildbot.tac")
+
     def testTacOpenError(self):
         """
         test that _makeBuildbotTac() handles open() errors on buildbot.tac
@@ -131,8 +142,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "error reading %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error reading bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -145,8 +157,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "error reading %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error reading bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -159,8 +172,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpWriteError(0)
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "could not write %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "could not write bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -288,7 +302,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error creating directory bdir/info: err-msg",
+                                "error creating directory %s: err-msg" %
+                                        _regexp_path("bdir", "info"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -337,7 +352,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
                                 "could not write %s: info-err-msg" %
-                                        os.path.join("bdir", "info", "admin"),
+                                        _regexp_path("bdir", "info", "admin"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -346,7 +361,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
             self.assertWasQuiet()
         else:
             self.assertStdoutEqual(
-                "Creating info/admin, you need to edit it appropriately.\n")
+                "Creating %s, you need to edit it appropriately.\n" %
+                    os.path.join("info", "admin"))
 
     def testOpenError(self):
         """
@@ -410,11 +426,14 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         else:
             self.assertStdoutEqual(
                 "mkdir %s\n"
-                "Creating info/admin, you need to edit it appropriately.\n"
-                "Creating info/host, you need to edit it appropriately.\n"
-                "Not creating info/access_uri - add it if you wish\n"
-                "Please edit the files in bdir/info appropriately.\n" %
-                    os.path.join("bdir", "info"))
+                "Creating %s, you need to edit it appropriately.\n"
+                "Creating %s, you need to edit it appropriately.\n"
+                "Not creating %s - add it if you wish\n"
+                "Please edit the files in %s appropriately.\n" %
+                    (info_path, os.path.join("info", "admin"),
+                     os.path.join("info", "host"),
+                     os.path.join("info", "access_uri"),
+                     info_path))
 
     def testCreatedSuccessfully(self):
         """
