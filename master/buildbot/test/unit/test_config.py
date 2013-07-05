@@ -832,6 +832,13 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_schedulers()
         self.assertConfigError(self.errors, "Unknown builder 'b2'")
 
+    def test_check_schedulers_ignored_in_multiMaster(self):
+        self.setup_basic_attrs()
+        del self.cfg.builders[1] # remove b2, leaving b1
+        self.cfg.multiMaster = True
+        self.cfg.check_schedulers()
+        self.assertNoConfigErrors(self.errors)
+
     def test_check_schedulers(self):
         self.setup_basic_attrs()
         self.cfg.check_schedulers()
