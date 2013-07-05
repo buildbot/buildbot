@@ -62,7 +62,7 @@
 		});
 		$('#clearFilter').click(function(){
 			$("#filterinput").val("");
-			th.show();
+			$(th).show();
 			oTable.fnFilterAll($("#filterinput").val());
 
 		});

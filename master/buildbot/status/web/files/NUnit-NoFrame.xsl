@@ -9,17 +9,11 @@
 
 -->
 
-
-
-
 <xsl:stylesheet version="1.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-
-
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" >
    <xsl:output method="html" indent="yes"/>
    <xsl:include href="toolkit.xsl"/>
    <xsl:preserve-space elements='a root'/>
-
 
 <!--
 	====================================================
@@ -30,8 +24,7 @@
 
 	<HTML>
 		<HEAD>
-
-
+		<title>Katana build log</title>
 		<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css' />	
 	    <link href='http://fonts.googleapis.com/css?family=Leckerli+One' rel='stylesheet' type='text/css' />
 		<link rel="stylesheet" href="/css/default.css" type="text/css" />
