@@ -1,3 +1,4 @@
+
 // sort and filter tables logs
 
 		var th = $('.table-holder');

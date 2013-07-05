@@ -862,7 +862,7 @@ li {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\0000391}}
 .chrome.win .breadcrumbs-nav li:before {
-  content: "/";
+  content: ">";
   font-weight: bold;
 }
 
