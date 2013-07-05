@@ -32,11 +32,11 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, slaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
                     buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, slaveid=-1,
+            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=-1,
                     buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=77, masterid=88, slaveid=-1,
+            fakedb.Build(id=15, builderid=77, masterid=88, buildslaveid=-1,
                     buildrequestid=82, number=5),
         ])
 
@@ -83,11 +83,11 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, slaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
                     buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, slaveid=-1,
+            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=-1,
                     buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=78, masterid=88, slaveid=-1,
+            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=-1,
                     buildrequestid=83, number=5),
         ])
 
@@ -134,14 +134,15 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.newBuild, # fake
             self.rtype.newBuild) # real
-        def newBuild(self, builderid, buildrequestid, slaveid):
+        def newBuild(self, builderid, buildrequestid, buildslaveid):
             pass
 
     def test_newBuild(self):
         self.do_test_callthrough('addBuild', self.rtype.newBuild,
-                builderid=10, buildrequestid=13, slaveid=20,
-                exp_kwargs=dict(builderid=10, buildrequestid=13, slaveid=20,
-                    masterid=self.master.masterid, state_strings=['starting']))
+                builderid=10, buildrequestid=13, buildslaveid=20,
+                exp_kwargs=dict(builderid=10, buildrequestid=13,
+                    buildslaveid=20, masterid=self.master.masterid,
+                    state_strings=['starting']))
 
     def test_signature_setBuildStateStrings(self):
         @self.assertArgSpecMatches(

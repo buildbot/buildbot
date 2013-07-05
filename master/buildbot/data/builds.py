@@ -28,8 +28,8 @@ class Db2DataMixin(object):
             'buildrequestid': dbdict['buildrequestid'],
             'buildrequest_link': base.Link(('buildrequest',
                                            str(dbdict['buildrequestid']))),
-            'slaveid': dbdict['slaveid'],
-            'slave_link': base.Link(('slave', str(dbdict['slaveid']))),
+            'buildslaveid': dbdict['buildslaveid'],
+            'slave_link': base.Link(('slave', str(dbdict['buildslaveid']))),
             'masterid': dbdict['masterid'],
             'master_link': base.Link(('master', str(dbdict['masterid']))),
             'started_at': datetime2epoch(dbdict['started_at']),
@@ -99,7 +99,7 @@ class Build(base.ResourceType):
         builder_link = types.Link()
         buildrequestid = types.Integer()
         buildrequest_link = types.Link()
-        slaveid = types.Integer()
+        buildslaveid = types.Integer()
         slave_link = types.Link()
         masterid = types.Integer()
         master_link = types.Link()
@@ -112,11 +112,11 @@ class Build(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    def newBuild(self, builderid, buildrequestid, slaveid):
+    def newBuild(self, builderid, buildrequestid, buildslaveid):
         return self.master.db.builds.addBuild(
                 builderid=builderid,
                 buildrequestid=buildrequestid,
-                slaveid=slaveid,
+                buildslaveid=buildslaveid,
                 masterid=self.master.masterid,
                 state_strings=[u'starting'])
 

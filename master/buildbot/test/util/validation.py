@@ -223,6 +223,17 @@ class SourcedPropertiesValidator(Validator):
                 yield "%s[%r] value is not JSON-able" % (name, k)
 
 
+class JsonValidator(Validator):
+
+    name = 'json'
+
+    def validate(self, name, object):
+        try:
+            json.dumps(object)
+        except:
+            yield "%s[%r] value is not JSON-able" % (name, object)
+
+
 class PatchValidator(Validator):
 
     name = 'patch'
@@ -386,6 +397,21 @@ dbdict['builderdict'] = DictValidator(
     name=StringValidator(),
 )
 
+# slave
+
+dbdict['buildslavedict'] = DictValidator(
+    id=IntValidator(),
+    name=StringValidator(),
+    configured_on=ListValidator(
+        DictValidator(
+            masterid=IntValidator(),
+            builderid=IntValidator(),
+        )
+    ),
+    connected_to=ListValidator(IntValidator()),
+    slaveinfo=JsonValidator(),
+)
+
 # buildset
 
 _buildset = dict(
@@ -518,7 +544,7 @@ _build = dict(
     number=IntValidator(),
     builderid=IntValidator(),
     buildrequestid=IntValidator(),
-    slaveid=IntValidator(),
+    buildslaveid=IntValidator(),
     masterid=IntValidator(),
     started_at=IntValidator(),
     complete=BooleanValidator(),
@@ -543,7 +569,7 @@ dbdict['builddict'] = DictValidator(
     number=IntValidator(),
     builderid=IntValidator(),
     buildrequestid=IntValidator(),
-    slaveid=IntValidator(),
+    buildslaveid=IntValidator(),
     masterid=IntValidator(),
     started_at=DateTimeValidator(),
     complete_at=NoneOk(DateTimeValidator()),

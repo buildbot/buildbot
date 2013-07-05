@@ -48,7 +48,7 @@ def add_new_builds(migrate_engine):
         sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
         sa.Column('buildrequestid', sa.Integer,
             sa.ForeignKey('buildrequests.id'), nullable=False),
-        sa.Column('slaveid', sa.Integer),
+        sa.Column('buildslaveid', sa.Integer),
         sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
             nullable=False),
         sa.Column('started_at', sa.Integer, nullable=False),
@@ -60,7 +60,7 @@ def add_new_builds(migrate_engine):
     idx = sa.Index('builds_number', builds.c.builderid, builds.c.number,
             unique=True)
     idx.create()
-    idx = sa.Index('builds_slaveid', builds.c.slaveid)
+    idx = sa.Index('builds_buildslaveid', builds.c.buildslaveid)
     idx.create()
     idx = sa.Index('builds_masterid', builds.c.masterid)
     idx.create()

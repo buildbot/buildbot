@@ -416,8 +416,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:
-        buildslave = yield self.master.db.buildslaves.getBuildslaveByName("bot")
-        
+        buildslave = yield self.master.db.buildslaves.getBuildslave(name="bot")
+
         self.assertEqual(buildslave['slaveinfo']['admin'], 'TheAdmin')
         self.assertEqual(buildslave['slaveinfo']['host'], 'TheHost')
         self.assertEqual(buildslave['slaveinfo']['access_uri'], 'TheURI')

@@ -244,7 +244,7 @@ builds
     * ``number`` (the build number, unique only within the builder)
     * ``builderid`` (the ID of the builder that performed this build)
     * ``buildrequestid`` (the ID of the build request that caused this build)
-    * ``slaveid`` (the ID of the slave on which this build was performed)
+    * ``buildslaveid`` (the ID of the slave on which this build was performed)
     * ``masterid`` (the ID of the master on which this build was performed)
     * ``started_at`` (datetime at which this build began)
     * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
@@ -277,7 +277,7 @@ builds
         Get a list of builds, in the format described above.
         Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: addBuild(builderid, buildrequestid, slaveid, masterid, state_strings)
+    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_strings)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: build request id
@@ -629,44 +629,65 @@ buildslaves
 
 .. py:class:: BuildslavesConnectorComponent
 
-    This class handles Buildbot's notion of buildslaves. The buildslave 
-    information is returned as a dictionary:
+    This class handles Buildbot's notion of buildslaves.
+    The buildslave information is returned as a dictionary:
 
-    * ``slaveid``
-    * ``name`` (the name of the buildslave)
-    * ``slaveinfo`` (buildslave information as dictionary)
+    * ``buildslaveid``
+    * ``name`` - the name of the buildslave
+    * ``slaveinfo`` - buildslave information as dictionary
+    * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
+      This list will typically contain only one master, but in unusual circumstances the same bulidslave may appear to be connected to multiple masters simultaneously.
+    * ``configured_on`` - a list of master-builder pairs, on which this buildslave is configured.
+      Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``.
 
-    The 'slaveinfo' dictionary has the following keys:
+    The buildslave information can be any JSON-able object.
+    In practice, it contains the following keys, based on information provided by the slave:
 
     * ``admin`` (the admin information)
     * ``host`` (the name of the host)
     * ``access_uri`` (the access URI)
     * ``version`` (the version on the buildslave)
 
-    .. py:method:: getBuildslaves()
+    .. py:method:: findBuildslaveId(name=name)
 
-        :returns: list of partial information via Deferred
+        :param name: buildslave name
+        :type name: 50-character identifier
+        :returns: builslave ID via Deferred
 
-        Get the entire list of buildslaves. Only id and name are returned.
+        Get the ID for a buildslave, adding a new buildslave to the database if necessary.
+        The slave information for a new buildslave is initialized to an empty dictionary.
 
-    .. py:method:: getBuildslaveByName(name)
+    .. py:method:: getBuildslaves(masterid=None, builderid=None)
 
-        :param name: the name of the buildslave to retrieve
-        :type name: string
-        :returns: info dictionary or None, via deferred
+        :param integer masterid: limit to slaves configured on this master
+        :param integer builderid: limit to slaves configured on this builder
+        :returns: list of buildslave dictionaries, via Deferred
 
-        Looks up the buildslave with the name, returning the information or
-        ``None`` if no matching buildslave is found.
+        Get a list of buildslaves.
+        If either or both of the filtering parameters either specified, then the result is limited to buildslaves configured to run on that master or builder.
+        The ``configured_on`` results are limited by the filtering parameters as well.
+        The ``connected_to`` results are limited by the ``masterid`` parameter.
 
-    .. py:method:: updateBuildslave(name, slaveinfo)
+    .. py:method:: getBuildslave(slaveid=None, name=None, masterid=None, builderid=None)
 
-        :param name: the name of the buildslave to update
-        :type name: string
-        :param slaveinfo: the full buildslave dictionary
+        :param string name: the name of the buildslave to retrieve
+        :param integer slaveid: the ID of the buildslave to retrieve
+        :param integer masterid: limit to slaves configured on this master
+        :param integer builderid: limit to slaves configured on this builder
+        :returns: info dictionary or None, via Deferred
+
+        Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
+        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getBuildslaves`.
+
+    .. py:method:: updateBuildslave(buildslaveid, slaveinfo)
+
+        :param integer slaveid: the ID of the buildslave to retrieve
+        :param slaveinfo: the new buildslave dictionary
         :type slaveinfo: dict
         :returns: Deferred
 
-        Update information about the given buildslave.
+        Update the information for the given buildslave.
+        The supplied information completely replaces any existing information.
 
 changes
 ~~~~~~~

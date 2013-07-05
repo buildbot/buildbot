@@ -23,12 +23,13 @@ from buildbot.test.fake import fakedb, fakemaster
 class Tests(interfaces.InterfaceTests):
 
     backgroundData = [
+        fakedb.Buildslave(id=47, name='linux'),
         fakedb.Buildset(id=20),
         fakedb.Builder(id=88, name='b1'),
         fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-            builderid=88),
+            builderid=88, buildslaveid=47),
         fakedb.Step(id=101, buildid=30, number=1, name='one'),
         fakedb.Step(id=102, buildid=30, number=2, name='two'),
     ]
@@ -293,7 +294,8 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
-                         'masters', 'buildrequests', 'buildsets'])
+                         'masters', 'buildrequests', 'buildsets',
+                         'buildslaves'])
 
         @d.addCallback
         def finish_setup(_):
