@@ -101,7 +101,7 @@ $(document).ready(function() {
 	});
 
 	// sort and filter tables
-	$('.tablesorter').dataTable({
+	$('.tablesorter-js').dataTable({
 		"bPaginate": false,
 		"bLengthChange": false,
 		"bFilter": true,
@@ -118,7 +118,7 @@ $(document).ready(function() {
 		 	"sSearch": "Filter"
 		 },
 		"bStateSave": true
-	});
+	});	
 
 	// validate the form
 	function validateForm() {
@@ -155,12 +155,11 @@ $(document).ready(function() {
 			}
 
 		});
-		/* You you want a clear button here it is
+		/* clear all button
 			$(".clear-btn", formEl).click(function (e) {
 				$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
 				e.preventDefault();
 			});
 		*/
 	}
-
 });
