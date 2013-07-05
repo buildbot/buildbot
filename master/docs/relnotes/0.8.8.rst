@@ -84,6 +84,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``workdir`` build property has been renamed to ``builddir``.
   This change accurately reflects its content; the term "workdir" means something different.
+  ``workdir`` is currently still supported for backwards compatability, but will be removed eventually.
 
 * The ``Blocker`` step has been removed.
 
@@ -100,6 +101,8 @@ Deprecations, Removals, and Non-Compatible Changes
   can be rebuilt exactly.
 
 * The ``SetProperty`` step in ``buildbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
+
+* The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

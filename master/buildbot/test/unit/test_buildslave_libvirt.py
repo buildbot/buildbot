@@ -17,9 +17,10 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
 from twisted.python import failure
-from buildbot import libvirtbuildslave, config
+from buildbot import config
 from buildbot.test.fake import libvirt
 from buildbot.test.util import compat
+from buildbot.buildslave import libvirt as libvirtbuildslave
 
 
 class TestLibVirtSlave(unittest.TestCase):

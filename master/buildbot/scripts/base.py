@@ -39,20 +39,16 @@ def isBuildmasterDir(dir):
 
     return True
 
-
-def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
-    configFile = os.path.abspath(os.path.join(basedir, defaultName))
-    if os.path.exists(configFile):
-        return configFile
+def getConfigFileFromTac(basedir):
     # execute the .tac file to see if its configfile location exists
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
         # don't mess with the global namespace
         tacGlobals = {}
         execfile(tacFile, tacGlobals)
-        return tacGlobals["configfile"]
-    # No config file found; return default location and fail elsewhere
-    return configFile
+        return tacGlobals.get("configfile", "master.cfg")
+    else:
+        return "master.cfg"
 
 
 class SubcommandOptions(usage.Options):
