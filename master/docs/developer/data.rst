@@ -559,6 +559,7 @@ All strings in the data model are unicode strings.
     rtype-changesource
     rtype-master
     rtype-builder
+    rtype-buildslave
     rtype-sourcestamp
     rtype-patch
     rtype-scheduler

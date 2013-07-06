@@ -641,12 +641,7 @@ buildslaves
       Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``.
 
     The buildslave information can be any JSON-able object.
-    In practice, it contains the following keys, based on information provided by the slave:
-
-    * ``admin`` (the admin information)
-    * ``host`` (the name of the host)
-    * ``access_uri`` (the access URI)
-    * ``version`` (the version on the buildslave)
+    See :bb:rtype:`buildslave` for more detail.
 
     .. py:method:: findBuildslaveId(name=name)
 
