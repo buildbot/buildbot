@@ -24,8 +24,6 @@ Builds
     .. todo:
 
         * Currently build properties aren't available in this resource type
-        * ``buildslaveid`` is always -1, since slaves aren't in the data API yet
-        * add ``builderName``?
 
     .. note:
 

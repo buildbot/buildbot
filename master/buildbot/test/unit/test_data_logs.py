@@ -30,9 +30,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=5, name='make'),
             fakedb.Log(id=60, stepid=50, name=u'stdio', type='s'),
@@ -101,9 +102,10 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=9, name='make'),
             fakedb.Log(id=60, stepid=50, name='stdio', type='s'),

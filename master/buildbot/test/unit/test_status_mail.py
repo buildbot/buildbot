@@ -231,12 +231,13 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder1'),
-            fakedb.Build(number=0, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                 masterid=92),
             fakedb.BuildRequest(id=12, buildsetid=99, buildername='Builder2'),
-            fakedb.Build(number=0, buildrequestid=12, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=12, buildslaveid=13,
                 masterid=92),
         ])
         mn.master = self.master
@@ -290,9 +291,10 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                 masterid=92),
         ])
         mn.master = self.master
@@ -345,9 +347,10 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                 masterid=92),
         ])
         mn.master = self.master
@@ -415,9 +418,10 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=22),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                 masterid=22),
         ])
         mn.master = self.master
@@ -660,10 +664,11 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
             fakedb.Build(number=0, buildrequestid=11, masterid=92,
-                buildslaveid=-1),
+                buildslaveid=13),
             fakedb.Change(changeid=9123),
             fakedb.ChangeUser(changeid=9123, uid=1),
             fakedb.User(uid=1, identifier="tdurden"),
@@ -768,11 +773,12 @@ class TestMailNotifier(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
-            fakedb.Build(number=0, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                 masterid=92),
-            fakedb.Build(number=1, buildrequestid=11, buildslaveid=-1,
+            fakedb.Build(number=1, buildrequestid=11, buildslaveid=13,
                 masterid=92),
             fakedb.Change(changeid=9123),
             fakedb.Change(changeid=9124),

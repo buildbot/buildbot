@@ -30,13 +30,14 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=15, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=5),
         ])
 
@@ -81,13 +82,14 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
+            fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
                     buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=-1,
+            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=13,
                     buildrequestid=83, number=5),
         ])
 

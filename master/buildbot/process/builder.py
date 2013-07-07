@@ -47,6 +47,9 @@ class Builder(config.ReconfigurableServiceMixin,
         service.MultiService.__init__(self)
         self.name = name
 
+        # this is filled on demand by getBuilderId; don't access it directly
+        self._builderid = None
+
         # this is created the first time we get a good build
         self.expectations = None
 
@@ -101,11 +104,6 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
         return defer.succeed(None)
-
-    def stopService(self):
-        d = defer.maybeDeferred(lambda :
-                service.MultiService.stopService(self))
-        return d
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -276,6 +274,10 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
+        # get some ID's for use later
+        buildslaveid = slavebuilder.slave.buildslaveid
+        builderid = yield self.getBuilderId()
+
         # Build a stack of cleanup functions so that, at any point, we can
         # abort this operation and unwind the commitments made so far.
         cleanups = []
@@ -373,9 +375,10 @@ class Builder(config.ReconfigurableServiceMixin,
             bids = []
             req = build.requests[-1]
             # TODO: get id's for builder, slave
-            bid, number = yield self.master.db.builds.addBuild(builderid=-1,
-                    buildrequestid=req.id, buildslaveid=-1,
-                    masterid=self.master.masterid, state_strings=['created'])
+            bid, number = yield self.master.db.builds.addBuild(
+                    builderid=builderid, buildrequestid=req.id,
+                    buildslaveid=buildslaveid, masterid=self.master.masterid,
+                    state_strings=['created'])
             bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
@@ -467,10 +470,10 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _notify_completions(self, requests, results, complete_at_epoch):
+        builderid = yield self.getBuilderId()
         # send a message for each request
         for br in requests:
             bsid = br.bsid
-            builderid = -1 # br.buildername - TODO
             brid = br.id
             key = ('buildrequest', str(bsid), str(builderid),
                                                 str(brid), 'complete')
@@ -497,6 +500,7 @@ class Builder(config.ReconfigurableServiceMixin,
         d = self.master.db.buildrequests.unclaimBuildRequests(brids)
         @d.addCallback
         def notify(_):
+            # XXX method does not exist
             self._msg_buildrequests_unclaimed(build.requests)
         return d
 
@@ -515,6 +519,14 @@ class Builder(config.ReconfigurableServiceMixin,
             self.expectations = Expectations(progress)
         log.msg("new expectations: %s seconds" %
                 self.expectations.expectedBuildTime())
+
+    @defer.inlineCallbacks
+    def getBuilderId(self):
+        # return the builderid, caching it along the way
+        if self._builderid is None:
+            self._builderid = yield self.master.data.updates.findBuilderId(
+                                                                self.name)
+        defer.returnValue(self._builderid)
 
     # Build Creation
 

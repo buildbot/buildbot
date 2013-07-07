@@ -295,6 +295,19 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         self.assertIdentical(True, result)
 
 
+class TestGetBuilderId(BuilderMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def test_getBuilderId(self):
+        yield self.makeBuilder(name='b1')
+        fbi = self.master.data.updates.findBuilderId = mock.Mock(name='fbi')
+        fbi.side_effect = lambda name : defer.succeed(13)
+        # call twice..
+        self.assertEqual((yield self.bldr.getBuilderId()), 13)
+        self.assertEqual((yield self.bldr.getBuilderId()), 13)
+        # and see that fbi was only called once
+        fbi.assert_called_once_with('b1')
+
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
     def setUp(self):
