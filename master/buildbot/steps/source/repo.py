@@ -18,20 +18,21 @@ import textwrap
 
 from twisted.internet import defer, reactor
 
+from buildbot import util
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import IRenderable
 from zope.interface import implements
 
 
-class RepoDownloadsFromProperties(object):
+class RepoDownloadsFromProperties(util.ComparableMixin, object):
     implements(IRenderable)
     parse_download_re = (re.compile(r"repo download ([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
                          )
 
-    compare_attrs = ('names')
+    compare_attrs = ('names',)
 
     def __init__(self, names):
         self.names = names
@@ -64,12 +65,34 @@ class RepoDownloadsFromProperties(object):
         return ret
 
 
+class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
+    implements(IRenderable)
+    compare_attrs = ('codebase',)
+
+    def __init__(self, codebase=None):
+        self.codebase = codebase
+
+    def getRenderingFor(self, props):
+        downloads = []
+        if self.codebase is None:
+            changes = props.getBuild().allChanges()
+        else:
+            changes = props.getBuild().getSourceStamp(self.codebase).changes
+        for change in changes:
+            if ("event.type" in change.properties and
+               change.properties["event.type"] == "patchset-created"):
+                    downloads.append("%s %s/%s" % (change.properties["event.change.project"],
+                                                   change.properties["event.change.number"],
+                                                   change.properties["event.patchSet.number"]))
+        return downloads
+
+
 class Repo(Source):
     """ Class for Repo with all the smarts """
     name = 'repo'
-    renderables = ["manifestUrl", "manifestUrl", "manifestFile", "tarball", "jobs",
+    renderables = ["manifestURL", "manifestFile", "tarball", "jobs",
                    "syncAllBranches", "updateTarballAge", "manifestOverrideUrl",
-                   "repoDownloads", "repoDownloadsFromChangeSource"]
+                   "repoDownloads"]
 
     ref_not_found_re = re.compile(r"fatal: Couldn't find remote ref")
     cherry_pick_error_re = re.compile(r"|".join([r"Automatic cherry-pick failed",
@@ -82,7 +105,7 @@ class Repo(Source):
     mirror_sync_sleep = 60  # wait 1min between retries (thus default total retry time is 10min)
 
     def __init__(self,
-                 manifestUrl=None,
+                 manifestURL=None,
                  manifestBranch="master",
                  manifestFile="default.xml",
                  tarball=None,
@@ -91,11 +114,10 @@ class Repo(Source):
                  updateTarballAge=7*24.0*3600.0,
                  manifestOverrideUrl=None,
                  repoDownloads=None,
-                 repoDownloadsFromChangeSource=True,
                  **kwargs):
         """
-        @type  manifestUrl: string
-        @param manifestUrl: The URL which points at the repo manifests repository.
+        @type  manifestURL: string
+        @param manifestURL: The URL which points at the repo manifests repository.
 
         @type  manifestBranch: string
         @param manifestBranch: The manifest branch to check out by default.
@@ -118,13 +140,9 @@ class Repo(Source):
 
         @type repoDownloads: list of strings
         @param repoDownloads: optional repo download to perform after the repo sync
-                 repoDownloadsFromChangeSource=False,
 
-        @type repoDownloadsFromChangeSource: boolean
-        @param repoDownloadsFromChangeSource: do we compute the list of repo downloads
-                                              from changeSource information?
         """
-        self.manifestUrl = manifestUrl
+        self.manifestURL = manifestURL
         self.manifestBranch = manifestBranch
         self.manifestFile = manifestFile
         self.tarball = tarball
@@ -132,39 +150,17 @@ class Repo(Source):
         self.syncAllBranches = syncAllBranches
         self.updateTarballAge = updateTarballAge
         self.manifestOverrideUrl = manifestOverrideUrl
+        if repoDownloads is None:
+            repoDownloads = []
         self.repoDownloads = repoDownloads
-        self.repoDownloadsFromChangeSource = repoDownloadsFromChangeSource
         Source.__init__(self, **kwargs)
 
-        assert self.manifestUrl is not None
+        assert self.manifestURL is not None
 
     def computeSourceRevision(self, changes):
         if not changes:
             return None
         return changes[-1].revision
-
-    def buildDownloadList(self):
-        """taken the changesource and forcebuild property,
-        build the repo download command to send to the slave
-        making this a defereable allow config to tweak this
-        in order to e.g. manage dependancies
-        """
-        downloads = self.repoDownloads
-        if downloads is None:
-            downloads = []
-        if self.repoDownloadsFromChangeSource:
-            # download patches based on GerritChangeSource events
-            for change in self.build.allChanges():
-                if ("event.type" in change.properties and
-                   change.properties["event.type"] == "patchset-created"):
-                        downloads.append("%s %s/%s" % (change.properties["event.change.project"],
-                                                       change.properties["event.change.number"],
-                                                       change.properties["event.patchSet.number"]))
-
-        self.repoDownloads = downloads
-        if downloads:
-            self.setProperty("computed_repo_downloads", downloads, "repo step")
-        return defer.succeed(None)
 
     def filterManifestPatches(self):
         """
@@ -178,12 +174,12 @@ class Repo(Source):
         manifest_related_downloads = []
         for download in self.repoDownloads:
             project, ch_ps = download.split(" ")[-2:]
-            if (self.manifestUrl.endswith("/"+project) or
-               self.manifestUrl.endswith("/"+project+".git")):
+            if (self.manifestURL.endswith("/"+project) or
+               self.manifestURL.endswith("/"+project+".git")):
                 ch, ps = map(int, ch_ps.split("/"))
                 branch = "refs/changes/%02d/%d/%d" % (ch % 100, ch, ps)
                 manifest_related_downloads.append(
-                    ["git", "fetch", self.manifestUrl, branch])
+                    ["git", "fetch", self.manifestURL, branch])
                 manifest_related_downloads.append(
                     ["git", "cherry-pick", "FETCH_HEAD"])
             else:
@@ -231,8 +227,6 @@ class Repo(Source):
     def doStartVC(self):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        yield self.buildDownloadList()
-
         self.filterManifestPatches()
 
         if self.repoDownloads:
@@ -274,7 +268,7 @@ class Repo(Source):
             yield self.doClobberStart()
         yield self.doCleanup()
         yield self._repoCmd(['init',
-                             '-u', self.manifestUrl,
+                             '-u', self.manifestURL,
                              '-b', self.manifestBranch,
                              '-m', self.manifestFile])
 
@@ -299,7 +293,7 @@ class Repo(Source):
             command.append('-c')
         self.step_status.setText(["repo sync"])
         self.stdio_log.addHeader("synching manifest %s from branch %s from %s\n"
-                                 % (self.manifestFile, self.manifestBranch, self.manifestUrl))
+                                 % (self.manifestFile, self.manifestBranch, self.manifestURL))
         yield self._repoCmd(command)
 
         command = ['manifest', '-r', '-o', 'manifest-original.xml']
