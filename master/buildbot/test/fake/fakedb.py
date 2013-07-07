@@ -1238,7 +1238,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 pairs = [ builder_masters[cfg['buildermasterid']]
                           for cfg in configured ]
                 if builderid is not None and masterid is not None:
-                    if(builderid, masterid) not in pairs:
+                    if (builderid, masterid) not in pairs:
                         continue
                 if builderid is not None:
                     if not any(builderid == p[0] for p in pairs):
@@ -1262,7 +1262,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
             slave['info'] = slaveinfo
         return defer.succeed(None)
 
-    def _configedOn(self, buildslaveid, builderid=None, masterid=None):
+    def _configuredOn(self, buildslaveid, builderid=None, masterid=None):
         cfg = []
         for cs in self.configured.itervalues():
             if cs['buildslaveid'] != buildslaveid:
@@ -1290,7 +1290,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
             'id': sl['id'],
             'slaveinfo': sl['info'],
             'name': sl['name'],
-            'configured_on': self._configedOn(sl['id'], builderid, masterid),
+            'configured_on': self._configuredOn(sl['id'], builderid, masterid),
             'connected_to': self._connectedTo(sl['id'], masterid),
         }
 
