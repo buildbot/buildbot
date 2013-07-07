@@ -79,10 +79,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.registration = None
         self.registered_port = None
 
-        # these are set when the service is started, and unset when it is
-        # stopped
+        # these are set when the service is started
         self.botmaster = None
         self.master = None
+        self.buildslaveid = None
 
         self.slave_status = SlaveStatus(name)
         self.slave = None # a RemoteReference to the Bot, when connected
