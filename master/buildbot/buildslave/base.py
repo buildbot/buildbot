@@ -29,7 +29,7 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics, botmaster
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.util import subscription
+from buildbot.util import subscription, ascii2unicode
 from buildbot.util.eventual import eventually
 from buildbot import config
 
@@ -69,6 +69,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                       can be used
         @type locks: dictionary
         """
+        name = ascii2unicode(name)
+
         service.MultiService.__init__(self)
         self.slavename = name
         self.password = password
@@ -189,21 +191,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             'version': self.slave_status.getVersion(),
         }
         return self.master.db.buildslaves.updateBuildslave(
-            name=self.slavename,
+            buildslaveid=self.buildslaveid,
             slaveinfo=slaveinfo,
         )
 
+    @defer.inlineCallbacks
     def _getSlaveInfo(self):
-        d = self.master.db.buildslaves.getBuildslaveByName(self.slavename)
-
-        @d.addCallback
-        def applyInfo(buildslave):
-            if buildslave is None:
-                return
-
-            self._applySlaveInfo(buildslave.get('slaveinfo'))
-
-        return d
+        buildslave = yield self.master.db.buildslaves.getBuildslave(
+                                                buildslaveid=self.buildslaveid)
+        self._applySlaveInfo(buildslave['slaveinfo'])
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
@@ -211,12 +207,16 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.master = parent.master
         service.MultiService.setServiceParent(self, parent)
 
+    @defer.inlineCallbacks
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
-        d = self._getSlaveInfo()
-        d.addCallback(lambda _: service.MultiService.startService(self))
-        return d
+
+        self.buildslaveid = yield self.master.db.buildslaves.findBuildslaveId(
+                                                        self.slavename)
+
+        yield self._getSlaveInfo()
+        yield service.MultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -272,6 +272,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
+        self.buildslaveid = None
         return service.MultiService.stopService(self)
 
     def findNewSlaveInstance(self, new_config):

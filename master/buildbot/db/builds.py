@@ -54,7 +54,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._builddictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def addBuild(self, builderid, buildrequestid, slaveid, masterid,
+    def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
             state_strings, _reactor=reactor, _race_hook=None):
         started_at = _reactor.seconds()
         state_strings_json = json.dumps(state_strings)
@@ -74,9 +74,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 try:
                     r = conn.execute(self.db.model.builds.insert(),
                         dict(number=new_number, builderid=builderid,
-                            buildrequestid=buildrequestid, slaveid=slaveid,
-                            masterid=masterid, started_at=started_at,
-                            complete_at=None,
+                            buildrequestid=buildrequestid,
+                            buildslaveid=buildslaveid, masterid=masterid,
+                            started_at=started_at, complete_at=None,
                             state_strings_json=state_strings_json))
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     new_number += 1
@@ -111,7 +111,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             number=row.number,
             builderid=row.builderid,
             buildrequestid=row.buildrequestid,
-            slaveid=row.slaveid,
+            buildslaveid=row.buildslaveid,
             masterid=row.masterid,
             started_at=mkdt(row.started_at),
             complete_at=mkdt(row.complete_at),

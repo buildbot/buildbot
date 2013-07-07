@@ -39,6 +39,7 @@ class FakeUpdates(object):
         self.builderIds = {} # { name : id }; users can add schedulers here
         self.schedulerMasters = {} # { schedulerid : masterid }
         self.changesourceMasters = {} # { changesourceid : masterid }
+        self.buildslaveIds = {} # { name : id }; users can add buildslaves here
 
     ## extra assertions
 
@@ -188,12 +189,12 @@ class FakeUpdates(object):
         self.changesourceMasters[changesourceid] = masterid
         return defer.succeed(True)
 
-    def newBuild(self, builderid, buildrequestid, slaveid):
+    def newBuild(self, builderid, buildrequestid, buildslaveid):
         validation.verifyType(self.testcase, 'builderid', builderid,
                 validation.IntValidator())
         validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
                 validation.IntValidator())
-        validation.verifyType(self.testcase, 'slaveid', slaveid,
+        validation.verifyType(self.testcase, 'buildslaveid', buildslaveid,
                 validation.IntValidator())
         return defer.succeed((10, 1))
 
@@ -258,6 +259,13 @@ class FakeUpdates(object):
                 validation.StringValidator())
         self.testcase.assertEqual(content[-1], u'\n')
         return defer.succeed(None)
+
+    def findBuildslaveId(self, name):
+        validation.verifyType(self.testcase, 'buildslave name', name,
+                validation.IdentifierValidator(50))
+        if name not in self.buildslaveIds:
+            self.buildslaveIds[name] = max([0] + self.buildslaveIds.values()) + 1
+        return defer.succeed(self.buildslaveIds[name])
 
 
 class FakeDataConnector(object) :

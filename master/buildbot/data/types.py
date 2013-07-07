@@ -177,6 +177,52 @@ class SourcedProperties(Type):
                 yield "%s[%r] value is not JSON-able" % (name, k)
 
 
+class Dict(Type):
+
+    def __init__(self, **contents):
+        self.contents = contents
+        self.keys = set(contents)
+
+    def validate(self, name, object):
+        if type(object) != dict:
+            yield "%s (%r) is not a dictionary (got type %s)" \
+                    % (name, object, type(object))
+            return
+
+        gotNames = set(object.keys())
+
+        unexpected = gotNames - self.keys
+        if unexpected:
+            yield "%s has unexpected keys %s" % (name,
+                    ", ".join([ `n` for n in unexpected ]))
+
+        missing = self.keys - gotNames
+        if missing:
+            yield "%s is missing keys %s" % (name,
+                    ", ".join([ `n` for n in missing ]))
+
+        for k in gotNames & self.keys:
+            f = self.contents[k]
+            for msg in f.validate("%s[%r]" % (name, k), object[k]):
+                yield msg
+
+
+class JsonObject(Type):
+
+    def validate(self, name, object):
+        if type(object) != dict:
+            yield "%s (%r) is not a dictionary (got type %s)" \
+                    % (name, object, type(object))
+            return
+
+        # make sure JSON can represent it
+        try:
+            json.dumps(object)
+        except Exception, e:
+            yield "%s is not JSON-able: %s" % (name, e)
+            return
+
+
 class Entity(Type):
 
     # NOTE: this type is defined by subclassing it in each resource type class.
