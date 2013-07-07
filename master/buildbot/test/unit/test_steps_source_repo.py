@@ -79,7 +79,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             kwargs.update(
                 dict(repoDownloads=repo.RepoDownloadsFromProperties(["repo_download", "repo_download2"])))
         self.setupStep(
-            repo.Repo(manifestUrl='git://myrepo.com/manifest.git',
+            repo.Repo(manifestURL='git://myrepo.com/manifest.git',
                       manifestBranch="mb",
                       manifestFile="mf",
                       **kwargs))
@@ -501,10 +501,30 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_repo_downloads_from_change_source(self):
         """basic repo download from change source, and check that repo_downloaded is updated"""
-        self.mySetupStep()
+        self.mySetupStep(repoDownloads=repo.RepoDownloadsFromChangeSource())
         chdict = TestGerritChangeSource.expected_change
         change = Change(None, None, None, properties=chdict['properties'])
         self.build.allChanges = lambda x=None: [change]
+        self.expectnoClobber()
+        self.expectRepoSync()
+        self.expectCommands(
+            self.ExpectShell(command=['repo', 'download', 'pr', '4321/12'])
+            + 0
+            + Expect.log(
+                'stdio', stderr="test/bla refs/changes/64/564/12 -> FETCH_HEAD\n")
+            + Expect.log('stdio', stderr="HEAD is now at 0123456789abcdef...\n"))
+        self.expectProperty(
+            "repo_downloaded", "564/12 0123456789abcdef ", "Source")
+        return self.myRunStep(status_text=["update"])
+
+    def test_repo_downloads_from_change_source_codebase(self):
+        """basic repo download from change source, and check that repo_downloaded is updated"""
+        self.mySetupStep(repoDownloads=repo.RepoDownloadsFromChangeSource("mycodebase"))
+        chdict = TestGerritChangeSource.expected_change
+        change = Change(None, None, None, properties=chdict['properties'])
+        # getSourceStamp is faked by SourceStepMixin
+        ss = self.build.getSourceStamp("")
+        ss.changes = [change]
         self.expectnoClobber()
         self.expectRepoSync()
         self.expectCommands(

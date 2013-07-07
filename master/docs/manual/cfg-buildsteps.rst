@@ -795,7 +795,7 @@ for new and old projects.
 
 The Repo step takes the following arguments:
 
-``manifestUrl``
+``manifestURL``
     (required): the URL at which the Repo's manifests source repository is available.
 
 ``manifestBranch``
@@ -820,7 +820,8 @@ The Repo step takes the following arguments:
     simultaneously while syncing. Passed to repo sync subcommand with "-j".
 
 ``syncAllBranches``
-    (optional, defaults to ``False``): renderable boolean to control the policy of repo sync -c
+    (optional, defaults to ``False``): renderable boolean to control whether ``repo``
+    syncs all branches. i.e. ``repo sync -c``
 
 ``updateTarballAge``
     (optional, defaults to "one week"):
@@ -857,9 +858,28 @@ This feature allows integrators to build with several pending interdependent cha
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
 
-This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
+.. py:class:: buildbot.steps.source.repo.RepoDownloadsFromChangeSource
+
+``RepoDownloadsFromChangeSource`` can be used as a renderable of the ``repoDownload`` parameter
+
+This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will
 automatically use the :command:`repo download` command of repo to
 download the additionnal changes introduced by a pending changeset.
+
+.. note:: you can use the two above Rendereable in conjuction by using the class ``buildbot.process.properties.FlattenList``
+
+for example::
+
+   from buildbot.steps.source.repo import Repo, RepoDownloadsFromChangeSource,
+   from buildbot.steps.source.repo import RepoDownloadsFromProperties
+   from buildbot.process.properties import FlattenList
+
+   factory.addStep(Repo(manifestUrl='git://mygerrit.org/manifest.git',
+                        repoDownloads=FlattenList([RepoDownloadsFromChangeSource(),
+                                                   RepoDownloadsFromProperties("repo_downloads")
+                                                   ]
+                                                  )
+                        ))
 
 .. index:: double: Gerrit integration; Repo Build Step
 
