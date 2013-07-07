@@ -632,7 +632,7 @@ buildslaves
     This class handles Buildbot's notion of buildslaves.
     The buildslave information is returned as a dictionary:
 
-    * ``buildslaveid``
+    * ``id``
     * ``name`` - the name of the buildslave
     * ``slaveinfo`` - buildslave information as dictionary
     * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
