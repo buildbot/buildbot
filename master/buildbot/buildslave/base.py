@@ -183,18 +183,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave_status.setAccessURI(info.get("access_uri"))
         self.slave_status.setVersion(info.get("version"))
 
-    def _saveSlaveInfoDict(self):
-        slaveinfo = {
-            'admin': self.slave_status.getAdmin(),
-            'host': self.slave_status.getHost(),
-            'access_uri': self.slave_status.getAccessURI(),
-            'version': self.slave_status.getVersion(),
-        }
-        return self.master.db.buildslaves.updateBuildslave(
-            buildslaveid=self.buildslaveid,
-            slaveinfo=slaveinfo,
-        )
-
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
         buildslave = yield self.master.db.buildslaves.getBuildslave(
@@ -380,12 +368,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.slave_status.buildFinished(buildFinished)
 
     @metrics.countMethod('AbstractBuildSlave.attached()')
+    @defer.inlineCallbacks
     def attached(self, bot):
-        """This is called when the slave connects.
-
-        @return: a Deferred that fires when the attachment is complete
-        """
-
         # the botmaster should ensure this.
         assert not self.isConnected()
 
@@ -407,95 +391,82 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
 
-        d = defer.succeed(None)
+        try:
+            yield bot.callRemote("print", "attached")
+        except Exception:
+            pass
 
-        @d.addCallback
-        def _log_attachment_on_slave(res):
-            d1 = bot.callRemote("print", "attached")
-            d1.addErrback(lambda why: None)
-            return d1
+        try:
+            info = yield bot.callRemote("getSlaveInfo")
+            log.msg("Got slaveinfo from '%s'" % self.slavename)
+            # TODO: info{} might have other keys
+            state["admin"] = info.get("admin")
+            state["host"] = info.get("host")
+            state["access_uri"] = info.get("access_uri", None)
+            state["slave_environ"] = info.get("environ", {})
+            state["slave_basedir"] = info.get("basedir", None)
+            state["slave_system"] = info.get("system", None)
+        except pb.NoSuchMethod:
+            # maybe an old slave, doesn't implement remote_getSlaveInfo
+            log.msg("BuildSlave.info_unavailable")
+            log.err(why)
 
-        @d.addCallback
-        def _get_info(res):
-            d1 = bot.callRemote("getSlaveInfo")
-            def _got_info(info):
-                log.msg("Got slaveinfo from '%s'" % self.slavename)
-                # TODO: info{} might have other keys
-                state["admin"] = info.get("admin")
-                state["host"] = info.get("host")
-                state["access_uri"] = info.get("access_uri", None)
-                state["slave_environ"] = info.get("environ", {})
-                state["slave_basedir"] = info.get("basedir", None)
-                state["slave_system"] = info.get("system", None)
-            def _info_unavailable(why):
-                why.trap(pb.NoSuchMethod)
-                # maybe an old slave, doesn't implement remote_getSlaveInfo
-                log.msg("BuildSlave.info_unavailable")
-                log.err(why)
-            d1.addCallbacks(_got_info, _info_unavailable)
-            return d1
+        self.startKeepaliveTimer()
 
-        d.addCallback(lambda _: self.startKeepaliveTimer())
+        try:
+            version = yield bot.callRemote("getVersion")
+            state["version"] = version
+        except pb.NoSuchMethod:
+            # probably an old slave
+            state["version"] = '(unknown)'
 
-        @d.addCallback
-        def _get_version(_):
-            d = bot.callRemote("getVersion")
-            def _got_version(version):
-                state["version"] = version
-            def _version_unavailable(why):
-                why.trap(pb.NoSuchMethod)
-                # probably an old slave
-                state["version"] = '(unknown)'
-            d.addCallbacks(_got_version, _version_unavailable)
-            return d
+        try:
+            commands = yield bot.callRemote("getCommands")
+            state["slave_commands"] = commands
+        except AttributeError:
+            pass
+        except pb.NoSuchMethod:
+            log.msg("BuildSlave.getCommands is unavailable - ignoring")
 
-        @d.addCallback
-        def _get_commands(_):
-            d1 = bot.callRemote("getCommands")
-            def _got_commands(commands):
-                state["slave_commands"] = commands
-            def _commands_unavailable(why):
-                # probably an old slave
-                if why.check(AttributeError):
-                    return
-                log.msg("BuildSlave.getCommands is unavailable - ignoring")
-                log.err(why)
-            d1.addCallbacks(_got_commands, _commands_unavailable)
-            return d1
+        slaveinfo = {
+            'admin': state['admin'],
+            'host': state['host'],
+            'access_uri': state['access_uri'],
+            'version': state['version']
+        }
+        # TODO: use update method
+        yield self.master.db.buildslaves.updateBuildslave(
+            buildslaveid=self.buildslaveid,
+            slaveinfo=slaveinfo,
+        )
 
-        @d.addCallback
-        def _accept_slave(res):
-            self.slave_status.setConnected(True)
+        self.slave_status.setConnected(True)
 
-            self._applySlaveInfo(state)
-            
-            self.slave_commands = state.get("slave_commands")
-            self.slave_environ = state.get("slave_environ")
-            self.slave_basedir = state.get("slave_basedir")
-            self.slave_system = state.get("slave_system")
-            self.slave = bot
-            if self.slave_system == "nt":
-                self.path_module = namedModule("ntpath")
-            else:
-                # most everything accepts / as separator, so posix should be a
-                # reasonable fallback
-                self.path_module = namedModule("posixpath")
-            log.msg("bot attached")
-            self.messageReceivedFromSlave()
-            self.stopMissingTimer()
-            self.botmaster.master.status.slaveConnected(self.slavename)
-
-        d.addCallback(lambda _: self._saveSlaveInfoDict())
+        self._applySlaveInfo(state)
         
-        d.addCallback(lambda _: self.updateSlave())
+        self.slave_commands = state.get("slave_commands")
+        self.slave_environ = state.get("slave_environ")
+        self.slave_basedir = state.get("slave_basedir")
+        self.slave_system = state.get("slave_system")
+        self.slave = bot
+        if self.slave_system == "nt":
+            self.path_module = namedModule("ntpath")
+        else:
+            # most everything accepts / as separator, so posix should be a
+            # reasonable fallback
+            self.path_module = namedModule("posixpath")
+        log.msg("bot attached")
+        self.messageReceivedFromSlave()
+        self.stopMissingTimer()
+        self.botmaster.master.status.slaveConnected(self.slavename)
 
-        d.addCallback(lambda _:
-                self.botmaster.maybeStartBuildsForSlave(self.slavename))
+        yield self.updateSlave()
+
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
         # Finally, the slave gets a reference to this BuildSlave. They
         # receive this later, after we've started using them.
-        d.addCallback(lambda _: self)
-        return d
+        defer.returnValue(self)
 
     def messageReceivedFromSlave(self):
         now = time.time()
