@@ -407,8 +407,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             state["slave_system"] = info.get("system", None)
         except pb.NoSuchMethod:
             # maybe an old slave, doesn't implement remote_getSlaveInfo
-            log.msg("BuildSlave.info_unavailable")
-            log.err(why)
+            log.msg("BuildSlave info is unavailable - old slave")
 
         self.startKeepaliveTimer()
 
