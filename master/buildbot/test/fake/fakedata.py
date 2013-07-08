@@ -263,9 +263,20 @@ class FakeUpdates(object):
     def findBuildslaveId(self, name):
         validation.verifyType(self.testcase, 'buildslave name', name,
                 validation.IdentifierValidator(50))
-        if name not in self.buildslaveIds:
-            self.buildslaveIds[name] = max([0] + self.buildslaveIds.values()) + 1
-        return defer.succeed(self.buildslaveIds[name])
+        # this needs to actually get inserted into the db (fake or real) since
+        # getBuildslave will get called later
+        return self.master.db.buildslaves.findBuildslaveId(name)
+
+    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+        return self.master.db.buildslaves.buildslaveConnected(
+                buildslaveid=buildslaveid,
+                masterid=masterid,
+                slaveinfo=slaveinfo)
+
+    def buildslaveDisconnected(self, buildslaveid, masterid):
+        return self.master.db.buildslaves.buildslaveDisconnected(
+                buildslaveid=buildslaveid,
+                masterid=masterid)
 
 
 class FakeDataConnector(object) :
