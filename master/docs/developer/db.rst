@@ -666,7 +666,7 @@ buildslaves
     .. py:method:: getBuildslave(slaveid=None, name=None, masterid=None, builderid=None)
 
         :param string name: the name of the buildslave to retrieve
-        :param integer slaveid: the ID of the buildslave to retrieve
+        :param integer buildslaveid: the ID of the buildslave to retrieve
         :param integer masterid: limit to slaves configured on this master
         :param integer builderid: limit to slaves configured on this builder
         :returns: info dictionary or None, via Deferred
@@ -674,15 +674,24 @@ buildslaves
         Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
         The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getBuildslaves`.
 
-    .. py:method:: updateBuildslave(buildslaveid, slaveinfo)
+    .. py:method:: buildslaveConnected(buildslaveid, masterid, slaveinfo)
 
-        :param integer slaveid: the ID of the buildslave to retrieve
-        :param slaveinfo: the new buildslave dictionary
+        :param integer buildslaveid: the ID of the buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :param slaveinfo: the new buildslave information dictionary
         :type slaveinfo: dict
         :returns: Deferred
 
-        Update the information for the given buildslave.
+        Record the given buildslave as attached to the given master, and update its cached slave information.
         The supplied information completely replaces any existing information.
+
+    .. py:method:: buildslaveDisconnected(buildslaveid, masterid)
+
+        :param integer buildslaveid: the ID of the buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :returns: Deferred
+
+        Record the given buildslave as no longer attached to the given master.
 
 changes
 ~~~~~~~

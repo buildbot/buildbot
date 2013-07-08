@@ -120,9 +120,26 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             return rv.values()
         return self.db.pool.do(thd)
 
-    def updateBuildslave(self, buildslaveid, slaveinfo):
+    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         def thd(conn):
-            tbl = self.db.model.buildslaves
-            q = tbl.update(whereclause=(tbl.c.id == buildslaveid))
+            conn_tbl = self.db.model.connected_buildslaves
+            q = conn_tbl.insert()
+            try:
+                conn.execute(q,
+                    {'buildslaveid': buildslaveid, 'masterid': masterid})
+            except sa.exc.IntegrityError:
+                # if the row is already present, silently fail..
+                pass
+
+            bs_tbl = self.db.model.buildslaves
+            q = bs_tbl.update(whereclause=(bs_tbl.c.id == buildslaveid))
             conn.execute(q, info=slaveinfo)
+        return self.db.pool.do(thd)
+
+    def buildslaveDisconnected(self, buildslaveid, masterid):
+        def thd(conn):
+            tbl = self.db.model.connected_buildslaves
+            q = tbl.delete(whereclause=(tbl.c.buildslaveid == buildslaveid)
+                                     & (tbl.c.masterid == masterid))
+            conn.execute(q)
         return self.db.pool.do(thd)

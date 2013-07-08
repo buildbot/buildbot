@@ -1254,12 +1254,24 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self._mkdict(sl, builderid, masterid)
             for sl in slaves])
 
-    def updateBuildslave(self, buildslaveid, slaveinfo):
+    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         slave = self.buildslaves.get(buildslaveid)
         # test serialization
         json.dumps(slaveinfo)
         if slave is not None:
             slave['info'] = slaveinfo
+        new_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
+        if new_conn not in self.connected.itervalues():
+            conn_id = max([0] + self.connected.keys()) + 1
+            self.connected[conn_id] = new_conn
+        return defer.succeed(None)
+
+    def buildslaveDisconnected(self, buildslaveid, masterid):
+        del_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
+        for id, conn in self.connected.iteritems():
+            if conn == del_conn:
+                del self.connected[id]
+                break
         return defer.succeed(None)
 
     def _configuredOn(self, buildslaveid, builderid=None, masterid=None):

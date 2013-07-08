@@ -27,6 +27,14 @@ Buildslaves
 
     A buildslave resource represents a buildslave to the source code monitored by Buildbot.
 
+    .. bb:event:: buildslave.$buildslaveid.connected
+
+        The buildslave has connected to a master.
+
+    .. bb:event:: buildslave.$buildslaveid.disconnected
+
+        The buildslave has disconnected from a master.
+
     .. bb:rpath:: /buildslave
 
         This path lists all buildslaves.
@@ -120,3 +128,25 @@ All update methods are available as attributes of ``master.data.updates``.
         :returns: scheduler ID via Deferred
 
         Get the ID for the given buildslave name, inventing one if necessary.
+
+    .. py:method:: buildslaveConnected(buildslaveid, masterid, slaveinfo)
+
+        :param integer buildslaveid: ID of the newly-connected buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :param slaveinfo: the new buildslave information dictionary
+        :type slaveinfo: dict
+        :returns: Deferred
+
+        Record the given buildslave as attached to the given master, and update its cached slave information.
+        The supplied information completely replaces any existing information.
+        This method also sends a message indicating the connection.
+
+    .. py:method:: buildslaveDisconnected(buildslaveid, masterid)
+
+        :param integer buildslaveid: ID of the newly-connected buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :returns: Deferred
+
+        Record the given buildslave as no longer attached to the given master.
+        This method also sends a message indicating the disconnection.
+

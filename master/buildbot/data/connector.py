@@ -35,6 +35,7 @@ class DataConnector(service.Service):
     submodules = [
         'buildbot.data.builders',
         'buildbot.data.builds',
+        'buildbot.data.buildslaves',
         'buildbot.data.steps',
         'buildbot.data.logs',
         'buildbot.data.logchunks',

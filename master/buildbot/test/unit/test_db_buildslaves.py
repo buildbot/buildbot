@@ -18,6 +18,7 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import buildslaves
+from sqlalchemy import exc
 
 class Tests(interfaces.InterfaceTests):
 
@@ -79,9 +80,14 @@ class Tests(interfaces.InterfaceTests):
         def getBuildslaves(self, masterid=None, builderid=None):
             pass
 
-    def test_signature_updateBuildslave(self):
-        @self.assertArgSpecMatches(self.db.buildslaves.updateBuildslave)
-        def updateBuildslave(self, buildslaveid, slaveinfo):
+    def test_signature_buildslaveConnected(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.buildslaveConnected)
+        def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+            pass
+
+    def test_signature_buildslaveDisconnected(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.buildslaveDisconnected)
+        def buildslaveDisconnected(self, buildslaveid, masterid):
             pass
 
     @defer.inlineCallbacks
@@ -363,29 +369,64 @@ class Tests(interfaces.InterfaceTests):
             ]), connected_to=[11]),
         ]))
 
-    def test_updateBuildslave_existing(self):
-        d = self.insertTestData(self.buildslave1_rows)
+    @defer.inlineCallbacks
+    def test_buildslaveConnected_existing(self):
+        yield self.insertTestData(self.buildslave1_rows)
 
         NEW_INFO = { 'other': [ 1, 2, 3] }
 
-        @d.addCallback
-        def update(_):
-            return self.db.buildslaves.updateBuildslave(
-                    buildslaveid=self.BS1_ID, slaveinfo=NEW_INFO)
+        yield self.db.buildslaves.buildslaveConnected(
+                    buildslaveid=self.BS1_ID, masterid=11, slaveinfo=NEW_INFO)
 
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslave(self.BS1_ID)
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs, {
+            'id': self.BS1_ID,
+            'name': self.BS1_NAME,
+            'slaveinfo': NEW_INFO,
+            'configured_on': [],
+            'connected_to': [11]})
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res['id'], self.BS1_ID)
-            self.assertEqual(res['name'], self.BS1_NAME)
-            self.assertEqual(res['slaveinfo'], NEW_INFO)
+    @defer.inlineCallbacks
+    def test_buildslaveConnected_already_connected(self):
+        yield self.insertTestData(self.buildslave1_rows + [
+            fakedb.ConnectedBuildslave(id=888,
+                buildslaveid=self.BS1_ID, masterid=11),
+        ])
+        yield self.db.buildslaves.buildslaveConnected(
+                    buildslaveid=self.BS1_ID, masterid=11, slaveinfo={})
 
-        return d
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [11])
 
-    def test_updateBuildslave_badJson(self):
+    @defer.inlineCallbacks
+    def test_buildslaveDisconnected(self):
+        yield self.insertTestData(self.buildslave1_rows + [
+            fakedb.ConnectedBuildslave(id=888,
+                buildslaveid=self.BS1_ID, masterid=10),
+            fakedb.ConnectedBuildslave(id=889,
+                buildslaveid=self.BS1_ID, masterid=11),
+        ])
+        yield self.db.buildslaves.buildslaveDisconnected(
+                    buildslaveid=self.BS1_ID, masterid=11)
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [10])
+
+    @defer.inlineCallbacks
+    def test_buildslaveDisconnected_already_disconnected(self):
+        yield self.insertTestData(self.buildslave1_rows)
+        yield self.db.buildslaves.buildslaveDisconnected(
+                    buildslaveid=self.BS1_ID, masterid=11)
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [])
+
+
+class RealTests(Tests):
+
+    # tests that only "real" implementations will pass
+
+    def test_buildslaveConnected_badJson(self):
         d = self.insertTestData(self.buildslave1_rows)
 
         @d.addCallback
@@ -393,19 +434,13 @@ class Tests(interfaces.InterfaceTests):
             BAD_JSON = {
                 'key': object(),  # something json won't serialize
             }
-            return self.db.buildslaves.updateBuildslave(
+            return self.db.buildslaves.buildslaveConnected(
                 buildslaveid=self.BS1_ID,
+                masterid=11,
                 slaveinfo=BAD_JSON)
 
-        # don't really care what exception this is..
-        self.assertFailure(d, Exception)
+        self.assertFailure(d, exc.StatementError)
 
-
-class RealTests(Tests):
-
-    # tests that only "real" implementations will pass
-
-    pass
 
 
 class TestFakeDB(unittest.TestCase, Tests):

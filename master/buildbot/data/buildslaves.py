@@ -104,3 +104,22 @@ class Buildslave(base.ResourceType):
     @base.updateMethod
     def findBuildslaveId(self, name):
         return self.master.db.buildslaves.findBuildslaveId(name)
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+        yield self.master.db.buildslaves.buildslaveConnected(
+                buildslaveid=buildslaveid,
+                masterid=masterid,
+                slaveinfo=slaveinfo)
+        bs = yield self.master.data.get(('buildslave', buildslaveid))
+        self.produceEvent(bs, 'connected')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def buildslaveDisconnected(self, buildslaveid, masterid):
+        yield self.master.db.buildslaves.buildslaveDisconnected(
+                buildslaveid=buildslaveid,
+                masterid=masterid)
+        bs = yield self.master.data.get(('buildslave', buildslaveid))
+        self.produceEvent(bs, 'disconnected')

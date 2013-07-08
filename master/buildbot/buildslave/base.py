@@ -185,8 +185,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
-        buildslave = yield self.master.db.buildslaves.getBuildslave(
-                                                buildslaveid=self.buildslaveid)
+        buildslave = yield self.master.data.get(
+                ('buildslave', self.buildslaveid))
         self._applySlaveInfo(buildslave['slaveinfo'])
 
     def setServiceParent(self, parent):
@@ -200,7 +200,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.updateLocks()
         self.startMissingTimer()
 
-        self.buildslaveid = yield self.master.db.buildslaves.findBuildslaveId(
+        self.buildslaveid = yield self.master.data.updates.findBuildslaveId(
                                                         self.slavename)
 
         yield self._getSlaveInfo()
@@ -260,7 +260,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        self.buildslaveid = None
         return service.MultiService.stopService(self)
 
     def findNewSlaveInstance(self, new_config):
@@ -435,15 +434,16 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             'version': state['version']
         }
         # TODO: use update method
-        yield self.master.db.buildslaves.updateBuildslave(
+        yield self.master.data.updates.buildslaveConnected(
             buildslaveid=self.buildslaveid,
-            slaveinfo=slaveinfo,
+            masterid=self.master.masterid,
+            slaveinfo=slaveinfo
         )
 
         self.slave_status.setConnected(True)
 
         self._applySlaveInfo(state)
-        
+
         self.slave_commands = state.get("slave_commands")
         self.slave_environ = state.get("slave_environ")
         self.slave_basedir = state.get("slave_basedir")
@@ -483,6 +483,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.botmaster.master.status.slaveDisconnected(self.slavename)
         self.stopKeepaliveTimer()
         self.releaseLocks()
+
+        # unfortunately, detached is a sync function, so we fire-and-forget
+        # this disconnection
+        d = self.master.data.updates.buildslaveDisconnected(
+                buildslaveid=self.buildslaveid,
+                masterid=self.master.masterid)
+        d.addErrback(log.err, 'while marking slave as disconnected')
 
         # notify watchers, but do so in the next reactor iteration so that
         # any further detached() action by subclasses happens first
