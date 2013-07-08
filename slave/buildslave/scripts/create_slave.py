@@ -153,7 +153,8 @@ def _makeInfoFiles(basedir, quiet):
             return False
 
         if not quiet:
-            print "Creating info/%s, you need to edit it appropriately." % file
+            print "Creating %s, you need to edit it appropriately." % \
+                os.path.join("info", file)
 
         try:
             open(filepath, "wt").write(contents)
@@ -184,7 +185,8 @@ def _makeInfoFiles(basedir, quiet):
 
     if not os.path.exists(access_uri):
         if not quiet:
-            print "Not creating info/access_uri - add it if you wish"
+            print "Not creating %s - add it if you wish" % \
+                os.path.join("info", "access_uri")
 
     if created and not quiet:
         print "Please edit the files in %s appropriately." % path
