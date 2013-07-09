@@ -192,12 +192,13 @@ class DownloadArtifact(ShellCommand):
     description="DonwloadArtifact"
     descriptionDone="DonwloadArtifact finished"
 
-    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, **kwargs):
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None, artifactServer=None, artifactServerDir=None, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
+        self.artifactDestination = artifactDestination
         self.master = None
         name = "DownloadArtifact %s" % artifactBuilderName
         description = "DownloadArtifact %s" % artifactBuilderName
@@ -220,7 +221,11 @@ class DownloadArtifact(ShellCommand):
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/*"
 
-        command = ["rsync", "-vazr", remotelocation, self.artifactDirectory]
+        destination = self.artifact
+        if self.artifactDestination:
+            destination = artifactDestination
+
+        command = ["rsync", "-vazr", remotelocation, destination]
         self.setCommand(command)
         ShellCommand.start(self)
 
