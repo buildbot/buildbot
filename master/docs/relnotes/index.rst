@@ -73,6 +73,11 @@ Features
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
   See :bb:pull:`596`.
 
+* Master-side support for Repo is available.
+  The step parameters changed to camelCase.
+  ``repo_downloads``, and ``manifest_override_url`` properties are no longer hardcoded, but instead consult as default values via renderables.
+  Renderable are used in favor of callables for ``syncAllBranches`` and ``updateTarball``.
+
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
 * GNUAutoconf and other pre-defined factories now work correctly (:bb:bug:`2402`)
@@ -104,10 +109,6 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``SetProperty`` step in ``buildbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
 
 * The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
-
-* Repo step parameters changed to camelCase. ``repo_downloads``, and ``manifest_override_url`` properties
-  are no more used in favor of the flexible renderable parameters mechanism, renderable are used in favor
-  of callables for ``syncAllBranches`` and ``updateTarball``
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
