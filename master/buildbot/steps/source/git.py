@@ -145,6 +145,14 @@ class Git(Source):
             return 0
         d.addCallback(checkInstall)
 
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self._dovccmd(['clean', '-f', '-d', '-x'])
+            else:
+                return 0
+        d.addCallback(checkPatched)
+
         if self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
@@ -477,10 +485,6 @@ class Git(Source):
             if res == 0:
                 return True
             return False
-        d.addCallback(check)
-        return d
 
-    def patch(self, _, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                initialStdin=patch[1])
+        d.addCallback(check)
         return d
