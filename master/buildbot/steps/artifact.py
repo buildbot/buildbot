@@ -223,7 +223,7 @@ class DownloadArtifact(ShellCommand):
 
         destination = self.artifact
         if self.artifactDestination:
-            destination = artifactDestination
+            destination = self.artifactDestination
 
         command = ["rsync", "-vazr", remotelocation, destination]
         self.setCommand(command)
