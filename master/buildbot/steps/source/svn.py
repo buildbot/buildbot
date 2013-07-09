@@ -75,10 +75,21 @@ class SVN(Source):
             return 0
         d.addCallback(checkInstall)
 
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self.purge(False)
+            else:
+                return 0
+        d.addCallback(checkPatched)
+                
         if self.mode == 'full':
             d.addCallback(self.full)
         elif self.mode == 'incremental':
             d.addCallback(self.incremental)
+
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
