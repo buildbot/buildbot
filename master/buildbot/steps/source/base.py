@@ -14,10 +14,15 @@
 # Copyright Buildbot Team Members
 
 
+import os
+import StringIO
+
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.transfer import _FileReader
+from buildbot.process import buildstep
 
 class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
@@ -179,6 +184,76 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
+    def applyPatch(self, patchlevel):
+        patch_command = ['patch', '-p%s' % patchlevel, '--remove-empty-files',
+                         '--force', '--forward', '-i', '.buildbot-diff']
+        cmd = buildstep.RemoteShellCommand(self.workdir,
+                                           patch_command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron)
+
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def evaluateCommand(_):
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            return cmd.rc
+
+        d.addCallback(evaluateCommand)
+        return d
+
+    def patch(self, _, patch):
+        patchlevel = patch[0]
+        diff = patch[1]
+        root = None
+        if len(patch) >= 3:
+            root = patch[2]
+
+        if (root and
+            os.path.abspath(os.path.join(self.workdir, root)
+                            ).startswith(os.path.abspath(self.workdir))):
+            self.workdir = os.path.join(self.workdir, root)
+
+        def _downloadFile(buf, filename):
+            filereader = _FileReader(StringIO.StringIO(buf))
+            args = {
+                'slavedest': filename,
+                'maxsize': None,
+                'reader': filereader,
+                'blocksize': 16*1024,
+                'workdir': self.workdir,
+                'mode' : None
+                }
+            cmd = buildstep.RemoteCommand('downloadFile', args)
+            cmd.useLog(self.stdio_log, False)
+            log.msg("Downloading file: %s" % (filename))
+            d = self.runCommand(cmd)
+            def evaluateCommand(_):
+                if cmd.didFail():
+                    raise buildstep.BuildStepFailed()
+                return cmd.rc
+                
+            d.addCallback(evaluateCommand)
+            return d
+
+        d = _downloadFile(diff, ".buildbot-diff")
+        d.addCallback(lambda _ : _downloadFile("patched\n", ".buildbot-patched"))
+        d.addCallback(lambda _: self.applyPatch(patchlevel))
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
+                                                'logEnviron':self.logEnviron})
+        cmd.useLog(self.stdio_log, False)
+        d.addCallback(lambda _: self.runCommand(cmd))
+        def evaluateCommand(cmd):
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            return cmd.rc
+        d.addCallback(lambda _: evaluateCommand(cmd))
+        return d
+
+    def sourcedirIsPatched(self):
+        d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        return d
+        
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)

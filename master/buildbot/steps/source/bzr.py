@@ -67,13 +67,23 @@ class Bzr(Source):
             if not bzrInstalled:
                 raise BuildSlaveTooOldError("bzr is not installed on slave")
             return 0
-
         d.addCallback(checkInstall)
+
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self._dovccmd(['clean-tree', '--ignored', '--force'])
+            else:
+                return 0
+        d.addCallback(checkPatched)
+
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
 
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)

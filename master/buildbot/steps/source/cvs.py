@@ -49,7 +49,7 @@ class CVS(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch
         self.revision = revision
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
         self.method = self._getMethod()
         d = self.checkCvs()
         def checkInstall(cvsInstalled):
@@ -59,11 +59,20 @@ class CVS(Source):
         d.addCallback(checkInstall)
         d.addCallback(self.checkLogin)
 
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self.purge(False)
+            else:
+                return 0
+        d.addCallback(checkPatched)
         if self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
             d.addCallback(lambda _: self.full())
-
+        
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
