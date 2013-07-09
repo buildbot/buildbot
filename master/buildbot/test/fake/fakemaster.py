@@ -44,7 +44,7 @@ class FakeCaches(object):
 
 
 class FakeBotMaster(object):
-
+    builders = {}
     pass
 
 
