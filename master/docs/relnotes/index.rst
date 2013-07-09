@@ -107,6 +107,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
 
+* Pre v0.8.7 versions of buildbot supported passing keyword arguments to ``buildbot.process.BuildFactory.addStep``, but this was dropped.
+  Support was added again, while still being deprecated, to ease transition.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
