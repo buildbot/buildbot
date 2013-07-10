@@ -7,13 +7,16 @@
 
 .top-menu-container {
 	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%)); 
+	@include pie-clearfix;
 	width: 100%;
 }
 
 .top-menu {
 	list-style: none;
-	overflow: auto;
 	padding: 0;
+	margin:0;
+	float:left;
+	@include pie-clearfix;
 	li {
 		float:left;
 		padding: 0;
@@ -68,8 +71,8 @@
 }
 
 .breadcrumbs-nav {
-		padding:12px 0;
-		overflow: auto;
+		@include pie-clearfix;
+		padding:12px 0 12px 247px;
 	 	text-shadow: 0 1px 0 #FFF;	
 		li {
 		color: #666;

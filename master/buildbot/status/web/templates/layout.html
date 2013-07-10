@@ -28,7 +28,9 @@
     {% block header -%}
  
     <header class="header">
-      <div class="container-inner">
+      
+        <!--
+        <div class="container-inner">
         <div class="auth">    
           {% if authz.authenticated(request) %}
             {{ authz.getUsernameHTML(request) }}
@@ -44,14 +46,19 @@
             </form>
           {% endif %}
         </div>
-        <h1 class="logo">
-          <a href="/">
-            <span>K</span>atana
-          </a>
-        </h1>    
-      </div>
+        </div>
+      -->
+        
+      
         <nav class="top-menu-container">
-        <ul class="top-menu container-inner">
+          <div class="container-inner">
+          <h1 class="logo">
+            <a href="/">
+              <span>K</span>atana
+            </a>
+          </h1>    
+        <ul class="top-menu">
+          
           <li>
             <a href="{{ path_to_root or '.' }}">Home</a>
           </li>
@@ -106,10 +113,11 @@
 
        
         </ul>
+      </div>
          </nav>
       
        </header>
-     
+<div class="clear"></div>
     {% endblock %}
 
     {%- block barecontent -%}

@@ -79,7 +79,7 @@
 			<footer class="footer">
       <div class="container-inner">
         <h3 class="buildbot-version">
-        	This log is produces by Katana
+        	This log is produced by Katana
           
         </h3>
         

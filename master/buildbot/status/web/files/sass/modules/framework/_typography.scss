@@ -24,18 +24,21 @@
 }
  
 h1.logo a {
-	@include text-shadow(1px 1px 0 #FFF);
+	line-height:0;
+	color: #FFFFFF;
+    float: left;
+    margin-right: 29px;
+    font-size: 31px;
+    padding: 22px 0 0;
+    opacity: 0.76;
 	font-family: 'Pacifico';
-    font-size: 45px;
     font-weight: normal;
     letter-spacing: 1px;
 	text-decoration: none;
-	opacity: 1;
-	color:#445873;
 	@include transition(opacity .2s ease-in-out);
 	span {
 		font-family:'Leckerli One', cursive;
-		font-size: 43px;
+		font-size: 30px;
 	}
 }
 

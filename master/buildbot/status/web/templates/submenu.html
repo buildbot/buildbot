@@ -50,7 +50,7 @@
 	
 		{% if id == active_page %}
 			<li>{{caption|e}}</li>
-		{% elif loop.index == 3 and pathNum == 3 %}
+		{% elif loop.index == 3 and pathNum >= 3 %}
 			<li class="dropdown">
 		      <a id="pathToCodeBases" href="{{ codebasesPath }}">
 		          Codebases
@@ -60,7 +60,7 @@
 		      <div class="more-info-box more-info-box-js-2">
 		          <span class="close-btn">
 		          </span>
-		          <h3>Codebases select</h3>
+		          <h3>Codebases</h3>
 		          <div id="content">
 		          </div>          
 		      </div>
