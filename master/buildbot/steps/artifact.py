@@ -198,7 +198,7 @@ class DownloadArtifact(ShellCommand):
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
-        self.artifactDestination = artifactDestination
+        self.artifactDestination = artifactDestination or artifact
         self.master = None
         name = "DownloadArtifact %s" % artifactBuilderName
         description = "DownloadArtifact %s" % artifactBuilderName
@@ -219,9 +219,8 @@ class DownloadArtifact(ShellCommand):
         if (self.artifactDirectory):
             artifactPath += "/%s" % self.artifactDirectory
 
-        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/*"
-
-        command = ["rsync", "-vazr", remotelocation, self.artifact]
+        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
+        command = ["rsync", "-vazr", remotelocation, self.artifactDestination]
         self.setCommand(command)
         ShellCommand.start(self)
 
