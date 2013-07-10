@@ -230,17 +230,18 @@
 	
 	}
 }
-
+ 
 
 .select-tools {
 	font-size: 12px;
 	float:right;
-	color: #FFFFFF;
+	color: #666;
     font-size: 12px;
-    margin-top: 50px;
+    margin-bottom: 10px;
     padding: 1px;
     width: 117px;
     &.var-1 {
+    	width: 100%;
     	margin-top: 0;
     	float: none;
     	background-color: #A3A3A3;
@@ -454,11 +455,10 @@ div.force-text {
     border: 1px solid #C4C4C4;
     @include border-radius (4px);
     color: #2B2B2B;
-    content: "❱";
-    display: block;
+    content: "❯";
+    display: inline-block;
     font-family: Tahoma;
     font-size: 12px;
-    font-weight: bold;
     padding: 1px 7px 5px;
     @include text-shadow (1px 0 0 #FFFFFF);
     @include transform (rotate(90deg));
@@ -681,3 +681,115 @@ div.force-text input.not-valid {
 }
 
 .notimpl {color:#838383 !important;}
+#content {
+	min-height: 89px;
+    position: relative;
+}
+
+#bowlG{
+height: 30px;
+left: 42%;
+position: absolute;
+top: 22%;
+width: 30px;
+}
+
+#bowl_ringG{
+position:absolute;
+width:30px;
+height:30px;
+border:3px solid #000000;
+@include border-radius(30px);
+@include box-shadow(1px 1px 1px #fff);
+}
+
+.ball_holderG{
+position:absolute;
+width:8px;
+height:30px;
+left:11px;
+top:0px;
+-moz-animation-name:ball_moveG;
+-moz-animation-duration:1.3s;
+-moz-animation-iteration-count:infinite;
+-moz-animation-timing-function:linear;
+-webkit-animation-name:ball_moveG;
+-webkit-animation-duration:1.3s;
+-webkit-animation-iteration-count:infinite;
+-webkit-animation-timing-function:linear;
+-ms-animation-name:ball_moveG;
+-ms-animation-duration:1.3s;
+-ms-animation-iteration-count:infinite;
+-ms-animation-timing-function:linear;
+-o-animation-name:ball_moveG;
+-o-animation-duration:1.3s;
+-o-animation-iteration-count:infinite;
+-o-animation-timing-function:linear;
+animation-name:ball_moveG;
+animation-duration:1.3s;
+animation-iteration-count:infinite;
+animation-timing-function:linear;
+}
+
+.ballG{
+position:absolute;
+left:0px;
+top:-7px;
+width:12px;
+height:12px;
+background:#000000;
+@include border-radius(10px);
+}
+
+@keyframes ball_moveG {
+	0%{
+-moz-transform:rotate(0deg)}
+
+100%{
+-moz-transform:rotate(360deg)}	
+}
+
+@-moz-keyframes ball_moveG{
+0%{
+-moz-transform:rotate(0deg)}
+
+100%{
+-moz-transform:rotate(360deg)}
+
+}
+
+@-webkit-keyframes ball_moveG{
+0%{
+-webkit-transform:rotate(0deg)}
+
+100%{
+-webkit-transform:rotate(360deg)}
+
+}
+
+@-ms-keyframes ball_moveG{
+0%{
+-ms-transform:rotate(0deg)}
+
+100%{
+-ms-transform:rotate(360deg)}
+
+}
+
+@-o-keyframes ball_moveG{
+0%{
+-o-transform:rotate(0deg)}
+
+100%{
+-o-transform:rotate(360deg)}
+
+}
+
+@keyframes ball_moveG{
+0%{
+transform:rotate(0deg)}
+
+100%{
+transform:rotate(360deg)}
+
+} 

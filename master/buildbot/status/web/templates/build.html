@@ -1,41 +1,11 @@
 {% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
 {% import 'forms.html' as forms %}
 {% from "box_macros.html" import box %}
 {% from "change_macros.html" import change with context %}
 
 {% block submenu %}
-<nav class="sub-menu-container">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_root }}projects">
-          Projects
-      </a>
-    </li>
-    <li>
-      <a href="{{ path_to_codebases }}">
-          Codebases
-      </a>
-    </li>
-    <li>
-        <a href="{{ path_to_builders }}">
-            Builders
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_builder}}">
-         {{ builder_name }}
-      </a>
-    </li>
-    <li>
-        #{{ build_number }}
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu(active_page=build_number, pathNum=5, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, stepName='')}}
 {% endblock %}
 
 {% block content %}
@@ -212,7 +182,7 @@ SourceStamps
   Build Properties
 </a>
 
-  <div class="more-info-box">
+  <div class="more-info-box more-info-box-js">
     <span href="#" class="close-btn">
     </span>
     <h3>Overview of build properties</h3>
@@ -257,7 +227,7 @@ SourceStamps
   Forced build properties
 </a>
 
-  <div class="more-info-box">
+  <div class="more-info-box more-info-box-js">
     <span href="#" class="close-btn">
     </span>
     <h3>Overview of forced build properties</h3>

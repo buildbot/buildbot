@@ -1,43 +1,7 @@
 {% extends "layout.html" %}
-
+{% import 'submenu.html' as submenu %}
 {% block submenu %}
-<nav class="sub-menu-container">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_root }}projects">
-          Projects
-      </a>
-    </li>
-    <li>
-      <a href="{{ path_to_codebases }}">
-          Codebases
-      </a>
-    </li>
-    <li>
-        <a href="{{ path_to_builders }}">
-            Builders
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_builder }}">
-         {{ name}}
-      </a>
-    </li>
-    <li>
-      <a href="{{ path_to_build }}">
-        #{{ build_number }}
-      </a>
-    </li>
-    <li>
-        {{ step_name }}
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu(active_page=step_name, pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName=step_name)}}
 {% endblock %}
 
 {% block content %}

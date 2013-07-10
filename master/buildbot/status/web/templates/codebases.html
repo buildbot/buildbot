@@ -1,53 +1,38 @@
 {% from 'build_line.html' import build_table %}
 {% import 'forms.html' as forms %}
+{% import 'submenu.html' as submenu %}
 
 {% extends "layout.html" %}
 
 {% block submenu %}
-<nav class="sub-menu-container">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="/projects">
-      Projects
-    </a>
-    </li>
-    <li>
-        Codebases
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu(active_page="codebases", pathNum=2, builderName='', buildNumber='', stepName='')}}
 {% endblock %}
 
 {% block content %}
 
-<form method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
+<div id="formWrapper">
+<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
     <input value="Go" class="grey-btn var-1" type="submit" />
 
 <table class="table-2 no-bg">
    <thead>
   <tr>
     <th>Codebase</th>
-
     <th>Url</th>
     <th>Branches</th>
   </tr>
 </thead>
-
+<tbody>
 {% for cb in codebases %}
     {% for cbkey, codebase in cb.iteritems() %}
   <tr>
     <td>
         {{cbkey}}
     </td>
-    <td width="100%">
+    <td>
       {{codebase['repository']}}
     </td>
-    <td>
+    <td class="txt-align-right">
       <select name='{{cbkey}}_branch' class="select-tools var-1">
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
@@ -63,6 +48,8 @@
   </tr>
  {% endfor %}
 {% endfor %}
+</tbody>
 </table>
 </form>
+</div>
 {% endblock %}

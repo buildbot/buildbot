@@ -1,36 +1,10 @@
 {% from 'build_line.html' import build_table %}
 {% import 'forms.html' as forms %}
-
+{% import 'submenu.html' as submenu %}
 {% extends "layout.html" %}
 
 {% block submenu %}
-<nav class="sub-menu-container">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_root }}projects">
-          Projects
-      </a>
-    </li>
-    <li>
-      <a href="{{ path_to_codebases }}">
-          Codebases
-      </a>
-    </li>
-    <li>
-        <a href="{{ path_to_builders }}">
-          Builders
-        </a>
-    </li>
-    <li>
-      {{ name }}
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu(active_page=name, pathNum=4, builderName=name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='')}}
 {% endblock %}
 
 {% block content %}
@@ -141,7 +115,7 @@
     <a class="dropdown-info grey-btn popup-btn-js" href="#">
         Build slaves
     </a>
-        <div class="more-info-box">
+        <div class="more-info-box more-info-box-js">
           <span href="#" class="close-btn">
           </span>
           <h3>Overview</h3>
@@ -179,7 +153,7 @@
       <a class="dropdown-info grey-btn popup-btn-js" href="#">
         Force build
       </a>
-        <div class="more-info-box">
+        <div class="more-info-box more-info-box-js">
           <span href="#" class="close-btn">
           </span>
           <h3>Force build</h3>

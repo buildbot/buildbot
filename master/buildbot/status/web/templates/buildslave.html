@@ -1,26 +1,10 @@
 {% from 'build_line.html' import build_table, build_line %}
 {% import 'forms.html' as forms %}
-
+{% import 'submenu.html' as submenu %}
 {% extends "layout.html" %}
 
 {% block submenu %}
-<nav class="sub-menu-container container-inner">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="/buildslaves">
-            Build slaves
-      </a>
-    </li>
-    <li>
-      {{ slavename|e }}
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename)}}
 {% endblock %}
 
 

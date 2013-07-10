@@ -46,29 +46,34 @@ $(document).ready(function() {
 
 	//Show / hide
 
-	$(function centerPopup(){
-		$('.more-info-box').each(function(){
-				$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
-				$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
+	function centerPopup(className){
+		$(className).each(function(){
+			$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
+			$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
 		});
-	});
-	$('.popup-btn-js').click(function(e){
-		e.preventDefault();
-		$('.more-info-box').hide();
-		$('.command_forcebuild').removeClass('form-open');
-		$(this).next().fadeIn('fast', function (){
-			$('.command_forcebuild', this).addClass('form-open')
+	};
 
-			validateForm();
-			
-		});
+	centerPopup('.more-info-box');
 
-	});
+	function popUpBtn(classBtn, classHide){
 
-	$(document, '.close-btn').click(function(e){
-		if (!$(e.target).closest('.more-info-box, .popup-btn-js').length || $(e.target).closest('.close-btn').length ) {
+		$(classBtn).click(function(e){
+			e.preventDefault();
+			$('.more-info-box-js, .more-info-box-js-2').hide();
 			$('.command_forcebuild').removeClass('form-open');
-			$('.more-info-box').fadeOut('fast');
+			$(this).next().fadeIn('fast', function (){
+				$('.command_forcebuild', this).addClass('form-open')
+				validateForm();
+			});
+		});
+	};
+	popUpBtn('.popup-btn-js');
+	
+	$(document, '.close-btn').click(function(e){
+		if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
+			$('.command_forcebuild').removeClass('form-open');
+			$('.more-info-box-js, .more-info-box-js-2').hide();
+			$('#content').empty();
 		}
 	}); 
 
@@ -153,7 +158,6 @@ $(document).ready(function() {
     			} 
 				e.preventDefault();
 			}
-
 		});
 		/* clear all button
 			$(".clear-btn", formEl).click(function (e) {
@@ -162,4 +166,25 @@ $(document).ready(function() {
 			});
 		*/
 	}
+
+	// display popup box with external content
+
+	// get content in the dropdown and display it while removing the preloader
+	$('#getBtn').click(function() {
+		$('.more-info-box-js, .more-info-box-js-2').hide();
+		$('#content').empty();
+		var path = $('#pathToCodeBases').attr('href');
+		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+		$('#content').append(preloader).show();
+		
+		$.get(path)
+		.done(function(data) {
+			var $response=$(data);
+			$('#bowlG').remove();
+			$($response).find('#formWrapper').appendTo($('#content'));
+			centerPopup('.more-info-box-js-2');
+			$('.more-info-box-js-2').fadeIn('fast');
+		});
+	});
+
 });

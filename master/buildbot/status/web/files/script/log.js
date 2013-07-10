@@ -1,7 +1,8 @@
 
 // sort and filter tables logs
 
-		var th = $('.table-holder');
+$(document).one("click", function() {
+		
 		$("#filterinput").val("");
 
 		$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
@@ -68,3 +69,4 @@
 
 		});
 	
+ }); 

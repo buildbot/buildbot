@@ -1,18 +1,8 @@
 {% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
 
 {% block submenu %}
-<nav class="sub-menu-container container-inner">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      Build slaves
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu_slaves(active_page="buildslaves", pathNum=1, buildSlaveName='')}}
 {% endblock %}
 
 {% block content %}
@@ -36,7 +26,7 @@
       </a>
       <a class="more-info fl-right popup-btn-js" href="#">
       </a>
-        <div class="more-info-box">
+        <div class="more-info-box more-info-box-js">
           <h3>Additional information</h3>
           <br/>
           <h4>Buildbot</h4>

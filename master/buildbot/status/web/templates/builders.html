@@ -1,31 +1,12 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
+{% import 'submenu.html' as submenu %}
+{% from 'build_line.html' import build_table %}
 {% from "box_macros.html" import box %}
 {% from 'static.html' import force_build_static %}
 
 {% block submenu %}
-<nav class="sub-menu-container">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      <a href="{{ path_to_root }}projects">
-          Projects
-      </a>
-    </li>
-    <li>
-      <a href="{{ path_to_codebases }}">
-          Codebases
-      </a>
-    </li>
-    <li>
-      Builders
-    </li>
-  </ul>
-</nav>
+  {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}
 {% endblock %}
 
 {% block content %}
@@ -83,7 +64,7 @@
                  <a class="more-info popup-btn-js mod-1" href="#">
                   Pending jobs
                 </a>
-                 <div class="more-info-box">
+                 <div class="more-info-box more-info-box-js">
                   <span class="close-btn">
                   </span>
                   <h3>Pending Build Requests</h3>
@@ -166,7 +147,7 @@
       {% if b.force_schedulers != {} %}
       <a class="more-info popup-btn-js" href="#">
       </a>
-        <div class="more-info-box">
+        <div class="more-info-box more-info-box-js">
           <span class="close-btn">
           </span>
           <h3>Force build</h3>

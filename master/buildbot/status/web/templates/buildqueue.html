@@ -2,22 +2,10 @@
 {% import 'forms.html' as forms %}
 {% from 'build_line.html' import build_table %}
 {% from "box_macros.html" import box %}
-
+{% import 'submenu.html' as submenu %}
 
 {% block submenu %}
-<nav class="sub-menu-container container-inner">
-  <ul class="breadcrumbs-nav container-inner">
-    <li>
-        <a href="/">
-          Home
-        </a>
-    </li>
-    <li>
-      Build queue  
-    </li>
-    
-  </ul>
-</nav>
+  {{submenu.buildsubmenu_buildqueue(active_page='buildqueue', pathNum=1)}}
 {% endblock %}
 
 {% block content %}
