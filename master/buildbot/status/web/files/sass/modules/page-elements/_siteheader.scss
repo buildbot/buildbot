@@ -7,47 +7,6 @@
 * @author Simon Holm
 */
 
-// user login
-.auth {
-	float: right;
-	margin-top: 25px;
-}
-
-.auth input:first-child {
-
-	margin-right: 10px;
-
-}
-
-.auth input[type="text"],
-.auth input[type="password"] {
-	//@include background-image(linear-gradient(center top , #FBFBFB 0%, #E3E6ED 100%));
-    border: 1px solid #ccc;
-    @include border-radius(4px);
-    @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-    @include text-shadow(0 1px 0 #FFFFFF);
-    color: #666666;
-    font-size: 12px;
-    line-height: 13px;
-    padding: 7px 11px 6px;
-    width: 95px;
-    float: left;
-}
-
-.auth input[type="submit"] {
-	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%));
-    border: 1px solid #295E91;
-    @include border-radius( 4px);
-    color: #FFFFFF;
-    font-size: 10px;
-    margin: 1px 0 0 5px;
-    padding: 7px 11px 6px;
-    @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
-    text-transform: uppercase;
-    float: left;
-    letter-spacing: 0.8px;
-}
-
 .logo {
     margin: 0;
     padding: 0;

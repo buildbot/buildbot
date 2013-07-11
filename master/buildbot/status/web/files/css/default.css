@@ -530,8 +530,8 @@ h1.logo a {
   line-height: 0;
   color: #FFFFFF;
   float: left;
-  margin-right: 29px;
-  font-size: 31px;
+  margin-right: 48px;
+  font-size: 24px;
   padding: 22px 0 0;
   opacity: 0.76;
   font-family: 'Pacifico';
@@ -546,7 +546,7 @@ h1.logo a {
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000339}}
 h1.logo a span {
   font-family: 'Leckerli One', cursive;
-  font-size: 30px;
+  font-size: 23px;
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000345}}
@@ -626,11 +626,6 @@ div.welcome-txt ul li {
 * @author Simon Holm
 */
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\000038}}
-html {
-  background-color: #fff;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000312}}
 body.interface {
   margin: 0;
   padding: 0;
@@ -640,34 +635,34 @@ body.interface {
   color: #333;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000321}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000317}}
 a:link, a:visited, a:active {
   color: #2b6194;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000326}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000322}}
 a:hover {
   color: #BDC9D5;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000331}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000327}}
 table {
   border-spacing: 1px 1px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000335}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000331}}
 table td {
   padding: 3px 4px 3px 4px;
   text-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000340}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000336}}
 li {
   padding: 0.1em 1em 0.1em 1em;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000344}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_global\.scss}line{font-family:\0000340}}
 .fl-right {
   float: right;
 }
@@ -680,62 +675,7 @@ li {
 * @section page-elements
 * @author Simon Holm
 */
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000311}}
-.auth {
-  float: right;
-  margin-top: 25px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000316}}
-.auth input:first-child {
-  margin-right: 10px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000323}}
-.auth input[type="text"],
-.auth input[type="password"] {
-  border: 1px solid #ccc;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  -ms-border-radius: 4px;
-  -o-border-radius: 4px;
-  border-radius: 4px;
-  -webkit-box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset;
-  -moz-box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset;
-  box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset;
-  text-shadow: 0 1px 0 white;
-  color: #666666;
-  font-size: 12px;
-  line-height: 13px;
-  padding: 7px 11px 6px;
-  width: 95px;
-  float: left;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000337}}
-.auth input[type="submit"] {
-  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #0a3569), color-stop(100%, #417fb1));
-  background-image: -webkit-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
-  background-image: -moz-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
-  background-image: -o-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
-  background-image: linear-gradient(center top, #0a3569 0%, #417fb1 100%);
-  border: 1px solid #295E91;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  -ms-border-radius: 4px;
-  -o-border-radius: 4px;
-  border-radius: 4px;
-  color: #FFFFFF;
-  font-size: 10px;
-  margin: 1px 0 0 5px;
-  padding: 7px 11px 6px;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.59);
-  text-transform: uppercase;
-  float: left;
-  letter-spacing: 0.8px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000351}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_siteheader\.scss}line{font-family:\0000310}}
 .logo {
   margin: 0;
   padding: 0;
@@ -2013,6 +1953,135 @@ div.force-text input.not-valid {
   100% {
     transform: rotate(360deg);
   }
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003803}}
+.login-box {
+  width: auto;
+  margin: 0 auto;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003806}}
+.login-box.more-info-box {
+  display: block;
+  padding: 44px 19px 16px 38px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003809}}
+.login-box.more-info-box h3 {
+  display: block;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003812}}
+.login-box.more-info-box .login-welcome-txt {
+  text-shadow: 0 1px 0 white;
+  color: #666666;
+  font-size: 14px;
+  margin-bottom: 15px;
+  clear: both;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003820}}
+.login-box h1.logo a {
+  opacity: 1;
+  color: #445873;
+  display: block;
+  float: none;
+  font-size: 1.7em;
+  margin-bottom: 26px;
+  padding: 0;
+  margin-right: 14px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003829}}
+.login-box h1.logo a span {
+  font-size: 0.8em;
+  color: #445873;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003836}}
+.log-in-txt {
+  font-size: 12px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003843}}
+.auth {
+  margin: 25px 25px 25px 6px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003847}}
+.auth input[type="text"],
+.auth input[type="password"] {
+  border: 1px solid #ccc;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  -o-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset, 1px 1px 0px white;
+  -moz-box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset, 1px 1px 0px white;
+  box-shadow: 2px 2px 4px #dedede inset, 0 0 4px whitesmoke inset, 1px 1px 0px white;
+  text-shadow: 0 1px 0 white;
+  color: #666666;
+  font-size: 15px;
+  line-height: 13px;
+  padding: 9px 13px 8px;
+  width: 150px;
+  float: left;
+  margin-bottom: 15px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003861}}
+.auth input[type="checkbox"] {
+  float: left;
+  margin-left: 83px;
+  margin-right: 9px;
+  margin-top: 6px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003867}}
+.auth input[type="submit"] {
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #0a3569), color-stop(100%, #417fb1));
+  background-image: -webkit-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
+  background-image: -moz-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
+  background-image: -o-linear-gradient(center top, #0a3569 0%, #417fb1 100%);
+  background-image: linear-gradient(center top, #0a3569 0%, #417fb1 100%);
+  -webkit-box-shadow: 1px 1px 0px white;
+  -moz-box-shadow: 1px 1px 0px white;
+  box-shadow: 1px 1px 0px white;
+  border: 1px solid #295E91;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  -o-border-radius: 4px;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 10px;
+  margin: 0 0 0 14px;
+  padding: 7px 11px 6px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.59);
+  text-transform: uppercase;
+  clear: both;
+  letter-spacing: 0.8px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003880}}
+.auth input[type="submit"]:hover {
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #1057ad), color-stop(100%, #4e98d5));
+  background-image: -webkit-linear-gradient(center top, #1057ad 0%, #4e98d5 100%);
+  background-image: -moz-linear-gradient(center top, #1057ad 0%, #4e98d5 100%);
+  background-image: -o-linear-gradient(center top, #1057ad 0%, #4e98d5 100%);
+  background-image: linear-gradient(center top, #1057ad 0%, #4e98d5 100%);
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003884}}
+.auth input:first-child {
+  margin-right: 10px;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003887}}
+.auth label {
+  float: left;
+  font-size: 14px;
+  font-weight: bold;
+  padding-top: 8px;
+  width: 84px;
+  text-shadow: 0 1px 0 white;
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003894}}
+.auth label.checkbox-label {
+  font-size: 11px;
+  font-weight: normal;
+  margin-top: -2px;
 }
 
 /**

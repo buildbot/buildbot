@@ -27,8 +27,8 @@ h1.logo a {
 	line-height:0;
 	color: #FFFFFF;
     float: left;
-    margin-right: 29px;
-    font-size: 31px;
+    margin-right: 48px;
+    font-size: 24px;
     padding: 22px 0 0;
     opacity: 0.76;
 	font-family: 'Pacifico';
@@ -38,7 +38,7 @@ h1.logo a {
 	@include transition(opacity .2s ease-in-out);
 	span {
 		font-family:'Leckerli One', cursive;
-		font-size: 30px;
+		font-size: 23px;
 	}
 }
 

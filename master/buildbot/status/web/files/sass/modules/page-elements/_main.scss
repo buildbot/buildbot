@@ -798,3 +798,103 @@ transform:rotate(0deg)}
 transform:rotate(360deg)}
 
 } 
+
+// login box
+.login-box {
+	width:auto;
+	margin:0 auto;
+	&.more-info-box {
+		display: block;
+		padding:44px 19px 16px 38px;
+		h3 {
+			display: block;	
+		}
+		.login-welcome-txt {
+			@include text-shadow(0 1px 0 #FFFFFF);
+			color: #666666;
+		    font-size: 14px;
+		    margin-bottom: 15px;
+		    clear: both;
+		}
+	}
+	h1.logo a {
+			opacity: 1;
+		   	color: #445873;
+		    display: block;
+		    float: none;
+		    font-size: 1.7em;
+		    margin-bottom: 26px;
+		    padding: 0;
+		    margin-right: 14px;
+		span {
+			font-size: 0.8em;
+			color:#445873;
+		}
+	}
+}
+
+.log-in-txt {
+	font-size:12px;
+}
+
+// user login
+
+
+.auth {
+	margin: 25px 25px 25px 6px;
+	
+	input[type="text"],
+	input[type="password"] {
+		//@include background-image(linear-gradient(center top , #FBFBFB 0%, #E3E6ED 100%));
+	    border: 1px solid #ccc;
+	    @include border-radius(4px);
+	    @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset, 1px 1px 0px #fff);
+	    @include text-shadow(0 1px 0 #FFFFFF);
+	    color: #666666;
+	    font-size: 15px;
+	    line-height: 13px;
+	    padding: 9px 13px 8px;
+	    width: 150px;
+	    float: left;
+	    margin-bottom:15px;
+	}
+	input[type="checkbox"] {
+	    float: left;
+	    margin-left: 83px;
+	    margin-right: 9px;
+	    margin-top: 6px;
+	}
+	input[type="submit"] {
+		@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%));
+		@include box-shadow(1px 1px 0px #fff);
+	    border: 1px solid #295E91;
+	    @include border-radius( 4px);
+	    color: #FFFFFF;
+	    font-size: 10px;
+	    margin: 0 0 0 14px;
+	    padding: 7px 11px 6px;
+	    @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
+	    text-transform: uppercase;
+	    clear: both;
+	    letter-spacing: 0.8px;
+	    &:hover {
+	    	@include background-image(linear-gradient(center top , #1057AD 0%, #4E98D5 100%));
+	    }
+	}
+	input:first-child {
+		margin-right: 10px;
+	}
+	label {
+	 float: left;
+	 font-size: 14px;
+	 font-weight: bold;
+	 padding-top: 8px;
+	 width: 84px;
+	 @include text-shadow(0 1px 0 #FFFFFF);
+		 &.checkbox-label {
+		 	font-size: 11px;
+		    font-weight: normal;
+		    margin-top: -2px;
+		}
+	}
+}

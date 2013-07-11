@@ -36,6 +36,7 @@ from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.buildqueue import BuildqueueResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
+from buildbot.status.web.loginkatana import LoginKatanaResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.projects import ProjectsResource
@@ -371,8 +372,12 @@ class WebStatus(service.MultiService):
         self.putChild("authfail", AuthFailResource())
         self.putChild("authzfail", AuthzFailResource())
         self.putChild("users", UsersResource())
-        self.putChild("login", LoginResource())
+        #self.putChild("login", LoginResource())
         self.putChild("logout", LogoutResource())
+        self.putChild("login", LoginKatanaResource())
+
+
+
 
     def __repr__(self):
         if self.http_port is None:

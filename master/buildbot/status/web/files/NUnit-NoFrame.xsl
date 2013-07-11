@@ -25,8 +25,8 @@
 	<HTML>
 		<HEAD>
 		<title>Katana build log</title>
-		<link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css' />	
-	    <link href='http://fonts.googleapis.com/css?family=Leckerli+One' rel='stylesheet' type='text/css' />
+		<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css' />	
+	    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css' />
 		<link rel="stylesheet" href="/css/default.css" type="text/css" />
 		<link rel="stylesheet" href="/css/log.css" type="text/css" />
 	    

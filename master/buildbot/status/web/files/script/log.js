@@ -4,6 +4,7 @@
 $(document).one("click", function() {
 		
 		$("#filterinput").val("");
+		var th = $('.table-holder');
 
 		$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
 		    var settings = $.fn.dataTableSettings;

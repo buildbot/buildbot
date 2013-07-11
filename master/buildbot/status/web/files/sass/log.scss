@@ -9,7 +9,7 @@
 	color: #FFFFFF;
     float: left;
     font-size: 18px;
-    margin: 20px 0 0 25px;
+    margin: 3px 0 0 25px;
     padding: 0;
     text-shadow: none;
 }
@@ -27,9 +27,12 @@
 .log-main .dataTables_filter {
 	float: right;
     margin-bottom: 0;
-    margin-top: 12px;
+    margin-top: 0;
     label {
     	color:#fff;
+    }
+    input {
+    	 margin-right: 5px;
     }
 }
 
@@ -41,21 +44,11 @@
 	 border-top: none;
 	 @include background-image (linear-gradient(center top , #0A3569 0%, #417FB1 100%));
 	 @include pie-clearfix;
+	 padding:10px 0 ;
 }
 
 .log-main h1.logo a {
-	color: #FFFFFF;
-    float: left;
-    font-size: 31px;
-    margin-bottom: 2px;
-    margin-top: -2px;
-    opacity: 0.57;
-    @include text-shadow (none);
-}
-
-.log-main h1.logo a span {
-    font-family: 'Leckerli One',cursive;
-    font-size: 30px;
+	 padding: 13px 0 0;
 }
 
 .summary-list {

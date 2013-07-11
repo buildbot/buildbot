@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+ 	<meta charset="utf-8">
+ 	<title>Katana - login</title>
+    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
+    <script type="text/javascript" src="/script/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="/script/default.js"></script>
+ </head>
+ <body class="interface">
+ 	<div class="login-box more-info-box">
+ 		<h1 class="logo">
+            <a href="/">
+              <span>K</span>atana
+            </a>
+         </h1>
+
+         <!--
+ 			<h3>Login to Katana</h3>
+ 		-->
+ 		<p class="login-welcome-txt">
+				Welcome to Unity's BuildServer! Have fun
+			</p>
+		<div class="auth">    
+			
+          {% if authz.authenticated(request) %}
+            {{ authz.getUsernameHTML(request) }}
+            |<a href="{{ path_to_root }}logout">Logout</a>
+            {% elif authz.useHttpHeader and authz.httpLoginUrl %}
+            <a href="{{ authz.httpLoginUrl }}">Login</a>
+            {% elif authz.auth %}
+            <form method="post" name="login" action="{{ path_to_root }}login">
+            <label for="username">
+            	Username
+            </label>
+            <input class="defaultText" id="username" type="text"  name="username" />
+            <div class="clear"></div>
+            <label for="password">
+            	Password
+            </label>
+            
+            <input id="password" class="defaultText" autocomplete="off" type="password" name="password" />
+            <div class="clear"></div>
+            <input id="remember" type="checkbox" name="remember" checked="" value="true" />
+            <label for="remember" class="checkbox-label">
+            	Remember me
+            </label>
+            
+            <input type="submit" value="login" />
+            </form>
+          {% endif %}
+        </div>
+ 	</div>
+ </body>
+ </html>
