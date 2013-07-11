@@ -148,6 +148,8 @@ class StatusResourceBuild(HtmlResource):
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
         cxt['path_to_builders'] = path_to_builders(req, project)
         cxt['path_to_codebases'] = path_to_codebases(req, project)
+        cxt['build_url'] = path_to_build(req, b, False)
+        codebases_arg = cxt['codebases_arg'] = getCodebasesArg(request=req)
 
         if not b.isFinished():
             step = b.getCurrentStep()
@@ -207,7 +209,7 @@ class StatusResourceBuild(HtmlResource):
 
             step['link'] = path_to_step(req, s)
             step['text'] = " ".join(s.getText())
-            step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
+            step['urls'] = map(lambda x:dict(url=x[1]+codebases_arg,logname=x[0]), s.getURLs().items())
 
             step['logs']= []
             for l in s.getLogs():
@@ -262,8 +264,6 @@ class StatusResourceBuild(HtmlResource):
             has_changes = has_changes or ss.changes
         cxt['exactly'] = (exactly) or b.getChanges()
         cxt['has_changes'] = has_changes
-        cxt['build_url'] = path_to_build(req, b, False)
-        cxt['codebases_arg'] = getCodebasesArg(request=req)
         cxt['authz'] = self.getAuthz(req)
 
         template = req.site.buildbot_service.templates.get_template("build.html")

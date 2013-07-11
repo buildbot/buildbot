@@ -125,20 +125,30 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getMetrics(self):
         return self.master.metrics
 
-    def getURLForBuild(self, builder_name, build_number):
-        prefix = self.getBuildbotURL()
-        return prefix + "builders/%s/builds/%d" % (
+    def getBuildersPath(self, builder_name, build_number):
+        builder_path = ""
+        if len(self.botmaster.builders) > 0:
+            bldr = self.botmaster.builders[builder_name]
+            if bldr.config.project:
+                builder_path += "projects/%s/" % bldr.config.project
+
+        builder_path += "builders/%s/builds/%d" % (
             urllib.quote(builder_name, safe=''),
             build_number)
+
+        return builder_path
+
+    def getURLForBuild(self, builder_name, build_number):
+        prefix = self.getBuildbotURL()
+        return prefix + self.getBuildersPath(builder_name, build_number)
 
     def getURLForBuildRequest(self, brid, builder_name, build_number):
         d = self.master.db.mastersconfig.getMasterURL(brid)
         
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
-            url['path'] = bmdict['buildbotURL'] + "builders/%s/builds/%d" % (
-                urllib.quote(builder_name, safe=''),
-                build_number)
+            bldr = self.botmaster.builders[builder_name]
+            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
             url['text'] = "%s #%d" % (builder_name, build_number)
             return url
         d.addCallback(getMasterURL, builder_name, build_number)

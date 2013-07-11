@@ -58,7 +58,11 @@ class CheckArtifactExists(ShellCommand):
     def createSummary(self, log):
         artifactlist = list(self.artifact)
         stdio = self.getLog('stdio').readlines()
+        notfoundregex = re.compile(r'Not found!!')
         for l in stdio:
+            m = notfoundregex.search(l)
+            if m:
+                break
             if len(artifactlist) == 0:
                 break
             for a in artifactlist:
@@ -110,8 +114,9 @@ class CheckArtifactExists(ShellCommand):
             for a in self.artifact:
                 search_artifact += "; ls %s" % a
 
-            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
-                           self.artifactPath, search_artifact, "; ls"]
+            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir,
+                       "if [ -d %s ]; then echo 'Exists'; else echo 'Not found!!'; fi;" % self.artifactPath,
+                       "cd %s" % self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
             self.setCommand(command)
             ShellCommand.start(self)
@@ -192,12 +197,13 @@ class DownloadArtifact(ShellCommand):
     description="DonwloadArtifact"
     descriptionDone="DonwloadArtifact finished"
 
-    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, **kwargs):
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None, artifactServer=None, artifactServerDir=None, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
+        self.artifactDestination = artifactDestination or artifact
         self.master = None
         name = "DownloadArtifact %s" % artifactBuilderName
         description = "DownloadArtifact %s" % artifactBuilderName
@@ -218,9 +224,8 @@ class DownloadArtifact(ShellCommand):
         if (self.artifactDirectory):
             artifactPath += "/%s" % self.artifactDirectory
 
-        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/*"
-
-        command = ["rsync", "-vazr", remotelocation, self.artifactDirectory]
+        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
+        command = ["rsync", "-vazr", remotelocation, self.artifactDestination]
         self.setCommand(command)
         ShellCommand.start(self)
 

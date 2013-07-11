@@ -21,6 +21,7 @@ class FakeBotMaster(service.MultiService):
         self.setName("fake-botmaster")
         self.master = master
         self.locks = {}
+        self.builders = {}
 
     def getLockByID(self, lockid):
         if not lockid in self.locks:
