@@ -799,10 +799,15 @@ transform:rotate(360deg)}
 
 } 
 
+.shake { 
+	 @include animate (shake);
+}
+
 // login box
 .login-box {
 	width:auto;
 	margin:0 auto;
+	  
 	&.more-info-box {
 		display: block;
 		padding:44px 19px 16px 38px;
@@ -830,6 +835,14 @@ transform:rotate(360deg)}
 			font-size: 0.8em;
 			color:#445873;
 		}
+		&:hover {
+			opacity: 0.5;
+		}
+	}
+	.error-input {
+		font-size: 14px;
+		font-weight: normal;
+		@include text-shadow(0 1px 0 #FFFFFF);
 	}
 }
 
@@ -857,6 +870,9 @@ transform:rotate(360deg)}
 	    width: 150px;
 	    float: left;
 	    margin-bottom:15px;
+	    &.not-valid {
+    		border: 1px solid #E42323;
+		}
 	}
 	input[type="checkbox"] {
 	    float: left;

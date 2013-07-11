@@ -81,7 +81,7 @@ $(document).ready(function() {
 		"bStateSave": true
 	});	
 
-	// validate the form
+	// validate the forcebuildform
 	function validateForm() {
 		var formEl = $('.form-open');
 		var excludeFields = ':button, :hidden, :checkbox, :submit';
