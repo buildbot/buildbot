@@ -58,7 +58,11 @@ class CheckArtifactExists(ShellCommand):
     def createSummary(self, log):
         artifactlist = list(self.artifact)
         stdio = self.getLog('stdio').readlines()
+        notfoundregex = re.compile(r'Not found!!')
         for l in stdio:
+            m = notfoundregex.search(l)
+            if m:
+                break
             if len(artifactlist) == 0:
                 break
             for a in artifactlist:
@@ -110,8 +114,9 @@ class CheckArtifactExists(ShellCommand):
             for a in self.artifact:
                 search_artifact += "; ls %s" % a
 
-            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "cd ",
-                           self.artifactPath, search_artifact, "; ls"]
+            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir,
+                       "if [ -d %s ]; then echo 'Exists'; else echo 'Not found!!'; fi;" % self.artifactPath,
+                       "cd %s" % self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
             self.setCommand(command)
             ShellCommand.start(self)
