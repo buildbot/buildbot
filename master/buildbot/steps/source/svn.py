@@ -187,6 +187,12 @@ class SVN(Source):
             export_cmd = ['svn', 'export']
             if self.revision:
                 export_cmd.extend(["--revision", str(self.revision)])
+            if self.username:
+                export_cmd.extend(['--username', self.username])
+            if self.password:
+                export_cmd.extend(['--password', self.password])
+            if self.extra_args:
+                export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
 
             cmd = buildstep.RemoteShellCommand('', export_cmd,
