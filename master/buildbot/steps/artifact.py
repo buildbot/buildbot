@@ -77,6 +77,7 @@ class CheckArtifactExists(ShellCommand):
             # update buildrequest (artifactbrid) with self.artifactBuildrequest
             brid = self.build.requests[0].id
             reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
+            self.step_status.stepFinished(SUCCESS)
             self.build.result = SUCCESS
             self.build.allStepsDone()
             return
