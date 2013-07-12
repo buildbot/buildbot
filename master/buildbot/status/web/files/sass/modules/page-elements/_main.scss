@@ -805,12 +805,15 @@ transform:rotate(360deg)}
 
 // login box
 .login-box {
-	width:auto;
-	margin:0 auto;
 	  
 	&.more-info-box {
+		margin:127px auto 0 auto;
+		
 		display: block;
-		padding:44px 19px 16px 38px;
+	    float: none;
+	    padding: 44px 19px 16px 38px;
+	    position: relative;
+	    width: 298px;
 		h3 {
 			display: block;	
 		}
@@ -913,4 +916,67 @@ transform:rotate(360deg)}
 		    margin-top: -2px;
 		}
 	}
+}
+
+
+// buildlog
+.content-holder {
+	margin:0 0 15px;
+	padding:0;
+	white-space: pre-line;
+	@include pie-clearfix;
+	border-bottom:1px solid #ccc;
+	font-family: "helvetica neue",sans-serif;
+	padding-bottom:10px;
+}
+.build-log-header,
+.stdout{
+	display:block;
+	font-size:14px;
+	clear:both;
+}
+
+.build-log-header {
+	height: 70px;
+	overflow: hidden;
+	margin-bottom: 15px;
+}
+
+.build-log-header-btn {
+	clear:both;
+	margin-bottom:10px;
+	margin-top:10px;
+	white-space: normal;
+	font-weight: bold;
+	line-height:0;
+	&:after {
+		   margin-left: 4px;
+		   @include background-image(linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
+	       border: 1px solid #C4C4C4;
+		   border-radius: 4px 4px 4px 4px;
+	   	   color: #2B2B2B;
+		   content: "+";
+		   display: inline-block;
+		   font-size: 17px;
+		   font-weight: bold;
+		   line-height: 2px;
+		   padding: 5px 5px 11px 6px;
+		   text-shadow: 0 1px 0 white;
+	}
+	&.open:after  {
+		content:('-');	
+	}
+	&:hover:after {
+		@include background-image (linear-gradient(right center , #F2F6FE 0%, #F8FAFF 100%));
+	}
+}
+
+.stdout,
+.stderr {
+	margin-bottom:10px;
+	color:#666;
+}
+.small-head-2 {
+	padding:0;
+	margin:10px 0 10px 0 ;
 }

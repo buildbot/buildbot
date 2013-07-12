@@ -498,21 +498,9 @@ li {
 }
 
 /* log view */
-.log * {
-	vlink: #800080;
-	font-family: "Courier New", courier, monotype, monospace;
-}
-
-span.stdout {
-	color: black;
-}
 
 span.stderr {
 	color: red;
-}
-
-span.header {
-	color: blue;
 }
 
 /* revision & email */

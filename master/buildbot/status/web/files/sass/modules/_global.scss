@@ -4,6 +4,12 @@
 * @section modules
 * @author Simon Holm
 */
+html {
+	background-color: #fff;
+	&.no-background {
+		background-color: transparent;
+	}
+}
 
 body.interface {
 	margin: 0;

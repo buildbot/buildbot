@@ -14,7 +14,6 @@
     <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="/css/default.css" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=EB+Garamond&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
@@ -28,28 +27,7 @@
     {% block header -%}
  
     <header class="header">
-      
-        <!--
-        <div class="container-inner">
-        <div class="auth">    
-          {% if authz.authenticated(request) %}
-            {{ authz.getUsernameHTML(request) }}
-            |<a href="{{ path_to_root }}logout">Logout</a>
-            {% elif authz.useHttpHeader and authz.httpLoginUrl %}
-            <a href="{{ authz.httpLoginUrl }}">Login</a>
-            {% elif authz.auth %}
-            <form method="post" name="login" action="{{ path_to_root }}login">
-            <input class="defaultText" type="text" value="Username" name="Username" size=10 />
-            <input id="password-clear" class="defaultText" autocomplete="off" type="text" value="Password" name="Passwd" size=10 />
-            <input id="password-password" class="defaultText" autocomplete="off" type="password" value="Password" name="passwd" size=10 />
-            <input type="submit" value="login" />
-            </form>
-          {% endif %}
-        </div>
-        </div>
-      -->
-        
-      
+          
         <nav class="top-menu-container">
           <div class="container-inner">
           <h1 class="logo">

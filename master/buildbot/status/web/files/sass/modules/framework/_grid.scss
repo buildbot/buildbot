@@ -39,6 +39,10 @@ div.column-1 {
 	border: 1px solid #CCCCCC;
 	float:left;
 	@include box-shadow(1px 1px 0 #FFFFFF);
+	&.inner {
+		padding:21px 20px 25px 20px;
+		width: 920px;	
+	}
 }
 
 .column-2 {
@@ -60,6 +64,10 @@ div.column-1 {
 	&:first-child:before {
 		background: none;	
 	}
+}
+
+.m-top20 {
+	margin-top:20px;
 }
 
 

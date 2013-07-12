@@ -1,15 +1,6 @@
 $(document).ready(function() {	
 	// validate the log in form
 
-	function centerPopup(className){
-		$(className).each(function(){
-			$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
-			$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
-		});
-	};
-
-	centerPopup('.more-info-box');
-	
 	function validatelogin() {
 		var formEl = $('#loginForm');
 		var loginBox = $('.login-box');
