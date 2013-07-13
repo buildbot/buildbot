@@ -371,7 +371,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_buildslaveConnected_existing(self):
-        yield self.insertTestData(self.buildslave1_rows)
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
 
         NEW_INFO = { 'other': [ 1, 2, 3] }
 
@@ -388,7 +388,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_buildslaveConnected_already_connected(self):
-        yield self.insertTestData(self.buildslave1_rows + [
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
             fakedb.ConnectedBuildslave(id=888,
                 buildslaveid=self.BS1_ID, masterid=11),
         ])
@@ -400,7 +400,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_buildslaveDisconnected(self):
-        yield self.insertTestData(self.buildslave1_rows + [
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
             fakedb.ConnectedBuildslave(id=888,
                 buildslaveid=self.BS1_ID, masterid=10),
             fakedb.ConnectedBuildslave(id=889,
@@ -414,7 +414,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_buildslaveDisconnected_already_disconnected(self):
-        yield self.insertTestData(self.buildslave1_rows)
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
         yield self.db.buildslaves.buildslaveDisconnected(
                     buildslaveid=self.BS1_ID, masterid=11)
 
@@ -427,7 +427,7 @@ class RealTests(Tests):
     # tests that only "real" implementations will pass
 
     def test_buildslaveConnected_badJson(self):
-        d = self.insertTestData(self.buildslave1_rows)
+        d = self.insertTestData(self.baseRows + self.buildslave1_rows)
 
         @d.addCallback
         def corrupt(_):

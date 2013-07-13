@@ -127,7 +127,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             try:
                 conn.execute(q,
                     {'buildslaveid': buildslaveid, 'masterid': masterid})
-            except sa.exc.IntegrityError:
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
