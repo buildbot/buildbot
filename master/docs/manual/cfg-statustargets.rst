@@ -741,6 +741,8 @@ And create a file ``changehook.passwd`` ::
 
 Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
 
+See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
+
 Note that not using ``change_hook_auth`` can expose you to security risks.
 
 Google Code hook
