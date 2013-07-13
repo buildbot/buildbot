@@ -336,6 +336,8 @@ class WebStatus(service.MultiService):
 
                 if IUsernamePassword not in checker.credentialInterfaces:
                     config.error("change_hook checker doesn't support IUsernamePassword: %r" % (checker,))
+                    continue
+
                 self.change_hook_auth.append(checker)
         else:
             self.change_hook_auth = None
