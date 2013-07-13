@@ -425,22 +425,7 @@ class Tests(interfaces.InterfaceTests):
 class RealTests(Tests):
 
     # tests that only "real" implementations will pass
-
-    def test_buildslaveConnected_badJson(self):
-        d = self.insertTestData(self.baseRows + self.buildslave1_rows)
-
-        @d.addCallback
-        def corrupt(_):
-            BAD_JSON = {
-                'key': object(),  # something json won't serialize
-            }
-            return self.db.buildslaves.buildslaveConnected(
-                buildslaveid=self.BS1_ID,
-                masterid=11,
-                slaveinfo=BAD_JSON)
-
-        self.assertFailure(d, exc.StatementError)
-
+    pass
 
 
 class TestFakeDB(unittest.TestCase, Tests):
