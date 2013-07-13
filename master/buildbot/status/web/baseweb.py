@@ -45,8 +45,10 @@ from buildbot.status.web.root import RootPage
 from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
 from twisted.cred.portal import IRealm, Portal
+from twisted.cred import strcred
+from twisted.cred.checkers import ICredentialsChecker
+from twisted.cred.credentials import IUsernamePassword
 from twisted.web import resource, guard
-from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
@@ -320,9 +322,23 @@ class WebStatus(service.MultiService):
 
         # check for correctness of HTTP auth parameters
         if change_hook_auth is not None:
-            if not isinstance(change_hook_auth, tuple) or len(change_hook_auth) != 2:
-                config.error("Invalid credentials for change_hook auth")
-        self.change_hook_auth = change_hook_auth
+            self.change_hook_auth = []
+            for checker in change_hook_auth:
+                if isinstance(checker, str):
+                    try:
+                        checker = strcred.makeChecker(checker)
+                    except Exception, error:
+                        config.error("Invalid change_hook checker description: %s" % (error,))
+                        continue
+                elif not ICredentialsChecker.providedBy(checker):
+                    config.error("change_hook checker doesn't provide ICredentialChecker: %r" % (checker,))
+                    continue
+
+                if IUsernamePassword not in checker.credentialInterfaces:
+                    config.error("change_hook checker doesn't support IUsernamePassword: %r" % (checker,))
+                self.change_hook_auth.append(checker)
+        else:
+            self.change_hook_auth = None
 
         self.orderConsoleByTime = order_console_by_time
 
@@ -357,7 +373,8 @@ class WebStatus(service.MultiService):
             self.change_hook_dialects = change_hook_dialects
             resource_obj = ChangeHookResource(dialects=self.change_hook_dialects)
             if self.change_hook_auth is not None:
-                resource_obj = self.setupProtectedResource(resource_obj)
+                resource_obj = self.setupProtectedResource(
+                        resource_obj, self.change_hook_auth)
             self.putChild("change_hook", resource_obj)
 
         # Set default feeds
@@ -368,7 +385,7 @@ class WebStatus(service.MultiService):
 
         self.jinja_loaders = jinja_loaders
 
-    def setupProtectedResource(self, resource_obj):
+    def setupProtectedResource(self, resource_obj, checkers):
         class SimpleRealm(object):
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated
@@ -381,10 +398,7 @@ class WebStatus(service.MultiService):
                     return (resource.IResource, resource_obj, lambda: None)
                 raise NotImplementedError()
 
-        login, password = self.change_hook_auth
-        checker = InMemoryUsernamePasswordDatabaseDontUse()
-        checker.addUser(login, password)
-        portal = Portal(SimpleRealm(), [checker])
+        portal = Portal(SimpleRealm(), checkers)
         credentialFactory = guard.BasicCredentialFactory('Protected area')
         wrapper = guard.HTTPAuthSessionWrapper(portal, [credentialFactory])
         return wrapper
