@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot import config as bbconfig
 from buildbot.process import buildstep
@@ -137,6 +137,7 @@ class Git(Source):
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
+
 
         d = self.checkGit()
         def checkInstall(gitInstalled):
@@ -379,15 +380,14 @@ class Git(Source):
         elif self.retryFetch:
             yield self._fetch(None)
         elif self.clobberOnFailure:
-            yield self._doClobber()
-            yield self._fullClone()
+            yield self.clobber()
         else:
             raise buildstep.BuildStepFailed()
 
-    def _fullClone(self, shallowClone=False):
-        """Perform full clone and checkout to the revision if specified
-           In the case of shallow clones if any of the step fail abort whole build step.
-        """
+
+    def _clone(self, shallowClone):
+        """Retry if clone failed"""
+
         args = []
         if self.branch != 'HEAD':
             args += ['--branch', self.branch]
@@ -399,9 +399,36 @@ class Git(Source):
 
         if self.prog:
             command.append('--progress')
-
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
         # If it's a shallow clone abort build step
-        d = self._dovccmd(command, shallowClone)
+        d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+        def _retry(res):
+            if self.stopped or res == 0: # or shallow clone??
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self._doClobber())
+                df.addCallback(lambda _: self._clone(shallowClone))
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
+        return d
+
+    def _fullClone(self, shallowClone=False):
+        """Perform full clone and checkout to the revision if specified
+           In the case of shallow clones if any of the step fail abort whole build step.
+        """
+        d = self._clone(shallowClone)
         # If revision specified checkout that revision
         if self.revision:
             d.addCallback(lambda _: self._dovccmd(['reset', '--hard',
@@ -424,9 +451,7 @@ class Git(Source):
         def clobber(res):
             if res != 0:
                 if self.clobberOnFailure:
-                    d = self._doClobber()
-                    d.addCallback(lambda _: self._fullClone())
-                    return d
+                    return self.clobber()
                 else:
                     raise buildstep.BuildStepFailed()
             else:

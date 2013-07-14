@@ -58,6 +58,8 @@ Features
 
 * Master side source checkout steps now support patches
 
+* Master side source checkout steps now support retry option
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -356,6 +356,47 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
+    def test_mode_full_clobber_retry(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='full', method='clobber', retry=(0, 2)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'version-info', '--custom', "--template='{revno}"])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+            )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'Bzr')
+        return self.runStep()
 
     def test_mode_full_clobber_revision(self):
         self.setupStep(
@@ -550,6 +591,41 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.bzr',
                                 logEnviron=True))
             + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'version-info', '--custom', "--template='{revno}"])
+            + ExpectShell.log('stdio',
+                stdout='100\n')
+            + 0,
+            )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100\n', 'Bzr')
+        return self.runStep()
+
+    def test_mode_incremental_retry(self):
+        self.setupStep(
+            bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
+                    mode='incremental', retry=(0, 1)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.bzr',
+                                logEnviron=True))
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['bzr', 'checkout',
+                                'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                 'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
