@@ -418,6 +418,42 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
+    def test_mode_incremental_retry(self):
+        self.setupStep(
+                svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
+                        mode='incremental', retry=(0, 1)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.svn',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'checkout', 'http://svn.local/trunk/app',
+                                 '.', '--non-interactive', '--no-auth-cache'])
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'checkout', 'http://svn.local/trunk/app',
+                                 '.', '--non-interactive', '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                stdout=self.svn_info_stdout_xml)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+
     def test_mode_incremental_repourl_not_updatable_svninfo_mismatch(self):
         self.setupStep(
                 svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
@@ -706,6 +742,48 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
+            + ExpectShell.log('stdio', stdout='\n')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+
+    def test_mode_full_fresh_retry(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                                    mode='full', method='fresh', retry=(0, 2)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', {'file': 'wkdir/.svn',
+                            'logEnviron': True})
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'checkout', 'http://svn.local/app/trunk',
+                                 '.', '--non-interactive', '--no-auth-cache'])
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'checkout', 'http://svn.local/app/trunk',
+                                 '.', '--non-interactive', '--no-auth-cache'])
+            + 1,
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'checkout', 'http://svn.local/app/trunk',
+                                 '.', '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])

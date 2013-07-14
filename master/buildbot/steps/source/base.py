@@ -109,6 +109,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.logEnviron = logEnviron
         self.env = env
         self.timeout = timeout
+        self.retry = retry
 
         descriptions_for_mode = {
             "clobber": "checkout",
