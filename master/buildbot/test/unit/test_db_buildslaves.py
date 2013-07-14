@@ -18,7 +18,6 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import buildslaves
-from sqlalchemy import exc
 
 class Tests(interfaces.InterfaceTests):
 
