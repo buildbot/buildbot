@@ -564,6 +564,30 @@ span.stderr {
 span.header {
 	color: blue;
 }
+span.ansi30 {
+	color: black;
+}
+span.ansi31 {
+	color: red;
+}
+span.ansi32 {
+	color: green;
+}
+span.ansi33 {
+	color: orange;
+}
+span.ansi34 {
+	color: yellow;
+}
+span.ansi35 {
+	color: purple;
+}
+span.ansi36 {
+	color: blue;
+}
+span.ansi37 {
+	color: white;
+}
 
 /* revision & email */
 .revision .full {
