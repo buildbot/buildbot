@@ -107,8 +107,7 @@ class Bot(amp.AMP):
 def sendAuthReq(ampProto):
     user, password = 'user', 'password'
     my_features = [{'key': 'connection_type', 'value': 'slave'}]
-    master_features = ampProto.addCallback(RemoteAuth, user=user, password=password, features=my_features)
-    return master_features
+    return ampProto.callRemote(RemoteAuth, user=user, password=password, features=my_features)
 
 
 class BuildSlave(service.MultiService):
@@ -136,7 +135,8 @@ class BuildSlave(service.MultiService):
         factory = Factory()
         factory.protocol = Bot
         ampProto = endpoint.connect(factory)
-        master_feautures = sendAuthReq(ampProto)
+        ampProto.addCallback(sendAuthReq)
+        ampProto.addCallback(lambda vector: log.msg("Master's features: %s" % vector))
 
     def startService(self):
         # first, apply all monkeypatches
