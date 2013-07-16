@@ -130,7 +130,7 @@ class P4(Source):
         yield self._dovccmd(['sync', '#none'])
 
         # Then remove directory.
-        cmd = yield self.runRmdir(self.workdir)
+        yield self.runRmdir(self.workdir)
 
         # Then we need to sync the client
         if self.revision:
