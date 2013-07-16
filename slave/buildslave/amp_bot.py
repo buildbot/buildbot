@@ -30,6 +30,7 @@ from twisted.application import service
 
 import buildslave
 from buildslave import monkeypatches
+from buildslave.commands import registry, base
 from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,\
 RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown
 
@@ -38,27 +39,14 @@ class Bot(amp.AMP):
     @GetInfo.responder
     def getInfo(self):
         commands = [
-            {'name': 'shell', 'version': 1},
-            {'name': 'uploadFile', 'version': 1},
-            {'name': 'uploadDirectory', 'version': 1},
-            {'name': 'downloadFile', 'version': 1},
-            {'name': 'svn', 'version': 1},
-            {'name': 'bk', 'version': 1},
-            {'name': 'cvs', 'version': 1},
-            {'name': 'darcs', 'version': 1},
-            {'name': 'git', 'version': 1},
-            {'name': 'repo', 'version': 1},
-            {'name': 'bzr', 'version': 1},
-            {'name': 'hg', 'version': 1},
-            {'name': 'p4', 'version': 1},
-            {'name': 'mtn', 'version': 1},
-            {'name': 'mkdir', 'version': 1},
-            {'name': 'rmdir', 'version': 1},
-            {'name': 'cpdir', 'version': 1},
-            {'name': 'stat', 'version': 1},
+            dict([('name', n), ('version', base.command_version)])
+            for n in registry.getAllCommandNames()
         ]
-        environ = [{'key': 'foo', 'value': 'bar'}, {'key': 'asd', 'value': 'qwe'}]
-        system = 'SYSTEM'
+        environ = [
+            dict([('key', key), ('value', value)])
+            for key, value in os.environ.copy().items()
+        ]
+        system = os.name
         basedir= 'BASEDIR'
         version = '0.1'
         return {'commands': commands, 'environ': environ, 'system': system,
@@ -161,7 +149,6 @@ class BuildSlave(service.MultiService):
             l.start(interval=10)
 
     def stopService(self):
-        reactor.stop()
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
