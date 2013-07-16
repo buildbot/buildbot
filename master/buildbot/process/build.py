@@ -199,7 +199,7 @@ class Build(properties.PropertiesMixin):
         if slavebuilder.slave.slave_basedir:
             builddir = self.path_module.join(
                             slavebuilder.slave.slave_basedir,
-                            self.builder.config.slavebuilddir),
+                            self.builder.config.slavebuilddir)
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 
