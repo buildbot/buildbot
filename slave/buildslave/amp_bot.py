@@ -35,7 +35,130 @@ from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,
 RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown
 
 
+class SlaveBuilder(service.Service):
+
+    """This is the local representation of a single Builder: it handles a
+    single kind of build (like an all-warnings build). It has a name and a
+    home directory. The rest of its behavior is determined by the master.
+    """
+
+    stopCommandOnShutdown = True
+
+    # remote is a ref to the Builder object on the master side, and is set
+    # when they attach. We use it to detect when the connection to the master
+    # is severed.
+    remote = None
+
+    # .command points to a SlaveCommand instance, and is set while the step
+    # is running. We use it to implement the stopBuild method.
+    command = None
+
+    # .remoteStep is a ref to the master-side BuildStep object, and is set
+    # when the step is started
+    remoteStep = None
+
+    def __init__(self, name):
+        self.setName(name)
+
+    def __repr__(self):
+        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
+
+    def setServiceParent(self, parent):
+        pass
+        # service.Service.setServiceParent(self, parent) uncommenting this line
+        # will produce
+        # exceptions.AttributeError: 'Bot' object has no attribute 'addService'
+        self.bot = self.parent
+
+        # note that self.parent will go away when the buildmaster's config
+        # file changes and this Builder is removed (possibly because it has
+        # been changed, so the Builder will be re-added again in a moment).
+        # This may occur during a build, while a step is running.
+
+    def setBuilddir(self, builddir):
+        # assert self.parent
+        self.builddir = builddir
+        self.basedir = os.path.join(self.bot.basedir, self.builddir)
+        if not os.path.isdir(self.basedir):
+            os.makedirs(self.basedir)
+
+    def stopService(self):
+        service.Service.stopService(self)
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    def activity(self):
+        # Do we need something similar?
+        log.msg("activity called")
+
+    def remote_setMaster(self, remote):
+        # Do we need something similar?
+        pass
+
+    def remote_print(self, message):
+        log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
+                (self.name, message))
+
+    def lostRemote(self, remote):
+        # Do we need something similar?
+        log.msg("lostRemote called")
+
+
+    def lostRemoteStep(self, remotestep):
+        # Do we need something similar?
+        log.msg("lostRemoteStep called")
+
+    # the following are Commands that can be invoked by the master-side
+    # Builder
+    def remote_startBuild(self):
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+        pass
+
+    def remote_startCommand(self, environ, command, args):
+        # We need to discuss how command will be executed here
+        # also
+        # After command started it will generate some amount of logs
+        # which should be streamed to master. I think that reasonably will stream
+        # log from this function, what you think?
+        pass
+
+    def remote_interruptCommand(self, stepId, why):
+        # The way interrupting command will depends on how it'll started
+        pass
+
+    def stopCommand(self):
+        log.msg("stopCommand called")
+
+    # sendUpdate is invoked by the Commands we spawn
+    def sendUpdate(self, data):
+        pass
+
+    def ackUpdate(self, acknum):
+        pass
+
+    def ackComplete(self, dummy):
+        pass
+
+    def _ackFailed(self, why, where):
+        pass
+
+    # this is fired by the Deferred attached to each Command
+    def commandComplete(self, failure):
+        pass
+
+    def remote_shutdown(self):
+        # Do we need something similar?
+        pass
+
+
 class Bot(amp.AMP):
+    def __init__(self, basedir, usePTY, unicode_encoding=None):
+        self.basedir = basedir
+        self.usePTY = usePTY
+        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
+        self.builders = {}
+
     @GetInfo.responder
     def getInfo(self):
         commands = [
@@ -47,19 +170,58 @@ class Bot(amp.AMP):
             for key, value in os.environ.copy().items()
         ]
         system = os.name
-        basedir= 'BASEDIR'
-        version = '0.1'
+        basedir= self.basedir
+        version = buildslave.version
         return {'commands': commands, 'environ': environ, 'system': system,
             'basedir': basedir, 'version': version,
         }
 
     @SetBuilderList.responder
     def setBuilderList(self, builders):
-        log.msg('Setting builders')
+        retval = {}
+        wanted_names = set([ builder["name"] for builder in builders ])
+        wanted_dirs = set([ builder["dir"] for builder in builders ])
+        wanted_dirs.add('info')
         for builder in builders:
-            log.msg("(%s, %s)" % (builder['name'], builder['dir']))
-        log.msg('Done with builders')
-        return {'result': 0} # assume that all builders were created successfully
+            name = builder["name"]
+            builddir = builder["dir"]
+            b = self.builders.get(name, None)
+            if b:
+                if b.builddir != builddir:
+                    log.msg("changing builddir for builder %s from %s to %s" \
+                            % (name, b.builddir, builddir))
+                    b.setBuilddir(builddir)
+            else:
+                b = SlaveBuilder(name)
+                b.usePTY = self.usePTY
+                b.unicode_encoding = self.unicode_encoding
+                b.setServiceParent(self)
+                b.setBuilddir(builddir)
+                self.builders[name] = b
+            retval[name] = b
+
+        # disown any builders no longer desired
+        to_remove = list(set(self.builders.keys()) - wanted_names)
+        dl = defer.DeferredList([
+            defer.maybeDeferred(self.builders[name].disownServiceParent)
+            for name in to_remove ])
+        wfd = defer.waitForDeferred(dl)
+        # yield wfd ???
+        wfd.getResult()
+
+        # and *then* remove them from the builder list
+        for name in to_remove:
+            del self.builders[name]
+
+        # finally warn about any leftover dirs
+        for dir in os.listdir(self.basedir):
+            if os.path.isdir(os.path.join(self.basedir, dir)):
+                if dir not in wanted_dirs:
+                    log.msg("I have a leftover directory '%s' that is not "
+                            "being used by the buildmaster: you can delete "
+                            "it now" % dir)
+
+        return {'result': 0}  # return value
 
     @RemotePrint.responder
     def remotePrint(self, message):
@@ -121,7 +283,7 @@ class BuildSlave(service.MultiService):
 
         endpoint = TCP4ClientEndpoint(reactor, buildmaster_host, port)
         factory = Factory()
-        factory.protocol = Bot
+        factory.protocol = lambda: Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         ampProto = endpoint.connect(factory)
         ampProto.addCallback(sendAuthReq)
         ampProto.addCallback(lambda vector: log.msg("Master's features: %s" % vector))
