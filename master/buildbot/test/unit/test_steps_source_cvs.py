@@ -316,6 +316,51 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
+    def test_mode_full_clobber_retry(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='full', method='clobber',
+                    login=True, retry=(0, 2)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
+            + 0,
+            )
+
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        return self.runStep()
+
     def test_mode_full_copy(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
@@ -618,6 +663,44 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
+    def test_mode_incremental_retry(self):
+        self.setupStep(
+            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                    cvsmodule="mozilla/browser/", mode='incremental',
+                    login=True, retry=(0,1)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['cvs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Root', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
+            + 0,
+            )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
+        return self.runStep()
 
     def test_mode_incremental_wrong_repo(self):
         self.setupStep(

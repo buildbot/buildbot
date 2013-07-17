@@ -60,6 +60,8 @@ Features
 
 * The master-side SVN step now supports authentication, fixing :bb:bug:`2463`.
 
+* Master side source checkout steps now support retry option
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
