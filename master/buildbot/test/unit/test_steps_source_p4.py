@@ -97,7 +97,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
@@ -105,7 +105,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        '''.format(root_dir));
+        ''' % root_dir)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
@@ -180,7 +180,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
@@ -188,7 +188,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        '''.format(root_dir))
+        ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_p4extra_views(self):
@@ -209,7 +209,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
@@ -219,7 +219,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         \t-//depot/trunk/test/... //p4_client1/test/...
         \t-//depot/trunk/doc/... //p4_client1/doc/...
-        '''.format(root_dir))
+        ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
@@ -238,7 +238,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
@@ -246,7 +246,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...
-        '''.format(root_dir))
+        ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user'):
@@ -303,14 +303,14 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n'''.format(root_dir))
+        \t//depot/trunk/... //p4_client1/...\n'''% root_dir)
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4viewspec(self):
@@ -330,14 +330,14 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/main/... //p4_client1/...\n'''.format(root_dir))
+        \t//depot/main/... //p4_client1/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin)
 
@@ -360,14 +360,14 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/release/1.0/... //p4_client2/...\n'''.format(root_dir))
+        \t//depot/release/1.0/... //p4_client2/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin, p4client='p4_client2')
 
@@ -390,14 +390,14 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client_render/...\n'''.format(root_dir))
+        \t//depot/trunk/... //p4_client_render/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin, p4client='p4_client_render')
 
@@ -420,14 +420,14 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_branch/... //p4_client1/...\n'''.format(root_dir))
+        \t//depot/render_branch/... //p4_client1/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin)
 
@@ -450,13 +450,13 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         Description:
         \tCreated by different_user
 
-        Root:\t{0}
+        Root:\t%s
 
         Options:\tallwrite rmdir
 
         LineEnd:\tlocal
 
         View:
-        \t//depot/render_trunk/... //p4_client1/...\n'''.format(root_dir))
+        \t//depot/render_trunk/... //p4_client1/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin, p4user='different_user')
