@@ -83,7 +83,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                 .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
                 .path('/some/dir').stdout("1"),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '0:1',
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '1:1',
                                 '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '64a5dc2',
