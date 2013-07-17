@@ -61,13 +61,12 @@ class Bot(amp.AMP, service.MultiService):
 
     def setBuilddir(self, builddir):
         self.builddir = builddir
-        self.basedir = os.path.join(self.basedir, self.builddir)
-        if not os.path.isdir(self.basedir):
-            os.makedirs(self.basedir)
+        abs_builddir = os.path.join(self.basedir, self.builddir)
+        if not os.path.isdir(abs_builddir):
+            os.makedirs(abs_builddir)
 
     @SetBuilderList.responder
     def setBuilderList(self, builders):
-        retval = {}
         wanted_names = set([ builder["name"] for builder in builders ])
         wanted_dirs = set([ builder["dir"] for builder in builders ])
         wanted_dirs.add('info')
