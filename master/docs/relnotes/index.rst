@@ -58,6 +58,8 @@ Features
 
 * Master side source checkout steps now support patches
 
+* The master-side SVN step now supports authentication, fixing :bb:bug:`2463`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
