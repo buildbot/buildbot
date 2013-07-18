@@ -62,6 +62,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         if self.workdir == None:
             config.error("workdir is mandatory for now in HgPoller")
 
+        if len(self.branches) == 0:
+            config.error("HgPoller: missing branches configuration, for example branches={'include': [r'.*'], 'exclude': [r'default']}")
+
     def describe(self):
         status = ""
         if not self.master:
@@ -171,7 +174,6 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def _processBranches(self, output):
-        # two passes for hg log makes parsing simpler (comments is multi-lines)
         args = ['branches', "--closed"]
 
         results = yield utils.getProcessOutput(self.hgbin, args,
