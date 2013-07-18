@@ -44,8 +44,8 @@ class RemoveDirectory(base.Command):
 
     header = "rmdir"
 
-    def setup(self,args):
-        self.logEnviron = args.get('logEnviron',True)
+    def setup(self, args):
+        self.logEnviron = args.get('logEnviron', True)
 
 
     @defer.deferredGenerator
@@ -75,6 +75,10 @@ class RemoveDirectory(base.Command):
             self.rc = wfd.getResult()
 
         self.sendStatus({'rc': self.rc})
+
+    def interrupt(self):
+        self.interrupted = True
+        self.command.kill("RemoveDirectory interrupted")
 
     def removeSingleDir(self, dirname):
         self.dir = os.path.join(self.builder.basedir, dirname)
@@ -179,6 +183,11 @@ class CopyDirectory(base.Command):
 
             d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
+
+    def interrupt(self):
+        self.interrupted = True
+        self.command.kill("CopyDirectory interrupted")
+
 
 class StatFile(base.Command):
 
