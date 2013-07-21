@@ -104,3 +104,102 @@ class RemoteInterrupt(amp.Command):
 class RemoteSlaveShutdown(amp.Command):
     arguments = []
     response = []
+
+class ShellBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('command', amp.ListOf(amp.String())),
+        ('workdir', amp.String()),
+        ('env', amp.AmpList([
+            ('key', amp.String()),
+            ('value', amp.String()),
+            ])
+        ),
+        ('initial_stdin', amp.String()),
+        ('want_stdout', amp.String()),
+        ('want_stderr', amp.String()),
+        ('usePTY', amp.Boolean()),
+        ('not_really', amp.Boolean()),
+        ('timeout', amp.Float()),
+        ('maxTime', amp.Float()),
+        ('logfiles', amp.AmpList([
+            ('key', amp.String()),
+            ('value', amp.String()),
+            ])
+        ),
+        ('follow', amp.String()),
+        ('logEnviron', amp.Boolean()),
+    ]
+    response = [('error', amp.String())]
+
+class UploadFileBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('workdir', amp.String()),
+        ('slavesrc', amp.String()),
+        ('writer', amp.String()), # TODO
+        ('maxsize', amp.Integer()),
+        ('blocksize', amp.Integer()),
+        ('keepstamp', amp.Boolean()),
+    ]
+    response = [('error', amp.String())]
+
+class UploadDirectoryBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('workdir', amp.String()),
+        ('slavesrc', amp.String()),
+        ('writer', amp.String()), # TODO
+        ('maxsize', amp.Integer()),
+        ('blocksize', amp.Integer()),
+        ('compress', amp.String()),
+    ]
+    response = [('error', amp.String())]
+
+class DownloadFileBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('workdir', amp.String()),
+        ('slavesrc', amp.String()),
+        ('reader', amp.String()), # TODO
+        ('maxsize', amp.Integer()),
+        ('blocksize', amp.Integer()),
+        ('mode', amp.Integer()),
+    ]
+    response = [('error', amp.String())]
+
+class MkdirBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('dir', amp.String()),
+    ]
+    response = [('error', amp.String())]
+
+class RmdirBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('dir', amp.String()),
+        ('timeout', amp.Float()),
+        ('maxtime', amp.Float()),
+    ]
+    response = [('error', amp.String())]
+
+class CpdirBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('fromdir', amp.String()),
+        ('todir', amp.String()),
+        ('timeout', amp.Float()),
+        ('maxtime', amp.Float()),
+    ]
+    response = [('error', amp.String())]
+
+class StatBbCommand(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('file', amp.String()),
+        ('todir', amp.String()),
+        ('timeout', amp.Float()),
+        ('maxtime', amp.Float()),
+    ]
+    response = [('error', amp.String())]

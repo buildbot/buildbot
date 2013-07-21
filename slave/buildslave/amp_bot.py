@@ -32,15 +32,120 @@ import buildslave
 from buildslave import monkeypatches
 from buildslave.commands import registry, base
 from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,\
-RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown
+RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown,\
+ShellBbCommand
+
+
+class SlaveBuilder(service.Service):
+
+    stopCommandOnShutdown = True
+    remote = None
+    command = None
+    remoteStep = None
+
+    def __init__(self, name):
+        self.setName(name)
+
+    def __repr__(self):
+        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
+
+    def setServiceParent(self, parent):
+        service.Service.setServiceParent(self, parent)
+        self.bot = self.parent
+
+    def setBuilddir(self, builddir):
+        assert self.parent
+        self.builddir = builddir
+        self.basedir = os.path.join(self.bot.basedir, self.builddir)
+        if not os.path.isdir(self.basedir):
+            os.makedirs(self.basedir)
+        self.sendUpdate("Creating buildir '%s' done!" % builddir)
+
+    def stopService(self):
+        service.Service.stopService(self)
+        if self.stopCommandOnShutdown:
+            self.stopCommand()
+
+    def activity(self):
+        pass
+
+    def remote_setMaster(self, remote):
+        pass
+
+    def remote_print(self, message):
+        log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
+                (self.name, message))
+
+    def lostRemote(self, remote):
+        pass
+
+    def lostRemoteStep(self, remotestep):
+        pass
+
+    def remote_startBuild(self):
+        pass
+
+    def startCommand(self, command, args):
+        log.msg("Builder %s executing command %s with args %s" % (self.name, command, args))
+        if self.command:
+            log.msg("leftover command, dropping it")
+            self.stopCommand()
+        try:
+            factory = registry.getFactory(command)
+        except KeyError:
+            raise UnknownCommand, "unrecognized SlaveCommand '%s'" % command
+        stepId = 0
+        self.command = factory(self, stepId, args)
+
+        log.msg(" startCommand:%s [id %s]" % (command,stepId))
+        #self.remoteStep = stepref
+        #self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
+        d = self.command.doStart()
+        d.addCallback(lambda res: None)
+        #d.addBoth(self.commandComplete)
+        return None
+
+
+    def remote_interruptCommand(self, stepId, why):
+        pass
+
+    def stopCommand(self):
+        pass
+
+    @defer.inlineCallbacks
+    def sendUpdate(self, data):
+        log.msg("sendUpdate data: %s" % data)
+        yield self.parent.callRemote(RemoteAcceptLog, line=repr(data))
+
+    def ackUpdate(self, acknum):
+        pass
+
+    def ackComplete(self, dummy):
+        pass
+
+    def _ackFailed(self, why, where):
+        pass
+
+    def commandComplete(self, failure):
+        pass
+
+    def remote_shutdown(self):
+        log.msg("slave shutting down on command from master")
+        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        reactor.stop()
 
 
 class Bot(amp.AMP, service.MultiService):
+
     def __init__(self, basedir, usePTY, unicode_encoding=None):
+        service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
+
+    def ampList2dict(self, ampList):
+        return dict([(elem['key'], elem['value']) for elem in ampList])
 
     @GetInfo.responder
     def getInfo(self):
@@ -70,18 +175,23 @@ class Bot(amp.AMP, service.MultiService):
         wanted_names = set([ builder["name"] for builder in builders ])
         wanted_dirs = set([ builder["dir"] for builder in builders ])
         wanted_dirs.add('info')
+
         for builder in builders:
             name = builder["name"]
             builddir = builder["dir"]
             b = self.builders.get(name, None)
             if b:
-                if b != builddir:
+                if b.builddir != builddir:
                     log.msg("changing builddir for builder %s from %s to %s" \
-                            % (name, b, builddir))
-                    self.setBuilddir(builddir)
+                            % (name, b.builddir, builddir))
+                    b.setBuilddir(builddir)
             else:
-                self.setBuilddir(builddir)
-                self.builders[name] = builddir
+                b = SlaveBuilder(name)
+                b.usePTY = self.usePTY
+                b.unicode_encoding = self.unicode_encoding
+                b.setServiceParent(self)
+                b.setBuilddir(builddir)
+                self.builders[name] = b
 
         to_remove = list(set(self.builders.keys()) - wanted_names)
         # remove any builders no longer desired from the builder list
@@ -128,6 +238,18 @@ class Bot(amp.AMP, service.MultiService):
         reactor.stop()
         return {}
 
+    @ShellBbCommand.responder
+    def executeShell(self, **kwargs):
+        builder_name = kwargs["builder"]
+        builder = self.builders.get(builder_name, None)
+        if "env" in kwargs:
+            kwargs["env"] = self.ampList2dict(kwargs["env"])
+        if "logfiles" in kwargs:
+            kwargs["logfiles"] = self.ampList2dict(kwargs["logfiles"])
+        if builder is None:
+            return {'error': 'No such builder'}
+        builder.startCommand("shell", kwargs)
+        return {'error': ''}
 
 def sendAuthReq(ampProto):
     user, password = 'user', 'password'
