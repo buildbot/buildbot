@@ -98,6 +98,7 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.shortrev = None
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",

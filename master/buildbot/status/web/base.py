@@ -551,7 +551,7 @@ def map_branches(branches):
 # jinja utilities
 
 def createJinjaEnv(revlink=None, changecommentlink=None,
-                     repositories=None, projects=None, jinja_loaders=None):
+                     repositories=None, projects=None, jinja_loaders=None, shortrev=None):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
 
@@ -568,6 +568,9 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
 
         @type projects: C{None} or dict (string -> url)
         @param projects: similar to repositories, but for projects.
+
+        @type shortrev: C{None}, int (max revision label length), format-string, dict (repository -> format string), or callable
+        @param shortrev: see revlinkfilter()
     '''
 
     # See http://buildbot.net/trac/ticket/658
@@ -592,7 +595,7 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
         urlencode = urllib.quote,
         email = emailfilter,
         user = userfilter,
-        shortrev = shortrevfilter(revlink, env),
+        shortrev = shortrevfilter(revlink, env, shortrev),
         revlink = revlinkfilter(revlink, env),
         changecomment = changelinkfilter(changecommentlink),
         repolink = dictlinkfilter(repositories),
@@ -672,28 +675,46 @@ def _revlinkmacros(replace, templates):
     return (id, short)
 
 
-def shortrevfilter(replace, templates):
+def shortrevfilter(revlink_replace, templates, shortrev_replace):
     ''' Returns a function which shortens the revisison string
         to 12-chars (chosen as this is the Mercurial short-id length)
         and add link if replacement string is set.
 
         (The full id is still visible in HTML, for mouse-over events etc.)
 
-        @param replace: see revlinkfilter()
+        @param revlink_replace: see revlinkfilter()
         @param templates: a jinja2 environment
+        @param shortrev_replace: see revlinkfilter()
     '''
 
-    url_f = _revlinkcfg(replace, templates)
+    url_f = _revlinkcfg(revlink_replace, templates)
+
+    if shortrev_replace is None:
+        shortrev_replace = 12 # TODO: customize shortrev_len depending on vc type
+
+    if type(shortrev_replace) is int:
+        shortrev_len = shortrev_replace
+
+        def default_shortref_decorator(rev, repo):
+            if len(rev) <= shortrev_len:
+                return rev
+            else:
+                return "%s..." % rev[:shortrev_len]
+
+        shortrev_replace = default_shortref_decorator
+
+
+    shortrev_f = _revlinkcfg(shortrev_replace, templates)
 
     def filter(rev, repo):
         if not rev:
             return u''
 
-        id_html, short_html = _revlinkmacros(replace, templates)
+        id_html, short_html = _revlinkmacros(revlink_replace, templates)
         rev = unicode(rev)
         url = url_f(rev, repo)
         rev = jinja2.escape(rev)
-        shortrev = rev[:12] # TODO: customize this depending on vc type
+        shortrev = shortrev_f(rev, repo)
 
         if shortrev == rev:
             if url:
@@ -704,7 +725,7 @@ def shortrevfilter(replace, templates):
             if url:
                 return short_html(short=shortrev, rev=rev, url=url)
             else:
-                return shortrev + '...'
+                return shortrev
 
     return filter
 
