@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, \
-    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch
+    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch, default_revlink_matcher
 from twisted.trial import unittest
 
 class TestGithubRevlink(unittest.TestCase):
@@ -93,3 +93,14 @@ class TestGitwebMatch(unittest.TestCase):
         matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
         self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
                 'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
+
+class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
+    revision = "0"
+
+    def testAllRevlinkMatchers(self):
+        # GithubRevlink
+        self.assertTrue(default_revlink_matcher(self.revision, 'https://github.com/buildbot/buildbot.git'))
+        # SourceforgeGitRevlink
+        self.assertTrue(default_revlink_matcher(self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'))
+        # SourceforgeGitRevlink_AlluraPlatform
+        self.assertTrue(default_revlink_matcher(self.revision, 'git://git.code.sf.net/p/klusters/klusters'))
