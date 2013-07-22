@@ -75,7 +75,20 @@ class RemoteAcceptLog(amp.Command):
     """
     Accept log from fake_slave
     """
-    arguments = [('line', amp.Unicode())]
+    arguments = [
+        ('builder', amp.String()),
+        ('logName', amp.String()),
+        ('stream', amp.String()),
+        ('data', amp.String()),
+    ]
+    response = []
+    requiresAnswer = False
+
+class RemoteUpdateSendRC(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('rc', amp.Integer()),
+    ]
     response = []
     requiresAnswer = False
 

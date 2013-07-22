@@ -342,7 +342,7 @@ class RunProcess:
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
             if self.usePTY and usePTY != "slave-config":
-                self.sendStatus({'header': "WARNING: disabling usePTY for this command"})
+                self.sendStatus({"stream": "header", "data": "WARNING: disabling usePTY for this command"})
             self.usePTY = False
 
         # use an explicit process group on POSIX, noting that usePTY always implies
@@ -599,9 +599,12 @@ class RunProcess:
         for log in msg:
             data = "".join(msg[log])
             if isinstance(log, tuple) and log[0] == 'log':
-                retval['log'] = (log[1], data)
+                retval['logName'] = log[1]
+                retval['stream'] = 'stdout' # ?????
+                retval['data'] = data
             else:
-                retval[log] = data
+                retval['stream'] = log
+                retval['data'] = data
         return retval
 
     def _sendMessage(self, msg):
@@ -720,10 +723,9 @@ class RunProcess:
             rc = -1
         if self.sendRC:
             if sig is not None:
-                self.sendStatus(
-                    {'header': "process killed by signal %d\n" % sig})
+                self.sendStatus({'stream': 'header', 'data': 'process killed by signal %d\n' % sig})
             self.sendStatus({'rc': rc})
-        self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
+        self.sendStatus({'stream': 'header', 'data': 'elapsedTime=%0.6f\n' % self.elapsedTime})
         self._cancelTimers()
         d = self.deferred
         self.deferred = None
@@ -760,7 +762,7 @@ class RunProcess:
         self._cancelTimers()
         msg += ", attempting to kill"
         log.msg(msg)
-        self.sendStatus({'header': "\n" + msg + "\n"})
+        self.sendStatus({'stream': 'header', 'data': '\n%s\n' % msg})
 
         # let the PP know that we are killing it, so that it can ensure that
         # the exit status comes out right
@@ -839,9 +841,9 @@ class RunProcess:
         log.msg("we tried to kill the process, and it wouldn't die.."
                 " finish anyway")
         self.killTimer = None
-        self.sendStatus({'header': "SIGKILL failed to kill process\n"})
+        self.sendStatus({'stream': 'header', 'data': 'SIGKILL failed to kill process\n'})
         if self.sendRC:
-            self.sendStatus({'header': "using fake rc=-1\n"})
+            self.sendStatus({'stream': 'header', 'data': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(RuntimeError("SIGKILL failed to kill process"))
 

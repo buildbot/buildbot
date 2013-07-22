@@ -33,7 +33,7 @@ from buildslave import monkeypatches
 from buildslave.commands import registry, base
 from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,\
 RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown,\
-ShellBbCommand
+ShellBbCommand, RemoteUpdateSendRC
 
 
 class SlaveBuilder(service.Service):
@@ -59,7 +59,11 @@ class SlaveBuilder(service.Service):
         self.basedir = os.path.join(self.bot.basedir, self.builddir)
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
-        self.sendUpdate("Creating buildir '%s' done!" % builddir)
+        data = {
+            "stream": "header", 
+            "data": "Creating buildir '%s' done!" % builddir
+        }
+        self.sendUpdate(data)
 
     def stopService(self):
         service.Service.stopService(self)
@@ -114,8 +118,19 @@ class SlaveBuilder(service.Service):
 
     @defer.inlineCallbacks
     def sendUpdate(self, data):
-        log.msg("sendUpdate data: %s" % data)
-        yield self.parent.callRemote(RemoteAcceptLog, line=repr(data))
+        assert isinstance(data, dict)
+        if 'stream' in data:
+            yield self.parent.callRemote(
+                RemoteAcceptLog, builder=self.name, stream=data["stream"],
+                logName="", data=data["data"]
+            )
+        elif 'rc' in data:
+            yield self.parent.callRemote(
+                RemoteUpdateSendRC, builder=self.name, rc=data["rc"]
+            )
+        else:
+            log.msg("MESSAGE TYPE UNKNOWN %s" % data) # for debug
+        log.msg("sendUpdate data: %s" % pprint.pformat(data))
 
     def ackUpdate(self, acknum):
         pass
