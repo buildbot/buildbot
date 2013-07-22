@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, \
+    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch
 from twisted.trial import unittest
-from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, GitwebMatch
 
 class TestGithubRevlink(unittest.TestCase):
     revision = 'b6874701b54e0043a78882b020afc86033133f91'
@@ -49,6 +50,18 @@ class TestSourceforgeGitRevlink(unittest.TestCase):
 
     def testSSHuri(self):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'ssh://somebody@gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'),
+                self.url)
+
+class TestSourceforgeGitRevlink_AlluraPlatform(unittest.TestCase):
+    revision = '6f9b1470bae497c6ce47e4cf8c9195d864d2ba2f'
+    url = 'https://sourceforge.net/p/klusters/klusters/ci/6f9b1470bae497c6ce47e4cf8c9195d864d2ba2f/'
+
+    def testGIT(self):
+        self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'git://git.code.sf.net/p/klusters/klusters'),
+                self.url)
+
+    def testSSHuri(self):
+        self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'ssh://somebody@git.code.sf.net/p/klusters/klusters'),
                 self.url)
 
 class TestRevlinkMatch(unittest.TestCase):
