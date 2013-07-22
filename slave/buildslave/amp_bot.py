@@ -61,7 +61,8 @@ class SlaveBuilder(service.Service):
             os.makedirs(self.basedir)
         data = {
             "stream": "header", 
-            "data": "Creating buildir '%s' done!" % builddir
+            "data": "Creating buildir '%s' done!" % builddir,
+            "logName": "stdio"
         }
         self.sendUpdate(data)
 
@@ -122,7 +123,7 @@ class SlaveBuilder(service.Service):
         if 'stream' in data:
             yield self.parent.callRemote(
                 RemoteAcceptLog, builder=self.name, stream=data["stream"],
-                logName="", data=data["data"]
+                logName=data["logName"], data=data["data"]
             )
         elif 'rc' in data:
             yield self.parent.callRemote(
