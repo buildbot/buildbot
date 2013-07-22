@@ -604,7 +604,7 @@ class RunProcess:
             data = "".join(msg[log])
             if isinstance(log, tuple) and log[0] == "log":
                 retval["logName"] = log[1]
-                retval["stream"] = 'stdout' # ?????
+                retval["stream"] = "stdout"
                 retval["data"] = data
             else:
                 retval["logName"] = "stdio"
