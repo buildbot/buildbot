@@ -272,15 +272,12 @@ class SourceBaseCommand(Command):
             try:
                 self._commandPaths[name] = utils.getCommand(name)
             except RuntimeError:
+                error = "could not find '%s'\n" % name
+                path_is = "PATH is '%s'\n" % os.environ.get('PATH', '')
                 self.sendStatus({
                     "stream": "stderr",
-                    "data": "could not find '%s'\n" % name,
+                    "data": error + path_is
                     "logname": "stdio"
-                })
-                self.sendStatus({
-                    "stream": "stderr",
-                    "data": "PATH is '%s'\n" % os.environ.get('PATH', ''),
-                    "logName": "stdio"
                 })
                 raise AbandonChain(-1)
         return self._commandPaths[name]
