@@ -33,7 +33,7 @@ from buildslave import monkeypatches
 from buildslave.commands import registry, base
 from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,\
 RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown,\
-ShellBbCommand, RemoteUpdateSendRC
+ShellBbCommand, RemoteUpdateSendRC, MkdirBbCommand
 
 
 class SlaveBuilder(service.Service):
@@ -102,14 +102,13 @@ class SlaveBuilder(service.Service):
         stepId = 0
         self.command = factory(self, stepId, args)
 
-        log.msg(" startCommand:%s [id %s]" % (command,stepId))
+        log.msg(" startCommand:%s [id %s]" % (command, stepId))
         #self.remoteStep = stepref
         #self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
         d.addCallback(lambda res: None)
         #d.addBoth(self.commandComplete)
         return None
-
 
     def remote_interruptCommand(self, stepId, why):
         pass
@@ -162,6 +161,9 @@ class Bot(amp.AMP, service.MultiService):
 
     def ampList2dict(self, ampList):
         return dict([(elem['key'], elem['value']) for elem in ampList])
+
+    def getBuilder(self, builder_name):
+        return self.builders.get(builder_name, None)
 
     @GetInfo.responder
     def getInfo(self):
@@ -256,16 +258,24 @@ class Bot(amp.AMP, service.MultiService):
 
     @ShellBbCommand.responder
     def executeShell(self, **kwargs):
-        builder_name = kwargs["builder"]
-        builder = self.builders.get(builder_name, None)
+        b = self.getBuilder(kwargs["builder"])
         if "env" in kwargs:
             kwargs["env"] = self.ampList2dict(kwargs["env"])
         if "logfiles" in kwargs:
             kwargs["logfiles"] = self.ampList2dict(kwargs["logfiles"])
-        if builder is None:
+        if b is None:
             return {'error': 'No such builder'}
-        builder.startCommand("shell", kwargs)
+        b.startCommand("shell", kwargs)
         return {'error': ''}
+
+    @MkdirBbCommand.responder
+    def remoteMkdir(self, **kwargs):
+        b = self.getBuilder(kwargs["builder"])
+        if b is None:
+            return {'error': 'No such builder'}
+        b.startCommand("mkdir", kwargs)
+        return {'error': ''}
+
 
 def sendAuthReq(ampProto):
     user, password = 'user', 'password'

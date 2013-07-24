@@ -276,7 +276,7 @@ class SourceBaseCommand(Command):
                 path_is = "PATH is '%s'\n" % os.environ.get('PATH', '')
                 self.sendStatus({
                     "stream": "stderr",
-                    "data": error + path_is
+                    "data": error + path_is,
                     "logname": "stdio"
                 })
                 raise AbandonChain(-1)
