@@ -682,13 +682,15 @@ class UserOptions(base.SubcommandOptions):
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
-class UiTestOption(base.BasedirMixin, base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.uitestserver.uitestserver"
+
+class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.dataspec.dataspec"
     optParameters  = [
-        ['port', 'p', "0", "force port number"],
+        ['out', 'o', "dataspec.json", "output to specified path"],
+        ['global', 'g', None, "output a js script, that sets a global, for inclusion in tessuite"],
         ]
     def getSynopsis(self):
-        return "Usage:   buildbot ui-test-server [options]"
+        return "Usage:   buildbot dataspec [options]"
 
 
 
@@ -726,8 +728,8 @@ class Options(usage.Options):
          "test the validity of a master.cfg config file"],
         ['user', None, UserOptions,
          "Manage users in buildbot's database"],
-        ['ui-test-server', None, UiTestOption,
-         "Start a fake master to test the www UI"]
+        ['dataspec', None, DataSpecOption,
+         "Output data api spec"]
         ]
 
     def opt_version(self):
