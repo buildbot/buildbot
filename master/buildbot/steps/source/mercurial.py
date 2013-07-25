@@ -244,7 +244,6 @@ class Mercurial(Source):
                                            initialStdin=initialStdin,
                                            decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
-        log.msg("Starting mercurial command : hg %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():

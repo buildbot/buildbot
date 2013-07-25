@@ -174,7 +174,7 @@ class SVN(Source):
             if self.username:
                 export_cmd.extend(['--username', self.username])
             if self.password:
-                export_cmd.extend(['--password', self.password])
+                export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
@@ -204,7 +204,7 @@ class SVN(Source):
         if self.username:
             command.extend(['--username', self.username])
         if self.password:
-            command.extend(['--password', self.password])
+            command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
         if self.depth:
             command.extend(['--depth', self.depth])
         if self.extra_args:
@@ -216,7 +216,6 @@ class SVN(Source):
                                            timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
-        log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if cmd.didFail() and abandonOnFailure:

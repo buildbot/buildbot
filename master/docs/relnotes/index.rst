@@ -62,6 +62,8 @@ Features
 
 * Master side source checkout steps now support retry option
 
+* The SVN step now obfuscates the password in status logs, fixing :bb:bug:`2468`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
