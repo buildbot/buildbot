@@ -323,7 +323,6 @@ class Git(Source):
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
-        log.msg("Starting git command : git %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():

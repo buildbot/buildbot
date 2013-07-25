@@ -256,14 +256,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -297,7 +297,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
@@ -305,7 +305,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         timeout=1,
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -548,14 +548,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -587,14 +587,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -630,14 +630,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
@@ -1441,7 +1441,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
-                                 '--password', 'svn_password'])
+                                 '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
@@ -1449,12 +1449,12 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache',
                                  '--username', 'svn_username',
-                                 '--password', 'svn_password'])
+                                 '--password', ('obfuscated', 'svn_password', 'XXXXXX')])
             + 0,
             ExpectShell(workdir='',
                         command=['svn', 'export',
                                  '--username', 'svn_username',
-                                 '--password', 'svn_password', 'source', 'wkdir'])
+                                 '--password', ('obfuscated', 'svn_password', 'XXXXXX'), 'source', 'wkdir'])
             + 0,
             ExpectShell(workdir='source',
                         command=['svn', 'info', '--xml'])
@@ -1487,7 +1487,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'],
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
@@ -1495,7 +1495,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'],
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1530,7 +1530,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'],
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
@@ -1538,7 +1538,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'],
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1571,14 +1571,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio',
                 stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
@@ -1603,13 +1603,13 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + ExpectShell.log('stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
-                                 '--password', 'pass', '--random'])
+                                 '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info', '--xml'])
