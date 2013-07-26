@@ -481,7 +481,8 @@ class StringDownload(_TransferBuildStep):
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
             config.error(
-                'mode must be an integer or None')
+                "StringDownload step's mode must be an integer or None,"
+                " got '%s'" % mode)
         self.mode = mode
 
     def start(self):
