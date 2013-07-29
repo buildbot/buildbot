@@ -96,12 +96,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return str
 
     def _isRepositoryReady(self):
-        print "_initRepository %s\n" % self._absWorkdir()
-        """Easy to patch in tests."""
         return os.path.exists(os.path.join(self._absWorkdir(), '.git'))
 
     def _initRepository(self):
-        print "_initRepository"
         if self._isRepositoryReady():
             return defer.succeed(None)
         log.msg('gitpoller: initializing working dir from %s' % self.repourl)
