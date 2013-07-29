@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import re, shlex, random
+import re, shlex, random, sys
 from string import join, capitalize, lower
 
 from zope.interface import implements
@@ -240,7 +240,15 @@ class Contact(base.StatusReceiver):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
         try:
-            return shlex.split(args)
+            # see http://bugs.python.org/issue1170
+            # shlex only supports unicode input in Python 2.7.3+
+            if isinstance(args, unicode):
+                if sys.hexversion >= 0x020703F0:
+                    return shlex.split(args)
+                else:
+                    return shlex.split(str(args))
+            else:
+                return shlex.split(args)
         except ValueError, e:
             raise UsageError(e)
 
