@@ -272,7 +272,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         yet, one shouldn't be surprised to get errors)
         """
         d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', "-r", branch, '--template={node}' + os.linesep],
+                                   ['heads', branch, '--template={node}' + os.linesep],
                                    path=self._absWorkdir(), env=os.environ, errortoo=False)
 
         def no_head_err(exc):
