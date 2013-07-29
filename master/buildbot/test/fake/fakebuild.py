@@ -13,13 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import interfaces
+from buildbot.process import properties
+from buildbot.status.results import SUCCESS
+from twisted.python import components
 import mock
 import posixpath
-from twisted.python import components
-from buildbot.process import properties
-from buildbot import interfaces
 
 class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
+
+    BuildNumberCounter = 0
+
+    def __init__(self, *args, **kwargs):
+        mock.Mock.__init__(self, *args, **kwargs)
+
+        self.BuildNumberCounter += 1
+
+        self.buildNumber = self.BuildNumberCounter
+        self.previousBuild = FakeBuildStatus()
 
     # work around http://code.google.com/p/mock/issues/detail?id=105
     def _get_child_mock(self, **kw):
@@ -27,6 +38,21 @@ class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
 
     def getInterestedUsers(self):
         return []
+
+    def getName(self):
+        return "fakebuild"
+
+    def getNumber(self):
+        return self.buildNumber
+
+    def getText(self):
+        return "getText() called"
+
+    def getResults(self):
+        return SUCCESS
+
+    def getPreviousBuild(self):
+        self.previousBuild
 
 components.registerAdapter(
         lambda build_status : build_status.properties,
