@@ -93,7 +93,7 @@ class GerritStatusPush(StatusReceiverMultiService):
 
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
-        message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
+        message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
         self.sendCodeReviews(build, message, verified, reviewed)
 
     def sendCodeReviews(self, build, message, verified=0, reviewed=0):
