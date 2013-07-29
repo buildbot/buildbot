@@ -110,6 +110,7 @@ Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
+  This release includes the fix for :bb:bug:`2536`.
 
 * An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
   to send a message back to the committer.
