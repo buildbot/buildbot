@@ -50,7 +50,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         self.repourl = repourl
         self.branches = branches
-        self.currentRev = {}
         self.currentBranches = []
         self.encoding = encoding
         self.gitbin = gitbin
@@ -161,37 +160,49 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             if self.trackingBranch(branch):
                 self.currentBranches.append(branch)
 
-        print "got branches %s\n" % self.currentBranches
-        #self.lastRev.update(self.currentRev)
-        #yield self.setState('lastRev', self.lastRev)
+
+    @defer.inlineCallbacks
+    def _processChangesAllBranches(self, output):
+        updated = False
+        currentRevs = {}
+        for branch in self.currentBranches:
+            current = None
+
+            branchname = branch
+            if "origin/" in branchname:
+                branchname = branchname[7:len(branchname)]
+
+            if branchname in self.lastRev.keys():
+                current = self.lastRev[branchname]
+
+            rev = yield self._processChangesByBranch(branchname, branch=branch, lastRev=current)
+            currentRevs[branchname]=rev
+
+            if current != rev:
+                updated = True
+
+        if updated:
+            self.lastRev.update(currentRevs)
+            yield self.setState('lastRev', self.lastRev)
 
 
     @defer.inlineCallbacks
-    def _processChangesByBranch(self, branch):
-        branchname = branch
-        if "origin/" in branch:
-            branchname = branchname[7:len(branchname)]
+    def _processChangesByBranch(self,branchname, branch, lastRev):
 
         args = ['rev-parse', branch]
-        self.currentRev[branchname] = rev = yield utils.getProcessOutput(self.gitbin, args,
-                                                                         path=self._absWorkdir(), env=os.environ, errortoo=False )
-
-        print "procesing rev %s of branch %s" % (rev, branch)
-        '''
-        self.currentRev[branchname] = rev = yield self._dovccmd('rev-parse',
-                                                 [branch], path=self.workdir)
-
-        lastRev = self.lastRev.get(branchname)
+        rev = (yield utils.getProcessOutput(self.gitbin, args,
+                                           path=self._absWorkdir(), env=os.environ, errortoo=False)).strip()
 
         if lastRev != rev:
-            print "\n lastrev, rev %s,%s \n" % (lastRev, rev)
-            self.lastRev[branchname] = rev
-            #yield self._process_changes(branch, lastRev, rev)
-        '''
+            yield self._process_changes(branchname, lastRev, rev)
+
+        defer.returnValue(rev)
+
     #@defer.inlineCallbacks
     def poll(self):
         d = self._getRepositoryChanges()
         d.addCallback(self._processBranches)
+        d.addCallback(self._processChangesAllBranches)
         return d
 
     def _absWorkdir(self):
@@ -249,17 +260,17 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     @defer.inlineCallbacks
-    def _process_changes(self,branch, lastRev, newRev):
-
+    def _process_changes(self,branchname, lastRev, newRev):
         # get the change list
         revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
 
-        print "\ngetting changes %s\n" % revListArgs
+        if lastRev is None:
+            revListArgs = [r'--format=%H', '%s' % newRev, '-1', '--']
+
         self.changeCount = 0
-        '''
+
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
-        print "\nresults %s\n" % results
         # process oldest change first
         revList = results.split()
         revList.reverse()
@@ -291,12 +302,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=epoch2datetime(timestamp),
-                branch=branch,
+                branch=branchname,
                 category=self.category,
                 project=self.project,
                 repository=self.repourl,
                 src='git')
-            '''
+
     def _dovccmd(self, command, args, path=None):
         d = utils.getProcessOutputAndValue(self.gitbin,
                                            [command] + args, path=path, env=os.environ)
