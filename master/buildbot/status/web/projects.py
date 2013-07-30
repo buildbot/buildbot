@@ -18,6 +18,7 @@
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot import util
+from twisted.internet import defer
 
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
@@ -50,12 +51,26 @@ class CodeBasesResource(HtmlResource):
         HtmlResource.__init__(self)
         self.project = project
 
+    @defer.inlineCallbacks
     def content(self, request, cxt):
+        master = request.site.buildbot_service.master
+        repositories = []
+        for cb in self.project.codebases:
+            for key,value in cb.iteritems():
+                repositories.append(value['repository'])
+
+        branches = yield master.db.state.getObjectState(repositories)
+
+        if len(branches) > 0:
+            for cb in self.project.codebases:
+                for key, value in cb.iteritems():
+                    value['branch'] = branches[value['repository']]
+
         cxt['codebases'] = self.project.codebases
         cxt['selectedproject'] = self.project.name
         template = request.site.buildbot_service.templates.get_template("codebases.html")
         template.autoescape = True
-        return template.render(**cxt)
+        defer.returnValue(template.render(**cxt))
 
     def getChild(self, path, req):
         if path == "builders":
