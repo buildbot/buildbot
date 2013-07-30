@@ -64,7 +64,7 @@ class CodeBasesResource(HtmlResource):
         if len(branches) > 0:
             for cb in self.project.codebases:
                 for key, value in cb.iteritems():
-                    value['branch'] = branches[value['repository']]
+                    value['branch'] = util.naturalSort(branches[value['repository']])
 
         cxt['codebases'] = self.project.codebases
         cxt['selectedproject'] = self.project.name
