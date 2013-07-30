@@ -151,6 +151,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
 
         for branch in results.strip().split('\n'):
+            branch = branch.strip()
             if "origin/HEAD ->" in branch:
                 branch = branch[14:len(branch)]
             branch = branch.strip()
