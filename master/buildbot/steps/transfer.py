@@ -189,6 +189,13 @@ class _TransferBuildStep(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
+    # Check that buildslave version used have implementation for
+    # a remote command. Raise exception if buildslave is to old.
+    def checkSlaveVersion(self, command):
+        if not self.slaveVersion(command):
+            message = "slave is too old, does not know about %s" % command
+            raise BuildSlaveTooOldError(message)
+
     def setDefaultWorkdir(self, workdir):
         if self.workdir is None:
             self.workdir = workdir
@@ -243,11 +250,7 @@ class FileUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        version = self.slaveVersion("uploadFile")
-
-        if not version:
-            m = "slave is too old, does not know about uploadFile"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("uploadFile")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -313,11 +316,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        version = self.slaveVersion("uploadDirectory")
-
-        if not version:
-            m = "slave is too old, does not know about uploadDirectory"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("uploadDirectory")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -421,10 +420,7 @@ class FileDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
-        if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -486,10 +482,8 @@ class StringDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
-        if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+        # we use 'downloadFile' remote command on the slave
+        self.checkSlaveVersion("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
