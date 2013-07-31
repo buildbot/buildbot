@@ -91,14 +91,9 @@
             <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
             <input type="hidden" name='{{f.fullName}}' value='{{ ' '.join(request.args[f.fullName])}}' />
          {% else %}
-            <span class="select">
-            <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
-             {% for c in f.choices %}
-                <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
-            {% endfor %}
+            <span class="label">{{default_props[sch.name+"."+f.fullName]}}</span>
+            <input type="hidden" name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
           {% endif %}
-            </select>
-            </span>
     {% elif 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>
        <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
