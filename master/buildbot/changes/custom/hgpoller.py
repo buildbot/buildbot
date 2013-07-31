@@ -219,9 +219,11 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             if rev != current:
                 updated = True
                 self._processChangesByBranch(branch=branch,current=current)
+                self.lastRev[branch] = rev
 
         if updated:
-            self.lastRev.update(self.currentRev)
+            # if branches were deleted we need to replace with currentRev
+            self.lastRev = self.currentRev
             yield self.setState('lastRev', self.lastRev)
 
     @defer.inlineCallbacks

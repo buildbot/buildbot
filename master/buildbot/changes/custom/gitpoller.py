@@ -116,7 +116,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d.addCallback(lambda _ : log.msg(
             "gitpoller: polling git repo at %s" % self.repourl))
 
-        args = ['pull', '--all']
+        args = ['pull', '-p', '--all']
 
         d.addCallback(lambda _: utils.getProcessOutput(
             self.gitbin, args, path=self._absWorkdir(),
@@ -147,6 +147,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     def _processBranches(self, output):
         args = ['branch', '-r']
 
+        self.currentBranches = []
+
         results = yield utils.getProcessOutput(self.gitbin, args,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
 
@@ -162,10 +164,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     @defer.inlineCallbacks
     def _processChangesAllBranches(self, output):
         updated = False
-        currentRevs = {}
+        currentRevs  = {}
         for branch in self.currentBranches:
             current = None
-
             branchname = branch
             if "origin/" in branchname:
                 branchname = branchname[7:len(branchname)]
@@ -180,9 +181,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 updated = True
 
         if updated:
-            self.lastRev.update(currentRevs)
+            # if branches were deleted we need to replace with currentRev
+            self.lastRev = currentRevs
             yield self.setState('lastRev', self.lastRev)
-
 
     @defer.inlineCallbacks
     def _processChangesByBranch(self,branchname, branch, lastRev):
@@ -305,6 +306,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 project=self.project,
                 repository=self.repourl,
                 src='git')
+
+        self.lastRev[branchname] = newRev
 
     def _dovccmd(self, command, args, path=None):
         d = utils.getProcessOutputAndValue(self.gitbin,
