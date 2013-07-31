@@ -33,7 +33,7 @@ from buildslave import monkeypatches
 from buildslave.commands import registry, base
 from buildslave.protocols import DebugAMP, GetInfo, SetBuilderList, RemotePrint,\
 RemoteStartCommand, RemoteAcceptLog, RemoteAuth, RemoteInterrupt, RemoteSlaveShutdown,\
-ShellBbCommand, RemoteUpdateSendRC, MkdirBbCommand
+ShellBbCommand, RemoteUpdateSendRC, MkdirBbCommand, Chunk, EndData, UploadFileBbCommand
 
 
 class SlaveBuilder(service.Service):
@@ -148,6 +148,14 @@ class SlaveBuilder(service.Service):
         log.msg("slave shutting down on command from master")
         log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
         reactor.stop()
+
+    @defer.inlineCallbacks
+    def sendChunk(self, data):
+        yield self.parent.callRemote(Chunk, builder=self.name, chunk=data)
+
+    @defer.inlineCallbacks
+    def transferFinished(self):
+        yield self.parent.callRemote(EndData, builder=self.name)
 
 
 class Bot(amp.AMP, service.MultiService):
@@ -274,6 +282,14 @@ class Bot(amp.AMP, service.MultiService):
         if b is None:
             return {'error': 'No such builder'}
         b.startCommand("mkdir", kwargs)
+        return {'error': ''}
+
+    @UploadFileBbCommand.responder
+    def startUploadFile(self, **kwargs):
+        b = self.getBuilder(kwargs["builder"])
+        if b is None:
+            return {'error': 'No such builder'}
+        b.startCommand("uploadFile", kwargs)
         return {'error': ''}
 
 

@@ -150,12 +150,25 @@ class UploadFileBbCommand(amp.Command):
         ('builder', amp.String()),
         ('workdir', amp.String()),
         ('slavesrc', amp.String()),
-        ('writer', amp.String()), # TODO
         ('maxsize', amp.Integer()),
-        ('blocksize', amp.Integer()),
         ('keepstamp', amp.Boolean()),
     ]
     response = [('error', amp.String())]
+
+class Chunk(amp.Command):
+    arguments = [
+        ('builder', amp.String()),
+        ('chunk', amp.String()),
+    ]
+    response = []
+    requiresAnswer = False
+
+class EndData(amp.Command):
+    arguments = [
+        ('builder', amp.String())
+    ]
+    response = []
+    requiresAnswer = False
 
 class UploadDirectoryBbCommand(amp.Command):
     arguments = [
