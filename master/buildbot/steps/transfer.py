@@ -189,6 +189,10 @@ class _TransferBuildStep(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
+    def __init__(self, workdir=None, **buildstep_kwargs):
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.workdir = workdir
+
     # Check that buildslave version used have implementation for
     # a remote command. Raise exception if buildslave is to old.
     def checkSlaveVersion(self, command):
@@ -235,11 +239,10 @@ class FileUpload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  keepstamp=False, url=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -302,11 +305,10 @@ class DirectoryUpload(_TransferBuildStep):
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16*1024,
                  compress=None, url=None, **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if compress not in (None, 'gz', 'bz2'):
@@ -407,11 +409,10 @@ class FileDownload(_TransferBuildStep):
     def __init__(self, mastersrc, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.mastersrc = mastersrc
         self.slavedest = slavedest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -468,11 +469,10 @@ class StringDownload(_TransferBuildStep):
     def __init__(self, s, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.s = s
         self.slavedest = slavedest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
