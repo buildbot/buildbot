@@ -58,6 +58,8 @@ class CodeBasesResource(HtmlResource):
         for cb in self.project.codebases:
             for key,value in cb.iteritems():
                 repositories.append(value['repository'])
+                if 'defaultbranch' not in value.keys():
+                    value['defaultbranch'] = value['branch']
 
         branches = yield master.db.state.getObjectState(repositories)
 
