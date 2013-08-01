@@ -15,9 +15,9 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import gerrit
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS
 from buildbot.test.util import config, sourcesteps
-from buildbot.test.fake.remotecommand import ExpectRemoteRef, ExpectShell, Expect
+from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
 class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
     
