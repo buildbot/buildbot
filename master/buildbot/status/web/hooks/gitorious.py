@@ -13,11 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-"""
-this file is based on github.py
-
-Note: Gitorious web hooks are only available for local Gitorious installations
-"""
+# note: this file is based on github.py
 
 import re
 from twisted.python import log
@@ -31,13 +27,6 @@ except ImportError:
 
 
 def getChanges(request, options=None):
-        """
-        Reponds only to POST events and starts the build process
-
-        :arguments:
-            request
-                the http request object
-        """
         payload = json.loads(request.args['payload'][0])
         user = payload['repository']['owner']['name']
         repo = payload['repository']['name']
@@ -50,13 +39,6 @@ def getChanges(request, options=None):
 
 
 def process_change(payload, user, repo, repo_url, project):
-        """
-        Consumes the JSON as a python object and actually starts the build.
-
-        :arguments:
-            payload
-                Python Object that represents the JSON sent by Gitorious hook.
-        """
         changes = []
         newrev = payload['after']
 

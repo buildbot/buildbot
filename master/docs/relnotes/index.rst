@@ -58,6 +58,8 @@ Features
 
 * Master side source checkout steps now support patches
 
+* The web hooks now include support for Gitorious. 
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
