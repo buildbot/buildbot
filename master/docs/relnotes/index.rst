@@ -64,6 +64,8 @@ Features
 
 * The SVN step now obfuscates the password in status logs, fixing :bb:bug:`2468`.
 
+* Gerrit integration with Git Source step on master side.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
