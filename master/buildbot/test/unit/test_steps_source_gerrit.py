@@ -36,6 +36,8 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                stdout='git version 1.7.5')
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
@@ -76,6 +78,8 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                stdout='git version 1.7.5')
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))

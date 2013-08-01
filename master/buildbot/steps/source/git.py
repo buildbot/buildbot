@@ -15,6 +15,7 @@
 
 from twisted.python import log
 from twisted.internet import defer, reactor
+from distutils.version import StrictVersion
 
 from buildbot import config as bbconfig
 from buildbot.process import buildstep
@@ -118,6 +119,7 @@ class Git(Source):
         self.mode = mode
         self.getDescription = getDescription
         self.config = config
+        self.supportsBranch = True
         Source.__init__(self, **kwargs)
 
         if self.mode not in ['incremental', 'full']:
@@ -138,8 +140,7 @@ class Git(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-
-        d = self.checkGit()
+        d = self.checkBranchSupport()
         def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
@@ -388,7 +389,7 @@ class Git(Source):
         """Retry if clone failed"""
 
         args = []
-        if self.branch != 'HEAD':
+        if self.supportsBranch and self.branch != 'HEAD':
             args += ['--branch', self.branch]
         if shallowClone:
             args += ['--depth', '1']
@@ -503,12 +504,15 @@ class Git(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
-    def checkGit(self):
-        d = self._dovccmd(['--version'])
-        def check(res):
-            if res == 0:
-                return True
-            return False
-
-        d.addCallback(check)
+    def checkBranchSupport(self):
+        d = self._dovccmd(['--version'], collectStdout=True)
+        def checkSupport(stdout):
+            gitInstalled = False
+            if 'git' in stdout:
+                gitInstalled = True
+            version = stdout.strip().split(' ')[2]
+            if StrictVersion(version) < StrictVersion("1.6.5"):
+                self.supportsBranch = False
+            return gitInstalled
+        d.addCallback(checkSupport)
         return d
