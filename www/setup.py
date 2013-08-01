@@ -99,7 +99,7 @@ package_json.update(base_json)
 # in a crazy CI fashion
 bower_json = {
     "dependencies": {
-    "bootstrap": "latest",
+    "bootstrap": "~2.3.2",
     "font-awesome": "latest",
     "angular": "latest",
     "angular-resource": "latest",
