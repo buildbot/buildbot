@@ -85,7 +85,16 @@
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
 
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
-    {% if 'text' in f.type or 'int' in f.type %}
+    {% if f.fullName and '_branch' in f.fullName %}
+        <span class="label">{{f.label}}</span>
+        {% if request.args|length > 0 and f.fullName in request.args.keys() %}
+            <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
+            <input type="hidden" name='{{f.fullName}}' value='{{ ' '.join(request.args[f.fullName])}}' />
+         {% else %}
+            <span class="label">{{default_props[sch.name+"."+f.fullName]}}</span>
+            <input type="hidden" name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
+          {% endif %}
+    {% elif 'text' in f.type or 'int' in f.type %}
        <span class="label">{{f.label}}</span>
        <input type='text' size='{{f.size}}' name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
     {% elif 'bool' in f.type%}
@@ -96,17 +105,11 @@
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
     {% elif 'list' in f.type %}
        <span class="label">{{f.label}}</span>
-        {% if request.args|length > 0 and f.fullName in request.args.keys() %}
-            <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
-            <input type="hidden" name='{{f.fullName}}' value='{{ ' '.join(request.args[f.fullName])}}' />
-         {% else %}
             <span class="select">
             <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
              {% for c in f.choices %}
                 <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
-
             {% endfor %}
-          {% endif %}
        </select>
        </span>
     {% elif 'nested' in f.type %}

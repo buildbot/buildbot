@@ -38,7 +38,7 @@
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
             <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
           {% else %}
-            <option>
+            <option {{(b in codebase['defaultbranch']) and "selected" or ""}}>
           {% endif %}
             {{ b }}
             </option>

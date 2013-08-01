@@ -1,3 +1,4 @@
+
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -22,25 +23,29 @@ from buildbot import config
 from buildbot.util import deferredLocked
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
+from buildbot.util.state import StateMixin
+import re
 
-class HgPoller(base.PollingChangeSource):
+class HgPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ["repourl", "branch", "workdir",
+    compare_attrs = ["repourl", 'branches', "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
                      "category", "project"]
 
     db_class_name = 'HgPoller'
 
-    def __init__(self, repourl, branch='default',
+    def __init__(self, repourl, branches={},
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='',
                  encoding='utf-8'):
 
         self.repourl = repourl
-        self.branch = branch
+        self.branches = branches
+        self.lastRev = {}
+        self.currentRev = {}
         base.PollingChangeSource.__init__(
             self, name=repourl, pollInterval=pollInterval)
         self.encoding = encoding
@@ -57,18 +62,33 @@ class HgPoller(base.PollingChangeSource):
         if self.workdir == None:
             config.error("workdir is mandatory for now in HgPoller")
 
+        if len(self.branches) == 0:
+            config.error("HgPoller: missing branches configuration, for example branches={'include': [r'.*'], 'exclude': [r'default']}")
+
     def describe(self):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        return ("HgPoller watching the remote Mercurial repository %r, "
-                "branch: %r, in workdir %r %s") % (self.repourl, self.branch,
-                                                   self.workdir, status)
+        return ("HgPoller watching the remote Mercurial repository %r "
+                "in workdir %r %s") % (self.repourl, self.workdir, status)
+
+    def startService(self):
+        d = self.getState('lastRev', {})
+        def setLastRev(lastRev):
+            self.lastRev = lastRev
+        d.addCallback(setLastRev)
+
+        d.addCallback(lambda _:
+        base.PollingChangeSource.startService(self))
+        d.addErrback(log.err, 'while initializing HgPoller repository')
+
+        return d
 
     @deferredLocked('initLock')
     def poll(self):
-        d = self._getChanges()
-        d.addCallback(self._processChanges)
+        d = self._getRepositoryChanges()
+        d.addCallback(self._processBranches)
+        d.addCallback(self._processChangesAllBranches)
         d.addErrback(self._processChangesFailure)
         return d
 
@@ -131,7 +151,7 @@ class HgPoller(base.PollingChangeSource):
             "hgpoller: finished initializing working dir %r" % self.workdir))
         return d
 
-    def _getChanges(self):
+    def _getRepositoryChanges(self):
         self.lastPoll = time.time()
 
         d = self._initRepository()
@@ -139,7 +159,7 @@ class HgPoller(base.PollingChangeSource):
             "hgpoller: polling hg repo at %s" % self.repourl))
 
         # get a deferred object that performs the fetch
-        args = ['pull', '-b', self.branch, self.repourl]
+        args = ['pull', self.repourl]
 
         # This command always produces data on stderr, but we actually do not
         # care about the stderr or stdout from this command.
@@ -152,48 +172,100 @@ class HgPoller(base.PollingChangeSource):
 
         return d
 
-    def _getStateObjectId(self):
-        """Return a deferred for object id in state db.
+    @defer.inlineCallbacks
+    def _processBranches(self, output):
+        args = ['branches', "--closed"]
 
-        Being unique among pollers, workdir is used with branch as instance
-        name for db.
-        """
-        return self.master.db.state.getObjectId(
-            '#'.join((self.workdir, self.branch)), self.db_class_name)
+        results = yield utils.getProcessOutput(self.hgbin, args,
+                                               path=self._absWorkdir(), env=os.environ, errortoo=False )
 
-    def _getCurrentRev(self):
-        """Return a deferred for object id in state db and current numeric rev.
+        branchlist = [branch for branch in results.strip().split('\n')]
 
-        If never has been set, current rev is None.
-        """
-        d = self._getStateObjectId()
-        def oid_cb(oid):
-            d = self.master.db.state.getState(oid, 'current_rev', None)
-            def addOid(cur):
-                if cur is not None:
-                    return  oid, int(cur)
-                return oid, cur
-            d.addCallback(addOid)
-            return d
-        d.addCallback(oid_cb)
-        return d
+        self.currentRev  = {}
+        for branch in branchlist:
+            list = branch.strip().split()
+            if self.trackingBranch(list[0]):
+                self.currentRev[list[0]] = list[1]
 
-    def _setCurrentRev(self, rev, oid=None):
-        """Return a deferred to set current revision in persistent state.
+    # filter branches by regex
+    def trackingBranch(self, branch):
+        if 'exclude' in self.branches.keys():
+            m = self.findBranchInExp(branch, self.branches['exclude'])
+            if m:
+                return False
+        if 'include' in self.branches.keys():
+            m = self.findBranchInExp(branch, self.branches['include'])
+            if m:
+                return True
 
-        oid is self's id for state db. It can be passed to avoid a db lookup."""
-        if oid is None:
-            d = self._getStateObjectId()
+    def findBranchInExp(self, branch, expressions):
+        for regex in expressions:
+            exp = re.compile(regex)
+            m = exp.match(branch)
+            if m:
+                return True
+        return False
+
+    @defer.inlineCallbacks
+    def _processChangesAllBranches(self, output):
+        updated = False
+
+        # in case the branch is not longer visible
+        for branch,rev in self.currentRev.iteritems():
+            current = None
+            if branch in self.lastRev.keys():
+                current = self.lastRev[branch]
+
+            if rev != current:
+                updated = True
+                self._processChangesByBranch(branch=branch,current=current)
+                self.lastRev[branch] = rev
+
+        if updated:
+            # if branches were deleted we need to replace with currentRev
+            self.lastRev = self.currentRev
+            yield self.setState('lastRev', self.lastRev)
+
+    @defer.inlineCallbacks
+    def _processChangesByBranch(self, branch, current):
+
+        # hg log on a range of revisions is never empty
+        # also, if a numeric revision does not exist, a node may match.
+        # Therefore, we have to check explicitely that branch head > current.
+        head = yield self._getHead(branch)
+
+        if current is None:
+            # we could have used current = -1 convention as well (as hg does)
+            revrange = '%s:%s' % (head, head)
         else:
-            d = defer.succeed(oid)
+            revrange = '%d:%s' % (int(current.split(":")[0]) + 1, head)
 
-        def set_in_state(obj_id):
-            return self.master.db.state.setState(obj_id, 'current_rev', rev)
-        d.addCallback(set_in_state)
+        # two passes for hg log makes parsing simpler (comments is multi-lines)
+        revListArgs = ['log', '-b', branch, '-r', revrange,
+                       r'--template={rev}:{node}\n']
+        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
+                                               path=self._absWorkdir(), env=os.environ, errortoo=False )
 
-        return d
+        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
 
-    def _getHead(self):
+        log.msg('hgpoller: processing %d changes: %r in %r'
+                % (len(revNodeList), revNodeList, self._absWorkdir()))
+        for rev, node in revNodeList:
+            timestamp, author, files, comments = yield self._getRevDetails(
+                node)
+            yield self.master.addChange(
+                author=author,
+                revision=node,
+                files=files,
+                comments=comments,
+                when_timestamp=epoch2datetime(timestamp),
+                branch=branch,
+                category=self.category,
+                project=self.project,
+                repository=self.repourl,
+                src='hg')
+
+    def _getHead(self, branch):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
@@ -202,12 +274,12 @@ class HgPoller(base.PollingChangeSource):
         yet, one shouldn't be surprised to get errors)
         """
         d = utils.getProcessOutput(self.hgbin,
-                    ['heads', self.branch, '--template={rev}' + os.linesep],
-                    path=self._absWorkdir(), env=os.environ, errortoo=False)
+                                   ['heads', branch, '--template={node}' + os.linesep],
+                                   path=self._absWorkdir(), env=os.environ, errortoo=False)
 
         def no_head_err(exc):
             log.err("hgpoller: could not find branch %r in repository %r" % (
-                self.branch, self.repourl))
+                branch, self.repourl))
         d.addErrback(no_head_err)
 
         def results(heads):
@@ -219,66 +291,15 @@ class HgPoller(base.PollingChangeSource):
                          "from repository %r. Staying at previous revision"
                          "You should wait until the situation is normal again "
                          "due to a merge or directly strip if remote repo "
-                         "gets stripped later.") % (self.branch, self.repourl))
+                         "gets stripped later.") % (branch, self.repourl))
                 return
 
             # in case of whole reconstruction, are we sure that we'll get the
             # same node -> rev assignations ?
-            return int(heads.strip())
+            return heads.strip()
 
         d.addCallback(results)
         return d
-
-    @defer.inlineCallbacks
-    def _processChanges(self, unused_output):
-        """Send info about pulled changes to the master and record current.
-
-        GitPoller does the recording by moving the working dir to the head
-        of the branch.
-        We don't update the tree (unnecessary treatment and waste of space)
-        instead, we simply store the current rev number in a file.
-        Recall that hg rev numbers are local and incremental.
-        """
-        oid, current = yield self._getCurrentRev()
-        # hg log on a range of revisions is never empty
-        # also, if a numeric revision does not exist, a node may match.
-        # Therefore, we have to check explicitely that branch head > current.
-        head = yield self._getHead()
-        if head <= current:
-            return
-        if current is None:
-            # we could have used current = -1 convention as well (as hg does)
-            revrange = '%d:%d' % (head, head)
-        else:
-            revrange = '%d:%s' % (current + 1, head)
-
-        # two passes for hg log makes parsing simpler (comments is multi-lines)
-        revListArgs = ['log', '-b', self.branch, '-r', revrange,
-                       r'--template={rev}:{node}\n']
-        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                    path=self._absWorkdir(), env=os.environ, errortoo=False )
-
-        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
-
-        log.msg('hgpoller: processing %d changes: %r in %r'
-                % (len(revNodeList), revNodeList, self._absWorkdir()))
-        for rev, node in revNodeList:
-            timestamp, author, files, comments = yield self._getRevDetails(
-                node)
-            yield self.master.addChange(
-                   author=author,
-                   revision=node,
-                   files=files,
-                   comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
-                   branch=self.branch,
-                   category=self.category,
-                   project=self.project,
-                   repository=self.repourl,
-                   src='hg')
-            # writing after addChange so that a rev is never missed,
-            # but at once to avoid impact from later errors
-            yield self._setCurrentRev(rev, oid=oid)
 
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')

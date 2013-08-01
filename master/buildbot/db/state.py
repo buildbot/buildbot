@@ -79,6 +79,32 @@ class StateConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     class Thunk: pass
+
+    def getObjectState(self, objects):
+        def thd(conn):
+            object_state_tbl = self.db.model.object_state
+            objects_tbl = self.db.model.objects
+
+            stmt = sa.select([objects_tbl.c.name, object_state_tbl.c.value_json], from_obj=
+                                 object_state_tbl.join(objects_tbl,
+                                                                (object_state_tbl.c.objectid == objects_tbl.c.id)),
+                             whereclause=(objects_tbl.c.name.in_(objects)))
+
+            res = conn.execute(stmt)
+            rows = res.fetchall()
+            res.close()
+
+            try:
+                object_state = {}
+                for row in rows:
+                    object_state[row.name] = json.loads(row.value_json).keys()
+
+                return object_state
+            except:
+                raise TypeError("JSON error loading state value '%s'" %
+                                (objects))
+        return self.db.pool.do(thd)
+
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             object_state_tbl = self.db.model.object_state
