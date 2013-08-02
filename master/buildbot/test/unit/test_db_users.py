@@ -193,8 +193,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                                   identifier='soap',
                                   attr_type='telepathIO(tm)',
                                   attr_data='hmm,lye'))
-        return self.assertFailure(d, sa.exc.IntegrityError,
-                                     sa.exc.ProgrammingError)
+        return d
 
     def test_getUser(self):
         d = self.insertTestData(self.user1_rows)

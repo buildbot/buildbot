@@ -19,6 +19,7 @@ from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot import util
 from twisted.internet import defer
+import types
 
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
@@ -58,6 +59,8 @@ class CodeBasesResource(HtmlResource):
         for cb in self.project.codebases:
             for key,value in cb.iteritems():
                 repositories.append(value['repository'])
+                if not isinstance(value['branch'], types.ListType):
+                    value['branch'] = [value['branch']]
                 if 'defaultbranch' not in value.keys():
                     value['defaultbranch'] = value['branch']
 
