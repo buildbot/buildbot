@@ -41,6 +41,7 @@ class DataConnector(service.Service):
         'buildbot.data.logchunks',
         'buildbot.data.buildsets',
         'buildbot.data.changes',
+        'buildbot.data.changesources',
         'buildbot.data.masters',
         'buildbot.data.sourcestamps',
         'buildbot.data.schedulers',

@@ -19,7 +19,7 @@ from twisted.python import log
 from twisted.application import internet, service
 from buildbot import config
 from buildbot.db import enginestrategy, exceptions
-from buildbot.db import pool, model, changes, schedulers, sourcestamps
+from buildbot.db import pool, model, changes, changesources, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests
 from buildbot.db import builds, buildslaves, users, masters, builders
 
@@ -61,6 +61,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.pool = None # set up in reconfigService
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
+        self.changesources = changesources.ChangeSourcesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
