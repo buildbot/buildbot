@@ -24,7 +24,21 @@ from buildbot.db import buildrequests
 
 class TempSourceStamp(object):
     # temporary fake sourcestamp; attributes are added below
-    pass
+    def asDict(self):
+        # This return value should match the kwargs to SourceStampsConnectorComponent.findSourceStampId
+        result = vars(self).copy()
+        
+        del result['ssid']
+        del result['changes']
+
+        result['patch_level'], result['patch_body'], result['patch_subdir'] = result.pop('patch')
+        result['patch_author'], result['patch_comment'] = result.pop('patch_info')
+
+        assert all(
+                isinstance(val, (unicode, type(None), int))
+                for attr, val in result.items()
+        ), result
+        return result
 
 class BuildRequest(object):
     """
@@ -111,15 +125,16 @@ class BuildRequest(object):
             ss.ssid = ssdata['ssid']
             ss.branch = ssdata['branch']
             ss.revision = ssdata['revision']
-            ss.project = ssdata['project']
             ss.repository = ssdata['repository']
+            ss.project = ssdata['project']
             ss.codebase = ssdata['codebase']
             if ssdata['patch']:
                 patch = ssdata['patch']
                 ss.patch = (patch['level'], patch['body'], patch['subdir'])
                 ss.patch_info = (patch['author'], patch['comment'])
             else:
-                ss.patch = ss.patch_info = None
+                ss.patch = (None, None, None)
+                ss.patch_info = (None, None)
             ss.changes = []
             # XXX: sourcestamps don't have changes anymore; this affects merging!!
 
