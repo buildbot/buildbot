@@ -245,6 +245,8 @@ class BasicBuildChooser(BuildChooserBase):
                 if nextBreq not in breqs:
                     nextBreq = None
             except Exception:
+                log.err(Failure(),
+                        "from _getNextUnclaimedBuildRequest for builder '%s'" % (self.bldr,))
                 nextBreq = None
         else:
             # otherwise just return the first build
