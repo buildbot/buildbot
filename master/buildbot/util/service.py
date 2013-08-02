@@ -153,4 +153,4 @@ class ClusteredService(service.Service, util.ComparableMixin):
 
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
-            pass
+            log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
