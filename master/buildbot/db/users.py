@@ -42,6 +42,24 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if rows:
                 return rows[0].uid
 
+            # same user may exists in other repository example hg/git
+            q = sa.select([ tbl.c.uid ],
+                          whereclause=and_(tbl.c.identifier == identifier))
+            rows = conn.execute(q).fetchall()
+
+            if rows:
+                transaction = conn.begin()
+                try:
+                    conn.execute(tbl_info.insert(),
+                                 dict(uid=rows[0].uid, attr_type=attr_type,
+                                      attr_data=attr_data))
+                    transaction.commit()
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    transaction.rollback()
+                    raise
+
+                return rows[0].uid
+
             _race_hook and _race_hook(conn)
 
             # try to do both of these inserts in a transaction, so that both
