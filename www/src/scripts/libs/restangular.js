@@ -1,0 +1,1 @@
+../../../components/restangular/src/restangular.js

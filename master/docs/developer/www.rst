@@ -263,7 +263,62 @@ Directives
 
 We use angular directives as much as possible to implement reusable UI components.
 
+Services
+~~~~~~~~
 
+BuildbotService
+...............
+
+BuildbotService is the base service for accessing to the buildbot data api.
+It uses and is derivated from `restangular <https://github.com/mgonto/restangular/blob/master/README.md>`_.
+Restangular offers nice semantics around nested REST endpoints. Please see restangular documentation for overview on how it works.
+
+BuildbotService adds serveral methods to restangular objects in order to integrate it with EventSource.
+The idea is to simplifify automatic update of the $scope based on events happening on a given data endpoint
+
+.. code-block: python
+
+    # Following code will get initial data from 'api/v2/build/1/step/2'
+    # and register to events from 'sse/build/1/step/2'
+    # Up to the template to specify what to display
+
+    buildbotService.one("build", 1).one("step", 2).bind($scope)
+
+Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
+
+    * ``.bind($scope, scope_key)``
+
+        bind the api result to the scope, automatically listening to events on this endpoint, and modifying the scope object accordingly.
+        scope_key defaults to the last path of the restangular object, i.e ``build/1/step/2`` binds to ``$scope.step``
+
+    * ``.unbind()``
+
+        Stop listening to events. This is automatically done when $scope is destroyed.
+
+    * ``.on(eventtype, callback)``
+
+        Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
+        You need to manually call unbind() when the scope is destroyed. EventSource connection is shared between listeners on the same endpoint.
+
+Mocks and testing utils
+~~~~~~~~~~~~~~~~~~~~~~~
+
+httpMock.coffee
+...............
+
+This modules adds ``decorateHttpBackend($httpBackend)`` to the global namespace. This function decorate the $httpBackend with additional functionality:
+
+    * ``.expectDataGET(ep, {nItems:<int or undefined>, override: <fn or undefined>})``
+
+       automatically create a GET expectation to the data api, given the data spec
+       Options available are:
+
+       * ``nItems``: if defined, this will generate a collection of nItems instead of single value
+
+       * ``override``: a custom function to override the resulting generated data
+
+       Example: ``$httpBackend.expectDataGET("change", {nItems:2, override: (val) -> val[1].id=4 })``
+       will create 2 changes, but the id of the second change will be overridden to 4
 
 Linking with Buildbot
 ~~~~~~~~~~~~~~~~~~~~~

@@ -9,6 +9,7 @@ files = [
     './buildbot_www/scripts/libs/require.js',
     './buildbot_www/scripts/**/*.js',
 
+    './buildbot_www_test/scripts/dataspec.js',
     './buildbot_www_test/scripts/filters/*.js',
     './buildbot_www_test/scripts/services/*.js'
 ];

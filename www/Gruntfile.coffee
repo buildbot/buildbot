@@ -34,9 +34,6 @@ module.exports = (grunt) ->
                     ext: '.js'
                 ]
                 options:
-                    # Don't include a surrounding Immediately-Invoked Function Expression (IIFE) in the compiled output.
-                    # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
-                    bare: true
                     sourceMap: true
                     sourceRoot : '/src'
         concat:
@@ -321,7 +318,7 @@ module.exports = (grunt) ->
                     'copy:index'
                 ]
             scripts:
-                files: './src/scripts/**'
+                files: ['./src/scripts/**', './test/scripts/**']
                 tasks: [
                     'coffee:scripts'
                     'copy:js'
@@ -371,6 +368,15 @@ module.exports = (grunt) ->
 
     grunt.loadTasks 'tasks'
 
+    grunt.registerTask 'dataspec', ->
+        done = @async()
+        grunt.util.spawn
+            cmd: "buildbot"
+            args: "dataspec -o buildbot_www_test/scripts/dataspec.js -g dataspec".split(" ")
+        , (error, result, code) ->
+            grunt.log.write result.toString()
+            done(!error)
+
     # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
     # Enter the following command at the command line to execute this build task:
     # grunt ci
@@ -407,6 +413,7 @@ module.exports = (grunt) ->
     grunt.registerTask 'default', [
         'clean:working'
         'concat:bower_configs'
+        'dataspec'
         'coffee:scripts'
         'copy:js'
         'requiregen:main'

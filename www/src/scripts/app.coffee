@@ -1,1 +1,1 @@
-angular.module 'app', ['ngResource']
+angular.module 'app', ['restangular']

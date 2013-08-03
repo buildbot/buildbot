@@ -103,6 +103,8 @@ bower_json = {
     "font-awesome": "latest",
     "angular": "latest",
     "angular-resource": "latest",
+    "restangular": "latest",
+    "lodash": "latest",
     "html5shiv": "~3.6.2",
     "jquery": "~2.0.0",
     "requirejs": "~2.1.5",

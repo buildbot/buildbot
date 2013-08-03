@@ -14,6 +14,7 @@ angular.module('app').run
 
 plugins_modules = []
 plugins_paths = {}
+@config ?= {plugins: {}}
 
 # load plugins's css (async)
 for plugin, cfg of @config.plugins
