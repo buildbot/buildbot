@@ -12,36 +12,7 @@
 	<link rel="stylesheet" href="/css/default.css" type="text/css" />
   </head>
   <body class='log interface'>
-<header class="header">          
-	<nav class="top-menu-container">
-		<div class="container-inner">
-		<h1 class="logo">
-			<a href="/">
-			  <span>K</span>atana
-			</a>
-		</h1>    
-		<ul class="top-menu">
 
-		  <li>
-		    <a href="{{ path_to_root or '.' }}">Home</a>
-		  </li>
-		  
-		  <li>
-		    <a href="{{ path_to_root }}projects">Projects</a>
-		  </li>
-		  
-		  <li>
-		    <a href="{{ path_to_root }}buildqueue">Build queue</a>
-		  </li>
-		  
-		  <li>
-		    <a href="{{ path_to_root }}buildslaves">Build slaves</a>
-		  </li>
-		  
-		</ul>
-		</div>
-	</nav>      
-</header>
 <div class="clear"></div>
 
     
@@ -49,14 +20,14 @@
 
 	<div class="column-1 inner">
 		<a href="{{ texturl }}">(view as text)</a><br/><br/>
-		<a id="expandAll" href="#" class="grey-btn js-expand">Expand all </a>
+		<a id="toggleExpand" href="#" class="grey-btn js-expand">Expand all </a>
 	      
 			{%- endmacro -%}
 
 			{%- macro chunks(entries) -%}
 			
 			{%- for entry in entries -%}
-				{%- if entry.is_header == true %}<pre class="content-holder"><h3 class="small-head-2">Header</h3>{% else %}<h3 class="small-head-2">Output</h3>{% endif %}<div class="{{ entry.type }}">{{ entry.text|e }}</div>{%- if entry.is_header == true %}<a href="#" class="build-log-header-btn js-header-btn">Show header </a>{% endif %}{%- if entry.is_header == false %}</pre>{% endif %}	
+				{%- if entry.is_header == true %}<pre class="content-holder">{% else %}<h3 class="small-head-2">Output</h3>{% endif %}<div class="{{ entry.type }}">{{ entry.text|e }}</div>{%- if entry.is_header == true %}<a href="#" class="build-log-header-btn js-header-btn"> <span></span></a>{% endif %}{%- if entry.is_header == false %}</pre>{% endif %}	
 			{%- endfor -%}
 
 			{%- endmacro -%}

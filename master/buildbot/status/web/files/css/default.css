@@ -4037,7 +4037,7 @@ li {
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\0000371}}
 .sub-menu-container.root {
-  height: 3px;
+  height: 39px;
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\0000376}}
@@ -5372,8 +5372,13 @@ div.force-text input.not-valid {
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003924}}
+.all-text {
+  display: none;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003925}}
 .content-holder {
-  margin: 0 0 15px;
+  margin: 10px 0 15px;
   padding: 0;
   white-space: pre-line;
   *zoom: 1;
@@ -5388,7 +5393,7 @@ div.force-text input.not-valid {
   clear: both;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003934}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003935}}
 .build-log-header,
 .stdout {
   display: block;
@@ -5396,9 +5401,8 @@ div.force-text input.not-valid {
   clear: both;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003940}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003941}}
 .build-log-header {
-  height: 70px;
   overflow: hidden;
   margin-bottom: 15px;
 }
@@ -5413,45 +5417,45 @@ div.force-text input.not-valid {
   line-height: 0;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003953}}
-.build-log-header-btn:after {
+.build-log-header-btn:before {
+  content: "Show all";
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003956}}
+.build-log-header-btn span {
   margin-left: 4px;
-  background-image: -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #dfe2ea), color-stop(100%, #eef0f5));
-  background-image: -webkit-linear-gradient(right center, #dfe2ea 0%, #eef0f5 100%);
-  background-image: -moz-linear-gradient(right center, #dfe2ea 0%, #eef0f5 100%);
-  background-image: -o-linear-gradient(right center, #dfe2ea 0%, #eef0f5 100%);
-  background-image: linear-gradient(right center, #dfe2ea 0%, #eef0f5 100%);
-  border: 1px solid #C4C4C4;
-  border-radius: 4px 4px 4px 4px;
-  color: #2B2B2B;
-  content: "+";
-  display: inline-block;
-  font-size: 17px;
+  	   /*
+  	   @include background-image(linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
+         border: 1px solid #C4C4C4;
+  	   border-radius: 4px 4px 4px 4px;
+     	   color: #2B2B2B;
+  	   display: inline-block;
+  	   */
+  font-size: 20px;
   font-weight: bold;
   line-height: 2px;
-  padding: 5px 5px 11px 6px;
   text-shadow: 0 1px 0 white;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003967}}
-.build-log-header-btn.open:after {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003970}}
+.build-log-header-btn span:before {
+  content: "+";
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003974}}
+.build-log-header-btn.open:before {
+  content: "Hide all";
+}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003977}}
+.build-log-header-btn.open span:before {
   content: "-";
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003970}}
-.build-log-header-btn:hover:after {
-  background-image: -webkit-gradient(linear, 100% 50%, 0% 50%, color-stop(0%, #f2f6fe), color-stop(100%, #f8faff));
-  background-image: -webkit-linear-gradient(right center, #f2f6fe 0%, #f8faff 100%);
-  background-image: -moz-linear-gradient(right center, #f2f6fe 0%, #f8faff 100%);
-  background-image: -o-linear-gradient(right center, #f2f6fe 0%, #f8faff 100%);
-  background-image: linear-gradient(right center, #f2f6fe 0%, #f8faff 100%);
-}
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003976}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003986}}
 .stdout,
 .stderr {
   margin-bottom: 10px;
   color: #666;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003980}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003990}}
 .small-head-2 {
   padding: 0;
   margin: 10px 0 10px 0;

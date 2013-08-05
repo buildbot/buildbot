@@ -1,5 +1,5 @@
 $(document).ready(function() {
-// class on selected menuitem
+	// class on selected menuitem
 	$(function setCurrentItem(){
 		var path = window.location.pathname.split("\/");
 		
@@ -9,50 +9,49 @@ $(document).ready(function() {
 	            $(this).parent().addClass("selected");
 	    });
 	});
-	var bHeader = $('.build-log-header');
 
-	$(bHeader).each(function(){
-		var currHeight = $(this).height();
-		var autoHeight = $(this).css('height', 'auto').height();
+	// split string on environment
+	$('.build-log-header').each(function(){
+		$(this).html($(this).text().replace("environment:", "<span class='env'></span>environment:"));
 
-		$(this).height(currHeight)
-		if (autoHeight <= currHeight) {
-			$(this).next().hide();
+		var text = $('.env', this).parent().contents().filter(
+	    function(){
+	        return this.nodeType === 3 && this.nodeValue.trim() !== '';
+	    }).last().wrapAll('<div class="all-text" />');
+
+		if ($('.env', this).length === 0) {
+			$(this).next($('.js-header-btn')).remove();		
 		}
 	});
 
+	// toggle individual show hide button
 	$('.js-header-btn').click(function(e){
 		e.preventDefault();
 		var theBtn = $(this);
-		var pEl = $(this).prev();
-		var curHeight = $(pEl).height();
-		$(pEl).css('height', 'auto');
-		var autoHeight = $(pEl).height();
-		if ($(theBtn).hasClass('open')) {
-			autoHeight = 70;
-		}
-		
-		$(pEl).height(curHeight).animate({height:  autoHeight}, 700, function(){
+		$(theBtn).prev('.build-log-header').children('.all-text').slideToggle('slow', function(){
 			$(theBtn).toggleClass('open');
-			if ($(theBtn).hasClass('open')) {
-				$(theBtn).text('Hide header ');
-			} else {
-				$(theBtn).text('Show header ');
-			}
 		});
 	});
 
-	$('#expandAll').click(function(e){
+	// toggle the top expand button
+	$('#toggleExpand').click(function(e){
 		e.preventDefault();
-		if ($(this).hasClass('open')) {
-			$(this).text('Expand all ');
-			
+		$(this).toggleClass('expanded');
+		var text = $(this).hasClass('expanded')
+		$(this).text(text == true ? 'Collapse all' : 'Expand all')
+		if ($(this).hasClass('expanded')) {
+			$('.js-header-btn').each(function(){
+				if (!$(this).hasClass('open')) {
+					$(this).trigger('click');		
+				} 
+			});		
 		} else {
-			$(this).text('Collapse all ');
-
-		};
-		$('.js-header-btn').trigger('click');
-		$(this).toggleClass('open');		
+			$('.js-header-btn').each(function(){
+				if ($(this).hasClass('open')) {
+					$(this).trigger('click');		
+				} 
+			});		
+		}
 	});
 
 });

@@ -921,8 +921,9 @@ transform:rotate(360deg)}
 
 
 // buildlog
+.all-text {display:none;}
 .content-holder {
-	margin:0 0 15px;
+	margin:10px 0 15px;
 	padding:0;
 	white-space: pre-line;
 	@include pie-clearfix;
@@ -938,7 +939,6 @@ transform:rotate(360deg)}
 }
 
 .build-log-header {
-	height: 70px;
 	overflow: hidden;
 	margin-bottom: 15px;
 }
@@ -950,25 +950,35 @@ transform:rotate(360deg)}
 	white-space: normal;
 	font-weight: bold;
 	line-height:0;
-	&:after {
-		   margin-left: 4px;
-		   @include background-image(linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
-	       border: 1px solid #C4C4C4;
-		   border-radius: 4px 4px 4px 4px;
-	   	   color: #2B2B2B;
-		   content: "+";
-		   display: inline-block;
-		   font-size: 17px;
-		   font-weight: bold;
-		   line-height: 2px;
-		   padding: 5px 5px 11px 6px;
-		   text-shadow: 0 1px 0 white;
+	&:before {
+		content:('Show all');
 	}
-	&.open:after  {
+	span {
+	   margin-left: 4px;
+	   /*
+	   @include background-image(linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
+       border: 1px solid #C4C4C4;
+	   border-radius: 4px 4px 4px 4px;
+   	   color: #2B2B2B;
+	   display: inline-block;
+	   */
+	   font-size: 20px;
+	   font-weight: bold;
+	   line-height: 2px;
+	   //padding: 5px 5px 11px 6px;
+	   text-shadow: 0 1px 0 white;
+	   &:before {
+			content: ('+');
+	   }
+	}
+	&.open:before {
+		content:('Hide all');
+	}
+	&.open span:before  {
 		content:('-');	
 	}
-	&:hover:after {
-		@include background-image (linear-gradient(right center , #F2F6FE 0%, #F8FAFF 100%));
+	&:hover span {
+		//@include background-image (linear-gradient(right center , #F2F6FE 0%, #F8FAFF 100%));
 	}
 }
 
