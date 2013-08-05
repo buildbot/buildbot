@@ -85,7 +85,7 @@ route_config_fn = ($routeProvider, route_config, plugins_routes...) ->
                 templateUrl: cfg.templateUrl
                 resolve:
                         changeTab: ['$rootScope', ($rootScope) ->
-                            $rootScope.$broadcast 'changeTab#' + cfg.tabid
+                            $rootScope.selectedTab = cfg
                         ]
     $routeProvider.otherwise redirectTo: '/'
 

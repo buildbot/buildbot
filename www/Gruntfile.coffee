@@ -12,7 +12,6 @@ module.exports = (grunt) ->
             working:
                 src: [
                     './buildbot_www/'
-                    './buildbot_www_test/'
                     './.temp/views'
                     './.temp/'
                 ]
@@ -26,10 +25,12 @@ module.exports = (grunt) ->
                     dest: './.temp/'
                     expand: true
                     ext: '.js'
-                ,
-                    cwd: './test/'
-                    src: 'scripts/**/*.coffee'
-                    dest: './buildbot_www_test/'
+                ]
+            testscripts:
+                files: [
+                    cwd: './test/scripts/'
+                    src: '**/*.coffee'
+                    dest: './.temp/scripts/test/'
                     expand: true
                     ext: '.js'
                 ]
@@ -64,11 +65,15 @@ module.exports = (grunt) ->
                     # if a module has been loaded in previous layers, it wont be loaded again
                     # so that you can use global regular expression in the end
                         'libs/jquery'
-                        'libs/angular' # angular needs jquery before or will use internal jqlite
-                        'libs/.*'      # remaining libs before app
-                        'app'          # app needs libs
+                        'libs/angular'      # angular needs jquery before or will use internal jqlite
+                        'libs/.*'           # remaining libs before app
+                        'test/libs/.*'      # test libs in dev mode
+                        'test/dataspec'  # test mocks in dev mode
+                        'test/mocks/.*'     # test mocks in dev mode
+                        'app'               # app needs libs
                         '(routes|views|config)'
-                        '.*/.*'   # remaining angularjs components
+                        '[^/]*/[^/]*'   # remaining angularjs components
+                        'test/scenarios/.*' # test scenarios in dev mode
                         'run'     # run has to be in the end, because it is triggering angular's own DI
                     ]
                 dest: '.temp/scripts/main.js'
@@ -106,17 +111,20 @@ module.exports = (grunt) ->
                     src: 'scripts/**/*.js'
                     dest: './.temp/'
                     expand: true
-                ,
-                    cwd: './src/'
-                    src: 'scripts/**/*.js'
-                    dest: './buildbot_www_test/'
+                ]
+            # Copies js files to the temp directory
+            testjs:
+                files: [
+                    cwd: './test/scripts/'
+                    src: '**/*.js'
+                    dest: './.temp/scripts/test'
                     expand: true
                 ]
-            # Copies coffee src files to the buildbot_ww directory
+            # Copies coffee src files to the buildbot_www directory
             src:
                 files: [
-                    cwd: './src/'
-                    src: 'scripts/**/*.coffee'
+                    cwd: './'
+                    src: '*/scripts/**/*.coffee'
                     dest: 'buildbot_www/src/'
                     expand: true
                     flatten: true
@@ -318,10 +326,17 @@ module.exports = (grunt) ->
                     'copy:index'
                 ]
             scripts:
-                files: ['./src/scripts/**', './test/scripts/**']
+                files: ['./src/scripts/**']
                 tasks: [
                     'coffee:scripts'
                     'copy:js'
+                    'copy:scripts'
+                    'copy:src'
+                ]
+            testscripts:
+                files: ['./test/scripts/**']
+                tasks: [
+                    'coffee:testscripts'
                     'copy:scripts'
                     'copy:src'
                 ]
@@ -372,7 +387,7 @@ module.exports = (grunt) ->
         done = @async()
         grunt.util.spawn
             cmd: "buildbot"
-            args: "dataspec -o buildbot_www_test/scripts/dataspec.js -g dataspec".split(" ")
+            args: "dataspec -o .temp/scripts/test/dataspec.js -g dataspec".split(" ")
         , (error, result, code) ->
             grunt.log.write result.toString()
             done(!error)
@@ -414,8 +429,9 @@ module.exports = (grunt) ->
         'clean:working'
         'concat:bower_configs'
         'dataspec'
-        'coffee:scripts'
+        'coffee'
         'copy:js'
+        'copy:testjs'
         'requiregen:main'
         'less'
         'jade:views'

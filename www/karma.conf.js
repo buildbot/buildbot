@@ -5,13 +5,12 @@ files = [
     './buildbot_www/scripts/libs/angular.js',
     './buildbot_www/scripts/libs/angular-resource.js',
     './buildbot_www/scripts/libs/*.js',
-    './test/scripts/libs/angular-mocks.js',
     './buildbot_www/scripts/libs/require.js',
     './buildbot_www/scripts/**/*.js',
 
-    './buildbot_www_test/scripts/dataspec.js',
-    './buildbot_www_test/scripts/filters/*.js',
-    './buildbot_www_test/scripts/services/*.js'
+    './buildbot_www/scripts/test/filters/*.js',
+    './buildbot_www/scripts/test/services/*.js',
+    './buildbot_www/scripts/test/controllers/*.js'
 ];
 
 // level of logging

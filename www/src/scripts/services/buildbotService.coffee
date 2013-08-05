@@ -19,19 +19,26 @@ angular.module('app').factory 'buildbotService',
                         onEvent = (e) ->
                             $scope[scope_key].push(e.msg)
                             $scope.$apply()
-                        $scope[scope_key] = elem.getList()
-                        $scope[scope_key].then ->
+                        p = elem.getList()
+                        p.then((v) ->
+                            $scope[scope_key] = v
                             elem.on("new", onEvent)
+                            return v
+                        )
                     else
                         onEvent = (e) ->
                             for k, v of e.msg
                                 $scope[scope_key][k] = v
                             $scope.$apply()
-                        $scope[scope_key] = this.get()
-                        $scope[scope_key].then ->
+                        p = this.get()
+                        p.then((v) ->
+                            $scope[scope_key] = v
                             elem.on("update", onEvent)
-                    $scope.$on("$destroy", -> elem.source.close())
-                    return $scope[scope_key]
+                            return v
+                        )
+                    $scope.$on("$destroy", -> elem.source?.close())
+                    $scope[scope_key] = p
+                    return p
 
                 elem.unbind = () ->
                     this.source?.close()

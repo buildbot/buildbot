@@ -14,12 +14,11 @@ angular.module('app').directive 'topmenu',
                 $scope.select tab if $scope.tabs.length is 0
                 $scope.tabs.push tab
 
-                if tabId
-                    $rootScope.$on "changeTab##{tabId}", ->
-                        $scope.select tab
             for id, tab of route_config
                 if tab.caption?
                     @addTab(tab, id)
+
+            $rootScope.$watch("selectedTab", $scope.select)
         ]
     controller: controller
     replace: true
