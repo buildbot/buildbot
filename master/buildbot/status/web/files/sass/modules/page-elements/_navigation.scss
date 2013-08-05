@@ -6,7 +6,7 @@
 */
 
 .top-menu-container {
-	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%)); 
+	@include background-image(linear-gradient(center top , #EBEBEB 0%, #D9D9D9 100%)); 
 	@include pie-clearfix;
 	width: 100%;
 }
@@ -31,9 +31,9 @@
 			}
 
 			a {
-			    border-top: 4px solid rgba(255, 255, 255, 0.32);
-		      	margin: 9px 25px 0;
-    			padding: 4px 0 0;
+			    border-top: 4px solid rgba(31, 81, 133, 0.84);
+	      	 	margin: 0 25px;
+    			padding: 13px 0 0;
 			    &:hover {
 					opacity: 1;    	
 			    }
@@ -41,19 +41,19 @@
 		}
 
 		a {
-		    color: #FFFFFF;
+		    color: rgba(31, 81, 133, 0.84);
 		    display: block;
 		    font-size: 11px;
 		    font-weight: bold;
 		    letter-spacing: 0.9px;
 		    padding: 17px 25px;
 		    text-decoration: none;
-		    @include text-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+		    @include text-shadow(0 1px 0 #fff);
 		    text-transform: uppercase;
 			@include transition(opacity .2s ease-in-out);
 			&:hover {
 				opacity: 0.5;
-				text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+				
 			}
 		}
 	}
@@ -63,32 +63,48 @@
 // sub-menu
 
 .sub-menu-container {
-	@include background-image(linear-gradient(center top, #EBEBEB 0%, #D9D9D9 100%)); 
+	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%)); 
     border-bottom: 1px solid #FFFFFF;
     border-top: 1px solid #FFFFFF;
     width: 100%;
 	margin-bottom:30px;
+	&.root {
+		height: 3px;
+	}
 }
 
 .breadcrumbs-nav {
 		@include pie-clearfix;
-		padding:12px 0 12px 247px;
-	 	text-shadow: 0 1px 0 #FFF;	
-		li {
-		color: #666;
+		padding:13px 0 10px 247px;
+		& > li {
+		color: rgba(255, 255, 255, 0.59);
 		float: left;
 		font-size: 12px;
 		list-style: none outside none;
 		margin: 0 10px 0 0;
 		padding: 0;
 		font-weight: bold;
+		letter-spacing:0.7px;
+		a {
+			color: #fff;
+			&:hover{
+				color: rgba(255, 255, 255, 0.75);
+			}
+		}
 		&.dropdown {
-			margin-top: -3px;
+			margin-right:44px;
+			position: relative;
+			.more-info {
+				position: absolute;
+			    right: -32px;
+			    top: -6px;
+			}
 		}
 		&:before {
 			content: "❯";
 			padding-right: 8px;
 			font-size: 9px;
+			color: #fff;
 		}
 	}
 }

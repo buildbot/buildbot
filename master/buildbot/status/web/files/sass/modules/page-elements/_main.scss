@@ -501,6 +501,7 @@ div.force-text {
 	//width:auto;/*can be % px auto*/
 	z-index:200;
 	float:left;
+	color:#333;
     @include text-shadow(0 1px 0 #FFFFFF);
 	@include border-radius(8px);
     @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
