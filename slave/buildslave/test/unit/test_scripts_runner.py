@@ -224,6 +224,16 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                         "log-count parameter needs to be an number or None",
                         self.parse, "--log-count=X", *self.req_args)
 
+    def test_inv_umask(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                        "umask parameter needs to be an number or None",
+                        self.parse, "--umask=X", *self.req_args)
+
+    def test_inv_allow_shutdown(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                    "allow-shutdown needs to be one of 'signal' or 'file'",
+                    self.parse, "--allow-shutdown=X", *self.req_args)
+
     def test_too_few_args(self):
         self.assertRaisesRegexp(usage.UsageError,
                                 "incorrect number of arguments",
