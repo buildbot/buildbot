@@ -32,6 +32,7 @@ class Authz(object):
             'stopBuild',
             'stopAllBuilds',
             'cancelPendingBuild',
+            'cancelAllPendingBuilds',
             'stopChange',
             'cleanShutdown',
             'showUsersPage',
