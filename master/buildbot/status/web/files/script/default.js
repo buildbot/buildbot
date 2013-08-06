@@ -2,14 +2,18 @@ $(document).ready(function() {
 	
 	//Show / hide
 
-	function centerPopup(className){
-		$(className).each(function(){
-			$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
-			$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
-		});
-	};
+	jQuery.fn.center = function() {
 
-	centerPopup('.more-info-box');
+	var h = $(window).height();
+    var w = $(window).width();
+
+    this.css('height',(h < 400) ? 300 : '');
+
+	this.css("position", "absolute");
+	this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
+	this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
+	return this;
+	};
 
 	function popUpBtn(classBtn, classHide){
 
@@ -17,7 +21,12 @@ $(document).ready(function() {
 			e.preventDefault();
 			$('.more-info-box-js, .more-info-box-js-2').hide();
 			$('.command_forcebuild').removeClass('form-open');
-			$(this).next().fadeIn('fast', function (){
+			var newThis = $(this);
+			$(window).resize(function() {
+				$(newThis).next().center();
+			});
+			
+			$(this).next().center().fadeIn('fast', function (){
 				$('.command_forcebuild', this).addClass('form-open')
 				validateForm();
 			});
@@ -129,7 +138,7 @@ $(document).ready(function() {
 	
 
 	$('#getBtn').click(function() {
-		
+
 		$('.more-info-box-js, .more-info-box-js-2').hide();
 		$('#content').empty();
 		var path = $('#pathToCodeBases').attr('href');
@@ -141,7 +150,10 @@ $(document).ready(function() {
 			var $response=$(data);
 			$('#bowlG').remove();
 			$($response).find('#formWrapper').appendTo($('#content'));
-			centerPopup('.more-info-box-js-2');
+			$('.more-info-box-js-2').center();
+			$(window).resize(function() {
+				$('.more-info-box-js-2').center();
+			});
 			$('.more-info-box-js-2').fadeIn('fast');
 			$('#getForm').attr('action', window.location.href);
 		});

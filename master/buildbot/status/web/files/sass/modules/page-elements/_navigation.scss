@@ -8,7 +8,6 @@
 .top-menu-container {
 	@include background-image(linear-gradient(center top , #EBEBEB 0%, #D9D9D9 100%)); 
 	@include pie-clearfix;
-	width: 100%;
 }
 
 .top-menu {
@@ -66,7 +65,7 @@
 	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%)); 
     border-bottom: 1px solid #FFFFFF;
     border-top: 1px solid #FFFFFF;
-    width: 100%;
+    
 	margin-bottom:30px;
 	&.root {
 		height: 39px;
@@ -75,7 +74,7 @@
 
 .breadcrumbs-nav {
 		@include pie-clearfix;
-		padding:13px 0 10px 247px;
+		padding:13px 0 12px 247px;
 		& > li {
 		color: rgba(255, 255, 255, 0.59);
 		float: left;
@@ -97,7 +96,7 @@
 			.more-info {
 				position: absolute;
 			    right: -32px;
-			    top: -6px;
+			    top: -5px;
 			}
 		}
 		&:before {

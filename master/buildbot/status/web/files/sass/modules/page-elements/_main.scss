@@ -497,7 +497,6 @@ div.force-text {
     min-width:280px;
     max-height:690px;
     overflow-y: auto; 
-	position:fixed;
 	//width:auto;/*can be % px auto*/
 	z-index:200;
 	float:left;
@@ -808,12 +807,9 @@ transform:rotate(360deg)}
 .login-box {
 	  
 	&.more-info-box {
-		margin:127px auto 0 auto;
-		
 		display: block;
 	    float: none;
 	    padding: 44px 19px 16px 38px;
-	    position: relative;
 	    width: 298px;
 		h3 {
 			display: block;	

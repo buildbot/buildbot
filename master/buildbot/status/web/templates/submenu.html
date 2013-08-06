@@ -57,19 +57,19 @@
 		      </a>
 		      <a id="getBtn" class="more-info popup-btn-js-2" href="#">
 		      </a>
-		      <div class="more-info-box more-info-box-js-2">
-		          <span class="close-btn">
-		          </span>
-		          <h3>Codebases</h3>
-		          <div id="content">
-		          </div>          
-		      </div>
 		    </li>	
 		{% elif loop.index <= pathNum %}
 			<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
 		{% endif %}
 	{% endfor %}
 	</ul>
+	<div class="more-info-box more-info-box-js-2">
+	  <span class="close-btn">
+	  </span>
+	  <h3>Codebases</h3>
+	  <div id="content">
+	  </div>          
+	</div>
 	</nav>
 {% endmacro %}
 
