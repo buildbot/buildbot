@@ -23,7 +23,6 @@ import copy
 import base64
 import hashlib
 from buildbot.util import json, datetime2epoch
-from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests, schedulers, changesources
 from buildbot.test.util import validation
@@ -122,6 +121,7 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
+		waited_for = 0,
     )
 
     id_column = 'id'
@@ -1530,7 +1530,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at)
+                submitted_at=submitted_at, complete_at=complete_at,
+				waited_for=bool(row.waited_for))
 
     # fake methods
 

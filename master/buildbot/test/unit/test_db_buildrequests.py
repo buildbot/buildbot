@@ -72,7 +72,7 @@ class Tests(interfaces.InterfaceTests):
                         priority=7, claimed=True, mine=True, complete=True,
                         results=75, claimed_at=self.CLAIMED_AT,
                         submitted_at=self.SUBMITTED_AT,
-                        complete_at=self.COMPLETE_AT))
+                        complete_at=self.COMPLETE_AT, waited_for=False))
         d.addCallback(check)
         return d
 

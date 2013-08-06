@@ -45,7 +45,7 @@ class Model(base.DBConnectorComponent):
     # * dates are stored as unix timestamps (UTC-ish epoch time)
     #
     # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
-    #   use sa.Integer instead
+    #   use sa.SmallInteger instead
 
     # build requests
 
@@ -73,6 +73,10 @@ class Model(base.DBConnectorComponent):
 
         # time the buildrequest was completed, or NULL
         sa.Column('complete_at', sa.Integer),
+
+        # boolean indicating whether there is a step blocking, waiting for this request to complete
+        sa.Column('waited_for', sa.SmallInteger,
+            server_default=sa.DefaultClause("0")),
     )
 
     # Each row in this table represents a claimed build request, where the
