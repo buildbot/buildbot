@@ -1,1 +1,1 @@
-../../../components/jquery/jquery.js
+../../../bower_components/jquery/jquery.js

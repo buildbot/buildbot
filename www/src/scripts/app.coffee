@@ -1,1 +1,1 @@
-angular.module 'app', ['restangular']
+angular.module 'app', ['restangular', 'ui.bootstrap']

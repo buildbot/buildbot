@@ -1,1 +1,1 @@
-../../../components/restangular/src/restangular.js
+../../../bower_components/restangular/src/restangular.js

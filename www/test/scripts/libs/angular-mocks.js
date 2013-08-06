@@ -1,1 +1,1 @@
-../../../components/angular-mocks/angular-mocks.js
+../../../bower_components/angular-mocks/angular-mocks.js
