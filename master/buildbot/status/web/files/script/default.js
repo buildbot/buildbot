@@ -126,7 +126,10 @@ $(document).ready(function() {
 	// display popup box with external content
 
 	// get content in the dropdown and display it while removing the preloader
+	
+
 	$('#getBtn').click(function() {
+		
 		$('.more-info-box-js, .more-info-box-js-2').hide();
 		$('#content').empty();
 		var path = $('#pathToCodeBases').attr('href');
@@ -140,6 +143,7 @@ $(document).ready(function() {
 			$($response).find('#formWrapper').appendTo($('#content'));
 			centerPopup('.more-info-box-js-2');
 			$('.more-info-box-js-2').fadeIn('fast');
+			$('#getForm').attr('action', window.location.href);
 		});
 	});
 
