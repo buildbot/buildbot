@@ -14,4 +14,7 @@ block content
         div.nav-collapse.collapse
           topmenu
   // fluid container
+  div(ng-controller="alertPanelController")
+    alert(ng-repeat="alert in alerts",type="alert.type",close="closeAlert($index)", ng-animate="'repeat'")
+      | {{alert.msg}}{{alert.occur_msg}}
   ng:view
