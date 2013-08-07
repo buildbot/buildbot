@@ -71,7 +71,10 @@ class PyFlakes(ShellCommand):
     description = ["running", "pyflakes"]
     descriptionDone = ["pyflakes"]
     flunkOnFailure = False
-    flunkingIssues = ["undefined"] # any pyflakes lines like this cause FAILURE
+    # any pyflakes lines like this cause FAILURE
+    flunkingIssues = ["undefined"]
+    # we need a separate variable for syntax errors
+    hasSyntaxError = False
 
     MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
 
@@ -110,22 +113,32 @@ class PyFlakes(ShellCommand):
                 m = "undefined"
             elif line.find("redefinition of unused") != -1:
                 m = "redefs"
+            elif line.find("invalid syntax") != -1:
+                self.hasSyntaxError = True
+                # we can do this, because if a syntax error occurs
+                # the output will only contain the info about it, nothing else
+                m = "misc"
             else:
                 m = "misc"
             summaries[m].append(line)
             counts[m] += 1
 
         self.descriptionDone = self.descriptionDone[:]
-        for m in self.MESSAGES:
-            if counts[m]:
-                self.descriptionDone.append("%s=%d" % (m, counts[m]))
-                self.addCompleteLog(m, "".join(summaries[m]))
-            self.setProperty("pyflakes-%s" % m, counts[m], "pyflakes")
-        self.setProperty("pyflakes-total", sum(counts.values()), "pyflakes")
 
+        # we log 'misc' as syntax-error
+        if self.hasSyntaxError:
+            self.addCompleteLog("syntax-error", "".join(summaries['misc']))
+        else:
+            for m in self.MESSAGES:
+                if counts[m]:
+                    self.descriptionDone.append("%s=%d" % (m, counts[m]))
+                    self.addCompleteLog(m, "".join(summaries[m]))
+                self.setProperty("pyflakes-%s" % m, counts[m], "pyflakes")
+            self.setProperty("pyflakes-total", sum(counts.values()),
+                             "pyflakes")
 
     def evaluateCommand(self, cmd):
-        if cmd.didFail():
+        if cmd.didFail() or self.hasSyntaxError:
             return FAILURE
         for m in self.flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):

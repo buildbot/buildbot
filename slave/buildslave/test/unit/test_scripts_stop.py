@@ -21,6 +21,7 @@ import signal
 from twisted.trial import unittest
 from buildslave.scripts import stop
 from buildslave.test.util import misc
+from buildslave.test.util import compat
 
 
 class TestStopSlave(misc.FileIOMixin,
@@ -49,6 +50,7 @@ class TestStopSlave(misc.FileIOMixin,
         self.assertRaises(stop.SlaveNotRunning,
                           stop.stopSlave, None, False)
 
+    @compat.skipUnlessPlatformIs("posix")
     def test_successful_stop(self):
         """
         test stopSlave() on a successful slave stop

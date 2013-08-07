@@ -20,7 +20,7 @@ from urlparse import urlparse, urlunparse
 from string import lower
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
@@ -75,10 +75,21 @@ class SVN(Source):
             return 0
         d.addCallback(checkInstall)
 
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self.purge(False)
+            else:
+                return 0
+        d.addCallback(checkPatched)
+                
         if self.mode == 'full':
             d.addCallback(self.full)
         elif self.mode == 'incremental':
             d.addCallback(self.incremental)
+
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -95,14 +106,8 @@ class SVN(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            # blow away the old (un-updatable) directory
-            yield self.runRmdir(self.workdir)
-
-            # then do a checkout
-            checkout_cmd = ['checkout', self.repourl, '.']
-            if self.revision:
-                checkout_cmd.extend(["--revision", str(self.revision)])
-            yield self._dovccmd(checkout_cmd)
+            # blow away the old (un-updatable) directory and checkout
+            yield self.clobber()
         elif self.method == 'clean':
             yield self.clean()
         elif self.method == 'fresh':
@@ -113,29 +118,19 @@ class SVN(Source):
         updatable = yield self._sourcedirIsUpdatable()
 
         if not updatable:
-            # blow away the old (un-updatable) directory
-            yield self.runRmdir(self.workdir)
-
-            # and plan to do a checkout
-            command = ['checkout', self.repourl, '.']
+            # blow away the old (un-updatable) directory and checkout
+            yield self.clobber()
         else:
             # otherwise, do an update
             command = ['update']
+            if self.revision:
+                command.extend(['--revision', str(self.revision)])
+            yield self._dovccmd(command)
 
-        if self.revision:
-            command.extend(['--revision', str(self.revision)])
-
-        yield self._dovccmd(command)
-
-    @defer.inlineCallbacks
     def clobber(self):
-        yield self.runRmdir(self.workdir)
-
-        checkout_cmd = ['checkout', self.repourl, '.']
-        if self.revision:
-            checkout_cmd.extend(["--revision", str(self.revision)])
-
-        yield self._dovccmd(checkout_cmd)
+        d = self.runRmdir(self.workdir)
+        d.addCallback(lambda _: self._checkout())
+        return d
 
     def fresh(self):
         d = self.purge(True)
@@ -176,6 +171,12 @@ class SVN(Source):
             export_cmd = ['svn', 'export']
             if self.revision:
                 export_cmd.extend(["--revision", str(self.revision)])
+            if self.username:
+                export_cmd.extend(['--username', self.username])
+            if self.password:
+                export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
+            if self.extra_args:
+                export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
 
             cmd = buildstep.RemoteShellCommand('', export_cmd,
@@ -197,13 +198,13 @@ class SVN(Source):
         return d
 
 
-    def _dovccmd(self, command, collectStdout=False):
+    def _dovccmd(self, command, collectStdout=False, abandonOnFailure=True):
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
         if self.password:
-            command.extend(['--password', self.password])
+            command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
         if self.depth:
             command.extend(['--depth', self.depth])
         if self.extra_args:
@@ -215,10 +216,9 @@ class SVN(Source):
                                            timeout=self.timeout,
                                            collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
-        log.msg("Starting SVN command : svn %s" % (" ".join(command), ))
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.didFail():
+            if cmd.didFail() and abandonOnFailure:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
@@ -425,3 +425,32 @@ class SVN(Source):
             return canonical_uri[:-1]
         else:
             return canonical_uri
+
+    def _checkout(self):
+        checkout_cmd = ['checkout', self.repourl, '.']
+        if self.revision:
+            checkout_cmd.extend(["--revision", str(self.revision)])
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
+        d = self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self.runRmdir(self.workdir))
+                df.addCallback(lambda _: self._checkout())
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
+        return d
+        
