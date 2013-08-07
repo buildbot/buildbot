@@ -39,8 +39,15 @@ table td {
 	text-align: center;
 }
 
+ul {
+	padding: 0;
+	margin:0;	
+
+}
 li {
-	padding: 0.1em 1em 0.1em 1em;
+	padding: 0;
+	margin:0;
+	list-style:none;
 }
 
 .fl-right {float:right;}

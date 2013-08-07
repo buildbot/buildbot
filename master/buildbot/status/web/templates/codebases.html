@@ -12,7 +12,7 @@
 
 <div id="formWrapper">
 <form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
-    <input value="Go" class="grey-btn var-1" type="submit" />
+    <input value="next" class="grey-btn var-1" type="submit" />
 
 <table class="table-2 no-bg">
    <thead>
@@ -33,7 +33,8 @@
       {{codebase['repository']}}
     </td>
     <td class="txt-align-right">
-      <select name='{{cbkey}}_branch' class="select-tools var-1">
+
+      <select name='{{cbkey}}_branch' class="select-tools select-tools-js var-1">
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
             <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>

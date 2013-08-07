@@ -85,7 +85,7 @@
         
       </div>
     </footer>
-    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
+    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
 	<script type="text/javascript" src="/script/jquery.dataTables.js"></script>
     <script type="text/javascript" src="/script/log.js"></script>
 		</body>

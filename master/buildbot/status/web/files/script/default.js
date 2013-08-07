@@ -9,7 +9,7 @@ $(document).ready(function() {
 
     this.css('height',(h < 400) ? 300 : '');
 
-	this.css("position", "absolute");
+	this.css("position", "fixed");
 	this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
 	this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
 	return this;
@@ -151,6 +151,11 @@ $(document).ready(function() {
 			$('#bowlG').remove();
 			$($response).find('#formWrapper').appendTo($('#content'));
 			$('.more-info-box-js-2').center();
+			$(".select-tools-js").chosen({
+				disable_search_threshold: 1,
+			    no_results_text: "Nothing found!",
+			    width: "95%"
+  			});
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
 			});
@@ -158,5 +163,11 @@ $(document).ready(function() {
 			$('#getForm').attr('action', window.location.href);
 		});
 	});
+
+	$(".select-tools-js").chosen({
+		disable_search_threshold: 1,
+	    no_results_text: "Nothing found!",
+	    width: "95%"
+  	});
 
 });
