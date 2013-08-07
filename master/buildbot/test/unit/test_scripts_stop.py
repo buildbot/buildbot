@@ -45,10 +45,12 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             with open("basedir/twistd.pid", 'wt') as f:
                 f.write('1234')
         def sleep(t):
+            self.assertTrue(kill_sequence, "unexpected sleep: %d" % t)
             what, exp_t = kill_sequence.pop(0)
             self.assertEqual((what, exp_t), ('sleep', t))
         self.patch(time, 'sleep', sleep)
         def kill(pid, signal):
+            self.assertTrue(kill_sequence, "unexpected signal: %d" % signal)
             exp_sig, result = kill_sequence.pop(0)
             self.assertEqual((pid,signal), (1234,exp_sig))
             if isinstance(result, Exception):

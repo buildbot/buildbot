@@ -401,6 +401,12 @@ div.BuildWaterfall {
 	border-color: #ACA0B3;
 }
 
+.cancelled {
+    color: #F433FF;
+    background-color: #000;
+    border-color: #FFFFFF;
+}
+
 .start {
 	color: #000;
 	background-color: #ccc;

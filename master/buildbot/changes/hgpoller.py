@@ -19,17 +19,16 @@ from twisted.python import log
 from twisted.internet import defer, utils
 
 from buildbot import config
-from buildbot.util import deferredLocked
+from buildbot.util import deferredLocked, ascii2unicode
 from buildbot.changes import base
-from buildbot.util import epoch2datetime
 
 class HgPoller(base.PollingChangeSource):
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 
-    compare_attrs = ["repourl", "branch", "workdir",
+    compare_attrs = ("repourl", "branch", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
-                     "category", "project"]
+                     "category", "project")
 
     db_class_name = 'HgPoller'
 
@@ -37,16 +36,19 @@ class HgPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
-                 encoding='utf-8'):
+                 encoding='utf-8', name=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
+        if name is None:
+            name = repourl
+
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=repourl, pollInterval=pollInterval)
+            self, name=name, pollInterval=pollInterval)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
@@ -58,7 +60,7 @@ class HgPoller(base.PollingChangeSource):
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
 
-        if self.workdir == None:
+        if self.workdir is None:
             config.error("workdir is mandatory for now in HgPoller")
 
     def describe(self):
@@ -269,17 +271,17 @@ class HgPoller(base.PollingChangeSource):
         for rev, node in revNodeList:
             timestamp, author, files, comments = yield self._getRevDetails(
                 node)
-            yield self.master.addChange(
+            yield self.master.data.updates.addChange(
                    author=author,
-                   revision=node,
+                   revision=unicode(node),
                    files=files,
                    comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
-                   branch=self.branch,
-                   category=self.category,
-                   project=self.project,
-                   repository=self.repourl,
-                   src='hg')
+                   when_timestamp=int(timestamp),
+                   branch=ascii2unicode(self.branch),
+                   category=ascii2unicode(self.category),
+                   project=ascii2unicode(self.project),
+                   repository=ascii2unicode(self.repourl),
+                   src=u'hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(rev, oid=oid)

@@ -102,11 +102,9 @@ SQLAlchemy: http://www.sqlalchemy.org/
 
 SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
 
-  Buildbot requires one of the following SQLAlchemy-Migrate versions:
-  0.6.1, 0.7.0, and 0.7.1.  Sadly, Migrate's inter-version compatibility is not
-  good, so other versions - newer or older - are unlikely to work correctly.
-  Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to
-  version.
+  Buildbot requires one of the following SQLAlchemy-Migrate versions: 0.7.1 or 0.7.2.
+  Sadly, Migrate's inter-version compatibility is not good, so other versions - newer or older - are unlikely to work correctly.
+  Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to version.
 
 Python-Dateutil: http://labix.org/python-dateutil
 

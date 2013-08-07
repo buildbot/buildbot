@@ -133,7 +133,7 @@ class WebStatus(service.MultiService):
     The following CSS class names are used:
         - Activity, Event, BuildStep, LastBuild: general classes
         - waiting, interlocked, building, offline, idle: Activity states
-        - start, running, success, failure, warnings, skipped, exception:
+        - start, running, success, failure, warnings, skipped, exception, cancelled:
           LastBuild and BuildStep states
         - Change: box with change
         - Builder: box for builder name (at top)

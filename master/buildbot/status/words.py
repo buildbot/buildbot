@@ -26,9 +26,8 @@ from twisted.internet import defer, task
 from buildbot import config, interfaces, util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
-from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY, CANCELLED
 from buildbot.process.properties import Properties
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -407,11 +406,12 @@ class IRCContact(base.StatusReceiver):
         self.send(r)
 
     results_descriptions = {
-        SUCCESS:   ("Success",   'GREEN'),
-        WARNINGS:  ("Warnings",  'YELLOW'),
-        FAILURE:   ("Failure",   'RED'),
-        EXCEPTION: ("Exception", 'PURPLE'),
-        RETRY:     ("Retry",     'AQUA_LIGHT'),
+        SUCCESS:    ("Success",   'GREEN'),
+        WARNINGS:   ("Warnings",  'YELLOW'),
+        FAILURE:    ("Failure",   'RED'),
+        EXCEPTION:  ("Exception", 'PURPLE'),
+        RETRY:      ("Retry",     'AQUA_LIGHT'),
+        CANCELLED:  ("Cancelled", 'PINK'),
         }
 
     def getResultsDescriptionAndColor(self, results):
@@ -511,13 +511,13 @@ class IRCContact(base.StatusReceiver):
         opts = ForceOptions()
         opts.parseOptions(args)
 
-        which = opts['builder']
+        builderName = opts['builder']
         branch = opts['branch']
         revision = opts['revision']
         reason = opts['reason']
         props = opts['props']
 
-        if which is None:
+        if builderName is None:
             raise UsageError("you must provide a Builder, " + errReply)
 
         # keep weird stuff out of the branch, revision, and properties args.
@@ -555,14 +555,14 @@ class IRCContact(base.StatusReceiver):
                     return
                 properties.setProperty(pname, pvalue, "Force Build IRC")
 
-        bc = self.getControl(which)
-
         reason = "forced: by %s: %s" % (self.describeUser(who), reason)
-        ss = SourceStamp(branch=branch, revision=revision)
-        d = bc.submitBuildRequest(ss, reason, props=properties.asDict())
-        def subscribe(buildreq):
-            ireq = IrcBuildRequest(self, self.useRevisions)
-            buildreq.subscribe(ireq.started)
+        d = self.master.data.addBuildset(builderNames=[builderName],
+                sourcestamps=[{ 'branch' : branch, 'revision' : revision }],
+                reason=reason, properties=properties.asDict)
+        def subscribe((bsid, brids)):
+            assert 0, "rewrite to not use the status hierarchy" # TODO
+            #ireq = IrcBuildRequest(self, self.useRevisions)
+            #buildreq.subscribe(ireq.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 

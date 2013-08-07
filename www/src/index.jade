@@ -1,0 +1,15 @@
+extends layout
+block content
+  // navbar
+  div.navbar.navbar-fixed.navbar-inverse
+    div.navbar-inner
+      div.container
+        a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
+          span.icon-bar
+        a.brand(href="#/")
+          img#logo(src="img/favicon.ico")
+          | &nbsp;Buildbot
+        div.nav-collapse
+          topmenu
+  // fluid container
+  ng:view

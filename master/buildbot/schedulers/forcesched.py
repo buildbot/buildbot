@@ -448,7 +448,8 @@ class ForceScheduler(base.BaseScheduler):
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
     """
-    compare_attrs = ( 'name', 'builderNames',
+    compare_attrs = base.BaseScheduler.compare_attrs + \
+                   ( 'builderNames',
                      'reason', 'username',
                      'forcedProperties' )
 
@@ -574,7 +575,7 @@ class ForceScheduler(base.BaseScheduler):
 
         if properties:
             self.forcedProperties.extend(properties)
-            
+
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
@@ -594,12 +595,6 @@ class ForceScheduler(base.BaseScheduler):
            isListOfType = False
 
         return isListOfType
-
-    def startService(self):
-        pass
-
-    def stopService(self):
-        pass
 
     @defer.inlineCallbacks
     def gatherPropertiesAndChanges(self, **kwargs):
@@ -631,7 +626,7 @@ class ForceScheduler(base.BaseScheduler):
         if builderNames is None:
             builderNames = self.builderNames
         else:
-            builderNames = set(builderNames).intersection(self.builderNames)
+            builderNames = list(set(builderNames).intersection(self.builderNames))
 
         if not builderNames:
             defer.returnValue(None)
@@ -653,10 +648,15 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("A build was forced by '%s': %s" % (owner, reason))
+        r = (u"A build was forced by '%s': %s" % (owner, reason))
+
+        # turn sourcestamps into a list
+        for cb, ss in sourcestamps.iteritems():
+            ss['codebase'] = cb
+        sourcestamps = sourcestamps.values()
 
         # everything is validated, we can create our source stamp, and buildrequest
-        res = yield self.addBuildsetForSourceStampSetDetails(
+        res = yield self.addBuildsetForSourceStampsWithDefaults(
             reason = r,
             sourcestamps = sourcestamps,
             properties = properties,

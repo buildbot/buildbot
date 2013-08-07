@@ -17,7 +17,6 @@ import time
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
-from buildbot.util import epoch2datetime
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
@@ -89,11 +88,6 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.expectCommands(
                 gpo.Expect('p4', 'describe', '-s', str(number)).stdout(result))
 
-    def makeTime(self, timestring):
-        datefmt = '%Y/%m/%d %H:%M:%S'
-        when = time.mktime(time.strptime(timestring, datefmt))
-        return epoch2datetime(when)
-
     # tests
 
     def test_describe(self):
@@ -102,6 +96,19 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                          p4base='//depot/myproject/',
                          split_file=lambda x: x.split('/', 1)))
         self.assertSubstring("p4source", self.changesource.describe())
+
+    def test_name(self):
+        # no name:
+        cs1 = P4Source(p4port=None, p4user=None,
+                         p4base='//depot/myproject/',
+                         split_file=lambda x: x.split('/', 1))
+        self.assertEqual("P4Source:None://depot/myproject/", cs1.name)
+
+        # explicit name:
+        cs2 = P4Source(p4port=None, p4user=None, name='MyName',
+                         p4base='//depot/myproject/',
+                         split_file=lambda x: x.split('/', 1))
+        self.assertEqual("MyName", cs2.name)
 
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
@@ -123,48 +130,69 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.assert_(self.changesource.last_change is None)
         d = self.changesource.poll()
         def check_first_check(_):
-            self.assertEquals(self.changes_added, [])
+            self.assertEquals(self.master.data.updates.changesAdded, [])
             self.assertEquals(self.changesource.last_change, 1)
         d.addCallback(check_first_check)
 
         # Subsequent times, it returns Change objects for new changes.
         d.addCallback(lambda _ : self.changesource.poll())
         def check_second_check(res):
-            self.assertEquals(len(self.changes_added), 3)
-            self.assertEquals(self.changesource.last_change, 3)
 
-            # They're supposed to go oldest to newest, so this one must be first.
-            self.assertEquals(self.changes_added[0],
-                dict(author='slamb',
-                     files=['whatbranch'],
-                     project='',
-                     comments=change_2_log,
-                     revision='2',
-                     when_timestamp=self.makeTime("2006/04/13 21:46:23"),
-                     branch='trunk'))
+            # when_timestamp is converted from a local time spec, so just
+            # replicate that here
+            when1 = "2006/04/13 21:46:23"
+            when1 = int(time.mktime(time.strptime(when1, '%Y/%m/%d %H:%M:%S')))
+            when2 = "2006/04/13 21:51:39"
+            when2 = int(time.mktime(time.strptime(when2, '%Y/%m/%d %H:%M:%S')))
 
-            # These two can happen in either order, since they're from the same
-            # Perforce change.
-            if self.changes_added[1]['branch'] == 'branch_c':
-                self.changes_added[1:] = reversed(self.changes_added[1:])
-
-            self.assertEquals(self.changes_added[1],
-                dict(author='bob',
-                     files=['branch_b_file',
-                            'whatbranch'],
-                     project='',
-                     comments=change_3_log, # converted to unicode correctly
-                     revision='3',
-                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
-                     branch='branch_b'))
-            self.assertEquals(self.changes_added[2],
-                dict(author='bob',
-                     files=['whatbranch'],
-                     project='',
-                     comments=change_3_log, # converted to unicode correctly
-                     revision='3',
-                     when_timestamp=self.makeTime("2006/04/13 21:51:39"),
-                     branch='branch_c'))
+            # these two can happen in either order, since they're from the same
+            # perforce change.
+            changesAdded = self.master.data.updates.changesAdded
+            if changesAdded[1]['branch'] == 'branch_c':
+                changesAdded[1:] = reversed(changesAdded[1:])
+            self.assertEqual(self.master.data.updates.changesAdded, [ {
+                'author': u'slamb',
+                'branch': u'trunk',
+                'category': None,
+                'codebase': None,
+                'comments': u'Change 2 by slamb@testclient on 2006/04/13 21:46:23\n\n\tcreation\n',
+                'files': [u'whatbranch'],
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': '2',
+                'revlink': '',
+                'src': None,
+                'when_timestamp': when1,
+            }, {
+                'author': u'bob',
+                'branch': u'branch_b',
+                'category': None,
+                'codebase': None,
+                'comments': u'Change 3 by bob@testclient on 2006/04/13 21:51:39\n\n\tshort desc truncated because this is a long description.\n    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.\n',
+                'files': [u'branch_b_file', u'whatbranch'],
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': '3',
+                'revlink': '',
+                'src': None,
+                'when_timestamp': when2,
+            }, {
+                'author': u'bob',
+                'branch': u'branch_c',
+                'category': None,
+                'codebase': None,
+                'comments': u'Change 3 by bob@testclient on 2006/04/13 21:51:39\n\n\tshort desc truncated because this is a long description.\n    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.\n',
+                'files': [u'whatbranch'],
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': '3',
+                'revlink': '',
+                'src': None,
+                'when_timestamp': when2,
+            }])
             self.assertAllCommandsRan()
         d.addCallback(check_second_check)
         return d
@@ -224,7 +252,40 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.changesource.last_change = 50
         d = self.changesource.poll()
         def check(res):
-            self.assertEquals(len(self.changes_added), 2)
+            # when_timestamp is converted from a local time spec, so just
+            # replicate that here
+            when = "2006/04/13 21:55:39"
+            when = int(time.mktime(time.strptime(when, '%Y/%m/%d %H:%M:%S')))
+
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'mpatel',
+                'branch': u'branch_c',
+                'category': None,
+                'codebase': None,
+                'comments': u'Change 4 by mpatel@testclient on 2006/04/13 21:55:39\n\n\tshort desc truncated because this is a long description.\n',
+                'files': [u'branch_c_file'],
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': '5',
+                'revlink': '',
+                'src': None,
+                'when_timestamp': when,
+            }, {
+                'author': u'mpatel',
+                'branch': u'branch_b',
+                'category': None,
+                'codebase': None,
+                'comments': u'Change 4 by mpatel@testclient on 2006/04/13 21:55:39\n\n\tshort desc truncated because this is a long description.\n',
+                'files': [u'branch_b_file'],
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': '5',
+                'revlink': '',
+                'src': None,
+                'when_timestamp': when,
+                }])
             self.assertEquals(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)

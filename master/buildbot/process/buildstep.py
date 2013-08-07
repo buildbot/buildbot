@@ -27,7 +27,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import interfaces, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY, worst_status
+     EXCEPTION, RETRY, CANCELLED, worst_status
 from buildbot.process import metrics, properties
 from buildbot.util.eventual import eventually
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -580,7 +580,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def _startStep_2(self, res):
         if self.stopped:
-            self.finished(EXCEPTION)
+            self.finished(CANCELLED)
             return
 
         if self.progress:
@@ -655,10 +655,16 @@ class BuildStep(object, properties.PropertiesMixin):
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            results = EXCEPTION
-            self.step_status.setText(self.describe(True) +
-                                 ["interrupted"])
-            self.step_status.setText2(["interrupted"])
+            if results == CANCELLED:
+              self.step_status.setText(self.describe(True) +
+                                   ["cancelled"])
+              self.step_status.setText2(["cancelled"])
+            else:
+              results = EXCEPTION
+              self.step_status.setText(self.describe(True) +
+                                   ["interrupted"])
+              self.step_status.setText2(["interrupted"])
+
         self._finishFinished(results)
 
     def _finishFinished(self, results):
@@ -906,13 +912,13 @@ class LoggingBuildStep(BuildStep):
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
         if self.step_status.isWaitingForLocks():
-            self.addCompleteLog('interrupt while waiting for locks', str(reason))
+            self.addCompleteLog('cancelled while waiting for locks', str(reason))
         else:
-            self.addCompleteLog('interrupt', str(reason))
+            self.addCompleteLog('cancelled', str(reason))
 
         if self.cmd:
             d = self.cmd.interrupt(reason)
-            d.addErrback(log.err, 'while interrupting command')
+            d.addErrback(log.err, 'while cancelling command')
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
@@ -939,6 +945,8 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["warnings"]
         elif results == EXCEPTION:
             return self.describe(True) + ["exception"]
+        elif results == CANCELLED:
+            return self.describe(True) + ["cancelled"]
         else:
             return self.describe(True) + ["failed"]
 
