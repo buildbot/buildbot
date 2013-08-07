@@ -164,10 +164,30 @@ $(document).ready(function() {
 		});
 	});
 
+
 	$(".select-tools-js").chosen({
 		disable_search_threshold: 1,
 	    no_results_text: "Nothing found!",
 	    width: "95%"
   	});
+
+	$('.sort-name').click(function(e){
+		e.preventDefault();
+		var items = $('.chosen-results li').get();
+
+		items.sort(function(a,b){
+		  var keyA = $(a).text();
+		  var keyB = $(b).text();
+		  if (keyA < keyB) return -1;
+		  if (keyA > keyB) return 1;
+		  return 0;
+		});
+		var ul = $('.chosen-results');
+
+		$.each(items, function(i, li){
+		  ul.append(li);
+		});
+
+	});
 
 });
