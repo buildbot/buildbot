@@ -276,6 +276,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def setReason(self, reason):
         self.reason = reason
+
     def setBlamelist(self, blamelist):
         self.blamelist = blamelist
     def setProgress(self, progress):

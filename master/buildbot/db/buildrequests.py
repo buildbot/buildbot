@@ -68,7 +68,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None, _master_objectid=None):
+            bsid=None, _master_objectid=None, brids = None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -94,11 +94,37 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(reqs_tbl.c.complete == 0)
             if bsid is not None:
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
+            if brids is not None:
+                q = q.where(reqs_tbl.c.id.in_(brids))
             res = conn.execute(q)
 
             return [ self._brdictFromRow(row, _master_objectid)
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
+
+    def getUnclaimedBuildRequest(self):
+        def thd(conn):
+            reqs_tbl = self.db.model.buildrequests
+            claims_tbl = self.db.model.buildrequest_claims
+            buildset_tbl = self.db.model.buildsets
+
+            q = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
+                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
+                          .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
+                          whereclause=((claims_tbl.c.claimed_at == None) &
+                                       (reqs_tbl.c.complete == 0)))
+            res = conn.execute(q)
+            rows = res.fetchall()
+            rv = []
+            if rows:
+                for row in rows:
+                    rv.append(dict(brid=row.id, buildername=row.buildername, reason=row.reason))
+
+            res.close()
+            return rv
+
+        return self.db.pool.do(thd)
+
 
     def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
         def thd(conn):
