@@ -7,6 +7,7 @@ $(document).ready(function() {
 	var h = $(window).height();
     var w = $(window).width();
 
+    // adjust height to browser height
     this.css('height',(h < 400) ? 300 : '');
 
 	this.css("position", "absolute");
@@ -164,13 +165,14 @@ $(document).ready(function() {
 		});
 	});
 
-
+	// Freetext filtering
 	$(".select-tools-js").chosen({
 		disable_search_threshold: 1,
 	    no_results_text: "Nothing found!",
 	    width: "95%"
   	});
 
+	// Name sorting for filterbox
 	$('.sort-name').click(function(e){
 		e.preventDefault();
 		var items = $('.chosen-results li').get();
