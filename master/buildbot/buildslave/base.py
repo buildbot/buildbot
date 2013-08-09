@@ -236,7 +236,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 self.registration = None
             self.password = new.password
             self.registered_port = new_config.slavePortnum
-            self.registration = self.master.pbmanager.register(
+            self.registration = self.master.ampManager.register(
                     self.registered_port, self.slavename,
                     self.password, self.getPerspective)
 

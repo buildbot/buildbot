@@ -284,10 +284,7 @@ class MasterConfig(object):
             self.prioritizeBuilders = prioritizeBuilders
 
         if 'slavePortnum' in config_dict:
-            slavePortnum = config_dict.get('slavePortnum')
-            if isinstance(slavePortnum, int):
-                slavePortnum = "tcp:%d" % slavePortnum
-            self.slavePortnum = slavePortnum
+            self.slavePortnum = config_dict.get('slavePortnum')
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]

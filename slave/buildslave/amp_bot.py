@@ -293,10 +293,9 @@ class Bot(amp.AMP, service.MultiService):
         return {'error': ''}
 
 
-def sendAuthReq(ampProto):
-    user, password = 'user', 'password'
+def sendAuthReq(ampProto, name, passwd):
     my_features = [{'key': 'connection_type', 'value': 'slave'}]
-    return ampProto.callRemote(RemoteAuth, user=user, password=password, features=my_features)
+    return ampProto.callRemote(RemoteAuth, user=name, password=passwd, features=my_features)
 
 
 class BuildSlave(service.MultiService):
@@ -324,7 +323,7 @@ class BuildSlave(service.MultiService):
         factory = Factory()
         factory.protocol = lambda: Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         ampProto = endpoint.connect(factory)
-        ampProto.addCallback(sendAuthReq)
+        ampProto.addCallback(sendAuthReq, name=name, passwd=passwd)
         ampProto.addCallback(lambda vector: log.msg("Master's features: %s" % vector))
 
     def startService(self):

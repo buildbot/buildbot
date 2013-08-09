@@ -119,8 +119,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.caches = cache.CacheManager()
         self.caches.setServiceParent(self)
 
-        self.pbmanager = buildbot.pbmanager.PBManager()
-        self.pbmanager.setServiceParent(self)
+        self.ampManager = buildbot.pbmanager.AMPManager()
+        self.ampManager.setServiceParent(self)
 
         self.change_svc = ChangeManager(self)
         self.change_svc.setServiceParent(self)
