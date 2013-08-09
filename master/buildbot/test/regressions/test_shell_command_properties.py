@@ -24,6 +24,11 @@ from buildbot import config
 class FakeSlaveBuilder:
     slave = None
 
+class FakeBuilderStatus:
+    reason = None
+
+class FakeBuilder:
+    builder_status = FakeBuilderStatus()
 
 class FakeBuildStatus:
     def __init__(self):
@@ -86,6 +91,7 @@ class TestShellCommandProperties(unittest.TestCase):
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
+        b.builder = FakeBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
@@ -103,6 +109,7 @@ class TestSetProperty(unittest.TestCase):
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
+        b.builder = FakeBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
