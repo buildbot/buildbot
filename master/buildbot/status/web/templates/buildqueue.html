@@ -11,7 +11,7 @@
 {% block content %}
 <div id="formWrapper">
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
-    <input class="grey-btn" type="submit" value="Cancel selected" />
+    <input class="grey-btn" type="submit" value="Remove selected" />
 
 <table class="table-1 first-child tablesorter tablesorter-js">
     <thead>
@@ -20,7 +20,7 @@
         <th class="txt-align-left">Codebases</th>
         <th class="txt-align-left">Reason</th>
         <th>Compatible slaves</th>
-        <th>Cancel</th>
+        <th>Remove</th>
     </tr>
     </thead>
     <tbody>
@@ -41,6 +41,7 @@
         </td>
         <td>{{ bq.reason }} <p> requested on {{ bq.when }}, waiting {{ bq.waiting }} </p></td>
         <td>
+            <p>{{ bq.slaves|length }} slaves</p>
         <ul>
         {% for slave in bq.slaves %}
             <li> <a href="{{ path_to_root + 'buildslaves/' + slave }}">
