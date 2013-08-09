@@ -33,7 +33,7 @@ from buildbot.status.web.olpb import OneLinePerBuild
 from buildbot.status.web.grid import GridStatusResource
 from buildbot.status.web.grid import TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
-from buildbot.status.web.buildqueue import BuildqueueResource
+from buildbot.status.web.buildqueue import BuildQueueResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.loginkatana import LoginKatanaResource
@@ -360,7 +360,7 @@ class WebStatus(service.MultiService):
         self.putChild("console", ConsoleStatusResource(
                 orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
-        self.putChild("buildqueue", BuildqueueResource()) # has buildqueue
+        self.putChild("buildqueue", BuildQueueResource()) # has buildqueue
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())

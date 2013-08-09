@@ -9,74 +9,54 @@
 {% endblock %}
 
 {% block content %}
-   <select class="select-tools">
-      <option>
-        With selected
-      </option>
-      <option>
-        Remove
-      </option>
-    </select>
-  <table id="inputfields" class="table-1">
-    <th>
-      Build Number
-    </th>
-    <th>
-      Branch
-    </th>
-    <th>
-      Builder
-    </th>
-    <th>
-      Estimated Time Until Start
-    </th>
-    <th>
-      Requestor
-    </th>
-    <th>
-      Compatible Slaves
-    </th>
-    <th>
-      
-      <input id="selectall" type="checkbox"/>
-    </th>
-    <tr class="last">
-      <td>
-        <span class="notimpl">Not implxemented</span>
+<div id="formWrapper">
+<form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
+    <input class="grey-btn" type="submit" value="Remove selected" />
 
-
-      </td>
-      <td>
-       <span class="notimpl">Not implemented</span>
-
-      </td>
-      <td>
-        <a href="#">
-          <span class="notimpl">Not implemented</span>
-
-        </a>
-      </td>
-      <td>
-       <span class="notimpl">Not implemented</span>
-
-      </td>
-      <td>
-        <span class="notimpl">Not implemented</span>
-
-      </td>
-      <td>
-        <a href="#">
-         <span class="notimpl">Not implemented</span>
-
-        </a>
-      </td>
-      <td>
-        
-        <input type="checkbox"/>
-      </td>
+<table class="table-1 first-child tablesorter tablesorter-js">
+    <thead>
+    <tr>
+        <th class="txt-align-left">Builder</th>
+        <th class="txt-align-left">Codebases</th>
+        <th class="txt-align-left">Reason</th>
+        <th>Compatible slaves</th>
+        <th>Remove</th>
     </tr>
-    
-
-  </table>
-
+    </thead>
+    <tbody>
+    {% for bq in buildqueue %}
+    <tr>
+        <td>{{ bq.name }}</td>
+        <td>
+        {% for sskey, value in bq.sourcestamps.iteritems() %}
+            {{ sskey}} :
+            <ul>
+                <li> {{value.repository}}</li>
+                <li>{{value.branch}}</li>
+                {% if value.revision %}
+                <li>{{value.revision}}</li>
+                {% endif %}
+            </ul>
+        {% endfor %}
+        </td>
+        <td>{{ bq.reason }} <p> requested on {{ bq.when }}, waiting {{ bq.waiting }} </p></td>
+        <td>
+            <p>{{ bq.slaves|length }} slaves</p>
+        <ul>
+        {% for slave in bq.slaves %}
+            <li> <a href="{{ path_to_root + 'buildslaves/' + slave }}">
+                {{slave}}
+            </a> </li>
+        {% endfor %}
+        </ul>
+        </td>
+        <td>
+            <input type="checkbox" name="cancelselected" value="{{ bq.brid }}"/>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+ </form>
+ </div>
 {% endblock %}

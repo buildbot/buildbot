@@ -79,6 +79,7 @@ class BuilderStatus(styles.Versioned):
         self.nextBuild = None
         self.watchers = []
         self.buildCache = LRUCache(self.cacheMiss)
+        self.reason = None
 
     # persistence
 

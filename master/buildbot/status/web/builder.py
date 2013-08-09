@@ -20,7 +20,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
+    path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
     getRequestCharset
@@ -166,10 +166,10 @@ class ForceBuildActionResource(ActionResource):
                 break
 
         # send the user back to the builder page
-        returnbuilders = args.get("returnbuilders", None)
-        if returnbuilders is None:
+        returnpage = args.get("returnpage", None)
+        if returnpage is None:
             defer.returnValue((path_to_builder(req, self.builder_status), msg))
-        else:
+        elif "builders" in returnpage:
             defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
@@ -380,11 +380,15 @@ class CancelChangeResource(ActionResource):
                     if not cancel_all:
                         break
         args = req.args.copy()
-        returnbuilders = args.get("returnbuilders", None)
-        if returnbuilders is None:
+
+        returnpage = args.get("returnpage", None)
+
+        if returnpage is None:
             defer.returnValue((path_to_builder(req, self.builder_status)))
-        else:
+        elif "builders" in returnpage:
             defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
+        elif "buildqueue" in returnpage:
+            defer.returnValue(path_to_buildqueue(req))
 
 class StopChangeMixin(object):
 
@@ -547,9 +551,9 @@ class BuildersResource(HtmlResource):
         codebases_in_args = len(codebases_arg) > 0
 
         if codebases_in_args:
-            builder_arg = codebases_arg + "&returnbuilders=true"
+            builder_arg = codebases_arg + "&returnpage=builders"
         else:
-            builder_arg = "?returnbuilders=true"
+            builder_arg = "?returnpage=builders"
 
         # get counts of pending builds for each builder
         brstatus_ds = []

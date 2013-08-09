@@ -102,7 +102,6 @@
                       {% if authz.advertiseAction('cancelPendingBuild', request) %}
                         {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
                         {% endif %}
-
                     </li>
                     {% endfor %}
                     </ul>

@@ -352,6 +352,7 @@ class Build(properties.PropertiesMixin):
         # pass all sourcestamps to the buildstatus
         self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
+        self.builder.builder_status.reason = self.reason
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
 
