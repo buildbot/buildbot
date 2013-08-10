@@ -534,7 +534,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
                 scriptCommand('write_pidfile_and_sleep', pidfile),
                 self.basedir)
         if interruptSignal is not None:
-            s.interruptSignal = interruptSignal
+            s.interruptSignals = [interruptSignal]
         runproc_d = s.start()
 
         pidfile_d = self.waitForPidfile(pidfile)
@@ -548,6 +548,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile_d.addCallback(check_alive)
 
         def check_dead(_):
+            self.failUnlessEqual(s.killedBy, "TERM")
             self.assertDead(self.pid)
         runproc_d.addCallback(check_dead)
         return defer.gatherResults([pidfile_d, runproc_d])
