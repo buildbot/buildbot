@@ -1,8 +1,3 @@
-# Buildbot pylint configuration file
-#
-# Severely strips pylint output to expose more important issues. As fixes goes
-# in, it will make sense to re-enable some of these messages.
-
 [MASTER]
 
 # Specify a configuration file.
@@ -15,12 +10,12 @@
 # Profiled execution.
 profile=no
 
-# Add <file or directory> to the black list. It should be a base name, not a
-# path. You may set this option multiple times.
-ignore=CVS
+# Add files or directories to the blacklist. They should be base names, not
+# paths.
+ignore=
 
 # Pickle collected data for later comparisons.
-persistent=yes
+persistent=no
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
@@ -29,67 +24,141 @@ load-plugins=
 
 [MESSAGES CONTROL]
 
-# Enable the message, report, category or checker with the given id(s). You can
-# either give multiple identifier separated by comma (,) or put this option
-# multiple time.
-#enable=
+# For now disable bunch of checks that does not pass. Most of them should be
+# re-enabled and reported issues fixed.
 
-# Disable the message, report, category or checker with the given id(s). You
-# can either give multiple identifier separated by comma (,) or put this option
-# multiple time.
-# C0103: Invalid name "xxx" (should match [a-z_][a-z0-9_]{2,30}$)
+# Following are the checks we don't care about, and thus should remain disabled
+#
+# C0102: Black listed name "%s"
 # C0111: Missing docstring
-# C0301: Line too long (NN/80)
-# C0302: Too many lines in module (%s) Used when a module has too much lines,
-# reducing its readibility.
-# I0011: Locally disabling %s Used when an inline option disable a message or a
-# messages category.
-# R0201: Method could be a function. Used when a method doesn't use its bound
-# instance, and so could be written as a function.
-# R0801: Similar lines in %s files. Indicates that a set of similar lines has
-# been detected among multiple file. This usually means that the code should be
-# refactored to avoid this duplication.
-# R0902: Too many instance attributes (N/7)
-# R0903: Too few public methods (N/2)
-# R0904: Too many public methods (N/20)
-# R0911: Too many return statements (N/6)
-# R0912: Too many branches (N/12)
-# R0913: Too many arguments (N/5)
-# R0914: Too many local variables (N/15)
-# R0915: Too many statements (N/50)
-# W0102: Dangerous default value %s as argument Used when a mutable value as
-# list or dictionary  is detected in a default value for an argument.
-# W0141: Used builtin function 'N'
-# W0142: Used * or * magic* Used when a function or method is called using *args
-# or **kwargs to dispatch arguments. This doesn't improve readility and should
-# be used with care.
-# W0212: Access to a protected member %s of a client class Used when a protected
-# member  (i.e. class member with a name beginning with an underscore) is access
-# outside the class or a descendant of the class where it's defined.
-# W0232: Class has no __init__ method Used when a class has no __init__ method,
-# neither its parent classes.
-# W0511: TODO
-# W0602: Using global for %r but no assigment is done Used when a variable is
-# defined through  the "global" statement but no assigment to this variable is
-# done.
-# W0603: Using the global statement Used when you use the "global" statement to
-# update a global variable.
-# W0613: Unused argument ''
-# W0622: Redefining built-in %r Used when a variable or function override a
-# built-in.
-# W0704: Except doesn't do anything Used when an except clause does nothing but
-# "pass" and there is no "else" clause.
-disable-msg=C0103,C0111,C0301,C0302,I0011,R0201,R0801,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0102,W0141,W0142,W0212,W0232,W0511,W0602,W0603,W0613,W0622,W0704
+# C0302: Too many lines in module (%s)*
+# R0201: Method could be a function*
+# R0801: Similar lines in %s files*
+# R0901: Too many ancestors (%s/%s)*
+# R0902: Too many instance attributes (%s/%s)*
+# R0903: Too few public methods (%s/%s)*
+# R0904: Too many public methods (%s/%s)*
+# R0911: Too many return statements (%s/%s)*
+# R0912: Too many branches (%s/%s)*
+# R0913: Too many arguments (%s/%s)*
+# R0914: Too many local variables (%s/%s)*
+# R0915: Too many statements (%s/%s)*
+# R0921: Abstract class not referenced*
+# R0922: Abstract class is only
+# R0924: Badly implemented %s, implements %s but not %s*
+# W0122: Use of the exec statement*
+# W0142: Used * or ** magic
+# W0402: Uses of a deprecated module %r
+# W0511: FIXME or XXX is detected
+# W0601: Global variable %r undefined at the module level
+# W0613: Unused argument %r
+# E1103: %s %r has no %r member (but some types could not be inferred)
 
+disable=
+  C0102,
+  C0103,
+  C0111,
+  C0302,
+  R0201,
+  R0801,
+  R0901,
+  R0902,
+  R0903,
+  R0904,
+  R0911,
+  R0912,
+  R0913,
+  R0914,
+  R0915,
+  R0921,
+  R0922,
+  R0924,
+  W0402,
+  W0511,
+  W0601,
+  W0613,
+  E1103,
+  I0011,
+  C0112,
+  C0202,
+  C0204,
+  C0301,
+  C0321,
+  C0322,
+  C0323,
+  C0324,
+  E0101,
+  E0102,
+  E0202,
+  E0203,
+  E0211,
+  E0213,
+  E0603,
+  E0611,
+  E0701,
+  E1002,
+  E1101,
+  E1102,
+  E1111,
+  E1120,
+  E1121,
+  E1123,
+  E1124,
+  F0401,
+  R0401,
+  W0122,
+  W0142,
+  W0101,
+  W0102,
+  W0104,
+  W0105,
+  W0106,
+  W0107,
+  W0108,
+  W0109,
+  W0110,
+  W0120,
+  W0141,
+  W0201,
+  W0212,
+  W0221,
+  W0222,
+  W0223,
+  W0231,
+  W0232,
+  W0233,
+  W0301,
+  W0311,
+  W0312,
+  W0333,
+  W0403,
+  W0406,
+  W0603,
+  W0611,
+  W0612,
+  W0621,
+  W0622,
+  W0631,
+  W0701,
+  W0702,
+  W0703,
+  W0710,
+  W1001,
+  W1401,
+  W1402
 
 [REPORTS]
 
 # Set the output format. Available formats are text, parseable, colorized, msvs
-# (visual studio) and html
+# (visual studio) and html. You can also give a reporter class, eg
+# mypackage.mymodule.MyReporterClass.
 output-format=text
 
 # Include message's id in output
 include-ids=yes
+
+# Include symbolic ids of messages in output
+symbols=no
 
 # Put messages in a separate file for each module / package specified on the
 # command line instead of printing them on stdout. Reports (if any) will be
@@ -103,11 +172,11 @@ reports=no
 # note). You have access to the variables errors warning, statement which
 # respectively contain the number of errors / warnings messages and the total
 # number of statements analyzed. This is used by the global evaluation report
-# (R0004).
+# (RP0004).
 evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
 
 # Add a comment according to your evaluation note. This is used by the global
-# evaluation report (R0004).
+# evaluation report (RP0004).
 comment=no
 
 
@@ -115,6 +184,21 @@ comment=no
 
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,XXX,TODO
+
+
+[SIMILARITIES]
+
+# Minimum lines number of a similarity.
+min-similarity-lines=4
+
+# Ignore comments when computing similarities.
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities.
+ignore-imports=no
 
 
 [FORMAT]
@@ -142,10 +226,11 @@ ignored-classes=SQLObject
 
 # When zope mode is activated, add a predefined set of Zope acquired attributes
 # to generated-members.
-zope=yes
+zope=no
 
 # List of members which are set dynamically and missed by pylint inference
-# system, and so shouldn't trigger E0201 when accessed.
+# system, and so shouldn't trigger E0201 when accessed. Python regular
+# expressions are accepted.
 generated-members=REQUEST,acl_users,aq_parent
 
 
@@ -167,13 +252,13 @@ const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
 # Regular expression which should only match correct function names
-function-rgx=[a-z_][a-z0-9_]{2,30}$
+function-rgx=[a-z_][a-zA-Z0-9]{2,30}$
 
 # Regular expression which should only match correct method names
-method-rgx=[a-z_][a-z0-9_]{2,30}$
+method-rgx=[_]{0,2}[a-z][a-zA-Z0-9]{2,30}[_]{0,2}$
 
 # Regular expression which should only match correct instance attribute names
-attr-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-zA-Z0-9]{2,30}$
 
 # Regular expression which should only match correct argument names
 argument-rgx=[a-z_][a-z0-9_]{2,30}$
@@ -201,24 +286,13 @@ no-docstring-rgx=__.*__
 # Tells whether we should check for unused import in __init__ files.
 init-import=no
 
-# A regular expression matching names used for dummy variables (i.e. not used).
+# A regular expression matching the beginning of the name of dummy variables
+# (i.e. not used).
 dummy-variables-rgx=_|dummy
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.
 additional-builtins=
-
-
-[SIMILARITIES]
-
-# Minimum lines number of a similarity.
-min-similarity-lines=4
-
-# Ignore comments when computing similarities.
-ignore-comments=yes
-
-# Ignore docstrings when computing similarities.
-ignore-docstrings=yes
 
 
 [CLASSES]
@@ -229,6 +303,30 @@ ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp
+
+# List of valid names for the first argument in a class method.
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method.
+valid-metaclass-classmethod-first-arg=mcs
+
+
+[IMPORTS]
+
+# Deprecated modules which should not be used, separated by a comma
+deprecated-modules=regsub,string,TERMIOS,Bastion,rexec
+
+# Create a graph of every (i.e. internal and external) dependencies in the
+# given file (report RP0402 must not be disabled)
+import-graph=
+
+# Create a graph of external dependencies in the given file (report RP0402 must
+# not be disabled)
+ext-import-graph=
+
+# Create a graph of internal dependencies in the given file (report RP0402 must
+# not be disabled)
+int-import-graph=
 
 
 [DESIGN]
@@ -265,19 +363,8 @@ min-public-methods=2
 max-public-methods=20
 
 
-[IMPORTS]
+[EXCEPTIONS]
 
-# Deprecated modules which should not be used, separated by a comma
-deprecated-modules=regsub,string,TERMIOS,Bastion,rexec
-
-# Create a graph of every (i.e. internal and external) dependencies in the
-# given file (report R0402 must not be disabled)
-import-graph=
-
-# Create a graph of external dependencies in the given file (report R0402 must
-# not be disabled)
-ext-import-graph=
-
-# Create a graph of internal dependencies in the given file (report R0402 must
-# not be disabled)
-int-import-graph=
+# Exceptions that will emit a warning when being caught. Defaults to
+# "Exception"
+overgeneral-exceptions=Exception
