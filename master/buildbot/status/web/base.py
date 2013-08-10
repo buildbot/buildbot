@@ -109,15 +109,15 @@ def build_get_class(b):
     return builder.Results[result]
 
 def path_to_root(request):
-    # /waterfall : ['waterfall'] -> ''
+    # /waterfall : ['waterfall'] -> './'
     # /somewhere/lower : ['somewhere', 'lower'] -> '../'
     # /somewhere/indexy/ : ['somewhere', 'indexy', ''] -> '../../'
-    # / : [] -> ''
+    # / : [] -> './'
     if request.prepath:
         segs = len(request.prepath) - 1
     else:
         segs = 0
-    root = "../" * segs
+    root = "../" * segs if segs else './'
     return root
 
 def path_to_authfail(request):

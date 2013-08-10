@@ -67,6 +67,11 @@ class Functions(unittest.TestCase):
 
         self.assertEqual(base.getRequestCharset(req), exp)
 
+    def fakeRequest(self, prepath):
+        r = mock.Mock()
+        r.prepath = prepath
+        return r
+
     def test_getRequestCharset_empty(self):
         return self.do_test_getRequestCharset(None, 'utf-8')
 
@@ -80,3 +85,14 @@ class Functions(unittest.TestCase):
             'application/x-www-form-urlencoded ; charset=UTF-16 ; foo=bar',
             'UTF-16')
 
+    def test_path_to_root_from_root(self):
+        self.assertEqual(base.path_to_root(self.fakeRequest([])),
+                         './')
+
+    def test_path_to_root_from_one_level(self):
+        self.assertEqual(base.path_to_root(self.fakeRequest(['waterfall'])),
+                         './')
+
+    def test_path_to_root_from_two_level(self):
+        self.assertEqual(base.path_to_root(self.fakeRequest(['a', 'b'])),
+                         '../')
