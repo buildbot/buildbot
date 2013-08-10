@@ -70,6 +70,8 @@ Features
 
 * The :bb:chsrc:`P4Source` changesource now supports Perforce servers in a different timezone than the buildbot master.
 
+* Revision links for commits on SouceForge (Allura) are now automatically generated.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

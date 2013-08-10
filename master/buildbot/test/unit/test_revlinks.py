@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, \
+    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch, default_revlink_matcher
 from twisted.trial import unittest
-from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, GitwebMatch
 
 class TestGithubRevlink(unittest.TestCase):
     revision = 'b6874701b54e0043a78882b020afc86033133f91'
@@ -51,6 +52,18 @@ class TestSourceforgeGitRevlink(unittest.TestCase):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'ssh://somebody@gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'),
                 self.url)
 
+class TestSourceforgeGitRevlink_AlluraPlatform(unittest.TestCase):
+    revision = '6f9b1470bae497c6ce47e4cf8c9195d864d2ba2f'
+    url = 'https://sourceforge.net/p/klusters/klusters/ci/6f9b1470bae497c6ce47e4cf8c9195d864d2ba2f/'
+
+    def testGIT(self):
+        self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'git://git.code.sf.net/p/klusters/klusters'),
+                self.url)
+
+    def testSSHuri(self):
+        self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'ssh://somebody@git.code.sf.net/p/klusters/klusters'),
+                self.url)
+
 class TestRevlinkMatch(unittest.TestCase):
     def testNotmuch(self):
         revision = 'f717d2ece1836c863f9cc02abd1ff2539307cd1d'
@@ -80,3 +93,14 @@ class TestGitwebMatch(unittest.TestCase):
         matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
         self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
                 'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
+
+class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
+    revision = "0"
+
+    def testAllRevlinkMatchers(self):
+        # GithubRevlink
+        self.assertTrue(default_revlink_matcher(self.revision, 'https://github.com/buildbot/buildbot.git'))
+        # SourceforgeGitRevlink
+        self.assertTrue(default_revlink_matcher(self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'))
+        # SourceforgeGitRevlink_AlluraPlatform
+        self.assertTrue(default_revlink_matcher(self.revision, 'git://git.code.sf.net/p/klusters/klusters'))
