@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import time
+import datetime
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
-from buildbot.util import epoch2datetime
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
@@ -91,8 +90,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
     def makeTime(self, timestring):
         datefmt = '%Y/%m/%d %H:%M:%S'
-        when = time.mktime(time.strptime(timestring, datefmt))
-        return epoch2datetime(when)
+        when = datetime.datetime.strptime(timestring, datefmt)
+        return when
 
     # tests
 
