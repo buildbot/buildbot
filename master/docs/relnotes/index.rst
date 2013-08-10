@@ -75,6 +75,8 @@ Features
 
 * GNUAutoconf and other pre-defined factories now work correctly (:bb:bug:`2402`)
 
+* The pubDate in RSS feeds is now rendered correctly (:bb:bug:`2530`)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
