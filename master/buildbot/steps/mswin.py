@@ -14,10 +14,9 @@
 # Copyright Buildbot Team Members
 
 from twisted.python import log
-from twisted.python.failure import Failure
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 
 class Robocopy(ShellCommand):
@@ -83,5 +82,5 @@ class Robocopy(ShellCommand):
                 if (cmd.rc & flag) == flag:
                     return result
 
-        log.err(Failure(), "Unknown return code for Robocopy: %s" % cmd.rc)
+        log.msg("Unknown return code for Robocopy: %s" % cmd.rc)
         return EXCEPTION

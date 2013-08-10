@@ -13,12 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import time
 import datetime
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
-from buildbot.util import epoch2datetime
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'

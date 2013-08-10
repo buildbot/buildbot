@@ -15,6 +15,8 @@
 # Portions Copyright 2013 Bad Dog Consulting
 
 
+import textwrap
+import platform
 from twisted.trial import unittest
 from buildbot.steps.source.p4 import P4
 from buildbot.status.results import SUCCESS
@@ -22,9 +24,6 @@ from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot import config
-import textwrap
-import os.path
-import platform
 
 _is_windows = (platform.system() == 'Windows')
 
