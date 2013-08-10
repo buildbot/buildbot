@@ -80,6 +80,8 @@ Features
 
 * Added zsh and bash tab-completions support for 'buildslave' command.
 
+* Buildslave fires SIGTERM before SIGKILL when killing a process :bb:bug:`751`
+
 Fixes
 ~~~~~
 
