@@ -38,10 +38,13 @@ requirejs.config
     paths: plugins_paths
 # loads the plugin js modules, and the start angular magic
 require(plugins_modules, ->
-    if config.devmode? and not window.describe?  # describe is part of jasmine
-        app = 'devapp'
-        console.log "devmode!"
+    if window.__karma__?
+        window.__karma__.start()
     else
-        app = 'app'
-    angular.bootstrap document, [ app ]
+        if config.devmode?
+            app = 'devapp'
+            console.log "devmode!"
+        else
+            app = 'app'
+        angular.bootstrap document, [ app ]
 )
