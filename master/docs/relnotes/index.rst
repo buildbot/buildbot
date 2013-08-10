@@ -76,6 +76,8 @@ Features
 
 * Master-side source steps now respond to the "stop build" button (:bb:bug:`2356`).
 
+* The web hooks now include support for Gitorious. 
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
