@@ -26,7 +26,6 @@ module.exports = (grunt) ->
             working:
                 src: [
                     './buildbot_www/'
-                    './.temp/views'
                     './.temp/'
                 ]
 
@@ -50,9 +49,9 @@ module.exports = (grunt) ->
                     ext: '.js'
                     filter: hasChanged
                 ]
-                options:
-                    sourceMap: true
-                    sourceRoot : '/src'
+            options:
+                sourceMap: true
+                sourceRoot : '/src'
         concat:
             # concat bower.json files into config.js, to display deps in the UI
             # we declare a constant in the 'app' module
@@ -306,6 +305,21 @@ module.exports = (grunt) ->
                     autoWatch: false
                     browsers: ['PhantomJS']
                     singleRun: true
+            prod:
+                options:
+                    background: false
+                    autoWatch: false
+                    browsers: ['PhantomJS']
+                    singleRun: true
+                    frameworks: ['jasmine', 'requirejs'],
+                    files: [
+                        './src/scripts/libs/jquery.js'
+                        './src/scripts/libs/angular.js'
+                        './test/scripts/libs/angular-mocks.js'
+                        '.temp/scripts/test/dataspec.js'
+                        './test/scripts/*/**.coffee'
+                        './buildbot_www/scripts/scripts.min.js'
+                    ]
 
         # Sets up file watchers and runs tasks when watched files are changed.
         watch:
@@ -379,13 +393,6 @@ module.exports = (grunt) ->
             grunt.log.write result.toString()
             done(!error)
 
-    # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
-    # Enter the following command at the command line to execute this build task:
-    # grunt ci
-    grunt.registerTask 'ci', [
-        'default'
-        'karma:ci'
-    ]
 
     # Compiles the app with non-optimized build settings and places the build artifacts in the buildbot_www directory.
     # Enter the following command at the command line to execute this build task:
@@ -416,6 +423,16 @@ module.exports = (grunt) ->
         'watch',
     ]
 
+    # steps needed for ci. compile in dev mode and in prod, run tests for each
+    # Enter the following command at the command line to execute this build task:
+    # grunt ci
+    grunt.registerTask 'ci', [
+        'default'
+        'karma:ci'
+        'prod'
+        'dataspec'
+        'karma:prod'
+    ]
     # Compiles the app with optimized build settings and places the build artifacts in the buildbot_www directory.
     # Enter the following command at the command line to execute this build task:
     # grunt prod
