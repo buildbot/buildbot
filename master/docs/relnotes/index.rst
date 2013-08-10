@@ -72,6 +72,8 @@ Features
 
 * Revision links for commits on SouceForge (Allura) are now automatically generated.
 
+* The WebStatus now interprets ANSI color codes in stdio output.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
