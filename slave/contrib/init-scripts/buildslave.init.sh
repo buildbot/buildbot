@@ -79,31 +79,31 @@ function is_disabled() {
 
 
 function slave_config_valid() {
-    # Function validates buildmaster instance startup variables based on array
+    # Function validates buildslave instance startup variables based on array
     # index
     local errors=0
     local index=$1
 
     if ! is_enabled "${SLAVE_ENABLED[$index]}" && ! is_disabled "${SLAVE_ENABLED[$index]}" ; then
-        log_warning_msg "buildmaster #${i}: invalid enabled status"
+        log_warning_msg "buildslave #${index}: invalid enabled status"
         errors=$(($errors+1))
     fi
 
     if [[ -z ${SLAVE_NAME[$index]} ]]; then
-        log_failure_msg "buildmaster #${i}: no name"
+        log_failure_msg "buildslave #${index}: no name"
         errors=$(($errors+1))
     fi
 
     if [[ -z ${SLAVE_USER[$index]} ]]; then
-        log_failure_msg "buildmaster #${i}: no run user specified"
+        log_failure_msg "buildslave #${index}: no run user specified"
         errors=$( ($errors+1) )
     elif ! getent passwd ${SLAVE_USER[$index]} >/dev/null; then
-        log_failure_msg "buildmaster #${i}: unknown user ${SLAVE_USER[$index]}"
+        log_failure_msg "buildslave #${index}: unknown user ${SLAVE_USER[$index]}"
         errors=$(($errors+1))
     fi
 
     if [[ ! -d "${SLAVE_BASEDIR[$index]}" ]]; then
-        log_failure_msg "buildmaster ${i}: basedir does not exist ${SLAVE_BASEDIR[$index]}"
+        log_failure_msg "buildslave ${index}: basedir does not exist ${SLAVE_BASEDIR[$index]}"
         errors=$(($errors+1))
     fi
 
