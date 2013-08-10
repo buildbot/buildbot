@@ -155,7 +155,7 @@ class WebStatus(service.MultiService):
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
                  change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None,
-                 change_hook_auth=None):
+                 change_hook_auth=None, shortrev=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -277,6 +277,9 @@ class WebStatus(service.MultiService):
         @type  jinja_loaders: None or list
         @param jinja_loaders: If not empty, a list of additional Jinja2 loader
                               objects to search for templates.
+
+        @type shortrev: C{None}, int (max revision label length), format-string, dict (repository -> format string), or callable
+        @param shortrev: decorations revision labels to a web-view,
         """
 
         service.MultiService.__init__(self)
@@ -345,6 +348,7 @@ class WebStatus(service.MultiService):
                              num_events_max=num_events_max)
 
         self.revlink = revlink
+        self.shortrev = shortrev
         self.changecommentlink = changecommentlink
         self.repositories = repositories
         self.projects = projects
@@ -448,8 +452,15 @@ class WebStatus(service.MultiService):
             revlink = self.revlink
         else:
             revlink = self.master.config.revlink
+
+        # Set up the jinja templating engine.
+        if self.shortrev:
+            shortrev = self.shortrev
+        else:
+            shortrev = self.master.config.shortrev
+
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects, self.jinja_loaders)
+                                        self.repositories, self.projects, self.jinja_loaders, shortrev)
 
         if not self.site:
             
