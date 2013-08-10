@@ -74,6 +74,8 @@ Features
 
 * The WebStatus now interprets ANSI color codes in stdio output.
 
+* Master-side source steps now respond to the "stop build" button (:bb:bug:`2356`).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
