@@ -16,7 +16,6 @@
 import sqlalchemy as sa
 from twisted.trial import unittest
 from buildbot.test.util import migration
-from buildbot.db.types.json import JsonObject
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
