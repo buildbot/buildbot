@@ -52,6 +52,7 @@ class RpmLint(Test):
             self.fileloc = fileloc
         if config:
             self.config = config
+        self.addFactoryArguments(fileloc=fileloc, config=config)
 
         self.command = ["rpmlint", "-i"]
         if self.config:
