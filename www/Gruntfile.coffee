@@ -2,6 +2,20 @@ path = require 'path'
 
 # Build configurations.
 module.exports = (grunt) ->
+    changedFiles = {}
+    firstPass = true
+    grunt.event.on "watch", (action, filepath) ->
+        firstPass = false
+        changedFiles[filepath] = action
+    # allows incremental build using watch
+    hasChanged = (filepath) ->
+        if firstPass
+            return true
+        if changedFiles.hasOwnProperty(filepath)
+            delete changedFiles[filepath]
+            return true
+        return false
+
     grunt.initConfig
         # Deletes buildbot_www and temp directories.
         # The temp directory is used during the build process.
@@ -12,8 +26,6 @@ module.exports = (grunt) ->
             working:
                 src: [
                     './buildbot_www/'
-                    './buildbot_www_test/'
-                    './.temp/views'
                     './.temp/'
                 ]
 
@@ -26,19 +38,20 @@ module.exports = (grunt) ->
                     dest: './.temp/'
                     expand: true
                     ext: '.js'
-                ,
-                    cwd: './test/'
-                    src: 'scripts/**/*.coffee'
-                    dest: './buildbot_www_test/'
+                    filter: hasChanged
+                ]
+            testscripts:
+                files: [
+                    cwd: './test/scripts/'
+                    src: '**/*.coffee'
+                    dest: './.temp/scripts/test/'
                     expand: true
                     ext: '.js'
+                    filter: hasChanged
                 ]
-                options:
-                    # Don't include a surrounding Immediately-Invoked Function Expression (IIFE) in the compiled output.
-                    # For more information on IIFEs, please visit http://benalman.com/news/2010/11/immediately-invoked-function-expression/
-                    bare: true
-                    sourceMap: true
-                    sourceRoot : '/src'
+            options:
+                sourceMap: true
+                sourceRoot : '/src'
         concat:
             # concat bower.json files into config.js, to display deps in the UI
             # we declare a constant in the 'app' module
@@ -67,11 +80,13 @@ module.exports = (grunt) ->
                     # if a module has been loaded in previous layers, it wont be loaded again
                     # so that you can use global regular expression in the end
                         'libs/jquery'
-                        'libs/angular' # angular needs jquery before or will use internal jqlite
-                        'libs/.*'      # remaining libs before app
-                        'app'          # app needs libs
-                        '(routes|views|config)'
-                        '.*/.*'   # remaining angularjs components
+                        'libs/angular'     # angular needs jquery before or will use internal jqlite
+                        'libs/*'           # remaining libs before app
+                        'test/libs/*'      # test libs in dev mode
+                        'test/dataspec'    # test mocks in dev mode
+                        'test/mocks/*'     # test mocks in dev mode
+                        'app'              # app needs libs
+                        '{routes,views,config,*/**}'    # remaining angularjs components
                         'run'     # run has to be in the end, because it is triggering angular's own DI
                     ]
                 dest: '.temp/scripts/main.js'
@@ -109,17 +124,20 @@ module.exports = (grunt) ->
                     src: 'scripts/**/*.js'
                     dest: './.temp/'
                     expand: true
-                ,
-                    cwd: './src/'
-                    src: 'scripts/**/*.js'
-                    dest: './buildbot_www_test/'
+                ]
+            # Copies js files to the temp directory
+            testjs:
+                files: [
+                    cwd: './test/scripts/'
+                    src: '**/*.js'
+                    dest: './.temp/scripts/test'
                     expand: true
                 ]
-            # Copies coffee src files to the buildbot_ww directory
+            # Copies coffee src files to the buildbot_www directory
             src:
                 files: [
-                    cwd: './src/'
-                    src: 'scripts/**/*.coffee'
+                    cwd: './'
+                    src: '*/scripts/**/*.coffee'
                     dest: 'buildbot_www/src/'
                     expand: true
                     flatten: true
@@ -142,7 +160,7 @@ module.exports = (grunt) ->
                     dest: './buildbot_www/'
                     expand: true
                 ,
-                    './buildbot_www/index.html': './.temp/index.min.html'
+                    './buildbot_www/index.html': './.temp/index.html'
                 ,
                     './buildbot_www/require.js': './src/scripts/libs/require.js'
                 ]
@@ -197,35 +215,12 @@ module.exports = (grunt) ->
                 files:
                     './.temp/styles/styles.css': './src/styles/styles.less'
 
-        # Minifiy index.html.
-        minifyHtml:
-            prod:
-                files:
-                    './.temp/index.min.html': './.temp/index.html'
-
         # Gathers all views and creates a file to push views directly into the $templateCache
-        # This will produce a file with the following content.
-        #
-        # angular.module('app').run(['$templateCache', function ($templateCache) {
-        #   $templateCache.put('/views/directives/tab.html', '<div class="tab-pane" ng-class="{active: selected}" ng-transclude></div>');
-        #   $templateCache.put('/views/directives/tabs.html', '<div class="tabbable"> <ul class="nav nav-tabs"> <li ng-repeat="tab in tabs" ng-class="{active:tab.selected}"> <a href="http://localhost:3005/scripts/views.js" ng-click="select(tab)">{{tab.caption}}</a> </li> </ul> <div class="tab-content" ng-transclude></div> </div>');
-        #   [...]
-        # }]);
-        #
-        # This file is then included in the output automatically.  AngularJS will use it instead of going to the file system for the views, saving requests.  Notice that the view content is actually minified.  :)
-        ngTemplateCache:
+        html2js:
             views:
-                files:
-                    './.temp/scripts/views.js': './.temp/views/**/*.html'
+                files: './.temp/scripts/views.js':'./.temp/views/**/*.html'
                 options:
-                    trim: './.temp/'
-
-        # Restart server when server sources have changed, notify all browsers on change.
-        regarde:
-            buildbot_www:
-                files: './buildbot_www/**'
-                tasks: 'livereload'
-
+                    base: './.temp/'
         # RequireJS optimizer configuration for both scripts and styles.
         # This configuration is only used in the 'prod' build.
         # The optimizer will scan the main file, walk the dependency tree, and write the output in dependent sequence to a single file.
@@ -286,31 +281,45 @@ module.exports = (grunt) ->
                         timestamp: "<%= grunt.template.today() %>"
                         environment: 'prod'
 
-        # Runs unit tests using karma (formerly testacular)
+        # Runs unit tests using karma
         karma:
             options:
-                autoWatch: true
                 colors: true
-                configFile: './karma.conf.js'
                 keepalive: true
+                autoWatch: false
+                background: true
                 reporters: ['progress']
+                frameworks: ['jasmine', 'requirejs'],
+                files: [
+                    './buildbot_www/scripts/test/main.js'
+                    {pattern: 'buildbot_www/scripts/**/*.js', included: false},
+                    {pattern: 'buildbot_www/scripts/**/*.js.map', included: false},
+                ]
                 singleRun: false
-            chrome:
+            dev:
                 options:
-                    browsers: ['Chrome']
-            firefox:
-                options:
-                    browsers: ['Firefox']
-            pjs:
-                options:
-                    browsers: ['PhantomJS']
+                    browsers: (grunt.option('browsers') or 'Chrome,Firefox,PhantomJS').split(",")
             ci:
                 options:
+                    background: false
                     autoWatch: false
-                    colors: false
                     browsers: ['PhantomJS']
-                    configFile: './karma.conf.js'
                     singleRun: true
+            prod:
+                options:
+                    background: false
+                    autoWatch: false
+                    browsers: ['PhantomJS']
+                    singleRun: true
+                    frameworks: ['jasmine', 'requirejs'],
+                    files: [
+                        './src/scripts/libs/jquery.js'
+                        './src/scripts/libs/angular.js'
+                        './test/scripts/libs/angular-mocks.js'
+                        '.temp/scripts/test/dataspec.js'
+                        './test/scripts/*/**.coffee'
+                        './buildbot_www/scripts/scripts.min.js'
+                    ]
 
         # Sets up file watchers and runs tasks when watched files are changed.
         watch:
@@ -321,13 +330,17 @@ module.exports = (grunt) ->
                     'copy:index'
                 ]
             scripts:
-                files: './src/scripts/**'
+                files: ['./src/scripts/**', './test/scripts/**']
                 tasks: [
                     'coffee:scripts'
+                    'coffee:testscripts'
                     'copy:js'
                     'copy:scripts'
                     'copy:src'
+                    'karma:dev:run'
                 ]
+                options:
+                    spawn: false,
             styles:
                 files: './src/styles/**/*.less'
                 tasks: [
@@ -340,6 +353,9 @@ module.exports = (grunt) ->
                     'jade:views'
                     'copy:views'
                 ]
+            livereload:
+                files: './buildbot_www/**'
+                options: {livereload: true}
 
     # Register grunt tasks supplied by grunt-contrib-*.
     # Referenced in package.json.
@@ -356,50 +372,27 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-contrib-concat'
 
 
-    # Register grunt tasks supplied by grunt-hustler.
+    # Register grunt tasks supplied by grunt-html2js.
     # Referenced in package.json.
-    # https://github.com/CaryLandholt/grunt-hustler
-    grunt.loadNpmTasks 'grunt-hustler'
-
-    # Recommended watcher for LiveReload
-    grunt.loadNpmTasks 'grunt-regarde'
+    # https://github.com/karlgoldstein/grunt-html2js
+    grunt.loadNpmTasks 'grunt-html2js'
 
     # Register grunt tasks supplied by grunt-karma.
     # Referenced in package.json.
     # https://github.com/Dignifiedquire/grunt-karma
     grunt.loadNpmTasks 'grunt-karma'
+    grunt.loadNpmTasks 'grunt-requiregen'
 
-    grunt.loadTasks 'tasks'
 
-    # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and runs unit tests.
-    # Enter the following command at the command line to execute this build task:
-    # grunt ci
-    grunt.registerTask 'ci', [
-        'default'
-        'karma:ci'
-    ]
-    # For developing, run the karma test suite in watch mode (in parallel with the dev mode ("grunt dev"))
-    # grunt chrometest
-    grunt.registerTask 'chrometest', [
-        'karma:chrome'
-    ]
-    # grunt fftest
-    grunt.registerTask 'fftest', [
-        'karma:firefox'
-    ]
-    # grunt pjstest
-    grunt.registerTask 'pjstest', [
-        'karma:pjs'
-    ]
+    grunt.registerTask 'dataspec', ->
+        done = @async()
+        grunt.util.spawn
+            cmd: "buildbot"
+            args: "dataspec -o .temp/scripts/test/dataspec.js -g dataspec".split(" ")
+        , (error, result, code) ->
+            grunt.log.write result.toString()
+            done(!error)
 
-    # Starts a reload server
-    # Enter the following command at the command line to execute this task:
-    # grunt reloadserver
-    # this must be done in parallel with "grunt dev"
-    grunt.registerTask 'reloadserver', [
-        'livereload-start'
-        'regarde'
-    ]
 
     # Compiles the app with non-optimized build settings and places the build artifacts in the buildbot_www directory.
     # Enter the following command at the command line to execute this build task:
@@ -407,8 +400,10 @@ module.exports = (grunt) ->
     grunt.registerTask 'default', [
         'clean:working'
         'concat:bower_configs'
-        'coffee:scripts'
+        'dataspec'
+        'coffee'
         'copy:js'
+        'copy:testjs'
         'requiregen:main'
         'less'
         'jade:views'
@@ -424,9 +419,20 @@ module.exports = (grunt) ->
     # grunt dev
     grunt.registerTask 'dev', [
         'default'
+        'karma:dev'
         'watch',
     ]
 
+    # steps needed for ci. compile in dev mode and in prod, run tests for each
+    # Enter the following command at the command line to execute this build task:
+    # grunt ci
+    grunt.registerTask 'ci', [
+        'default'
+        'karma:ci'
+        'prod'
+        'dataspec'
+        'karma:prod'
+    ]
     # Compiles the app with optimized build settings and places the build artifacts in the buildbot_www directory.
     # Enter the following command at the command line to execute this build task:
     # grunt prod
@@ -441,9 +447,8 @@ module.exports = (grunt) ->
         'less'
         'jade:views'
         'imagemin'
-        'ngTemplateCache'
+        'html2js'
         'requirejs'
         'jade:prod'
-        'minifyHtml'
         'copy:prod'
     ]

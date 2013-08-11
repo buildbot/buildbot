@@ -1,0 +1,1 @@
+../../../bower_components/restangular/src/restangular.js

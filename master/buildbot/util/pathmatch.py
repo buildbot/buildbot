@@ -68,8 +68,11 @@ class Matcher(object):
         else:
             raise KeyError, 'No match for %r' % (path,)
 
+    def iterPatterns(self):
+        return self._patterns.iteritems()
+
     def _compile(self):
         self._by_length = {}
-        for k, v in self._patterns.iteritems():
+        for k, v in self.iterPatterns():
             l = len(k)
             self._by_length.setdefault(l, {})[k] = v

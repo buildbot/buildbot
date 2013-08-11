@@ -105,7 +105,7 @@ class Build(base.ResourceType):
         master_link = types.Link()
         started_at = types.Integer()
         complete = types.Boolean()
-        complete_at = types.NoneOk(types.Integer)
+        complete_at = types.NoneOk(types.Integer())
         results = types.NoneOk(types.Integer())
         state_strings = types.List(of=types.String())
         link = types.Link()
