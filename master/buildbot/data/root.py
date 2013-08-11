@@ -30,7 +30,7 @@ class SpecEndpoint(base.Endpoint):
     pathPatterns = "/application.spec"
 
     def get(self, resultSpec, kwargs):
-        return defer.succeed(self.master.data.asList())
+        return defer.succeed(self.master.data.allEndpoints())
 
 
 class Root(base.ResourceType):

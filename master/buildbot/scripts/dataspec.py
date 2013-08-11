@@ -33,6 +33,6 @@ def dataspec(config):
     with open(config['out'], "w") as f:
         if config['global'] is not None:
             f.write("window." + config['global'] + '=')
-        f.write(json.dumps(data.asList(), indent=2))
+        f.write(json.dumps(data.allEndpoints(), indent=2))
     print "written", config['out']
     defer.returnValue(0)

@@ -687,7 +687,7 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.dataspec.dataspec"
     optParameters  = [
         ['out', 'o', "dataspec.json", "output to specified path"],
-        ['global', 'g', None, "output a js script, that sets a global, for inclusion in tessuite"],
+        ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
         ]
     def getSynopsis(self):
         return "Usage:   buildbot dataspec [options]"

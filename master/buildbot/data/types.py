@@ -38,7 +38,7 @@ class Type(object):
     def validate(self, name, object):
         raise NotImplementedError
 
-    def asDict(self):
+    def getSpec(self):
         r = dict(name=self.name)
         if self.doc is not None:
             r["doc"] = self.doc
@@ -61,8 +61,8 @@ class NoneOk(Type):
             return
         for msg in self.nestedType.validate(name, object):
             yield msg
-    def asDict(self):
-        r = self.nestedType.asDict()
+    def getSpec(self):
+        r = self.nestedType.getSpec()
         r["can_be_null"] = True
         return r
 
@@ -162,9 +162,9 @@ class List(Type):
             for msg in self.of.validate("%s[%d]" % (name, idx), elt):
                 yield msg
 
-    def asDict(self):
+    def getSpec(self):
         return dict(type=self.name,
-                    of=self.of.asDict())
+                    of=self.of.getSpec())
 
 class SourcedProperties(Type):
 
@@ -219,11 +219,11 @@ class Dict(Type):
             for msg in f.validate("%s[%r]" % (name, k), object[k]):
                 yield msg
 
-    def asDict(self):
+    def getSpec(self):
         return dict(type=self.name,
                     fields=[dict(name=k,
                                  type=v.name,
-                                 type_spec=v.asDict())
+                                 type_spec=v.getSpec())
                             for k, v in self.contents.items()
                             ])
 
@@ -288,10 +288,10 @@ class Entity(Type):
             for msg in f.validate("%s[%r]" % (name, k), object[k]):
                 yield msg
 
-    def asDict(self):
+    def getSpec(self):
         return dict(type=self.name,
                     fields=[dict(name=k,
                                  type=v.name,
-                                 type_spec=v.asDict())
+                                 type_spec=v.getSpec())
                             for k, v in self.fields.items()
                             ])

@@ -82,7 +82,7 @@ package_json = {
         "grunt-html2js": "~0.1.6",
         "grunt-requiregen": "~0.1.0",
         "grunt-karma": "~0.6.0",
-        "bower": "~0.9.2"
+        "bower": "~1.1.0"
     },
     "engines": {
         "node": "0.8.x",

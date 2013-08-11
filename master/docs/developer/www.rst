@@ -193,6 +193,89 @@ A simple example:
     --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
     <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
+Discovering
+~~~~~~~~~~~
+
+Data API comes with a discovery endpoint which exposes all endpoints of the API in a json format so that one can write
+middleware to automatically create higher level API, or generate fake data for development.
+The api is available at:
+
+.. code-block:: none
+
+    GET http://build.my.org/api/v2/application.spec
+
+This metadata is guaranteed to be correct, as this is generated from the spec used in data's unit tests.
+see :ref:`Adding-Fields-to-Resource-Types` for more details on the type system used.
+
+The data validation type system is serialized into json in a very simple way. The API returns a list of endpoints specs:
+
+.. code-block:: javascript
+
+    {
+      path: "<endpoint_path>"
+      type: "<endpoint_entity_type>"
+      type_spec: "<endpoint_entity_type_spec>"
+    }
+
+Typespec encoding can have several forms:
+
+    * Entity or Dict
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "<type name>"
+            fields: [
+              {
+                name: "<field name>"
+                type: "<field type name>"
+                type_spec: "<field type spec>"
+              }, // [...]
+            ]
+           }
+        }
+
+    * List
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "list"
+            of: {
+
+                type: "<field type name>"
+                type_spec: "<field type spec>"
+            }
+        }
+
+    * links
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "link"
+            link_specs: [
+              "<ep1 path>",
+              "<ep2 path>", // [...]
+            ]
+        }
+
+    * Other base types
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "(string|integer|boolean|binary|identifier|jsonobject|source-properties)"
+        }
+
 Message API
 -----------
 
@@ -276,7 +359,7 @@ Restangular offers nice semantics around nested REST endpoints. Please see resta
 BuildbotService adds serveral methods to restangular objects in order to integrate it with EventSource.
 The idea is to simplifify automatic update of the $scope based on events happening on a given data endpoint
 
-.. code-block: python
+.. code-block:: coffeescript
 
     # Following code will get initial data from 'api/v2/build/1/step/2'
     # and register to events from 'sse/build/1/step/2'

@@ -16,7 +16,7 @@ angular.module('app').factory 'alert', ['$rootScope', ($rootScope) ->
     return alert
 ]
 angular.module('app').config ['$httpProvider', ($httpProvider) ->
-    $httpProvider.responseInterceptors.push ["alert", (alert) ->
+    $httpProvider.responseInterceptors.push ["alert", "$q", (alert, $q) ->
          return (promise) ->
             promise.then (res)->
                 res
@@ -24,8 +24,8 @@ angular.module('app').config ['$httpProvider', ($httpProvider) ->
                 if res.config.url.indexOf("views") == 0 and res.status == 404
                     alert.error "view does not exist: " + res.config.url
                 else
-                    console.log res
                     alert.error res.data
+                $q.reject res
     ]
 
 ]
