@@ -105,6 +105,7 @@ class BuildRequest(object):
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
+        buildrequest.waitedFor = brdict['waited_for']
 
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])

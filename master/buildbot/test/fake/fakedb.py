@@ -22,8 +22,7 @@ the real connector components.
 import copy
 import base64
 import hashlib
-from buildbot.util import json, epoch2datetime, datetime2epoch
-from twisted.python import failure
+from buildbot.util import json, datetime2epoch
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests, schedulers, changesources
 from buildbot.test.util import validation
@@ -122,6 +121,7 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
+		waited_for = 0,
     )
 
     id_column = 'id'
@@ -709,7 +709,7 @@ class FakeChangesComponent(FakeDBComponent):
     def _chdict(self, row):
         chdict = row.copy()
         del chdict['uids']
-        chdict['when_timestamp'] = epoch2datetime(chdict['when_timestamp'])
+        chdict['when_timestamp'] = _mkdt(chdict['when_timestamp'])
         return chdict
 
     # assertions
@@ -916,7 +916,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, SourceStamp):
                 ss = self.sourcestamps[row.id] = row.values.copy()
-                ss['created_at'] = epoch2datetime(ss['created_at'])
+                ss['created_at'] = _mkdt(ss['created_at'])
                 del ss['ss_hash']
                 del ss['id']
 
@@ -943,7 +943,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
         new_ssdict = dict(branch=branch, revision=revision, codebase=codebase,
                 patchid=patchid, repository=repository, project=project,
-                created_at=epoch2datetime(_reactor.seconds()))
+                created_at=_mkdt(_reactor.seconds()))
         for id, ssdict in self.sourcestamps.iteritems():
             keys = ['branch', 'revision', 'repository',
                     'codebase', 'project', 'patchid']
@@ -1113,11 +1113,11 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def _row2dict(self, row):
         row = row.copy()
         if row['complete_at']:
-            row['complete_at'] = epoch2datetime(row['complete_at'])
+            row['complete_at'] = _mkdt(row['complete_at'])
         else:
             row['complete_at'] = None
         row['submitted_at'] = row['submitted_at'] and \
-                             epoch2datetime(row['submitted_at'])
+                             _mkdt(row['submitted_at'])
         row['complete'] = bool(row['complete'])
         row['bsid'] = row['id']
         row['sourcestamps'] = self.buildset_sourcestamps.get(row['id'], [])
@@ -1412,8 +1412,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         except:
             return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None):
+            bsid=None, branch=None, repository=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -1426,29 +1427,41 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if claimed is not None:
                 claim_row = self.claims.get(br.id)
                 if claimed == "mine":
-                    if not claim_row or claim_row.objectid != self.MASTER_ID:
+                    if not claim_row or claim_row.masterid != self.MASTER_ID:
                         continue
                 elif claimed:
                     if not claim_row:
                         continue
                 else:
-                    if claim_row:
+                    if br.complete or claim_row:
                         continue
             if bsid is not None:
                 if br.buildsetid != bsid:
                     continue
-            rv.append(self._brdictFromRow(br))
-        return defer.succeed(rv)
 
-    def claimBuildRequests(self, brids, claimed_at=None):
+            if branch or repository:
+                buildset = yield self.db.buildsets.getBuildset(br.buildsetid)
+                sourcestamps = [
+                    (yield self.db.sourcestamps.getSourceStamp(ssid))
+                    for ssid in buildset['sourcestamps']
+                ]
+
+                if branch and not any(branch == s['branch'] for s in sourcestamps):
+                    continue
+                if repository and not any(repository == s['repository'] for s in sourcestamps):
+                    continue
+
+            rv.append(self._brdictFromRow(br))
+        defer.returnValue(rv)
+
+    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         for brid in brids:
             if brid not in self.reqs or brid in self.claims:
-                return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))
+                raise buildrequests.AlreadyClaimedError
 
         claimed_at = datetime2epoch(claimed_at)
         if not claimed_at:
-            claimed_at = self._reactor.seconds()
+            claimed_at = _reactor.seconds()
 
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
@@ -1456,27 +1469,49 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 masterid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
-    def reclaimBuildRequests(self, brids):
+    def reclaimBuildRequests(self, brids, _reactor):
         for brid in brids:
-            if brid not in self.claims:
-                return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))
+            if brid in self.claims and self.claims[brid].masterid != self.db.master.masterid:
+                raise buildrequests.AlreadyClaimedError
+            
         # now that we've thrown any necessary exceptions, get started
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
-                masterid=self.MASTER_ID, claimed_at=self._reactor.seconds())
+                masterid=self.MASTER_ID, claimed_at=_reactor.seconds())
         return defer.succeed(None)
 
     def unclaimBuildRequests(self, brids):
         for brid in brids:
-            try:
+            if brid in self.claims and self.claims[brid].masterid == self.db.master.masterid:
                 self.claims.pop(brid)
-            except KeyError:
-                print "trying to unclaim brid %d, but it's not claimed" % brid
-                return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))
 
-        return defer.succeed(None)
+    def completeBuildRequests(self, brids, results, complete_at=None,
+                            _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
+
+        for brid in brids:
+            if brid not in self.reqs or self.reqs[brid].complete == 1:
+                raise buildrequests.NotClaimedError
+
+
+        for brid in brids:
+            self.reqs[brid].complete = 1
+            self.reqs[brid].results = results
+            self.reqs[brid].complete_at = complete_at
+
+    def unclaimExpiredRequests(self, old, _reactor=reactor):
+        old_epoch = _reactor.seconds() - old
+
+        for br in self.reqs.itervalues():
+            if br.complete == 1:
+                continue
+
+            claim_row = self.claims.get(br.id)
+            if claim_row and claim_row.claimed_at < old_epoch:
+                del self.claims[br.id]
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
@@ -1485,17 +1520,18 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         claim_row = self.claims.get(row.id, None)
         if claim_row:
             claimed = True
-            claimed_at = claim_row.claimed_at
+            claimed_at = _mkdt(claim_row.claimed_at)
             mine = claim_row.masterid == self.MASTER_ID
 
-        submitted_at = epoch2datetime(row.submitted_at)
-        complete_at = epoch2datetime(row.complete_at)
+        submitted_at =_mkdt(row.submitted_at)
+        complete_at = _mkdt(row.complete_at)
 
         return dict(brid=row.id, buildsetid=row.buildsetid,
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at)
+                submitted_at=submitted_at, complete_at=complete_at,
+				waited_for=bool(row.waited_for))
 
     # fake methods
 
@@ -1543,8 +1579,8 @@ class FakeBuildsComponent(FakeDBComponent):
             builderid=row['builderid'],
             masterid=row['masterid'],
             buildslaveid=row['buildslaveid'],
-            started_at=epoch2datetime(row['started_at']),
-            complete_at=epoch2datetime(row['complete_at']),
+            started_at=_mkdt(row['started_at']),
+            complete_at=_mkdt(row['complete_at']),
             state_strings=json.loads(row['state_strings_json']),
             results=row['results'])
 
@@ -1629,8 +1665,8 @@ class FakeStepsComponent(FakeDBComponent):
             buildid=row['buildid'],
             number=row['number'],
             name=row['name'],
-            started_at=epoch2datetime(row['started_at']),
-            complete_at=epoch2datetime(row['complete_at']),
+            started_at=_mkdt(row['started_at']),
+            complete_at=_mkdt(row['complete_at']),
             state_strings=json.loads(row['state_strings_json']),
             results=row['results'],
             urls=json.loads(row['urls_json']))
@@ -1932,7 +1968,7 @@ class FakeMastersComponent(FakeDBComponent):
                         id=row.id,
                         name=row.name,
                         active=bool(row.active),
-                        last_active=epoch2datetime(row.last_active))
+                        last_active=_mkdt(row.last_active))
 
     def findMasterId(self, name, _reactor=reactor):
         for m in self.masters.itervalues():
@@ -1943,7 +1979,7 @@ class FakeMastersComponent(FakeDBComponent):
             id=id,
             name=name,
             active=False,
-            last_active=epoch2datetime(_reactor.seconds()))
+            last_active=_mkdt(_reactor.seconds()))
         return defer.succeed(id)
 
     def setMasterState(self, masterid, active, _reactor=reactor):
@@ -1952,7 +1988,7 @@ class FakeMastersComponent(FakeDBComponent):
             self.masters[masterid]['active'] = active
             if active:
                 self.masters[masterid]['last_active'] = \
-                    epoch2datetime(_reactor.seconds())
+                    _mkdt(_reactor.seconds())
             return defer.succeed(bool(was_active) != bool(active))
         else:
             return defer.succeed(False)
@@ -2091,3 +2127,9 @@ class FakeDBConnector(object):
         for comp in self._components:
             comp.insertTestData(rows)
         return defer.succeed(None)
+
+def _mkdt(epoch):
+    # Local import for better encapsulation.
+    from buildbot.util import epoch2datetime
+    if epoch:
+        return epoch2datetime(epoch)

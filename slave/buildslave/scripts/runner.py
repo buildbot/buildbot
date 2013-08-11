@@ -205,6 +205,15 @@ class CreateSlaveOptions(MakerBase):
             raise usage.UsageError("log-count parameter needs to be an number"
                                    " or None")
 
+        if not re.match('^\d+$', self['umask']) and \
+                self['umask'] != 'None':
+            raise usage.UsageError("umask parameter needs to be an number"
+                                   " or None")
+
+        if self['allow-shutdown'] not in [None, 'signal', 'file']:
+            raise usage.UsageError("allow-shutdown needs to be one of"
+                                   " 'signal' or 'file'")
+
 
 class Options(usage.Options):
     synopsis = "Usage:    buildslave <command> [command options]"

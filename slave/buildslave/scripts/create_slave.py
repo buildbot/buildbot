@@ -22,8 +22,8 @@ import os
 from twisted.application import service
 from buildslave.bot import BuildSlave
 
-basedir = r'%(basedir)s'
-rotateLength = %(log-size)s
+basedir = %(basedir)r
+rotateLength = %(log-size)d
 maxRotatedFiles = %(log-count)s
 
 # if this is a relocatable tac file, get the directory containing the TAC
@@ -47,10 +47,10 @@ except ImportError:
   pass
 """,
 """
-buildmaster_host = '%(host)s'
+buildmaster_host = %(host)r
 port = %(port)d
-slavename = '%(name)s'
-passwd = '%(passwd)s'
+slavename = %(name)r
+passwd = %(passwd)r
 keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
@@ -153,7 +153,8 @@ def _makeInfoFiles(basedir, quiet):
             return False
 
         if not quiet:
-            print "Creating info/%s, you need to edit it appropriately." % file
+            print "Creating %s, you need to edit it appropriately." % \
+                os.path.join("info", file)
 
         try:
             open(filepath, "wt").write(contents)
@@ -184,7 +185,8 @@ def _makeInfoFiles(basedir, quiet):
 
     if not os.path.exists(access_uri):
         if not quiet:
-            print "Not creating info/access_uri - add it if you wish"
+            print "Not creating %s - add it if you wish" % \
+                os.path.join("info", "access_uri")
 
     if created and not quiet:
         print "Please edit the files in %s appropriately." % path
@@ -199,7 +201,7 @@ def createSlave(config):
 
     asd = config['allow-shutdown']
     if asd:
-        config['allow-shutdown'] = "'%s'" % asd
+        config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
         slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
