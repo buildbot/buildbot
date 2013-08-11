@@ -125,7 +125,7 @@ class DataConnector(service.Service):
         """
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
-            paths.append(dict(path="/".join(k),
-                              type=v.rtype.entityType.name,
+            paths.append(dict(path=u"/".join(k),
+                              type=unicode(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths

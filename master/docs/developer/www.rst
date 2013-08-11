@@ -193,8 +193,10 @@ A simple example:
     --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
     <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
-Discovering
-~~~~~~~~~~~
+.. _API-Discovery:
+
+Discovery
+~~~~~~~~~
 
 The Data API provides a discovery endpoint which exposes all endpoints of the API in a JSON format so that one can write middleware to automatically create higher level API, or generate fake data for development.
 The endpoint is available at:

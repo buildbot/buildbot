@@ -121,6 +121,12 @@ Within the buildmaster process, the root of the data API is available at `self.m
         This method implements the control section.
         Depending on the path, it may return a new created resource.
 
+    .. py:method:: allEndpoints()
+
+        :returns: list of endpoint specifications
+
+        This method returns the API spec as described in :ref:`API-Discovery`.
+
     .. py:attribute:: rtypes
 
         This object has an attribute named for each resource type, named after the singular form (e.g., `self.master.data.builder`).

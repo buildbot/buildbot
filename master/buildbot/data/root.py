@@ -25,6 +25,17 @@ class RootEndpoint(base.Endpoint):
         return defer.succeed(self.master.data.rootLinks)
 
 
+class Root(base.ResourceType):
+    name = "rootlink"
+    plural = "rootlinks"
+    endpoints = [RootEndpoint]
+
+    class EntityType(types.Entity):
+        name = types.String()
+        link = types.Link()
+    entityType = EntityType(name)
+
+
 class SpecEndpoint(base.Endpoint):
     isCollection = True
     pathPatterns = "/application.spec"
@@ -33,12 +44,13 @@ class SpecEndpoint(base.Endpoint):
         return defer.succeed(self.master.data.allEndpoints())
 
 
-class Root(base.ResourceType):
-    name = "rootlink"
-    plural = "rootlinks"
-    endpoints = [RootEndpoint, SpecEndpoint]
+class Spec(base.ResourceType):
+    name = "spec"
+    plural = "specs"
+    endpoints = [SpecEndpoint]
 
     class EntityType(types.Entity):
-        name = types.String()
-        link = types.Link()
+        path = types.String()
+        type = types.String()
+        type_spec = types.JsonObject()
     entityType = EntityType(name)
