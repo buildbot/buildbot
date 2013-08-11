@@ -265,4 +265,5 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at)
+                submitted_at=submitted_at, complete_at=complete_at,
+				waited_for=bool(row.waited_for))

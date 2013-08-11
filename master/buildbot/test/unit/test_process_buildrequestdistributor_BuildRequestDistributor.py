@@ -740,6 +740,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[], exp_builds=[])
 
+    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_nextBuild_fails(self):
         def nextBuildRaises(*args):
@@ -749,8 +750,10 @@ class TestMaybeStartBuilds(unittest.TestCase):
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
         ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+        result = self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[], exp_builds=[])
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        yield result
 
 
     # check concurrency edge cases
@@ -873,15 +876,22 @@ class TestMaybeStartBuilds(unittest.TestCase):
             return defer.succeed(lst[-1])
         return self.do_test_nextBuild(nextBuild, exp_choice=[13, 12, 11, 10])
 
+    @compat.usesFlushLoggedErrors
     def test_nextBuild_exception(self):
         def nextBuild(bldr, lst):
             raise RuntimeError("")
-        return self.do_test_nextBuild(nextBuild)
+        result = self.do_test_nextBuild(nextBuild)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        return result
 
+
+    @compat.usesFlushLoggedErrors
     def test_nextBuild_failure(self):
         def nextBuild(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))
-        return self.do_test_nextBuild(nextBuild)
+        result = self.do_test_nextBuild(nextBuild)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
+        return result
 
 
     # merge tests

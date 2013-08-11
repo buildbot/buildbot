@@ -18,7 +18,7 @@ import time
 import re
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.process import buildstep
 from buildbot.steps.shell import StringFileWriter
@@ -49,7 +49,7 @@ class CVS(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch
         self.revision = revision
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
         self.method = self._getMethod()
         d = self.checkCvs()
         def checkInstall(cvsInstalled):
@@ -59,11 +59,20 @@ class CVS(Source):
         d.addCallback(checkInstall)
         d.addCallback(self.checkLogin)
 
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self.purge(False)
+            else:
+                return 0
+        d.addCallback(checkPatched)
         if self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
             d.addCallback(lambda _: self.full())
-
+        
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
@@ -102,7 +111,7 @@ class CVS(Source):
             raise ValueError("Unknown method, check your configuration")
         defer.returnValue(rv)
 
-    def clobber(self):
+    def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
@@ -112,6 +121,10 @@ class CVS(Source):
                 raise RuntimeError("Failed to delete directory")
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
+        return d
+        
+    def clobber(self):
+        d = self._clobber()
         d.addCallback(lambda _: self.doCheckout(self.workdir))
         return d
 
@@ -172,8 +185,30 @@ class CVS(Source):
         if self.revision:
             command += ['-D', self.revision]
         command += [ self.cvsmodule ]
-        d = self._dovccmd(command, '')
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
+        d = self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self._clobber())
+                df.addCallback(lambda _: self.doCheckout(self.workdir))
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
         return d
+
 
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']
@@ -210,7 +245,7 @@ class CVS(Source):
 
         return d
 
-    def _dovccmd(self, command, workdir=None):
+    def _dovccmd(self, command, workdir=None, abandonOnFailure=True):
         if workdir is None:
             workdir = self.workdir
         if not command:
@@ -223,7 +258,7 @@ class CVS(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.rc != 0 and abandonOnFailure:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             return cmd.rc

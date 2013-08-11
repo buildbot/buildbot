@@ -158,6 +158,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testObfuscatedCommand(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                        [('obfuscated', 'abcd', 'ABCD')],
+                        self.basedir)
+        self.assertEqual(s.command, ['abcd'])
+        self.assertEqual(s.fake_command, ['ABCD'])
+
     def testMultiWordStringCommand(self):
         b = FakeSlaveBuilder(False, self.basedir)
         # careful!  This command must execute the same on windows and UNIX

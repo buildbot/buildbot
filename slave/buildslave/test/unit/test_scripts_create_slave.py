@@ -13,11 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+
 import os
 import mock
 from twisted.trial import unittest
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
+
+
+def _regexp_path(name, *names):
+    """
+    Join two or more path components and create a regexp that will match that
+    path.
+    """
+    return os.path.join(name, *names).replace("\\", "\\\\")
 
 
 class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
@@ -122,6 +132,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.chmod = mock.Mock()
         self.patch(os, "chmod", self.chmod)
 
+        # generate OS specific relative path to buildbot.tac inside basedir
+        self.tac_file_path = _regexp_path("bdir", "buildbot.tac")
+
     def testTacOpenError(self):
         """
         test that _makeBuildbotTac() handles open() errors on buildbot.tac
@@ -131,8 +144,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpOpenError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "error reading %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error reading bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -145,8 +159,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpReadError()
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "error reading %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error reading bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -159,8 +174,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
         self.setUpWriteError(0)
 
         # call _makeBuildbotTac() and check that correct exception is raised
+        expected_message = "could not write %s: dummy-msg" % self.tac_file_path
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "could not write bdir/buildbot.tac: dummy-msg",
+                                expected_message,
                                 create_slave._makeBuildbotTac,
                                 "bdir", "contents", False)
 
@@ -288,7 +304,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
-                                "error creating directory bdir/info: err-msg",
+                                "error creating directory %s: err-msg" %
+                                        _regexp_path("bdir", "info"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -337,7 +354,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
                                 "could not write %s: info-err-msg" %
-                                        os.path.join("bdir", "info", "admin"),
+                                        _regexp_path("bdir", "info", "admin"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -346,7 +363,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
             self.assertWasQuiet()
         else:
             self.assertStdoutEqual(
-                "Creating info/admin, you need to edit it appropriately.\n")
+                "Creating %s, you need to edit it appropriately.\n" %
+                    os.path.join("info", "admin"))
 
     def testOpenError(self):
         """
@@ -410,11 +428,14 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         else:
             self.assertStdoutEqual(
                 "mkdir %s\n"
-                "Creating info/admin, you need to edit it appropriately.\n"
-                "Creating info/host, you need to edit it appropriately.\n"
-                "Not creating info/access_uri - add it if you wish\n"
-                "Please edit the files in bdir/info appropriately.\n" %
-                    os.path.join("bdir", "info"))
+                "Creating %s, you need to edit it appropriately.\n"
+                "Creating %s, you need to edit it appropriately.\n"
+                "Not creating %s - add it if you wish\n"
+                "Please edit the files in %s appropriately.\n" %
+                    (info_path, os.path.join("info", "admin"),
+                     os.path.join("info", "host"),
+                     os.path.join("info", "access_uri"),
+                     info_path))
 
     def testCreatedSuccessfully(self):
         """
@@ -540,6 +561,118 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # check that correct info message was printed
         self.assertStdoutEqual("buildslave configured in bdir\n")
+
+    def assertTACFileContents(self, options):
+        """
+        Check that TAC file generated with provided options is valid Python
+        script and does typical for TAC file logic.
+        """
+
+        # import modules for mocking
+        import twisted.application.service
+        import twisted.python.logfile
+        import buildslave.bot
+
+        # mock service.Application class
+        application_mock = mock.Mock()
+        application_class_mock = mock.Mock(return_value=application_mock)
+        self.patch(twisted.application.service, "Application",
+                   application_class_mock)
+
+        # mock logging stuff
+        logfile_mock = mock.Mock()
+        self.patch(twisted.python.logfile.LogFile, "fromFullPath",
+                   logfile_mock)
+
+        # mock BuildSlave class
+        buildslave_mock = mock.Mock()
+        buildslave_class_mock = mock.Mock(return_value=buildslave_mock)
+        self.patch(buildslave.bot, "BuildSlave", buildslave_class_mock)
+
+        expected_tac_contents = \
+            "".join(create_slave.slaveTACTemplate) % options
+
+        # Executed .tac file with mocked functions with side effect.
+        # This will raise exception if .tac file is not valid Python file.
+        glb = {}
+        exec(expected_tac_contents, glb, glb)
+
+        # only one Application must be created in .tac
+        application_class_mock.assert_called_once_with("buildslave")
+
+        # check that BuildSlave created with passed options
+        buildslave_class_mock.assert_called_once_with(
+            options["host"],
+            options["port"],
+            options["name"],
+            options["passwd"],
+            options["basedir"],
+            options["keepalive"],
+            options["usepty"],
+            umask=options["umask"],
+            maxdelay=options["maxdelay"],
+            allow_shutdown=options["allow-shutdown"])
+
+        # check that BuildSlave instance attached to application
+        self.assertEqual(buildslave_mock.method_calls,
+                         [mock.call.setServiceParent(application_mock)])
+
+        # .tac file must define global variable "application", instance of
+        # Application
+        self.assertTrue('application' in glb,
+            ".tac file doesn't define \"application\" variable")
+        self.assertTrue(glb['application'] is application_mock,
+            "defined \"application\" variable in .tac file is not "
+            "Application instance")
+
+    def testDefaultTACContents(self):
+        """
+        test that with default options generated TAC file is valid.
+        """
+
+        self.assertTACFileContents(self.options)
+
+    def testBackslashInBasedir(self):
+        """
+        test that using backslash (typical for Windows platform) in basedir
+        won't break generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"}):
+            self.assertTACFileContents(self.options)
+
+    def testQuotesInBasedir(self):
+        """
+        test that using quotes in basedir won't break generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"Buildbot's \"dir"}):
+            self.assertTACFileContents(self.options)
+
+    def testDoubleQuotesInBasedir(self):
+        """
+        test that using double quotes at begin and end of basedir won't break
+        generated TAC file.
+        """
+
+        with mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"}):
+            self.assertTACFileContents(self.options)
+
+    def testSpecialCharactersInOptions(self):
+        """
+        test that using special characters in options strings won't break
+        generated TAC file.
+        """
+
+        test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
+            " \x07 \" \\\" ' \\' ''")
+        with mock.patch.dict(self.options, {
+                "basedir": test_string,
+                "host": test_string,
+                "passwd": test_string,
+                "name": test_string,
+                }):
+            self.assertTACFileContents(self.options)
 
     def testNoLogRotate(self):
         """
