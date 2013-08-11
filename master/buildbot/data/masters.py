@@ -108,7 +108,7 @@ class Master(base.ResourceType):
         too_old = epoch2datetime(_reactor.seconds() - 60*EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
-            if m['last_active'] >= too_old:
+            if m['last_active'] is not None and m['last_active'] >= too_old:
                 continue
 
             # mark the master inactive, and send a message on its behalf

@@ -16,7 +16,7 @@
 import os
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
@@ -67,33 +67,38 @@ class Bzr(Source):
             if not bzrInstalled:
                 raise BuildSlaveTooOldError("bzr is not installed on slave")
             return 0
-
         d.addCallback(checkInstall)
+
+        d.addCallback(lambda _: self.sourcedirIsPatched())
+        def checkPatched(patched):
+            if patched:
+                return self._dovccmd(['clean-tree', '--ignored', '--force'])
+            else:
+                return 0
+        d.addCallback(checkPatched)
+
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
 
+        if patch:
+            d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
         return d
 
+    @defer.inlineCallbacks
     def incremental(self):
-        d = self._sourcedirIsUpdatable()
-        def _cmd(updatable):
-            if updatable:
-                command = ['update']
-            else:
-                command = ['checkout', self.repourl, '.']
-
+        updatable = yield self._sourcedirIsUpdatable()
+        if updatable:
+            command = ['update']
             if self.revision:
                 command.extend(['-r', self.revision])
-            return command
-
-        d.addCallback(_cmd)
-        d.addCallback(self._dovccmd)
-        return d
+            yield self._dovccmd(command)
+        else:
+            yield self._doFull()
 
     @defer.inlineCallbacks
     def full(self):
@@ -116,7 +121,7 @@ class Bzr(Source):
         else:
             raise ValueError("Unknown method, check your configuration")
 
-    def clobber(self):
+    def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
@@ -126,6 +131,10 @@ class Bzr(Source):
                 raise RuntimeError("Failed to delete directory")
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
+        return d
+
+    def clobber(self):
+        d = self._clobber()
         d.addCallback(lambda _: self._doFull())
         return d
 
@@ -166,7 +175,29 @@ class Bzr(Source):
         command = ['checkout', self.repourl, '.']
         if self.revision:
             command.extend(['-r', self.revision])
-        d = self._dovccmd(command)
+
+        if self.retry:
+            abandonOnFailure = (self.retry[1] <= 0)
+        else:
+            abandonOnFailure = True
+        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                    % (repeats, delay))
+                self.retry = (delay, repeats-1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self._clobber())
+                df.addCallback(lambda _: self._doFull())
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
         return d
 
     def finish(self, res):

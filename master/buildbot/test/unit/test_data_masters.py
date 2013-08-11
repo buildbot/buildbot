@@ -273,7 +273,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.expireMasters(_reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(master, dict(id=14, name='other',
-                    active=False, last_active=epoch2datetime(0)))
+                    active=False, last_active=None))
         self.assertEqual(self.master.mq.productions, [
             (('master', '14', 'stopped'),
              dict(masterid=14, name='other', active=False)),

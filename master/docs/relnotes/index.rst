@@ -117,6 +117,16 @@ Features
 * Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
   the slave is not connected.
 
+* Master side source checkout steps now support patches
+
+* The master-side SVN step now supports authentication, fixing :bb:bug:`2463`.
+
+* Master side source checkout steps now support retry option
+
+* The SVN step now obfuscates the password in status logs, fixing :bb:bug:`2468`.
+
+* Gerrit integration with Git Source step on master side.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
