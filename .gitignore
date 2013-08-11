@@ -44,4 +44,4 @@ www/package.json
 www/bower.json
 www/VERSION
 www/node_modules
-www/components
+www/bower_components

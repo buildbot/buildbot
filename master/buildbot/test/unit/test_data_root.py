@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.data import root, base
+from buildbot.data import root, base, connector
 from buildbot.test.util import endpoint
 
 class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -32,7 +32,6 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
-
     @defer.inlineCallbacks
     def test_get(self):
         rootlinks = yield self.callGet(('',))
@@ -40,3 +39,42 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(rootlinks, [
             {'name': u'abc', 'link': base.Link(('abc',))},
         ])
+
+class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+
+    endpointClass = root.SpecEndpoint
+    resourceTypeClass = root.Root
+
+
+    def setUp(self):
+        self.setUpEndpoint()
+        # replace fakeConnector with real DataConnector
+        self.master.data = connector.DataConnector(self.master)
+
+    def tearDown(self):
+        self.tearDownEndpoint()
+
+    @defer.inlineCallbacks
+    def test_get(self):
+        spec = yield self.callGet(('application.spec',))
+        for s in spec:
+            # only test an endpoint that is reasonably stable
+            if s['path'] == "master":
+                self.assertEqual(s, {'path': 'master',
+                                     'type': 'master',
+                                     'type_spec': {'fields': [{'name': 'active',
+                                                               'type': 'boolean',
+                                                               'type_spec': {'name': 'boolean'}},
+                                                              {'name': 'masterid',
+                                                               'type': 'integer',
+                                                               'type_spec': {'name': 'integer'}},
+                                                              {'name': 'link',
+                                                               'type': 'link',
+                                                               'type_spec': {'name': 'link'}},
+                                                              {'name': 'name',
+                                                               'type': 'string',
+                                                               'type_spec': {'name': 'string'}},
+                                                              {'name': 'last_active',
+                                                               'type': 'integer',
+                                                               'type_spec': {'name': 'integer'}}],
+                                                   'type': 'master'}})

@@ -1,1 +1,1 @@
-../../../components/requirejs/require.js
+../../../bower_components/requirejs/require.js

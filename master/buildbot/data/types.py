@@ -38,10 +38,15 @@ class Type(object):
     def validate(self, name, object):
         raise NotImplementedError
 
+    def getSpec(self):
+        r = dict(name=self.name)
+        if self.doc is not None:
+            r["doc"] = self.doc
+        return r
 
 class NoneOk(Type):
-
     def __init__(self, nestedType):
+        assert isinstance(nestedType, Type)
         self.nestedType = nestedType
         self.name = self.nestedType.name + " or None"
 
@@ -56,6 +61,10 @@ class NoneOk(Type):
             return
         for msg in self.nestedType.validate(name, object):
             yield msg
+    def getSpec(self):
+        r = self.nestedType.getSpec()
+        r["can_be_null"] = True
+        return r
 
 
 class Instance(Type):
@@ -153,6 +162,9 @@ class List(Type):
             for msg in self.of.validate("%s[%d]" % (name, idx), elt):
                 yield msg
 
+    def getSpec(self):
+        return dict(type=self.name,
+                    of=self.of.getSpec())
 
 class SourcedProperties(Type):
 
@@ -178,6 +190,7 @@ class SourcedProperties(Type):
 
 
 class Dict(Type):
+    name = "dict"
 
     def __init__(self, **contents):
         self.contents = contents
@@ -206,9 +219,17 @@ class Dict(Type):
             for msg in f.validate("%s[%r]" % (name, k), object[k]):
                 yield msg
 
+    def getSpec(self):
+        return dict(type=self.name,
+                    fields=[dict(name=k,
+                                 type=v.name,
+                                 type_spec=v.getSpec())
+                            for k, v in self.contents.items()
+                            ])
+
 
 class JsonObject(Type):
-
+    name = "jsonobject"
     def validate(self, name, object):
         if type(object) != dict:
             yield "%s (%r) is not a dictionary (got type %s)" \
@@ -266,3 +287,11 @@ class Entity(Type):
             f = self.fields[k]
             for msg in f.validate("%s[%r]" % (name, k), object[k]):
                 yield msg
+
+    def getSpec(self):
+        return dict(type=self.name,
+                    fields=[dict(name=k,
+                                 type=v.name,
+                                 type_spec=v.getSpec())
+                            for k, v in self.fields.items()
+                            ])

@@ -74,7 +74,7 @@ class Builder(base.ResourceType):
 
     class EntityType(types.Entity):
         builderid = types.Integer()
-        name = types.String()
+        name = types.Identifier(20)
         link = types.Link()
     entityType = EntityType(name)
 

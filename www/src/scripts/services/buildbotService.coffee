@@ -1,17 +1,59 @@
+angular.module('app').factory 'EventSource', ->
+    # turn HTML5's EventSource into a angular module for mockability
+    return (url)->
+        return new EventSource(url)
+BASEURLAPI = 'api/v2/'
+BASEURLSSE = 'sse/'
 angular.module('app').factory 'buildbotService',
-['$log', '$resource',
-    ($log, $resource) ->
-        # populateScope populate $scope[scope_key] with an api_query use
-        # sse_query and EventSource to update automatically the table
+['$log', 'Restangular', 'EventSource',
+    ($log, Restangular, EventSource) ->
+        configurer = (RestangularConfigurer) ->
+            onElemRestangularized = (elem, isCollection, route, Restangular) ->
+                # add the bind() method to each restangular object
+                # bind method will create one way binding (readonly)
+                # via event source
+                elem.bind = ($scope, scope_key) ->
+                    if not scope_key?
+                        scope_key = elem.route
+                    if (isCollection)
+                        onEvent = (e) ->
+                            $scope[scope_key].push(e.msg)
+                            $scope.$apply()
+                        p = elem.getList()
+                        p.then((v) ->
+                            $scope[scope_key] = v
+                            elem.on("new", onEvent)
+                            return v
+                        )
+                    else
+                        onEvent = (e) ->
+                            for k, v of e.msg
+                                $scope[scope_key][k] = v
+                            $scope.$apply()
+                        p = this.get()
+                        p.then((v) ->
+                            $scope[scope_key] = v
+                            elem.on("update", onEvent)
+                            return v
+                        )
+                    $scope.$on("$destroy", -> elem.source?.close())
+                    $scope[scope_key] = p
+                    return p
 
-        # @todo the implementation is very naive for now.  Need to sort out
-        # server side paging/sorting (do we really need serverside sorting?)
+                elem.unbind = () ->
+                    this.source?.close()
 
-        populateScope = ($scope,  scope_key, api_query, sse_query) ->
-                $scope[scope_key] = $resource("api/v2/"+api_query).query()
-                source = new EventSource("sse/"+sse_query)
-                source.addEventListener "event", (e) ->
-                  $scope[scope_key].push msg
-                  $scope.$apply()
-        {populateScope}
+                elem.on = (event, onEvent) ->
+                    if not elem.source?
+                        route = elem.getRestangularUrl()
+                        route = route.replace(BASEURLAPI, BASEURLSSE)
+                        source = new EventSource(route)
+                        elem.source = source
+                    elem.source.addEventListener(event, onEvent)
+                return elem
+            RestangularConfigurer.setBaseUrl(BASEURLAPI)
+            RestangularConfigurer.setOnElemRestangularized(onElemRestangularized)
+
+        return Restangular.withConfig(configurer)
+
 ]

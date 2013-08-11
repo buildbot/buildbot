@@ -66,8 +66,6 @@ base_json = {
 }
 package_json = {
     "dependencies": {
-        "coffee-script": "~1.6.2",
-        "express": "~3.1.1",
         "grunt": "~0.4.1",
         "grunt-cli": "~0.1.1",
         "grunt-contrib-clean": "~0.4.0",
@@ -79,14 +77,12 @@ package_json = {
         "grunt-contrib-concat": "~0.3.0",
         "grunt-contrib-livereload": "~0.1.2",
         "grunt-contrib-requirejs": "~0.4.0",
-        "grunt-contrib-watch": "~0.3.1",
+        "grunt-contrib-watch": "~0.5.1",
         "grunt-mkdir": "~0.1.1",
-        "grunt-express": "~0.3.2",
-        "grunt-hustler": "0.11.2",
-        "grunt-regarde": "~0.1.1",
-        "grunt-karma": "~0.4.4",
-        "socket.io": "~0.9.14",
-        "bower": "~0.9.2"
+        "grunt-html2js": "~0.1.6",
+        "grunt-requiregen": "~0.1.0",
+        "grunt-karma": "~0.6.0",
+        "bower": "~1.1.0"
     },
     "engines": {
         "node": "0.8.x",
@@ -102,7 +98,9 @@ bower_json = {
     "bootstrap": "~2.3.2",
     "font-awesome": "latest",
     "angular": "latest",
-    "angular-resource": "latest",
+    "angular-bootstrap": "latest",
+    "restangular": "latest",
+    "lodash": "latest",
     "html5shiv": "~3.6.2",
     "jquery": "~2.0.0",
     "requirejs": "~2.1.5",

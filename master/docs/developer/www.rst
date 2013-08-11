@@ -193,6 +193,89 @@ A simple example:
     --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
     <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
+Discovering
+~~~~~~~~~~~
+
+Data API comes with a discovery endpoint which exposes all endpoints of the API in a json format so that one can write
+middleware to automatically create higher level API, or generate fake data for development.
+The api is available at:
+
+.. code-block:: none
+
+    GET http://build.my.org/api/v2/application.spec
+
+This metadata is guaranteed to be correct, as this is generated from the spec used in data's unit tests.
+see :ref:`Adding-Fields-to-Resource-Types` for more details on the type system used.
+
+The data validation type system is serialized into json in a very simple way. The API returns a list of endpoints specs:
+
+.. code-block:: javascript
+
+    {
+      path: "<endpoint_path>"
+      type: "<endpoint_entity_type>"
+      type_spec: "<endpoint_entity_type_spec>"
+    }
+
+Typespec encoding can have several forms:
+
+    * Entity or Dict
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "<type name>"
+            fields: [
+              {
+                name: "<field name>"
+                type: "<field type name>"
+                type_spec: "<field type spec>"
+              }, // [...]
+            ]
+           }
+        }
+
+    * List
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "list"
+            of: {
+
+                type: "<field type name>"
+                type_spec: "<field type spec>"
+            }
+        }
+
+    * links
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "link"
+            link_specs: [
+              "<ep1 path>",
+              "<ep2 path>", // [...]
+            ]
+        }
+
+    * Other base types
+
+    .. code-block:: javascript
+
+        {
+          ..
+          type_spec: {
+            type: "(string|integer|boolean|binary|identifier|jsonobject|source-properties)"
+        }
+
 Message API
 -----------
 
@@ -263,7 +346,62 @@ Directives
 
 We use angular directives as much as possible to implement reusable UI components.
 
+Services
+~~~~~~~~
 
+BuildbotService
+...............
+
+BuildbotService is the base service for accessing to the buildbot data api.
+It uses and is derivated from `restangular <https://github.com/mgonto/restangular/blob/master/README.md>`_.
+Restangular offers nice semantics around nested REST endpoints. Please see restangular documentation for overview on how it works.
+
+BuildbotService adds serveral methods to restangular objects in order to integrate it with EventSource.
+The idea is to simplifify automatic update of the $scope based on events happening on a given data endpoint
+
+.. code-block:: coffeescript
+
+    # Following code will get initial data from 'api/v2/build/1/step/2'
+    # and register to events from 'sse/build/1/step/2'
+    # Up to the template to specify what to display
+
+    buildbotService.one("build", 1).one("step", 2).bind($scope)
+
+Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
+
+    * ``.bind($scope, scope_key)``
+
+        bind the api result to the scope, automatically listening to events on this endpoint, and modifying the scope object accordingly.
+        scope_key defaults to the last path of the restangular object, i.e ``build/1/step/2`` binds to ``$scope.step``
+
+    * ``.unbind()``
+
+        Stop listening to events. This is automatically done when $scope is destroyed.
+
+    * ``.on(eventtype, callback)``
+
+        Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
+        You need to manually call unbind() when the scope is destroyed. EventSource connection is shared between listeners on the same endpoint.
+
+Mocks and testing utils
+~~~~~~~~~~~~~~~~~~~~~~~
+
+httpMock.coffee
+...............
+
+This modules adds ``decorateHttpBackend($httpBackend)`` to the global namespace. This function decorate the $httpBackend with additional functionality:
+
+    * ``.expectDataGET(ep, {nItems:<int or undefined>, override: <fn or undefined>})``
+
+       automatically create a GET expectation to the data api, given the data spec
+       Options available are:
+
+       * ``nItems``: if defined, this will generate a collection of nItems instead of single value
+
+       * ``override``: a custom function to override the resulting generated data
+
+       Example: ``$httpBackend.expectDataGET("change", {nItems:2, override: (val) -> val[1].id=4 })``
+       will create 2 changes, but the id of the second change will be overridden to 4
 
 Linking with Buildbot
 ~~~~~~~~~~~~~~~~~~~~~

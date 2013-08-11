@@ -1,27 +1,28 @@
-.container-fluid
- .row-fluid
-  ul.breadcrumb
-    li.active
-      a(href="#/about") About
-  .well
-      h2 About this buildbot
-      .row-fluid
-        .span4
-          ul
-            li Buildbot version: {{config.bbversion}}
-            li Twisted version: {{config.txversion}}
-        .span4
-          ul
-            li Project Name: {{config.projectname}}
-            li Project Version: {{config.projectversion}}
-            li Project Url: {{config.projecturl}}
-      .row-fluid
-        small
+.container
+  .row
+    ul.breadcrumb
+      li.active
+        a(href="#/about") About
+  .row
+    .well
+        h2 About this buildbot
+        .row
+          .col-sm-4
+            ul
+              li Buildbot version: {{config.bbversion}}
+              li Twisted version: {{config.txversion}}
+          .col-sm-4
+            ul
+              li Project Name: {{config.projectname}}
+              li Project Version: {{config.projectversion}}
+              li Project Url: {{config.projecturl}}
+        .row
+          small
 
-          | buildbot-www is configured using:
-          pre {{config.config}}
-          | buildbot-www is using the following open-source JavaScript libraries:
-          ul
-            li(ng-repeat='module in bower_configs')
-              a(href='{{module.http_url}}') {{module.name}}
-              | : {{module.version}}
+            | buildbot-www is configured using:
+            pre {{config.config}}
+            | buildbot-www is using the following open-source JavaScript libraries:
+            ul
+              li(ng-repeat='module in bower_configs')
+                a(href='{{module.http_url}}') {{module.name}}
+                | : {{module.version}}

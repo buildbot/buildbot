@@ -14,19 +14,25 @@
 # Copyright Buildbot Team Members
 
 
-import webbrowser,os
-from twisted.internet import reactor, defer
+from twisted.internet import defer
+from buildbot.util import in_reactor, json
+from buildbot.data import connector
 from buildbot.test.fake import fakemaster
+import os
 
+@in_reactor
 @defer.inlineCallbacks
-def _uitestserver(config):
-    master = yield fakemaster.make_master_for_uitest(int(config['port']))
-    if "DISPLAY" in os.environ:
-        webbrowser.open(master.config.www['url']+"app/base/bb/tests/runner.html")
+def dataspec(config):
+    master = yield fakemaster.make_master()
+    data = connector.DataConnector(master)
 
-def uitestserver(config):
-    def async():
-        return _uitestserver(config)
-    reactor.callWhenRunning(async)
-    # unlike in_reactor, we dont stop until CTRL-C
-    reactor.run()
+    dirs = os.path.dirname(config['out'])
+    if dirs and not os.path.exists(dirs):
+        os.makedirs(dirs)
+
+    with open(config['out'], "w") as f:
+        if config['global'] is not None:
+            f.write("window." + config['global'] + '=')
+        f.write(json.dumps(data.allEndpoints(), indent=2))
+    print "written", config['out']
+    defer.returnValue(0)
