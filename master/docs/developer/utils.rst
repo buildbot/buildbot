@@ -572,6 +572,10 @@ buildbot.util.pathmatch
 
     where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
 
+    .. py:method:: iterPatterns()
+
+        Returns an iterator which yields all patterns in the matcher as tuples of (pattern, endpoint).
+
 buildbot.util.topicmatch
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
