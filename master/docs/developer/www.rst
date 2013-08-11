@@ -196,18 +196,18 @@ A simple example:
 Discovering
 ~~~~~~~~~~~
 
-Data API comes with a discovery endpoint which exposes all endpoints of the API in a json format so that one can write
-middleware to automatically create higher level API, or generate fake data for development.
-The api is available at:
+The Data API provides a discovery endpoint which exposes all endpoints of the API in a JSON format so that one can write middleware to automatically create higher level API, or generate fake data for development.
+The endpoint is available at:
 
 .. code-block:: none
 
     GET http://build.my.org/api/v2/application.spec
 
 This metadata is guaranteed to be correct, as this is generated from the spec used in data's unit tests.
-see :ref:`Adding-Fields-to-Resource-Types` for more details on the type system used.
+See :ref:`Adding-Fields-to-Resource-Types` for more details on the type system used.
 
-The data validation type system is serialized into json in a very simple way. The API returns a list of endpoints specs:
+The data validation type system is serialized into JSON in a very simple way.
+The API returns a list of endpoint specs, each of the form:
 
 .. code-block:: javascript
 
@@ -217,64 +217,64 @@ The data validation type system is serialized into json in a very simple way. Th
       type_spec: "<endpoint_entity_type_spec>"
     }
 
-Typespec encoding can have several forms:
+The type spec encoding can have several forms:
 
-    * Entity or Dict
+* Entity or Dict
 
-    .. code-block:: javascript
+.. code-block:: javascript
 
-        {
-          ..
-          type_spec: {
-            type: "<type name>"
-            fields: [
-              {
-                name: "<field name>"
-                type: "<field type name>"
-                type_spec: "<field type spec>"
-              }, // [...]
-            ]
-           }
+    {
+        ..
+        type_spec: {
+        type: "<type name>"
+        fields: [
+            {
+            name: "<field name>"
+            type: "<field type name>"
+            type_spec: "<field type spec>"
+            }, // [...]
+        ]
         }
+    }
 
-    * List
+* List
 
-    .. code-block:: javascript
+.. code-block:: javascript
 
-        {
-          ..
-          type_spec: {
-            type: "list"
-            of: {
+    {
+        ..
+        type_spec: {
+        type: "list"
+        of: {
 
-                type: "<field type name>"
-                type_spec: "<field type spec>"
-            }
+            type: "<field type name>"
+            type_spec: "<field type spec>"
         }
+    }
 
-    * links
+* Links
 
-    .. code-block:: javascript
+.. code-block:: javascript
 
-        {
-          ..
-          type_spec: {
-            type: "link"
-            link_specs: [
-              "<ep1 path>",
-              "<ep2 path>", // [...]
-            ]
-        }
+    {
+        ..
+        type_spec: {
+        type: "link"
+        link_specs: [
+            "<ep1 path>",
+            "<ep2 path>", // [...]
+        ]
+    }
 
-    * Other base types
+* Other base types
 
-    .. code-block:: javascript
+.. code-block:: javascript
 
-        {
-          ..
-          type_spec: {
-            type: "(string|integer|boolean|binary|identifier|jsonobject|source-properties)"
-        }
+    {
+        ..
+        type_spec: {
+        type: "(string|integer|boolean|binary|identifier|jsonobject|sourced-properties)"
+    }
 
 Message API
 -----------
