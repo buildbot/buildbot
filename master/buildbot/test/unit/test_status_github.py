@@ -152,7 +152,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         result = self.status.buildStarted(builder_name, build)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.status._sendStartStatus.assert_called_once_with(
             builder_name, build)
 
@@ -167,7 +167,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         result = self.status.buildStarted(builder_name, None)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.assertLogError(
             error,
             'While sending start status to GitHub for builder-name.')
@@ -183,7 +183,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         result = self.status.buildFinished(builder_name, build, results)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.status._sendFinishStatus.assert_called_once_with(
             builder_name, build, results)
 
@@ -198,7 +198,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
 
         result = self.status.buildFinished(builder_name, None, None)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.assertLogError(
             error,
             'While sending finish status to GitHub for builder-name.')
@@ -213,7 +213,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         d = self.status._sendStartStatus('builder-name', None)
         result = self.successResultOf(d)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
 
     def test_sendStartStatus_failure(self):
         """
@@ -247,7 +247,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         d = self.status._sendStartStatus('builder-name', self.build)
         result = self.successResultOf(d)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.status._sendGitHubStatus.assert_called_with({
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
@@ -285,7 +285,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         d = self.status._sendFinishStatus('builder-name', None, None)
         result = self.successResultOf(d)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
 
     def test_sendFinishStatus_ok(self):
         """
@@ -307,7 +307,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         d = self.status._sendFinishStatus('builder-name', self.build, SUCCESS)
         result = self.successResultOf(d)
 
-        self.assertIsNone(result)
+        self.assertIdentical(result, None)
         self.status._sendGitHubStatus.assert_called_with({
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
