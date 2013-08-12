@@ -24,34 +24,11 @@
 
 	<HTML>
 		<HEAD>
-		<title>Katana build log</title>
-		<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css' />	
-	    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css' />
-		<link rel="stylesheet" href="/css/default.css" type="text/css" />
-		<link rel="stylesheet" href="/css/log.css" type="text/css" />
-	    
-	    
-		<script language="JavaScript"><![CDATA[   
-	  function Toggle(id) {
-	  var element = document.getElementById(id);
-
-		 if ( element.style.display == "none" )
-			element.style.display = "block";
-		 else 
-			element.style.display = "none";
-	  }
-
-	  function ToggleImage(id) {
-	  var element = document.getElementById(id);
-
-		 if ( element.innerText   == "-" )
-			element.innerText   = "+";
-		 else 
-			element.innerText = "-";
-	  }
-	  
-	  	
-	]]></script>
+			<title>Katana test results</title>
+			<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css' />	
+		    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css' />
+			<link rel="stylesheet" href="/css/default.css" type="text/css" />
+			<link rel="stylesheet" href="/css/log.css" type="text/css" />
 		</HEAD>
 		<body class="interface log-main">
 			
@@ -79,7 +56,7 @@
 			<footer class="footer">
       <div class="container-inner">
         <h3 class="buildbot-version">
-        	This log is produced by Katana
+        	Produced by <a href="/">Katana</a>
           
         </h3>
         
@@ -146,7 +123,6 @@
 		</xsl:for-each>
 	</xsl:template>
 	
-
   <xsl:template name="dot-replace">
 	  <xsl:param name="package"/>
 	  <xsl:choose>
@@ -154,7 +130,6 @@
 		  <xsl:otherwise><xsl:value-of select="$package"/></xsl:otherwise>
 	  </xsl:choose>
   </xsl:template>
-
 
  <xsl:template name="GetLastSegment">
     <xsl:param name="value" />
