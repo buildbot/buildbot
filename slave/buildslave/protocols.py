@@ -15,8 +15,8 @@ class GetInfo(amp.Command):
     arguments = []
     response = [
         ('commands', amp.AmpList([
-            ('name', amp.String()),
-            ('version', amp.String()),
+            ('key', amp.String()), # command name
+            ('value', amp.String()), # version
             ])
         ),
         ('environ', amp.AmpList([

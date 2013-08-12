@@ -24,7 +24,7 @@ from twisted.internet import defer, reactor, task
 from twisted.application import service
 
 import buildbot
-import buildbot.pbmanager
+import buildbot.ampmanager
 from buildbot.util import subscription, epoch2datetime
 from buildbot.status.master import Status
 from buildbot.changes import changes
@@ -119,7 +119,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.caches = cache.CacheManager()
         self.caches.setServiceParent(self)
 
-        self.ampManager = buildbot.pbmanager.AMPManager()
+        self.ampManager = buildbot.ampmanager.AMPManager()
         self.ampManager.setServiceParent(self)
 
         self.change_svc = ChangeManager(self)

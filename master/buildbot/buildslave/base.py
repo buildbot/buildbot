@@ -32,6 +32,8 @@ from buildbot.process.properties import Properties
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot import config
+from buildbot.protocols import RemotePrint, GetInfo
+
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                         service.MultiService):
@@ -292,7 +294,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.missing_timer.cancel()
             self.missing_timer = None
 
-    def getPerspective(self, mind, slavename):
+    def getPerspective(self, proto, slavename):
         assert slavename == self.slavename
         metrics.MetricCountEvent.log("attached_slaves", 1)
 
@@ -302,16 +304,18 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         # try to use TCP keepalives
         try:
-            mind.broker.transport.setTcpKeepAlive(1)
+            proto.transport.setTcpKeepAlive(1)
         except:
-            pass
+            log.msg("Can't set TcpKeepAlive")
 
         if self.isConnected():
             # duplicate slave - send it to arbitration
+            log.msg("Already connected!")
             arb = botmaster.DuplicateSlaveArbitrator(self)
+            # TODO: after done with registering, try to make it work
             return arb.getPerspective(mind, slavename)
         else:
-            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
+            log.msg("slave '%s' attaching from %s" % (slavename, proto.transport.getPeer()))
             return self
 
     def doKeepalive(self):
@@ -319,7 +323,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                                                 self.doKeepalive)
         if not self.slave:
             return
-        d = self.slave.callRemote("print", "Received keepalive from master")
+        d = self.slave.callRemote(RemotePrint, message="Received keepalive from master")
         d.addErrback(log.msg, "Keepalive failed for '%s'" % (self.slavename, ))
 
     def stopKeepaliveTimer(self):
@@ -368,7 +372,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         @return: a Deferred that indicates when an attached slave has
         accepted the new builders and/or released the old ones."""
         if self.slave:
-            return self.sendBuilderList()
+            pass
+            # TODO: need to send builders list
+            # return self.sendBuilderList()
         else:
             return defer.succeed(None)
 
@@ -378,8 +384,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if buildFinished:
             self.slave_status.buildFinished(buildFinished)
 
+    def ampList2dict(self, ampList):
+        return dict([(elem['key'], elem['value']) for elem in ampList])
+
     @metrics.countMethod('AbstractBuildSlave.attached()')
-    def attached(self, bot):
+    def attached(self, proto):
         """This is called when the slave connects.
 
         @return: a Deferred that fires when the attachment is complete
@@ -410,24 +419,26 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         @d.addCallback
         def _log_attachment_on_slave(res):
-            d1 = bot.callRemote("print", "attached")
+            d1 = proto.callRemote(RemotePrint, message="attached")
             d1.addErrback(lambda why: None)
             return d1
 
         @d.addCallback
         def _get_info(res):
-            d1 = bot.callRemote("getSlaveInfo")
+            d1 = proto.callRemote(GetInfo)
             def _got_info(info):
                 log.msg("Got slaveinfo from '%s'" % self.slavename)
                 # TODO: info{} might have other keys
                 state["admin"] = info.get("admin")
                 state["host"] = info.get("host")
                 state["access_uri"] = info.get("access_uri", None)
-                state["slave_environ"] = info.get("environ", {})
+                state["slave_environ"] = self.ampList2dict(info.get("environ", {}))
                 state["slave_basedir"] = info.get("basedir", None)
                 state["slave_system"] = info.get("system", None)
+                state["version"] = info.get("version", "(unknown)")
+                state["slave_commands"] = self.ampList2dict(info.get("commands", {}))
             def _info_unavailable(why):
-                why.trap(pb.NoSuchMethod)
+                # why.trap(pb.NoSuchMethod) # TODO: do we need this?
                 # maybe an old slave, doesn't implement remote_getSlaveInfo
                 log.msg("BuildSlave.info_unavailable")
                 log.err(why)
@@ -437,42 +448,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         d.addCallback(lambda _: self.startKeepaliveTimer())
 
         @d.addCallback
-        def _get_version(_):
-            d = bot.callRemote("getVersion")
-            def _got_version(version):
-                state["version"] = version
-            def _version_unavailable(why):
-                why.trap(pb.NoSuchMethod)
-                # probably an old slave
-                state["version"] = '(unknown)'
-            d.addCallbacks(_got_version, _version_unavailable)
-            return d
-
-        @d.addCallback
-        def _get_commands(_):
-            d1 = bot.callRemote("getCommands")
-            def _got_commands(commands):
-                state["slave_commands"] = commands
-            def _commands_unavailable(why):
-                # probably an old slave
-                if why.check(AttributeError):
-                    return
-                log.msg("BuildSlave.getCommands is unavailable - ignoring")
-                log.err(why)
-            d1.addCallbacks(_got_commands, _commands_unavailable)
-            return d1
-
-        @d.addCallback
         def _accept_slave(res):
             self.slave_status.setConnected(True)
 
             self._applySlaveInfo(state)
-            
             self.slave_commands = state.get("slave_commands")
             self.slave_environ = state.get("slave_environ")
             self.slave_basedir = state.get("slave_basedir")
             self.slave_system = state.get("slave_system")
-            self.slave = bot
+            self.slave = proto
             if self.slave_system == "nt":
                 self.path_module = namedModule("ntpath")
             else:
@@ -485,9 +469,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.botmaster.master.status.slaveConnected(self.slavename)
 
         d.addCallback(lambda _: self._saveSlaveInfoDict())
-        
         d.addCallback(lambda _: self.updateSlave())
-
         d.addCallback(lambda _:
                 self.botmaster.maybeStartBuildsForSlave(self.slavename))
 

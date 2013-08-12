@@ -23,7 +23,7 @@ from twisted.cred import portal, checkers, credentials, error
 from twisted.application import service, strports
 from twisted.internet.protocol import Factory
 
-from protocols import *
+from buildbot.protocols import *
 
 debug = True
 
@@ -49,10 +49,10 @@ class AMPManager(service.MultiService):
             port = self.ports[portstr]
 
         if debug:
-            log.msg("registering username '%s' on pb port %s: %s"
+            log.msg("registering username '%s' on port %s: %s"
                 % (username, portstr, pfactory))
         if username in self.users:
-            raise KeyError, ("username '%s' is already registered on PB port %s"
+            raise KeyError, ("username '%s' is already registered on port %s"
                              % (username, portstr))
         self.users[username] = (password, pfactory)
         return reg
@@ -83,7 +83,7 @@ class Registration(object):
         self.ampManager = ampManager
 
     def __repr__(self):
-        return "<pbmanager.Registration for %s on %s>" % \
+        return "<ampmanager.Registration for %s on %s>" % \
                             (self.username, self.portstr)
 
     def unregister(self):
@@ -125,6 +125,18 @@ class Master(DebugAMP, service.MultiService):
             error = [{'key': 'Error', 'value': 'Login or password incorrect'}]
             return {'features': error}
         log.msg('User \'%s\' authenticated!' % user)
+        _, afactory = self.ampManager.users.get(user)
+        d = defer.maybeDeferred(afactory, self, user)
+        def check(persp):
+            if not persp:
+                raise ValueError("no perspective for '%s'" % user)
+            return persp
+        d.addCallback(check)
+        def call_attached(persp):
+            d = defer.maybeDeferred(persp.attached, self)
+            d.addCallback(lambda _ : persp) # keep returning the perspective
+            return d
+        d.addCallback(call_attached)
 #        Hello(self)
         log.msg('Slave feature negotiation vector: %s' % pprint.pformat(features))
         features = [{'key': 'feature1', 'value': 'bar1'}, {'key': 'feature2', 'value': 'baz1'}]
@@ -168,100 +180,3 @@ class Master(DebugAMP, service.MultiService):
             builder_info['writer'] = None
         builder_info['file'] = None
         return {}
-
-
-# class Dispatcher(service.Service):
-#     implements(portal.IRealm, checkers.ICredentialsChecker)
-#
-#     credentialInterfaces = [ credentials.IUsernamePassword,
-#                              credentials.IUsernameHashedPassword ]
-#
-#     def __init__(self, portstr):
-#         print "+++++++++ Dispatcher.__init__"
-#         self.portstr = portstr
-#         self.users = {}
-#
-#         # there's lots of stuff to set up for a PB connection!
-#         self.portal = portal.Portal(self)
-#         self.portal.registerChecker(self)
-#         self.serverFactory = pb.PBServerFactory(self.portal)
-#         self.serverFactory.unsafeTracebacks = True
-#         self.port = strports.listen(portstr, self.serverFactory)
-#
-#     def __repr__(self):
-#         return "<pbmanager.Dispatcher for %s on %s>" % \
-#                             (", ".join(self.users.keys()), self.portstr)
-#
-#     def stopService(self):
-#         print "+++++++++ Dispatcher.stopService"
-#         # stop listening on the port when shut down
-#         d = defer.maybeDeferred(self.port.stopListening)
-#         d.addCallback(lambda _ : service.Service.stopService(self))
-#         return d
-#
-#     def register(self, username, password, pfactory):
-#         print "+++++++++ Dispatcher.register"
-#         if debug:
-#             log.msg("registering username '%s' on pb port %s: %s"
-#                 % (username, self.portstr, pfactory))
-#         if username in self.users:
-#             raise KeyError, ("username '%s' is already registered on PB port %s"
-#                              % (username, self.portstr))
-#         self.users[username] = (password, pfactory)
-#
-#     def unregister(self, username):
-#         print "+++++++++ Dispatcher.unregister"
-#         if debug:
-#             log.msg("unregistering username '%s' on pb port %s"
-#                     % (username, self.portstr))
-#         del self.users[username]
-#
-#     # IRealm
-#
-#     def requestAvatar(self, username, mind, interface):
-#         print "+++++++++ Dispatcher.reuqestAvatar"
-#         assert interface == pb.IPerspective
-#         if username not in self.users:
-#             d = defer.succeed(None) # no perspective
-#         else:
-#             _, afactory = self.users.get(username)
-#             d = defer.maybeDeferred(afactory, mind, username)
-#
-#         # check that we got a perspective
-#         def check(persp):
-#             if not persp:
-#                 raise ValueError("no perspective for '%s'" % username)
-#             return persp
-#         d.addCallback(check)
-#
-#         # call the perspective's attached(mind)
-#         def call_attached(persp):
-#             d = defer.maybeDeferred(persp.attached, mind)
-#             d.addCallback(lambda _ : persp) # keep returning the perspective
-#             return d
-#         d.addCallback(call_attached)
-#
-#         # return the tuple requestAvatar is expected to return
-#         def done(persp):
-#             return (pb.IPerspective, persp, lambda: persp.detached(mind))
-#         d.addCallback(done)
-#
-#         return d
-#     
-#     # ICredentialsChecker
-#
-#     def requestAvatarId(self, creds):
-#         print "+++++++++ Dispatcher.requestAvatarId"
-#         if creds.username in self.users:
-#             password, _ = self.users[creds.username]
-#             d = defer.maybeDeferred(creds.checkPassword, password)
-#             def check(matched):
-#                 if not matched:
-#                     log.msg("invalid login from user '%s'" % creds.username)
-#                     return failure.Failure(error.UnauthorizedLogin())
-#                 return creds.username
-#             d.addCallback(check)
-#             return d
-#         else:
-#             log.msg("invalid login from unknown user '%s'" % creds.username)
-#             return defer.fail(error.UnauthorizedLogin())

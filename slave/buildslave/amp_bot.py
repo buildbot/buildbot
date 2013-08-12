@@ -176,7 +176,7 @@ class Bot(amp.AMP, service.MultiService):
     @GetInfo.responder
     def getInfo(self):
         commands = [
-            dict([('name', n), ('version', base.command_version)])
+            dict([('key', n), ('value', base.command_version)])
             for n in registry.getAllCommandNames()
         ]
         environ = [
