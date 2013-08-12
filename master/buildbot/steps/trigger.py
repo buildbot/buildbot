@@ -155,13 +155,11 @@ class Trigger(LoggingBuildStep):
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
         else:
+            rclist = ()
             # do something to handle errors
             for d in dl:
                 d.addErrback(log.err,
                     '(ignored) while invoking Triggerable schedulers:')
-            rclist = None
-            self.end(SUCCESS)
-            return
 
         was_exception = was_failure = False
         brids = {}
@@ -207,4 +205,3 @@ class Trigger(LoggingBuildStep):
             dl.addCallback(add_links)
 
         self.end(result)
-        return
