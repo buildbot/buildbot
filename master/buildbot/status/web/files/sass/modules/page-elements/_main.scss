@@ -1434,3 +1434,23 @@ transform:rotate(360deg)}
 		font-size: 16px;
 	}	
 }
+
+.ellipsis {
+	width:175px;
+   	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+}
+
+  .tool-tip {
+	  	background-color:#eee;
+	    border: 1px solid #ccc;
+	    border-radius: 7px 7px 7px 7px;
+	    left: 0;
+	    padding: 10px;
+	    position: absolute;
+	    text-shadow: 0 1px 0 #FFFFFF;
+	    top: -10px;
+	    z-index: 1;
+	}

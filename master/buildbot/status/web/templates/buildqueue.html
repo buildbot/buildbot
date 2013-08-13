@@ -17,7 +17,10 @@
     <thead>
     <tr>
         <th class="txt-align-left">Builder</th>
-        <th class="txt-align-left">Codebases</th>
+        <th class="txt-align-left">Project</th>
+        <th class="txt-align-left">Repository</th>
+        <th class="txt-align-left">Branch</th>
+        <th class="txt-align-left">Revision</th>
         <th class="txt-align-left">Reason</th>
         <th class="txt-align-left">Compatible slaves</th>
         <th><input id="selectall" type="checkbox" name="checkuncheck" /></th>
@@ -26,23 +29,40 @@
     <tbody>
     {% for bq in buildqueue %}
     <tr>
-        <td class="txt-align-left">{{ bq.name }} </td>
         <td class="txt-align-left">
-        {% for sskey, value in bq.sourcestamps.iteritems() %}
-            <h4 class="pr-small-head">
-                {{sskey}}
-            </h4>
-            <ul class="codebases-list">
-                <li> {{value.repository}}</li>
-                <li>{{value.branch}}</li>
-                {% if value.revision %}
-                <li>{{value.revision}}</li>
-                {% endif %}
-            </ul>
-        {% endfor %}
+            {{ bq.name }} 
         </td>
         <td class="txt-align-left">
+        {% for sskey, value in bq.sourcestamps.iteritems() %}
+            {{sskey}}
+        {% endfor %}
+        </td>
+
+        <td class="txt-align-left">
+            <div class="ellipsis ellipsis-js">
+                {% for sskey, value in bq.sourcestamps.iteritems() %}
+                    {{value.repository}}
+                {% endfor %}
+            </div>
+        </td>
+
+        <td class="txt-align-left">
+            {% for sskey, value in bq.sourcestamps.iteritems() %}
+                {{value.branch}}
+            {% endfor %}
+        </td>
+
+        <td class="txt-align-left">
+            {% for sskey, value in bq.sourcestamps.iteritems() %}
+                {% if value.revision %}
+                    {{value.revision}}
+                {% endif %}
+            {% endfor %}
+        </td>
+
+        <td class="txt-align-left">
             <ul class="codebases-list">
+
                 <li>
                     {{ bq.reason }}
                 </li> 
@@ -55,19 +75,24 @@
             </ul>
         </td>
         <td class="txt-align-left">
-            <h4 class="pr-small-head">
-                {{ bq.slaves|length }} slaves
-            </h4>
- 
-        <ul class="codebases-list">
-        {% for slave in bq.slaves %}
-            <li> 
-                <a href="{{ path_to_root + 'buildslaves/' + slave }}">
-                    {{slave}}
-                </a> 
-            </li>
-        {% endfor %}
-        </ul>
+            <a class="more-info popup-btn-js mod-1" href="#">
+              {{ bq.slaves|length }} slaves
+            </a>
+             <div class="more-info-box more-info-box-js">
+              <span class="close-btn">
+              </span>
+              <h3>Compatible slaves</h3>
+                
+                <ul class="codebases-list">
+                {% for slave in bq.slaves %}
+                    <li> 
+                        <a href="{{ path_to_root + 'buildslaves/' + slave }}">
+                            {{slave}}
+                        </a> 
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
         </td>
         <td>
             <input class="fi-js fi" type="checkbox" name="cancelselected" value="{{ bq.brid }}"/><br/>

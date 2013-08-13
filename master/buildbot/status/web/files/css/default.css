@@ -6030,6 +6030,28 @@ div.force-text input.not-valid {
   font-size: 16px;
 }
 
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031438}}
+.ellipsis {
+  width: 175px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031446}}
+.tool-tip {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 7px 7px 7px 7px;
+  left: 0;
+  padding: 10px;
+  position: absolute;
+  text-shadow: 0 1px 0 #FFFFFF;
+  top: -10px;
+  z-index: 1;
+}
+
 /**
 * Base variables and function definitions
 *

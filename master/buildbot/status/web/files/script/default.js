@@ -206,4 +206,15 @@ $(document).ready(function() {
 
 	});
 
+	$('.ellipsis-js').hover(function(){
+		var tthis = $(this);
+		var txt = $(this).text();
+		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
+		$(this).css('overflow', 'visible')
+		$(this).append(toolTip);
+	}, function(){
+		$(this).css('overflow', 'hidden');
+		$('.tool-tip', this).remove();
+	});
+
 });
