@@ -4206,7 +4206,13 @@ a.grey-btn:hover,
   font-size: 13px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000359}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000360}}
+.grey-btn.var-2 {
+  font-size: 9px;
+  padding: 9px 8px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000365}}
 .close-btn {
   position: absolute;
   right: 10px;
@@ -4214,7 +4220,7 @@ a.grey-btn:hover,
   cursor: pointer;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000366}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000372}}
 .close-btn:after {
   color: #333333;
   content: "✖";
@@ -5990,14 +5996,15 @@ div.force-text input.not-valid {
 /* @end */
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031410}}
 .codebases-list {
+  color: #666;
   margin-bottom: 5px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031412}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031413}}
 .codebases-list li {
   margin-bottom: 3px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031417}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031418}}
 .m-bottom15 {
   margin-bottom: 15px;
 }
@@ -6007,12 +6014,16 @@ div.force-text input.not-valid {
   src: url(/../fonts/fontello/fontello.ttf) format('truetype'), url(/../fonts/fontello/fontello.otf) format('opentype');
 }
 
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031424}}
+.fi {
+  margin-bottom: 3px;
+}
+
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031429}}
 .delete-icon {
   display: inline-block;
 }
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031435}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000031431}}
 .delete-icon:before {
   font-family: "fontello";
   content: "";

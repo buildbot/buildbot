@@ -1408,6 +1408,7 @@ transform:rotate(360deg)}
 /* @end */
 
 .codebases-list {
+	color:#666;
 	margin-bottom:5px;
 	li {
 		margin-bottom:3px;
@@ -1421,21 +1422,15 @@ transform:rotate(360deg)}
 @include font-face("fontello", font-files("/../fonts/fontello/fontello.ttf", "/../fonts/fontello/fontello.otf"));
 
 .fi {
-	
-	
+	margin-bottom:3px;	
 }
 
 
 .delete-icon {
-	
 	display:inline-block;
-	
-}
-
-.delete-icon:before {
-	
-	font-family: "fontello";
-	content: "";
-	font-size: 16px;
-	
+	&:before {
+		font-family: "fontello";
+		content: "";
+		font-size: 16px;
+	}	
 }

@@ -11,7 +11,7 @@
 {% block content %}
 <div id="formWrapper">
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
-    <input class="grey-btn fl-right m-bottom15" type="submit" value="Remove selected" />
+    <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
 
 <table class="table-1 first-child">
     <thead>
@@ -26,7 +26,7 @@
     <tbody>
     {% for bq in buildqueue %}
     <tr>
-        <td class="txt-align-left">{{ bq.name }}</td>
+        <td class="txt-align-left">{{ bq.name }} </td>
         <td class="txt-align-left">
         {% for sskey, value in bq.sourcestamps.iteritems() %}
             <h4 class="pr-small-head">
@@ -55,8 +55,9 @@
             </ul>
         </td>
         <td class="txt-align-left">
- 
-            {{ bq.slaves|length }} slaves
+            <h4 class="pr-small-head">
+                {{ bq.slaves|length }} slaves
+            </h4>
  
         <ul class="codebases-list">
         {% for slave in bq.slaves %}

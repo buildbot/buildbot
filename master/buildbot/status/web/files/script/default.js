@@ -66,7 +66,7 @@ $(document).ready(function() {
 		/*
 		$(this).prev('.fi-js').prop('checked', true);
 		*/
-		var iVal = $(this).prev().val();
+		var iVal = $(this).prev().prev().val();
 		console.log(iVal)
 		var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
 		$(hi).insertAfter($(this));
