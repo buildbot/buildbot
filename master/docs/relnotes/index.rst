@@ -78,6 +78,8 @@ Features
 
 * The web hooks now include support for Gitorious. 
 
+* It is now possible to select categories to show in the waterfall help
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
