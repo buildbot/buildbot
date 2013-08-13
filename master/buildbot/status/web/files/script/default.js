@@ -57,9 +57,23 @@ $(document).ready(function() {
 	// check all in tables
 	$(function selectAll() {
 	    $('#selectall').click(function () {
-	        $('#inputfields').find(':checkbox').prop('checked', this.checked);
+	    	
+	        $('.fi-js').prop('checked', this.checked);
 	    });
 	});
+	$('.force-individual-js').click(function(e){
+		e.preventDefault();
+		/*
+		$(this).prev('.fi-js').prop('checked', true);
+		*/
+		var iVal = $(this).prev().val();
+		console.log(iVal)
+		var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
+		$(hi).insertAfter($(this));
+		$('#formWrapper form').submit();
+
+	});
+	
 
 	// chrome font problem fix
 	$(function chromeWin() {
