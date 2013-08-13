@@ -4,6 +4,7 @@ from buildbot.steps.shell import ShellCommand
 import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
+from buildbot.changes.changes import Change
 
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
@@ -11,6 +12,39 @@ def FormatDatetime(value):
 def mkdt(epoch):
     if epoch:
         return epoch2datetime(epoch)
+
+@defer.inlineCallbacks
+def updateSourceStampsChanges(master, sourcestamp_changes, sourcestamps):
+    codebase_change = {}
+
+    for codebase, ssid, changeid in sourcestamp_changes:
+        chdict = yield master.db.changes.getChange(changeid)
+        change = yield Change.fromChdict(master, chdict)
+        if codebase not in codebase_change.keys():
+            codebase_change[codebase] = [ change ]
+        else:
+            codebase_change[codebase] =+ [ change ]
+
+    for ss in sourcestamps:
+        ss.changes = codebase_change[ss.codebase]
+
+@defer.inlineCallbacks
+def collectBuildChanges(sourcestamps, master):
+    sourcestamps_changes = []
+    for ss in sourcestamps:
+        if len(ss.changes) < 1:
+            sourcestamps_changes.append(
+                {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_sourcestampsetid': ss.sourcestampsetid})
+
+    if len(sourcestamps_changes) > 0:
+        rv = yield master.db.sourcestamps.findMatchingChanges(sourcestamps_changes)
+
+        if len(rv) > 0:
+            updateSourceStampsChanges(master, rv, sourcestamps)
+
+        # else:
+        # changes not found in db needs to be collected
+
 
 class CheckArtifactExists(ShellCommand):
     name = "CheckArtifactExists"
@@ -53,6 +87,9 @@ class CheckArtifactExists(ShellCommand):
             for ss in sourcestamps:
                 self.build_sourcestamps.append(
                     {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_sourcestampsetid': ss.sourcestampsetid})
+
+        # collect changes
+        collectBuildChanges(sourcestamps, self.master)
 
     @defer.inlineCallbacks
     def createSummary(self, log):
