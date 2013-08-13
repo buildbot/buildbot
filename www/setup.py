@@ -23,6 +23,7 @@ import setuptools.command.sdist
 import setuptools.command.install
 import setuptools.command.develop
 from distutils.core import Command
+from distutils.version import LooseVersion
 try:
     import simplejson as json
     assert json
@@ -34,6 +35,10 @@ except ImportError:
         # a fresh python-2.5 environment may have neither json nor simplejson
         # luckily it's only required for building from source
         json = None
+
+
+def check_output(cmd):
+    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 # This script can run either in a source checkout (e.g., to 'setup.py sdist')
 # or in an sdist tarball (to install)
@@ -86,7 +91,7 @@ package_json = {
     },
     "engines": {
         "node": "0.8.x",
-        "npm": "1.1.x"
+        "npm": "1.2.x"
     }
 }
 package_json.update(base_json)
@@ -95,7 +100,7 @@ package_json.update(base_json)
 # in a crazy CI fashion
 bower_json = {
     "dependencies": {
-    "bootstrap": "~2.3.2",
+    "bootstrap": "~3.0.0",
     "font-awesome": "latest",
     "angular": "latest",
     "angular-bootstrap": "latest",
@@ -132,6 +137,9 @@ class npm_install(Command):
     def run(self):
         assert json, "Install 'json' or 'simplejson' first"
         json.dump(package_json, open("package.json", "w"))
+        npm_version = check_output("npm -v").strip()
+        assert npm_version != "", "need nodejs and npm installed in current PATH"
+        assert LooseVersion(npm_version) >= LooseVersion("1.2"),  "npm < 1.2 (%s)" % (npm_version)
         self.spawn(['npm', 'install'])
 
 cmdclass['npm_install'] = npm_install
