@@ -31,6 +31,7 @@ from twisted.internet import utils
 from twisted.python import log
 from twisted.python.procutils import which
 from twisted.spread import pb
+from twisted.spread.flavors import NoSuchMethod
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
@@ -541,6 +542,9 @@ class Try(pb.Referenceable):
         self.project = self.getopt('project', '')
         self.who = self.getopt('who')
         self.comment = self.getopt('comment')
+        self.urls = {}
+        self.exitcode = 0
+        self.pending = []
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -591,20 +595,21 @@ class Try(pb.Referenceable):
             else:
                 treedir = os.getcwd()
             d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
-        d.addCallback(self._createJob_1)
-        return d
 
-    def _createJob_1(self, ss):
-        self.sourcestamp = ss
-        if self.connect == "ssh":
-            patchlevel, diff = ss.patch
-            revspec = ss.revision
-            if revspec is None:
-                revspec = ""
-            self.jobfile = createJobfile(
-                self.bsid, ss.branch or "", revspec, patchlevel, diff,
-                ss.repository, self.project, self.who, self.comment,
-                self.builderNames, self.config.get('properties', {}))
+        def createJob_jobfile(ss):
+            self.sourcestamp = ss
+            if self.connect == "ssh":
+                patchlevel, diff = ss.patch
+                revspec = ss.revision
+                if revspec is None:
+                    revspec = ""
+                self.jobfile = createJobfile(
+                    self.bsid, ss.branch or "", revspec, patchlevel, diff,
+                    ss.repository, self.project, self.who, self.comment,
+                    self.builderNames, self.config.get('properties', {}))
+
+        d.addCallback(createJob_jobfile)
+        return d
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
@@ -664,24 +669,34 @@ class Try(pb.Referenceable):
                               self.who,
                               self.comment,
                               self.config.get('properties', {}))
-        d.addCallback(self._deliverJob_pb2)
-        return d
+        
+        def _deliverJob_pbstatus(status):
+            self.buildsetStatus = status
+            return status
 
-    def _deliverJob_pb2(self, status):
-        self.buildsetStatus = status
-        return status
+        d.addCallback(_deliverJob_pbstatus)
+        return d
 
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
         wait = bool(self.getopt("wait"))
+        url = bool(self.getopt("url"))
+        if ((not wait) and url):
+            # contacts the status port.
+            # prints out the url of the build then exits.
+            self.announce("Not waiting for builds to finish")
+            self.announce("for more information visit the url below")
+            self.announce("waiting for build to start...")
+            d = self.running = defer.Deferred()
+            if self.buildsetStatus:
+                self._getUrl()
+                return self.running
+            d = self._connectStatusClient(d)
+            d.addCallback(self._getUrl_ssh_1)
+            return d
         if not wait:
-            # TODO: emit the URL where they can follow the builds. This
-            # requires contacting the Status server over PB and doing
-            # getURLForThing() on the BuildSetStatus. To get URLs for
-            # individual builds would require we wait for the builds to
-            # start.
-            print "not waiting for builds to finish"
+            self.announce("Not waiting for builds to start")
             return
         d = self.running = defer.Deferred()
         if self.buildsetStatus:
@@ -689,16 +704,42 @@ class Try(pb.Referenceable):
             return self.running
         # contact the status port
         # we're probably using the ssh style
-        master = self.getopt("master")
-        host, port = master.split(":")
-        port = int(port)
-        self.announce("contacting the status port at %s:%d" % (host, port))
+        d = self._connectStatusClient(d)
+        d.addCallback(self._getStatus_ssh_1)
+        return self.running
+
+    def _connectStatusClient(self, d):
+        master = master.getopt("master")
+        host, port = masater.split(":")
+        port = 5050
+        self.announce("Connecting to the status port at %s:%d" % (host, port))
         f = pb.PBClientFactory()
         creds = credentials.UsernamePassword("statusClient", "clientpw")
         d = f.login(creds)
-        reactor.connectTCP(host, port, f)
-        d.addCallback(self._getStatus_ssh_1)
-        return self.running
+        reactor.connectTcp(host, port, f)
+        return d
+
+    def _getUrl_ssh_1(self, remote):
+        self.announce("waiting for job to be accepted")
+        g = BuildSetStatusGrabber(remote, self.bsid)
+        d = g.grab()
+        d.addCallback(self._getUrl)
+
+    def _getUrl(self, res=None):
+        if res:
+            self.buildsetStatus = res
+        d = self.buildsetStatus.callRemote("getBuildRequests")
+
+        def _getUrl_parse(res):
+            self.builderNames = []
+            self.buildRequests = {}
+
+            for n,br in res:
+                self.builderNames.append(n)
+                self.buildRequests[n] = br
+                self.pending.append(n)
+                br.callRemote("subscribe", self)
+        d.addCallback(_getUrl_parse)
 
     def _getStatus_ssh_1(self, remote):
         # find a remotereference to the corresponding BuildSetStatus object
@@ -718,6 +759,7 @@ class Try(pb.Referenceable):
     def _getStatus_2(self, brs):
         self.builderNames = []
         self.buildRequests = {}
+        self.urls = {}
 
         # self.builds holds the current BuildStatus object for each one
         self.builds = {}
@@ -746,6 +788,7 @@ class Try(pb.Referenceable):
             self.results[n] = [None, None]
             self.currentStep[n] = None
             self.ETA[n] = None
+            self.pending.append(n)
             # get new Builds for this buildrequest. We follow each one until
             # it finishes or is interrupted.
             br.callRemote("subscribe", self)
@@ -756,15 +799,44 @@ class Try(pb.Referenceable):
             self.printloop = task.LoopingCall(self.printStatus)
             self.printloop.start(3, now=False)
 
+    def setUrl(self, url, buildername):
+        self.urls[buildername] = url
+        self.pending.remove(buildername)
+        wait = self.getopt('wait')
+        #we have all the urls and we are not waiting.
+        if (not self.pending) and (not wait):
+            self.ending()
+
     # these methods are invoked by the status objects we've subscribed to
 
     def remote_newbuild(self, bs, builderName):
-        if self.builds[builderName]:
-            self.builds[builderName].callRemote("unsubscribe", self)
-        self.builds[builderName] = bs
-        bs.callRemote("subscribe", self, 20)
-        d = bs.callRemote("waitUntilFinished")
-        d.addCallback(self._build_finished, builderName)
+        d = bs.callRemote("getUrl")
+
+        def remote_newbuild_geturlerr( failure, bs, builderName):
+            self.announce("Error while getting the url")
+            self.announce("make sure the build master is up to date")
+            wait = self.getopt("wait")
+            failure.trap(NoSuchMethod)
+            if wait:
+                self.remote_newbuild_2(bs, builderName)
+            else:
+                self.ending()
+
+        def remote_newbuild_subscribe(url, bs, builderName):
+            self.setUrl( url, builderName)
+            wait = self.getopt('wait')
+            if not wait:
+                return
+            if self.builds[builderName]:
+                self.builds[buildName].callRemote("unsubscribe", self)
+            self.builds[builderName] = bs
+            bs.callRemote("subscribe", self, 20)
+            d = bs.callRemote("waitUntilFinished")
+            d.addCallback(self._build_finished, builderName) 
+
+        d.addCallback(remote_newbuild_subscribe, bs, builderName)
+        d.addErrback(remote_newbuild_geturlerr, bs, builderName)
+        return d
 
     def remote_stepStarted(self, buildername, build, stepname, step):
         self.currentStep[buildername] = stepname
@@ -779,26 +851,24 @@ class Try(pb.Referenceable):
         # we need to collect status from the newly-finished build. We don't
         # remove the build from self.outstanding until we've collected
         # everything we want.
-        self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
         d = bs.callRemote("getResults")
-        d.addCallback(self._build_finished_2, bs, builderName)
+
+        def _build_finished_getText( results, bs, builderName):
+            self.results[builderName][0] = results
+            d = bs.callRemote("getText")
+            d.addCallback(_build_finished_remove, bs, builderName)
+            return d
+
+        def _build_finished_remove( text, bs, builderNames):
+            self.results[builderName][1] = text
+            self.outstanding.remove(builderName)
+            if not self.outstanding:
+                return self.statusDone()
+
+        d.addCallback(_build_finished_getText, bs, builderName)
         return d
-
-    def _build_finished_2(self, results, bs, builderName):
-        self.results[builderName][0] = results
-        d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, builderName)
-        return d
-
-    def _build_finished_3(self, text, builderName):
-        self.results[builderName][1] = text
-
-        self.outstanding.remove(builderName)
-        if not self.outstanding:
-            # all done
-            return self.statusDone()
 
     def printStatus(self):
         try:
@@ -843,7 +913,19 @@ class Try(pb.Referenceable):
             self.exitcode = 0
         else:
             self.exitcode = 1
+        self.ending()
+
+
+    def ending(self):
+        self.printURL()
         self.running.callback(self.exitcode)
+
+    def printURL(self):
+        url = self.getopt('url')
+        if url:
+            self.announce("Urls:")
+            for name in self.urls.keys():
+                self.announce("\t%s"%self.urls[name])
 
     def getAvailableBuilderNames(self):
         # This logs into the master using the PB protocol to
@@ -858,7 +940,7 @@ class Try(pb.Referenceable):
             f = pb.PBClientFactory()
             d = f.login(credentials.UsernamePassword(user, passwd))
             reactor.connectTCP(tryhost, tryport, f)
-            d.addCallback(self._getBuilderNames, self._getBuilderNames2)
+            d.addCallback(self._getBuilderNames)
             return d
         if self.connect == "ssh":
             print "Cannot get availble builders over ssh."
@@ -866,7 +948,7 @@ class Try(pb.Referenceable):
         raise RuntimeError(
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
-    def _getBuilderNames(self, remote, output):
+    def _getBuilderNames(self, remote):
         # Older schedulers won't support the properties argument, so only
         # attempt to send them when necessary.
         properties = self.config.get('properties', {})
@@ -874,13 +956,14 @@ class Try(pb.Referenceable):
             d = remote.callRemote("getAvailableBuilderNames", properties)
         else:
             d = remote.callRemote("getAvailableBuilderNames")
-        d.addCallback(self._getBuilderNames2)
-        return d
 
-    def _getBuilderNames2(self, buildernames):
-        print "The following builders are available for the try scheduler: "
-        for buildername in buildernames:
-            print buildername
+        def _getBuilderNames_print(buildernames):
+            print "The following builders are available for the try scheduler: "
+            for buildername in buildernames:
+                print buildername
+
+        d.addCallback(_getBuilderNames_print)
+        return d
 
     def announce(self, message):
         if not self.quiet:

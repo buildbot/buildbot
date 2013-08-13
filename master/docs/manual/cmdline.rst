@@ -470,6 +470,13 @@ exiting. Unless you use the :option:`--quiet` option (or
 ``try_quiet=True``), it will emit a progress message every 60
 seconds until the builds have completed.
 
+Waiting to URL to results
+##################
+If you provide the :option:'--url' option (or ''try_url = True''
+in :file:'.buildbot/options'), the ''buildbot try'' command will wait
+until your build(s) have started and print out the url's for the results
+before exiting. 
+
 Sending properties
 ##################
 
