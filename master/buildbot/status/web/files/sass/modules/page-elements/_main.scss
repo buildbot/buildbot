@@ -916,72 +916,16 @@ transform:rotate(360deg)}
 
 
 // buildlog
-.all-text {display:none;}
+
 .content-holder {
 	margin:10px 0 15px;
 	padding:0;
 	white-space: pre-line;
 	@include pie-clearfix;
-	border-bottom:1px solid #ccc;
 	font-family: "helvetica neue",sans-serif;
 	padding-bottom:10px;
 }
-.build-log-header,
-.stdout{
-	display:block;
-	font-size:14px;
-	clear:both;
-}
 
-.build-log-header {
-	overflow: hidden;
-	margin-bottom: 15px;
-}
-
-.build-log-header-btn {
-	clear:both;
-	margin-bottom:10px;
-	margin-top:10px;
-	white-space: normal;
-	font-weight: bold;
-	line-height:0;
-	&:before {
-		content:('Show all');
-	}
-	span {
-	   margin-left: 4px;
-	   /*
-	   @include background-image(linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
-       border: 1px solid #C4C4C4;
-	   border-radius: 4px 4px 4px 4px;
-   	   color: #2B2B2B;
-	   display: inline-block;
-	   */
-	   font-size: 20px;
-	   font-weight: bold;
-	   line-height: 2px;
-	   //padding: 5px 5px 11px 6px;
-	   text-shadow: 0 1px 0 white;
-	   &:before {
-			content: ('+');
-	   }
-	}
-	&.open:before {
-		content:('Hide all');
-	}
-	&.open span:before  {
-		content:('-');	
-	}
-	&:hover span {
-		//@include background-image (linear-gradient(right center , #F2F6FE 0%, #F8FAFF 100%));
-	}
-}
-
-.stdout,
-.stderr {
-	margin-bottom:10px;
-	color:#666;
-}
 .small-head-2 {
 	padding:0;
 	margin:10px 0 10px 0 ;

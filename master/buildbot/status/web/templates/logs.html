@@ -8,7 +8,7 @@
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
-    <script type="text/javascript" src="/script/build_logs.js"></script>
+  
 	<link rel="stylesheet" href="/css/default.css" type="text/css" />
   </head>
   <body class='log interface'>
@@ -20,19 +20,20 @@
 
 	<div class="column-1 inner">
 		<a href="{{ texturl }}">(view as text)</a><br/><br/>
-		<a id="toggleExpand" href="#" class="grey-btn js-expand">Expand all </a>
-	      
+		
+	    <pre class="content-holder">  
 			{%- endmacro -%}
 
 			{%- macro chunks(entries) -%}
 			
 			{%- for entry in entries -%}
-				{%- if entry.is_header == true %}<pre class="content-holder">{% else %}<h3 class="small-head-2">Output</h3>{% endif %}<div class="{{ entry.type }}">{{ entry.text|e }}</div>{%- if entry.is_header == true %}<a href="#" class="build-log-header-btn js-header-btn"> <span></span></a>{% endif %}{%- if entry.is_header == false %}</pre>{% endif %}	
+				{{ entry.text|e }}
 			{%- endfor -%}
 
 			{%- endmacro -%}
 
 			{%- macro page_footer() -%}
+      </pre>
 	</div>
 </div>
 <footer class="footer" style="clear:both">
@@ -42,6 +43,7 @@
         </h3>
       </div>
     </footer>
+    
 </body>
 
 </html>
