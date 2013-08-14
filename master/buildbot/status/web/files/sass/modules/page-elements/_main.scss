@@ -914,21 +914,21 @@ transform:rotate(360deg)}
 	}
 }
 
-
 // buildlog
-
 .content-holder {
-	margin:10px 0 15px;
-	padding:0;
-	white-space: pre-line;
-	@include pie-clearfix;
+	white-space: pre;
 	font-family: "helvetica neue",sans-serif;
-	padding-bottom:10px;
+	font-size: 12px;
+}
+
+body.log.interface {
+	background: #FFFFFF;
+	padding:20px;
 }
 
 .small-head-2 {
 	padding:0;
-	margin:10px 0 10px 0 ;
+	margin:10px 0 10px 0;
 }
 
 /* @group Base */
