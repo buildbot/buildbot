@@ -166,11 +166,12 @@ $(document).ready(function() {
 			$('#bowlG').remove();
 			$($response).find('#formWrapper').appendTo($('#content'));
 			$('.more-info-box-js-2').center();
-			$(".select-tools-js").chosen({
+			$("#formWrapper .select-tools-js").chosen({
 				disable_search_threshold: 1,
 			    no_results_text: "Nothing found!",
-			    width: "100%"
+			    width:"170px"
   			});
+  			clickSort();
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
 			});
@@ -187,25 +188,30 @@ $(document).ready(function() {
   	});
 
 	// Name sorting for filterbox
-	$('.sort-name').click(function(e){
-		e.preventDefault();
-		var items = $('.chosen-results li').get();
+	function clickSort() {
+		$('.sort-name').click(function(e){
+			e.preventDefault();
+			var ch = $(this).next($('.chosen-results li'));
+			var items = $('.chosen-with-drop .chosen-results li').get();
+			console.log(ch, items)
+			items.sort(function(a,b){
+			  var keyA = $(a).text();
+			  var keyB = $(b).text();
+			  if (keyA < keyB) return -1;
+			  if (keyA > keyB) return 1;
+			  return 0;
+			});
+			var ul = $(this).next($('.chosen-results'));
+			
+			$.each(items, function(i, li){
+			  ul.append(li);
+			});
 
-		items.sort(function(a,b){
-		  var keyA = $(a).text();
-		  var keyB = $(b).text();
-		  if (keyA < keyB) return -1;
-		  if (keyA > keyB) return 1;
-		  return 0;
 		});
-		var ul = $('.chosen-results');
+	}
+	clickSort();
 
-		$.each(items, function(i, li){
-		  ul.append(li);
-		});
-
-	});
-
+	// tooltip for long txtstrings
 	$('.ellipsis-js').hover(function(){
 		var tthis = $(this);
 		var txt = $(this).text();
