@@ -1,3 +1,4 @@
+
 $(document).ready(function() {
 	
 	//Show / hide
@@ -147,46 +148,6 @@ $(document).ready(function() {
 		*/
 	}
 
-	// display popup box with external content
-
-	// get content in the dropdown and display it while removing the preloader
-	
-
-	$('#getBtn').click(function() {
-
-		$('.more-info-box-js, .more-info-box-js-2').hide();
-		$('#content').empty();
-		var path = $('#pathToCodeBases').attr('href');
-		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
-		$('#content').append(preloader).show();
-		
-		$.get(path)
-		.done(function(data) {
-			var $response=$(data);
-			$('#bowlG').remove();
-			$($response).find('#formWrapper').appendTo($('#content'));
-			$('.more-info-box-js-2').center();
-			$("#formWrapper .select-tools-js").chosen({
-				disable_search_threshold: 1,
-			    no_results_text: "Nothing found!",
-			    width:"170px"
-  			});
-  			clickSort();
-			$(window).resize(function() {
-				$('.more-info-box-js-2').center();
-			});
-			$('.more-info-box-js-2').fadeIn('fast');
-			$('#getForm').attr('action', window.location.href);
-		});
-	});
-
-	// Freetext filtering
-	$(".select-tools-js").chosen({
-		disable_search_threshold: 1,
-	    no_results_text: "Nothing found!",
-	    width: "100%"
-  	});
-
 	// Name sorting for filterbox
 	function clickSort() {
 		$('.sort-name').click(function(e){
@@ -211,6 +172,52 @@ $(document).ready(function() {
 	}
 	clickSort();
 
+
+	// display popup box with external content
+
+	// get content in the dropdown and display it while removing the preloader
+	
+
+	$('#getBtn').click(function() {
+
+		$('.more-info-box-js, .more-info-box-js-2').hide();
+		$('#content').empty();
+		var path = $('#pathToCodeBases').attr('href');
+		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+		$('body').append(preloader).show();
+		
+		$.get(path)
+		.done(function(data) {
+
+			$('#bowlG').remove();
+			
+			var fw = $(data).find('#formWrapper');
+			$(fw).appendTo($('#content'));
+			
+			$("#formWrapper .select-tools-js").chosen({
+				disable_search_threshold: 1,
+			    no_results_text: "Nothing found!",
+			    width: "150px"
+  			});
+
+			$('.more-info-box-js-2').center();
+			
+  			clickSort();
+			$(window).resize(function() {
+				$('.more-info-box-js-2').center();
+			});
+			$('.more-info-box-js-2').fadeIn('fast');
+			$('#getForm').attr('action', window.location.href);
+		});
+	});
+
+	// Freetext filtering
+	/*
+	$(".select-tools-js").chosen({
+		disable_search_threshold: 1,
+	    no_results_text: "Nothing found!"
+  	});
+	*/
 	// tooltip for long txtstrings
 	$('.ellipsis-js').hover(function(){
 		var tthis = $(this);

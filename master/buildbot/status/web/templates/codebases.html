@@ -34,7 +34,7 @@
     </td>
     <td class="txt-align-right">
 
-      <select name='{{cbkey}}_branch' class="select-tools select-tools-js var-1">
+      <select name='{{cbkey}}_branch' class="select-tools select-tools-js var-2" >
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
             <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
@@ -44,6 +44,7 @@
             {{ b }}
             </option>
           {% endfor %}
+          
       </select>
     </td>
   </tr>

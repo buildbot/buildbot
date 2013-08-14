@@ -249,6 +249,16 @@
     	color: #fff;
     	padding: 3px;
     }
+    &.var-2 {
+    	
+    	min-width: 80px;
+    	margin-top: 0;
+    	float: none;
+    	background-color: #A3A3A3;
+    	border: 0 none;	
+    	color: #fff;
+    	padding: 3px;	
+    }
 }
 
 .chrome.win .grey-btn.var-1:after {
@@ -936,7 +946,6 @@ body.log.interface {
   position: relative;
   display: inline-block;
   vertical-align: middle;
-  font-size: 13px;
   zoom: 1;
   *display: inline;
   user-select:none; 
