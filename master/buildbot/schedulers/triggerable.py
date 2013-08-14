@@ -35,7 +35,9 @@ class Triggerable(base.BaseScheduler):
 
     def trigger(self, sourcestamps = None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
-        Returns a deferred that will fire when the buildset is finished."""
+        Returns two deferreds:
+            idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are available.
+            resultsDeferred -- yields the build result(s), when they finish."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
         props = Properties()
@@ -46,15 +48,17 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        d = self.addBuildsetForSourceStampsWithDefaults(self.reason,
+        idsDeferred = self.addBuildsetForSourceStampsWithDefaults(self.reason,
                                                 sourcestamps, props)
-        def setup_waiter((bsid,brids)):
-            d = defer.Deferred()
-            self._waiters[bsid] = (d, brids)
+        resultsDeferred = defer.Deferred()
+        def setup_waiter(ids):
+            bsid, brids = ids
+            self._waiters[bsid] = (resultsDeferred, brids)
             self._updateWaiters()
-            return d
-        d.addCallback(setup_waiter)
-        return d
+            return ids
+
+        idsDeferred.addCallback(setup_waiter)
+        return idsDeferred, resultsDeferred
 
     def stopService(self):
         # cancel any outstanding subscription

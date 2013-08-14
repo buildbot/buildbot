@@ -116,7 +116,7 @@ class FakeUpdates(object):
             if not isinstance(ss, int) and not isinstance(ss, dict):
                 self.testcase.fail("%s (%s) is not an integer or a dictionary"
                                         % (ss, type(ss)))
-        del ss # since we use locals(), below
+            del ss # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderNames, list)
