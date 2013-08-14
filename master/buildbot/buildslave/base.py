@@ -32,7 +32,7 @@ from buildbot.process.properties import Properties
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot import config
-from buildbot.protocols import RemotePrint, GetInfo
+from buildbot.protocols import RemotePrint, GetInfo, SetBuilderList
 
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
@@ -372,9 +372,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         @return: a Deferred that indicates when an attached slave has
         accepted the new builders and/or released the old ones."""
         if self.slave:
-            pass
-            # TODO: need to send builders list
-            # return self.sendBuilderList()
+            return self.sendBuilderList()
         else:
             return defer.succeed(None)
 
@@ -571,11 +569,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
-        blist = [(b.name, b.config.slavebuilddir) for b in our_builders]
+        blist = [dict([('name', b.name), ('dir', b.config.slavebuilddir)])
+            for b in our_builders]
         if blist == self._old_builder_list:
             return defer.succeed(None)
 
-        d = self.slave.callRemote("setBuilderList", blist)
+        d = self.slave.callRemote(SetBuilderList, builders=blist)
         def sentBuilderList(ign):
             self._old_builder_list = blist
             return ign
