@@ -17,13 +17,17 @@
     <thead>
     <tr>
         <th class="txt-align-left">Builder</th>
-        <th class="txt-align-left">Project</th>
+        <th class="txt-align-left">Codebases</th>
+        <!--
         <th class="txt-align-left">Repository</th>
         <th class="txt-align-left">Branch</th>
         <th class="txt-align-left">Revision</th>
+        -->
         <th class="txt-align-left">Reason</th>
         <th class="txt-align-left">Compatible slaves</th>
-        <th><input id="selectall" type="checkbox" name="checkuncheck" /></th>
+        <th>
+            <input id="selectall" type="checkbox" name="checkuncheck" />
+        </th>
     </tr>
     </thead>
     <tbody>
@@ -33,36 +37,54 @@
             {{ bq.name }} 
         </td>
         <td class="txt-align-left">
-        {% for sskey, value in bq.sourcestamps.iteritems() %}
-            {{sskey}}
-        {% endfor %}
-        </td>
 
-        <td class="txt-align-left">
-            <div class="ellipsis ellipsis-js">
-                {% for sskey, value in bq.sourcestamps.iteritems() %}
-                    {{value.repository}}
-                {% endfor %}
+            <a class="more-info popup-btn-js mod-1" href="#">
+              Codebase {{bq.sourcestamps|length}}
+            </a>
+             <div class="more-info-box more-info-box-js">
+              <span class="close-btn">
+              </span>
+              <h3>Codebases</h3>
+              <table class="table-1 first-child">
+                <thead>
+                    <th class="txt-align-left">
+                        Codebase
+                    </th>
+                    <th class="txt-align-left">
+                        Repository
+                    </th>
+                    <th class="txt-align-left">
+                        Branch
+                    </th>
+                    <th class="txt-align-left">
+                        Revision
+                    </th>
+                </thead>
+                    <tbody>
+                        {% for sskey, value in bq.sourcestamps.iteritems() %}
+                            <tr>
+                                <td class="txt-align-left">
+                                    {{sskey}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.repository}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.branch}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.revision}}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
             </div>
         </td>
 
         <td class="txt-align-left">
-            {% for sskey, value in bq.sourcestamps.iteritems() %}
-                {{value.branch}}
-            {% endfor %}
-        </td>
-
-        <td class="txt-align-left">
-            {% for sskey, value in bq.sourcestamps.iteritems() %}
-                {% if value.revision %}
-                    {{value.revision}}
-                {% endif %}
-            {% endfor %}
-        </td>
-
-        <td class="txt-align-left">
             <ul class="codebases-list">
-
                 <li>
                     {{ bq.reason }}
                 </li> 

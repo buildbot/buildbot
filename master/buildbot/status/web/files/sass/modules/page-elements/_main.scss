@@ -1166,6 +1166,7 @@ transform:rotate(360deg)}
   background-color: #3875d7;
   @include background-image (linear-gradient(center top, #3A669A 0%, #6AA1CD 100%));
   color: #fff;
+  @include text-shadow (none);
 }
 
 

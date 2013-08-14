@@ -169,7 +169,7 @@ $(document).ready(function() {
 			$(".select-tools-js").chosen({
 				disable_search_threshold: 1,
 			    no_results_text: "Nothing found!",
-			    width: "95%"
+			    width: "100%"
   			});
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
@@ -183,7 +183,7 @@ $(document).ready(function() {
 	$(".select-tools-js").chosen({
 		disable_search_threshold: 1,
 	    no_results_text: "Nothing found!",
-	    width: "95%"
+	    width: "100%"
   	});
 
 	// Name sorting for filterbox
