@@ -275,6 +275,28 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             })
 
     @defer.inlineCallbacks
+    def test_addBuildsetForSourceStamps_unknown(self):
+        sched = self.makeScheduler(name='n', builderNames=['b'])
+        bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
+                reason=u'power', sourcestamps=[
+                    {'codebase': 'cbA', 'branch': 'AA'},
+                    {'codebase': 'cbB', 'revision': 'BB'},
+                ])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            sourcestamps=[
+                {'revision': 'BB', 'codebase': 'cbB'},
+                {'branch': 'AA', 'codebase': 'cbA'},
+            ],
+            reason=u'power',
+            scheduler=u'n',
+            external_idstring=None,
+            builderNames=['b'],
+            properties={
+                u'scheduler': ('n', u'Scheduler'),
+            })
+
+    @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
