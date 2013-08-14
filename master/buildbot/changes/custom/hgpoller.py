@@ -234,6 +234,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         # Therefore, we have to check explicitely that branch head > current.
         head = yield self._getHead(branch)
 
+        # skipped get changes on a close branch
+        if head is None:
+            return
+
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
             revrange = '%s:%s' % (head, head)
