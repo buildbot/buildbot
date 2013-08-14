@@ -26,9 +26,7 @@
     <td><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
   {% endif %}
     <td><a href="{{ b.buildurl }}">#{{ b.buildnum }}</a></td> 
-    <td>
-        <span class="notimpl">Not implemented</span>
-    </td>
+    
     <!--
       <td class="left">{{ b.text|capitalize }}</td>
     -->
@@ -46,7 +44,7 @@
     <th>Builder</th>
      {% endif %}
     <th>Build #</th>
-    <th>Build artifacts</th>
+    
   </tr>
   {% for b in builds %}
     {{ build_tr(b, include_builder, loop) }}
