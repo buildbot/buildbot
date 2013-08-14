@@ -212,12 +212,12 @@ $(document).ready(function() {
 	});
 
 	// Freetext filtering
-	/*
+	
 	$(".select-tools-js").chosen({
 		disable_search_threshold: 1,
 	    no_results_text: "Nothing found!"
   	});
-	*/
+	
 	// tooltip for long txtstrings
 	$('.ellipsis-js').hover(function(){
 		var tthis = $(this);
