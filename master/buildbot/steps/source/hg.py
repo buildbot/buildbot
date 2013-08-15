@@ -39,10 +39,16 @@ class Hg(Mercurial):
     def parseChanges(self, _):
         self.master = self.build.builder.botmaster.parent
 
+        sourcestamps_updated = self.build.build_status.getAllGotRevisions()
         # calculate rev ranges
+        lastRev = None
+
+        currentRev  = sourcestamps_updated[self.codebase]
+
+        revrange = '%s:%s' % (currentRev, currentRev)
 
         # build from latest will have empty rev
-        command = ['log', '-b', self.update_branch, '-r', "0:17",  r'--template={rev}:{node}\n'
+        command = ['log', '-b', self.update_branch, '-r', revrange,  r'--template={rev}:{node}\n'
                    ]
         stdout= yield self._dovccmd(command, collectStdout=True)
 
@@ -57,7 +63,6 @@ class Hg(Mercurial):
 
         sourcestamps = self.build.build_status.getSourceStamps()
 
-        sourcestamps_updated = self.build.build_status.getAllGotRevisions()
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:
@@ -70,7 +75,6 @@ class Hg(Mercurial):
             result = yield self.master.db.sourcestamps.updateSourceStamps(ss)
 
         defer.returnValue(0)
-
 
     def _getRevDetails(self, rev):
         """Return a deferred for (date, author, files, comments) of given rev.
