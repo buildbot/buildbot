@@ -107,7 +107,7 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
             properties={}, builderNames=[], external_idstring=None):
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
@@ -131,7 +131,7 @@ class FakeUpdates(object):
         bsid, brids = yield self.master.db.buildsets.addBuildset(
                 sourcestamps=sourcestamps, reason=reason,
                 properties=properties, builderNames=builderNames,
-                external_idstring=external_idstring)
+                waited_for=waited_for, external_idstring=external_idstring)
         defer.returnValue((bsid, brids))
 
     def maybeBuildsetComplete(self, bsid):

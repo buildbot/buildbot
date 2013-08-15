@@ -150,7 +150,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuildset, # fake
             self.rtype.addBuildset) # real
-        def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
+        def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
             properties={}, builderNames=[], external_idstring=None):
             pass
 
@@ -217,7 +217,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
                     sourcestamps=[234], external_idstring=u'extid',
-                    builderNames=['a', 'b'])
+                    builderNames=['a', 'b'], waited_for=True)
         expectedReturn = (200, dict(a=1000, b=1001))
         expectedMessages = [
             self._buildRequestMessage(1000, 200, -1, u'a'),
@@ -236,7 +236,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             name = 'fakesched'
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                            sourcestamps=[234], external_idstring=u'extid')
+                            sourcestamps=[234], external_idstring=u'extid', waited_for=False)
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),

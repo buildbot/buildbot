@@ -1019,14 +1019,17 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
     @defer.inlineCallbacks
-    def addBuildset(self, sourcestamps, reason, properties, builderNames,
+    def addBuildset(self, sourcestamps, reason, properties, builderNames, waited_for,
                    external_idstring=None, submitted_at=None,
                    _reactor=reactor):
+        # TODO TEST: assert this behavior.
+        # We've gotten this wrong a couple times.
+        assert type(waited_for) is bool, 'waited_for should be boolean %r' % waited_for
         bsid = self._newBsid()
         br_rows = []
         for buildername in builderNames:
             br_rows.append(
-                    BuildRequest(buildsetid=bsid, buildername=buildername))
+                    BuildRequest(buildsetid=bsid, buildername=buildername, waited_for=waited_for))
         self.db.buildrequests.insertTestData(br_rows)
 
         # calculate submitted at

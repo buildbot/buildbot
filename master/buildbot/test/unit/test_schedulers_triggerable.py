@@ -39,7 +39,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         return sched
 
     @defer.inlineCallbacks
-    def assertTriggeredBuildset(self, idsDeferred, properties={}, sourcestamps=None):
+    def assertTriggeredBuildset(self, idsDeferred, waited_for, properties={}, sourcestamps=None):
         bsid, brids = yield idsDeferred
         properties.update({ u'scheduler' : ( 'n', u'Scheduler') })
 
@@ -103,7 +103,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     'mine': False,
                     'priority': 0,
                     'results': -1,
-                    'waited_for': False,
+                    'waited_for': waited_for,
                 }
             )
             
@@ -134,6 +134,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(sched.master.mq.qrefs, [])
 
         # trigger the scheduler, exercising properties while we're at it
+        waited_for = True
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
         ss = {'revision':'myrev',
@@ -141,10 +142,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'project':'p',
               'repository':'r',
               'codebase':'cb' }
-        idsDeferred, d = sched.trigger([ss], set_props=set_props)
+        idsDeferred, d = sched.trigger(waited_for, sourcestamps=[ss], set_props=set_props)
 
         self.assertTriggeredBuildset(
             idsDeferred,
+            waited_for,
             properties={ u'pr': ('op', u'test') },
             sourcestamps=[
                  dict(branch='br', project='p', repository='r',
@@ -192,14 +194,16 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # no subscription should be in place yet
         self.assertEqual(sched.master.mq.qrefs, [])
 
+        waited_for = False
         def makeSS(rev):
             return { 'revision':rev, 'branch':'br', 'project':'p',
                      'repository':'r', 'codebase':'cb' }
 
         # trigger the scheduler the first time
-        idsDeferred, d = sched.trigger([makeSS('myrev1')]) # triggers bsid 200
+        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev1')]) # triggers bsid 200
         self.assertTriggeredBuildset(
             idsDeferred,
+            waited_for,
             sourcestamps=[
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev1'),
@@ -207,10 +211,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         d.addCallback(lambda (res, brids) : self.assertEqual(res, 11)
                 and self.assertEqual(brids, {u'b':1000}))
 
+        waited_for = True
         # and the second time
-        idsDeferred, d = sched.trigger([makeSS('myrev2')]) # triggers bsid 201
+        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev2')]) # triggers bsid 201
         self.assertTriggeredBuildset(
             idsDeferred,
+            waited_for,
             sourcestamps=[
                  dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev2'),
@@ -241,16 +247,18 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler()
 
+        waited_for = False
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
                'branch': 'default', 'project': 'p' }
-        idsDeferred = sched.trigger(sourcestamps=[ss])[0]
+        idsDeferred = sched.trigger(waited_for, sourcestamps=[ss])[0]
 
-        self.assertTriggeredBuildset(idsDeferred, sourcestamps=[ss])
+        self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[ss])
 
     def test_trigger_without_sourcestamps(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler without a sourcestamp; this should translate to
         # a call to addBuildsetForSourceStampsWithDefaults with no sourcestamps
+        waited_for = True
         sched = self.makeScheduler()
-        idsDeferred = sched.trigger(sourcestamps=[])[0]
-        self.assertTriggeredBuildset(idsDeferred, sourcestamps=[])
+        idsDeferred = sched.trigger(waited_for, sourcestamps=[])[0]
+        self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[])

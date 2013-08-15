@@ -36,7 +36,7 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_addBuildset(self):
         @self.assertArgSpecMatches(self.db.buildsets.addBuildset)
         def addBuildset(self, sourcestamps, reason, properties,
-                builderNames, external_idstring=None, submitted_at=None):
+                builderNames, waited_for, external_idstring=None, submitted_at=None):
             pass
 
     def test_signature_completeBuildset(self):
@@ -69,7 +69,7 @@ class Tests(interfaces.InterfaceTests):
     def test_addBuildset_getBuildset(self):
         bsid, brids = yield self.db.buildsets.addBuildset(sourcestamps=[234],
                 reason='because', properties={}, builderNames=['bldr'],
-                external_idstring='extid', _reactor=self.clock)
+                external_idstring='extid', _reactor=self.clock, waited_for=False)
         # TODO: verify buildrequests too
         bsdict = yield self.db.buildsets.getBuildset(bsid)
         validation.verifyDbDict(self, 'bsdict', bsdict)
@@ -85,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
                 properties={}, builderNames=['bldr'], external_idstring='extid',
-                submitted_at=epoch2datetime(8888888), _reactor=self.clock))
+                submitted_at=epoch2datetime(8888888), _reactor=self.clock, waited_for=False))
         d.addCallback(lambda (bsid,brids) :
             self.db.buildsets.getBuildset(bsid))
         @d.addCallback
@@ -422,7 +422,7 @@ class RealTests(Tests):
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
                 properties={}, builderNames=['bldr'], external_idstring='extid',
-                _reactor=self.clock))
+                waited_for=False, _reactor=self.clock))
         def check((bsid, brids)):
             def thd(conn):
                 # we should only have one brid
@@ -460,7 +460,7 @@ class RealTests(Tests):
         d = defer.succeed(None)
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                                properties=props, builderNames=['a', 'b']))
+                waited_for=False, properties=props, builderNames=['a', 'b']))
         def check((bsid, brids)):
             def thd(conn):
                 self.assertEqual(len(brids), 2)

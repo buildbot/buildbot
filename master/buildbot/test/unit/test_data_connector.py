@@ -67,7 +67,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_addBuildset(self):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
-        def addBuildset(self, scheduler=None, sourcestamps=[],
+        def addBuildset(self, waited_for, scheduler=None, sourcestamps=[],
                 reason='', properties={}, builderNames=[],
                 external_idstring=None):
             pass
