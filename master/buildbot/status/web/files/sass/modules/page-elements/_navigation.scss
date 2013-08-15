@@ -74,7 +74,7 @@
 
 .breadcrumbs-nav {
 		@include pie-clearfix;
-		padding:13px 0 12px 247px;
+		padding:13px 0 12px 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.59);
 		float: left;
@@ -84,19 +84,26 @@
 		padding: 0;
 		font-weight: bold;
 		letter-spacing:0.7px;
+		&:first-child {
+			padding-left:123px;
+		}
 		a {
-			color: #fff;
+			color: #fff;	
 			&:hover{
 				color: rgba(255, 255, 255, 0.75);
 			}
 		}
 		&.dropdown {
-			margin-right:44px;
+			margin-right:32px;
 			position: relative;
 			.more-info {
 				position: absolute;
-			    right: -32px;
-			    top: -5px;
+			    right: -21px;
+			    top: 0;
+			    &:hover:after {
+			    	background:none;
+
+			    }
 			}
 		}
 		&:before {

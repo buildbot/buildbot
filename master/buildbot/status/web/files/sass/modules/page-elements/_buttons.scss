@@ -60,8 +60,24 @@ a.grey-btn,
 .grey-btn.var-2 {
     font-size: 9px;
     padding: 9px 8px;
+    position: relative;
 }
+#submitBtn {
+    padding: 9px 9px 8px 34px;
+    &:after {
+        color: #2B6194;
+        content: "";
+        font-family: katana_icons;
+        font-size: 17px;
+        left: 12px;
+        position: absolute;
+        top: 5px;
 
+    }
+    &:hover:after {
+        color: #A4A4A4;     
+    }
+}
 .close-btn {
 	position: absolute;
     right: 10px;

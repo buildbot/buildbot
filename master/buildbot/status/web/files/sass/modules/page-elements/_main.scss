@@ -456,29 +456,28 @@ div.force-text {
 	line-height: 19px;
 }
 
+.more-info {
+	font-weight:bold;
+}
+
 .mod-1.more-info:after {
-	margin-left:5px;
+	margin-left:3px;
 }
 
 .more-info:after {
-	@include background-image (linear-gradient(right center , #DFE2EA 0%, #EEF0F5 100%));
-    border: 1px solid #C4C4C4;
-    @include border-radius (4px);
-    color: #2B2B2B;
-    content: "❯";
+    font-family: "katana_icons";
+    content: "";
     display: inline-block;
-    font-family: Tahoma;
-    font-size: 12px;
-    padding: 1px 7px 5px;
-    @include text-shadow (1px 0 0 #FFFFFF);
-    @include transform (rotate(90deg));
+    padding: 0;
+    font-weight:normal;
+    /*    
     .chrome.win & {
     	content: "▾";
     	@include transform (none);
     	font-size: 18px;
     	line-height: 13px;
     	padding: 2px 5px 4px;
-    }
+    }*/
 }
 
 .more-info:hover:after {
@@ -1376,8 +1375,6 @@ body.log.interface {
 	margin-bottom:15px;
 }
 
-@include font-face("fontello", font-files("/../fonts/fontello/fontello.ttf", "/../fonts/fontello/fontello.otf"));
-
 .fi {
 	margin-bottom:3px;	
 }
@@ -1386,9 +1383,14 @@ body.log.interface {
 .delete-icon {
 	display:inline-block;
 	&:before {
-		font-family: "fontello";
+		font-family: "katana_icons";
 		content: "";
 		font-size: 16px;
+		color:#ABABAB;
+
+	}
+	&:hover:before{
+		color:#ccc;
 	}	
 }
 

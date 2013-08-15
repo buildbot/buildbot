@@ -152,7 +152,7 @@ $(document).ready(function() {
 
 	//Set the highest with on both selectors
 	function getMaxChildWidth(sel) {
-	    max = 0;
+	    max = 80;
 	    $(sel).each(function(){
 	        c_width = parseInt($(this).width());
 	        if (c_width > max) {
@@ -244,6 +244,18 @@ $(document).ready(function() {
 	}, function(){
 		$(this).css('overflow', 'hidden');
 		$('.tool-tip', this).remove();
+	});
+
+	//parse reason string
+	$('.codebases-list .reason-txt').each(function(){
+		var rTxt = $(this).text().trim();
+		if (rTxt === "A build was forced by '':") {
+			$(this).remove();
+		}
+	});
+
+	$('#submitBtn').click(function(){
+		$('#formWrapper form').submit();
 	});
 
 });

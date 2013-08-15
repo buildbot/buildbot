@@ -15,9 +15,11 @@ body.interface {
 	margin: 0;
 	padding: 0;
 	background: url(/images/noise-f1.gif);
-	font-family: "helvetica neue", sans-serif;
+	font-family: arial, sans-serif;
 	font-size: 10px;
-	color: #333;
+	color: #444;
+	letter-spacing:0.4px;
+	-webkit-font-smoothing: antialiased
 }
 
 a:link,a:visited,a:active {
@@ -50,4 +52,6 @@ li {
 	list-style:none;
 }
 
-.fl-right {float:right;}
+.fl-right {
+	float:right;
+}

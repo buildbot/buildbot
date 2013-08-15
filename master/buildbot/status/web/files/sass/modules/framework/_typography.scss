@@ -5,6 +5,9 @@
 * @author Simon Holm
 */
 
+@include font-face("fontello", font-files("/../fonts/fontello/fontello.ttf", "/../fonts/fontello/fontello.otf"));
+@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.ttf", "/../fonts/fontello/fontello.otf"));
+
 .main-head {
     font-size: 25px;
     @include text-shadow(1px 1px 0 #FFF);
