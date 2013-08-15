@@ -31,3 +31,18 @@ class Hg(Mercurial):
             yield self.fresh(None)
         else:
             raise ValueError("Unknown method, check your configuration")
+
+    @defer.inlineCallbacks
+    def parseChanges(self, _):
+
+        # calculate rev ranges
+
+        print "\n parseChanges parameters %s,%s,%s,%s\n" %  (self.branch, self.update_branch, self.revision, self.repourl)
+        # build from latest will have empty rev
+        command = ['log', '-b', self.update_branch, '-r', "0:17",  r'--template={rev}:{node}\n'
+                   ]
+        stdout= yield self._dovccmd(command, collectStdout=True)
+
+        print "\n results %s\n" % stdout.strip()
+        defer.returnValue(0)
+
