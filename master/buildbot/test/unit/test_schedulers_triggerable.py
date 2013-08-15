@@ -18,7 +18,11 @@ from twisted.python import log
 from twisted.trial import unittest
 from buildbot.schedulers import triggerable
 from buildbot.process import properties
-from buildbot.test.util import scheduler
+from buildbot.test.util import interfaces, scheduler
+
+class TriggerableInterface(unittest.TestCase, interfaces.InterfaceTests):
+	def test_interface(self):
+		self.assertInterfacesImplemented(triggerable.Triggerable)
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
