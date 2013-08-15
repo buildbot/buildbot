@@ -25,20 +25,21 @@
  
 h1.logo a {
 	line-height:0;
-	color: #FFFFFF;
+	color: #17477A;
     float: left;
-    margin-right: 48px;
-    font-size: 24px;
+    margin-right: 35px;
+    font-size: 29px;
     padding: 22px 0 0;
     opacity: 0.76;
 	font-family: 'Pacifico';
     font-weight: normal;
     letter-spacing: 1px;
 	text-decoration: none;
+	@include text-shadow(0 1px 0 #FFF);
 	@include transition(opacity .2s ease-in-out);
 	span {
 		font-family:'Leckerli One', cursive;
-		font-size: 23px;
+		font-size: 27px;
 	}
 }
 
@@ -68,6 +69,7 @@ div.welcome-txt {
 		margin: 18px 0 0 21px;
 	    padding: 0;
 	    li {
+	    	list-style: outside;
 			margin: 0 0 18px;
 		    padding: 0 0px 0 6px ;
 		}
@@ -98,4 +100,8 @@ div.welcome-txt {
 
 .small-txt {
 	color:#838383;
+}
+
+.pr-small-head {
+	margin: 0 0 2px;
 }

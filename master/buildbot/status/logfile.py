@@ -28,7 +28,7 @@ from buildbot import interfaces
 STDOUT = interfaces.LOG_CHANNEL_STDOUT
 STDERR = interfaces.LOG_CHANNEL_STDERR
 HEADER = interfaces.LOG_CHANNEL_HEADER
-ChunkTypes = ["stdout", "stderr", "header"]
+ChunkTypes = ["stdout", "stderr", "build-log-header"]
 
 class LogFileScanner(netstrings.NetstringParser):
     def __init__(self, chunk_cb, channels=[]):

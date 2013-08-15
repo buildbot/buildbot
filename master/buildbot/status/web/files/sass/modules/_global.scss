@@ -4,6 +4,12 @@
 * @section modules
 * @author Simon Holm
 */
+html {
+	background-color: #fff;
+	&.no-background {
+		background-color: transparent;
+	}
+}
 
 body.interface {
 	margin: 0;
@@ -33,8 +39,15 @@ table td {
 	text-align: center;
 }
 
+ul {
+	padding: 0;
+	margin:0;	
+
+}
 li {
-	padding: 0.1em 1em 0.1em 1em;
+	padding: 0;
+	margin:0;
+	list-style:none;
 }
 
 .fl-right {float:right;}

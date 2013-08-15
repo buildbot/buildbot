@@ -1,9 +1,9 @@
 
 // sort and filter tables logs
 
-$(document).one("click", function() {
+//$(document).ready(function() {
+		$("#filterinput").val("")
 		
-		$("#filterinput").val("");
 		var th = $('.table-holder');
 
 		$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
@@ -36,7 +36,9 @@ $(document).one("click", function() {
 		    return this;
 		};
 
-			var oTable = $('.tablesorter-log-js').dataTable({
+		var oTable = $('.tablesorter-log-js').dataTable({
+			"asSorting": true,
+			"bSearchable": true,			
 			"bPaginate": false,
 			"bFilter": true,
 			"bSort": true,
@@ -45,29 +47,52 @@ $(document).one("click", function() {
 			"aaSorting": []
 		});
 
-		//var oTable = $('.tablesorter-log-js').dataTable();
+		
+
+/* Add event listeners to the two range filtering inputs */
+		
+		function checkFilterInput() {
+			var iFields = $('.check-boxes-list input:checked');
+			$(th).show();
+			var checkString = []
 			
+			$(iFields).each(function(i){
+				checkString.push('(' + $(this).val() + ')');
+			});
+			var changesstr = checkString.join("|");
+			
+			oTable.fnFilterAll(changesstr, 1, true);	
+				
+		}
+		checkFilterInput();	
+
+		$('.dataTables_filter input').click(function(){
+			checkFilterInput();
+		});
+
+		function inputVal(inputVal) {
+			$('.check-boxes-list input').attr('checked', false);
+			$(th).show();
+			oTable.fnFilterAll(inputVal, 1, false);	
+		}
+
+		// submit on return
 		$("#filterinput").keydown(function(event) {
 		// Filter on the column (the index) of this element
 		var e = (window.event) ? window.event : event;
 		if(e.keyCode == 13){
-		    //var fnct = $(this).attr('onenter');
-		    //eval(fnct);
-		    $(th).show();
-		    oTable.fnFilterAll(this.value);
-		  }
+		    inputVal(this.value);
+		}
 		
 		});
 
+		
 		$('#submitFilter').click(function(){
-			$(th).show();
-			oTable.fnFilterAll($("#filterinput").val());
+			inputVal($("#filterinput").val());
 		});
 		$('#clearFilter').click(function(){
-			$("#filterinput").val("");
-			$(th).show();
-			oTable.fnFilterAll($("#filterinput").val());
-
+			$("#filterinput").val("")
+			inputVal($("#filterinput").val());
 		});
 	
- }); 
+ //}); 

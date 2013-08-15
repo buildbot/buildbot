@@ -11,47 +11,109 @@
 {% block content %}
 <div id="formWrapper">
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
-    <input class="grey-btn" type="submit" value="Remove selected" />
+    <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
 
-<table class="table-1 first-child tablesorter tablesorter-js">
+<table class="table-1 first-child">
     <thead>
     <tr>
         <th class="txt-align-left">Builder</th>
         <th class="txt-align-left">Codebases</th>
         <th class="txt-align-left">Reason</th>
-        <th>Compatible slaves</th>
-        <th>Remove</th>
+        <th class="txt-align-left">Compatible slaves</th>
+        <th>
+            <input id="selectall" type="checkbox" name="checkuncheck" />
+        </th>
     </tr>
     </thead>
     <tbody>
     {% for bq in buildqueue %}
     <tr>
-        <td>{{ bq.name }}</td>
-        <td>
-        {% for sskey, value in bq.sourcestamps.iteritems() %}
-            {{ sskey}} :
-            <ul>
-                <li> {{value.repository}}</li>
-                <li>{{value.branch}}</li>
-                {% if value.revision %}
-                <li>{{value.revision}}</li>
-                {% endif %}
+        <td class="txt-align-left">
+            {{ bq.name }} 
+        </td>
+        <td class="txt-align-left">
+
+            <a class="more-info popup-btn-js mod-1" href="#">
+              {{bq.sourcestamps|length}} Codebase 
+            </a>
+             <div class="more-info-box more-info-box-js">
+              <span class="close-btn">
+              </span>
+              <h3>Codebases</h3>
+              <table class="table-1 first-child">
+                <thead>
+                    <th class="txt-align-left">
+                        Codebase
+                    </th>
+                    <th class="txt-align-left">
+                        Repository
+                    </th>
+                    <th class="txt-align-left">
+                        Branch
+                    </th>
+                    <th class="txt-align-left">
+                        Revision
+                    </th>
+                </thead>
+                    <tbody>
+                        {% for sskey, value in bq.sourcestamps.iteritems() %}
+                            <tr>
+                                <td class="txt-align-left">
+                                    {{sskey}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.repository}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.branch}}
+                                </td>
+                                <td class="txt-align-left">
+                                    {{value.revision}}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+            </div>
+        </td>
+
+        <td class="txt-align-left">
+            <ul class="codebases-list">
+                <li>
+                    {{ bq.reason }}
+                </li> 
+                <li>
+                    requested on {{ bq.when }}
+                </li>
+                <li>
+                    waiting {{ bq.waiting }} 
+                </li>
             </ul>
-        {% endfor %}
         </td>
-        <td>{{ bq.reason }} <p> requested on {{ bq.when }}, waiting {{ bq.waiting }} </p></td>
-        <td>
-            <p>{{ bq.slaves|length }} slaves</p>
-        <ul>
-        {% for slave in bq.slaves %}
-            <li> <a href="{{ path_to_root + 'buildslaves/' + slave }}">
-                {{slave}}
-            </a> </li>
-        {% endfor %}
-        </ul>
+        <td class="txt-align-left">
+            <a class="more-info popup-btn-js mod-1" href="#">
+              {{ bq.slaves|length }} slaves
+            </a>
+             <div class="more-info-box more-info-box-js">
+              <span class="close-btn">
+              </span>
+              <h3>Compatible slaves</h3>
+                
+                <ul class="codebases-list">
+                {% for slave in bq.slaves %}
+                    <li> 
+                        <a href="{{ path_to_root + 'buildslaves/' + slave }}">
+                            {{slave}}
+                        </a> 
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
         </td>
         <td>
-            <input type="checkbox" name="cancelselected" value="{{ bq.brid }}"/>
+            <input class="fi-js fi" type="checkbox" name="cancelselected" value="{{ bq.brid }}"/><br/>
+            <a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
         </td>
     </tr>
     {% endfor %}

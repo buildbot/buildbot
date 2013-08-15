@@ -33,7 +33,14 @@
     }
     input {
     	 margin-right: 5px;
+    	 width: auto;
     }
+}
+
+.check-boxes-list {
+	float: left;
+    margin-right: 20px;
+    margin-top: 7px;
 }
 
 .log-main .table-1 {
@@ -48,7 +55,9 @@
 }
 
 .log-main h1.logo a {
-	 padding: 13px 0 0;
+	color: #FFFFFF;
+    padding: 13px 0 0;
+    text-shadow: inherit;
 }
 
 .summary-list {
@@ -58,7 +67,7 @@
     float:right;
     line-height: 11px;
 	li {
-		color: #939393;
+		color: #7D7D7D;
 		@include text-shadow (0 1px 0 #fff); 
 		font-size: 12px;
 		list-style:none;
@@ -83,6 +92,7 @@
     display: block;
     float: left;
     margin-top: -37px;
+    font-size: 11px;
 }
 .link-1 {font-weight:bold;}
 
@@ -95,7 +105,7 @@
 }
 
 //.case-names,
-.results-con {display:none;}
+.results-con {color:#fff;}
 
 span.covered {
 	background: #00df00; 

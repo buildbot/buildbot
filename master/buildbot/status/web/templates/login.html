@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="no-background">
   <head>
  	<meta charset="utf-8">
  	<title>Katana - login</title>
@@ -7,12 +7,11 @@
     <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/script/jQuery.2.0.2.js"></script>
-    <script type="text/javascript" src="/script/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="/script/default.js"></script>
+    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
+    <script type="text/javascript" src="/script/login.js"></script>
  </head>
  <body class="interface">
- 	<div class="login-box more-info-box">
+ 	<div class="login-box more-info-box more-info-box-js">
  		<h1 class="logo">
             <a href="/">
               <span>K</span>atana
@@ -33,7 +32,7 @@
             {% elif authz.useHttpHeader and authz.httpLoginUrl %}
             <a href="{{ authz.httpLoginUrl }}">Login</a>
             {% elif authz.auth %}
-            <form method="post" name="login" action="{{ path_to_root }}login">
+            <form id="loginForm" method="post" name="login" action="{{ path_to_root }}login">
             <label for="username">
             	Username
             </label>
@@ -50,7 +49,7 @@
             	Remember me
             </label>
             
-            <input type="submit" value="login" />
+            <input type="submit" value="login" id="submitLogin" />
             </form>
           {% endif %}
         </div>

@@ -13,18 +13,6 @@
 <xsl:param name="sys.clr.version" />
 
 <!--
-<msxsl:script language="C#" implements-prefix="nunit2report">
-	
-	public string TestCaseName(string path) {
-	
-	string[] a = path.Split('.');
-
-	return(a[a.Length-1]);
-	}
-
-</msxsl:script>
--->
-<!--
     TO DO
 	Corriger les alignement sur error
 	Couleur http://nanning.sourceforge.net/junit-report.html
@@ -96,21 +84,30 @@
 
 <nav class="sub-menu-container">
 <div class="container-inner">
+	
+		
 	<div class="dataTables_filter">
-		<label>Global filter 
-			<input type="text" placeholder="filter text" id="filterinput"/>
+		
+		
+			<input type="text" placeholder="Free text filter ewfdw" id="filterinput" disabled="false"/>
 			<button class="grey-btn" id="submitFilter">Filter</button>
 			<button class="grey-btn" id="clearFilter">Clear</button>
-		</label>
+				
+		<div class="check-boxes-list">
+			<label for="passinput">Passed</label>
+			<input type="checkbox" value="Pass" id="passinput"/>
+			<label for="ignoreinput">ignored</label>
+			<input type="checkbox" checked="checked" value="Ignored" id="ignoreinput"/>
+			<label for="failedinput">Failed</label>
+			<input type="checkbox" checked="checked" value="Failed" id="failedinput"/>
+		</div>
 	</div>
 	<h1 class="logo">
       <a href="/">
         <span>K</span>atana
       </a>
     </h1>
-	<h1 id=":i18n:UnitTestsResults" class="main-head big">
-		Unit Tests Results <xsl:value-of select="$nant.project.name"/>
-	</h1>
+
 </div>
 </nav>
 
@@ -233,7 +230,7 @@
    <xsl:variable name="newid" select="generate-id(@name)" />
 	<tr>
 		<td class="txt-align-left first-child">
-			<div>
+			
 				<!-- If failure, add click on the test method name and color red -->
 				<xsl:choose>
 					<xsl:when test="$result = 'Failure' or $result = 'Error'">
@@ -245,13 +242,11 @@
 						</xsl:call-template>
 						</a>
 					</xsl:when>
-					<xsl:when test="$result = 'Ignored'"><a title="Show/Hide message error">
-						<xsl:attribute name="href">javascript:Toggle('<xsl:value-of select="$newid"/>')</xsl:attribute>
-						<xsl:attribute name="class">case-names link-1</xsl:attribute>
+					<xsl:when test="$result = 'Ignored'">
 						<xsl:call-template name="GetLastSegment">
 							<xsl:with-param name="value" select="./@name" />
 						</xsl:call-template>
-						</a>
+						
 					</xsl:when>
 					<xsl:otherwise>
 						<xsl:attribute name="class">method txt-align-left case-names</xsl:attribute>
@@ -260,7 +255,7 @@
 						</xsl:call-template>
 					</xsl:otherwise>
 				</xsl:choose>
-			</div>
+			
 		</td>
 		<!--
 		<td>
@@ -283,6 +278,7 @@
 			<xsl:attribute name="class"><xsl:value-of select="$result"/></xsl:attribute>
 			<xsl:attribute name="id">:i18n:<xsl:value-of select="$result"/></xsl:attribute><xsl:value-of select="$result"/>
 		</td>
+		
 		<td>
 		    <xsl:call-template name="display-time">
 		        <xsl:with-param name="value" select="@time"/>
@@ -300,12 +296,7 @@
 	         <xsl:apply-templates select="./error"/>
 			 <xsl:apply-templates select="./reason"/>
          </td>
-         <td>
-         	<span class="results-con">
-         		&#160;
-         		<xsl:value-of select="$result"/>
-         	</span>
-         </td>
+         <td class="results-con"><xsl:value-of select="$result"/></td>
          <td>
          	&#160;
          </td>

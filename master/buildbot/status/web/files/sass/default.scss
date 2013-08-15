@@ -19,6 +19,7 @@
 
 @import "modules/framework/framework";
 @import "modules/framework/normalize";
+@import "modules/framework/animate";
 @import "modules/base"; // old vars.scss
 @import "modules/framework/grid";
 
@@ -492,26 +493,10 @@ table.info.rows tr td:first-child {
 	background-color: #f6f6f6;
 }
 
-li {
-	padding: 0.1em 1em 0.1em 1em;
-}
-
 /* log view */
-.log * {
-	vlink: #800080;
-	font-family: "Courier New", courier, monotype, monospace;
-}
-
-span.stdout {
-	color: black;
-}
 
 span.stderr {
 	color: red;
-}
-
-span.header {
-	color: blue;
 }
 
 /* revision & email */

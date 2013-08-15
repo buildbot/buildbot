@@ -20,7 +20,6 @@
   <th>
     Status
   </th>
-  <th>Build Artifacts</th>
   <th >
     Force build
   </th>
@@ -135,12 +134,7 @@
         no build
       </td>
     {% endif %}  
-    <td>
-      <a href="#">
-        <span class="notimpl">Not implemented</span>
- 
-      </a>
-    </td>
+    
 
     <td >
       {% if b.force_schedulers != {} %}
@@ -157,17 +151,7 @@
         
         {% endif %}
     </td>
-    <!--    
-    <br>
-  
-      <a class="more-info" href="#">
-        Stop build
-      </a>
     
-    </td>
-    
-      {{ box(**b.current_box) }}  
-    -->
   </tr>
 {% endfor %}
 </tbody>

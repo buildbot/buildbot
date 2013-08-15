@@ -1,15 +1,21 @@
+
 $(document).ready(function() {
 	
 	//Show / hide
 
-	function centerPopup(className){
-		$(className).each(function(){
-			$(this).css('left',($(window).width()-$(this).outerWidth())/ 2 + 'px');
-			$(this).css('top',($(window).height()-$(this).outerHeight())/ 2 + 'px');
-		});
-	};
+	jQuery.fn.center = function() {
 
-	centerPopup('.more-info-box');
+	var h = $(window).height();
+    var w = $(window).width();
+
+    // adjust height to browser height
+    this.css('height',(h < 400) ? 300 : '');
+
+	this.css("position", "absolute");
+	this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
+	this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
+	return this;
+	};
 
 	function popUpBtn(classBtn, classHide){
 
@@ -17,7 +23,12 @@ $(document).ready(function() {
 			e.preventDefault();
 			$('.more-info-box-js, .more-info-box-js-2').hide();
 			$('.command_forcebuild').removeClass('form-open');
-			$(this).next().fadeIn('fast', function (){
+			var newThis = $(this);
+			$(window).resize(function() {
+				$(newThis).next().center();
+			});
+			
+			$(this).next().center().fadeIn('fast', function (){
 				$('.command_forcebuild', this).addClass('form-open')
 				validateForm();
 			});
@@ -47,9 +58,23 @@ $(document).ready(function() {
 	// check all in tables
 	$(function selectAll() {
 	    $('#selectall').click(function () {
-	        $('#inputfields').find(':checkbox').prop('checked', this.checked);
+	    	
+	        $('.fi-js').prop('checked', this.checked);
 	    });
 	});
+	$('.force-individual-js').click(function(e){
+		e.preventDefault();
+		/*
+		$(this).prev('.fi-js').prop('checked', true);
+		*/
+		var iVal = $(this).prev().prev().val();
+		console.log(iVal)
+		var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
+		$(hi).insertAfter($(this));
+		$('#formWrapper form').submit();
+
+	});
+	
 
 	// chrome font problem fix
 	$(function chromeWin() {
@@ -81,7 +106,7 @@ $(document).ready(function() {
 		"bStateSave": true
 	});	
 
-	// validate the form
+	// validate the forcebuildform
 	function validateForm() {
 		var formEl = $('.form-open');
 		var excludeFields = ':button, :hidden, :checkbox, :submit';
@@ -123,24 +148,102 @@ $(document).ready(function() {
 		*/
 	}
 
+	// Freetext filtering
+
+	//Set the highest with on both selectors
+	function getMaxChildWidth(sel) {
+	    max = 0;
+	    $(sel).each(function(){
+	        c_width = parseInt($(this).width());
+	        if (c_width > max) {
+	            max = c_width + 5;
+	        }
+	    });
+	    $('#selectorWidth').width(max);
+	    return max;
+	}
+
+		
+	$(".select-tools-js").chosen({
+		disable_search_threshold: 1,
+	    no_results_text: "Nothing found!",
+	    width: getMaxChildWidth(".select-tools-js")+"px"
+  	});
+
+	// Name sorting for filterbox
+	function clickSort() {
+		$('.sort-name').click(function(e){
+			e.preventDefault();
+
+			var items = $('.chosen-with-drop .chosen-results li').get();
+			
+			items.sort(function(a,b){
+			  var keyA = $(a).text();
+			  var keyB = $(b).text();
+			  if (keyA < keyB) return -1;
+			  if (keyA > keyB) return 1;
+			  return 0;
+			});
+			var ul = $(this).next($('.chosen-results'));
+			
+			$.each(items, function(i, li){
+			  ul.append(li);
+			});
+
+		});
+	}
+	clickSort();
+
+
 	// display popup box with external content
 
 	// get content in the dropdown and display it while removing the preloader
+	
+
 	$('#getBtn').click(function() {
+
 		$('.more-info-box-js, .more-info-box-js-2').hide();
 		$('#content').empty();
 		var path = $('#pathToCodeBases').attr('href');
 		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
-		$('#content').append(preloader).show();
+		$('body').append(preloader).show();
 		
 		$.get(path)
 		.done(function(data) {
 			var $response=$(data);
 			$('#bowlG').remove();
-			$($response).find('#formWrapper').appendTo($('#content'));
-			centerPopup('.more-info-box-js-2');
+			
+			var fw = $($response).find('#formWrapper')
+			$(fw).appendTo($('#content'));
+
+			$("#formWrapper .select-tools-js").chosen({
+				disable_search_threshold: 1,
+			    no_results_text: "Nothing found!",
+			    width:"150px"
+  			});
+
+			$('.more-info-box-js-2').center();
+			
+  			clickSort();
+			$(window).resize(function() {
+				$('.more-info-box-js-2').center();
+			});
 			$('.more-info-box-js-2').fadeIn('fast');
+			$('#getForm').attr('action', window.location.href);
 		});
+	});
+
+	
+	// tooltip for long txtstrings
+	$('.ellipsis-js').hover(function(){
+		var tthis = $(this);
+		var txt = $(this).text();
+		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
+		$(this).css('overflow', 'visible')
+		$(this).append(toolTip);
+	}, function(){
+		$(this).css('overflow', 'hidden');
+		$('.tool-tip', this).remove();
 	});
 
 });

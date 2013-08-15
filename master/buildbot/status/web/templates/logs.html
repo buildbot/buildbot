@@ -1,23 +1,37 @@
+{% import 'submenu.html' as submenu %}
 {%- macro page_header(pageTitle, path_to_root, texturl) -%}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-  <html>
+<!DOCTYPE html>
+  <html class="no-background">
   <head><title>{{ pageTitle }}</title>
-  <link rel="stylesheet" href="{{ path_to_root }}default.css" type="text/css" />
+  	<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
+  
+	<link rel="stylesheet" href="/css/default.css" type="text/css" />
   </head>
-  <body class='log'>
-    <a href="{{ texturl }}">(view as text)</a><br/>
-    <pre>  
-{%- endmacro -%}
+  <body class='log interface'>
 
-{%- macro chunks(entries) -%}
-{%- for entry in entries -%}
-    <span class="{{ entry.type }}">{{ entry.text|e }}</span>
-{%- endfor -%}
-{%- endmacro -%}
+<div class="clear"></div>
+	
+		<a href="{{ texturl }}">(view as text)</a><br/><br/>
+		
+	    <pre class="content-holder">  
+			{%- endmacro -%}
 
-{%- macro page_footer() -%}
-</pre>
+			{%- macro chunks(entries) -%}
+			
+			{%- for entry in entries -%}
+				{{ entry.text|e }}
+			{%- endfor -%}
+
+			{%- endmacro -%}
+
+			{%- macro page_footer() -%}
+      </pre>
+    
 </body>
+
 </html>
 {%- endmacro -%}
