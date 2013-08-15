@@ -4524,7 +4524,6 @@ a.grey-btn:hover,
   font-size: 12px;
   margin-bottom: 10px;
   padding: 1px;
-  width: 117px;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003243}}
 .select-tools.var-1 {
@@ -4538,7 +4537,6 @@ a.grey-btn:hover,
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003252}}
 .select-tools.var-2 {
-  min-width: 80px;
   margin-top: 0;
   float: none;
   background-color: #A3A3A3;

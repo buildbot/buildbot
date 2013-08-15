@@ -148,13 +148,35 @@ $(document).ready(function() {
 		*/
 	}
 
+	// Freetext filtering
+
+	//Set the highest with on both selectors
+	function getMaxChildWidth(sel) {
+	    max = 0;
+	    $(sel).each(function(){
+	        c_width = parseInt($(this).width());
+	        if (c_width > max) {
+	            max = c_width + 5;
+	        }
+	    });
+	    $('#selectorWidth').width(max);
+	    return max;
+	}
+
+		
+	$(".select-tools-js").chosen({
+		disable_search_threshold: 1,
+	    no_results_text: "Nothing found!",
+	    width: getMaxChildWidth(".select-tools-js")+"px"
+  	});
+
 	// Name sorting for filterbox
 	function clickSort() {
 		$('.sort-name').click(function(e){
 			e.preventDefault();
-			var ch = $(this).next($('.chosen-results li'));
+
 			var items = $('.chosen-with-drop .chosen-results li').get();
-			console.log(ch, items)
+			
 			items.sort(function(a,b){
 			  var keyA = $(a).text();
 			  var keyB = $(b).text();
@@ -188,16 +210,16 @@ $(document).ready(function() {
 		
 		$.get(path)
 		.done(function(data) {
-
+			var $response=$(data);
 			$('#bowlG').remove();
 			
-			var fw = $(data).find('#formWrapper');
+			var fw = $($response).find('#formWrapper')
 			$(fw).appendTo($('#content'));
-			
+
 			$("#formWrapper .select-tools-js").chosen({
 				disable_search_threshold: 1,
 			    no_results_text: "Nothing found!",
-			    width: "150px"
+			    width:"150px"
   			});
 
 			$('.more-info-box-js-2').center();
@@ -211,12 +233,6 @@ $(document).ready(function() {
 		});
 	});
 
-	// Freetext filtering
-	
-	$(".select-tools-js").chosen({
-		disable_search_threshold: 1,
-	    no_results_text: "Nothing found!"
-  	});
 	
 	// tooltip for long txtstrings
 	$('.ellipsis-js').hover(function(){

@@ -239,7 +239,7 @@
     font-size: 12px;
     margin-bottom: 10px;
     padding: 1px;
-    width: 117px;
+    //width: 117px;
     &.var-1 {
     	width: 100%;
     	margin-top: 0;
@@ -250,8 +250,8 @@
     	padding: 3px;
     }
     &.var-2 {
-    	
-    	min-width: 80px;
+    	//min-width: 80px;	
+    	//width: auto;
     	margin-top: 0;
     	float: none;
     	background-color: #A3A3A3;
