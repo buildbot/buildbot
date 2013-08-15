@@ -349,7 +349,7 @@ SourceStamps
             {% endif %}
             <ol>
                   {% for c in ss.changes %}
-                    <li><h3>Change #{{ c.number }}</h3>
+                    <li><h3>Change #{{ c.number or c.revision }}</h3>
                       {{ change(c.asDict()) }}
                     </li>
                   {% endfor %}
