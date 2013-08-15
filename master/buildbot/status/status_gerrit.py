@@ -139,7 +139,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         if message:
             command.append("--message '%s'" % message.replace("'","\""))
         if verified:
-            command.extend(["--verified %d" % int(verified)])
+            command.extend(["--label Verified=%d" % int(verified)])
         if reviewed:
             command.extend(["--code-review %d" % int(reviewed)])
         command.append(str(revision))
