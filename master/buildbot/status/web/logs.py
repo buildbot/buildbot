@@ -24,6 +24,9 @@ from buildbot import interfaces
 from buildbot.status import logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
 
+import re
+
+
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
 
@@ -46,6 +49,7 @@ class ChunkConsumer:
     def finish(self):
         self.textlog.finished()
 
+ANSI_RE = re.compile(r"^(\d*)(;(\d+))?([a-zA-Z])")
 
 # /builders/$builder/builds/$buildnum/steps/$stepname/logs/$logname
 class TextLog(Resource):
@@ -80,9 +84,26 @@ class TextLog(Resource):
                 # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
                 if not isinstance(entry, unicode):
                     entry = unicode(entry, 'utf-8', 'replace')
-                html_entries.append(dict(type = logfile.ChunkTypes[type], 
-                                         text = entry,
-                                         is_header = is_header))
+                first_entry = True
+                _type = logfile.ChunkTypes[type]
+                for ansi_entry in entry.split("\033["):
+                    code = ""
+                    if not first_entry:
+                        res = ANSI_RE.search(ansi_entry)
+                        if res:
+                            mode = res.group(4)
+                            ansi_entry = ansi_entry[len(res.group(0)):]
+                            if mode == 'm':
+                                code = " ansi" + res.group(1)
+                        else:
+                            # illegal code, restore the CSI
+                            ansi_entry = "\033[" + ansi_entry
+
+                    html_entries.append(dict(type=_type + code,
+                                             text=ansi_entry,
+                                             is_header=is_header))
+                    first_entry = False
+
             elif not is_header:
                 text_data += entry
 

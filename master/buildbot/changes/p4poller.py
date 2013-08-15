@@ -18,7 +18,8 @@
 # Many thanks to Dave Peticolas for contributing this module
 
 import re
-import time
+import datetime
+import dateutil
 import os
 
 from twisted.python import log
@@ -32,7 +33,7 @@ class P4PollerError(Exception):
     exception type so that unit tests can detect and ignore it."""
 
 def get_simple_split(branchfile):
-    """Splits the branchfile argument and assuming branch is 
+    """Splits the branchfile argument and assuming branch is
        the first path component in branchfile, will return
        branch and file else None."""
 
@@ -66,7 +67,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
-                 encoding='utf8', project=None, name=None):
+                 encoding='utf8', project=None, name=None,
+                 server_tz=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -88,6 +90,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.split_file = split_file
         self.encoding = encoding
         self.project = util.ascii2unicode(project)
+        self.server_tz = server_tz
 
     def describe(self):
         return "p4source %s %s" % (self.p4port, self.p4base)
@@ -160,8 +163,12 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             if not m:
                 raise P4PollerError("Unexpected 'p4 describe -s' result: %r" % result)
             who = m.group('who')
-            when = int(time.mktime(time.strptime(m.group('when'),
-                                                 self.datefmt)))
+            when = datetime.datetime.strptime(m.group('when'), self.datefmt)
+            if self.server_tz:
+                # Convert from the server's timezone to the local timezone.
+                when = when.replace(tzinfo=self.server_tz)
+                when = when.astimezone(dateutil.tz.tzlocal())
+            when = util.datetime2epoch(when)
             comments = ''
             while not lines[0].startswith('Affected files'):
                 comments += lines.pop(0) + '\n'

@@ -25,7 +25,7 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot import config
 
-from mock import Mock
+from mock import Mock, call
 
 class FakeChange:
     properties = Properties()
@@ -233,6 +233,29 @@ class TestBuild(unittest.TestCase):
         self.assertIdentical(True,  Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
         self.assertIdentical(True,  Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
         slave_lock_1.release(slavebuilder1, counting_access)
+
+
+    def testBuilddirPropType(self):
+        import posixpath
+
+        b = self.build
+
+        slavebuilder = Mock()
+        b.build_status = Mock()
+        b.builder.config.slavebuilddir = 'test'
+        slavebuilder.slave.slave_basedir = "/srv/buildbot/slave"
+        slavebuilder.slave.path_module = posixpath
+        b.getProperties = Mock()
+        b.setProperty = Mock()
+
+        b.setupSlaveBuilder(slavebuilder)
+
+        expected_path = '/srv/buildbot/slave/test'
+
+        b.setProperty.assert_has_calls(
+            [call('workdir', expected_path, 'slave (deprecated)'),
+             call('builddir', expected_path, 'slave')],
+            any_order=True)
 
 
     def testBuildLocksAcquired(self):

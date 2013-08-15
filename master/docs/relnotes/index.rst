@@ -127,6 +127,20 @@ Features
 
 * Gerrit integration with Git Source step on master side.
 
+* A new :bb:step:`Robocopy` step is available for Windows builders.
+
+* The :bb:chsrc:`P4Source` changesource now supports Perforce servers in a different timezone than the buildbot master.
+
+* Revision links for commits on SouceForge (Allura) are now automatically generated.
+
+* The WebStatus now interprets ANSI color codes in stdio output.
+
+* Master-side source steps now respond to the "stop build" button (:bb:bug:`2356`).
+
+* The web hooks now include support for Gitorious. 
+
+* It is now possible to select categories to show in the waterfall help
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

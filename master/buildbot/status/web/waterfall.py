@@ -287,6 +287,15 @@ class WaterfallHelp(HtmlResource):
         cxt['show_builders'] = show_builders
         cxt['all_builders'] = status.getBuilderNames(categories=self.categories)
 
+        # this has a set of toggle-buttons to let the user choose the
+        # categories
+        show_categories = request.args.get("category", [])
+        allBuilderNames = status.getBuilderNames()
+        builders = [status.getBuilder(name) for name in allBuilderNames]
+        allCategories = [builder.getCategory() for builder in builders]
+        cxt['show_categories'] = show_categories
+        cxt['all_categories'] = allCategories
+
         # a couple of radio-button selectors for refresh time will appear
         # just after that text
         times = [("none", "None"),

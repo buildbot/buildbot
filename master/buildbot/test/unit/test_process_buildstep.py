@@ -21,7 +21,7 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
-from buildbot.test.fake import fakebuild, remotecommand
+from buildbot.test.fake import fakebuild, remotecommand, slave
 from buildbot.test.util import config, steps, compat
 from buildbot.util.eventual import eventually
 
@@ -137,6 +137,15 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         props.setProperty.assert_called_with("x", "y", "t", runtime=True)
         bs.setProperty("x", "abc", "test", runtime=True)
         props.setProperty.assert_called_with("x", "abc", "test", runtime=True)
+
+    def test_runCommand(self):
+        bs = buildstep.BuildStep()
+        bs.buildslave = slave.FakeSlave()
+        bs.remote = 'dummy'
+        cmd = buildstep.RemoteShellCommand("build", ["echo", "hello"], user=None)
+        cmd.run = lambda self, remote : SUCCESS
+        bs.runCommand(cmd)
+        self.assertEqual(bs.cmd, cmd)
 
     def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)

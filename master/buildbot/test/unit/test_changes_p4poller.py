@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import time
+import datetime
 from twisted.trial import unittest
+from buildbot.util import datetime2epoch
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
 
@@ -88,6 +89,11 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.expectCommands(
                 gpo.Expect('p4', 'describe', '-s', str(number)).stdout(result))
 
+    def makeTime(self, timestring):
+        datefmt = '%Y/%m/%d %H:%M:%S'
+        when = datetime.datetime.strptime(timestring, datefmt)
+        return when
+
     # tests
 
     def test_describe(self):
@@ -140,10 +146,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
             # when_timestamp is converted from a local time spec, so just
             # replicate that here
-            when1 = "2006/04/13 21:46:23"
-            when1 = int(time.mktime(time.strptime(when1, '%Y/%m/%d %H:%M:%S')))
-            when2 = "2006/04/13 21:51:39"
-            when2 = int(time.mktime(time.strptime(when2, '%Y/%m/%d %H:%M:%S')))
+            when1 = self.makeTime("2006/04/13 21:46:23")
+            when2 = self.makeTime("2006/04/13 21:51:39")
 
             # these two can happen in either order, since they're from the same
             # perforce change.
@@ -163,7 +167,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revision': '2',
                 'revlink': '',
                 'src': None,
-                'when_timestamp': when1,
+                'when_timestamp': datetime2epoch(when1),
             }, {
                 'author': u'bob',
                 'branch': u'branch_b',
@@ -177,7 +181,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revision': '3',
                 'revlink': '',
                 'src': None,
-                'when_timestamp': when2,
+                'when_timestamp': datetime2epoch(when2),
             }, {
                 'author': u'bob',
                 'branch': u'branch_c',
@@ -191,7 +195,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revision': '3',
                 'revlink': '',
                 'src': None,
-                'when_timestamp': when2,
+                'when_timestamp': datetime2epoch(when2),
             }])
             self.assertAllCommandsRan()
         d.addCallback(check_second_check)
@@ -254,8 +258,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         def check(res):
             # when_timestamp is converted from a local time spec, so just
             # replicate that here
-            when = "2006/04/13 21:55:39"
-            when = int(time.mktime(time.strptime(when, '%Y/%m/%d %H:%M:%S')))
+            when = self.makeTime("2006/04/13 21:55:39")
 
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'mpatel',
@@ -270,7 +273,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revision': '5',
                 'revlink': '',
                 'src': None,
-                'when_timestamp': when,
+                'when_timestamp': datetime2epoch(when),
             }, {
                 'author': u'mpatel',
                 'branch': u'branch_b',
@@ -284,7 +287,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revision': '5',
                 'revlink': '',
                 'src': None,
-                'when_timestamp': when,
+                'when_timestamp': datetime2epoch(when),
                 }])
             self.assertEquals(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
