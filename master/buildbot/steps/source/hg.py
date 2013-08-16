@@ -41,11 +41,15 @@ class Hg(Mercurial):
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
         # calculate rev ranges
-        lastRev = None
+        lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name, self.codebase, self.repourl, self.update_branch)
 
         currentRev  = sourcestamps_updated[self.codebase]
 
-        revrange = '%s:%s' % (currentRev, currentRev)
+        if lastRev is None or lastRev == currentRev:
+            revrange = '%s:%s' % (currentRev, currentRev)
+        else:
+            rev= yield self._dovccmd(['log', '-r', lastRev,  r'--template={rev}'], collectStdout=True)
+            revrange =  '%d:%s' % (int(rev.strip()), currentRev)
 
         # build from latest will have empty rev
         command = ['log', '-b', self.update_branch, '-r', revrange,  r'--template={rev}:{node}\n'
