@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.5"
+  - "2.6"
+  - "2.7"
+# command to install dependencies
+install:
+  - pushd master; python setup.py develop; popd
+  - pushd slave;  python setup.py develop; popd
+# command to run tests
+script:
+  - trial buildbot.test
+  - trial buildslave.test
+  - make pylint
+  - make pyflakes
+  - make docs
