@@ -5,6 +5,9 @@ python:
   - "2.7"
 # command to install dependencies
 install:
+  - pip install pylint
+  - pip install pyflakes
+  - pip install sphinx
   - pushd master; python setup.py develop; popd
   - pushd slave;  python setup.py develop; popd
 # command to run tests
