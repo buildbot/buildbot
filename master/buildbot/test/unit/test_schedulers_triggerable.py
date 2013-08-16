@@ -13,7 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+import mock
+from twisted.internet import defer, task
 from twisted.python import log
 from twisted.trial import unittest
 from buildbot.schedulers import triggerable
@@ -21,19 +22,27 @@ from buildbot.process import properties
 from buildbot.test.util import interfaces, scheduler
 
 class TriggerableInterface(unittest.TestCase, interfaces.InterfaceTests):
-	def test_interface(self):
-		self.assertInterfacesImplemented(triggerable.Triggerable)
+    def test_interface(self):
+        self.assertInterfacesImplemented(triggerable.Triggerable)
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 33
 
     def setUp(self):
+        # Necessary to get an assertable submitted_at time.
+        self.now = 946684799
+        self.clock = task.Clock()
+        self.clock.advance(self.now)
+        self.clock_patch = mock.patch('buildbot.test.fake.fakedb.reactor.seconds', self.clock.seconds)
+        self.clock_patch.start()
+
         self.setUpScheduler()
         self.subscription = None
 
     def tearDown(self):
         self.tearDownScheduler()
+        self.clock_patch.stop()
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(
@@ -54,9 +63,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         buildset = yield self.master.db.buildsets.getBuildset(bsid)
 
-        #from datetime import datetime
-        #from buildbot.util import UTC
-        buildset.pop('submitted_at') # TODO
+        from datetime import datetime
+        from buildbot.util import UTC
         ssids = buildset.pop('sourcestamps')
 
         self.assertEqual(
@@ -69,7 +77,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'reason': u'Triggerable(n)',
                 'results': -1,
                 #'sourcestamps': [100],
-                #'submitted_at': datetime(2013, 8, 13, 0, 39, 55, 799986, tzinfo=UTC),
+                'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
             }
         )
         
@@ -93,7 +101,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             #from datetime import datetime
             #from buildbot.util import UTC
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
-            buildrequest.pop('submitted_at') # TODO
             self.assertEqual(
                 buildrequest,
                 {
@@ -107,6 +114,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     'mine': False,
                     'priority': 0,
                     'results': -1,
+                    'submitted_at': None,
                     'waited_for': waited_for,
                 }
             )
