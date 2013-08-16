@@ -354,7 +354,7 @@ class _Lookup(util.ComparableMixin, object):
 
 
 def _getInterpolationList(fmtstring):
-    # TODO: Verify that no positial substitutions are requested
+    # TODO: Verify that no positional substitutions are requested
     dd = collections.defaultdict(str)
     fmtstring % dd
     return dd.keys()
@@ -642,7 +642,7 @@ def renderer(fn):
 
 class _DefaultRenderer(object):
     """
-    Default IRenderable adaptor. Calls .getRenderingFor if availble, otherwise
+    Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
     returns argument unchanged.
     """
 
