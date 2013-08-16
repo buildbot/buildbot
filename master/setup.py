@@ -189,8 +189,23 @@ except ImportError:
     pass
 else:
     ## dependencies
-    setup_args['install_requires'] = [
-        'twisted >= 9.0.0',
+    setup_args['install_requires'] = []
+
+    if sys.version_info[:2] >= (2, 6):
+        setup_args['install_requires'] += [
+            'twisted >= 9.0.0',
+        ]
+    else:
+        # Latest supported on Python 2.5 version of Twisted is 12.10, and
+        # pip/easy_install currently can't select correct version of Twisted.
+        # Twisted depends on zope.interface, which became incompatible with
+        # Python 2.5 starting from 4.0.0 release.
+        setup_args['install_requires'] += [
+            'twisted >= 9.0.0, <= 12.1.0',
+            'zope.interface < 4.0.0',
+        ]
+
+    setup_args['install_requires'] += [
         'Jinja2 >= 2.1',
         # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
         'sqlalchemy >= 0.6, <= 0.7.10',
