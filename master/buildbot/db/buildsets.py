@@ -33,7 +33,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def addBuildset(self, sourcestamps, reason, properties, builderNames,
                    waited_for, external_idstring=None, submitted_at=None,
                    _reactor=reactor):
-        assert type(waited_for) is bool, waited_for # We've gotten this wrong a couple times.
+        # We've gotten this wrong a couple times.
+        assert type(waited_for) is bool, 'waited_for should be boolean: %r' % waited_for
         if submitted_at:
             submitted_at = datetime2epoch(submitted_at)
         else:

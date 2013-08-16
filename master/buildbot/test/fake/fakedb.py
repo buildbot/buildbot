@@ -121,7 +121,7 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
-		waited_for = 0,
+        waited_for = 0,
     )
 
     id_column = 'id'
@@ -1022,9 +1022,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def addBuildset(self, sourcestamps, reason, properties, builderNames, waited_for,
                    external_idstring=None, submitted_at=None,
                    _reactor=reactor):
-        # TODO TEST: assert this behavior.
         # We've gotten this wrong a couple times.
-        assert type(waited_for) is bool, 'waited_for should be boolean %r' % waited_for
+        assert type(waited_for) is bool, 'waited_for should be boolean: %r' % waited_for
         bsid = self._newBsid()
         br_rows = []
         for buildername in builderNames:
@@ -1534,7 +1533,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
                 submitted_at=submitted_at, complete_at=complete_at,
-				waited_for=bool(row.waited_for))
+                waited_for=bool(row.waited_for))
 
     # fake methods
 
