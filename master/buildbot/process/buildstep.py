@@ -509,7 +509,7 @@ class BuildStep(object, properties.PropertiesMixin):
         pass
 
     def addFactoryArguments(self, **kwargs):
-        # this is here for backwards compatability
+        # this is here for backwards compatibility
         pass
 
     def _getStepFactory(self):
