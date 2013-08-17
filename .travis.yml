@@ -10,9 +10,9 @@ install:
   #- pip install pylint
   - pip install pyflakes
   - pip install sphinx
-  - pip install txgithub
   - pushd master; python setup.py develop; popd
   - pushd slave;  python setup.py develop; popd
+  - pip install txgithub
 # command to run tests
 script:
   - trial buildbot.test
