@@ -198,7 +198,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             try:
                 doc = xml.dom.minidom.parseString(output)
             except xml.parsers.expat.ExpatError:
-                log.msg("SVNPoller: SVNPoller._determine_prefix_2: ExpatError in '%s'"
+                log.msg("SVNPoller: SVNPoller.get_prefix: ExpatError in '%s'"
                         % output)
                 raise
             rootnodes = doc.getElementsByTagName("root")
@@ -337,7 +337,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
-                # the rest of buildbot is certaily not yet ready to handle
+                # the rest of buildbot is certainly not yet ready to handle
                 # unicode filenames, because they get put in RemoteCommands
                 # which get sent via PB to the buildslave, and PB doesn't
                 # handle unicode.

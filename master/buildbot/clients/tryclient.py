@@ -861,7 +861,7 @@ class Try(pb.Referenceable):
             d.addCallback(self._getBuilderNames, self._getBuilderNames2)
             return d
         if self.connect == "ssh":
-            print "Cannot get availble builders over ssh."
+            print "Cannot get available builders over ssh."
             sys.exit(1)
         raise RuntimeError(
             "unknown connecttype '%s', should be 'pb'" % self.connect)
