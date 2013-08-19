@@ -4,31 +4,34 @@ $(document).ready(function() {
 	//Show / hide
 
 	jQuery.fn.center = function() {
+		var h = $(window).height();
+	    var w = $(window).width();
 
-	var h = $(window).height();
-    var w = $(window).width();
+	    // adjust height to browser height
+	    this.css('height',(h < 400) ? 300 : '');
 
-    // adjust height to browser height
-    this.css('height',(h < 400) ? 300 : '');
-
-	this.css("position", "absolute");
-	this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
-	this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
-	return this;
+		this.css("position", "absolute");
+		this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
+		this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
+		return this;
 	};
 
 	function popUpBtn(classBtn, classHide){
 
 		$(classBtn).click(function(e){
 			e.preventDefault();
-			$('.more-info-box-js, .more-info-box-js-2').hide();
+			$('.cloned').hide();
 			$('.command_forcebuild').removeClass('form-open');
-			var newThis = $(this);
+
+			var clonedInfoBox = $(this).next().clone().addClass('cloned');
+
+			$('body').append(clonedInfoBox);
+
 			$(window).resize(function() {
-				$(newThis).next().center();
+				$(clonedInfoBox).center();
 			});
 			
-			$(this).next().center().fadeIn('fast', function (){
+			$(clonedInfoBox).center().fadeIn('fast', function (){
 				$('.command_forcebuild', this).addClass('form-open')
 				validateForm();
 			});
@@ -101,7 +104,7 @@ $(document).ready(function() {
 		//"oSearch": {"sSearch": " "}
 		"aaSorting": [],
 		"oLanguage": {
-		 	"sSearch": "Filter"
+		 	"sSearch": ""
 		 },
 		"bStateSave": true
 	});	
@@ -152,7 +155,7 @@ $(document).ready(function() {
 
 	//Set the highest with on both selectors
 	function getMaxChildWidth(sel) {
-	    max = 0;
+	    max = 80;
 	    $(sel).each(function(){
 	        c_width = parseInt($(this).width());
 	        if (c_width > max) {
@@ -244,6 +247,18 @@ $(document).ready(function() {
 	}, function(){
 		$(this).css('overflow', 'hidden');
 		$('.tool-tip', this).remove();
+	});
+
+	//parse reason string
+	$('.codebases-list .reason-txt').each(function(){
+		var rTxt = $(this).text().trim();
+		if (rTxt === "A build was forced by '':") {
+			$(this).remove();
+		}
+	});
+
+	$('#submitBtn').click(function(){
+		$('#formWrapper form').submit();
 	});
 
 });

@@ -5,6 +5,11 @@
 * @author Simon Holm
 */
 
+@include font-face("fontello", font-files("/../fonts/fontello/fontello.ttf", "/../fonts/fontello/fontello.otf", "/../fonts/fontello/fontello.eot"));
+@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.ttf", "/../fonts/katana_icons/katana_icons.otf", "/../fonts/katana_icons/katana_icons.eot"));
+@include font-face("katana_icons_2", font-files("/../fonts/katana_icons_2/katana_icons_2.ttf", "/../fonts/katana_icons_2/katana_icons_2.otf", "/../fonts/katana_icons_2/katana_icons_2.eot"));
+@include font-face("katana_icons_search", font-files("/../fonts/katana_icons_search/katana_icons_search.ttf", "/../fonts/katana_icons_search/katana_icons_search.otf", "/../fonts/katana_icons_search/katana_icons_search.eot"));
+
 .main-head {
     font-size: 25px;
     @include text-shadow(1px 1px 0 #FFF);

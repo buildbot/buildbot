@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg">
+<metadata>Copyright (C) 2012 by original authors @ fontello.com</metadata>
+<defs>
+<font id="katana_icons" horiz-adv-x="1000" >
+<font-face font-family="katana_icons" font-weight="400" font-stretch="normal" units-per-em="1000" ascent="850" descent="-150" />
+<missing-glyph horiz-adv-x="1000" />
+<glyph glyph-name="cancel" unicode="&#xe802;" d="M452 194q18-18 18-43t-18-43q-18-16-43-16t-43 16l-132 152-132-152q-18-16-43-16t-43 16q-16 18-16 43t16 43l138 156-138 158q-16 18-16 43t16 43q18 16 43 16t43-16l132-152 132 152q18 16 43 16t43-16q18-18 18-43t-18-43l-138-158z" horiz-adv-x="470" />
+<glyph glyph-name="cancel-circled" unicode="&#xe800;" d="M420 770q174 0 297-123t123-297-123-297-297-123-297 123-123 297 123 297 297 123z m86-420l154 154-86 86-154-152-152 152-88-86 154-154-154-152 88-86 152 152 154-152 86 86z" horiz-adv-x="840" />
+<glyph glyph-name="cancel-circled-outline" unicode="&#xe801;" d="M469 819q194 0 331-138t138-331-138-331-331-138-331 138-138 331 138 331 331 138z m0-834q151 0 258 107t107 258-107 258-258 107-258-107-107-258 107-258 258-107z m36 365l139-138q13-13 5-29t-24-16q-11 0-19 8l-138 139-138-139q-8-8-19-8-16 0-24 16t5 29l139 138-139 138q-18 18 1 36t36 1l138-139 138 139q18 18 36-1t1-36z" horiz-adv-x="938" />
+<glyph glyph-name="popup" unicode="&#xe806;" d="M781 793q44 0 74-31t30-73l0-521q0-44-30-74t-74-30l-104 0 0-53q0-43-31-73t-74-31l-469 0q-44 0-74 31t-30 73l0 469q0 44 31 74t73 31l53 0 0 104q0 43 31 73t73 31l521 0z m-678-781l469 0 0 443q0 10-8 18t-18 8l-444 0 0-469z m678 156l0 521-521 0 0-156 288 0q31 0 54-23t23-56l0-286 156 0z" horiz-adv-x="885" />
+</font>
+</defs>
+</svg>

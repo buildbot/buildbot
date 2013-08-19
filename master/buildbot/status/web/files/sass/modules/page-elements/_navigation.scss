@@ -6,7 +6,7 @@
 */
 
 .top-menu-container {
-	@include background-image(linear-gradient(center top , #EBEBEB 0%, #D9D9D9 100%)); 
+	@include bgimage (linear-gradient(top, #EBEBEB 0%, #D9D9D9 100%));
 	@include pie-clearfix;
 }
 
@@ -62,11 +62,11 @@
 // sub-menu
 
 .sub-menu-container {
-	@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%)); 
+	@include bgimage(linear-gradient(top, #0A3569 0%, #417FB1 100%)); 
     border-bottom: 1px solid #FFFFFF;
     border-top: 1px solid #FFFFFF;
     
-	margin-bottom:30px;
+	margin-bottom:22px;
 	&.root {
 		height: 39px;
 	}
@@ -74,7 +74,7 @@
 
 .breadcrumbs-nav {
 		@include pie-clearfix;
-		padding:13px 0 12px 247px;
+		padding:13px 0 12px 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.59);
 		float: left;
@@ -83,25 +83,34 @@
 		margin: 0 10px 0 0;
 		padding: 0;
 		font-weight: bold;
-		letter-spacing:0.7px;
+		letter-spacing:1.1px;
+		&:first-child {
+			padding-left:123px;
+		}
 		a {
-			color: #fff;
+			color: #fff;	
+			@include text-shadow (0 1px 0 #194767);
 			&:hover{
 				color: rgba(255, 255, 255, 0.75);
 			}
 		}
 		&.dropdown {
-			margin-right:44px;
+			margin-right:32px;
 			position: relative;
 			.more-info {
 				position: absolute;
-			    right: -32px;
-			    top: -5px;
+			    right: -22px;
+			    top: -2px;
+			    &:hover:after {
+			    	background:none;
+
+			    }
 			}
 		}
 		&:before {
+			@include text-shadow (0 1px 0 #194767);
 			content: "❯";
-			padding-right: 8px;
+			padding-right: 7px;
 			font-size: 9px;
 			color: #fff;
 		}
