@@ -21,6 +21,7 @@ import re
 import datetime
 import dateutil
 import os
+import exceptions
 
 from twisted.python import log
 from twisted.internet import defer, utils
