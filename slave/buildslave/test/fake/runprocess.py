@@ -103,8 +103,7 @@ class FakeRunProcess:
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, initialStdin=None,
                  keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config",
-                 user=None)
+                 logEnviron=True, logfiles={}, usePTY="slave-config")
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: %s" % (kwargs,))
@@ -133,7 +132,6 @@ class FakeRunProcess:
         self._builder = builder
         self.stdout = ''
         self.stderr = ''
-        self.user = kwargs.get('user')
 
     def start(self):
         # figure out the stdio-related parameters

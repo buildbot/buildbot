@@ -66,7 +66,7 @@ _abbr_mon = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 def rfc822_time(tstamp):
     res = time.strftime("%%s, %d %%s %Y %H:%M:%S GMT",
                                        tstamp)
-    res = res % (tstamp.tm_wday, tstamp.tm_mon)
+    res = res % (_abbr_day[tstamp.tm_wday], _abbr_mon[tstamp.tm_mon])
     return res
 
 class FeedResource(XmlResource):
