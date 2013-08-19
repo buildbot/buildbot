@@ -45,7 +45,7 @@ class Hg(Mercurial):
 
         currentRev  = sourcestamps_updated[self.codebase]
 
-        if lastRev is None or lastRev == currentRev:
+        if lastRev is None or lastRev == '' or lastRev == currentRev:
             revrange = '%s:%s' % (currentRev, currentRev)
         else:
             rev= yield self._dovccmd(['log', '-r', lastRev,  r'--template={rev}'], collectStdout=True)
@@ -84,11 +84,7 @@ class Hg(Mercurial):
         """Return a deferred for (date, author, files, comments) of given rev.
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, os.linesep.join((
-            '--template={date|hgdate}',
-            '{author}',
-            '{files}',
-            '{desc|strip}'))]
+        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{files}\n{desc|strip}']
 
         # Mercurial fails with status 255 if rev is unknown
         d = self._dovccmd(args, collectStdout=True)
