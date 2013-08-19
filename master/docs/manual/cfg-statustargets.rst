@@ -744,12 +744,20 @@ useful in cases where you cannot expose the WebStatus for public consumption.
     Anyone who can access the web status can "fake" a request from
     GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+To protect URL against unauthorized access you should use ``change_hook_auth`` option ::
 
     c['status'].append(html.WebStatus(...,
-                                      change_hook_auth=('user', 'password')))
+                                      change_hook_auth=["file:changehook.passwd"]))
+
+And create a file ``changehook.passwd``
+
+.. code-block:: none
+
+    user:password
 
 Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
+
+See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
 
 Note that not using ``change_hook_auth`` can expose you to security risks.
 
