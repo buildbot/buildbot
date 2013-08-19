@@ -85,14 +85,7 @@
 		@include text-shadow(0 1px 0 #fff);
 		border-top:1px solid #FFFFFF;
 	}
-	&.tablesorter th {
-		border-right: 1px solid #CCCCCC;
-    	border-left: 1px solid #FFFFFF;
-    	&:last-child {
-    		border-right:none;
-    	}
-
-	}
+	
 	td {
 		padding:15px 10px;		
 		//border-bottom:1px solid #DADADA;
@@ -171,13 +164,15 @@
 
 .tablesorter {
 	th {
+		@include text-shadow (0 1px 0 #fff);
 		&:after {
-			content:"▾";
-			float: right;			
-			font-size: 20px;
-    		line-height: 0;
 			color: #B5B5B5;
-			margin-top: 6px;
+			font-size: 11px;
+		    line-height: 0;
+		    padding-left: 6px;
+		    font-family: katana_icons_2;
+		    content:"";
+			@include text-shadow (0 1px 0 #fff);
 		}
 		&:hover {
 			background-color: #E5E7EB;
@@ -185,53 +180,60 @@
 		}
 	}
 	
-	th.sorting_asc {
-		background-color:#98AFC8;	
-		color:#fff;
-		@include text-shadow (0 -1px 0 #666);
+	th.sorting_asc,
+	th.sorting_desc {	
 		&:after {
-			color:rgba(255, 255, 255, 0.59);
-			@include text-shadow (none);
+			color:#444;
+			content: "";
+			padding-left: 5px;
 		}
-
+	}
+	th.sorting_asc {
+		&:after {	
+			content: "";
+		}
 	}
 	th.sorting_desc {
-		background-color:#98AFC8;	
-		color:#fff;
-		@include text-shadow (0 -1px 0 #666);
-		&:after {
-			margin-top: 11px;
-			@include transform (rotate(180deg));
-			content:"▾";
-			color:rgba(255, 255, 255, 0.59);
-			@include text-shadow (none);
+		&:after {	
+			content: "";
 		}
 	}
 }
 
 .dataTables_filter {
-	float: right;
-	margin-bottom: 15px;
+	margin-bottom: 23px;
 	label {
-		font-size: 12px;
+		position: relative;
 		font-weight: bold;
+		@include text-shadow (0 1px 0 white);
+		&:after {
+			color: #ADADAD;
+		    content: "";
+		    font-family: katana_icons_search;
+		    left: 12px;
+		    position: absolute;
+		    top: -1px;
+		}
 	}
 	input {
-		margin-left:7px;
 	    border: 1px solid #CCCCCC;
 	    @include border-radius (4px);
-	    @include box-shadow (2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+	    @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
 	    color: #666666;
 	    font-size: 12px;
 	    line-height: 13px;
-	    padding: 7px 11px 6px;
+	    padding: 7px 11px 6px 30px;
 	   	@include text-shadow (0 1px 0 white);
-	    width: 95px;
-	
+	    width: 100px;
 	}
 }
  
-
+.select-input {
+	text-align:right;
+	label {
+		padding-right: 3px;
+	}
+}
 .select-tools {
 	font-size: 12px;
 	float:right;
@@ -465,11 +467,12 @@ div.force-text {
 }
 
 .more-info:after {
-    font-family: "katana_icons";
-    content: "";
+    font-family: "katana_icons_2";
+    content: "";
     display: inline-block;
     padding: 0;
     font-weight:normal;
+    font-size: 16px;
     /*    
     .chrome.win & {
     	content: "▾";
@@ -478,10 +481,6 @@ div.force-text {
     	line-height: 13px;
     	padding: 2px 5px 4px;
     }*/
-}
-
-.more-info:hover:after {
-	@include background-image (linear-gradient(right center , #F2F6FE 0%, #F8FAFF 100%));
 }
 
 .more-info.before:before {
@@ -505,15 +504,13 @@ div.force-text {
     text-align: left;
     min-width:280px;
     overflow-y: auto; 
-	//width:auto;/*can be % px auto*/
 	z-index:200;
 	float:left;
 	color:#333;
     @include text-shadow(0 1px 0 #FFFFFF);
 	@include border-radius(8px);
     @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
-    @include background-image(linear-gradient(center top , rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
-    //@include background-image(linear-gradient(center top, #FFF 0%, #F8F8F9 100%)); 
+    @include bgimage(linear-gradient(top, rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
     text-align:left;
     p {
     	margin-bottom: 10px;
@@ -685,6 +682,7 @@ div.force-text input.not-valid {
 
 .small-head {
 	display:inline-block;
+	margin-top:0;
 	margin-bottom:5px;
 }
 
@@ -866,7 +864,6 @@ transform:rotate(360deg)}
 	
 	input[type="text"],
 	input[type="password"] {
-		//@include background-image(linear-gradient(center top , #FBFBFB 0%, #E3E6ED 100%));
 	    border: 1px solid #ccc;
 	    @include border-radius(4px);
 	    @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset, 1px 1px 0px #fff);
@@ -889,7 +886,7 @@ transform:rotate(360deg)}
 	    margin-top: 6px;
 	}
 	input[type="submit"] {
-		@include background-image(linear-gradient(center top , #0A3569 0%, #417FB1 100%));
+		@include bgimage(linear-gradient(top , #0A3569 0%, #417FB1 100%));
 		@include box-shadow(1px 1px 0px #fff);
 	    border: 1px solid #295E91;
 	    @include border-radius( 4px);
@@ -902,7 +899,7 @@ transform:rotate(360deg)}
 	    clear: both;
 	    letter-spacing: 0.8px;
 	    &:hover {
-	    	@include background-image(linear-gradient(center top , #1057AD 0%, #4E98D5 100%));
+	    	@include bgimage(linear-gradient(top , #1057AD 0%, #4E98D5 100%));
 	    }
 	}
 	input:first-child {
@@ -981,7 +978,7 @@ body.log.interface {
 	  border: 1px solid #aaa;
 	  border-radius: 5px;
 	  background-color: #fff;
-	  @include background (linear-gradient(top, #ffffff 20%, #f6f6f6 50%, #eeeeee 52%, #f4f4f4 100%));
+	  @include bgimage (linear-gradient(top, #ffffff 20%, #f6f6f6 50%, #eeeeee 52%, #f4f4f4 100%));
 	  background-clip: padding-box;
 	  @include box-shadow ( 0 0 3px white inset, 0 1px 1px rgba(0, 0, 0, 0.1));
 	  text-decoration: none;
@@ -1049,7 +1046,7 @@ body.log.interface {
 		  height: auto;
 		  outline: 0;
 		  border: 1px solid #aaa;
-		  @include background (linear-gradient(#eeeeee 1%, #ffffff 15%));
+		  @include bgimage (linear-gradient(top, #eeeeee 1%, #ffffff 15%));
 		  font-size: 1em;
 		  font-family: sans-serif;
 		  line-height: normal;
@@ -1116,7 +1113,7 @@ body.log.interface {
 
 .highlighted {
   background-color: #3875d7;
-  @include background-image (linear-gradient(center top, #3A669A 0%, #6AA1CD 100%));
+  @include bgimage (linear-gradient(top, #3A669A 0%, #6AA1CD 100%));
   color: #fff;
   @include text-shadow (none);
 }
@@ -1137,7 +1134,7 @@ body.log.interface {
 		height: 1%;
 		border: 1px solid #aaa;
 		background-color: #fff;
-		@include background-image (linear-gradient(#eeeeee 1%, #ffffff 15%));
+		@include bgimage (linear-gradient(top, #eeeeee 1%, #ffffff 15%));
 		cursor: text;
 		li {
 		  float: left;
@@ -1171,7 +1168,7 @@ body.log.interface {
 			border: 1px solid #aaa;
 			border-radius: 3px;
 			background-color: #e4e4e4;
-			@include background-image (linear-gradient(#f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eeeeee 100%));
+			@include bgimage (linear-gradient(top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eeeeee 100%));
 			background-clip: padding-box;
 			@include box-shadow ( 0 0 2px white inset, 0 1px 0 rgba(0, 0, 0, 0.05));
 			color: #333;
@@ -1201,7 +1198,7 @@ body.log.interface {
 		  padding-right: 5px;
 		  border: 1px solid #ccc;
 		  background-color: #e4e4e4;
-		  @include background-image (linear-gradient(top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eeeeee 100%));
+		  @include bgimage (linear-gradient(top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eeeeee 100%));
 		  color: #666;
 		}
 		&.search-choice-focus {
@@ -1235,7 +1232,7 @@ body.log.interface {
 	  border-bottom-right-radius: 0;
 	  -moz-border-radius-bottomleft: 0;
 	  border-bottom-left-radius: 0;
-	  @include background-image (linear-gradient(#eeeeee 20%, #ffffff 80%));
+	  @include bgimage (linear-gradient(top, #eeeeee 20%, #ffffff 80%));
 	  @include box-shadow( 0 1px 0 #fff inset);
 	  div {
 		  border-left: none;

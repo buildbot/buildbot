@@ -22,7 +22,10 @@
         <th class="txt-align-left">Codebases</th>
         <th class="txt-align-left">Reason</th>
         <th class="txt-align-left">Compatible slaves</th>
-        <th>
+        <th class="select-input">
+            <label for="selectall">
+                Select all
+            </label>
             <input id="selectall" type="checkbox" name="checkuncheck" />
         </th>
     </tr>
@@ -113,7 +116,7 @@
                 </ul>
             </div>
         </td>
-        <td>
+        <td class="select-input">
             <input class="fi-js fi" type="checkbox" name="cancelselected" value="{{ bq.brid }}"/><br/>
             <a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
         </td>

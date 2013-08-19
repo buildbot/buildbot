@@ -49,7 +49,7 @@
 
 .log-main .sub-menu-container {
 	 border-top: none;
-	 @include background-image (linear-gradient(center top , #0A3569 0%, #417FB1 100%));
+	 @include bgimage (linear-gradient(top , #0A3569 0%, #417FB1 100%));
 	 @include pie-clearfix;
 	 padding:10px 0 ;
 }

@@ -6,3 +6,12 @@
 * @section      Framework
 * @author       Simon Holm
 */
+
+@mixin bgimage($selector) {
+	$bgImage: background-image;
+	#{$bgImage}:-moz-#{$selector};
+	#{$bgImage}:-webkit-#{$selector};
+	#{$bgImage}:-o-#{$selector};
+	#{$bgImage}:-ms-#{$selector};
+	#{$bgImage}:$selector;
+}
