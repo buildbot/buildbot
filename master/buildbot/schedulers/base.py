@@ -191,11 +191,11 @@ class BaseScheduler(ClusteredService, StateMixin):
         # Merge codebases with the passed list of sourcestamps
         # This results in a new sourcestamp for each codebase
         stampsWithDefaults = []
-        for codebase in self.codebases:
-            ss = self.codebases[codebase].copy()
+        for codebase in stampsByCodebase:
+            ss = self.codebases.get(codebase, {}).copy()
              # apply info from passed sourcestamps onto the configured default
              # sourcestamp attributes for this codebase.
-            ss.update(stampsByCodebase.get(codebase,{}))
+            ss.update(stampsByCodebase[codebase])
             stampsWithDefaults.append(ss)
 
         return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
