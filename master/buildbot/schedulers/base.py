@@ -175,7 +175,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     ## starting bulids
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-                                        properties=None, builderNames=None):
+            waited_for, properties=None, builderNames=None):
 
         if sourcestamps is None:
             sourcestamps = []
@@ -199,7 +199,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             stampsWithDefaults.append(ss)
 
         return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
-                reason=reason, properties=properties,
+                reason=reason, waited_for=waited_for, properties=properties,
                 builderNames=builderNames)
 
     def getCodebaseDict(self, codebase):
@@ -208,7 +208,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         return self.codebases[codebase]
 
     @defer.inlineCallbacks
-    def addBuildsetForChanges(self, reason='', external_idstring=None,
+    def addBuildsetForChanges(self, waited_for, reason='', external_idstring=None,
             changeids=[], builderNames=None, properties=None):
         changesByCodebase = {}
 
@@ -240,13 +240,13 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         # add one buildset, using the calculated sourcestamps
         bsid,brids = yield self.addBuildsetForSourceStamps(
-                sourcestamps=sourcestamps, reason=reason,
+                waited_for, sourcestamps=sourcestamps, reason=reason,
                 external_idstring=external_idstring, builderNames=builderNames,
                 properties=properties)
 
         defer.returnValue((bsid,brids))
 
-    def addBuildsetForSourceStamps(self, sourcestamps=[], reason='',
+    def addBuildsetForSourceStamps(self, waited_for, sourcestamps=[], reason='',
             external_idstring=None, properties=None, builderNames=None):
         # combine properties
         if properties:
@@ -264,5 +264,5 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         return self.master.data.updates.addBuildset(
                 scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
-                properties=properties_dict, builderNames=builderNames,
+                waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
                 external_idstring=external_idstring)

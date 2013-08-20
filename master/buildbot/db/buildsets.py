@@ -31,8 +31,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderNames,
-                   external_idstring=None, submitted_at=None,
+                   waited_for, external_idstring=None, submitted_at=None,
                    _reactor=reactor):
+        # We've gotten this wrong a couple times.
+        assert type(waited_for) is bool, 'waited_for should be boolean: %r' % waited_for
         if submitted_at:
             submitted_at = datetime2epoch(submitted_at)
         else:
@@ -62,7 +64,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # insert the buildset itself
             r = conn.execute(buildsets_tbl.insert(), dict(
                 submitted_at=submitted_at, reason=reason, complete=0,
-                complete_at=None, results=-1,
+                complete_at=None, results=-1, waited_for=waited_for,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 
