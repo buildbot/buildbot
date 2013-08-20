@@ -109,6 +109,7 @@ class Master(DebugAMP, service.MultiService):
     def __init__(self, ampManager):
         service.MultiService.__init__(self)
         self.ampManager = ampManager
+        self.callbacks_list = []
 
     def stopReceivingBoxes(self, reason):
         """ Called when slave disconnects """
@@ -134,17 +135,15 @@ class Master(DebugAMP, service.MultiService):
             d = defer.maybeDeferred(self.persp.detached, self)
             d.addCallback(lambda persp : persp)
 
-        if hasattr(self, "notify_callback"):
-            def call_callback(persp):
-                d = defer.maybeDeferred(self.notify_callback)
-                d.addCallback(lambda _ : persp)
-                return d
-            d.addCallback(call_callback)
+        if len(self.callbacks_list) > 0:
+            d = defer.Deferred()
+            for callback in self.callbacks_list:
+                d.addCallback(callback)
 
         log.msg("Slave '%s' disconnected with reason '%s'" % (self.user, reason))
 
     def notifyOnDisconnect(self, callback):
-        self.notify_callback = callback
+        self.callbacks_list.append(callback)
 
     @RemoteAuth.responder
     def authSlave(self, user, password, features):
