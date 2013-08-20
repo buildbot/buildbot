@@ -744,12 +744,20 @@ useful in cases where you cannot expose the WebStatus for public consumption.
     Anyone who can access the web status can "fake" a request from
     GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+To protect URL against unauthorized access you should use ``change_hook_auth`` option ::
 
     c['status'].append(html.WebStatus(...,
-                                      change_hook_auth=('user', 'password')))
+                                      change_hook_auth=["file:changehook.passwd"]))
+
+And create a file ``changehook.passwd``
+
+.. code-block:: none
+
+    user:password
 
 Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
+
+See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
 
 Note that not using ``change_hook_auth`` can expose you to security risks.
 
@@ -886,6 +894,46 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
+
+Gitorious Hook
+##############
+
+The Gitorious hook is as simple as GitHub one and it also takes no options. ::
+
+    c['status'].append(html.WebStatus(
+        # ...
+        change_hook_dialects={'gitorious': True}
+    ))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/gitorious``
+relative to the root of the web status. For example, it the grid URL is
+``http://builds.mycompany.com/bbot/grid``, then point Gitorious to
+``http://builds.mycompany.com/change_hook/gitorious``.
+
+.. warning::
+
+    As in the previous case, the incoming HTTP requests for this hook are not
+    authenticated by default. Anyone who can access the web status can "fake"
+    a request from your Gitorious server, potentially causing the buildmaster to run
+    arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+    c['status'].append(html.WebStatus(
+        # ...
+        change_hook_auth=('user', 'password')
+    ))
+
+Then, create a Gitorious web hook (see http://gitorious.org/gitorious/pages/WebHooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitorious``.
+
+Note that as before, not using ``change_hook_auth`` can expose you to security risks.
+
+.. note::
+
+    Web hooks are only available for local Gitorious
+    installations, since this feature is not offered as part of
+    Gitorious.org yet.
+
 
 .. bb:status:: MailNotifier
 

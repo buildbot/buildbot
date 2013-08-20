@@ -9,8 +9,9 @@ apidocs:
 	$(MAKE) -C apidocs
 
 pylint:
-	cd master; $(MAKE) pylint
-	cd slave; $(MAKE) pylint
+	$(MAKE) -C master pylint; master_res=$$?; \
+	$(MAKE) -C slave pylint; slave_res=$$?; \
+	if [ $$master_res != 0 ] || [ $$slave_res != 0 ]; then exit 1; fi
 
 pyflakes:
 	pyflakes master/buildbot slave/buildslave

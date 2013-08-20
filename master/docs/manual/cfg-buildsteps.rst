@@ -780,10 +780,12 @@ you will receive a configuration error exception.
     ``local``.
 
 
+.. index:: double: Gerrit integration; Repo Build Step
+
 .. bb:step:: Repo
 
 Repo
-+++++++++++++++++
+++++
 
 .. py:class:: buildbot.steps.source.repo.Repo
 
@@ -795,15 +797,15 @@ for new and old projects.
 
 The Repo step takes the following arguments:
 
-``manifest_url``
+``manifestURL``
     (required): the URL at which the Repo's manifests source repository is available.
 
-``manifest_branch``
+``manifestBranch``
     (optional, defaults to ``master``): the manifest repository branch
     on which repo will take its manifest. Corresponds to the ``-b``
     argument to the :command:`repo init` command.
 
-``manifest_file``
+``manifestFile``
     (optional, defaults to ``default.xml``): the manifest
     filename. Corresponds to the ``-m`` argument to the :command:`repo
     init` command.
@@ -813,39 +815,73 @@ The Repo step takes the following arguments:
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
     directory which contains all the Git objects. This feature helps
-    to minimize network usage on very big projects.
+    to minimize network usage on very big projects with lots of slaves.
 
 ``jobs``
     (optional, defaults to ``None``): Number of projects to fetch
     simultaneously while syncing. Passed to repo sync subcommand with "-j".
 
-``sync_all_branches``
-    (optional, defaults to if "manifest_override" property exists? -> True else -> False):
-    callback to control the policy of repo sync -c
+``syncAllBranches``
+    (optional, defaults to ``False``): renderable boolean to control whether ``repo``
+    syncs all branches. i.e. ``repo sync -c``
 
-``update_tarball``
-    (optional, defaults to "one week if we did not sync all branches"):
-    callback to control the policy of updating of the tarball
-    given properties, and boolean indicating whether
-    the last repo sync was on all branches
-    Returns: max age of tarball in seconds, or -1, if we
+``updateTarballAge``
+    (optional, defaults to "one week"):
+    renderable to control the policy of updating of the tarball
+    given properties
+    Returns: max age of tarball in seconds, or None, if we
     want to skip tarball update
     The default value should be good trade off on size of the tarball,
     and update frequency compared to cost of tarball creation
 
-This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
-automatically use the :command:`repo download` command of repo to
-download the additionnal changes introduced by a pending changeset.
+``repoDownloads``
+    (optional, defaults to None):
+    list of ``repo download`` commands to perform at the end of the Repo step
+    each string in the list will be prefixed ``repo download``, and run as is.
+    This means you can include parameter in the string. e.g:
 
-.. index:: double: Gerrit integration; Repo Build Step
+      - ``["-c project 1234/4"]`` will cherry-pick patchset 4 of patch 1234 in project ``project``
 
-Gerrit integration can be also triggered using forced build with following properties:
-``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
-with values in format: ``project/change_number/patchset_number``.
+      - ``["-f project 1234/4"]`` will enforce fast-forward on patchset 4 of patch 1234 in project ``project``
+
+.. py:class:: buildbot.steps.source.repo.RepoDownloadsFromProperties
+
+``RepoDownloadsFromProperties`` can be used as a renderable of the ``repoDownload`` parameter
+it will look in passed properties for string with following possible format:
+
+      -  ``repo download project change_number/patchset_number``.
+
+      -  ``project change_number/patchset_number``.
+
+      -  ``project/change_number/patchset_number``.
+
 All of these properties will be translated into a :command:`repo download`.
 This feature allows integrators to build with several pending interdependent changes,
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
+
+.. py:class:: buildbot.steps.source.repo.RepoDownloadsFromChangeSource
+
+``RepoDownloadsFromChangeSource`` can be used as a renderable of the ``repoDownload`` parameter
+
+This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will
+automatically use the :command:`repo download` command of repo to
+download the additionnal changes introduced by a pending changeset.
+
+.. note:: you can use the two above Rendereable in conjuction by using the class ``buildbot.process.properties.FlattenList``
+
+for example::
+
+   from buildbot.steps.source.repo import Repo, RepoDownloadsFromChangeSource,
+   from buildbot.steps.source.repo import RepoDownloadsFromProperties
+   from buildbot.process.properties import FlattenList
+
+   factory.addStep(Repo(manifestUrl='git://mygerrit.org/manifest.git',
+                        repoDownloads=FlattenList([RepoDownloadsFromChangeSource(),
+                                                   RepoDownloadsFromProperties("repo_downloads")
+                                                   ]
+                                                  )
+                        ))
 
 .. _Step-Gerrit:
 
@@ -1720,12 +1756,6 @@ The :bb:step:`ShellCommand` arguments are:
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
 
-``user``
-    When this is not None, runs the command as the given user by wrapping the
-    command with 'sudo', which typically requires root permissions to run
-    (and as discussed in the :ref:`System Architecture <System-Architecture>`
-    section, is generally not a good idea).
-
 .. bb:step:: Configure
 
 Configure
@@ -1962,6 +1992,66 @@ Here is a similar example using "msbuild"::
     f.addStep(
         MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
                 workdir="trunk"))
+
+
+.. bb:step:: Robocopy
+
+Robocopy
+++++++++
+
+.. py:class:: buildbot.steps.mswin.Robocopy
+
+This step runs ``robocopy`` on Windows.
+
+`Robocopy <http://technet.microsoft.com/en-us/library/cc733145.aspx>`_ is available in versions
+of Windows starting with Windows Vista and Windows Server 2008. For previous versions of Windows,
+it's available as part of the `Windows Server 2003 Resource Kit Tools <http://www.microsoft.com/en-us/download/details.aspx?id=17657>`_.
+
+::
+
+    from buildbot.steps.mswin import Robocopy
+
+    f.addStep(Robocopy(
+                name='deploy_binaries',
+                description='Deploying binaries...',
+                descriptionDone='Deployed binaries.',
+                source=Interpolate('Build\\Bin\\%(prop:configuration)s'),
+                destination=Interpolate('%(prop:deploy_dir)\\Bin\\%(prop:configuration)s'),
+                mirror=True
+            ))
+
+Available constructor arguments are:
+
+``source``
+    The path to the source directory (mandatory).
+
+``destination``
+    The path to the destination directory (mandatory).
+
+``files``
+    An array of file names or patterns to copy.
+
+``recursive``
+    Copy files and directories recursively (``/E`` parameter).
+
+``mirror``
+    Mirror the source directory in the destination directory,
+    including removing files that don't exist anymore (``/MIR`` parameter).
+
+``move``
+    Delete the source directory after the copy is complete (``/MOVE`` parameter).
+
+``exclude``
+    An array of file names or patterns to exclude from the copy (``/XF`` parameter).
+
+``verbose``
+    Whether to output verbose information (``/V /TS /TP`` parameters).
+
+Note that parameters ``/TEE /NP`` will always be appended to the
+command to signify, respectively, to output logging to the console, use
+Unicode logging, and not print any percentage progress information for
+each file.
+
 
 .. bb:step:: Test
 

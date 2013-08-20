@@ -340,6 +340,7 @@ class BuildRequestDistributor(service.Service):
         # now let any outstanding calls to maybeStartBuildsOn to finish, so
         # they don't get interrupted in mid-stride.  This tends to be
         # particularly painful because it can occur when a generator is gc'd.
+        # TEST-TODO: this behavior is not asserted in any way.
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
@@ -445,8 +446,7 @@ class BuildRequestDistributor(service.Service):
             builders = yield defer.maybeDeferred(lambda :
                     sorter(self.master, builders))
         except Exception:
-            log.msg("Exception prioritizing builders; order unspecified")
-            log.err(Failure())
+            log.err(Failure(), "prioritizing builders; order unspecified")
 
         # and return the names
         rv = [ b.name for b in builders ]
@@ -475,9 +475,9 @@ class BuildRequestDistributor(service.Service):
             bldr_name = self._pending_builders.pop(0)
             self.pending_builders_lock.release()
 
+            # get the actual builder object
+            bldr = self.botmaster.builders.get(bldr_name)
             try:
-                # get the actual builder object
-                bldr = self.botmaster.builders.get(bldr_name)
                 if bldr:
                     yield self._maybeStartBuildsOnBuilder(bldr)
             except Exception:

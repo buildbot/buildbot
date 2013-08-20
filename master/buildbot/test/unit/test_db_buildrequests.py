@@ -54,7 +54,6 @@ class Tests(interfaces.InterfaceTests):
     # tests
 
     def test_getBuildRequest(self):
-        # ned fakedb.BuildRequestClaim
         d = self.insertTestData([
             fakedb.BuildRequest(id=44, buildsetid=self.BSID, buildername="bbb",
                 complete=1, results=75, priority=7,

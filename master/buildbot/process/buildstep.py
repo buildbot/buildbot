@@ -30,7 +30,6 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, CANCELLED, worst_status
 from buildbot.process import metrics, properties
 from buildbot.util.eventual import eventually
-from buildbot.interfaces import BuildSlaveTooOldError
 
 class BuildStepFailed(Exception):
     pass
@@ -362,8 +361,7 @@ class RemoteShellCommand(RemoteCommand):
                  usePTY="slave-config", logEnviron=True,
                  collectStdout=False,collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0:SUCCESS},
-                 user=None):
+                 initialStdin=None, decodeRC={0:SUCCESS}):
 
         self.command = command # stash .command, set it later
         self.fake_command = [w[2] if (isinstance(w, tuple) and len(w) == 3 and w[0] =='obfuscated')
@@ -386,8 +384,6 @@ class RemoteShellCommand(RemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        if user is not None:
-            args['user'] = user
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
                                collectStderr=collectStderr,
                                decodeRC=decodeRC)
@@ -399,10 +395,6 @@ class RemoteShellCommand(RemoteCommand):
             # fixup themselves
             if self.step.slaveVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
-        if ('user' in self.args and
-                self.step.slaveVersionIsOlderThan("shell", "2.16")):
-            m = "slave does not support the 'user' parameter"
-            raise BuildSlaveTooOldError(m)
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])
         log.msg(what)
@@ -509,7 +501,7 @@ class BuildStep(object, properties.PropertiesMixin):
         pass
 
     def addFactoryArguments(self, **kwargs):
-        # this is here for backwards compatability
+        # this is here for backwards compatibility
         pass
 
     def _getStepFactory(self):
@@ -791,6 +783,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
+        self.cmd = c
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d

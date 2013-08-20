@@ -2,7 +2,8 @@
 *.pyc
 *.pyo
 *$py.class
-*.swp
+# vim trash:
+.*.sw[a-z]
 *.patch
 *.orig
 *.rej

@@ -98,6 +98,15 @@ check_relnotes || not_ok "$REVRANGE does not add release notes"
 status "running pyflakes"
 sandbox/bin/pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
 
+status "running pylint (SLOW)"
+status "..master"
+(cd master; time pylint --rcfile=../common/pylintrc buildbot); master_res=$?
+status "..slave"
+(cd slave; time pylint --rcfile=../common/pylintrc buildslave); slave_res=$?
+if [ $master_res != 0 ] || [ $slave_res != 0 ]; then
+    not_ok "failed pylint";
+fi
+
 status "building docs"
 make -C master/docs VERSION=latest clean html || not_ok "docs failed"
 

@@ -15,7 +15,7 @@
 
 from twisted.python import log
 from twisted.internet import defer, reactor
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from buildbot import config as bbconfig
 from buildbot.process import buildstep
@@ -511,7 +511,7 @@ class Git(Source):
             if 'git' in stdout:
                 gitInstalled = True
             version = stdout.strip().split(' ')[2]
-            if StrictVersion(version) < StrictVersion("1.6.5"):
+            if LooseVersion(version) < LooseVersion("1.6.5"):
                 self.supportsBranch = False
             return gitInstalled
         d.addCallback(checkSupport)

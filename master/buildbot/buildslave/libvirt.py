@@ -14,6 +14,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
 
+from __future__ import absolute_import
 import os
 
 from twisted.internet import defer, utils, threads

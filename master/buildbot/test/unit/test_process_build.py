@@ -25,7 +25,7 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot import config
 
-from mock import Mock
+from mock import Mock, call
 
 class FakeChange:
     properties = Properties()
@@ -210,29 +210,52 @@ class TestBuild(unittest.TestCase):
 
         # no locks, so both these pass (call twice to verify there's no state/memory)
         lock_list = [(real_lock, counting_access)]
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
 
         slave_lock_1 = real_lock.getLock(slavebuilder1.slave)
         slave_lock_2 = real_lock.getLock(slavebuilder2.slave)
 
         # then have slavebuilder2 claim its lock:
         slave_lock_2.claim(slavebuilder2, counting_access)
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(True, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(False, Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertIdentical(False, Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
         slave_lock_2.release(slavebuilder2, counting_access)
 
         # then have slavebuilder1 claim its lock:
         slave_lock_1.claim(slavebuilder1, counting_access)
-        self.assertIdentical(False, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(False, Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertIdentical(True,  Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertIdentical(True,  Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
         slave_lock_1.release(slavebuilder1, counting_access)
+
+
+    def testBuilddirPropType(self):
+        import posixpath
+
+        b = self.build
+
+        slavebuilder = Mock()
+        b.build_status = Mock()
+        b.builder.config.slavebuilddir = 'test'
+        slavebuilder.slave.slave_basedir = "/srv/buildbot/slave"
+        slavebuilder.slave.path_module = posixpath
+        b.getProperties = Mock()
+        b.setProperty = Mock()
+
+        b.setupSlaveBuilder(slavebuilder)
+
+        expected_path = '/srv/buildbot/slave/test'
+
+        b.setProperty.assert_has_calls(
+            [call('workdir', expected_path, 'slave (deprecated)'),
+             call('builddir', expected_path, 'slave')],
+            any_order=True)
 
 
     def testBuildLocksAcquired(self):

@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from buildbot.steps.shell import ShellCommand, SetProperty
+from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
 from buildbot import config
@@ -75,7 +75,7 @@ class FakeBuildRequest:
 class TestShellCommandProperties(unittest.TestCase):
     def testCommand(self):
         f = BuildFactory()
-        f.addStep(SetProperty(command=["echo", "value"], property="propname"))
+        f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))
         f.addStep(ShellCommand(command=["echo", WithProperties("%(propname)s")]))
 
         ss = mock.Mock(name="sourcestamp")
@@ -96,7 +96,7 @@ class TestShellCommandProperties(unittest.TestCase):
 class TestSetProperty(unittest.TestCase):
     def testGoodStep(self):
         f = BuildFactory()
-        f.addStep(SetProperty(command=["echo", "value"], property="propname"))
+        f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))
 
         ss = mock.Mock(name="sourcestamp")
         ss.repository = 'repo'
@@ -114,8 +114,8 @@ class TestSetProperty(unittest.TestCase):
 
     def testErrorBothSet(self):
         self.assertRaises(config.ConfigErrors,
-                SetProperty, command=["echo", "value"], property="propname", extract_fn=lambda x:{"propname": "hello"})
+                SetPropertyFromCommand, command=["echo", "value"], property="propname", extract_fn=lambda x:{"propname": "hello"})
 
     def testErrorNoneSet(self):
         self.assertRaises(config.ConfigErrors,
-                SetProperty, command=["echo", "value"])
+                SetPropertyFromCommand, command=["echo", "value"])
