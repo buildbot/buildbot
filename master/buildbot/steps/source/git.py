@@ -138,9 +138,14 @@ class Git(Source):
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.parseCommitDescription)
+        d.addCallback(self.parseChanges)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
         return d
+
+    def parseChanges(self, _):
+        #implement
+        return 0
 
     @defer.inlineCallbacks
     def full(self):

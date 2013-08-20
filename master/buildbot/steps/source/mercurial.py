@@ -122,6 +122,10 @@ class Mercurial(Source):
         d.addCallback(self.finish)
         d.addErrback(self.failed)
 
+    def parseChanges(self, _):
+        #implement
+        return 0
+
     @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
@@ -137,10 +141,6 @@ class Mercurial(Source):
             yield self.fresh(None)
         else:
             raise ValueError("Unknown method, check your configuration")
-
-    def parseChanges(self, _):
-        #implement
-        return 0
 
     def incremental(self):
         if self.method is not None:
