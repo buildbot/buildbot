@@ -111,25 +111,40 @@ class Master(DebugAMP, service.MultiService):
         self.ampManager = ampManager
 
     def stopReceivingBoxes(self, reason):
+        """ Called when slave disconnects """
+
         amp.AMP.stopReceivingBoxes(self, reason)
         if not self.ampManager.users.get(self.user):
             log.msg("That's weird, I can't find user '%s' that should be here!" % self.user)
             return
-        _, pfactory = self.ampManager.users[self.user]
-        d = defer.maybeDeferred(pfactory, self, self.user)
-        def check(persp):
-            if not persp:
-                raise ValueError("no perspective for '%s'" % user)
-            return persp
-        d.addCallback(check)
-        def call_detached(persp):
-            d = defer.maybeDeferred(persp.detached, self)
-            d.addCallback(lambda _ : persp) # keep returning the perspective
-            return d
-        d.addCallback(call_detached)
+        if not hasattr(self, "persp"):
+            _, pfactory = self.ampManager.users[self.user]
+            d = defer.maybeDeferred(pfactory, self, self.user)
+            def check(persp):
+                if not persp:
+                    raise ValueError("no perspective for '%s'" % user)
+                return persp
+            d.addCallback(check)
+            def call_detached(persp):
+                d = defer.maybeDeferred(persp.detached, self)
+                d.addCallback(lambda _ : persp) # keep returning the perspective
+                return d
+            d.addCallback(call_detached)
+        else:
+            d = defer.maybeDeferred(self.persp.detached, self)
+            d.addCallback(lambda persp : persp)
 
-        # TODO: maybe use log?
-        print "Slave '%s' disconnected with reason '%s'" % (self.user, reason)
+        if hasattr(self, "notify_callback"):
+            def call_callback(persp):
+                d = defer.maybeDeferred(self.notify_callback)
+                d.addCallback(lambda _ : persp)
+                return d
+            d.addCallback(call_callback)
+
+        log.msg("Slave '%s' disconnected with reason '%s'" % (self.user, reason))
+
+    def notifyOnDisconnect(self, callback):
+        self.notify_callback = callback
 
     @RemoteAuth.responder
     def authSlave(self, user, password, features):
@@ -156,6 +171,7 @@ class Master(DebugAMP, service.MultiService):
         def call_attached(persp):
             d = defer.maybeDeferred(persp.attached, self)
             d.addCallback(lambda _ : persp) # keep returning the perspective
+            self.persp = persp
             return d
         d.addCallback(call_attached)
         self.user = user
