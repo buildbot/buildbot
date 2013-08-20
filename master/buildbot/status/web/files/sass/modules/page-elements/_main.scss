@@ -170,8 +170,8 @@
 			font-size: 11px;
 		    line-height: 0;
 		    padding-left: 6px;
-		    font-family: katana_icons_2;
-		    content:"";
+		    font-family: katana_icons;
+		    content:"";
 			@include text-shadow (0 1px 0 #fff);
 		}
 		&:hover {
@@ -184,18 +184,18 @@
 	th.sorting_desc {	
 		&:after {
 			color:#444;
-			content: "";
+			//content: "";
 			padding-left: 5px;
 		}
 	}
 	th.sorting_asc {
 		&:after {	
-			content: "";
+			content: "";
 		}
 	}
 	th.sorting_desc {
 		&:after {	
-			content: "";
+			content: "";
 		}
 	}
 }
@@ -208,11 +208,12 @@
 		@include text-shadow (0 1px 0 white);
 		&:after {
 			color: #ADADAD;
+			font-family: katana_icons;
 		    content: "";
-		    font-family: katana_icons_search;
 		    left: 12px;
 		    position: absolute;
-		    top: -1px;
+		    top: 1px;
+		    line-height: 12px;
 		}
 	}
 	input {
@@ -222,7 +223,7 @@
 	    color: #666666;
 	    font-size: 12px;
 	    line-height: 13px;
-	    padding: 7px 11px 6px 30px;
+	    padding: 9px 11px 8px 30px;
 	   	@include text-shadow (0 1px 0 white);
 	    width: 100px;
 	}
@@ -467,8 +468,8 @@ div.force-text {
 }
 
 .more-info:after {
-    font-family: "katana_icons_2";
-    content: "";
+    font-family: "katana_icons";
+    content: "";
     display: inline-block;
     padding: 0;
     font-weight:normal;
@@ -721,7 +722,7 @@ height:30px;
 left:11px;
 top:0px;
 -moz-animation-name:ball_moveG;
--moz-animation-duration:1.3s;
+-moz-animation-duration:1s;
 -moz-animation-iteration-count:infinite;
 -moz-animation-timing-function:linear;
 -webkit-animation-name:ball_moveG;
@@ -1381,7 +1382,7 @@ body.log.interface {
 	display:inline-block;
 	&:before {
 		font-family: "katana_icons";
-		content: "";
+		content: "";
 		font-size: 16px;
 		color:#ABABAB;
 

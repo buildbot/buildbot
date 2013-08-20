@@ -31,6 +31,8 @@ class ProjectsResource(HtmlResource):
         cxt['projects'] = []
         if len(projects) > 0:
             cxt['projects'] = util.naturalSort(projects.keys())
+            
+            cxt['projects_codebases'] = status.getProjects() 
 
         template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True

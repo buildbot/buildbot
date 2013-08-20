@@ -39,14 +39,17 @@ $(document).ready(function() {
 	};
 	popUpBtn('.popup-btn-js');
 	
-	$(document, '.close-btn').click(function(e){
-		if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
-			$('.command_forcebuild').removeClass('form-open');
-			$('.more-info-box-js, .more-info-box-js-2').hide();
-			$('#content').empty();
-		}
-	}); 
-
+	function closePopUp() {
+		$(document, '.close-btn').click(function(e){
+			if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
+				$('.command_forcebuild').removeClass('form-open');
+				$('.more-info-box-js, .more-info-box-js-2').hide();
+				
+				$('#content').empty();
+			}
+		}); 
+	}
+	closePopUp();
 	// class on selected menuitem
 	$(function setCurrentItem(){
 		var path = window.location.pathname.split("\/");
@@ -235,7 +238,6 @@ $(document).ready(function() {
 			$('#getForm').attr('action', window.location.href);
 		});
 	});
-
 	
 	// tooltip for long txtstrings
 	$('.ellipsis-js').hover(function(){
@@ -259,6 +261,44 @@ $(document).ready(function() {
 
 	$('#submitBtn').click(function(){
 		$('#formWrapper form').submit();
+	});
+
+	$('#projectDropdown').click(function(e){
+		
+		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+		$('body').append(preloader).show();
+
+		var path = "/projects";
+		$('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>').insertAfter($(this));
+		
+		$.get(path)
+		.done(function(data) {
+			var $response=$(data);
+			$('#bowlG').remove();
+			
+			var fw = $($response).find('.tablesorter-js');
+			$(fw).appendTo($('#content1'));
+			$('.more-info-box-js-3 .tablesorter-js').removeClass('tablesorter')
+			var theLink = $('.dataTable tbody a').attr('href');
+
+			$('.more-info-box-js-3').slideDown('fast');
+
+			$(document, '.close-btn').click(function(e){
+			    if (!$(e.target).closest('.more-info-box-js-3').length || $(e.target).closest('.close-btn').length) {
+			        // .closest can help you determine if the element 
+			        // or one of its ancestors is #menuscontainer
+			        	
+			        $('.more-info-box-js-3').slideUp('fast', function(){
+			        	$(this).remove();	
+			        });
+			        
+			        $(this).unbind(e);
+			    }
+			});
+			
+	
+		});
+
 	});
 
 });
