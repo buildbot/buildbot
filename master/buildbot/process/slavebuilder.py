@@ -17,6 +17,8 @@ from twisted.spread import pb
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.protocols import RemotePrint
+
 (ATTACHING, # slave attached, still checking hostinfo/etc
  IDLE, # idle, available for use
  PINGING, # build about to start, making sure it is still alive
@@ -81,7 +83,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         if self.slave:
             self.slave.buildFinished(self)
 
-    def attached(self, slave, remote, commands):
+    def attached(self, slave, commands):
         """
         @type  slave: L{buildbot.buildslave.BuildSlave}
         @param slave: the BuildSlave that represents the buildslave as a
@@ -92,7 +94,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         @param commands: provides the slave's version of each RemoteCommand
         """
         self.state = ATTACHING
-        self.remote = remote
+        self.remote = slave.slave
         self.remoteCommands = commands # maps command name to version
         if self.slave is None:
             self.slave = slave
@@ -104,10 +106,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         d = defer.succeed(None)
 
         d.addCallback(lambda _:
-            self.remote.callRemote("setMaster", self))
-
-        d.addCallback(lambda _:
-            self.remote.callRemote("print", "attached"))
+            self.remote.callRemote(RemotePrint, message="attached"))
 
         def setIdle(res):
             self.state = IDLE
@@ -185,7 +184,7 @@ class Ping:
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the slave.. using 'print'
         # for this purpose is kind of silly.
-        remote.callRemote("print", "ping").addCallbacks(self._pong,
+        remote.callRemote(RemotePrint, message="ping").addCallbacks(self._pong,
                                                         self._ping_failed,
                                                         errbackArgs=(remote,))
         return self.d
@@ -199,7 +198,7 @@ class Ping:
         # the slave has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
-        remote.broker.transport.loseConnection()
+        remote.transport.loseConnection()
         # TODO: except, if they actually did manage to get this far, they'll
         # probably reconnect right away, and we'll do this game again. Maybe
         # it would be better to leave them in the PINGING state.

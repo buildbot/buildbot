@@ -110,6 +110,27 @@ class Master(DebugAMP, service.MultiService):
         service.MultiService.__init__(self)
         self.ampManager = ampManager
 
+    def stopReceivingBoxes(self, reason):
+        amp.AMP.stopReceivingBoxes(self, reason)
+        if not self.ampManager.users.get(self.user):
+            log.msg("That's weird, I can't find user '%s' that should be here!" % self.user)
+            return
+        _, pfactory = self.ampManager.users[self.user]
+        d = defer.maybeDeferred(pfactory, self, self.user)
+        def check(persp):
+            if not persp:
+                raise ValueError("no perspective for '%s'" % user)
+            return persp
+        d.addCallback(check)
+        def call_detached(persp):
+            d = defer.maybeDeferred(persp.detached, self)
+            d.addCallback(lambda _ : persp) # keep returning the perspective
+            return d
+        d.addCallback(call_detached)
+
+        # TODO: maybe use log?
+        print "Slave '%s' disconnected with reason '%s'" % (self.user, reason)
+
     @RemoteAuth.responder
     def authSlave(self, user, password, features):
         if user in self.ampManager.users:
@@ -137,7 +158,7 @@ class Master(DebugAMP, service.MultiService):
             d.addCallback(lambda _ : persp) # keep returning the perspective
             return d
         d.addCallback(call_attached)
-#        Hello(self)
+        self.user = user
         log.msg('Slave feature negotiation vector: %s' % pprint.pformat(features))
         features = [{'key': 'feature1', 'value': 'bar1'}, {'key': 'feature2', 'value': 'baz1'}]
         return {'features': features}

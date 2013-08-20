@@ -232,7 +232,7 @@ class Bot(amp.AMP, service.MultiService):
                             "being used by the buildmaster: you can delete "
                             "it now" % dir)
 
-        return {'result': 0}  # return value
+        return {'builders': wanted_names}  # return value
 
     @RemotePrint.responder
     def remotePrint(self, message):

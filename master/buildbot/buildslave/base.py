@@ -311,9 +311,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if self.isConnected():
             # duplicate slave - send it to arbitration
             log.msg("Already connected!")
-            arb = botmaster.DuplicateSlaveArbitrator(self)
-            # TODO: after done with registering, try to make it work
-            return arb.getPerspective(mind, slavename)
+            # TODO: Arbitration currently not working.
+            # need to discuss about how to implement it for AMP
+            # arb = botmaster.DuplicateSlaveArbitrator(self)
+            # return arb.getPerspective(mind, slavename)
+            return self
         else:
             log.msg("slave '%s' attaching from %s" % (slavename, proto.transport.getPeer()))
             return self
@@ -750,11 +752,11 @@ class BuildSlave(AbstractBuildSlave):
             if not slist:
                 return
             dl = []
-            for name, remote in slist.items():
+            for name in slist["builders"]:
                 # use get() since we might have changed our mind since then
                 b = self.botmaster.builders.get(name)
                 if b:
-                    d1 = b.attached(self, remote, self.slave_commands)
+                    d1 = b.attached(self, self.slave_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
         def _set_failed(why):
