@@ -85,6 +85,7 @@ package_json = {
         "grunt-contrib-watch": "~0.5.1",
         "grunt-mkdir": "~0.1.1",
         "grunt-html2js": "~0.1.6",
+        "grunt-coffeelint": "~0.0.7",
         "grunt-requiregen": "~0.1.0",
         "grunt-karma": "~0.6.0",
         "bower": "~1.1.0"

@@ -2,30 +2,36 @@ path = require 'path'
 
 # Build configurations.
 module.exports = (grunt) ->
+    project_name = "buildbot_www"
+
+    # allows incremental build using watch
+    # follow https://github.com/gruntjs/grunt-contrib-watch/issues/156
+    # for a better solution :-/
     changedFiles = {}
     firstPass = true
     grunt.event.on "watch", (action, filepath) ->
         firstPass = false
         changedFiles[filepath] = action
-    # allows incremental build using watch
     hasChanged = (filepath) ->
         if firstPass
             return true
         if changedFiles.hasOwnProperty(filepath)
-            delete changedFiles[filepath]
+            setTimeout( ->
+                delete changedFiles[filepath]
+            , 10000)
             return true
         return false
 
     grunt.initConfig
-        # Deletes buildbot_www and temp directories.
+        # Deletes #{project_name} and temp directories.
         # The temp directory is used during the build process.
-        # The buildbot_www directory contains the artifacts of the build.
+        # The #{project_name} directory contains the artifacts of the build.
         # These directories should be deleted before subsequent builds.
         # These directories are not committed to source control.
         clean:
             working:
                 src: [
-                    './buildbot_www/'
+                    "./#{project_name}/"
                     './.temp/'
                 ]
 
@@ -52,6 +58,68 @@ module.exports = (grunt) ->
             options:
                 sourceMap: true
                 sourceRoot : '/src'
+
+        # CoffeeScript lint. Enforce basic coding style rules
+        coffeelint:
+            scripts:
+                files: [
+                    src: 'src/scripts/**/*.coffee'
+                    filter: hasChanged
+                ,
+                    src: 'test/scripts/**/*.coffee'
+                    filter: hasChanged
+                ]
+                options:
+                    no_tabs:
+                        level: "error"
+                    no_trailing_whitespace:
+                        level: "error"
+                        allowed_in_comments: false
+                    max_line_length:
+                        value: 100
+                        level: "error"
+                    camel_case_classes:
+                        level: "error"
+                    indentation:
+                        value: 4
+                        level: "error"
+                    no_implicit_braces:
+                        level: "ignore"
+                    no_trailing_semicolons:
+                        level: "error"
+                    no_plusplus:
+                        level: "ignore"
+                    no_throwing_strings:
+                        level: "error"
+                    cyclomatic_complexity:
+                        value: 10
+                        level: "warn"
+                    no_backticks:
+                        level: "error"
+                    line_endings:
+                        level: "ignore"
+                        value: "unix"
+                    no_implicit_parens:
+                        level: "ignore"
+                    empty_constructor_needs_parens:
+                        level: "error"
+                    non_empty_constructor_needs_parens:
+                        level: "error"
+                    no_empty_param_list:
+                        level: "error"
+                    space_operators:
+                        level: "error"
+                    duplicate_key:
+                        level: "error"
+                    newlines_after_classes:
+                        value: 2
+                        level: "error"
+                    no_stand_alone_at:
+                        level: "error"
+                    arrow_spacing:
+                        level: "error"
+                    coffeescript_error:
+                        level: "error"
         concat:
             # concat bower.json files into config.js, to display deps in the UI
             # we declare a constant in the 'app' module
@@ -71,7 +139,8 @@ module.exports = (grunt) ->
             main:
                 cwd: './.temp/scripts/'
                 # require json2 and html5shiv are loaded in the html file
-                src: ['**/*.js','!libs/require.js', '!libs/json2.js', '!libs/html5shiv-printshiv.js']
+                src: ['**/*.js','!libs/require.js', '!libs/json2.js',
+                      '!libs/html5shiv-printshiv.js']
                 options:
                     order: [
                     # order is a list of regular expression matching
@@ -87,18 +156,20 @@ module.exports = (grunt) ->
                         'test/mocks/*'     # test mocks in dev mode
                         'app'              # app needs libs
                         '{routes,views,config,*/**}'    # remaining angularjs components
-                        'run'     # run has to be in the end, because it is triggering angular's own DI
+                        'run'     # run has to be in the end, because it is triggering
+                                  # angular's own DI
                     ]
                 dest: '.temp/scripts/main.js'
         # Copies directories and files from one location to another.
         copy:
-            # Copies the contents of the temp directory, except views, to the buildbot_www directory.
+            # Copies the contents of the temp directory, except views,
+            # to the #{project_name} directory.
             # In 'dev' individual files are used.
             dev:
                 files: [
                     cwd: './.temp/'
                     src: '**'
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ]
             # Copies img directory to temp.
@@ -133,18 +204,18 @@ module.exports = (grunt) ->
                     dest: './.temp/scripts/test'
                     expand: true
                 ]
-            # Copies coffee src files to the buildbot_www directory
+            # Copies coffee src files to the #{project_name} directory
             src:
                 files: [
                     cwd: './'
                     src: '*/scripts/**/*.coffee'
-                    dest: 'buildbot_www/src/'
+                    dest: "#{project_name}/src/"
                     expand: true
                     flatten: true
                 ]
-            # Copies select files from the temp directory to the buildbot_www directory.
+            # Copies select files from the temp directory to the #{project_name} directory.
             # In 'prod' minified files are used along with img and libs.
-            # The buildbot_www artifacts contain only the files necessary to run the application.
+            # The #{project_name} artifacts contain only the files necessary to run the application.
             prod:
                 files: [
                     cwd: './.temp/'
@@ -157,19 +228,21 @@ module.exports = (grunt) ->
                         'scripts/scripts.min.js'
                         'styles/styles.min.css'
                     ]
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ,
-                    './buildbot_www/index.html': './.temp/index.html'
+                    dest: "./#{project_name}/index.html"
+                    src: './.temp/index.min.html'
                 ,
-                    './buildbot_www/require.js': './src/scripts/libs/require.js'
+                    dest: "./#{project_name}/require.js"
+                    src: './src/script/libs/require.js'
                 ]
             # Task is run when the watched index.template file is modified.
             index:
                 files: [
                     cwd: './.temp/'
                     src: 'index.html'
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ]
             # Task is run when a watched script is modified.
@@ -177,7 +250,7 @@ module.exports = (grunt) ->
                 files: [
                     cwd: './.temp/'
                     src: 'scripts/**'
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ]
             # Task is run when a watched style is modified.
@@ -185,7 +258,7 @@ module.exports = (grunt) ->
                 files: [
                     cwd: './.temp/'
                     src: 'styles/**'
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ]
             # Task is run when a watched view is modified.
@@ -193,7 +266,7 @@ module.exports = (grunt) ->
                 files: [
                     cwd: './.temp/'
                     src: 'views/**'
-                    dest: './buildbot_www/'
+                    dest: "./#{project_name}/"
                     expand: true
                 ]
 
@@ -223,7 +296,8 @@ module.exports = (grunt) ->
                     base: './.temp/'
         # RequireJS optimizer configuration for both scripts and styles.
         # This configuration is only used in the 'prod' build.
-        # The optimizer will scan the main file, walk the dependency tree, and write the output in dependent sequence to a single file.
+        # The optimizer will scan the main file, walk the dependency tree, and write
+        # the output in dependent sequence to a single file.
         # The main file is used only to establish the proper loading sequence.
         requirejs:
             scripts:
@@ -233,7 +307,8 @@ module.exports = (grunt) ->
                     logLevel: 0
                     mainConfigFile: './.temp/scripts/main.js'
                     name: 'main'
-                    # Exclude main from the final output to avoid the dependency on RequireJS at runtime.
+                    # Exclude main from the final output to avoid the dependency on
+                    # RequireJS at runtime.
                     onBuildWrite: (moduleName, path, contents) ->
                         modulesToExclude = ['main']
                         shouldExcludeModule = modulesToExclude.indexOf(moduleName) >= 0
@@ -291,9 +366,9 @@ module.exports = (grunt) ->
                 reporters: ['progress']
                 frameworks: ['jasmine', 'requirejs'],
                 files: [
-                    './buildbot_www/scripts/test/main.js'
-                    {pattern: 'buildbot_www/scripts/**/*.js', included: false},
-                    {pattern: 'buildbot_www/scripts/**/*.js.map', included: false},
+                    "./#{project_name}/scripts/test/main.js"
+                    {pattern: "#{project_name}/scripts/**/*.js", included: false},
+                    {pattern: "#{project_name}/scripts/**/*.js.map", included: false},
                 ]
                 singleRun: false
             dev:
@@ -318,7 +393,7 @@ module.exports = (grunt) ->
                         './test/scripts/libs/angular-mocks.js'
                         '.temp/scripts/test/dataspec.js'
                         './test/scripts/*/**.coffee'
-                        './buildbot_www/scripts/scripts.min.js'
+                        "./#{project_name}/scripts/scripts.min.js"
                     ]
 
         # Sets up file watchers and runs tasks when watched files are changed.
@@ -354,7 +429,7 @@ module.exports = (grunt) ->
                     'copy:views'
                 ]
             livereload:
-                files: './buildbot_www/**'
+                files: "./#{project_name}/**"
                 options: {livereload: true}
 
     # Register grunt tasks supplied by grunt-contrib-*.
@@ -394,7 +469,8 @@ module.exports = (grunt) ->
             done(!error)
 
 
-    # Compiles the app with non-optimized build settings and places the build artifacts in the buildbot_www directory.
+    # Compiles the app with non-optimized build settings and places the build artifacts
+    # in the #{project_name} directory.
     # Enter the following command at the command line to execute this build task:
     # grunt
     grunt.registerTask 'default', [
@@ -414,7 +490,8 @@ module.exports = (grunt) ->
         'copy:src'
     ]
 
-    # Compiles the app with non-optimized build settings, places the build artifacts in the buildbot_www directory, and watches for file changes.
+    # Compiles the app with non-optimized build settings, places the build artifacts
+    # in the #{project_name} directory, and watches for file changes.
     # Enter the following command at the command line to execute this build task:
     # grunt dev
     grunt.registerTask 'dev', [
@@ -433,7 +510,8 @@ module.exports = (grunt) ->
         'dataspec'
         'karma:prod'
     ]
-    # Compiles the app with optimized build settings and places the build artifacts in the buildbot_www directory.
+    # Compiles the app with optimized build settings and places the build artifacts
+    # in the #{project_name} directory.
     # Enter the following command at the command line to execute this build task:
     # grunt prod
     grunt.registerTask 'prod', [
