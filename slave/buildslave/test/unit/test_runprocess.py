@@ -18,7 +18,6 @@ import re
 import os
 import time
 import signal
-from mock import Mock
 
 from twisted.trial import unittest
 from twisted.internet import task, defer, reactor
@@ -512,7 +511,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
                 scriptCommand('write_pidfile_and_sleep', pidfile),
                 self.basedir)
         if interruptSignal is not None:
-            s.interruptSignals = [interruptSignal]
+            s.interruptSignal = interruptSignal
         runproc_d = s.start()
 
         pidfile_d = self.waitForPidfile(pidfile)
@@ -526,47 +525,6 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile_d.addCallback(check_alive)
 
         def check_dead(_):
-            self.failUnlessEqual(s.killedBy, "TERM")
-            self.assertDead(self.pid)
-        runproc_d.addCallback(check_dead)
-        return defer.gatherResults([pidfile_d, runproc_d])
-
-    def test_kill(self, interruptSignal=None):
-
-        # Tests that the process will receive SIGKILL if SIGTERM
-        # is ignored.
-        pidfile = self.newPidfile()
-        self.pid = None
-        b = FakeSlaveBuilder(False, self.basedir)
-        s = runprocess.RunProcess(b,
-                scriptCommand('write_pidfile_and_sleep', pidfile),
-                self.basedir)
-        runproc_d = s.start()
-        pidfile_d = self.waitForPidfile(pidfile)
-
-        def check_alive(pid):
-            # Create a mock process that will ignore SIGTERM and only
-            # forward on the signal when we recieve SIGKILL
-            mock_process = Mock(wraps=s.process)
-            mock_process.pgid = None # Skips over group SIGTERM
-            process = s.process
-            def _mock_signalProcess(sig):
-                if sig == "TERM":
-                    raise OSError
-                else:
-                    process.signalProcess(sig)
-            mock_process.signalProcess = _mock_signalProcess
-            s.process = mock_process
-
-            self.pid = pid # for use in check_dead
-            # test that the process is still alive
-            self.assertAlive(pid)
-            # and tell the RunProcess object to kill it
-            s.kill("diaf")
-        pidfile_d.addCallback(check_alive)
-
-        def check_dead(_):
-            self.failUnlessEqual(s.killedBy, "KILL")
             self.assertDead(self.pid)
         runproc_d.addCallback(check_dead)
         return defer.gatherResults([pidfile_d, runproc_d])
