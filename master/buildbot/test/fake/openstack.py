@@ -75,7 +75,7 @@ class Instance():
         self.boot_args = boot_args
         self.boot_kwargs = boot_kwargs
         self.gets = 0
-        self.status = BUILD
+        self.status = 'BUILD(networking)'
         self.name = 'name'
 
     def delete(self):
