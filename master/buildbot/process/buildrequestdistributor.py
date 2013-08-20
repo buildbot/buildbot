@@ -340,6 +340,7 @@ class BuildRequestDistributor(service.Service):
         # now let any outstanding calls to maybeStartBuildsOn to finish, so
         # they don't get interrupted in mid-stride.  This tends to be
         # particularly painful because it can occur when a generator is gc'd.
+        # TEST-TODO: this behavior is not asserted in any way.
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
