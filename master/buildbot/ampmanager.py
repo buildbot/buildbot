@@ -135,14 +135,16 @@ class Master(DebugAMP, service.MultiService):
             d = defer.maybeDeferred(self.persp.detached, self)
             d.addCallback(lambda persp : persp)
 
-        if len(self.disconnectCallbacks) > 0:
-            for cb in self.disconnectCallbacks:
-                cb()
+        for cb in self.disconnectCallbacks:
+            cb()
 
         log.msg("Slave '%s' disconnected with reason '%s'" % (self.user, reason))
 
     def notifyOnDisconnect(self, cb):
         self.disconnectCallbacks.append(cb)
+
+    def dontNotifyOnDisconnect(self, cb):
+        self.disconnectCallbacks.remove(cb)
 
     @RemoteAuth.responder
     def authSlave(self, user, password, features):
