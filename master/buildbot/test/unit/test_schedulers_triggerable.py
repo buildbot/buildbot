@@ -21,7 +21,8 @@ from buildbot.schedulers import triggerable
 from buildbot.process import properties
 from buildbot.test.util import interfaces, scheduler
 
-class TriggerableInterface(unittest.TestCase, interfaces.InterfaceTests):
+class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
+
     def test_interface(self):
         self.assertInterfacesImplemented(triggerable.Triggerable)
 

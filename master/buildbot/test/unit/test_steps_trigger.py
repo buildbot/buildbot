@@ -47,7 +47,8 @@ class FakeTriggerable(object):
             reactor.callLater(0, d.callback, (self.result, self.brids))
         return d
 
-class TriggerableInterface(unittest.TestCase, InterfaceTests):
+class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
+
     def test_interface(self):
         self.assertInterfacesImplemented(FakeTriggerable)
 
