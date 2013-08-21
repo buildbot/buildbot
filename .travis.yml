@@ -67,7 +67,7 @@ script:
   # Run additional tests only in latest environment
   - |
     if [[ $TRAVIS_PYTHON_VERSION == '2.7' && $TWISTED == latest && \
-          $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]; then
+          $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
       export IS_LATEST=true
     else
       export IS_LATEST=false
