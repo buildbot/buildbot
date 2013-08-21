@@ -21,4 +21,6 @@ script:
   - trial buildslave.test
   #- make pylint
   - make pyflakes
-  - make docs
+  # At least in one place in documentation example depends on Python > 2.5,
+  # so example block becomes unhighlighted.  Skip building docs on Python 2.5.
+  - python -V 2>&1 | grep -q ' 2.5.' || make docs
