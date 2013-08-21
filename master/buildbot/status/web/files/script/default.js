@@ -172,9 +172,11 @@ $(document).ready(function() {
 
 	// invoke selec2 plugin
 	$(".select-tools-js").select2({
-		width: getMaxChildWidth(".select-tools-js"),
+		width: getMaxChildWidth(".select-tools-js")
 	});
-	$("#commonBranch_select").select2();
+	$("#commonBranch_select").select2({
+		placeholder: "Common branches"
+	});
 	
 
 	// combobox on codebases
