@@ -27,8 +27,6 @@ from buildbot.www import resource
 from buildbot.data import base, resultspec
 from buildbot.data import exceptions
 from buildbot.util import json
-from buildbot.status.web.status_json import JsonStatusResource
-
 class BadRequest(Exception):
     pass
 
@@ -69,13 +67,6 @@ class RestRootResource(resource.Resource):
                              if v > min_vers)
         return json.dumps(dict(api_versions=api_versions))
 
-
-# API version 1 was the 0.8.x status_json.py API
-
-class V1RootResource(JsonStatusResource):
-    def __init__(self, master):
-        self.master = master
-        JsonStatusResource.__init__(self,master.status)
 
 URL_ENCODED = "application/x-www-form-urlencoded"
 JSON_ENCODED = "application/json"
@@ -478,5 +469,4 @@ class V2RootResource(resource.Resource):
         if isinstance(obj, base.Link):
             return obj.makeUrl(self.base_url, self.apiVersion)
 
-RestRootResource.addApiVersion(1, V1RootResource)
 RestRootResource.addApiVersion(2, V2RootResource)

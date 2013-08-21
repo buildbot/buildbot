@@ -42,7 +42,7 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = rest.RestRootResource(master)
         self.assertEqual(sorted(rsrc.listNames()),
                 sorted([ 'latest' ] +
-                    [ 'v%d' % v for v in range(1, self.maxVersion+1) ]))
+                    [ 'v%d' % v for v in range(2, self.maxVersion+1) ]))
 
     def test_versions_limited(self):
         master = self.make_master(url='h:/a/b/')

@@ -65,6 +65,12 @@ It is also designed, in keeping with REST principles, to be discoverable.
 As such, the details of the paths and resources are not documented here.
 Begin at the root URL, and see the :ref:`Data_API` documentation for more information.
 
+Versions
+~~~~~~~~
+
+The API described here is version 2.
+The ad-hoc API from Buildbot-0.8.x, version 1, is no longer supported.
+
 Getting
 ~~~~~~~
 
