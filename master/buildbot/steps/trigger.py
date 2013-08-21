@@ -148,20 +148,21 @@ class Trigger(LoggingBuildStep):
         dl = []
         triggered_names = []
         for sch in triggered_schedulers:
-            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set))
+            dl.append(sch.trigger(
+                waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
+                set_props=props_to_set
+            ))
             triggered_names.append(sch.name)
         self.step_status.setText(['triggered'] + triggered_names)
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
         else:
+            rclist = ()
             # do something to handle errors
             for d in dl:
                 d.addErrback(log.err,
                     '(ignored) while invoking Triggerable schedulers:')
-            rclist = None
-            self.end(SUCCESS)
-            return
 
         was_exception = was_failure = False
         brids = {}
@@ -207,4 +208,3 @@ class Trigger(LoggingBuildStep):
             dl.addCallback(add_links)
 
         self.end(result)
-        return

@@ -107,7 +107,7 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, scheduler=None, sourcestamps=[], reason='',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
             properties={}, builderNames=[], external_idstring=None):
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
@@ -116,7 +116,7 @@ class FakeUpdates(object):
             if not isinstance(ss, int) and not isinstance(ss, dict):
                 self.testcase.fail("%s (%s) is not an integer or a dictionary"
                                         % (ss, type(ss)))
-        del ss # since we use locals(), below
+            del ss # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderNames, list)
@@ -131,7 +131,7 @@ class FakeUpdates(object):
         bsid, brids = yield self.master.db.buildsets.addBuildset(
                 sourcestamps=sourcestamps, reason=reason,
                 properties=properties, builderNames=builderNames,
-                external_idstring=external_idstring)
+                waited_for=waited_for, external_idstring=external_idstring)
         defer.returnValue((bsid, brids))
 
     def maybeBuildsetComplete(self, bsid):

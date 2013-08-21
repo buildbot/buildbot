@@ -68,3 +68,17 @@ class InterfaceTests(object):
                     self.fail(msg)
             return template  # just in case it's useful
         return wrap
+
+    def assertInterfacesImplemented(self, cls):
+        "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
+        import zope.interface.interface
+        for interface in zope.interface.implementedBy(cls):
+            for attr, template_argspec in interface.namesAndDescriptions():
+                actual_argspec = getattr(cls, attr)
+                actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
+
+                if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
+                    msg = "Expected: %s; got: %s" % (
+                        template_argspec.getSignatureString(),
+                        actual_argspec.getSignatureString())
+                    self.fail(msg)

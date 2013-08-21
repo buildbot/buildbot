@@ -112,14 +112,14 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, scheduler=None, sourcestamps=[], reason=u'',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
             properties={}, builderNames=[], external_idstring=None,
             _reactor=reactor):
         submitted_at = int(_reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
                 sourcestamps=sourcestamps, reason=reason,
                 properties=properties, builderNames=builderNames,
-                external_idstring=external_idstring,
+                waited_for=waited_for, external_idstring=external_idstring,
                 submitted_at=epoch2datetime(submitted_at))
 
         # get each of the sourcestamps for this buildset (sequentially)
