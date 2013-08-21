@@ -18,6 +18,8 @@ matrix:
       env: TWISTED=13.0.0
 # command to install dependencies
 install:
+  # zope.interface dropped Python 2.5 support in 4.0.0
+  - "python -V 2>&1 | grep -q ' 2.5.' && pip install 'zope.interface<4.0.0'"
   - "[ $TWISTED != latest ] && pip install Twisted==$TWISTED"
   - pushd master; python setup.py develop; popd
   - pushd slave;  python setup.py develop; popd
