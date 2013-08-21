@@ -20,9 +20,10 @@ matrix:
   exclude:
     # Disable not supported Twisted versions on Python 2.5
     - python: "2.5"
-      env: TWISTED=12.2.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=latest
+      env: TWISTED=12.2.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
     - python: "2.5"
-      env: TWISTED=13.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=latest
+      env: TWISTED=13.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
+
   include:
     # Test different versions on SQLAlchemy
     - python: "2.7"
