@@ -864,7 +864,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
             if not result:
-                log.msg("Slave '%s' doesn not want to substantiate at this time" % (self.slavename,))
+                log.msg("Slave '%s' does not want to substantiate at this time" % (self.slavename,))
                 d = self.substantiation_deferred
                 self.substantiation_deferred = None
                 d.callback(False)

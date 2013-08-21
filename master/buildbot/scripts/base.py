@@ -43,8 +43,8 @@ def getConfigFileFromTac(basedir):
     # execute the .tac file to see if its configfile location exists
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
-        # don't mess with the global namespace
-        tacGlobals = {}
+        # don't mess with the global namespace, but set __file__ for relocatable buildmasters
+        tacGlobals = {'__file__' : tacFile}
         execfile(tacFile, tacGlobals)
         return tacGlobals.get("configfile", "master.cfg")
     else:

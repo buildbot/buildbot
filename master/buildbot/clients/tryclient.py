@@ -861,19 +861,13 @@ class Try(pb.Referenceable):
             d.addCallback(self._getBuilderNames, self._getBuilderNames2)
             return d
         if self.connect == "ssh":
-            print "Cannot get availble builders over ssh."
+            print "Cannot get available builders over ssh."
             sys.exit(1)
         raise RuntimeError(
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
     def _getBuilderNames(self, remote, output):
-        # Older schedulers won't support the properties argument, so only
-        # attempt to send them when necessary.
-        properties = self.config.get('properties', {})
-        if properties:
-            d = remote.callRemote("getAvailableBuilderNames", properties)
-        else:
-            d = remote.callRemote("getAvailableBuilderNames")
+        d = remote.callRemote("getAvailableBuilderNames")
         d.addCallback(self._getBuilderNames2)
         return d
 

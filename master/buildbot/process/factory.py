@@ -13,23 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+import warnings
+from twisted.python import deprecate, versions
+
 from buildbot import interfaces, util
 from buildbot.process.build import Build
+from buildbot.process.buildstep import BuildStep
 from buildbot.steps.source import CVS, SVN
 from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
 
-class ArgumentsInTheWrongPlace(Exception):
-    """When calling BuildFactory.addStep(stepinstance), addStep() only takes
-    one argument. You passed extra arguments to addStep(), which you probably
-    intended to pass to your BuildStep constructor instead. For example, you
-    should do::
+# deprecated, use BuildFactory.addStep
+@deprecate.deprecated(versions.Version("buildbot", 0, 8, 6))
+def s(steptype, **kwargs):
+    # convenience function for master.cfg files, to create step
+    # specification tuples
+    return interfaces.IBuildStepFactory(steptype(**kwargs))
 
-     f.addStep(ShellCommand(command=['echo','stuff'], haltOnFailure=True))
-
-    instead of::
-
-     f.addStep(ShellCommand(command=['echo','stuff']), haltOnFailure=True)
-    """
 
 class BuildFactory(util.ComparableMixin):
     """
@@ -58,7 +57,13 @@ class BuildFactory(util.ComparableMixin):
         b.setStepFactories(self.steps)
         return b
 
-    def addStep(self, step):
+    def addStep(self, step, **kwargs):
+        if kwargs or (type(step) == type(BuildStep) and issubclass(step, BuildStep)):
+            warnings.warn(
+                    "Passing a BuildStep subclass to factory.addStep is "
+                    "deprecated. Please pass a BuildStep instance instead.",
+                    DeprecationWarning, stacklevel=2)
+            step = step(**kwargs)
         self.steps.append(interfaces.IBuildStepFactory(step))
 
     def addSteps(self, steps):

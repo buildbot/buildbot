@@ -39,7 +39,6 @@ class SlaveShellCommand(base.Command):
                          logfiles=args.get('logfiles', {}),
                          usePTY=args.get('usePTY', "slave-config"),
                          logEnviron=args.get('logEnviron', True),
-                         user=args.get('user'),
                          )
         if args.get('interruptSignal'):
             c.interruptSignal = args['interruptSignal']

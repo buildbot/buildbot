@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 
-from buildbot.process.factory import BuildFactory
+from buildbot.process.factory import BuildFactory, s
 from buildbot.process.buildstep import BuildStep, _BuildStepFactory
 
 class TestBuildFactory(unittest.TestCase):
@@ -30,6 +30,41 @@ class TestBuildFactory(unittest.TestCase):
         factory = BuildFactory()
         factory.addStep(step)
         self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep)])
+
+    def test_addStep_deprecated_withArguments(self):
+        """
+        Passing keyword arguments to L{BuildFactory.addStep} is deprecated,
+        but pass the arguments to the first argument, to construct a step.
+        """
+        factory = BuildFactory()
+        factory.addStep(BuildStep, name='test')
+        self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep, name='test')])
+        warnings = self.flushWarnings([self.test_addStep_deprecated_withArguments])
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]['category'], DeprecationWarning)
+
+    def test_addStep_deprecated(self):
+        """
+        Passing keyword arguments to L{BuildFactory.addStep} is deprecated,
+        but pass the arguments to the first argument, to construct a step.
+        """
+        factory = BuildFactory()
+        factory.addStep(BuildStep)
+        self.assertEqual(factory.steps, [_BuildStepFactory(BuildStep)])
+        warnings = self.flushWarnings([self.test_addStep_deprecated])
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]['category'], DeprecationWarning)
+
+    def test_s(self):
+        """
+        L{s} is deprecated, but pass keyword arguments to the first argument,
+        to construct a step.
+        """
+        stepFactory = s(BuildStep, name='test')
+        self.assertEqual(stepFactory, _BuildStepFactory(BuildStep, name='test'))
+        warnings = self.flushWarnings([self.test_s])
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]['category'], DeprecationWarning)
 
     def test_addStep_notAStep(self):
         factory = BuildFactory()
