@@ -11,8 +11,14 @@
 {% block content %}
 
 <div id="formWrapper">
-<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
-    <input value="Show builders" class="grey-btn fl-right m-bottom15 var-2" type="submit" />
+<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
+  
+    <input value="Show" class="grey-btn fl-right m-bottom10 var-2" type="submit" />
+    <div class="fl-right">
+      <select autocomplete="off" id="commonBranch_select" name='common_branches' class="select-tools-common">
+        <option disabled selected>Common branches</option>
+      </select>
+    </div>
 
 <table class="table-2 no-bg">
    <thead>
@@ -34,7 +40,7 @@
     </td>
     <td class="txt-align-right">
 
-      <select name='{{cbkey}}_branch' class="select-tools select-tools-js var-2" >
+      <select name='{{cbkey}}_branch' class="select-tools-js" >
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
             <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
@@ -44,7 +50,6 @@
             {{ b }}
             </option>
           {% endfor %}
-          
       </select>
     </td>
   </tr>
