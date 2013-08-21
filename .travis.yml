@@ -3,8 +3,22 @@ python:
   - "2.5"
   - "2.6"
   - "2.7"
+env:
+  - TWISTED=9.0.0
+  - TWISTED=10.2.0
+  - TWISTED=11.1.0
+  - TWISTED=12.2.0
+  - TWISTED=13.0.0
+  - TWISTED=latest
+matrix:
+  exclude:
+    - python: "2.5"
+      env: TWISTED=12.2.0
+    - python: "2.5"
+      env: TWISTED=13.0.0
 # command to install dependencies
 install:
+  - [ $TWISTED != latest ] && pip install Twisted==$TWISTED
   - pushd master; python setup.py develop; popd
   - pushd slave;  python setup.py develop; popd
   # Disable pylint. Latest version doesn't work on Python 2.5 
