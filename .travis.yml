@@ -1,4 +1,8 @@
+# Travis CI configuration file
+# http://about.travis-ci.org/docs/
+
 language: python
+
 python:
   - "2.5"
   - "2.6"
