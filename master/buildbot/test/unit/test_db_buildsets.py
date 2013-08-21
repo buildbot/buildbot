@@ -499,21 +499,6 @@ class RealTests(Tests):
         d.addCallback(check)
         return d
 
-    @defer.inlineCallbacks
-    def test_addBuildset_bad_waited_for(self):
-        try:
-            result = yield self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                properties={}, builderNames=['bldr'], external_idstring='extid',
-                waited_for='wat', _reactor=self.clock)
-        except Exception, actual_exception:
-            pass
-        else:
-            actual_exception = None
-
-        self.assertIdentical(AssertionError, type(actual_exception))
-        self.assertRaises(NameError, lambda: result)
-        self.assertEqual(("waited_for should be boolean: 'wat'",), actual_exception.args)
-
 
 
 class TestFakeDB(unittest.TestCase, Tests):
@@ -523,6 +508,13 @@ class TestFakeDB(unittest.TestCase, Tests):
         self.db = self.master.db
         self.insertTestData = self.db.insertTestData
         return self.setUpTests()
+
+    def test_addBuildset_bad_waited_for(self):
+        # only the fake db asserts on the type of waited_for
+        d = self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
+                properties={}, builderNames=['bldr'], external_idstring='extid',
+                waited_for='wat', _reactor=self.clock)
+        self.assertFailure(d, AssertionError)
 
 
 class TestRealDB(unittest.TestCase,
