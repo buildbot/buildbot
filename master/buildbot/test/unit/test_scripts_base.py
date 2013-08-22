@@ -18,6 +18,7 @@ from __future__ import with_statement
 import os
 import string
 import cStringIO
+import textwrap
 from twisted.trial import unittest
 from buildbot.scripts import base
 from buildbot.test.util import dirs, misc
@@ -65,7 +66,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basedir')
         return self.setUpDirs('basedir')
 
-    def _createBuildbotTac(self, configfile=None):
+    def _createBuildbotTac(self, contents=None):
         """
         Create a C{buildbot.tac} that points to a given C{configfile}
         and create that file.
@@ -73,12 +74,12 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         @param configfile: Config file to point at and create.
         @type configfile: L{str}
         """
+        if contents is None:
+            contents = '#dummy'
         tacfile = os.path.join(self.basedir, "buildbot.tac")
         with open(tacfile, "wt") as f:
-            if configfile is not None:
-                f.write("configfile = %r" % configfile)
-            else:
-                f.write("#dummy")
+            f.write(contents)
+        return tacfile
 
 
     def test_getConfigFileFromTac(self):
@@ -87,7 +88,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         containing a C{buildbot.tac}, it reads the location
         of the config file from there.
         """
-        self._createBuildbotTac("other.cfg")
+        self._createBuildbotTac("configfile='other.cfg'")
         foundConfigFile = base.getConfigFileFromTac(
                 basedir=self.basedir)
         self.assertEqual(foundConfigFile, "other.cfg")
@@ -113,6 +114,20 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
         foundConfigFile = base.getConfigFileFromTac(
                 basedir=self.basedir)
         self.assertEqual(foundConfigFile, 'master.cfg')
+
+
+    def test_getConfigFileFromTac_usingFile(self):
+        """
+        Wehn L{getConfigFileFromTac} is passed a C{basedir}
+        containing a C{buildbot.tac} which references C{__file__},
+        that reference points to C{buildbot.tac}.
+        """
+        self._createBuildbotTac(textwrap.dedent("""
+            from twisted.python.util import sibpath
+            configfile = sibpath(__file__, "relative.cfg")
+            """))
+        foundConfigFile = base.getConfigFileFromTac(basedir=self.basedir)
+        self.assertEqual(foundConfigFile, os.path.join(self.basedir, "relative.cfg"))
 
 
 
