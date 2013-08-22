@@ -175,7 +175,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     ## starting bulids
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-            waited_for, properties=None, builderNames=None):
+            waited_for=False, properties=None, builderNames=None):
 
         if sourcestamps is None:
             sourcestamps = []
@@ -208,8 +208,9 @@ class BaseScheduler(ClusteredService, StateMixin):
         return self.codebases[codebase]
 
     @defer.inlineCallbacks
-    def addBuildsetForChanges(self, waited_for, reason='', external_idstring=None,
-            changeids=[], builderNames=None, properties=None):
+    def addBuildsetForChanges(self, waited_for=False, reason='',
+            external_idstring=None, changeids=[], builderNames=None,
+            properties=None):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
@@ -246,8 +247,9 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         defer.returnValue((bsid,brids))
 
-    def addBuildsetForSourceStamps(self, waited_for, sourcestamps=[], reason='',
-            external_idstring=None, properties=None, builderNames=None):
+    def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
+            reason='', external_idstring=None, properties=None,
+            builderNames=None):
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)

@@ -126,6 +126,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a'],
+                waited_for=False,
                 properties={
                     u'owner': ('user', u'Force Build Form'),
                     u'p1': ('e', u'Force Build Form'),
@@ -152,6 +153,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a', 'b'],
+                waited_for=False,
                 properties={
                     u'owner': ('user', u'Force Build Form'),
                     u'reason': ('because', u'Force Build Form'),
@@ -175,6 +177,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a', 'b'],
+                waited_for=False,
                 properties={
                     u'owner': ('user', u'Force Build Form'),
                     u'reason': ('because', u'Force Build Form'),
@@ -239,6 +242,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a'],
+                waited_for=False,
                 properties=expProperties,
                 reason=u"A build was forced by 'user': because",
                 sourcestamps=[
@@ -305,6 +309,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a'],
+                waited_for=False,
                 properties=expect_props,
                 reason=u"A build was forced by 'user': because",
                 sourcestamps=[

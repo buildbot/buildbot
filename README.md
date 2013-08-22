@@ -146,6 +146,10 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Steps' URLs should be stored as JSON objects giving both a title and a URL. :runner:
 * Validate messages using the same system as used to validate resource types
 
+## Testing ##
+
+The BaseScheduler's addBuildsetForXxx methods should have their signatures checked against the corresponding fakes.
+
 ## Status Rewrites ##
 
 The following will need to be rewritten:

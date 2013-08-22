@@ -49,7 +49,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 properties=properties,
                 reason=u"The NightlyTriggerable scheduler named 'test' "
                        u"triggered this build",
-                sourcestamps=sourcestamps)),
+                sourcestamps=sourcestamps,
+                waited_for=False)),
             ])
         self.addBuildsetCalls = []
 
