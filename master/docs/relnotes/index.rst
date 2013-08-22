@@ -1,12 +1,13 @@
-Release Notes for Buildbot |version|
-====================================
+Release Notes for Buildbot v0.8.8
+=================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot |version|.
+The following are the release notes for Buildbot v0.8.8
+Buildbot v0.8.8 was released on August 22, 2013
 
 Master
 ------
