@@ -87,9 +87,9 @@ class StatusPush(StatusReceiverMultiService):
             # Update the index so we know if the next push succeed or not, don't
             # update the value when the queue is empty.
             if not self.queue.nbItems():
-                return
+                return defer.succeed(None)
             self.lastIndex = self.queue.getIndex()
-            return serverPushCb(self)
+            return defer.maybeDeferred(serverPushCb, self)
         self.serverPushCb = hookPushCb
         self.blackList = blackList
 
@@ -124,13 +124,16 @@ class StatusPush(StatusReceiverMultiService):
         """Returns if the "virtual pointer" in the queue advanced."""
         return self.lastIndex <= self.queue.getIndex()
 
+    @defer.inlineCallbacks
     def queueNextServerPush(self):
         """Queue the next push or call it immediately.
 
         Called to signal new items are available to be sent or on shutdown.
         A timer should be queued to trigger a network request or the callback
         should be called immediately. If a status push is already queued, ignore
-        the current call."""
+        the current call.
+
+        Returns a Deferred"""
         # Determine the delay.
         if self.wasLastPushSuccessful():
             if self.stopped:
@@ -166,15 +169,14 @@ class StatusPush(StatusReceiverMultiService):
         # Do the queue/direct call.
         if delay:
             # Call in delay seconds.
-            self.task = reactor.callLater(delay, self.serverPushCb)
+            self.task = reactor.callLater(delay,
+                    lambda : self.serverPushCb().addErrback(
+                                    log.err, 'in serverPushCb'))
         elif self.stopped:
-            if not self.queue.nbItems():
-                return
-            # Call right now, we're shutting down.
-            @defer.inlineCallbacks
-            def BlockForEverythingBeingSent():
+            if self.queue.nbItems():
+                # Call right now, we're shutting down.
                 yield self.serverPushCb()
-            return BlockForEverythingBeingSent()
+            return
         else:
             # delay should never be 0.  That can cause Buildbot to spin tightly
             # trying to push events that may not be received well by a status
@@ -213,6 +215,7 @@ class StatusPush(StatusReceiverMultiService):
             w.unsubscribe(self)
         return StatusReceiverMultiService.disownServiceParent(self)
 
+    @defer.inlineCallbacks
     def push(self, event, **objs):
         """Push a new event.
 
@@ -241,94 +244,115 @@ class StatusPush(StatusReceiverMultiService):
         self.queue.pushItem(packet)
         if self.task is None or not self.task.active():
             # No task queued since it was probably idle, let's queue a task.
-            return self.queueNextServerPush()
+            yield self.queueNextServerPush()
 
     #### Events
 
     def initialPush(self):
         # Push everything we want to push from the initial configuration.
-        self.push('start', status=self.status)
+        d = self.push('start', status=self.status)
+        d.addErrback(log.err, 'while pushing status message')
 
     def finalPush(self):
-        self.push('shutdown', status=self.status)
+        d = self.push('shutdown', status=self.status)
+        d.addErrback(log.err, 'while pushing status message')
 
     def requestSubmitted(self, request):
-        self.push('requestSubmitted', request=request)
+        d = self.push('requestSubmitted', request=request)
+        d.addErrback(log.err, 'while pushing status message')
 
     def requestCancelled(self, builder, request):
-        self.push('requestCancelled', builder=builder, request=request)
+        d = self.push('requestCancelled', builder=builder, request=request)
+        d.addErrback(log.err, 'while pushing status message')
 
     def buildsetSubmitted(self, buildset):
-        self.push('buildsetSubmitted', buildset=buildset)
+        d = self.push('buildsetSubmitted', buildset=buildset)
+        d.addErrback(log.err, 'while pushing status message')
 
     def builderAdded(self, builderName, builder):
-        self.push('builderAdded', builderName=builderName, builder=builder)
+        d = self.push('builderAdded', builderName=builderName, builder=builder)
+        d.addErrback(log.err, 'while pushing status message')
         self.watched.append(builder)
         return self
 
     def builderChangedState(self, builderName, state):
-        self.push('builderChangedState', builderName=builderName, state=state)
+        d = self.push('builderChangedState', builderName=builderName, state=state)
+        d.addErrback(log.err, 'while pushing status message')
 
     def buildStarted(self, builderName, build):
-        self.push('buildStarted', build=build)
+        d = self.push('buildStarted', build=build)
+        d.addErrback(log.err, 'while pushing status message')
         return self
 
     def buildETAUpdate(self, build, ETA):
-        self.push('buildETAUpdate', build=build, ETA=ETA)
+        d = self.push('buildETAUpdate', build=build, ETA=ETA)
+        d.addErrback(log.err, 'while pushing status message')
 
     def stepStarted(self, build, step):
-        self.push('stepStarted',
+        d = self.push('stepStarted',
                   properties=build.getProperties().asList(),
                   step=step)
+        d.addErrback(log.err, 'while pushing status message')
 
     def stepTextChanged(self, build, step, text):
-        self.push('stepTextChanged',
+        d = self.push('stepTextChanged',
                   properties=build.getProperties().asList(),
                   step=step,
                   text=text)
+        d.addErrback(log.err, 'while pushing status message')
 
     def stepText2Changed(self, build, step, text2):
-        self.push('stepText2Changed',
+        d = self.push('stepText2Changed',
                   properties=build.getProperties().asList(),
                   step=step,
                   text2=text2)
+        d.addErrback(log.err, 'while pushing status message')
 
     def stepETAUpdate(self, build, step, ETA, expectations):
-        self.push('stepETAUpdate',
+        d = self.push('stepETAUpdate',
                   properties=build.getProperties().asList(),
                   step=step,
                   ETA=ETA,
                   expectations=expectations)
+        d.addErrback(log.err, 'while pushing status message')
 
     def logStarted(self, build, step, log):
-        self.push('logStarted',
+        d = self.push('logStarted',
                   properties=build.getProperties().asList(),
                   step=step)
+        d.addErrback(log.err, 'while pushing status message')
 
     def logFinished(self, build, step, log):
-        self.push('logFinished',
+        d = self.push('logFinished',
                   properties=build.getProperties().asList(),
                   step=step)
+        d.addErrback(log.err, 'while pushing status message')
 
     def stepFinished(self, build, step, results):
-        self.push('stepFinished',
+        d = self.push('stepFinished',
                   properties=build.getProperties().asList(),
                   step=step)
+        d.addErrback(log.err, 'while pushing status message')
 
     def buildFinished(self, builderName, build, results):
-        self.push('buildFinished', build=build)
+        d = self.push('buildFinished', build=build)
+        d.addErrback(log.err, 'while pushing status message')
 
     def builderRemoved(self, builderName):
-        self.push('buildedRemoved', builderName=builderName)
+        d = self.push('buildedRemoved', builderName=builderName)
+        d.addErrback(log.err, 'while pushing status message')
 
     def changeAdded(self, change):
-        self.push('changeAdded', change=change)
+        d = self.push('changeAdded', change=change)
+        d.addErrback(log.err, 'while pushing status message')
 
     def slaveConnected(self, slavename):
-        self.push('slaveConnected', slave=self.status.getSlave(slavename))
+        d = self.push('slaveConnected', slave=self.status.getSlave(slavename))
+        d.addErrback(log.err, 'while pushing status message')
 
     def slaveDisconnected(self, slavename):
-        self.push('slaveDisconnected', slavename=slavename)
+        d = self.push('slaveDisconnected', slavename=slavename)
+        d.addErrback(log.err, 'while pushing status message')
 
 
 class HttpStatusPush(StatusPush):
