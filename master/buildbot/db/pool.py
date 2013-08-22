@@ -95,8 +95,9 @@ class DBThreadPool(threadpool.ThreadPool):
         # messages about versions and other warnings
         log_msg = log.msg
         if verbose:
-            def log_msg(m):
+            def _log_msg(m):
                 print m
+            log_msg = _log_msg
 
         pool_size = 5
 
