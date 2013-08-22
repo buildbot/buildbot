@@ -17,7 +17,7 @@ import os
 import mock
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.db import connector
+from buildbot.db import connector, exceptions
 from buildbot import config
 from buildbot.test.util import db
 from buildbot.test.fake import fakemaster
@@ -80,7 +80,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_setup_check_version_bad(self):
         d = self.startService(check_version=True)
-        return self.assertFailure(d, connector.DatabaseNotReadyError)
+        return self.assertFailure(d, exceptions.DatabaseNotReadyError)
 
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda : defer.succeed(True)

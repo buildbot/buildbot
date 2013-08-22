@@ -268,7 +268,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['description'] = b.getDescription()
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
-        connected_slaves = [s for s in slaves if s.isConnected()]
+        connected_buildslaves = [s for s in slaves if s.isConnected()]
 
         cxt['current'] = [
             self.builder(x, req) for x in b.getCurrentBuilds()
@@ -288,7 +288,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if not prop_match(properties):
                 continue
 
-            if source.changes:
+            if source and source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                      'who' : c.who,
@@ -305,7 +305,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties' : properties,
                 })
 
-        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
+        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds',
+                                                    [self.numbuilds])[0])
         maxsearch = int(req.args.get('maxsearch', [200])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(
@@ -315,7 +316,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
-        connected_slaves = 0
+        connected_buildslaves = 0
         for slave in slaves:
             s = {}
             sl.append(s)
@@ -325,8 +326,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             s['paused'] = slave.isPaused()
             s['admin'] = slave.getAdmin() or u''
             if c:
-                connected_slaves += 1
-        cxt['connected_slaves'] = connected_slaves
+                connected_buildslaves += 1
+        cxt['connected_buildslaves'] = connected_buildslaves
 
         cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b)

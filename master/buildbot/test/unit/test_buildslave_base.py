@@ -27,7 +27,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+                                                testcase=self)
         self.botmaster = FakeBotMaster(self.master)
 
         self.clock = task.Clock()
@@ -248,10 +249,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getAccessURI(), None)
         self.assertEqual(slave.slave_status.getVersion(), None)
 
+        # check that a new slave row was added for this buildslave
+        bs = yield self.master.db.buildslaves.getBuildslave(name='bot')
+        self.assertEqual(bs['name'], 'bot')
+
     @defer.inlineCallbacks
     def test_startService_getSlaveInfo_fromDb(self):
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={ 
+            fakedb.Buildslave(id=9292, name='bot', info={
                 'admin': 'TheAdmin',
                 'host': 'TheHost',
                 'access_uri': 'TheURI',
@@ -262,6 +267,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         yield slave.startService()
 
+        self.assertEqual(slave.buildslaveid, 9292)
         self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
         self.assertEqual(slave.slave_status.getHost(),    'TheHost')
         self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
@@ -416,8 +422,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:
-        buildslave = yield self.master.db.buildslaves.getBuildslaveByName("bot")
-        
+        buildslave = yield self.master.db.buildslaves.getBuildslave(name="bot")
+
         self.assertEqual(buildslave['slaveinfo']['admin'], 'TheAdmin')
         self.assertEqual(buildslave['slaveinfo']['host'], 'TheHost')
         self.assertEqual(buildslave['slaveinfo']['access_uri'], 'TheURI')

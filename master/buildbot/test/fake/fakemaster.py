@@ -15,7 +15,7 @@
 
 import weakref
 from twisted.internet import defer
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakedb, fakemq, fakedata
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
@@ -48,6 +48,12 @@ class FakeStatus(object):
 
     def builderAdded(self, name, basedir, category=None, description=None):
         return FakeBuilderStatus()
+
+    def getBuilderNames(self):
+        return []
+
+    def getSlaveNames(self):
+        return []
 
     def slaveConnected(self, name):
         pass
@@ -95,6 +101,8 @@ class FakeMaster(object):
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
+        self.name = 'fake:/master'
+        self.masterid = master_id
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
@@ -106,10 +114,19 @@ class FakeMaster(object):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+
 # Leave this alias, in case we want to add more behavior later
-def make_master(wantDb=False, testcase=None, **kwargs):
+def make_master(wantMq=False, wantDb=False, wantData=False,
+        testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
+    if wantData:
+        wantMq = wantDb = True
+    if wantMq:
+        assert testcase is not None, "need testcase for wantMq"
+        master.mq = fakemq.FakeMQConnector(master, testcase)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase)
+        master.db = fakedb.FakeDBConnector(master, testcase)
+    if wantData:
+        master.data = fakedata.FakeDataConnector(master, testcase)
     return master

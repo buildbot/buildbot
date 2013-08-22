@@ -52,6 +52,15 @@ check_long_lines() {
     $long_lines
 }
 
+
+check_yield_defer_returnValue() {
+    local yields=false
+    if git diff "$REVRANGE" | grep '+.*yield defer.returnValue'; then
+        yields=true
+    fi
+    $yields
+}
+
 check_relnotes() {
     if git diff --exit-code "$REVRANGE" master/docs/relnotes/index.rst >/dev/null 2>&1; then
         return 1
@@ -81,6 +90,7 @@ run_tests || not_ok "tests failed"
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
 check_long_lines && not_ok "$REVRANGE adds long lines"
+check_yield_defer_returnValue && not_ok "$REVRANGE yields defer.returnValue"
 
 status "checking for release notes"
 check_relnotes || not_ok "$REVRANGE does not add release notes"

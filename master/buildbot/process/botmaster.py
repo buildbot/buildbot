@@ -63,7 +63,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.lastSlavePortnum = None
 
         # subscription to new build requests
-        self.buildrequest_sub = None
+        self.buildrequest_consumer = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
@@ -141,10 +141,15 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self.builders.values()
 
     def startService(self):
-        def buildRequestAdded(notif):
-            self.maybeStartBuildsForBuilder(notif['buildername'])
-        self.buildrequest_sub = \
-            self.master.subscribeToBuildRequests(buildRequestAdded)
+        def buildRequestAdded(key, msg):
+            self.maybeStartBuildsForBuilder(msg['buildername'])
+        # consume both 'new' and 'unclaimed' build requests
+        self.buildrequest_consumer_new = self.master.mq.startConsuming(
+                buildRequestAdded,
+                ('buildrequest', None, None, None, 'new'))
+        self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
+                buildRequestAdded,
+                ('buildrequest', None, None, None, 'unclaimed'))
         service.MultiService.startService(self)
 
     @defer.inlineCallbacks
@@ -264,6 +269,10 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.builderNames = self.builders.keys()
 
+        yield self.master.data.updates.updateBuilderList(
+                self.master.masterid,
+                [ util.ascii2unicode(n) for n in self.builderNames ])
+
         metrics.MetricCountEvent.log("num_builders",
                 len(self.builders), absolute=True)
 
@@ -271,9 +280,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def stopService(self):
-        if self.buildrequest_sub:
-            self.buildrequest_sub.unsubscribe()
-            self.buildrequest_sub = None
+        if self.buildrequest_consumer_new:
+            self.buildrequest_consumer_new.stopConsuming()
+            self.buildrequest_consumer_new = None
+        if self.buildrequest_consumer_unclaimed:
+            self.buildrequest_consumer_unclaimed.stopConsuming()
+            self.buildrequest_consumer_unclaimed = None
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
@@ -310,14 +322,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         self.brd.maybeStartBuildsOn([buildername])
 
-    def maybeStartBuildsForSlave(self, slave_name):
+    def maybeStartBuildsForSlave(self, buildslave_name):
         """
         Call this when something suggests that a particular slave may now be
         available to start a build.
 
-        @param slave_name: the name of the slave
+        @param buildslave_name: the name of the slave
         """
-        builders = self.getBuildersForSlave(slave_name)
+        builders = self.getBuildersForSlave(buildslave_name)
         self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
     def maybeStartBuildsForAllBuilders(self):
