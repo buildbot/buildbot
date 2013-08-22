@@ -214,7 +214,7 @@ class Repo(Source):
         return d
 
     def repoDir(self):
-        return self.build.pathmodule.join(self.workdir, ".repo")
+        return self.build.path_module.join(self.workdir, ".repo")
 
     def sourcedirIsUpdateable(self):
         return self.pathExists(self.repoDir())
@@ -274,17 +274,17 @@ class Repo(Source):
 
         if self.manifestOverrideUrl:
             self.stdio_log.addHeader("overriding manifest with %s\n" % (self.manifestOverrideUrl))
-            local_file = yield self.pathExists(self.build.pathmodule.join(self.workdir,
+            local_file = yield self.pathExists(self.build.path_module.join(self.workdir,
                                                                           self.manifestOverrideUrl))
             if local_file:
                 yield self._Cmd(["cp", "-f", self.manifestOverrideUrl, "manifest_override.xml"])
             else:
                 yield self._Cmd(["wget", self.manifestOverrideUrl, "-O", "manifest_override.xml"])
             yield self._Cmd(["ln", "-sf", "../manifest_override.xml", "manifest.xml"],
-                            workdir=self.build.pathmodule.join(self.workdir, ".repo"))
+                            workdir=self.build.path_module.join(self.workdir, ".repo"))
 
         for command in self.manifestDownloads:
-            yield self._Cmd(command, workdir=self.build.pathmodule.join(self.workdir, ".repo", "manifests"))
+            yield self._Cmd(command, workdir=self.build.path_module.join(self.workdir, ".repo", "manifests"))
 
         command = ['sync']
         if self.jobs:
