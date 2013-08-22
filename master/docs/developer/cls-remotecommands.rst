@@ -152,9 +152,8 @@ RemoteCommand
         ``logfileName`` must match the name given by the slave in any ``log``
         updates.
 
-    .. py:method:: useLogDelayed(log, logfileName, activateCallback, closeWhenFinished=False)
+    .. py:method:: useLogDelayed(logfileName, activateCallback, closeWhenFinished=False)
 
-        :param log: the :class:`~buildbot.status.logfile.LogFile` instance to add to.
         :param logfileName: the name of the logfile, as given to the slave.
             This is ``stdio`` for standard streams.
         :param activateCallback: callback for when the log is added; see below
