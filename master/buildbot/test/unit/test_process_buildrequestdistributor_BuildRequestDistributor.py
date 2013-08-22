@@ -73,6 +73,7 @@ class TestBRDBase(unittest.TestCase):
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=11),
         ]
+        self.startedBuilds = []
 
     def tearDown(self):
         if self.brd.running:
@@ -96,16 +97,24 @@ class TestBRDBase(unittest.TestCase):
             for bldr in self.builders.values():
                 bldr.slaves.append(sb)
 
-    def createBuilder(self, name):
+    def createBuilder(self, name, startedCallback=None):
+        if startedCallback is None:
+            def startedCallback(slave, builds):
+                self.startedBuilds.append((slave.name, builds))
+
         bldr = mock.Mock(name=name)
         bldr.name = name
         self.botmaster.builders[name] = bldr
         self.builders[name] = bldr
 
+        orig_maybeStartBuild = bldr.maybeStartBuild
         def maybeStartBuild(slave, builds):
-            self.startedBuilds.append((slave.name, builds))
             d = defer.Deferred()
-            reactor.callLater(0, d.callback, True)
+            reactor.callLater(0, d.callback, None)
+            @d.addCallback
+            def started(_):
+                startedCallback(slave, builds)
+                return orig_maybeStartBuild(slave, builds)
             return d
         bldr.maybeStartBuild = maybeStartBuild
         bldr.canStartWithSlavebuilder = lambda _: True
@@ -123,11 +132,9 @@ class TestBRDBase(unittest.TestCase):
         
         return bldr
 
-    def addBuilders(self, names):
-        self.startedBuilds = []
-
+    def addBuilders(self, names, startedCallback=None):
         for name in names:
-            self.createBuilder(name)
+            self.createBuilder(name, startedCallback=startedCallback)
 
 
 
@@ -322,42 +329,81 @@ class Test(TestBRDBase):
         d.addCallback(check)
         return d
 
-    def test_stopService(self):
-        # check that stopService waits for a builder run to complete, but does not
-        # allow a subsequent run to start
-        self.useMock_maybeStartBuildsOnBuilder()
-        self.addBuilders(['A', 'B'])
+
+class StopServiceTest(TestBRDBase):
+
+    def stopBRD(self):
+		if self.brd.running:
+			stop_d = self.brd.stopService()
+			stop_d.addCallback(lambda _ : self.events.append('(brd stopped)'))
+
+
+    @defer.inlineCallbacks
+    def do_test_stopService(self, MSBOBcallback, expected_events, waited_for=False):
+        self.events = []
+        def startedCallback(slave, builds):
+            slave = slave.name
+            builds = ', '.join(b.buildername.encode('ascii') for b in builds)
+            event = '%s started on %s' % (builds, slave)
+            self.events.append(event)
+
+        self.addBuilders(['A', 'B'], startedCallback=startedCallback)
+        rows = self.make_slaves(1)
+        # Also make a request for the "B" builder.
+        rows = rows + [
+            fakedb.SourceStamp(id=22),
+            fakedb.Buildset(id=202, reason='because22'),
+            fakedb.BuildsetSourceStamp(buildsetid=202, sourcestampid=22),
+        ]
+        if waited_for:
+            rows.append(fakedb.BuildRequest(id=22, buildsetid=202, buildername="B", waited_for=1))
+        else:
+            rows.append(fakedb.BuildRequest(id=22, buildsetid=202, buildername="B"))
+
+        yield self.master.db.insertTestData(rows)
 
         oldMSBOB = self.brd._maybeStartBuildsOnBuilder
         def maybeStartBuildsOnBuilder(bldr):
-            d = oldMSBOB(bldr)
-
-            stop_d = self.brd.stopService()
-            stop_d.addCallback(lambda _ :
-                    self.maybeStartBuildsOnBuilder_calls.append('(stopped)'))
-
-            d.addCallback(lambda _ :
-                    self.maybeStartBuildsOnBuilder_calls.append('finished'))
-            return d
+            self.events.append('maybe start %s' % bldr.name)
+            MSBOBcallback()
+            return oldMSBOB(bldr)
         self.brd._maybeStartBuildsOnBuilder = maybeStartBuildsOnBuilder
 
-        # start both builds; A should start and complete *before* the service stops,
-        # and B should not run.
+        # start both builds; A and B should both start and complete.
         self.brd.maybeStartBuildsOn(['A', 'B'])
 
         def check(_):
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls,
-                    ['A', 'finished', '(stopped)'])
+            self.assertEqual(self.events, expected_events)
         self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.quiet_deferred
 
+    def test_trivial(self):
+        return self.do_test_stopService(
+            lambda:None,
+            ['maybe start A', 'A started on test-slave0', 'maybe start B', 'B started on test-slave0']
+        )
+
+    def test_stopService(self):
+        # check that stopService waits for a builder run to complete, but does not
+        # allow a subsequent run to start
+        return self.do_test_stopService(
+            self.stopBRD,
+            ['maybe start A', 'A started on test-slave0', '(brd stopped)', 'maybe start B'],
+        )
+
+    def test_stopService_waitedFor(self):
+        # check that stopService waits for a builder run to complete, but does not
+        # allow a subsequent run to start
+        return self.do_test_stopService(
+            self.stopBRD,
+            ['maybe start A', 'A started on test-slave0', '(brd stopped)', 'maybe start B', 'B started on test-slave0'],
+            waited_for=True,
+        )
 
 
 class TestMaybeStartBuilds(TestBRDBase):
     def setUp(self):
         TestBRDBase.setUp(self)
-
-        self.startedBuilds = []
 
         self.bldr = self.createBuilder('A')
         self.builders['A'] = self.bldr

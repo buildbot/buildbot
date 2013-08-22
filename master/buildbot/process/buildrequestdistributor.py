@@ -467,7 +467,7 @@ class BuildRequestDistributor(service.Service):
             yield self.pending_builders_lock.acquire()
 
             # bail out if we shouldn't keep looping
-            if not self.running or not self._pending_builders:
+            if not self._pending_builders:
                 self.pending_builders_lock.release()
                 self.activity_lock.release()
                 break
@@ -501,6 +501,12 @@ class BuildRequestDistributor(service.Service):
         while 1:
             slave, breqs = yield bc.chooseNextBuild()
             if not slave or not breqs:
+                break
+
+            if not self.running:
+                breqs = [b for b in breqs if b.waitedFor]
+
+            if not breqs:
                 break
 
             # claim brid's
