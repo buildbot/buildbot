@@ -20,6 +20,7 @@ from buildbot.status.web.builder import BuildersResource
 from buildbot import util
 from twisted.internet import defer
 import types
+import urllib
 
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
@@ -34,6 +35,33 @@ class ProjectsResource(HtmlResource):
             
             cxt['projects_codebases'] = status.getProjects() 
 
+        project_shortcut = {}
+        for key, value in projects.iteritems():
+            project_path= urllib.quote(key, safe='') + "/builders"
+
+            for cb in value.codebases:
+                if '?' not in project_path:
+                    project_path += '?'
+                for cbkey,cbvalue in cb.iteritems():
+                    if '=' in project_path:
+                        project_path += "&"
+
+                    project_path += urllib.quote(cbkey, safe='')
+
+                    if 'defaultbranch' in cbvalue.keys():
+                        branch =  cbvalue['defaultbranch']
+                    else:
+                        branch = cbvalue['branch']
+
+                    if not isinstance(cbvalue['branch'], types.ListType):
+                        project_path += "=" + urllib.quote(branch, safe='')
+                    else:
+                        if len(branch) > 0:
+                            project_path += "=" + branch[0]
+
+            project_shortcut[key] = project_path
+
+        cxt['project_shortcut'] = project_shortcut
         template = req.site.buildbot_service.templates.get_template("projects.html")
         template.autoescape = True
         return template.render(**cxt)
