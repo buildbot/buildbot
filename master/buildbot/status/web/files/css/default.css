@@ -4078,7 +4078,7 @@ li {
   font-family: katana_icons;
   font-size: 15px;
   padding: 1px 6px 1px 7px;
-  text-shadow: 0 1px 1px white;
+  text-shadow: 1px 1px 0 white;
   -webkit-box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.64);
   -moz-box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.64);
   box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.64);

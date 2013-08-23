@@ -175,7 +175,8 @@ $(document).ready(function() {
 		width: getMaxChildWidth(".select-tools-js")
 	});
 	$("#commonBranch_select").select2({
-		width: $("#commonBranch_select").width() + 40
+		placeholder: "Common branches",
+		width: $("#commonBranch_select").width() + 140
 	});
 	
 
@@ -187,8 +188,8 @@ $(document).ready(function() {
 		var seen = {};
 		
 		$(selector).each(function() {
-		    var txt = $(this).text();
-
+		    var txt = $(this).val();
+		    console.log(txt)
 		    if (seen[txt]) {
 		        	$(this).clone().removeAttr("selected").appendTo("#commonBranch_select");
 		        }
@@ -263,7 +264,9 @@ $(document).ready(function() {
 			$("#formWrapper .select-tools-js").select2({
 				width:"150px"
 			});
-			$("#formWrapper #commonBranch_select").select2();
+			$("#formWrapper #commonBranch_select").select2({
+				placeholder: "Common branches"
+			});
 
 			comboBox('#formWrapper .select-tools-js option');
 

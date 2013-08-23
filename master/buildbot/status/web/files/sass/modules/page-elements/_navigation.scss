@@ -73,7 +73,7 @@
 				font-family: katana_icons;
 				font-size: 15px;
 				padding: 1px 6px 1px 7px;
-				@include text-shadow(0 1px 1px white);		
+				@include text-shadow(1px 1px 0 white);		
 				@include box-shadow(1px 1px 0 rgba(255, 255, 255, 0.64));
 			}
 			&:hover:after {
