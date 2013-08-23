@@ -201,19 +201,17 @@ $(document).ready(function() {
 		
 		$('#commonBranch_select').change(function(){
 		var commonVal = $(this);
-		$(selector).prop('selected', false);
+		
 		$(selector).each(function() {
 			
 			if ($(this).val() === $(commonVal).val() ) {					
-				$(this).prop('selected', true);
-
-			}
-		})
-		$(selector).parent().hide();
-		$(selector).parent().show();
-		
-		$(selector).trigger("change");
-	});
+					$(this).parent().children('option').prop('selected', false);
+					$(this).prop('selected', true);
+				}
+			});
+			
+			$(selector).trigger("change");
+		});
 
 	}
 	comboBox('.select-tools-js option');
