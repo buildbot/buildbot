@@ -336,18 +336,18 @@ $(document).ready(function() {
 
 	});
 	
-		//console.log(optionTexts, optionTexts2)
-		/*
-		var optionTexts3 = [];
-		$('.select-tools-js option').each(function(){
-			console.log($(this).val().length)	
-			if ($(this).val() == $(this).val()) {
-				
-				optionTexts3.push($(this).val())
-			}
-			console.log(optionTexts3)	
+		$('.ajaxbtn').each(function(){
+			var datab = $(this).attr('data-b');
+			var databarg = $(this).attr('data-barg');
+			var datadauthz = $(this).attr('data-dauthz');
+			var datareq = $(this).attr('data-req');
+			var databool = $(this).attr('data-bool');
+			var dataforcesch = $(this).attr('data-forcesch');
+			var datadfprop = $(this).attr('data-dfprop');
+			
+			$.get('/extforms', {datab: datab, databarg: databarg, datadauthz: datadauthz, datareq: datareq, databool: databool, dataforcesch: dataforcesch, datadfprop: datadfprop}).done(function(data) {
+				$('.formsContainer').append(data)
+			});
 		});
-		*/
-
-
+	
 });

@@ -50,10 +50,11 @@
                         {% endif %}
 
                         {{ cb.current_step }}
-
+                        {#
                         {% if authz.advertiseAction('stopBuild', request) %}
                         {{ forms.stop_build(cb.stop_url, authz, on_all=False, short=True, label='Build') }}
                         {% endif %}
+                        #}
                     </li>
                     {% endfor %}
                 </ul>
@@ -72,10 +73,11 @@
                       <li>
                         <p class="txt-cont">
                             Cancel all builds
-                        </p>
+                        </p>  {#
                         {% if authz.advertiseAction('cancelPendingBuild', request) %}
                           {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=False, id='all') }}
                         {% endif %}
+                        #}
                       </li>
                     {% endif %}
 
@@ -98,9 +100,11 @@
                         {{cb.properties['reason'][0]}}
                         {% endif %}
                        </p>
+                       {#
                       {% if authz.advertiseAction('cancelPendingBuild', request) %}
                         {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
                         {% endif %}
+                        #}
                     </li>
                     {% endfor %}
                     </ul>
@@ -135,26 +139,34 @@
       </td>
     {% endif %}  
     
-
     <td >
       {% if b.force_schedulers != {} %}
-      <a class="more-info popup-btn-js" href="#">
-      </a>
+      <!--
         <div class="more-info-box more-info-box-js">
           <span class="close-btn">
           </span>
           <h3>Force build</h3>
-            {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
-              {{ forms.force_build(b.builder_url+"/force"+builder_arg, authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
-            {% endif %}
-        </div>
+        -->
+      <a class="ajaxbtn more-info popup-btn-js" href="#" data-b="{{b.builder_url}}" data-barg="{{builder_arg}}" data-dauthz="{{authz}}" data-req="{{request}}" data-bool="{{False}}" data-forcesch="{{b.force_schedulers}}" data-dfprop="{{default_props}}">
+      </a>
+      
         
+          {#
+            {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
+            
+              {{ extforms.force_build(b.builder_url+"/force"+builder_arg, authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
+            {% endif %}
+          #}
+            <!--
+        </div>
+        -->
         {% endif %}
+
     </td>
     
   </tr>
 {% endfor %}
 </tbody>
 </table>
-
+<div class="formsContainer"></div>
 {% endblock %}

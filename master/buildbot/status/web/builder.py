@@ -669,6 +669,10 @@ class BuildersResource(HtmlResource):
         cxt['num_building'] = building
         cxt['num_online'] = online
         buildForceContext(cxt, req, self.getBuildmaster(req))
+
+        cxt['simonPath'] = req.args
+        
+
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))
 

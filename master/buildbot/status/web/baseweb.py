@@ -36,6 +36,7 @@ from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.buildqueue import BuildQueueResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
+from buildbot.status.web.extforms import extFormsResource
 from buildbot.status.web.loginkatana import LoginKatanaResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.about import AboutBuildbot
@@ -375,6 +376,7 @@ class WebStatus(service.MultiService):
         #self.putChild("login", LoginResource())
         self.putChild("logout", LogoutResource())
         self.putChild("login", LoginKatanaResource())
+        self.putChild("extforms", extFormsResource())
 
 
 
