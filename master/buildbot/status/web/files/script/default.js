@@ -171,11 +171,13 @@ $(document).ready(function() {
 	}
 
 	// invoke selec2 plugin
+	
 	$(".select-tools-js").select2({
 		width: getMaxChildWidth(".select-tools-js")
 	});
 	$("#commonBranch_select").select2({
-		placeholder: "Common branches"
+		placeholder: "Common branches",
+		width: $("#commonBranch_select").width() + 140
 	});
 	
 
@@ -196,15 +198,20 @@ $(document).ready(function() {
 		        seen[txt] = true;
 		    }
 		});
-
+		
 		$('#commonBranch_select').change(function(){
 		var commonVal = $(this);
-		$(selector).attr('selected', false);
+		$(selector).prop('selected', false);
 		$(selector).each(function() {
+			
 			if ($(this).val() === $(commonVal).val() ) {					
-				$(this).attr('selected', true);
+				$(this).prop('selected', true);
+
 			}
 		})
+		$(selector).parent().hide();
+		$(selector).parent().show();
+		
 		$(selector).trigger("change");
 	});
 

@@ -15,6 +15,7 @@ module.exports = function(grunt) {
         options: {
           sassDir: '<%= meta.srcPath %>',
           cssDir: '<%= meta.deployPath %>',
+          debugInfo: true,
           environment: "development"
         }
       },

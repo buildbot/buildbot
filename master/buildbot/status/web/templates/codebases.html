@@ -11,14 +11,15 @@
 {% block content %}
 
 <div id="formWrapper">
-<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
-  
-    <input value="Show" class="grey-btn fl-right m-bottom10 var-2" type="submit" />
-    <div class="fl-right">
+  <div class="fl-right m-right10">
       <select autocomplete="off" id="commonBranch_select" name='common_branches' class="select-tools-common">
         <option></option>
       </select>
     </div>
+<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
+  
+    <input value="Show" class="grey-btn fl-right m-bottom10 var-2" type="submit" />
+    
 
 <table class="table-2 no-bg">
    <thead>
@@ -45,9 +46,12 @@
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
             <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
+
           {% else %}
             <option {{(b in codebase['defaultbranch']) and "selected" or ""}}>
+
           {% endif %}
+
             {{ b }}
             </option>
           {% endfor %}
