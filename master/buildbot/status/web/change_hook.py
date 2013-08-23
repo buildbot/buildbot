@@ -60,9 +60,9 @@ class ChangeHookResource(resource.Resource):
 
         try:
             changes, src = self.getChanges( request )
-        except ValueError, err:
-            request.setResponseCode(400, err.args[0])
-            return err.args[0]
+        except ValueError, val_err:
+            request.setResponseCode(400, val_err.args[0])
+            return val_err.args[0]
         except Exception, e:
             log.err(e, "processing changes from web hook")
             msg = "Error processing changes."

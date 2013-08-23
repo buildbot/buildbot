@@ -21,7 +21,7 @@ from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.process.properties import Properties
 from .test_changes_gerritchangesource import TestGerritChangeSource
 from buildbot.changes.changes import Change
-import os.path
+import os
 
 
 class RepoURL(unittest.TestCase):
