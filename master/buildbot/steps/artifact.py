@@ -17,7 +17,7 @@ class CheckArtifactExists(ShellCommand):
     description="CheckArtifactExists"
     descriptionDone="CheckArtifactExists finished"
 
-    def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
+    def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, stopBuild=True,**kwargs):
         self.master = None
         self.build_sourcestamps = []
         if not isinstance(artifact, list):
@@ -30,6 +30,7 @@ class CheckArtifactExists(ShellCommand):
         self.artifactBuildrequest = None
         self.artifactPath = None
         self.artifactURL = None
+        self.stopBuild = stopBuild
         ShellCommand.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
@@ -74,16 +75,23 @@ class CheckArtifactExists(ShellCommand):
                     artifactlist.remove(a)
 
         if len(artifactlist) == 0:
-            # update buildrequest (artifactbrid) with self.artifactBuildrequest
-            brid = self.build.requests[0].id
-            reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
-            self.step_status.stepFinished(SUCCESS)
-            self.build.result = SUCCESS
-            self.build.allStepsDone()
-            return
+            artifactsfound = self.build.getProperty("artifactsfound", True)
 
-        self.descriptionDone = ["Artifact not found on server %s" % self.artifactServerURL]
-        return
+            if not artifactsfound:
+                return
+            else:
+                self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
+
+            if self.stopBuild:
+                # update buildrequest (artifactbrid) with self.artifactBuildrequest
+                brid = self.build.requests[0].id
+                reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
+                self.step_status.stepFinished(SUCCESS)
+                self.build.result = SUCCESS
+                self.build.allStepsDone()
+        else:
+            self.build.setProperty("artifactsfound", False, "CheckArtifactExists %s" % self.artifact)
+            self.descriptionDone = ["Artifact not found on server %s" % self.artifactServerURL]
 
     @defer.inlineCallbacks
     def start(self):
