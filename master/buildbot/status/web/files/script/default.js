@@ -44,7 +44,6 @@ $(document).ready(function() {
 			if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
 				$('.command_forcebuild').removeClass('form-open');
 				$('.more-info-box-js, .more-info-box-js-2').hide();
-				
 				$('#content').empty();
 			}
 		}); 
@@ -176,8 +175,7 @@ $(document).ready(function() {
 		width: getMaxChildWidth(".select-tools-js")
 	});
 	$("#commonBranch_select").select2({
-		placeholder: "Common branches",
-		width: $("#commonBranch_select").width() + 140
+		width: $("#commonBranch_select").width() + 40
 	});
 	
 
