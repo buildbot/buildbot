@@ -73,7 +73,7 @@ $(document).ready(function() {
 		$(this).prev('.fi-js').prop('checked', true);
 		*/
 		var iVal = $(this).prev().prev().val();
-		console.log(iVal)
+		
 		var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
 		$(hi).insertAfter($(this));
 		$('#formWrapper form').submit();
@@ -156,6 +156,7 @@ $(document).ready(function() {
 	// Freetext filtering
 
 
+
 	//Set the highest with on both selectors
 	function getMaxChildWidth(sel) {
 	    max = 80;
@@ -168,40 +169,46 @@ $(document).ready(function() {
 	    $('#selectorWidth').width(max);
 	    return max;
 	}
-
-	// invoke selec2 plugin
 	
 	$(".select-tools-js").select2({
-		width: getMaxChildWidth(".select-tools-js")
-	});
-	$("#commonBranch_select").select2({
-		placeholder: "Common branches",
-		width: $("#commonBranch_select").width() + 140
-	});
-	
+			width: getMaxChildWidth(".select-tools-js")
+		});
+		$("#commonBranch_select").select2({
+			placeholder: "Common branches",
+			width: $("#commonBranch_select").width() + 140
+		});
 
 	// combobox on codebases
 	
 	function comboBox(selector) {
+
+		// invoke selec2 plugin
+		var selectLength = $('select.select-tools-js').length;
+
 		var sortLink = $('<a href="#" class="sort-name">Sort by name</a>');
 		$(sortLink).insertAfter($('.select2-search'));
-		var seen = {};
 		
-		$(selector).each(function() {
-		    var txt = $(this).val();
-		    console.log(txt)
-		    if (seen[txt]) {
-		        	$(this).clone().removeAttr("selected").appendTo("#commonBranch_select");
-		        }
-		    else {
-		        seen[txt] = true;
+		$('option', selector).each(function() {			
+			 if ($('option[value="' + $(this).val() + '"]', selector).length == selectLength) {
+        		$(this).clone().prop('selected', false).appendTo("#commonBranch_select");			
+    		}
+		});
+
+		// Remove duplicates from the list
+		var map = {};
+		$("#commonBranch_select option").each(function(){
+		    var value = $(this).text();
+		    if (map[value] == null){
+		        map[value] = true;
+		    } else {
+		        $(this).remove();
 		    }
 		});
-		
+
 		$('#commonBranch_select').change(function(){
 		var commonVal = $(this);
 		
-		$(selector).each(function() {
+		$('option',selector).each(function() {
 			
 			if ($(this).val() === $(commonVal).val() ) {					
 					$(this).parent().children('option').prop('selected', false);
@@ -213,7 +220,7 @@ $(document).ready(function() {
 		});
 
 	}
-	comboBox('.select-tools-js option');
+	comboBox('.select-tools-js');
 
 	// Name sorting for filterbox
 	function clickSort() {
@@ -268,7 +275,7 @@ $(document).ready(function() {
 				placeholder: "Common branches"
 			});
 
-			comboBox('#formWrapper .select-tools-js option');
+			comboBox('#formWrapper .select-tools-js');
 
 			$('.more-info-box-js-2').center();
 			
@@ -342,18 +349,7 @@ $(document).ready(function() {
 
 	});
 	
-		//console.log(optionTexts, optionTexts2)
-		/*
-		var optionTexts3 = [];
-		$('.select-tools-js option').each(function(){
-			console.log($(this).val().length)	
-			if ($(this).val() == $(this).val()) {
-				
-				optionTexts3.push($(this).val())
-			}
-			console.log(optionTexts3)	
-		});
-		*/
+		 
 
 
 });
