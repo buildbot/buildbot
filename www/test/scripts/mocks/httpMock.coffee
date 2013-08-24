@@ -78,11 +78,13 @@ window.decorateHttpBackend = ($httpBackend) ->
         for dataEp in window.dataspec
             if this.epMatch(dataEp.path, ep)
                 if nItems?
-                    ret = []
+                    data = []
                     for i in [1..nItems]
-                        ret.push(valueFromSpec(dataEp.type_spec, hint))
+                        data.push(valueFromSpec(dataEp.type_spec, hint))
                 else
-                    ret = valueFromSpec(dataEp.type_spec, hint)
+                    data = [valueFromSpec(dataEp.type_spec, hint)]
+                ret = {meta:{links: [] }}
+                ret[dataEp.plural] = data
                 return ret
         throw "endpoint not specified! #{ep}"
 
@@ -155,12 +157,12 @@ if window.describe?
                     'prop': ['value', 'source']
                 when_timestamp: 1
 
-            value = $httpBackend.buildDataValue("change")
+            value = $httpBackend.buildDataValue("change").changes[0]
             for k, v of value
                 expect(v).toEqual(expected[k])
 
             $httpBackend.resetIds()
-            value = $httpBackend.buildDataValue("change", 2)
+            value = $httpBackend.buildDataValue("change", 2).changes
 
             # small hack to replace ones by twos for ids of the second change
             expected = [expected, JSON.parse(JSON.stringify(expected).replace(/1/g,"2"))]

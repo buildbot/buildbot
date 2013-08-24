@@ -17,13 +17,13 @@ if window.__karma__?
         beforeEach(inject(injected))
 
         it 'should query for changes at /changes and receive an empty array', ->
-            $httpBackend.expectGET('api/v2/changes').respond([])
+            $httpBackend.expectGET('api/v2/changes').respond({changes:[]})
             buildbotService.all("changes").bind($scope, "changes")
             $httpBackend.flush()
             expect($scope.changes.length).toBe(0)
 
         it 'should query for build/1/step/2 and receive a SUCCESS result', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({res: "SUCCESS"})
+            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "SUCCESS"}]})
             r = buildbotService.one("build", 1).one("step", 2)
             r.bind($scope, "step_scope")
             $httpBackend.flush()
@@ -37,13 +37,13 @@ if window.__karma__?
             expect($scope.step.state_strings).toEqual(["mystate_strings"])
 
         it 'should query default scope_key to route key', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({res: "SUCCESS"})
+            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "SUCCESS"}]})
             buildbotService.one("build", 1).one("step", 2).bind($scope)
             $httpBackend.flush()
             expect($scope.step.res).toBe("SUCCESS")
 
         it 'should close the eventsource on scope.$destroy()', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({res: "SUCCESS"})
+            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "SUCCESS"}]})
             r = buildbotService.one("build", 1).one("step", 2)
             r.bind($scope)
             $httpBackend.flush()
@@ -52,7 +52,7 @@ if window.__karma__?
             expect(r.source.readyState).toBe(2)
 
         it 'should close the eventsource on unbind()', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({res: "SUCCESS"})
+            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "SUCCESS"}]})
             r = buildbotService.one("build", 1).one("step", 2)
             r.bind($scope)
             $httpBackend.flush()
@@ -61,7 +61,7 @@ if window.__karma__?
             expect(r.source.readyState).toBe(2)
 
         it 'should update the $scope when event received', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({res: "PENDING", otherfield: "FOO"})
+            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "PENDING", otherfield: "FOO"}]})
             r = buildbotService.one("build", 1).one("step", 2)
             r.bind($scope)
             $httpBackend.flush()
@@ -73,7 +73,7 @@ if window.__karma__?
             expect($scope.step.otherfield).toBe("FOO")
 
         it 'should update the $scope when event received for collections', ->
-            $httpBackend.expectGET('api/v2/build/1/step').respond([])
+            $httpBackend.expectGET('api/v2/build/1/step').respond({steps:[]})
             r = buildbotService.one("build", 1).all("step")
             r.bind($scope)
             $httpBackend.flush()
