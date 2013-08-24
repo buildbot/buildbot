@@ -1,6 +1,6 @@
 angular.module('app').controller 'aboutController',
-['$log', '$scope', '$location', 'bower_configs', 'config'
-    ($log, $scope, $location, bower_configs, config) ->
+['$log', '$scope', '$location', 'bower_configs', 'config', 'buildbotService'
+    ($log, $scope, $location, bower_configs, config, buildbotService) ->
         # translate github urls to http urls for link generations
         for module in bower_configs
             module.http_url = module.repository?.url?.replace("git://", "http://")
@@ -13,5 +13,5 @@ angular.module('app').controller 'aboutController',
                 projecturl: "http://buildbot.net"
                 config: config
         $scope.bower_configs = bower_configs
-
+        $scope.specs = buildbotService.all('application.spec').getList()
 ]
