@@ -16,6 +16,10 @@ angular.module('app').factory 'buildbotService',
                 # so we return the first elem that is not "meta"
                 for k, v of response
                     if k != "meta"
+                        for b in v
+                            # FIXME: fix the data api to always provide a 'id' key
+                            # as jsonapi (and restangular) is requiring
+                            b.id ?= b.builderid
                         return v
                 response
             onElemRestangularized = (elem, isCollection, route, Restangular) ->
@@ -30,25 +34,21 @@ angular.module('app').factory 'buildbotService',
                             $scope[scope_key].push(e.msg)
                             $scope.$apply()
                         p = elem.getList()
-                        p.then((res) ->
-                            window.res = res
+                        p.then (res) ->
                             $scope[scope_key] = res
                             elem.on("new", onEvent)
                             return res
-                        )
                     else
                         onEvent = (e) ->
                             for k, v of e.msg
                                 $scope[scope_key][k] = v
                             $scope.$apply()
                         p = this.getList() # all is list with jsonAPI
-                        p.then((res) ->
+                        p.then (res) ->
                             $scope[scope_key] = res[0]
                             elem.on("update", onEvent)
                             return res
-                        )
                     $scope.$on("$destroy", -> elem.source?.close())
-                    $scope[scope_key] = p
                     return p
 
                 elem.unbind = () ->

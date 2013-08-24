@@ -6,25 +6,23 @@ window.decorateHttpBackend = ($httpBackend) ->
         ids[namespace] += 1
         return ids[namespace]
 
-    $httpBackend.epMatch = (a, b) ->
-        a = a.split("/")
-        b = b.split("/")
-        if a.length != b.length
-            return false
-        for i in [0..a.length - 1]
-            if a[i].indexOf("n:") == 0
-                if not (/^\d$/).test(b[i])
-                    return false
-            else if a[i] isnt b[i]
-                return false
-        return true
-
     $httpBackend.epExample = (ep) ->
         ep = ep.split("/")
         for i in [0..ep.length - 1]
             if ep[i].indexOf("n:") == 0
                 ep[i] = "1"
+            if ep[i].indexOf("i:") == 0
+                ep[i] = "id"
         return ep.join("/")
+
+    $httpBackend.epRegexp = (ep) ->
+        ep = ep.split("/")
+        for i in [0..ep.length - 1]
+            if ep[i].indexOf("n:") == 0
+                ep[i] = "\\d+"
+            if ep[i].indexOf("i:") == 0
+                ep[i] = "[a-zA-Z_-][a-zA-Z0-9_-]*"
+        return RegExp("^"+ep.join("/")+"$")
 
     $httpBackend.epLastPath = (path) ->
         splitpath = path.split("/")
@@ -76,7 +74,8 @@ window.decorateHttpBackend = ($httpBackend) ->
 
         hint = $httpBackend.epLastPath(ep).replace("n:","")
         for dataEp in window.dataspec
-            if this.epMatch(dataEp.path, ep)
+            dataEp.re ?= this.epRegexp(dataEp.path)
+            if dataEp.re.test(ep)
                 if nItems?
                     data = []
                     for i in [1..nItems]
@@ -90,19 +89,20 @@ window.decorateHttpBackend = ($httpBackend) ->
 
     $httpBackend.whenDataGET = (ep, opts) ->
         opts ?= {}
-        opts.when = true  # callback for overriding automatically generated data
+        opts.when = true  # use whenGetET instead of expectGET
         return this.expectDataGET(ep, opts)
     $httpBackend.expectDataGET = (ep, opts) ->
         opts ?=
             nItems: undefined  # if nItems is defined, we will produce a collection
             override: undefined  # callback for overriding automaticly generated data
-            when: undefined  # callback for overriding automatically generated data
+            when: undefined  # use whenGetET instead of expectGET
 
-        value = this.buildDataValue(ep, opts.nItems)
+        value = this.buildDataValue(this.epExample(ep), opts.nItems)
+
         if opts.override?
             opts.override(value)
         if opts.when?
-            this.whenGET("api/v2/" + ep).respond(value)
+            this.whenGET(this.epRegexp("api/v2/" + ep)).respond(value)
         else
             this.expectGET("api/v2/" + ep).respond(value)
         return null
@@ -117,11 +117,14 @@ if window.describe?
         beforeEach(inject(injected))
 
         it 'should have correct endpoint matcher', ->
-            expect($httpBackend.epMatch("change", "change")).toBe(true)
-            expect($httpBackend.epMatch("change/n:foo", "change/1")).toBe(true)
-            expect($httpBackend.epMatch("change/n:foo", "change/sd")).toBe(false)
-            expect($httpBackend.epMatch("change/foo/bar/n:foobar/foo", "change/foo/bar/1/foo")).toBe(true)
-            expect($httpBackend.epMatch("change/foo/bar/n:foobar/foo", "change/foo/bar/1/foo/")).toBe(false)
+            epMatch = (a,b) ->
+                re = $httpBackend.epRegexp(a)
+                return re.test(b)
+            expect(epMatch("change", "change")).toBe(true)
+            expect(epMatch("change/n:foo", "change/1")).toBe(true)
+            expect(epMatch("change/n:foo", "change/sd")).toBe(false)
+            expect(epMatch("change/foo/bar/n:foobar/foo", "change/foo/bar/1/foo")).toBe(true)
+            expect(epMatch("change/foo/bar/n:foobar/foo", "change/foo/bar/1/foo/")).toBe(false)
 
         it 'should have correct value builder for change', ->
             expected =

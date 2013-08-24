@@ -8,7 +8,7 @@ angular.module('devapp').run [
             path = dataEp.path
             lastpath = $httpBackend.epLastPath(path)
             if (lastpath.indexOf("n:") == 0)
-                $httpBackend.whenDataGET($httpBackend.epExample(path))
+                $httpBackend.whenDataGET(path)
             else
-                $httpBackend.whenDataGET($httpBackend.epExample(path), {nItems: 10})
+                $httpBackend.whenDataGET(path, {nItems: 10})
     ]

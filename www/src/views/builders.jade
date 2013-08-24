@@ -16,15 +16,15 @@
             a(href='#/builders/{{ builder.builderid }}')
               | {{ builder.name }}
           td
-                        span(ng-repeat="slave in builder.slaves")
-                          a(href="#/buildslaves/{{slave}}")
-                            {{ slave }}
-                          span(ng-hide="$last") ,&nbsp;
+            ul.list-inline
+              li(ng-repeat="slave in builder.slaves")
+                a(href="#/buildslaves/{{slave}}")
+                  {{ slave.name }}
           td
-                      ul
-                        li(data-ng-repeat="build in builder.builds")
-                          a(data-ng-href="#/builders/{{ builder.BuilderName }}/build/{{build}}")
-                            {{ build }}
+            ul.list-inline
+              li(data-ng-repeat="build in builder.builds")
+                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.buildid}}")
+                  {{ build.id }}
           td
             | pending builds
           td
