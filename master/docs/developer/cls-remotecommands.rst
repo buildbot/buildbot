@@ -195,7 +195,7 @@ RemoteCommand
 
     Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
 
     :param workdir: directory in which command should be executed, relative to
         the builder's basedir.
@@ -206,6 +206,7 @@ RemoteCommand
     :param timeout: Maximum time without output before the command is killed.
     :param maxTime: Maximum overall time from the start before the command is
         killed.
+    :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing SIGKILL. If None, SIGTERM will not be fired.
     :param env: A dictionary of environment variables to augment or replace the
         existing environment on the slave.
     :param logfiles: Additional logfiles to request from the slave.
