@@ -553,12 +553,6 @@ class MasterConfig(object):
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
 
-        # convert allowed_origins to a lowercased set for faster membership
-        # checks
-        if 'allowed_origins' in www_cfg:
-            self.www['allowed_origins'] = set(o.lower()
-                                for o in self.www['allowed_origins'])
-
 
     def check_single_master(self):
         # check additional problems that are only valid in a single-master
