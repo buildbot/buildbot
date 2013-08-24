@@ -25,6 +25,7 @@ import re
 import subprocess
 import traceback
 import stat
+import time
 from collections import deque
 from tempfile import NamedTemporaryFile
 
@@ -211,7 +212,6 @@ class RunProcess:
 
     notreally = False
     BACKUP_TIMEOUT = 5
-    interruptSignal = "KILL"
     CHUNK_LIMIT = 128*1024
 
     # Don't send any data until at least BUFFER_SIZE bytes have been collected
@@ -234,8 +234,8 @@ class RunProcess:
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, maxTime=None, initialStdin=None,
-                 keepStdout=False, keepStderr=False,
+                 timeout=None, maxTime=None, sigtermTime=None,
+                 initialStdin=None, keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config",
                  useProcGroup=True):
         """
@@ -324,6 +324,7 @@ class RunProcess:
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
+        self.sigtermTime = sigtermTime
         self.maxTime = maxTime
         self.maxTimeoutTimer = None
         self.killTimer = None
@@ -333,6 +334,10 @@ class RunProcess:
         self.buffered = deque()
         self.buflen = 0
         self.sendBuffersTimer = None
+
+        self.interruptSignals = ["KILL"]
+        if sigtermTime is not None:
+            self.interruptSignals.insert(0, "TERM")
 
         if usePTY == "slave-config":
             self.usePTY = self.builder.usePTY
@@ -746,6 +751,22 @@ class RunProcess:
         msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
+    def isDead(self):
+        pid = int(self.process.pid)
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return True # dead
+        return False # alive
+
+    def waitForProcess(self):
+        until = time.time() + self.sigtermTime
+        while time.time() < until:
+            time.sleep(0.01)
+            if self.isDead():
+                return True
+        return False
+
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
@@ -761,57 +782,71 @@ class RunProcess:
 
         # keep track of whether we believe we've successfully killed something
         hit = 0
+        waitForSIGTERM = self.sigtermTime is not None
 
-        # try signalling the process group
-        if not hit and self.useProcGroup and runtime.platformType == "posix":
-            sig = getattr(signal, "SIG"+ self.interruptSignal, None)
+        for interruptSignal in self.interruptSignals:
 
-            if sig is None:
-                log.msg("signal module is missing SIG%s" % self.interruptSignal)
-            elif not hasattr(os, "kill"):
-                log.msg("os module is missing the 'kill' function")
-            elif self.process.pgid is None:
-                log.msg("self.process has no pgid")
-            else:
-                log.msg("trying to kill process group %d" %
-                                                (self.process.pgid,))
+            # try signalling the process group
+            if not hit and self.useProcGroup and runtime.platformType == "posix":
+                sig = getattr(signal, "SIG"+ interruptSignal, None)
+
+                if sig is None:
+                    log.msg("signal module is missing SIG%s" % interruptSignal)
+                elif not hasattr(os, "kill"):
+                    log.msg("os module is missing the 'kill' function")
+                elif self.process.pgid is None:
+                    log.msg("self.process has no pgid")
+                else:
+                    log.msg("trying to kill process group %d" %
+                                                    (self.process.pgid,))
+                    try:
+                        os.kill(-self.process.pgid, sig)
+                        log.msg(" signal %s sent successfully" % sig)
+                        self.process.pgid = None
+                        hit = 1
+                    except OSError:
+                        log.msg('failed to kill process group (ignored): %s' %
+                                (sys.exc_info()[1],))
+                        # probably no-such-process, maybe because there is no process
+                        # group
+                        pass
+
+            elif not hit and runtime.platformType == "win32":
+                if interruptSignal == None:
+                    log.msg("interruptSignal==None, only pretending to kill child")
+                elif self.process.pid is not None:
+                    if interruptSignal == "TERM":
+                        log.msg("using TASKKILL PID /T to kill pid %s" % self.process.pid)
+                        subprocess.check_call("TASKKILL /PID %s /T" % self.process.pid)
+                        log.msg("taskkill'd pid %s" % self.process.pid)
+                        hit = 1
+                    elif interruptSignal == "KILL":
+                        log.msg("using TASKKILL PID /F /T to kill pid %s" % self.process.pid)
+                        subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
+                        log.msg("taskkill'd pid %s" % self.process.pid)
+                        hit = 1
+
+            # try signalling the process itself (works on Windows too, sorta)
+            if not hit:
                 try:
-                    os.kill(-self.process.pgid, sig)
-                    log.msg(" signal %s sent successfully" % sig)
-                    self.process.pgid = None
+                    log.msg("trying process.signalProcess('%s')" % (interruptSignal,))
+                    self.process.signalProcess(interruptSignal)
+                    log.msg(" signal %s sent successfully" % (interruptSignal,))
                     hit = 1
                 except OSError:
-                    log.msg('failed to kill process group (ignored): %s' %
-                            (sys.exc_info()[1],))
-                    # probably no-such-process, maybe because there is no process
-                    # group
+                    log.err("from process.signalProcess:")
+                    # could be no-such-process, because they finished very recently
+                    pass
+                except error.ProcessExitedAlready:
+                    log.msg("Process exited already - can't kill")
+                    # the process has already exited, and likely finished() has
+                    # been called already or will be called shortly
                     pass
 
-        elif runtime.platformType == "win32":
-            if self.interruptSignal == None:
-                log.msg("self.interruptSignal==None, only pretending to kill child")
-            elif self.process.pid is not None:
-                log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
-                subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
-                log.msg("taskkill'd pid %s" % self.process.pid)
-                hit = 1
-
-        # try signalling the process itself (works on Windows too, sorta)
-        if not hit:
-            try:
-                log.msg("trying process.signalProcess('%s')" % (self.interruptSignal,))
-                self.process.signalProcess(self.interruptSignal)
-                log.msg(" signal %s sent successfully" % (self.interruptSignal,))
-                hit = 1
-            except OSError:
-                log.err("from process.signalProcess:")
-                # could be no-such-process, because they finished very recently
-                pass
-            except error.ProcessExitedAlready:
-                log.msg("Process exited already - can't kill")
-                # the process has already exited, and likely finished() has
-                # been called already or will be called shortly
-                pass
+            if hit and waitForSIGTERM and interruptSignal == "TERM":
+                isDead = self.waitForProcess()
+                if not isDead:
+                    hit = 0
 
         if not hit:
             log.msg("signalProcess/os.kill failed both times")
