@@ -56,7 +56,7 @@ module.exports = (grunt) ->
             # concat bower.json files into config.js, to display deps in the UI
             # we declare a constant in the 'app' module
             bower_configs:
-                src: ['components/**/bower.json']
+                src: ['bower_components/**/bower.json']
                 dest: '.temp/scripts/config.js'
                 options:
                     separator:','

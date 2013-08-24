@@ -24,5 +24,6 @@
             | buildbot-www is using the following open-source JavaScript libraries:
             ul
               li(ng-repeat='module in bower_configs')
-                a(href='{{module.http_url}}') {{module.name}}
+                a(ng-show='module.http_url', href='{{module.http_url}}') {{module.name}}
+                span(ng-hide='module.http_url') {{module.name}}
                 | : {{module.version}}
