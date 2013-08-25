@@ -80,6 +80,8 @@ Features
 
 * It is now possible to select categories to show in the waterfall help
 
+* The web status now has options to cancel some or all pending builds.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

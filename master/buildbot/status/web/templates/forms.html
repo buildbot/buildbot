@@ -78,6 +78,44 @@
   {% endif %}
 {% endmacro %}
 
+{% macro cancel_build(cancel_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
+  {% if not short %}
+    <form method="post" name="cancel_build" action="{{ cancel_url }}" class='command cancelbuild'
+               {{ 'style="display:inline"' if short else '' }}>
+      {% if not short %}
+        {% if on_all %}
+          <p>To cancel all pending builds, fill out the following field and
+          push the <i>Cancel {{ label }}</i> button</p>
+        {% elif on_selected %}
+          <p>To cancel selected pending builds, select the builders, fill out the
+          following field and push the <i>Cancel {{ label }}</i> button</p>
+          <table>
+          {% for b in builders %}
+            <tr>
+              <td align="center"><input type="checkbox" name="selected" value="{{ b.name }}"></td>
+              <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
+            </tr>
+          {% endfor %}
+          </table>
+
+        {% else %}
+          <p>To cancel this pending build, fill out the following field and
+          push the <i>Cancel {{ label }}</i> button</p>
+        {% endif %}
+      {% endif %}
+
+      {% if not short %}
+        <div class="row">
+          <span class="label">Reason:</span>
+          <input type="text" name="comments"/>
+        </div>
+      {% endif %}
+
+      <input type="submit" value="Cancel {{ label }}" />
+    </form>
+  {% endif %}
+{% endmacro %}
+
 {% macro force_build_scheduler_parameter(f, authz, request, sch, default_props) %}
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
