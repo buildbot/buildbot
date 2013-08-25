@@ -82,6 +82,7 @@ The "process" part of Buildbot is the part that coordinates all of the other par
   * In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
   * In the DB API, each result field has an ``id`` key.
 * The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
+* The tour must be upgraded to cover the new web UI.
 
 ## Data API ##
 
