@@ -32,13 +32,13 @@ angular.module('app').constant("route_config",
         route: "/builders/:builder"
         tabid: "builders"
     build:
-        route: "/builders/:builder/:build"
+        route: "/builders/:builder/build/:build"
         tabid: "builders"
     step:
-        route: "/builders/:builder/:build/steps/:step"
+        route: "/builders/:builder/build/:build/steps/:step"
         tabid: "builders"
     log:
-        route: "/builders/:builder/:build/steps/:step/logs/:log"
+        route: "/builders/:builder/build/:build/steps/:step/logs/:log"
         tabid: "builders"
 
     buildslave:
