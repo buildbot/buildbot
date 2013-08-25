@@ -21,6 +21,7 @@ import re
 import datetime
 import dateutil
 import os
+import exceptions
 
 from twisted.python import log
 from twisted.internet import defer, utils
@@ -150,7 +151,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             result = yield self._get_process_output(args)
 
             # decode the result from its designated encoding
-            result = result.decode(self.encoding)
+            try:
+                result = result.decode(self.encoding)
+            except exceptions.UnicodeError, ex:
+                log.msg("P4Poller: couldn't decode changelist description: %s" % ex.encoding)
+                log.msg("P4Poller: in object: %s" % ex.object)
+                log.err("P4Poller: poll failed")
+                raise
 
             lines = result.split('\n')
             # SF#1555985: Wade Brainerd reports a stray ^M at the end of the date
