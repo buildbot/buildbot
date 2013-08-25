@@ -21,7 +21,7 @@ from buildbot import config
 from buildbot.db import enginestrategy, exceptions
 from buildbot.db import pool, model, changes, changesources, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests
-from buildbot.db import builds, buildslaves, users, masters, builders
+from buildbot.db import builds, buildslaves, users, masters, builders, steps
 
 upgrade_message = textwrap.dedent("""\
 
@@ -72,6 +72,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)
+        self.steps = steps.StepsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                 self._doCleanup)

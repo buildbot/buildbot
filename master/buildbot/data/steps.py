@@ -55,18 +55,16 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             defer.returnValue((yield self.db2data(dbdict))
                                 if dbdict else None)
             return
-
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return
-
         dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
                 number=kwargs.get('step_number'), name=kwargs.get('step_name'))
         defer.returnValue((yield self.db2data(dbdict))
                             if dbdict else None)
 
-
-class StepsEndpoint(Db2DataMixin, base.Endpoint):
+# FIXME: need unit tests!
+class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
@@ -79,11 +77,9 @@ class StepsEndpoint(Db2DataMixin, base.Endpoint):
         if 'buildid' in kwargs:
             buildid = kwargs['buildid']
         else:
-            build = self.master.db.builds.getBuildByNumber(
-                builderid=kwargs['builderid'], number=kwargs['build_number'])
-            if not build:
+            buildid = yield self.getBuildid(kwargs)
+            if buildid is None:
                 return
-            buildid = build['id']
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
         defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in steps ])
 
