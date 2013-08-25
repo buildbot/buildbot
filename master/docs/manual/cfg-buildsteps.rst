@@ -452,7 +452,7 @@ The Git step takes the following arguments:
 ``config``
 
    (optional) A dict of git configuration settings to pass to the remote git commands.
-    
+
 .. bb:step:: SVN
 
 .. _Step-SVN:
@@ -746,12 +746,40 @@ you will receive a configuration error exception.
 
 ``p4viewspec``
     This will override any p4branch, p4base, and/or p4extra_views specified.
-    The viewspec will be an array of tuples as follows
-    ``[('//depot/main/','')]``
+    The viewspec will be an array of tuples as follows::
 
-    yields a viewspec with just
+        [('//depot/main/','')]
 
-    ``//depot/main/... //<p4client>/...``
+    It yields a viewspec with just:
+
+    .. code-block:: none
+
+        //depot/main/... //<p4client>/...
+
+``p4viewspec_suffix``
+    (optional): The ``p4viewspec`` lets you customize the client spec for a builder but, as the
+    previous example shows, it automatically adds ``...`` at the end of each line.
+    If you need to also specify file-level remappings, you can set the ``p4viewspec_suffix``
+    to ``None`` so that nothing is added to your viewspec::
+
+        [('//depot/main/...', '...'),
+         ('-//depot/main/config.xml', 'config.xml'),
+         ('//depot/main/config.vancouver.xml', 'config.xml')]
+
+    It yields a viewspec with:
+
+    .. code-block:: none
+
+        //depot/main/... //<p4client>/...
+        -//depot/main/config.xml //<p4client/main/config.xml
+        //depot/main/config.vancouver.xml //<p4client>/main/config.xml
+
+    Note how, with ``p4viewspec_suffix`` set to ``None``, you need to manually add ``...``
+    where you need it.
+
+``p4client_spec_options``
+    (optional): By default, clients are created with the ``allwrite rmdir`` options. This
+    string lets you change that.
 
 ``p4port``
     (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot
@@ -765,7 +793,6 @@ you will receive a configuration error exception.
     (optional): the Perforce password, used as the :option:`-p` argument to all p4
     commands.
 
-
 ``p4client``
     (optional): The name of the client to use. In ``mode='full'`` and
     ``mode='incremental'``, it's particularly important that a unique name is used
@@ -778,6 +805,14 @@ you will receive a configuration error exception.
     (optional): The type of line ending handling P4 should use.  This is
     added directly to the client spec's ``LineEnd`` property.  The default is
     ``local``.
+
+``p4extra_args``
+    (optional): Extra arguments to be added to the P4 command-line for the ``sync``
+    command. So for instance if you want to sync only to populate a Perforce proxy
+    (without actually syncing files to disk), you can do::
+
+        P4(p4extra_args=['-Zproxyload'], ...)
+
 
 
 .. index:: double: Gerrit integration; Repo Build Step
