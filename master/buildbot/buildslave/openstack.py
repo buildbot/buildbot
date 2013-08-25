@@ -99,7 +99,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         duration = 0
         interval = self._poll_resolution
         inst = instance
-        while inst.status == BUILD:
+        while inst.status.startswith(BUILD):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
