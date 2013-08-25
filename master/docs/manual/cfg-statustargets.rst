@@ -469,6 +469,9 @@ authentication.  The actions are:
 ``cancelPendingBuild``
     cancel a build that has not yet started
 
+``cancelAllPendingBuilds``
+    cancel all or selected subset of builds that has not yet started
+
 ``stopChange``
     cancel builds that include a given change number
 
