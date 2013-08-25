@@ -124,7 +124,7 @@ setup_args = {
         ],
 
     'packages': ["buildbot",
-              "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
+              "buildbot.status",
               "buildbot.www",
               "buildbot.changes",
               "buildbot.buildslave",
@@ -164,16 +164,6 @@ setup_args = {
                 ("buildbot/clients", [
                     "buildbot/clients/debug.glade",
                 ]),
-                ("buildbot/status/web/files", [
-                    "buildbot/status/web/files/default.css",
-                    "buildbot/status/web/files/bg_gradient.jpg",
-                    "buildbot/status/web/files/robots.txt",
-                    "buildbot/status/web/files/templates_readme.txt",
-                    "buildbot/status/web/files/favicon.ico",
-                ]),
-                include("buildbot/status/web/files/", '*.png'),
-                include("buildbot/status/web/templates", '*.html'),
-                include("buildbot/status/web/templates", '*.xml'),
                 ("buildbot/scripts", [
                     "buildbot/scripts/sample.cfg",
                     "buildbot/scripts/buildbot_tac.tmpl",

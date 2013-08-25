@@ -15,7 +15,6 @@ This section gives some general information about Buildbot development.
     utils
     results
     formats
-    webstatus
     www
     master-slave
     br-claiming

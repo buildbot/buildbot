@@ -73,10 +73,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.changes.changes import Change
         assert Change
 
-    def test_status_html_Webstatus(self):
-        from buildbot.status.html import WebStatus
-        assert WebStatus
-
     def test_schedulers_filter_ChangeFilter(self):
         # this was the location of ChangeFilter until 0.8.4
         from buildbot.schedulers.filter import ChangeFilter

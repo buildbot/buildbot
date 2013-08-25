@@ -82,6 +82,7 @@ The "process" part of Buildbot is the part that coordinates all of the other par
   * In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
   * In the DB API, each result field has an ``id`` key.
 * The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
+* The tour must be upgraded to cover the new web UI.
 
 ## Data API ##
 
@@ -205,6 +206,11 @@ Testing javascript and json api interaction is tricky. Few design principles:
 ### Localization ###
 
 Need to figure out how to do this!
+
+### Setup ###
+
+`buildbot create_master` and `buildbot upgrade_master` need to be upgraded to handle whatever setup is required for the new web service.
+The upgrade process should make whatever modifications are required, or at least tell the user what directories are no longer used, e.g., templates.
 
 ## Database ##
 

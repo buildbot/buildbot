@@ -23,7 +23,8 @@ from buildbot.process import builder, factory
 from buildbot.util import epoch2datetime
 
 class BuilderMixin(object):
-    def makeBuilder(self, name="bldr", patch_random=False, **config_kwargs):
+    def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
+                        **config_kwargs):
         """Set up C{self.bldr}"""
         self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master(testcase=self, wantData=True)
@@ -55,9 +56,10 @@ class BuilderMixin(object):
 
         mastercfg = config.MasterConfig()
         mastercfg.builders = [ self.builder_config ]
-        return self.bldr.reconfigService(mastercfg)
+        if not noReconfig:
+            return self.bldr.reconfigService(mastercfg)
 
-class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
+class TestBuilder(BuilderMixin, unittest.TestCase):
 
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
@@ -294,19 +296,43 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(True, result)
 
+    @defer.inlineCallbacks
+    def test_getBuilderId(self):
+        self.factory = factory.BuildFactory()
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        # only include the necessary required config, plus user-requested
+        self.bldr = builder.Builder('bldr', _addServices=False)
+        self.bldr.master = self.master
+        self.master.data.updates.findBuilderId = fbi = mock.Mock()
+        fbi.return_value = defer.succeed(13)
+
+        builderid = yield self.bldr.getBuilderId()
+        self.assertEqual(builderid, 13)
+        fbi.assert_called_with('bldr')
+        fbi.reset_mock()
+
+        builderid = yield self.bldr.getBuilderId()
+        self.assertEqual(builderid, 13)
+        fbi.assert_not_called()
+
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getBuilderId(self):
-        yield self.makeBuilder(name='b1')
+        # noReconfig because reconfigService calls getBuilderId, and we haven't
+        # set up the mock findBuilderId yet.
+        yield self.makeBuilder(name='b1', noReconfig=True)
         fbi = self.master.data.updates.findBuilderId = mock.Mock(name='fbi')
         fbi.side_effect = lambda name : defer.succeed(13)
         # call twice..
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         # and see that fbi was only called once
-        fbi.assert_called_once_with('b1')
+        fbi.assert_called_once_with(u'b1')
+        # check that the name was uniciodified
+        arg = fbi.mock_calls[0][1][0]
+        self.assertIsInstance(arg, unicode)
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
@@ -366,3 +392,6 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
                     category=self.bldr.builder_status.getCategory()),
                 dict(description="New",
                     category="NewCat"))
+
+        # check that the reconfig grabbed a buliderid
+        self.assertNotEqual(self.bldr._builderid, None)

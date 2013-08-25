@@ -46,7 +46,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
         functions = [ 'makeBasedir', 'makeTAC', 'makeSampleConfig',
-                      'makePublicHtml', 'makeTemplatesDir', 'createDB' ]
+                      'makePublicHtml', 'createDB' ]
         repls = {}
         calls = []
         for fn in functions:
@@ -191,13 +191,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_makePublicHtml(self):
         create_master.makePublicHtml(mkconfig(basedir='test', quiet=True))
         self.assertTrue(os.path.exists(
-            os.path.join('test', 'public_html', 'robots.txt')))
-        self.assertWasQuiet()
-
-    def test_makeTemplatesDir(self):
-        create_master.makeTemplatesDir(mkconfig(basedir='test', quiet=True))
-        self.assertTrue(os.path.exists(
-            os.path.join('test', 'templates', 'README.txt')))
+            os.path.join('test', 'public_html')))
         self.assertWasQuiet()
 
     @defer.inlineCallbacks

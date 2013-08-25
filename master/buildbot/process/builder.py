@@ -20,7 +20,7 @@ from twisted.python import log, failure
 from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer, reactor
-from buildbot.util import epoch2datetime
+from buildbot.util import epoch2datetime, ascii2unicode
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
@@ -46,6 +46,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
+        self._builderid = None # filled in by getBuilderId
 
         # this is filled on demand by getBuilderId; don't access it directly
         self._builderid = None
@@ -80,6 +81,7 @@ class Builder(config.ReconfigurableServiceMixin,
                                             self.updateBigStatus)
             self.updateStatusService.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # find this builder in the config
         for builder_config in new_config.builders:
@@ -98,15 +100,31 @@ class Builder(config.ReconfigurableServiceMixin,
 
         self.config = builder_config
 
+        # allocate  builderid now, so that the builder is visible in the web
+        # UI; without this, the bulider wouldn't appear until it preformed a
+        # build.
+        yield self.getBuilderId()
+
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
-        return defer.succeed(None)
-
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
+
+    def getBuilderId(self):
+        # since findBuilderId is idempotent, there's no reason to add
+        # additional locking around this function.
+        if self._builderid:
+            return defer.succeed(self._builderid)
+        name = ascii2unicode(self.name)
+        d = self.master.data.updates.findBuilderId(name)
+        @d.addCallback
+        def keep(builderid):
+            self._builderid = builderid
+            return builderid
+        return d
 
     @defer.inlineCallbacks
     def getOldestRequestTime(self):
@@ -292,6 +310,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
         cleanups.append(lambda : self.updateBigStatus())
+
+        builderid = yield self.getBuilderId()
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
@@ -519,14 +539,6 @@ class Builder(config.ReconfigurableServiceMixin,
             self.expectations = Expectations(progress)
         log.msg("new expectations: %s seconds" %
                 self.expectations.expectedBuildTime())
-
-    @defer.inlineCallbacks
-    def getBuilderId(self):
-        # return the builderid, caching it along the way
-        if self._builderid is None:
-            self._builderid = yield self.master.data.updates.findBuilderId(
-                                                                self.name)
-        defer.returnValue(self._builderid)
 
     # Build Creation
 

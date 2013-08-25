@@ -114,17 +114,17 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # Break the content up into chunks.  This takes advantage of the
             # fact that no character but u'\n' maps to b'\n' in UTF-8.
 
-            first_line = row[0]
+            first_line = chunk_first_line = row[0]
             remaining = content.encode('utf-8')
             while remaining:
                 chunk, remaining = self._splitBigChunk(remaining, logid)
 
-                last_line = first_line + chunk.count('\n')
+                last_line = chunk_first_line + chunk.count('\n')
                 conn.execute(self.db.model.logchunks.insert(),
-                    dict(logid=logid, first_line=first_line,
+                    dict(logid=logid, first_line=chunk_first_line,
                         last_line=last_line, content=chunk,
                         compressed=0))
-                first_line = last_line + 1
+                chunk_first_line = last_line + 1
 
             conn.execute(self.db.model.logs.update(),
                 whereclause=(self.db.model.logs.c.id == logid),
