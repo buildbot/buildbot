@@ -54,7 +54,8 @@ class deferredLocked(unittest.TestCase):
         @util.deferredLocked(l)
         def do_fail():
             raise RuntimeError("oh noes")
-        d = do_fail()
+        # using decorators confuses pylint and gives a false positive below
+        d = do_fail()           # pylint: disable=assignment-from-no-return
         def check_unlocked(_):
             self.assertFalse(l.locked)
         d.addCallbacks(lambda _ : self.fail("didn't errback"),
