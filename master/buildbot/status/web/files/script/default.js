@@ -328,14 +328,16 @@ $(document).ready(function() {
 			var fw = $($response).find('.tablesorter-js');
 			$(fw).appendTo($('#content1'));
 			$('.more-info-box-js-3 .tablesorter-js').removeClass('tablesorter')
-			var theLink = $('.dataTable tbody a').attr('href');
+
+			$('.shortcut-js .scLink').each(function(){
+				var scLink = $(this).attr('data-sc');
+				$(this).attr('href', scLink);
+			});
 
 			$('.more-info-box-js-3').slideDown('fast');
 
 			$(document, '.close-btn').click(function(e){
 			    if (!$(e.target).closest('.more-info-box-js-3').length || $(e.target).closest('.close-btn').length) {
-			        // .closest can help you determine if the element 
-			        // or one of its ancestors is #menuscontainer
 			        	
 			        $('.more-info-box-js-3').slideUp('fast', function(){
 			        	$(this).remove();	

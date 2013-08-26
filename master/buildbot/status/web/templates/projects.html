@@ -9,7 +9,7 @@
 
 {% block content %}
 
-<table class="table-2 tablesorter dataTable tablesorter-js">
+<table class="table-2 tablesorter dataTable tablesorter-js shortcut-js">
     <thead>
   <tr>
     <th>Name</th>
@@ -19,8 +19,8 @@
    {% for project in projects %}
     <tr>
         <td>
-          <a href="{{path_to_root}}projects/{{ project|urlencode }}">
-        {{ project }}
+          <a class="scLink" href="{{path_to_root}}projects/{{ project|urlencode }}" data-sc="/projects/{{ project_shortcut[project]}}">
+            {{ project }}
           </a>
         </td>
     </tr>
