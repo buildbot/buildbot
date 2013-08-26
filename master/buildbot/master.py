@@ -25,6 +25,8 @@ from twisted.application import service
 
 import buildbot
 import buildbot.ampmanager
+import buildbot.pbmanager
+from buildbot.wrapper import Wrapper
 from buildbot.util import subscription, epoch2datetime
 from buildbot.status.master import Status
 from buildbot.changes import changes
@@ -121,6 +123,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.ampManager = buildbot.ampmanager.AMPManager()
         self.ampManager.setServiceParent(self)
+
+        self.pbmanager = buildbot.pbmanager.PBManager()
+        self.pbmanager.setServiceParent(self)
+
+        self.wrapper = Wrapper(self)
+        self.wrapper.setServiceParent(self)
 
         self.change_svc = ChangeManager(self)
         self.change_svc.setServiceParent(self)

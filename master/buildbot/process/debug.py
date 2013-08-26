@@ -38,7 +38,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
     def reconfigService(self, new_config):
 
         # debug client
-        config_changed = (self.debug_port != new_config.slavePortnum or
+        config_changed = (self.debug_port != new_config.PBPortnum or
                           self.debug_password != new_config.debugPassword)
 
         if not new_config.debugPassword or config_changed:
@@ -49,12 +49,12 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
         if new_config.debugPassword and config_changed:
             factory = lambda mind, user : DebugPerspective(self.master)
             self.debug_registration = self.master.pbmanager.register(
-                    new_config.slavePortnum, "debug", new_config.debugPassword,
+                    new_config.PBPortnum, "debug", new_config.debugPassword,
                     factory)
 
         self.debug_password = new_config.debugPassword
         if self.debug_password:
-            self.debug_port = new_config.slavePortnum
+            self.debug_port = new_config.PBPortnum
         else:
             self.debug_port = None
 

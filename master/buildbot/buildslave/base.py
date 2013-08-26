@@ -54,7 +54,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     # reconfig slaves after builders
     reconfig_priority = 64
 
-    def __init__(self, name, password, max_builds=None,
+    def __init__(self, name, password, proto, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
                  properties={}, locks=None, keepalive_interval=3600):
         """
@@ -113,6 +113,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.detached_subs = None
 
         self._old_builder_list = None
+
+        self.proto = proto
 
     def __repr__(self):
         return "<%s %r>" % (self.__class__.__name__, self.slavename)
@@ -230,17 +232,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         assert self.slavename == new.slavename
 
         # do we need to re-register?
-        if (not self.registration or
-            self.password != new.password or
-            new_config.slavePortnum != self.registered_port):
-            if self.registration:
-                yield self.registration.unregister()
-                self.registration = None
-            self.password = new.password
-            self.registered_port = new_config.slavePortnum
-            self.registration = self.master.ampManager.register(
-                    self.registered_port, self.slavename,
-                    self.password, self.getPerspective)
+        self.master.wrapper.maybeUpdateRegistration(self, new, new_config)
 
         # adopt new instance's configuration parameters
         self.max_builds = new.max_builds

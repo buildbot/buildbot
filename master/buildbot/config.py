@@ -71,10 +71,12 @@ class MasterConfig(object):
         self.mergeRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
-        self.slavePortnum = None
+        self.AMPPortnum = None
+        self.PBPortnum = None
         self.multiMaster = False
         self.debugPassword = None
         self.manhole = None
+        self.slaveProtos = ["AMP", "PB"]
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -106,7 +108,7 @@ class MasterConfig(object):
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "revlink", "schedulers", "slavePortnum", "slaves",
+        "properties", "revlink", "schedulers", "AMPPortnum", "PBPortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation"
     ])
 
@@ -205,7 +207,7 @@ class MasterConfig(object):
             config.check_builders()
             config.check_status()
             config.check_horizons()
-            config.check_slavePortnum()
+            config.check_slavePorts()
         finally:
             _errors = None
 
@@ -283,8 +285,9 @@ class MasterConfig(object):
         else:
             self.prioritizeBuilders = prioritizeBuilders
 
-        if 'slavePortnum' in config_dict:
-            self.slavePortnum = config_dict.get('slavePortnum')
+        for portType in ['AMPPortnum', 'PBPortnum']:
+            if portType in config_dict:
+                setattr(self, portType, config_dict.get(portType))
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
@@ -454,6 +457,11 @@ class MasterConfig(object):
                 msg = "slave name '%s' is reserved" % sl.slavename
                 error(msg)
 
+            if sl.proto not in self.slaveProtos:
+                msg = "Unknown protocol '%s'" % sl.proto
+                error(msg)
+                return
+
         self.slaves = config_dict['slaves']
 
 
@@ -592,14 +600,25 @@ class MasterConfig(object):
             if self.logHorizon > self.buildHorizon:
                 error("logHorizon must be less than or equal to buildHorizon")
 
-    def check_slavePortnum(self):
-        if self.slavePortnum:
-            return
+    def check_slavePorts(self):
+        ports = [("AMPPortnum", "AMP"), ("PBPortnum", "PB")]
+        atLeastOneSet = False
+        for option, proto in ports:
+            if getattr(self, option, None):
+                atLeastOneSet = True
+                continue
 
-        if self.slaves:
-            error("slaves are configured, but no slavePortnum is set")
-        if self.debugPassword:
-            error("debug client is configured, but no slavePortnum is set")
+            for s in self.slaves:
+                if s.proto == proto:
+                    msg = "%s slaves are configured, but no %s is set" % \
+                        (proto, option)
+                    error(msg)
+
+        if self.debugPassword and not self.PBPortnum:
+            error("debug client is configured, but PBPortnum is not set")
+
+        if self.AMPPortnum == self.PBPortnum:
+            error("AMPPortnum and PBPortnum are can't be set to same value")
 
 
 class BuilderConfig:
