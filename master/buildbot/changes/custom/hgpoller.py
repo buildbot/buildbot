@@ -218,7 +218,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
             if rev != current:
                 updated = True
-                self._processChangesByBranch(branch=branch,current=current)
+                yield self._processChangesByBranch(branch=branch,current=current)
                 self.lastRev[branch] = rev
 
         if updated:
