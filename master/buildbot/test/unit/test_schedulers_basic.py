@@ -34,7 +34,10 @@ class CommonStuffMixin(object):
 
         # keep track of builds in self.events
         self.events = []
-        def addBuildsetForChanges(reason='', external_idstring=None, changeids=[]):
+        @self.assertArgSpecMatches(sched.addBuildsetForChanges)
+        def addBuildsetForChanges(
+                waited_for=False, reason='', external_idstring=None, changeids=[],
+                builderNames=None, properties=None):
             self.assertEqual(external_idstring, None)
             self.assertEqual(reason, 'scheduler') # basic schedulers all use this
             self.events.append('B%s@%d' % (`changeids`.replace(' ',''),
