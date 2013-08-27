@@ -20,8 +20,7 @@ sources for properties are:
 * :ref:`changes <Change-Sources>` -- A change can have properties attached to
   it, supplying extra information gathered by the change source.  This is most
   commonly used with the :bb:cmdline:`sendchange` command.
-* :bb:status:`forced builds <WebStatus>` -- The "Force Build" form allows users
-  to specify properties
+* forced builds -- The "Force Build" form allows users to specify properties
 * :bb:cfg:`buildslaves <slaves>` -- A buildslave can pass properties on to
   the builds it performs.
 * :ref:`builds <Common-Build-Properties>` -- A build automatically sets a
