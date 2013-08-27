@@ -74,7 +74,7 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (xx, yy); got: (x, y)',))
+        self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
 
     def test_function_style(self):
         def myfunc(x, y=2, *args):
@@ -93,6 +93,5 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
         else:
             error = None
 
-        # TODO: instate these commented assertions
-        self.assertIdentical(type(error), type(None)) #unittest.FailTest)
-        #self.assertEqual(error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))
+        self.assertIdentical(type(error), unittest.FailTest)
+        self.assertEqual(error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))
