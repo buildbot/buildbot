@@ -457,11 +457,6 @@ class MasterConfig(object):
                 msg = "slave name '%s' is reserved" % sl.slavename
                 error(msg)
 
-            if sl.proto not in self.slaveProtos:
-                msg = "Unknown protocol '%s'" % sl.proto
-                error(msg)
-                return
-
         self.slaves = config_dict['slaves']
 
 

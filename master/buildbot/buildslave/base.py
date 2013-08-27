@@ -54,7 +54,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     # reconfig slaves after builders
     reconfig_priority = 64
 
-    def __init__(self, name, password, proto, max_builds=None,
+    def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
                  properties={}, locks=None, keepalive_interval=3600):
         """
@@ -75,9 +75,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slavename = name
         self.password = password
 
-        # PB registration
+        # protocol registration
         self.registration = None
-        self.registered_port = None
 
         # these are set when the service is started, and unset when it is
         # stopped
@@ -113,8 +112,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.detached_subs = None
 
         self._old_builder_list = None
-
-        self.proto = proto
 
     def __repr__(self):
         return "<%s %r>" % (self.__class__.__name__, self.slavename)
@@ -231,8 +228,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         assert self.slavename == new.slavename
 
-        # do we need to re-register?
-        self.master.wrapper.maybeUpdateRegistration(self, new, new_config)
+        # update our records with the buildslave manager
+        if not self.registration:
+            self.registration = yield self.master.buildslaves.register(self)
+        yield self.registration.update(new, new_config)
 
         # adopt new instance's configuration parameters
         self.max_builds = new.max_builds
@@ -261,12 +260,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
+    @defer.inlineCallbacks
     def stopService(self):
         if self.registration:
-            self.registration.unregister()
+            yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        return service.MultiService.stopService(self)
+        yield service.MultiService.stopService(self)
 
     def findNewSlaveInstance(self, new_config):
         # TODO: called multiple times per reconfig; use 1-element cache?
@@ -286,7 +286,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.missing_timer.cancel()
             self.missing_timer = None
 
-    def getPerspective(self, proto, slavename):
+    def getPerspective(self, mind, slavename):
         assert slavename == self.slavename
         metrics.MetricCountEvent.log("attached_slaves", 1)
 
@@ -296,7 +296,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         # try to use TCP keepalives
         try:
-            proto.transport.setTcpKeepAlive(1)
+            mind.broker.transport.setTcpKeepAlive(1)
         except:
             log.msg("Can't set TcpKeepAlive")
 
@@ -309,7 +309,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             # return arb.getPerspective(mind, slavename)
             return self
         else:
-            log.msg("slave '%s' attaching from %s" % (slavename, proto.transport.getPeer()))
+            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
             return self
 
     def doKeepalive(self):
