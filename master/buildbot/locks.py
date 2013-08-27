@@ -79,7 +79,7 @@ class BaseLock:
                 w_index = idx
                 break
         else:
-            w_index = len(self.waiting) 
+            w_index = len(self.waiting)
         ahead = self.waiting[:w_index]
 
         if access.mode == 'counting':
