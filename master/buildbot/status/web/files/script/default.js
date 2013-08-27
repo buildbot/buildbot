@@ -318,8 +318,9 @@ $(document).ready(function() {
 		$('body').append(preloader).show();
 
 		var path = "/projects";
-		$('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>').insertAfter($(this));
-		
+		var mib = $('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
+		$(mib).insertAfter($(this));
+
 		$.get(path)
 		.done(function(data) {
 			var $response=$(data);
@@ -334,12 +335,12 @@ $(document).ready(function() {
 				$(this).attr('href', scLink);
 			});
 
-			$('.more-info-box-js-3').slideDown('fast');
+			$(mib).slideDown('fast');
 
 			$(document, '.close-btn').click(function(e){
-			    if (!$(e.target).closest('.more-info-box-js-3').length || $(e.target).closest('.close-btn').length) {
+			    if (!$(e.target).closest(mib).length || $(e.target).closest('.close-btn').length) {
 			        	
-			        $('.more-info-box-js-3').slideUp('fast', function(){
+			        $(mib).slideUp('fast', function(){
 			        	$(this).remove();	
 			        });
 			        
@@ -351,7 +352,4 @@ $(document).ready(function() {
 
 	});
 	
-		 
-
-
 });
