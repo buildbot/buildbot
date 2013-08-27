@@ -40,7 +40,7 @@ $(document).ready(function() {
 	popUpBtn('.popup-btn-js');
 	
 	function closePopUp() {
-		$(document, '.close-btn').click(function(e){
+		$(document, '.close-btn').bind('click touchstart', function(e){
 			if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
 				$('.command_forcebuild').removeClass('form-open');
 				$('.more-info-box-js, .more-info-box-js-2').hide();
@@ -80,7 +80,6 @@ $(document).ready(function() {
 
 	});
 	
-
 	// chrome font problem fix
 	$(function chromeWin() {
 		var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
@@ -222,29 +221,26 @@ $(document).ready(function() {
 	}
 	comboBox('.select-tools-js');
 
-	// Name sorting for filterbox
-	function clickSort() {
+
+	function clickSort(selector) {
 		$('.sort-name').click(function(e){
+			var sn = $(this)
+			$(sn).toggleClass('direction-up');
 			e.preventDefault();
 
-			var items = $('#select2-drop .select2-results li').get();
-			
-			items.sort(function(a,b){
-			  var keyA = $(a).text();
-			  var keyB = $(b).text();
-			  if (keyA < keyB) return -1;
-			  if (keyA > keyB) return 1;
-			  return 0;
-			});
-			var ul = $(this).next($('.select2-results'));
-			
-			$.each(items, function(i, li){
-			  ul.append(li);
-			});
-
+		    $(selector).children("li").sort(function(a, b) {
+		        var upA = $(a).text().toUpperCase();
+		        var upB = $(b).text().toUpperCase();
+		        if ($(sn).hasClass('direction-up')) {
+		        	return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
+		        } else {
+		        	return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
+		        }
+		    }).appendTo(selector);
 		});
 	}
-	clickSort();
+	
+	clickSort('#select2-drop .select2-results');
 
 
 	// display popup box with external content
@@ -279,7 +275,7 @@ $(document).ready(function() {
 
 			$('.more-info-box-js-2').center();
 			
-  			clickSort();
+  			clickSort('#select2-drop .select2-results');
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
 			});
@@ -337,7 +333,7 @@ $(document).ready(function() {
 
 			$(mib).slideDown('fast');
 
-			$(document, '.close-btn').click(function(e){
+			$(document, '.close-btn').bind('click touchstart', function(e){
 			    if (!$(e.target).closest(mib).length || $(e.target).closest('.close-btn').length) {
 			        	
 			        $(mib).slideUp('fast', function(){
@@ -372,17 +368,16 @@ $(document).ready(function() {
 			});
 			$(mib3).fadeIn('fast');
 
-			$(document, '.close-btn').click(function(e){
+			$(document, '.close-btn').bind('click touchstart', function(e){
+		
+			    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
+			        	        	
+			        $(mib3).remove();
+			        	
+			        $(this).unbind(e);
+			    }
+			});
 
-		    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
-		        
-		        // or one of its ancestors is #menuscontainer
-		        	
-		        $(mib3).remove();
-		        	
-		        $(this).unbind(e);
-		    }
-		});
 
 		});
 
