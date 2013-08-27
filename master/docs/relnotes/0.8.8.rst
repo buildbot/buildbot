@@ -6,16 +6,18 @@ Release Notes for Buildbot v0.8.8
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot |version|.
-
-* The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
-* The master now poll the database for pending tasks when running buildbot in multi-master mode.
+The following are the release notes for Buildbot v0.8.8
+Buildbot v0.8.8 was released on August 22, 2013
 
 Master
 ------
 
 Features
 ~~~~~~~~
+* The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
+
+* The master now poll the database for pending tasks when running buildbot in multi-master mode.
+
 
 * The algorithm to match build requests to slaves has been rewritten in :bb:pull:`615`.
   The new algorithm automatically takes locks into account, and will not schedule a build only to have it wait on a lock.

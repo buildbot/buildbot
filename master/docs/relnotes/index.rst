@@ -86,12 +86,14 @@ Features
 
 * The web hooks now include support for GitLab.
 
-* The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to 
+* The 'Rebuild' button on the web pages for builds features a dropdown to choose whether to
   rebuild from exact revisions or from the same sourcestamps (ie, update branch references)
 
 * The ``start``, ``restart``, and ``reconfig`` commands will now wait for longer than 10 seconds as long as the master continues producing log lines indicating that the configuration is progressing.
 
 * Git source checkout step now supports reference repositories.
+
+* P4 source step now supports more advanced options.
 
 * The ``comments`` field of changes is no longer limited to 1024 characters on MySQL and Postgres.  See :bb:bug:`2367` and :bb:pull:`736`.
 
@@ -137,9 +139,11 @@ Features
 
 * Master-side source steps now respond to the "stop build" button (:bb:bug:`2356`).
 
-* The web hooks now include support for Gitorious. 
+* The web hooks now include support for Gitorious.
 
 * It is now possible to select categories to show in the waterfall help
+
+* The web status now has options to cancel some or all pending builds.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,9 +162,14 @@ Features
 Fixes
 ~~~~~
 
-* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for 
+* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for
   buildstep wasn't set or was None (see :bb:pull:`753`) thus keeping watched logfiles open
   (this prevented their removal on Windows in subsequent builds).
+
+* Fixed a bug in P4 source step where the ``timeout`` parameter was ignored.
+
+* Fixed a bug in P4 source step where using a custom view-spec could result in failed syncs
+  due to incorrectly generated command-lines.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

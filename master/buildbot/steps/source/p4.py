@@ -52,8 +52,10 @@ class P4(Source):
                  method=None, p4base=None, p4branch=None,
                  p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=(), p4line_end='local',
-                 p4viewspec=None,
+                 p4viewspec=None, p4viewspec_suffix='...',
                  p4client=Interpolate('buildbot_%(prop:slavename)s_%(prop:buildername)s'),
+                 p4client_spec_options='allwrite rmdir',
+                 p4extra_args=None,
                  p4bin='p4',
                  **kwargs):
         self.method = method
@@ -66,8 +68,11 @@ class P4(Source):
         self.p4passwd = p4passwd
         self.p4extra_views = p4extra_views
         self.p4viewspec = p4viewspec
+        self.p4viewspec_suffix = p4viewspec_suffix
         self.p4line_end = p4line_end
         self.p4client = p4client
+        self.p4client_spec_options = p4client_spec_options
+        self.p4extra_args = p4extra_args
 
         Source.__init__(self, **kwargs)
 
@@ -91,6 +96,9 @@ class P4(Source):
 
         if (p4branch or p4extra_views) and not p4base:
             config.error('If you specify either p4branch or p4extra_views you must also specify p4base')
+
+        if self.p4client_spec_options is None:
+            self.p4client_spec_options = ''
 
     def startVC(self, branch, revision, patch):
         if debug_logging:
@@ -135,11 +143,11 @@ class P4(Source):
         # Then we need to sync the client
         if self.revision:
             if debug_logging:
-                log.msg("P4: full() sync command based on :base:%s changeset:%d", self.p4base, int(self.revision))
-            yield self._dovccmd(['sync', '%s...@%d' % (self.p4base, int(self.revision))], collectStdout=True)
+                log.msg("P4: full() sync command based on :base:%s changeset:%d", self._getP4BaseForLog(), int(self.revision))
+            yield self._dovccmd(['sync', '%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))], collectStdout=True)
         else:
             if debug_logging:
-                log.msg("P4: full() sync command based on :base:%s no revision", self.p4base)
+                log.msg("P4: full() sync command based on :base:%s no revision", self._getP4BaseForLog())
             yield self._dovccmd(['sync'], collectStdout=True)
 
         if debug_logging:
@@ -157,7 +165,7 @@ class P4(Source):
         command = ['sync', ]
 
         if self.revision:
-            command.extend(['%s...@%d' % (self.p4base, int(self.revision))])
+            command.extend(['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
 
         if debug_logging:
             log.msg("P4:incremental() command:%s revision:%s", command, self.revision)
@@ -173,6 +181,12 @@ class P4(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
+    def _getP4BaseForLog(self):
+        return self.p4base or '<custom viewspec>'
+
+    def _getP4BaseForCommand(self):
+        return self.p4base or ''
+
     def _buildVCCommand(self, doCommand):
         assert doCommand, "No command specified"
 
@@ -187,6 +201,9 @@ class P4(Source):
             command.extend(['-P', self.p4passwd])
         if self.p4client:
             command.extend(['-c', self.p4client])
+        # Only add the extra arguments for the `sync` command.
+        if doCommand[0] == 'sync' and self.p4extra_args:
+            command.extend(self.p4extra_args)
 
         command.extend(doCommand)
 
@@ -201,6 +218,7 @@ class P4(Source):
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin,)
         cmd.useLog(self.stdio_log, False)
@@ -252,8 +270,8 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
-        client_spec += "Root:\t%s\n\n" % os.path.join(builddir, self.workdir)
-        client_spec += "Options:\tallwrite rmdir\n\n"
+        client_spec += "Root:\t%s\n\n" % os.path.normpath(os.path.join(builddir, self.workdir))
+        client_spec += "Options:\t%s\n\n" % self.p4client_spec_options
         if self.p4line_end:
             client_spec += "LineEnd:\t%s\n\n" % self.p4line_end
         else:
@@ -266,10 +284,11 @@ class P4(Source):
             # uses only p4viewspec array of tuples to build view
             # If the user specifies a viewspec via an array of tuples then
             # Ignore any specified p4base,p4branch, and/or p4extra_views
+            suffix = self.p4viewspec_suffix or ''
             for k, v in self.p4viewspec:
                 if debug_logging:
                     log.msg('P4:_createClientSpec():key:%s value:%s' % (k, v))
-                client_spec += '\t%s... //%s/%s...\n' % (k, self.p4client, v)
+                client_spec += '\t%s%s //%s/%s%s\n' % (k, suffix, self.p4client, v, suffix)
         else:
             # Uses p4base, p4branch, p4extra_views
             client_spec += "\t%s" % (self.p4base)
@@ -296,6 +315,7 @@ class P4(Source):
 
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
+                                           timeout=self.timeout,
                                            logEnviron=self.logEnviron,
                                            collectStdout=True)
         cmd.useLog(self.stdio_log, False)

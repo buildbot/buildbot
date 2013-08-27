@@ -134,24 +134,30 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
 
-    def _incremental(self, client_stdin=''):
+    def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20*60):
+        if extra_args is None:
+            extra_args = []
+
         self.expectCommands(
-            ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
+            ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
             + 0,  # expected exit status
 
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
+                        timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                        '-P', 'pass', '-c', 'p4_client1',
                                        'client', '-i'],
                         initialStdin=client_stdin,)
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'sync'])
+            ExpectShell(workdir=workdir,
+                        timeout=timeout,
+                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-P', 'pass', '-c', 'p4_client1']
+                                 + extra_args + ['sync']))
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
+                        timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
                                        '-P', 'pass', '-c', 'p4_client1',
                                        'changes', '-m1', '#have'])
@@ -248,32 +254,177 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
-    def _full(self, client_stdin='', p4client='p4_client1', p4user='user'):
+    def test_mode_incremental_p4viewspec_suffix(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4viewspec_suffix=None,
+                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml')],
+                          p4user='user', p4client='p4_client1', p4passwd='pass'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/foo.xml //p4_client1/bar.xml
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec)
+
+    def test_mode_incremental_p4client_spec_options(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4client_spec_options='rmdir compress',
+                          p4user='user', p4client='p4_client1', p4passwd='pass'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\trmdir compress
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec)
+
+    def test_mode_incremental_parent_workdir(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          workdir='../another_wkdir'))
+
+        root_dir = '/home/user/another_wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\another_wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec, workdir='../another_wkdir')
+
+    def test_mode_incremental_p4extra_args(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          p4extra_args=['-Zproxyload']))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec, extra_args=['-Zproxyload'])
+
+    def test_mode_incremental_timeout(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          timeout=60*60))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._incremental(client_stdin=client_spec, timeout=60*60)
+
+    def _full(self, client_stdin='', p4client='p4_client1', p4user='user', workdir='wkdir', extra_args=None):
+        if extra_args is None:
+            extra_args = []
+
         self.expectCommands(
-            ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
+            ExpectShell(workdir=workdir,
                         command=['p4', '-V'])  # expected remote command
             + 0,  # expected exit status
 
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                        '-P', 'pass', '-c', p4client, 'client',
                                        '-i'],
                         initialStdin=client_stdin)
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client, 'sync',
-                                       '#none'])
+                                       '-P', 'pass', '-c', p4client]
+                                + extra_args
+                                + ['sync', '#none'])
             + 0,
 
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': workdir, 'logEnviron': True})
             + 0,
 
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client, 'sync'])
+                                       '-P', 'pass', '-c', p4client]
+                                + extra_args + ['sync'])
             + 0,
-            ExpectShell(workdir='wkdir',
+            ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
                                        '-P', 'pass', '-c', p4client, 'changes',
                                        '-m1', '#have'])
@@ -459,3 +610,115 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/render_trunk/... //p4_client1/...\n''' % root_dir)
 
         self._full(client_stdin=client_stdin, p4user='different_user')
+
+    def test_mode_full_p4viewspec_suffix(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4viewspec_suffix=None,
+                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml')],
+                          p4user='user', p4client='p4_client1', p4passwd='pass'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/foo.xml //p4_client1/bar.xml
+        ''' % root_dir)
+        self._full(client_stdin=client_spec)
+
+    def test_mode_full_p4client_spec_options(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base='//depot', p4branch='trunk',
+                          p4client_spec_options='rmdir compress',
+                          p4user='user', p4client='p4_client1', p4passwd='pass'))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\trmdir compress
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._full(client_stdin=client_spec)
+
+    def test_mode_full_parent_workdir(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          workdir='../another_wkdir'))
+
+        root_dir = '/home/user/another_wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\another_wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._full(client_stdin=client_spec, workdir='../another_wkdir')
+
+    def test_mode_full_p4extra_args(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='full',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass',
+                          p4extra_args=['-Zproxyload']))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+        self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])

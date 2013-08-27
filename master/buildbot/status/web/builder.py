@@ -127,6 +127,41 @@ class StopAllBuildsActionResource(ActionResource):
         # go back to the welcome page
         defer.returnValue(path_to_root(req))
 
+class CancelAllPendingBuildsActionResource(ActionResource):
+
+    def __init__(self, status, selectedOrAll):
+        self.status = status
+        self.selectedOrAll = selectedOrAll
+        self.action = 'cancelAllPendingBuilds'
+
+    @defer.inlineCallbacks
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        res = yield authz.actionAllowed('cancelAllPendingBuilds', req)
+        if not res:
+            defer.returnValue(path_to_authzfail(req))
+            return
+
+        builders = None
+        if self.selectedOrAll == 'all':
+            builders = self.status.getBuilderNames()
+        elif self.selectedOrAll == 'selected':
+            builders = [b for b in req.args.get("selected", []) if b]
+
+        c = interfaces.IControl(self.getBuildmaster(req))
+        for bname in builders:
+            authz = self.getAuthz(req)
+            builder_control = c.getBuilder(bname)
+
+            brcontrols = yield builder_control.getPendingBuildRequestControls()
+
+            for build_req in brcontrols:
+                log.msg("Cancelling %s" % build_req)
+                build_req.cancel()
+
+        # go back to the welcome page
+        defer.returnValue(path_to_root(req))
+
 class PingBuilderActionResource(ActionResource):
 
     def __init__(self, builder_status):
@@ -489,6 +524,8 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
             return self.stopall(req)
         if path == "stopchangeall":
             return StopChangeAllResource(self.status)
+        if path == "cancelpendingall":
+            return CancelAllPendingBuildsActionResource(self.status, 'all')
 
         return HtmlResource.getChild(self, path, req)
 
@@ -510,6 +547,8 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
             return self.forceselected(req)
         if path == "stopselected":
             return self.stopselected(req)
+        if path == "cancelpendingselected":
+            return CancelAllPendingBuildsActionResource(self.status, 'selected')
 
         return HtmlResource.getChild(self, path, req)
 

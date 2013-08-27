@@ -469,6 +469,9 @@ authentication.  The actions are:
 ``cancelPendingBuild``
     cancel a build that has not yet started
 
+``cancelAllPendingBuilds``
+    cancel all or selected subset of builds that has not yet started
+
 ``stopChange``
     cancel builds that include a given change number
 
@@ -574,17 +577,17 @@ port). Frontend must require HTTP authentication to access WebStatus pages
 (using any source for credentials, such as htpasswd, PAM, LDAP).
 
 If you allow unauthenticated access through frontend as well, it's possible to
-specify a ``httpLoginLink`` which will be rendered on the WebStatus for
+specify a ``httpLoginUrl`` which will be rendered on the WebStatus for
 unauthenticated users as a link named Login. ::
 
-    authz = Authz(useHttpHeader=True, httpLoginLink='https://buildbot/login')
+    authz = Authz(useHttpHeader=True, httpLoginUrl='https://buildbot/login')
 
 A configuration example with Apache HTTPD as reverse proxy could look like the
 following. ::
 
     authz = Authz(
       useHttpHeader=True,
-      httpLoginLink='https://buildbot/login',
+      httpLoginUrl='https://buildbot/login',
       auth = HTPasswdAprAuth('/var/www/htpasswd'),
       forceBuild = 'auth')
 
