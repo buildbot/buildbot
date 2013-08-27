@@ -699,14 +699,16 @@ div.force-text input.not-valid {
 }
 
 #bowlG{
-height: 30px;
-left: 42%;
+height: 100%;
+left: 0;
 position: absolute;
-top: 22%;
-width: 30px;
+top: 0;
+width: 100%;
 }
 
 #bowl_ringG{
+left:50%;
+top:50%;
 position:absolute;
 width:30px;
 height:30px;

@@ -352,7 +352,6 @@ $(document).ready(function() {
 
 	});
 	
-
 	$('.ajaxbtn').click(function(){
 		var datab = $(this).attr('data-b');
 		
@@ -368,6 +367,9 @@ $(document).ready(function() {
 			$('#bowlG').remove();
 			$(data).appendTo($('#content1'));
 			$(mib3).center();
+			$(window).resize(function() {
+				$(mib3).center();
+			});
 			$(mib3).fadeIn('fast');
 
 			$(document, '.close-btn').click(function(e){
@@ -383,6 +385,7 @@ $(document).ready(function() {
 		});
 
 		});
+
 	});
 	
 
