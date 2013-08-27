@@ -129,12 +129,21 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Move the methods of BuilderControl to update methods of the Builder resouce type (or other places as appropriate), and add control methods where appropriate.
   In particular, implement `rebuildBuild` properly.
 * Use DateTimes everywhere :runner:
-* Ensure that all id's in the Data API are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
-  This includes the self-id (so, ``buildsetid``, not ``id``, is a field of a buildset resource). :runner:
+* Ensure that all foreign id's in the Data API are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
+as per jsonapi spec, this does not include the self-id (so, ``id``, not ``builderid``, is a field of a builder resource). :runner:
 * Ensure that resources are consistent in their handling of embedded objects vs. ids/links.
-  For example, a buildset includes its component sourcestamps.
-  Does a build request include its parent buildset (and consequently the source stamps)?
-  Does this differ between messages and resources?
+* follow more jsonapi spec concerning links. Better use the id only version. developer will then use the spec to know how to fetch it.
+ex from jsonapi spec:
+{
+  "posts": [{
+    "id": "1",
+    "title": "Rails is Omakase",
+    "links": {
+      "author": "9",
+      "comments": [ "5", "12", "17", "20" ]
+    }
+  }]
+}
 * Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler when they are no longer used.
 * Add messages to the scheduler resource type, one for each possible change in scheduler status. :runner:
 * Add a means to enumerate builds *previous* to a given build, using flexible criteria.
