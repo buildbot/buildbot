@@ -336,17 +336,35 @@ $(document).ready(function() {
 
 	});
 	
-		$('.ajaxbtn').each(function(){
+		$('.ajaxbtn').click(function(){
 			var datab = $(this).attr('data-b');
-			var databarg = $(this).attr('data-barg');
-			var datadauthz = $(this).attr('data-dauthz');
-			var datareq = $(this).attr('data-req');
-			var databool = $(this).attr('data-bool');
-			var dataforcesch = $(this).attr('data-forcesch');
-			var datadfprop = $(this).attr('data-dfprop');
 			
-			$.get('/extforms', {datab: datab, databarg: databarg, datadauthz: datadauthz, datareq: datareq, databool: databool, dataforcesch: dataforcesch, datadfprop: datadfprop}).done(function(data) {
-				$('.formsContainer').append(data)
+			var dataindexb = $(this).attr('data-indexb');
+			
+			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			$('body').append(preloader).show();
+			var mib3 = $('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Force build</h3><div id="content1"></div></div>');
+			$(mib3).insertAfter($(this));
+
+			$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {
+
+				$('#bowlG').remove();
+				$(data).appendTo($('#content1'));
+				$(mib3).center();
+				$(mib3).fadeIn('fast');
+
+				$(document, '.close-btn').click(function(e){
+
+			    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
+			        
+			        // or one of its ancestors is #menuscontainer
+			        	
+			        $(mib3).remove();
+			        	
+			        $(this).unbind(e);
+			    }
+			});
+
 			});
 		});
 	
