@@ -1,172 +1,181 @@
-{% extends 'layout.html' %}
-{% import 'forms.html' as forms %}
-{% import 'submenu.html' as submenu %}
-{% from 'build_line.html' import build_table %}
-{% from "box_macros.html" import box %}
-{% from 'static.html' import force_build_static %}
+{% if not fbuildsch.extform%}
+  {% extends 'layout.html' %}
+  {% import 'forms.html' as forms %}
+  {% import 'submenu.html' as submenu %}
+  {% from 'build_line.html' import build_table %}
+  {% from "box_macros.html" import box %}
+  {% from 'static.html' import force_build_static %}
 
-{% block submenu %}
-  {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}
-{% endblock %}
+  {% block submenu %}
+    {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}
+  {% endblock %}
 
-{% block content %}
+  {% block content %}
 
-<table class="table-1 first-child tablesorter tablesorter-js">
-  <thead>
-<tr>
-  <th class="txt-align-left">Builder</th>
-  <th class="txt-align-left">Current jobs</th>
-  <th class="txt-align-left">Last run</th>
-  <th>
-    Status
-  </th>
-  <th >
-    Force build
-  </th>
-</tr>
-</thead>
-<tbody>
-{% for b in builders %}
+  <table class="table-1 first-child tablesorter tablesorter-js">
+    <thead>
+  <tr>
+    <th class="txt-align-left">Builder</th>
+    <th class="txt-align-left">Current jobs</th>
+    <th class="txt-align-left">Last run</th>
+    <th>
+      Status
+    </th>
+    <th >
+      Force build
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for b in builders %}
 
-    <tr>
-  
-    <td class="box txt-align-left">
-      <a href="{{ b.link }}">
-        {{ b.name|e }}
-      </a>
-    </td>
-    <td class="txt-align-left">
-        
-                {% if b.current %}
+      <tr>
+    
+      <td class="box txt-align-left">
+        <a href="{{ b.link }}">
+          {{ b.name|e }}
+        </a>
+      </td>
+      <td class="txt-align-left">
+          
+                  {% if b.current %}
 
-                <h2 class="small-head">
-                    Current job
-                </h2>
-                <ul class="list">
-                    {% for cb in b.current %}
-                    <li><a href="{{ cb.link }}">{{ cb.num }}</a>
-                        {% if cb.when %}
-                        ETA: {{ cb.when_time }} [{{ cb.when }}]
-                        {% endif %}
+                  <h2 class="small-head">
+                      Current job
+                  </h2>
+                  <ul class="list">
+                      {% for cb in b.current %}
+                      <li><a href="{{ cb.link }}">{{ cb.num }}</a>
+                          {% if cb.when %}
+                          ETA: {{ cb.when_time }} [{{ cb.when }}]
+                          {% endif %}
 
-                        {{ cb.current_step }}
-                        {#
-                        {% if authz.advertiseAction('stopBuild', request) %}
-                        {{ forms.stop_build(cb.stop_url, authz, on_all=False, short=True, label='Build') }}
-                        {% endif %}
-                        #}
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                {% if b.pending %}
-                
-                 <a class="more-info popup-btn-js mod-1" href="#">
-                  Pending jobs
-                </a>
-                 <div class="more-info-box more-info-box-js">
-                  <span class="close-btn">
-                  </span>
-                  <h3>Pending Build Requests</h3>
-                  <ul class="pending-job-list">
-                    {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys())  %}
+                          {{ cb.current_step }}
+                          {#
+                          {% if authz.advertiseAction('stopBuild', request) %}
+                          {{ forms.stop_build(cb.stop_url, authz, on_all=False, short=True, label='Build') }}
+                          {% endif %}
+                          #}
+                      </li>
+                      {% endfor %}
+                  </ul>
+                  {% endif %}
+                  {% if b.pending %}
+                  
+                   <a class="more-info popup-btn-js mod-1" href="#">
+                    Pending jobs
+                  </a>
+                   <div class="more-info-box more-info-box-js">
+                    <span class="close-btn">
+                    </span>
+                    <h3>Pending Build Requests</h3>
+                    <ul class="pending-job-list">
+                      {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys())  %}
+                        <li>
+                          <p class="txt-cont">
+                              Cancel all builds
+                          </p>  {#
+                          {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                            {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=False, id='all') }}
+                          {% endif %}
+                          #}
+                        </li>
+                      {% endif %}
+
+                      {% for cb in b.pending %}
                       <li>
                         <p class="txt-cont">
-                            Cancel all builds
-                        </p>  {#
+                          {{ cb.when }}, waiting {{ cb.delay }}
+
+                          {% if cb.num_changes < 4 %}
+                          {% for c in cb.changes %}{{ c.revision|shortrev(c.repo) }}
+                          <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
+                          {% endfor %}
+                          {% else %}
+                          ({{ cb.num_changes }} changes)
+                          {% endif %}
+                          <br>
+                          {% if 'owner' in cb.properties %}
+                          Forced build
+                          by {{cb.properties['owner'][0]}}
+                          {{cb.properties['reason'][0]}}
+                          {% endif %}
+                         </p>
+                         {#
                         {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                          {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=False, id='all') }}
-                        {% endif %}
-                        #}
+                          {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
+                          {% endif %}
+                          #}
                       </li>
-                    {% endif %}
+                      {% endfor %}
+                      </ul>
+                 </div>
 
-                    {% for cb in b.pending %}
-                    <li>
-                      <p class="txt-cont">
-                        {{ cb.when }}, waiting {{ cb.delay }}
-
-                        {% if cb.num_changes < 4 %}
-                        {% for c in cb.changes %}{{ c.revision|shortrev(c.repo) }}
-                        <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
-                        {% endfor %}
-                        {% else %}
-                        ({{ cb.num_changes }} changes)
-                        {% endif %}
-                        <br>
-                        {% if 'owner' in cb.properties %}
-                        Forced build
-                        by {{cb.properties['owner'][0]}}
-                        {{cb.properties['reason'][0]}}
-                        {% endif %}
-                       </p>
-                       {#
-                      {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                        {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
-                        {% endif %}
-                        #}
-                    </li>
-                    {% endfor %}
-                    </ul>
-               </div>
-
-            {% endif %}
-            {% if not b.pending and not b.current %}
-                <span class="small-txt">
-                  No jobs
-                </span>
-            {% endif %}
-          
-        
-    </td>
-    <td class="txt-align-left">
-      
-      <a href="#">
-        <span class="notimpl small-txt">Not implemented</span>
- 
-      </a>
-      
-      
-    </td>
-    {% if b.build_url %}
-      <td class="LastBuild {{ b.build_css_class }} ">
-          <a href="{{ b.build_url }}">{{ b.build_label }}</a>
-          {{ b.build_text }}
-      </td>
-    {% else %}
-      <td class="LastBuild small-txt">
-        no build
-      </td>
-    {% endif %}  
-    
-    <td >
-      {% if b.force_schedulers != {} %}
-      <!--
-        <div class="more-info-box more-info-box-js">
-          <span class="close-btn">
-          </span>
-          <h3>Force build</h3>
-        -->
-      <a class="ajaxbtn more-info popup-btn-js" href="#" data-b="{{b.builder_url}}" data-barg="{{builder_arg}}" data-dauthz="{{authz}}" data-req="{{request}}" data-bool="{{False}}" data-forcesch="{{b.force_schedulers}}" data-dfprop="{{default_props}}">
-      </a>
-      
-        
-          {#
-            {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}
+              {% endif %}
+              {% if not b.pending and not b.current %}
+                  <span class="small-txt">
+                    No jobs
+                  </span>
+              {% endif %}
             
-              {{ extforms.force_build(b.builder_url+"/force"+builder_arg, authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
+          
+      </td>
+      <td class="txt-align-left">
+        
+        <a href="#">
+          <span class="notimpl small-txt">Not implemented</span>
+   
+        </a>
+        
+        
+      </td>
+      {% if b.build_url %}
+        <td class="LastBuild {{ b.build_css_class }} ">
+            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+            {{ b.build_text }}
+        </td>
+      {% else %}
+        <td class="LastBuild small-txt">
+          no build
+        </td>
+      {% endif %}  
+      
+      <td>
+        {% if b.force_schedulers != {} %}
+        
+          <a class="ajaxbtn more-info popup-btn-js" href="#" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
+          </a>
+          {#
+            {% if authz.advertiseAction('forceBuild', request) and b.force_schedulers != {} %}    
+              {{ forms.force_build(b.builder_url+"/force"+builder_arg, authz, request, False, force_schedulers=b.force_schedulers,default_props=default_props) }}
             {% endif %}
-          #}
-            <!--
-        </div>
-        -->
+          #}  
+          
         {% endif %}
 
-    </td>
-    
-  </tr>
-{% endfor %}
-</tbody>
-</table>
-<div class="formsContainer"></div>
-{% endblock %}
+      </td>
+      
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  
+  {% endblock %}
+
+  {% else %}
+
+  {% if fbuildsch.dataindexb[0] %}
+
+    {% import 'forms.html' as forms %}
+
+    {{ forms.force_build(fbuildsch.datab[0]+"/force"+builder_arg, authz, request, False, force_schedulers=builders[fbuildsch.dataindexb[0]|int].force_schedulers,default_props=default_props) }}
+
+    {#
+    {{ forms.force_build(fbuildsch.datab[0]+"/force"+fbuildsch.databarg[0], fbuildsch.datadauthz[0], fbuildsch.datareq[0], fbuildsch.databool[0], force_schedulers=fbuildsch.dataforcesch[0],default_props=fbuildsch.datadfprop[0]) }}
+    #}
+
+  {% endif %}
+
+
+{% endif %}
+
