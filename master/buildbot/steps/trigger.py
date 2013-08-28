@@ -148,10 +148,11 @@ class Trigger(LoggingBuildStep):
         dl = []
         triggered_names = []
         for sch in triggered_schedulers:
-            dl.append(sch.trigger(
+            idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
                 set_props=props_to_set
-            ))
+            )
+            dl.append(resultsDeferred)
             triggered_names.append(sch.name)
         self.step_status.setText(['triggered'] + triggered_names)
 
