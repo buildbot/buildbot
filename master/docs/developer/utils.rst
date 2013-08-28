@@ -668,3 +668,29 @@ This module makes it easy to check argument types.
     :returns: boolean
 
     Is object a :ref:`identifier <type-identifier>`?
+
+buildbot.util.lineboundaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.lineboundaries
+
+.. py:class:: LineBoundaryFinder
+
+    This class accepts a sequence of arbitrary strings and invokes a callback only with complete (newline-terminated) substrings.
+    It buffers any partial lines until a subsequent newline is seen.
+
+    :param callback: asynchronous function to call with newline-terminated strings
+
+    .. py:method:: append(text)
+
+        :param text: text to append to the boundary finder
+        :returns: Deferred
+
+        Add additional text to the boundary finder.
+        If the addition of this text completes at least one line, the callback will be invoked with as many complete lines as possible.
+
+    .. py:method:: flush()
+
+        :returns: Deferred
+
+        Flush any remaining partial line by adding a newline and invoking the callback.

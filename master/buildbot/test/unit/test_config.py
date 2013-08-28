@@ -787,6 +787,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=20, url='http://foo/',
                                     plugins={}))
 
+    def test_load_www_allowed_origins(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(url='http://foo',
+                    allowed_origins=['a', 'b'])))
+        self.assertResults(www=dict(port=None, url='http://foo/',
+                                    allowed_origins=['a', 'b'],
+                                    plugins={}))
+
     def test_load_www_unknown(self):
         self.cfg.load_www(self.filename,
                 dict(www=dict(foo="bar")))

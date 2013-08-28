@@ -938,7 +938,7 @@ file is something like::
 Authorization
 .............
 
-The force scheduler uses the web status's :ref:`authorization <Authorization>`
+The force scheduler uses the web interface's authorization
 framework to determine which user has the right to force which build.  Here is
 an example of code on how you can define which user has which right::
 

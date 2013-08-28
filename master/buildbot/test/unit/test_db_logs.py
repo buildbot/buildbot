@@ -203,7 +203,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_appendLog_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        yield self.db.logs.appendLog(201, u'abc\ndef\n')
+        self.assertEqual((yield self.db.logs.appendLog(201, u'abc\ndef\n')),
+                (7, 8))
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 7)),
                         u"yet another line\nabc\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 7, 8)),
@@ -221,7 +222,9 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        yield self.db.logs.appendLog(201, u'abc\n' * 20000) # 80k
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, u'abc\n' * 20000)), # 80k
+            (7, 20006))
         lines = yield self.db.logs.getLogLines(201, 7, 50000)
         self.assertEqual(len(lines), 80000)
         self.assertEqual(lines, (u'abc\n' * 20000))
@@ -230,7 +233,8 @@ class Tests(interfaces.InterfaceTests):
     def test_addLogLines_big_chunk_big_lines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = u'x' * 33000 + '\n'
-        yield self.db.logs.appendLog(201, line*3)
+        self.assertEqual((yield self.db.logs.appendLog(201, line*3)),
+                (7, 9)) # three long lines, all truncated
         lines = yield self.db.logs.getLogLines(201, 7, 100)
         self.assertEqual(len(lines), 99003)
         self.assertEqual(lines, (line*3))
@@ -241,7 +245,9 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_addLogLines_db(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        yield self.db.logs.appendLog(201, u'abc\ndef\nghi\njkl\n')
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, u'abc\ndef\nghi\njkl\n')),
+            (7, 10))
         def thd(conn):
             res = conn.execute(self.db.model.logchunks.select(
                 whereclause=self.db.model.logchunks.c.first_line > 6))

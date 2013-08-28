@@ -186,7 +186,7 @@ Three basic settings describe the buildmaster in status reports::
     c['title'] = "Buildbot"
     c['titleURL'] = "http://buildbot.sourceforge.net/"
 
-:bb:cfg:`title` is a short string that will appear at the top of this buildbot installation's :class:`html.WebStatus` home page (linked to the :bb:cfg:`titleURL`), and is embedded in the title of the waterfall HTML page.
+:bb:cfg:`title` is a short string that will appear at the top of this buildbot installation's home page (linked to the :bb:cfg:`titleURL`).
 
 :bb:cfg:`titleURL` is a URL string that must end with a slash (``/``).
 HTML status displays will show ``title`` as a link to :bb:cfg:`titleURL`.
@@ -194,7 +194,6 @@ This URL is often used to provide a link from buildbot HTML pages to your projec
 
 The :bb:cfg:`buildbotURL` string should point to the location where the buildbot's internal web server is visible.
 This URL must end with a slash (``/``).
-This typically uses the port number set for the web status (:bb:status:`WebStatus`): the buildbot needs your help to figure out a suitable externally-visible host URL.
 
 When status notices are sent to users (either by email or over IRC), :bb:cfg:`buildbotURL` will be used to create a URL to the specific build or problem that they are being notified about.
 It will also be made available to queriers (over IRC) who want to find out where to get more information about this buildbot.
@@ -643,7 +642,7 @@ Buildbot contains a built-in web server.
 This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
 
 .. note:
-    As of Buildbot 0.9.0, the built-in web server replaces the old :bb:status:`WebStatus` plugin.
+    As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
 
 ``port``
     The TCP port on which to serve requests.

@@ -216,10 +216,6 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
                 'test/public_html',
-                'test/public_html/bg_gradient.jpg',
-                'test/public_html/default.css',
-                'test/public_html/robots.txt',
-                'test/public_html/favicon.ico',
                 'test/templates',
                 'test/master.cfg.sample',
                 ]:
