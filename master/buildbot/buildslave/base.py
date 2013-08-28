@@ -26,16 +26,15 @@ from twisted.python.reflect import namedModule
 
 from buildbot.status.slave import SlaveStatus
 from buildbot.status.mail import MailNotifier
-from buildbot.process import metrics, botmaster
+from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot import config
-from buildbot.protocols import RemotePrint, GetInfo, SetBuilderList
 
 
-class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
+class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                         service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
@@ -84,7 +83,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.master = None
 
         self.slave_status = SlaveStatus(name)
-        self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = {}
         self.max_builds = max_builds
@@ -108,6 +106,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.missing_timeout = missing_timeout
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
+
+        # a protocol connection, if we're currently connected
+        self.conn = None
 
         self.detached_subs = None
 
@@ -286,43 +287,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.missing_timer.cancel()
             self.missing_timer = None
 
-    def getPerspective(self, mind, slavename):
-        assert slavename == self.slavename
-        metrics.MetricCountEvent.log("attached_slaves", 1)
-
-        # record when this connection attempt occurred
-        if self.slave_status:
-            self.slave_status.recordConnectTime()
-
-        # try to use TCP keepalives
-        try:
-            mind.broker.transport.setTcpKeepAlive(1)
-        except:
-            log.msg("Can't set TcpKeepAlive")
-
-        if self.isConnected():
-            # duplicate slave - send it to arbitration
-            log.msg("Already connected!")
-            # TODO: Arbitration currently not working.
-            # need to discuss about how to implement it for AMP
-            # arb = botmaster.DuplicateSlaveArbitrator(self)
-            # return arb.getPerspective(mind, slavename)
-            return self
-        else:
-            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
-            return self
-
     def doKeepalive(self):
-        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-                                                self.doKeepalive)
-        if not self.slave:
-            return
-        d = self.slave.callRemote(RemotePrint, message="Received keepalive from master")
-        d.addErrback(log.msg, "Keepalive failed for '%s'" % (self.slavename, ))
+        pass # TODO: this should be done at the protocol level
 
     def stopKeepaliveTimer(self):
         if self.keepalive_timer:
             self.keepalive_timer.cancel()
+            self.keepalive_timer = None
 
     def startKeepaliveTimer(self):
         assert self.keepalive_interval
@@ -331,7 +302,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.doKeepalive()
 
     def isConnected(self):
-        return self.slave
+        return self.conn
 
     def _missing_timer_fired(self):
         self.missing_timer = None
@@ -365,7 +336,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         @return: a Deferred that indicates when an attached slave has
         accepted the new builders and/or released the old ones."""
-        if self.slave:
+        if self.conn:
             return self.sendBuilderList()
         else:
             return defer.succeed(None)
@@ -380,7 +351,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         return dict([(elem['key'], elem['value']) for elem in ampList])
 
     @metrics.countMethod('AbstractBuildSlave.attached()')
-    def attached(self, proto):
+    def attached(self, conn):
         """This is called when the slave connects.
 
         @return: a Deferred that fires when the attachment is complete
@@ -391,7 +362,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
-        # set up the subscription point for eventual detachment
+        # set up the subscription point for eventual detachment; TODO: get rid of this and use the conn directly
         self.detached_subs = subscription.SubscriptionPoint("detached")
 
         # now we go through a sequence of calls, gathering information, then
@@ -411,24 +382,26 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         @d.addCallback
         def _log_attachment_on_slave(res):
-            d1 = proto.callRemote(RemotePrint, message="attached")
+            d1 = conn.remotePrint(message="attached")
             d1.addErrback(lambda why: None)
             return d1
 
         @d.addCallback
         def _get_info(res):
-            d1 = proto.callRemote(GetInfo)
+            d1 = conn.remoteGetSlaveInfo()
             def _got_info(info):
                 log.msg("Got slaveinfo from '%s'" % self.slavename)
                 # TODO: info{} might have other keys
                 state["admin"] = info.get("admin")
                 state["host"] = info.get("host")
                 state["access_uri"] = info.get("access_uri", None)
-                state["slave_environ"] = self.ampList2dict(info.get("environ", {}))
+                # TODO
+                #state["slave_environ"] = self.ampList2dict(info.get("environ", {}))
                 state["slave_basedir"] = info.get("basedir", None)
                 state["slave_system"] = info.get("system", None)
                 state["version"] = info.get("version", "(unknown)")
-                state["slave_commands"] = self.ampList2dict(info.get("commands", {}))
+                # TODO: this requires getCommands for PB
+                #state["slave_commands"] = self.ampList2dict(info.get("commands", {}))
             def _info_unavailable(why):
                 # why.trap(pb.NoSuchMethod) # TODO: do we need this?
                 # maybe an old slave, doesn't implement remote_getSlaveInfo
@@ -448,7 +421,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.slave_environ = state.get("slave_environ")
             self.slave_basedir = state.get("slave_basedir")
             self.slave_system = state.get("slave_system")
-            self.slave = proto
+
+            self.conn = conn
+            self.conn.notifyOnDisconnect(self.detached)
+
             if self.slave_system == "nt":
                 self.path_module = namedModule("ntpath")
             else:
@@ -465,9 +441,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         d.addCallback(lambda _:
                 self.botmaster.maybeStartBuildsForSlave(self.slavename))
 
-        # Finally, the slave gets a reference to this BuildSlave. They
-        # receive this later, after we've started using them.
-        d.addCallback(lambda _: self)
         return d
 
     def messageReceivedFromSlave(self):
@@ -475,9 +448,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.lastMessageReceived = now
         self.slave_status.setLastMessageReceived(now)
 
-    def detached(self, mind):
+    def detached(self):
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", -1)
-        self.slave = None
+        self.conn = None
         self._old_builder_list = []
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
@@ -563,24 +536,16 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
-        blist = [dict([('name', b.name), ('dir', b.config.slavebuilddir)])
-            for b in our_builders]
+        blist = [(b.name, b.config.slavebuilddir) for b in our_builders]
         if blist == self._old_builder_list:
             return defer.succeed(None)
 
-        d = self.slave.callRemote(SetBuilderList, builders=blist)
+        d = self.conn.remoteSetBuilderList(builders=blist)
         def sentBuilderList(ign):
             self._old_builder_list = blist
             return ign
         d.addCallback(sentBuilderList)
         return d
-
-    def perspective_keepalive(self):
-        self.messageReceivedFromSlave()
-
-    def perspective_shutdown(self):
-        log.msg("slave %s wants to shut down" % self.slavename)
-        self.slave_status.setGraceful(True)
 
     def addSlaveBuilder(self, sb):
         self.slavebuilders[sb.builder_name] = sb
@@ -670,11 +635,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             d = self.slave.callRemote('shutdown')
             d.addCallback(lambda _ : True) # successful shutdown request
             def check_nsm(f):
-                f.trap(pb.NoSuchMethod)
+                f.trap(pb.NoSuchMethod) # TODO: handle this in buildslave/protocols
                 return False # fall through to the old way
             d.addErrback(check_nsm)
             def check_connlost(f):
-                f.trap(pb.PBConnectionLost)
+                f.trap(pb.PBConnectionLost) # TODO: handle this in buildslave/protocols
                 return True # the slave is gone, so call it finished
             d.addErrback(check_connlost)
             return d
@@ -744,7 +709,7 @@ class BuildSlave(AbstractBuildSlave):
             if not slist:
                 return
             dl = []
-            for name in slist["builders"]:
+            for name in slist:
                 # use get() since we might have changed our mind since then
                 b = self.botmaster.builders.get(name)
                 if b:
@@ -759,8 +724,8 @@ class BuildSlave(AbstractBuildSlave):
         d.addCallbacks(_sent, _set_failed)
         return d
 
-    def detached(self, mind):
-        AbstractBuildSlave.detached(self, mind)
+    def detached(self):
+        AbstractBuildSlave.detached(self)
         self.botmaster.slaveLost(self)
         self.startMissingTimer()
 
@@ -865,8 +830,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return defer.fail(RuntimeError(msg))
         return AbstractBuildSlave.attached(self, bot)
 
-    def detached(self, mind):
-        AbstractBuildSlave.detached(self, mind)
+    def detached(self):
+        AbstractBuildSlave.detached(self)
         if self.substantiation_deferred is not None:
             d = self._substantiate(self.substantiation_build)
             d.addErrback(log.err, 'while re-substantiating')

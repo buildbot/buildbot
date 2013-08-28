@@ -34,7 +34,7 @@ class BuildslaveRegistration(object):
         bs = self.buildslave
         # update with portStr=None to remove any registration in place
         yield self.master.buildslaves.pb.updateRegistration(
-            bs.slavename, bs.password, None, None)
+            bs.slavename, bs.password, None)
         yield self.master.buildslaves._unregister(self)
 
     @defer.inlineCallbacks
@@ -43,11 +43,7 @@ class BuildslaveRegistration(object):
         # update the registration in case the port or password has changed.
         yield self.master.buildslaves.pb.updateRegistration(
                 slave_config.slavename, slave_config.password,
-                global_config.PBPortnum, # TOOD: use new config
-                self.getPerspective)
-
-    def getPerspective(self, mind, slavename):
-        return self.buildslave.getPerspective(mind, slavename)
+                global_config.PBPortnum) # TOOD: use new config
 
 
 class BuildslaveManager(config.ReconfigurableServiceMixin,
@@ -68,6 +64,9 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
         # BuildslaveRegistration instances keyed by buildslave name
         self.registrations = {}
 
+        # connection objects keyed by buildslave name
+        self.connections = {}
+
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
 
@@ -78,8 +77,11 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                         new_config)
 
+    def getBuildslaveByName(self, buildslaveName):
+        return self.registrations[buildslaveName].buildslave
+
     def register(self, buildslave):
-        # TODO: doc that update must be called, too
+        # TODO: doc that reg.update must be called, too
         buildslaveName = buildslave.slavename
         reg = BuildslaveRegistration(self.master, buildslave)
         self.registrations[buildslaveName] = reg
@@ -87,3 +89,15 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
 
     def _unregister(self, registration):
         del self.registrations[registration.buildslave.slavename]
+
+    def newConnection(self, conn, buildslaveName):
+        # TODO: this should arbitrate default connections, rather than
+        # just assert
+        assert buildslaveName not in self.connections
+        self.connections[buildslaveName] = conn
+        def remove():
+            del self.connections[buildslaveName]
+        conn.notifyOnDisconnect(remove)
+
+        # accept the connection
+        return defer.succeed(True)

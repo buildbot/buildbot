@@ -21,3 +21,9 @@ class Listener(base.Listener):
 
     def __init__(self, master):
         base.Listener.__init__(self, master)
+
+    # TODO: reconfig should listen on the AMP port, if any
+
+class Connection(base.Connection):
+
+    pass
