@@ -2,7 +2,8 @@
 // sort and filter tables logs
 
 //$(document).ready(function() {
-		$("#filterinput").val("")
+		$("#filterinput").val("");
+		$('.check-boxes-list input').attr('checked', false);
 		
 		var th = $('.table-holder');
 
@@ -11,11 +12,10 @@
 		     
 		    for ( var i=0 ; i<settings.length ; i++ ) {
 		      settings[i].oInstance.fnFilter( sInput, iColumn, bRegex, bSmart);
-		
 		    }
+
 		    var dv = $('.dataTables_empty').closest(th)
 			$(dv).hide();    
-		    
 		};
 
 		jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function (oSettings) {
@@ -44,7 +44,8 @@
 			"bSort": true,
 			"bInfo": false,
 			"bSortable": true,
-			"aaSorting": []
+			"aaSorting": [],
+			"bAutoWidth": false
 		});
 
 		
@@ -69,11 +70,10 @@
 		$('.dataTables_filter input').click(function(){
 			checkFilterInput();
 		});
-
+		
 		function inputVal(inputVal) {
-			$('.check-boxes-list input').attr('checked', false);
 			$(th).show();
-			oTable.fnFilterAll(inputVal, 1, false);	
+			oTable.fnFilterAll(inputVal);	
 		}
 
 		// submit on return
@@ -89,6 +89,7 @@
 		
 		$('#submitFilter').click(function(){
 			inputVal($("#filterinput").val());
+			console.log($("#filterinput").val());
 		});
 		$('#clearFilter').click(function(){
 			$("#filterinput").val("")

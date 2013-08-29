@@ -27,7 +27,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    // javascript compression
+    // javascript compression. This task is only used for test results.
     
     uglify: {
       my_target: {

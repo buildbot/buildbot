@@ -40,10 +40,9 @@
 	    @include border-radius( 4px );
 	   	color: #666666;
 	    font-size: 12px;
-	    line-height: 13px;
+	    line-height: 14px;
 	    padding: 6px 8px 6px 32px;
 	    @include text-shadow(0 1px 0 white);
-	    width: 100px;
     }
 }
 
@@ -128,11 +127,23 @@
 }
 
 .tablesorter .first-child {
-	width:50%;
+	width:550px;
 }
+.table-1 {
+	table-layout: fixed; 
+	width: 100%;
+}
+
+.table-1 td {
+	word-wrap: break-word;
+
+}
+
 
 //.case-names,
 .results-con {color:#fff;}
+
+//.case-names {width:100px;}
 
 span.covered {
 	background: #00df00; 

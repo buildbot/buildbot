@@ -93,15 +93,16 @@
 		</label>
 			<button class="grey-btn" id="submitFilter">Filter</button>
 			<button class="grey-btn" id="clearFilter">Clear</button>
-				
+
 		<div class="check-boxes-list">
 			<label for="passinput">Passed</label>
 			<input type="checkbox" value="Pass" id="passinput"/>
 			<label for="ignoreinput">ignored</label>
-			<input type="checkbox" checked="checked" value="Ignored" id="ignoreinput"/>
+			<input type="checkbox" value="Ignored" id="ignoreinput"/>
 			<label for="failedinput">Failed</label>
-			<input type="checkbox" checked="checked" value="Failed" id="failedinput"/>
+			<input type="checkbox" value="Failed" id="failedinput"/>
 		</div>
+
 	</div>
 	<h1 class="logo">
       <a href="/">
@@ -173,7 +174,7 @@
 			<td class="txt-align-left first-child"><xsl:value-of select="$runCount"/></td>
 			<td class="txt-align-left"><xsl:value-of select="$failureCount"/></td>
 			<td class="txt-align-left"><xsl:value-of select="$ignoreCount"/></td>
-			<td class="txt-align-left" nowrap="nowrap">
+			<td class="txt-align-left">
 			    <xsl:call-template name="display-percent">
 			        <xsl:with-param name="value" select="$successRate"/>
 			    </xsl:call-template>
