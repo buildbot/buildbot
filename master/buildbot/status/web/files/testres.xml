@@ -3,7 +3,7 @@
 <test-results name="UNNAMED" total="638" failures="0" not-run="35" date="2013-06-05" time="16:43:07">
     <environment nunit-version="AllIn1Runner" machine-name="" platform="" os-version="" clr-version="" user="" user-domain="" cwd="" />
     <culture-info current-uiculture="" current-culture="" />
-    <test-suite name="" result="" type="" executed="">
+    <test-suite name="UNNAMED" success="True" time="5287.320" asserts="0">
         <results>
             <test-case name="DisablingGOWithAttachedRigidbody2DWontCrash" result="Success" executed="true" time="0.104" success="true" />
             <test-case name="GeneratingPolygonColliderFromComplexTextureWontCrash" result="Success" executed="true" time="0.201" success="true" />
