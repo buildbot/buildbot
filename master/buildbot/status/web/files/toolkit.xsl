@@ -88,8 +88,9 @@
 		
 	<div class="dataTables_filter">
 		
-		
-			<input type="text" placeholder="Free text filter ewfdw" id="filterinput" disabled="false"/>
+		<label class="input-label">
+			<input type="text" placeholder="Free text filter" id="filterinput" />
+		</label>
 			<button class="grey-btn" id="submitFilter">Filter</button>
 			<button class="grey-btn" id="clearFilter">Clear</button>
 				

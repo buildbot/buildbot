@@ -1,8 +1,13 @@
+define(['jquery'], function ($) {
 
-$(document).ready(function() {
+    "use strict";
+    var helpers;
+    
+    helpers = {
+        init: function () {
 	
-	//Show / hide
 
+	// center infobox
 	jQuery.fn.center = function() {
 		var h = $(window).height();
 	    var w = $(window).width();
@@ -49,16 +54,92 @@ $(document).ready(function() {
 		}); 
 	}
 	closePopUp();
-	// class on selected menuitem
-	$(function setCurrentItem(){
-		var path = window.location.pathname.split("\/");
+	
+	//Set the highest with on both selectors
+			function getMaxChildWidth(sel) {
+			    var max = 80;
+			    $(sel).each(function(){
+			        var c_width = $(this).width();
+			        if (c_width > max) {
+			            max = c_width + 30;
+			        }
+			    });
+			    $('#selectorWidth').width(max);
+
+			    return max;
+			}
+			
+			$(".select-tools-js").select2({
+				width: getMaxChildWidth(".select-tools-js")
+			});
+			$("#commonBranch_select").select2({
+				placeholder: "Common branches",
+				width: $("#commonBranch_select").width() + 140
+			});
+
+		// combobox on codebases
+		function comboBox(selector) {
+
+			// invoke selec2 plugin
+			var selectLength = $('select.select-tools-js').length;
+
+			var sortLink = $('<a href="#" class="sort-name">Sort by name</a>');
+			$(sortLink).insertAfter($('.select2-search'));
+			
+			$('option', selector).each(function() {			
+				 if ($('option[value="' + $(this).val() + '"]', selector).length == selectLength) {
+	        		$(this).clone().prop('selected', false).appendTo("#commonBranch_select");			
+	    		}
+			});
+
+			// Remove duplicates from the list
+			var map = {};
+			$("#commonBranch_select option").each(function(){
+			    var value = $(this).text();
+			    if (map[value] == null){
+			        map[value] = true;
+			    } else {
+			        $(this).remove();
+			    }
+			});
+
+			$('#commonBranch_select').change(function(){
+			var commonVal = $(this);
+			
+			$('option',selector).each(function() {
+				
+				if ($(this).val() === $(commonVal).val() ) {					
+						$(this).parent().children('option').prop('selected', false);
+						$(this).prop('selected', true);
+					}
+				});
+				
+				$(selector).trigger("change");
+			});
+
+		}
+		comboBox('.select-tools-js');
+
+		// sort selector list by name
+		function clickSort(selector) {
+			$('.sort-name').click(function(e){
+				var sn = $(this)
+				$(sn).toggleClass('direction-up');
+				e.preventDefault();
+
+			    $(selector).children("li").sort(function(a, b) {
+			        var upA = $(a).text().toUpperCase();
+			        var upB = $(b).text().toUpperCase();
+			        if ($(sn).hasClass('direction-up')) {
+			        	return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
+			        } else {
+			        	return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
+			        }
+			    }).appendTo(selector);
+			});
+		}
 		
-		 $('.top-menu a').each(function(index) {
-		 	var thishref = this.href.split("\/");
-	        if(thishref[thishref.length-1].trim().toLowerCase() == path[1].trim().toLowerCase())
-	            $(this).parent().addClass("selected");
-	    });
-	});
+		clickSort('#select2-drop .select2-results');
 
 	// check all in tables
 	$(function selectAll() {
@@ -89,26 +170,6 @@ $(document).ready(function() {
 
 		}
 	});
-
-	// sort and filter tables
-	$('.tablesorter-js').dataTable({
-		"bPaginate": false,
-		"bLengthChange": false,
-		"bFilter": true,
-		"bSort": true,
-		"bInfo": false,
-		"bAutoWidth": false,
-		"bRetrieve": false,
-		"asSorting": true,
-		"bSearchable": true,
-		"bSortable": true,
-		//"oSearch": {"sSearch": " "}
-		"aaSorting": [],
-		"oLanguage": {
-		 	"sSearch": ""
-		 },
-		"bStateSave": true
-	});	
 
 	// validate the forcebuildform
 	function validateForm() {
@@ -144,110 +205,10 @@ $(document).ready(function() {
 				e.preventDefault();
 			}
 		});
-		/* clear all button
-			$(".clear-btn", formEl).click(function (e) {
-				$('input[name="fmod_revision"]',formEl).val("").removeClass('not-valid');
-				e.preventDefault();
-			});
-		*/
-	}
-
-	// Freetext filtering
-
-
-
-	//Set the highest with on both selectors
-	function getMaxChildWidth(sel) {
-	    max = 80;
-	    $(sel).each(function(){
-	        c_width = parseInt($(this).width());
-	        if (c_width > max) {
-	            max = c_width + 30;
-	        }
-	    });
-	    $('#selectorWidth').width(max);
-	    return max;
-	}
-	
-	$(".select-tools-js").select2({
-			width: getMaxChildWidth(".select-tools-js")
-		});
-		$("#commonBranch_select").select2({
-			placeholder: "Common branches",
-			width: $("#commonBranch_select").width() + 140
-		});
-
-	// combobox on codebases
-	
-	function comboBox(selector) {
-
-		// invoke selec2 plugin
-		var selectLength = $('select.select-tools-js').length;
-
-		var sortLink = $('<a href="#" class="sort-name">Sort by name</a>');
-		$(sortLink).insertAfter($('.select2-search'));
 		
-		$('option', selector).each(function() {			
-			 if ($('option[value="' + $(this).val() + '"]', selector).length == selectLength) {
-        		$(this).clone().prop('selected', false).appendTo("#commonBranch_select");			
-    		}
-		});
-
-		// Remove duplicates from the list
-		var map = {};
-		$("#commonBranch_select option").each(function(){
-		    var value = $(this).text();
-		    if (map[value] == null){
-		        map[value] = true;
-		    } else {
-		        $(this).remove();
-		    }
-		});
-
-		$('#commonBranch_select').change(function(){
-		var commonVal = $(this);
-		
-		$('option',selector).each(function() {
-			
-			if ($(this).val() === $(commonVal).val() ) {					
-					$(this).parent().children('option').prop('selected', false);
-					$(this).prop('selected', true);
-				}
-			});
-			
-			$(selector).trigger("change");
-		});
-
 	}
-	comboBox('.select-tools-js');
 
-
-	function clickSort(selector) {
-		$('.sort-name').click(function(e){
-			var sn = $(this)
-			$(sn).toggleClass('direction-up');
-			e.preventDefault();
-
-		    $(selector).children("li").sort(function(a, b) {
-		        var upA = $(a).text().toUpperCase();
-		        var upB = $(b).text().toUpperCase();
-		        if ($(sn).hasClass('direction-up')) {
-		        	return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
-		        } else {
-		        	return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
-		        }
-		    }).appendTo(selector);
-		});
-	}
-	
-	clickSort('#select2-drop .select2-results');
-
-
-	// display popup box with external content
-
-	// get content in the dropdown and display it while removing the preloader
-	
-
+	// display popup box with external content	
 	$('#getBtn').click(function() {
 
 		$('.more-info-box-js, .more-info-box-js-2').hide();
@@ -383,5 +344,8 @@ $(document).ready(function() {
 
 	});
 	
+	}
+	};
 
+    return helpers;
 });

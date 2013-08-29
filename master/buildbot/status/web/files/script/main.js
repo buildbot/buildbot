@@ -1,14 +1,42 @@
 require.config({
-    baseUrl: 'js/lib',
-    paths: {
-        // the left side is the module ID,
-        // the right side is the path to
-        // the jQuery file, relative to baseUrl.
-        // Also, the path should NOT include
-        // the '.js' file extension. This example
-        // is using jQuery 1.9.0 located at
-        // js/lib/jquery-1.9.0.js, relative to
-        // the HTML page.
-        jquery: 'jquery-2.0.3'
-    }
+	paths: {
+		'jquery': 'libs/jQuery-2-0-3',
+		'select2': 'plugins/select2',
+		'datatables': 'plugins/jquery-datatables',
+		'setcurrentitem': 'project/set-current-item',
+		'helpers': 'project/helpers'
+	}
+});
+
+require(['jquery','helpers','setcurrentitem', 'datatables', 'select2'], function($, setCurrentItem, helpers) {
+	'use strict';
+	 
+	$(document).ready(function() {
+		
+		setCurrentItem.init();
+		
+
+		
+		// sort and filter tabless		
+		$('.tablesorter-js').dataTable({
+			"bPaginate": false,
+			"bLengthChange": false,
+			"bFilter": true,
+			"bSort": true,
+			"bInfo": false,
+			"bAutoWidth": false,
+			"bRetrieve": false,
+			"asSorting": true,
+			"bSearchable": true,
+			"bSortable": true,
+			//"oSearch": {"sSearch": " "}
+			"aaSorting": [],
+			"oLanguage": {
+			 	"sSearch": ""
+			 },
+			"bStateSave": true
+		});	
+		
+			helpers.init();
+	});
 });

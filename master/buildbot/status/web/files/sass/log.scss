@@ -14,7 +14,6 @@
     text-shadow: none;
 }
 
-
 .log-main .dataTables_wrapper .dataTables_filter {
 	display:none;
 }
@@ -30,11 +29,39 @@
     margin-top: 0;
     label {
     	color:#fff;
+    	margin-right:3px;
     }
     input {
-    	 margin-right: 5px;
+    	 margin-right: 12px;
     	 width: auto;
     }
+    #filterinput {
+	    border: 1px solid #CCCCCC;
+	    @include border-radius( 4px );
+	   	color: #666666;
+	    font-size: 12px;
+	    line-height: 13px;
+	    padding: 6px 8px 6px 32px;
+	    @include text-shadow(0 1px 0 white);
+	    width: 100px;
+    }
+}
+
+.input-label {
+	font-weight: bold;
+	position: relative;
+	text-shadow: 0 1px 0 white;
+
+	&:after 
+	{
+		color: #ADADAD;
+	    content: "";
+	    font-family: katana_icons;
+	    left: 12px;
+	    line-height: 12px;
+	    position: absolute;
+	    top: 1px;
+	}
 }
 
 .check-boxes-list {

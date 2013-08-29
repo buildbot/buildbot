@@ -28,10 +28,30 @@ module.exports = function(grunt) {
       }
     },
     // javascript compression
+    
     uglify: {
       my_target: {
         files: {
-          'prod/script/output.min.js': ['script/jQuery.2.0.3.js','script/jquery.dataTables.js','script/select2.js','script/default.js']
+          'prod/script/logoutput.min.js': ['script/libs/jQuery-2-0-3.js','script/plugins/jquery-datatables.js', 'script/log.js']
+        }
+      }
+    },
+    
+    requirejs: {
+      compile: {
+        options: {
+          baseUrl: '.',
+          paths: {
+          jquery: 'script/libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
+          //jquery: 'empty:' //Use this to continue using CDN loading
+          select2: 'script/plugins/select2',
+          datatables: 'script/plugins/jquery-datatables',
+          setcurrentitem: 'script/project/set-current-item',
+          helpers: 'script/project/helpers'
+        },
+          name: 'script/main',
+          out: 'prod/script/main.js',
+          removeCombined: false
         }
       }
     },
@@ -50,9 +70,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-compass');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
 
   // Define your tasks here
   grunt.registerTask('default', ['compass']);
   grunt.registerTask('default', ['uglify']);
+  grunt.registerTask('default', ['requirejs']);
 
 };
