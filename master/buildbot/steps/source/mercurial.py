@@ -128,7 +128,9 @@ class Mercurial(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            yield self._dovccmd(['clone', self.repourl, '.'])
+            res = yield self._dovccmd(['clone', self.repourl, '.'])
+            yield self._checkBranchChange(res)
+
         elif self.method == 'clean':
             yield self.clean(None)
         elif self.method == 'fresh':

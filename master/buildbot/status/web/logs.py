@@ -155,7 +155,11 @@ class HTMLLog(Resource):
         self.original = original
 
     def render(self, request):
-        request.setHeader("content-type", "text/html")
+        if 'xml-stylesheet' in self.original.html:
+            request.setHeader("content-type", "text/xsl")
+        else:
+            request.setHeader("content-type", "text/html")
+
         return self.original.html
 
 components.registerAdapter(HTMLLog, logfile.HTMLLogFile, IHTMLLog)
