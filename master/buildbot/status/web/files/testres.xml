@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<?xml-stylesheet  type="text/xsl" href="/NUnit-NoFrame.xsl"?>
-<test-results name="UNNAMED" total="638" failures="0" not-run="35" date="2013-06-05" time="16:43:07">
+<?xml-stylesheet  type="text/xsl" href="NUnit-NoFrame.xsl"?>
+<test-results time="9:39 PM" date="8/29/2013" name="UNNAMED" invalid="0" skipped="0" ignored="0" total="0" failures="0" errors="0" inconclusive="0" not-run="0">
     <environment nunit-version="AllIn1Runner" machine-name="" platform="" os-version="" clr-version="" user="" user-domain="" cwd="" />
     <culture-info current-uiculture="" current-culture="" />
-    <test-suite name="UNNAMED" success="True" time="5287.320" asserts="0">
+    <test-suite name="" result="" type="" executed="">
         <results>
             <test-case name="DisablingGOWithAttachedRigidbody2DWontCrash" result="Success" executed="true" time="0.104" success="true" />
             <test-case name="GeneratingPolygonColliderFromComplexTextureWontCrash" result="Success" executed="true" time="0.201" success="true" />

@@ -71,9 +71,9 @@
 			checkFilterInput();
 		});
 		
-		function inputVal(inputVal) {
-			$(th).show();
-			oTable.fnFilterAll(inputVal);	
+		function inputVal(inputVal, num, bool) {
+			$(th).show(inputVal);
+			oTable.fnFilterAll(inputVal, num, bool);	
 		}
 
 		// submit on return
@@ -89,11 +89,10 @@
 		
 		$('#submitFilter').click(function(){
 			inputVal($("#filterinput").val());
-			console.log($("#filterinput").val());
+			
 		});
 		$('#clearFilter').click(function(){
-			$("#filterinput").val("")
-			inputVal($("#filterinput").val());
+			location.reload();
 		});
 	
  //}); 
