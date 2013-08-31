@@ -79,6 +79,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # first, stop the distributor; this will finish any ongoing scheduling
         # operations before firing
+        # FIXME: this should be renamed cleanShutdown, distinct from stopService.
         d = self.brd.stopService()
 
         # then wait for all builds to finish
@@ -95,6 +96,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(wait)
 
         # Finally, shut the whole process down
+        @defer.inlineCallbacks
         def shutdown(ign):
             # Double check that we're still supposed to be shutting down
             # The shutdown may have been cancelled!
@@ -108,6 +110,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
                         self.shuttingDown = False
                         self.cleanShutdown()
                         return
+                yield self.master.stopService()
                 log.msg("Stopping reactor")
                 _reactor.stop()
             else:
@@ -280,6 +283,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
     def stopService(self):
+        log.msg("Stopping BotMaster service")
         if self.buildrequest_consumer_new:
             self.buildrequest_consumer_new.stopConsuming()
             self.buildrequest_consumer_new = None
