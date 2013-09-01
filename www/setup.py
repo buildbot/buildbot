@@ -109,6 +109,7 @@ bower_json = {
     "html5shiv": "~3.6.2",
     "jquery": "~2.0.0",
     "requirejs": "~2.1.5",
+    "moment": "~2.1.10",
     "json2": "latest",
     # test deps
     "jasmine": "~1.3.1",
