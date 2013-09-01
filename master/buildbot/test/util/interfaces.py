@@ -19,7 +19,7 @@ class InterfaceTests(object):
 
     # assertions
 
-    def assertArgSpecMatches(self, *actualMethods):
+    def assertArgSpecMatches(self, actualMethod, *fakeMethods):
         """Usage::
 
             @self.assertArgSpecMatches(obj.methodUnderTest)
@@ -55,19 +55,28 @@ class InterfaceTests(object):
             except AttributeError:
                 return func
 
-        def wrap(template):
-            for actual in actualMethods:
-                actual_argspec = filter(
-                        inspect.getargspec(remove_decorators(actual)))
-                template_argspec = filter(
-                        inspect.getargspec(remove_decorators(template)))
-                if actual_argspec != template_argspec:
-                    msg = "Expected: %s; got: %s" % (
-                        inspect.formatargspec(*template_argspec),
-                        inspect.formatargspec(*actual_argspec))
-                    self.fail(msg)
-            return template  # just in case it's useful
-        return wrap
+        def assert_same_argspec(expected, actual):
+            if expected != actual:
+                msg = "Expected: %s; got: %s" % (
+                    inspect.formatargspec(*expected),
+                    inspect.formatargspec(*actual))
+                self.fail(msg)
+
+        actual_argspec = filter(
+                inspect.getargspec(remove_decorators(actualMethod)))
+
+        for fakeMethod in fakeMethods:
+            fake_argspec = filter(
+                    inspect.getargspec(remove_decorators(fakeMethod)))
+            assert_same_argspec(actual_argspec, fake_argspec) 
+
+        def assert_same_argspec_decorator(decorated):
+            expected_argspec = filter(
+                    inspect.getargspec(remove_decorators(decorated)))
+            assert_same_argspec(expected_argspec, actual_argspec) 
+            # The decorated function works as usual.
+            return decorated
+        return assert_same_argspec_decorator
 
     def assertInterfacesImplemented(self, cls):
         "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
