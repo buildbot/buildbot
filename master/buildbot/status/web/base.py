@@ -533,7 +533,9 @@ class BuildLineMixin:
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,
-                  'include_builder': include_builder
+                  'include_builder': include_builder,
+                  'reason': build.getReason(),
+                  'interested_users': build.getInterestedUsers(),
                   }
         return values
 
