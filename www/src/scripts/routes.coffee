@@ -17,6 +17,9 @@ angular.module('app').constant("route_config",
     buildmasters:
         caption: "Build Masters"
         route: "/buildmasters"
+    schedulers:
+        caption: "Schedulers"
+        route: "/schedulers"
     users:
         caption: "Users"
         route: "/users"
