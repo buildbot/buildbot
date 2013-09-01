@@ -144,6 +144,43 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                   project='p', sourcestampsetid=100)
              })
 
+
+    @defer.inlineCallbacks
+    def test_basicForce_reasonString(self):
+        """Same as above, but with a reasonString"""
+        sched = self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
+
+        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',revision='c',
+                        repository='d', project='p',
+                        property1_name='p1',property1_value='e',
+                        property2_name='p2',property2_value='f',
+                        property3_name='p3',property3_value='g',
+                        property4_name='p4',property4_value='h'
+                        )
+        bsid,brids = res
+
+        # only one builder forced, so there should only be one brid
+        self.assertEqual(len(brids), 1)
+
+        self.db.buildsets.assertBuildset\
+            (bsid,
+             dict(reason="user wants it because",
+                  brids=brids,
+                  external_idstring=None,
+                  properties=[ ('owner', ('user', 'Force Build Form')),
+                               ('p1', ('e', 'Force Build Form')),
+                               ('p2', ('f', 'Force Build Form')),
+                               ('p3', ('g', 'Force Build Form')),
+                               ('p4', ('h', 'Force Build Form')),
+                               ('reason', ('because', 'Force Build Form')),
+                               ('scheduler', ('testsched', 'Scheduler')),
+                               ],
+                  sourcestampsetid=100),
+             {'':
+              dict(branch='a', revision='c', repository='d', codebase='',
+                  project='p', sourcestampsetid=100)
+             })
+
     @defer.inlineCallbacks
     def test_force_allBuilders(self):
         sched = self.makeScheduler()

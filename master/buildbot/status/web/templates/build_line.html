@@ -27,6 +27,12 @@
     <td><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
   {% endif %}
     <td><a href="{{ b.buildurl }}">#{{ b.buildnum }}</a></td> 
+    <td><span class='reason'>{{ b.reason|e }}</span>
+      {%- for user in (b.interested_users or []) -%}
+        {%- if not loop.first %}, {% endif -%}
+        <span class='interested_user'>{{ user|e }}</span>
+      {%- endfor -%}
+    </td> 
     <td class="left">{{ b.text|capitalize }}</td>
   </tr>
 {% endmacro %}
@@ -42,6 +48,7 @@
     <th>Builder</th>
      {% endif %}
     <th>Build #</th>
+    <th>Reason</th>
     <th>Info</th>
   </tr>
   {% for b in builds %}

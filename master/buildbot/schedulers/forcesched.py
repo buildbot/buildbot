@@ -454,8 +454,8 @@ class ForceScheduler(base.BaseScheduler):
 
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
-            reason=StringParameter(name="reason", default="force build", length=20),
-
+            reason=StringParameter(name="reason", default="force build", size=20),
+            reasonString="A build was forced by '%(owner)s': %(reason)s",
             codebases=None,
             
             properties=[
@@ -579,6 +579,8 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
 
+        self.reasonString = reasonString
+
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
 
@@ -653,7 +655,7 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        r = ("A build was forced by '%s': %s" % (owner, reason))
+        r = self.reasonString % {'owner': owner, 'reason': reason}
 
         # everything is validated, we can create our source stamp, and buildrequest
         res = yield self.addBuildsetForSourceStampSetDetails(

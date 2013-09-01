@@ -44,8 +44,12 @@ Features
   Depends on txgithub package.
   See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
 
-* The web UI now shows sourcestamp information for builders that use multiple codebases (instead of the generic
-  "multiple rev" placeholder that was shown before).
+* The web UI for Builders has been updated:
+   * shows the build 'reason' and 'interested users'
+   * shows sourcestamp information for builders that use multiple codebases (instead of the generic
+     "multiple rev" placeholder that was shown before).
+
+* Each Scheduler type can now take a 'reason' argument to customize the reason it uses for triggered builds.
 
 * Added zsh and bash tab-completions support for 'buildbot' command.
 
