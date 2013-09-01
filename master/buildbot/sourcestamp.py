@@ -114,17 +114,20 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if ssdict['changeids']:
             # sort the changeids in order, oldest to newest
             sorted_changeids = sorted(ssdict['changeids'])
+            @defer.inlineCallbacks
             def gci(id):
-                d = master.db.changes.getChange(id)
-                d.addCallback(lambda chdict :
-                    Change.fromChdict(master, chdict))
-                return d
+                chdict = yield master.db.changes.getChange(id)
+                if chdict:
+                    defer.returnValue(Change.fromChdict(master, chdict))
+                else:
+                    # change isn't in the DB, so ignore it
+                    return
             d = defer.gatherResults([ gci(id)
                                 for id in sorted_changeids ])
         else:
             d = defer.succeed([])
         def got_changes(changes):
-            sourcestamp.changes = tuple(changes)
+            sourcestamp.changes = tuple(filter(None, changes))
             return sourcestamp
         d.addCallback(got_changes)
         return d
