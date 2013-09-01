@@ -179,7 +179,6 @@ The following will need to be rewritten:
 
 ### Javascript ###
 
-* Standardize on interCaps spellings for identifiers (method and variable names).
 * Convert tabs to spaces
 * Verify licensing for Bootstrap
 
