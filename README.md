@@ -78,8 +78,9 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 ## Documentation ##
 
 * Document naming conventions (below) in the style guide, make sure everything adheres to those conventions
-  * interCaps for Python, JavaScript function names
+  * interCaps for Python, CoffeeScript function names
   * In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
+    @TODO: actually it would make things much easier for webui to have it named ``id``
   * In the DB API, each result field has an ``id`` key.
 * The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
 * The tour must be upgraded to cover the new web UI.
@@ -112,7 +113,7 @@ For each resource type, we'll need the following (based on "Adding Resource Type
   Messages should be sent when this occurs.
 * Add support for uids to the change resource type :runner:
 * Consider importing build pickles into the new DB. :runner:
-* Implement compression in log chunks - implement ``compressLog`` to re-split logs into larger chunks and compress them; implement decompression, and handle the csae where chunks overlap during the compression process :runner:
+* Implement compression in log chunks - implement ``compressLog`` to re-split logs into larger chunks and compress them; implement decompression, and handle the case where chunks overlap during the compression process :runner:
 
 ### Misc Data API Work ###
 
@@ -187,20 +188,21 @@ The following will need to be rewritten:
 We need a means to unit-test the JavaScript frontend.
 
 Testing javascript and json api interaction is tricky. Few design principles:
-* Stubbing the data api in JS is considered wrong path, as we'll have to always make sure consistency between the stub and real implementation
-* ensure tests run either from `built/` or `src/` of buildbot-www; both need to be tested
+* Stubbing the data api in JS can only be made automatic, by reusing the same spec that the python tests are already using.
+* ensure tests run either in dev mode, and prod mode. dev mode is much easier to debug, but the step of minification
+  adds some small deviation which makes important to unit test.
 * Run JS inside trial environment is difficult. txghost.py method has been experimented, and has several drawbacks.
   - ghost is based on webkit which in turn is based on qt. The qtreactor had licence issue and is not well supported in twisted. So there is a
     hack in txghost trying to run the qt event loop at the same time as the twisted event loop.
   - better solution would be to run ghost in its own process, and have minimal RPC to control it. RPC between twisted and qt looks complicated.
   - installing pyqt/webkit inside virtualenv is tricky. You need to manually copy some of the .so libraries inside the sandbox
+  - ghost is not very well supported/known in the JS community
 * better option has been discussed:
   - let the JS test suite be entirely JS driven, and not python trial driven + JS assertion, like originally though
-  - JS tests can control data api, and trigger fake events via a special testing data api.
-  - JS developer can run its test without trial knowledge. Only points the browser to doh's runner.html page, and run the tests:
-    e.g.: http://nine.buildbot.net/nine/static/js/lib/tests/runner.html#all
-  - Need a js test mode that has to be enabled in master.cfg, in order to prevent prod's db to be corrupted by tests if malicious people launch them
-  - Test mode will add some data api to inject pre-crafted events in the data flow.
+  - angularJS comes with a very well though test framework (Karma + Jasmine). We should use it.
+  - For E2E tests, there is a angularJS solution which is pure E2E (need a real full blown master)
+  - Intermediate solution testing the whole UI against the fake data API has to be investigated.
+  - We have not found (yet) solution for testing the templates appart from E2E.
 
 ### REST API ###
 
@@ -214,7 +216,7 @@ Testing javascript and json api interaction is tricky. Few design principles:
 
 ### Localization ###
 
-Need to figure out how to do this!
+AngularJS ecosystem has ngTranslate project, which makes i18n relatively easy.
 
 ### Setup ###
 
@@ -227,6 +229,8 @@ The upgrade process should make whatever modifications are required, or at least
 
 * Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
 * Add ``changesources`` :runner:
+* add a parent-child 1-N relationship table for triggered and promoted build
+  Should that be buildid 1-N buildsetid or buildid 1-N buildid?
 
 ### DB API Changes ###
 
