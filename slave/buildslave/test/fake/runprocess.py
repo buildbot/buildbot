@@ -101,7 +101,7 @@ class FakeRunProcess:
         # value in **kwargs and didn't expect anything, well count that as OK
         default_values = dict(environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, maxTime=None, initialStdin=None,
+                 timeout=None, maxTime=None, sigtermTime=None, initialStdin=None,
                  keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config")
 
