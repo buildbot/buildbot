@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+import types
 import time, re, string
 import datetime
 import calendar
-import types
 from twisted.python import reflect 
 
 from buildbot.util.misc import deferredLocked, SerializedInvocation
@@ -207,8 +207,20 @@ def in_reactor(f):
     wrap._orig = f # for tests
     return wrap
 
+def string2boolean(str):
+    return {
+        'on': True,
+        'true': True,
+        'yes': True,
+        '1': True,
+        'off': False,
+        'false': False,
+        'no': False,
+        '0': False,
+    }[str.lower()]
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists', 'makeList', 'in_reactor' ]
+    'diffLists', 'makeList', 'in_reactor', 'string2boolean' ]

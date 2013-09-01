@@ -26,7 +26,8 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
     # source] tuple.
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_properties', 'change_files'])
+            table_names=['patches', 'sourcestamps', 'changes',
+                         'change_properties', 'change_files'])
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
         d.addCallback(finish_setup)
@@ -37,9 +38,10 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
 
     def test_bogus_row_no_source(self):
         d = self.insertTestData([
+            fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                 property_value='"no source"'),
-            fakedb.Change(changeid=13),
+            fakedb.Change(changeid=13, sourcestampid=10),
         ])
         def get13(_):
             return self.db.changes.getChange(13)
@@ -52,9 +54,10 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
 
     def test_bogus_row_jsoned_list(self):
         d = self.insertTestData([
+            fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                 property_value='[1, 2]'),
-            fakedb.Change(changeid=13),
+            fakedb.Change(changeid=13, sourcestampid=10),
         ])
         def get13(_):
             return self.db.changes.getChange(13)

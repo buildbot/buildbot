@@ -15,6 +15,7 @@
 
 
 from twisted.trial import unittest
+from buildbot.util import pickle
 
 class OldImportPaths(unittest.TestCase):
     """
@@ -63,18 +64,14 @@ class OldImportPaths(unittest.TestCase):
         assert Try_Userpass
 
     def test_changes_changes_ChangeMaster(self):
-        # this must exist to open old changes pickles
-        from buildbot.changes.changes import ChangeMaster
-        assert ChangeMaster
+        # this class is handled by buildbot.util.pickle
+        self.assertIn(('buildbot.changes.changes', 'ChangeMaster'),
+                pickle.substituteClasses)
 
     def test_changes_changes_Change(self):
         # this must exist to open old changes pickles
         from buildbot.changes.changes import Change
         assert Change
-
-    def test_status_html_Webstatus(self):
-        from buildbot.status.html import WebStatus
-        assert WebStatus
 
     def test_schedulers_filter_ChangeFilter(self):
         # this was the location of ChangeFilter until 0.8.4
@@ -90,10 +87,9 @@ class OldImportPaths(unittest.TestCase):
         assert BuildRequest
 
     def test_sourcestamp_SourceStamp(self):
-        # this must exist, and the class must be defined at this package path,
-        # in order for old build pickles to be loaded.
-        from buildbot.sourcestamp import SourceStamp
-        assert SourceStamp
+        # this class is handled by buildbot.util.pickle
+        self.assertIn(('buildbot.sourcestamp', 'SourceStamp'),
+                pickle.substituteClasses)
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
         from buildbot.process.subunitlogobserver import SubunitShellCommand

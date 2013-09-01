@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import random
-from twisted.trial import unittest
 from twisted.python import log
 from twisted.internet import defer, reactor
+from buildbot.test.util import fuzz
 from buildbot.util import lru
 
 # construct weakref-able objects for particular keys
@@ -31,24 +30,11 @@ def deferUntilLater(secs, result=None):
     reactor.callLater(secs, d.callback, result)
     return d
 
-class LRUCacheFuzzer(unittest.TestCase):
-
-    FUZZ_TIME = 60
-
-    def setUp(self):
-        lru.inv_failed = False
-
-    def tearDown(self):
-        self.assertFalse(lru.inv_failed, "invariant failed; see logs")
-        if hasattr(self, 'lru'):
-            log.msg("hits: %d; misses: %d; refhits: %d" %  (self.lru.hits,
-                self.lru.misses, self.lru.refhits))
-
-    # tests
+class LRUCacheFuzzer(fuzz.FuzzTestCase):
 
     @defer.inlineCallbacks
-    def test_fuzz(self):
-        started = reactor.seconds()
+    def do_fuzz(self, endTime):
+        lru.inv_failed = False
 
         def delayed_miss_fn(key):
             return deferUntilLater(random.uniform(0.001, 0.002),
@@ -59,8 +45,9 @@ class LRUCacheFuzzer(unittest.TestCase):
         errors = [] # bail out early in the event of an error
         results = [] # keep references to (most) results
 
-        # fire off as many requests as we can in the time alotted
-        while not errors and reactor.seconds() - started < self.FUZZ_TIME:
+        # fire off as many requests as we can in one second, with lots of
+        # overlap.
+        while not errors and reactor.seconds() < endTime:
             key = random.choice(keys)
 
             d = self.lru.get(key)
@@ -86,6 +73,6 @@ class LRUCacheFuzzer(unittest.TestCase):
             # give the reactor some time to process pending events
             yield deferUntilLater(0.001)
 
-# skip these tests entirely if fuzzing is not enabled
-if 'BUILDBOT_FUZZ' not in os.environ:
-    del LRUCacheFuzzer
+        self.assertFalse(lru.inv_failed, "invariant failed; see logs")
+        log.msg("hits: %d; misses: %d; refhits: %d" %  (self.lru.hits,
+            self.lru.misses, self.lru.refhits))

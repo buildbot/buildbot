@@ -80,10 +80,9 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.properties)
 
-    @defer.inlineCallbacks
     def getSourceStamp(self):
-        br = yield self._getBuildRequest()
-        defer.returnValue(br.source)
+        # TODO..
+        return defer.succeed(None)
 
     def getBuilderName(self):
         return self.buildername

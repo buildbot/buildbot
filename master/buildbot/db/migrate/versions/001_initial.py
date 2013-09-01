@@ -16,9 +16,8 @@
 from __future__ import with_statement
 
 import os
-import cPickle
 from twisted.persisted import styles
-from buildbot.util import json
+from buildbot.util import json, pickle
 import sqlalchemy as sa
 
 metadata = sa.MetaData()
@@ -192,7 +191,7 @@ def import_changes(migrate_engine):
     # pickles were written using the old text pickle format, which requires
     # newline translation
     with open(changes_pickle,"r") as f:
-        source = cPickle.load(f)
+        source = pickle.load(f)
     styles.doUpgrade()
 
     #if not quiet: print " (%d Change objects)" % len(source.changes)

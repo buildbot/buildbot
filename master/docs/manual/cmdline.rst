@@ -75,6 +75,18 @@ This creates a new directory and populates it with files that allow it to be use
 You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
 This allows you to move the master directory without editing this file.
 
+.. bb:cmdline:: upgrade-master
+
+upgrade-master
+++++++++++++++
+
+.. code-block:: none
+
+    buildbot upgrade-master {BASEDIR}
+
+This upgrades a previously created buildmaster's base directory for a new version of buildbot master source code.
+This will copy the web server static files, and potencially upgrade the db.
+
 .. bb:cmdline:: start (buildbot)
 
 start
@@ -638,12 +650,6 @@ buildmaster. The other sections of the tool are as follows:
     watching the buildmaster's :file:`twistd.log` as you reload the config
     file, as any errors which are detected in the config file will be
     announced there.
-
-:guilabel:`Rebuild .py`
-    (not yet implemented). The idea here is to use Twisted's ``rebuild``
-    facilities to replace the buildmaster's running code with a new
-    version. Even if this worked, it would only be used by buildbot
-    developers.
 
 :guilabel:`poke IRC`
     This locates a :class:`words.IRC` status target and causes it to emit a

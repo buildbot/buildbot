@@ -25,16 +25,24 @@ package.
 
 .. py:class:: ComparableMixin
 
-    This mixin class adds comparability to a subclass.  Use it like this::
+    This mixin class adds comparability to a subclass.
+    Use it like this::
 
         class Widget(FactoryProduct, ComparableMixin):
             compare_attrs = [ 'radius', 'thickness' ]
             # ...
 
-    Any attributes not in ``compare_attrs`` will not be considered when
-    comparing objects.  This is particularly useful in implementing buildbot's
-    reconfig logic, where a simple comparison between the new and existing objects
-    can determine whether the new object should replace the existing object.
+    Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
+    This is used to implement buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
+    If the comparison shows the objects to be equivalent, then the old object is left in place.
+    If they differ, the old object is removed from the buildmaster and the new object added.
+
+    For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
+    Be sure to also include the superclass's list, e.g.::
+
+        class MyScheduler(base.BaseScheduler):
+            compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
+
 
     A point to note is that the compare_attrs list is cumulative; that is,
     when a subclass also has a compare_attrs and the parent class has a
@@ -126,6 +134,25 @@ package.
     :returns: string or ``None``
 
     If ``obj`` is not None, return its string representation.
+
+.. py:function:: ascii2unicode(str):
+
+    :param str: string
+    :returns: string as unicode, assuming ascii
+
+    This function is intended to implement automatic conversions for user convenience.
+    If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
+    If given a unicode string, it returns it directly.
+
+.. py:function:: string2boolean(str):
+
+    :param str: string
+    :raises KeyError:
+    :returns: boolean
+
+    This function converts a string to a boolean.
+    It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
+    It raises :py:exc:`KeyError` if the value is not recognized.
 
 .. py:data:: NotABranch
 
@@ -516,6 +543,56 @@ This module contains a few utilities that are not included with SQLAlchemy.
     versions that did not have a ``__version__`` attribute are represented by
     ``(0,0,0)``.
 
+buildbot.util.pathmatch
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pathmatch
+
+.. py:class:: Matcher
+
+    This class implements the path-matching algorithm used by the data API.
+
+    Patterns are tuples of strings, with strings beginning with a colon (``:``) denoting variables.
+    A character can precede the colon to indicate the variable type:
+
+        * ``i`` specifies an identifier (:ref:`identifier <type-identifier>`).
+        * ``n`` specifies a number (parseable by ``int``).
+
+    A tuple of strings matches a pattern if the lengths are identical, every variable matches and has the correct type, and every non-variable pattern element matches exactly.
+
+    A matcher object takes patterns using dictionary-assignment syntax::
+
+        ep = ChangeEndpoint()
+        matcher[('change', 'n:changeid')] = ep
+
+    and performs matching using the dictionary-lookup syntax::
+
+        changeEndpoint, kwargs = matcher[('change', '13')]
+        # -> (ep, {'changeid': 13})
+
+    where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
+
+    .. py:method:: iterPatterns()
+
+        Returns an iterator which yields all patterns in the matcher as tuples of (pattern, endpoint).
+
+buildbot.util.topicmatch
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.topicmatch
+
+.. py:class:: TopicMatcher(topics)
+
+    :param list topics: topics to match
+
+    This class implements the AMQP-defined syntax: routing keys are treated as dot-separated sequences of words and matched against topics.
+    A star (``*``) in the topic will match any single word, while an octothorpe (``#``) will match zero or more words.
+
+    .. py:method:: matches(routingKey)
+
+        :param string routingKey: routing key to examine
+        :returns: True if the routing key matches a topic
+
 buildbot.util.subscription
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -567,3 +644,53 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
+
+buildbot.util.pickle
+~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pickle
+
+This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` modules.
+It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
+It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.
+
+buildbot.util.typechecks
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.typechecks
+
+This module makes it easy to check argument types.
+
+.. py:function:: isIdentifier(maxLength, object)
+
+    :param maxLength: maximum length of the identifier
+    :param object: object to test for identifier-ness
+    :returns: boolean
+
+    Is object a :ref:`identifier <type-identifier>`?
+
+buildbot.util.lineboundaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.lineboundaries
+
+.. py:class:: LineBoundaryFinder
+
+    This class accepts a sequence of arbitrary strings and invokes a callback only with complete (newline-terminated) substrings.
+    It buffers any partial lines until a subsequent newline is seen.
+
+    :param callback: asynchronous function to call with newline-terminated strings
+
+    .. py:method:: append(text)
+
+        :param text: text to append to the boundary finder
+        :returns: Deferred
+
+        Add additional text to the boundary finder.
+        If the addition of this text completes at least one line, the callback will be invoked with as many complete lines as possible.
+
+    .. py:method:: flush()
+
+        :returns: Deferred
+
+        Flush any remaining partial line by adding a newline and invoking the callback.

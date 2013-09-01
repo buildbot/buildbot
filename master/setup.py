@@ -37,6 +37,12 @@ def include(d, e):
     
     return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
 
+def include_statics(d):
+    r = []
+    for root, ds, fs in os.walk(d):
+        r.append((root, [ os.path.join(root, f) for f in fs]))
+    return r
+
 class install_data_twisted(install_data):
     """make sure data files are installed in package.
     this is evil.
@@ -118,7 +124,8 @@ setup_args = {
         ],
 
     'packages': ["buildbot",
-              "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
+              "buildbot.status",
+              "buildbot.www",
               "buildbot.changes",
               "buildbot.buildslave",
               "buildbot.steps",
@@ -135,12 +142,16 @@ setup_args = {
               "buildbot.db",
               "buildbot.db.types",
               "buildbot.db.migrate.versions",
-              "buildbot.util",
+              "buildbot.mq",
+              "buildbot.data",
               "buildbot.test",
               "buildbot.test.fake",
+              "buildbot.test.fuzz",
+              "buildbot.test.integration",
+              "buildbot.test.regressions",
               "buildbot.test.unit",
               "buildbot.test.util",
-              "buildbot.test.regressions",
+              "buildbot.util",
               ],
     'data_files': [
                 ("buildbot", [
@@ -153,21 +164,11 @@ setup_args = {
                 ("buildbot/clients", [
                     "buildbot/clients/debug.glade",
                 ]),
-                ("buildbot/status/web/files", [
-                    "buildbot/status/web/files/default.css",
-                    "buildbot/status/web/files/bg_gradient.jpg",
-                    "buildbot/status/web/files/robots.txt",
-                    "buildbot/status/web/files/templates_readme.txt",
-                    "buildbot/status/web/files/favicon.ico",
-                ]),
-                include("buildbot/status/web/files/", '*.png'),
-                include("buildbot/status/web/templates", '*.html'),
-                include("buildbot/status/web/templates", '*.xml'),
                 ("buildbot/scripts", [
                     "buildbot/scripts/sample.cfg",
                     "buildbot/scripts/buildbot_tac.tmpl",
                 ]),
-                ],
+                ] + include_statics("buildbot/www/static"),
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
@@ -213,7 +214,7 @@ else:
         'sqlalchemy >= 0.6, <= 0.7.10',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
-        'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
+        'sqlalchemy-migrate ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
     ]
     setup_args['tests_require'] = [
