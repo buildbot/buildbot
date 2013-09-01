@@ -62,7 +62,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # insert the buildset itself
             r = conn.execute(buildsets_tbl.insert(), dict(
                 submitted_at=submitted_at, reason=reason, complete=0,
-                complete_at=None, results=-1, waited_for=waited_for,
+                complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 
@@ -98,7 +98,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     dict(buildsetid=bsid, buildername=buildername, priority=0,
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
-                        submitted_at=submitted_at, complete_at=None))
+                        submitted_at=submitted_at, complete_at=None,
+						waited_for=waited_for))
 
                 brids[buildername] = r.inserted_primary_key[0]
 

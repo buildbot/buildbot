@@ -422,7 +422,7 @@ class RealTests(Tests):
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
                 properties={}, builderNames=['bldr'], external_idstring='extid',
-                waited_for=False, _reactor=self.clock))
+                waited_for=True, _reactor=self.clock))
         def check((bsid, brids)):
             def thd(conn):
                 # we should only have one brid
@@ -438,19 +438,18 @@ class RealTests(Tests):
 
                 # one buildrequests row
                 r = conn.execute(self.db.model.buildrequests.select())
-                rows = [ (row.buildsetid, row.id, row.buildername,
-                    row.priority, row.complete, row.results,
-                    row.submitted_at, row.complete_at)
-                          for row in r.fetchall() ]
-                self.assertEqual(rows,
+                self.assertEqual(r.keys(),
+                    [u'id', u'buildsetid', u'buildername', u'priority',
+                        u'complete', u'results', u'submitted_at',
+                        u'complete_at', u'waited_for'])
+                self.assertEqual(r.fetchall(),
                     [ ( bsid, brids['bldr'], 'bldr', 0, 0,
-                        -1, self.now, None) ])
+                        -1, self.now, None, 1) ])
 
                 # one buildset_sourcestamps row
                 r = conn.execute(self.db.model.buildset_sourcestamps.select())
-                rows = [ (row.buildsetid, row.sourcestampid)
-                          for row in r.fetchall() ]
-                self.assertEqual(rows, [ ( bsid, 234) ])
+                self.assertEqual(r.keys(), [u'id', u'buildsetid', u'sourcestampid'])
+                self.assertEqual(r.fetchall(), [ (1, bsid, 234) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
