@@ -118,7 +118,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             def gci(id):
                 chdict = yield master.db.changes.getChange(id)
                 if chdict:
-                    defer.returnValue(Change.fromChdict(master, chdict))
+                    change = yield Change.fromChdict(master, chdict)
+                    defer.returnValue(change)
                 else:
                     # change isn't in the DB, so ignore it
                     return
