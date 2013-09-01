@@ -1115,6 +1115,18 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             'slavenames': ['s2', 's1'],
         })
 
+    def test_getConfigDict_mergeRequests(self):
+        for mr in (False, lambda a,b,c:False):
+            cfg = config.BuilderConfig(name='b', mergeRequests=mr,
+                    factory=self.factory, slavename='s1')
+            self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
+                'mergeRequests': mr,
+                'name': 'b',
+                'slavebuilddir': 'b',
+                'factory': self.factory,
+                'slavenames': ['s1'],
+            })
+
 
 
 class FakeService(config.ReconfigurableServiceMixin,
