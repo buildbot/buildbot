@@ -32,6 +32,7 @@ class FakeTriggerable(object):
 
     triggered_with = None
     result = SUCCESS
+    bsid = 1
     brids = {}
     exception = False
 
@@ -40,12 +41,14 @@ class FakeTriggerable(object):
 
     def trigger(self, waited_for, sourcestamps = None, set_props=None):
         self.triggered_with = (waited_for, sourcestamps, set_props.properties)
-        d = defer.Deferred()
+        idsDeferred = defer.Deferred()
+        idsDeferred.callback((self.bsid, self.brids))
+        resultsDeferred = defer.Deferred()
         if self.exception:
-            reactor.callLater(0, d.errback, RuntimeError('oh noes'))
+            reactor.callLater(0, resultsDeferred.errback, RuntimeError('oh noes'))
         else:
-            reactor.callLater(0, d.callback, (self.result, self.brids))
-        return d
+            reactor.callLater(0, resultsDeferred.callback, (self.result, self.brids))
+        return (idsDeferred, resultsDeferred)
 
 class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
 
