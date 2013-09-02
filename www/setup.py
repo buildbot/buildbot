@@ -96,24 +96,27 @@ package_json = {
 }
 package_json.update(base_json)
 
-# we take latest angular version until we are stable
-# in a crazy CI fashion
+# we take angular 1.2.0 which has important new features
+# like ng-animate, and ng-if
+
+ANGULAR_TAG = "v1.2.0-rc.1"
 bower_json = {
     "dependencies": {
     "bootstrap": "~3.0.0",
     "font-awesome": "latest",
-    "angular": "latest",
+    "angular": ANGULAR_TAG,
+    "angular-route": ANGULAR_TAG,
+    "angular-animate": ANGULAR_TAG,
     "angular-bootstrap": "latest",
     "restangular": "latest",
     "lodash": "latest",
     "html5shiv": "~3.6.2",
     "jquery": "~2.0.0",
     "requirejs": "~2.1.5",
-    "moment": "~2.1.10",
+    "moment": "~2.1.0",
     "json2": "latest",
     # test deps
-    "jasmine": "~1.3.1",
-    "angular-mocks": "latest"
+    "angular-mocks": ANGULAR_TAG
     }
 }
 
