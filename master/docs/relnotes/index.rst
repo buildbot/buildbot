@@ -88,6 +88,8 @@ Features
 
 * The web status now has options to cancel some or all pending builds.
 
+* The web status correctly interprets ANSI color escape codes.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
