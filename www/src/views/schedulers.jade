@@ -1,0 +1,17 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href:"#/schedulers") Schedulers
+  .row
+    table.table.table-hover.table-striped.table-condensed
+      tr
+          td Scheduler Name
+          td Master
+        tr(ng-repeat='scheduler in schedulers')
+          td
+            a(href='#/schedulers/{{ scheduler.schedulerid }}')
+              | {{ scheduler.name }}
+          td
+            a(href="#/masters/{{scheduler.master.masterid}}")
+              | {{ scheduler.master.name }}

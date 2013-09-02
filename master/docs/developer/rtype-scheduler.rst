@@ -5,7 +5,7 @@ Scheduler
 
     :attr integer schedulerid: the ID of this scheduler
     :attr string name: name of this scheduler
-    :attr master master: the master on which this slave is running, or None if it is inactive
+    :attr master master: the master on which this scheduler is running, or None if it is inactive
     :attr Link link: link for this scheduler
 
     A scheduler initiates builds, often in response to changes from change sources.

@@ -1,0 +1,26 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href="#/builders")
+          | Builders
+      li
+        a(href="#/builders/{{builder.builderid}}")
+          | {{builder.name}}
+      li
+        a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}")
+          | {{build.number}}
+  .row
+    .col-sm-6
+      h4 Steps
+      ul.list-group
+        li.list-group-item(ng-repeat="step in steps",ng-click="fulldisplay=!fulldisplay",ng-init="fulldisplay=0")
+          span.badge
+            i.icon-spinner.icon-spin(ng-show="step.complete==0")
+            | &nbsp;{{step.state_strings.join(' ')}}
+          | {{step.name}}
+          ul.unstyled(ng-show="fulldisplay")
+            li(ng-repeat="url in step.urls")
+              a(href="{{url}}") {{url}}
+    .col-sm-6
+      h4 Slave: {{buildslave.name}}

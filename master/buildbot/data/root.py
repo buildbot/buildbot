@@ -52,5 +52,6 @@ class Spec(base.ResourceType):
     class EntityType(types.Entity):
         path = types.String()
         type = types.String()
+        plural = types.String()
         type_spec = types.JsonObject()
     entityType = EntityType(name)

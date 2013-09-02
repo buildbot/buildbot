@@ -23,9 +23,6 @@ class EventResource(resource.Resource):
         self.master = master
 
     def render(self, request):
-        request.setHeader("content-type", "text/event-stream")
-        request.write("")
-
         path = request.postpath
         if path and path[-1] == '':
             path = path[:-1]
@@ -36,10 +33,17 @@ class EventResource(resource.Resource):
         for k in options:
             if len(options[k]) == 1:
                 options[k] = options[k][1]
-
-        qref = self.master.data.startConsuming(
-            (lambda key, msg: self._sendEvent(request, key, msg)),
-            options, path)
+        try:
+            qref = self.master.data.startConsuming(
+                (lambda key, msg: self._sendEvent(request, key, msg)),
+                options, path)
+        except NotImplementedError:
+            request.setResponseCode(404)
+            request.setHeader('content-type', 'text/plain; charset=utf-8')
+            request.write("unimplemented")
+            return
+        request.setHeader("content-type", "text/event-stream")
+        request.write("")
         d = request.notifyFinish()
         d.addBoth(lambda _: qref.stopConsuming())
         return server.NOT_DONE_YET

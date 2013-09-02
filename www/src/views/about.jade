@@ -24,5 +24,18 @@
             | buildbot-www is using the following open-source JavaScript libraries:
             ul
               li(ng-repeat='module in bower_configs')
-                a(href='{{module.http_url}}') {{module.name}}
+                a(ng-show='module.http_url', href='{{module.http_url}}') {{module.name}}
+                span(ng-hide='module.http_url') {{module.name}}
                 | : {{module.version}}
+  .row
+    .well
+      h2 API description
+      ul.list-group
+        li.list-group-item(ng-repeat='spec in specs |orderBy:"path"')
+          b(ng-click="show_detail = ! show_detail", ng-init='show_detail=0') /{{spec.path}}:
+          | {{spec.type_spec.fields.length}} fields
+          dl.dl-horizontal(ng-show='show_detail')
+            span(ng-repeat='field in spec.type_spec.fields |orderBy:"path"')
+              dt {{field.name}}
+              dd {{field.type}}
+                span(ng-show="field.type=='list'") {{field.type_spec}}

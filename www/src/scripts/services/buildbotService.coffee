@@ -4,10 +4,24 @@ angular.module('app').factory 'EventSource', ->
         return new EventSource(url)
 BASEURLAPI = 'api/v2/'
 BASEURLSSE = 'sse/'
+
 angular.module('app').factory 'buildbotService',
 ['$log', 'Restangular', 'EventSource',
     ($log, Restangular, EventSource) ->
         configurer = (RestangularConfigurer) ->
+            responseExtractor =  (response) ->
+                # for now, we only support one resource type per request
+                # we'll have to figure out how to support aggregated response at
+                # some point because this will be a big improve in latency
+                # so we return the first elem that is not "meta"
+                for k, v of response
+                    if k != "meta"
+                        for b in v
+                            # FIXME: fix the data api to always provide a 'id' key
+                            # as jsonapi (and restangular) is requiring
+                            b.id ?= b.builderid
+                        return v
+                response
             onElemRestangularized = (elem, isCollection, route, Restangular) ->
                 # add the bind() method to each restangular object
                 # bind method will create one way binding (readonly)
@@ -20,24 +34,21 @@ angular.module('app').factory 'buildbotService',
                             $scope[scope_key].push(e.msg)
                             $scope.$apply()
                         p = elem.getList()
-                        p.then((v) ->
-                            $scope[scope_key] = v
+                        p.then (res) ->
+                            $scope[scope_key] = res
                             elem.on("new", onEvent)
-                            return v
-                        )
+                            return res
                     else
                         onEvent = (e) ->
                             for k, v of e.msg
                                 $scope[scope_key][k] = v
                             $scope.$apply()
-                        p = this.get()
-                        p.then((v) ->
-                            $scope[scope_key] = v
+                        p = this.getList() # all is list with jsonAPI
+                        p.then (res) ->
+                            $scope[scope_key] = res[0]
                             elem.on("update", onEvent)
-                            return v
-                        )
+                            return res
                     $scope.$on("$destroy", -> elem.source?.close())
-                    $scope[scope_key] = p
                     return p
 
                 elem.unbind = () ->
@@ -53,7 +64,7 @@ angular.module('app').factory 'buildbotService',
                 return elem
             RestangularConfigurer.setBaseUrl(BASEURLAPI)
             RestangularConfigurer.setOnElemRestangularized(onElemRestangularized)
-
+            RestangularConfigurer.setResponseExtractor(responseExtractor)
         return Restangular.withConfig(configurer)
 
 ]
