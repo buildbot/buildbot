@@ -452,7 +452,7 @@ prioritized from oldest to newest, so when a buildslave becomes free, the
 
 The :class:`BuildRequest` contains one :class:`SourceStamp` specification per codebase.
 The actual process of running the build (the series of :class:`Step`\s that will
-be executed) is implemented by the :class:`Build` object. In this future
+be executed) is implemented by the :class:`Build` object. In the future
 this might be changed, to have the :class:`Build` define *what*
 gets built, and a separate :class:`BuildProcess` (provided by the
 Builder) to define *how* it gets built.
