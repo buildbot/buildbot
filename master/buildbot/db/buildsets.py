@@ -99,7 +99,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
                         submitted_at=submitted_at, complete_at=None,
-                        waited_for=waited_for))
+                        waited_for=1 if waited_for else 0))
 
                 brids[buildername] = r.inserted_primary_key[0]
 
