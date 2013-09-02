@@ -138,7 +138,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
 
     @defer.inlineCallbacks
-    def xtest_get_builder(self):
+    def test_get_builder(self):
         steps = yield self.callGet(('builder', 77, 'build', 7, 'step'))
         [ self.validateData(step) for step in steps ]
         self.assertEqual([ s['number'] for s in steps ], [0, 1, 2])
