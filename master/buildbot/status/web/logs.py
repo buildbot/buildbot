@@ -23,9 +23,7 @@ from twisted.web.resource import Resource, NoResource
 from buildbot import interfaces
 from buildbot.status import logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
-
-import re
-
+from buildbot.util.ansicodes import parse_ansi_sgr
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -48,8 +46,6 @@ class ChunkConsumer:
             self.producing.stopProducing()
     def finish(self):
         self.textlog.finished()
-
-ANSI_RE = re.compile(r"^(\d*)(;(\d+))?([a-zA-Z])")
 
 # /builders/$builder/builds/$buildnum/steps/$stepname/logs/$logname
 class TextLog(Resource):
@@ -77,7 +73,7 @@ class TextLog(Resource):
             if type >= len(logfile.ChunkTypes) or type < 0:
                 # non-std channel, don't display
                 continue
-            
+
             is_header = type == logfile.HEADER
 
             if not self.asText:
@@ -89,16 +85,9 @@ class TextLog(Resource):
                 for ansi_entry in entry.split("\033["):
                     code = ""
                     if not first_entry:
-                        res = ANSI_RE.search(ansi_entry)
-                        if res:
-                            mode = res.group(4)
-                            ansi_entry = ansi_entry[len(res.group(0)):]
-                            if mode == 'm':
-                                code = " ansi" + res.group(1)
-                        else:
-                            # illegal code, restore the CSI
-                            ansi_entry = "\033[" + ansi_entry
-
+                        ansi_entry, ansi_classes = parse_ansi_sgr(ansi_entry)
+                        if ansi_classes:
+                            code = "".join([" ansi" + i for i in ansi_classes])
                     html_entries.append(dict(type=_type + code,
                                              text=ansi_entry,
                                              is_header=is_header))
