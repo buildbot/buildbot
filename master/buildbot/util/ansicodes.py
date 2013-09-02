@@ -15,7 +15,7 @@
 
 import re
 
-ANSI_RE = re.compile(r"^((\d*)(;\d+)*)([a-zA-Z])")
+ANSI_RE = re.compile(r"^((\d+)(;\d+)*)([a-zA-Z])")
 
 
 def parse_ansi_sgr(ansi_entry):

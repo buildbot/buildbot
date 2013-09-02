@@ -37,3 +37,6 @@ class TestAnsiCodes(unittest.TestCase):
 
     def test_ansi_invalid(self):
         self.runTest("<>foo", ("\033[<>foo", []))
+
+    def test_ansi_invalid_start_by_semicolon(self):
+        self.runTest(";3m", ("\033[;3m", []))
