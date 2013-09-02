@@ -69,26 +69,31 @@
 	background-color:#fff;
 	font-size:12px;
 	border:1px solid #ccc;
-	@include box-shadow(1px 1px 0 #FFFFFF);
+	@include box-shadow(1px 1px 0 #FFF);
 	border-collapse: inherit;
 	border-spacing:0;
 	clear:both;
+	@include border-radius(4px);
 	.txt-align-left {
 		text-align:left;	
 	}
 	.txt-align-right {
-	text-align:right;
-}
+		text-align:right;
+	}
 	th {
 		padding:15px 10px;
 		background-color:#EEF0F5;
 		@include text-shadow(0 1px 0 #fff);
-		border-top:1px solid #FFFFFF;
+		border-top:1px solid #FFF;
 	}
-	
+	tr th:first-child {
+		@include border-radius(4px 4px 0 0);
+	}
+	tr th:last-child {
+		@include border-radius(4px 4px 0 0);
+	}
 	td {
 		padding:15px 10px;		
-		//border-bottom:1px solid #DADADA;
 		border-bottom:1px solid #C8C8C8;
 		&.buttontd {
 			width: 80px;

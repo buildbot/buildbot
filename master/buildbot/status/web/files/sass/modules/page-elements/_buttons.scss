@@ -28,7 +28,8 @@
 
 a.grey-btn,
 .grey-btn,
-.clear-btn {
+.clear-btn,
+.blue-btn {
 	@include bgimage(linear-gradient(bottom , #CED3D7 0%, #FFFFFF 100%)); 
     border: 1px solid #D9D9D9;
     @include border-radius(7px);
@@ -43,6 +44,22 @@ a.grey-btn,
     &:hover {
 		color: #A4A4A4;    	
     }
+}
+
+.blue-btn {
+    @include bgimage(linear-gradient(top, #5585BF 0%, #0B4A7D 100%)); 
+    border:1px solid #878787;
+    border-bottom:1px solid #6D6D6D;
+    @include box-shadow( 0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #fff);
+    @include border-radius(6px);
+    color: #F7F7F7;
+    display: inline-block;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    padding: 8px 10px;
+    @include text-shadow( 0 -1px 0 rgba(0, 0, 0, 0.44));
+    text-transform: uppercase;
 }
 
 .grey-btn.var-1 {

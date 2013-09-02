@@ -82,7 +82,10 @@
 				<xsl:variable name="passCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters)='true'])"/>
 				<xsl:variable name="ignoredCount" select="count(child::results/test-case[translate(@executed,$ucletters,$lcletters)='false'])"/>
 				<xsl:variable name="failureCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters) ='false'])"/>
-				<xsl:variable name="timeCount" select="translate(@time,',','.')"/>
+				<!--
+				<xsl:variable name="timeCount" select="translate(test-case[@time])"/>
+			-->
+				<xsl:variable name="timeCount" select="format-number(sum(child::results/test-case/@time),'#.000')"/>
 		<div class="table-holder">
 			<ul class="summary-list">
 				<li>
@@ -103,10 +106,12 @@
 				</li>
 				
 				<li>
-					<span id=":i18n:Time">Time(s) </span>
+					<span id=":i18n:Time">Time(s) </span> <xsl:value-of select="$timeCount"/>
+					<!--
 					<xsl:call-template name="display-time">
                         	<xsl:with-param name="value" select="$timeCount"/>
                     </xsl:call-template>				
+                    -->
 				</li>
 			</ul>
 
