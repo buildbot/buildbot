@@ -30,17 +30,18 @@ class BaseBasicScheduler(base.BaseScheduler):
     """
 
     compare_attrs = ['treeStableTimer', 'change_filter', 'fileIsImportant',
-                      'onlyImportant']
+                      'onlyImportant', 'reason']
 
     _reactor = reactor # for tests
 
     fileIsImportant = None
+    reason = 'scheduler'
 
     class NotSet: pass
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
-                change_filter=None, onlyImportant=False, **kwargs):
+                reason=None, change_filter=None, onlyImportant=False, **kwargs):
         if shouldntBeSet is not self.NotSet:
             config.error(
                 "pass arguments to schedulers using keyword arguments")
@@ -63,6 +64,9 @@ class BaseBasicScheduler(base.BaseScheduler):
         # treeStableTimer expires.
         self._stable_timers = defaultdict(lambda : None)
         self._stable_timers_lock = defer.DeferredLock()
+
+        if reason is not None:
+            self.reason = reason
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
@@ -117,7 +121,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             if not important:
                 return defer.succeed(None)
             # otherwise, we'll build it right away
-            return self.addBuildsetForChanges(reason=u'scheduler',
+            return self.addBuildsetForChanges(reason=self.reason,
                             changeids=[ change.number ])
 
         timer_name = self.getTimerNameForChange(change)
@@ -190,7 +194,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             return
 
         changeids = sorted(classifications.keys())
-        yield self.addBuildsetForChanges(reason=u'scheduler',
+        yield self.addBuildsetForChanges(reason=self.reason,
                                            changeids=changeids)
 
         max_changeid = changeids[-1] # (changeids are sorted)

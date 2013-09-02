@@ -106,6 +106,9 @@ available with all schedulers.
     ``False`` and only applies when ``fileIsImportant`` is
     given.
 
+``reason``
+    A string that will be used as the reason for the triggered build.
+
 Scheduler Resiliency
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -246,6 +249,8 @@ The arguments to this scheduler are:
 ``change_filter``
 
 ``onlyImportant``
+
+``reason``
     See :ref:`Configuring-Schedulers`.
 
 ``treeStableTimer``
@@ -337,6 +342,8 @@ The arguments to this scheduler are:
 ``change_filter``
 
 ``onlyImportant``
+
+``reason``
     See :ref:`Configuring-Schedulers`.
 
 ``treeStableTimer``
@@ -433,6 +440,9 @@ The arguments to this scheduler are:
 
 ``onlyImportant``
 
+``reason``
+    See :ref:`Configuring-Schedulers`.
+
 ``periodicBuildTimer``
     The time, in seconds, after which to start a build.
 
@@ -485,6 +495,8 @@ The full list of parameters is:
 ``change_filter``
 
 ``onlyImportant``
+
+``reason``
 
 ``codebases``
     See :ref:`Configuring-Schedulers`.  Note that ``fileIsImportant`` and
@@ -875,6 +887,12 @@ The scheduler takes the following parameters:
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the reason for
     the build.  The default value is a string parameter with value "force build".
+
+``reasonString``
+
+    A string that will be used to create the build reason for the forced build. This
+    string can contain the placeholders '%(owner)s' and '%(reason)s', which represents
+    the value typed into the reason field.
 
 ``username``
 

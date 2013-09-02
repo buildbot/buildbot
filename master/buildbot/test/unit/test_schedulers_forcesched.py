@@ -142,6 +142,59 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 ])),
         ])
 
+
+    @defer.inlineCallbacks
+    def test_basicForce_reasonString(self):
+        """Same as above, but with a reasonString"""
+        sched = self.makeScheduler(reasonString='%(owner)s wants it %(reason)s')
+
+        res = yield sched.force('user', builderNames=['a'], branch='a', reason='because',revision='c',
+                        repository='d', project='p',
+                        property1_name='p1',property1_value='e',
+                        property2_name='p2',property2_value='f',
+                        property3_name='p3',property3_value='g',
+                        property4_name='p4',property4_value='h'
+                        )
+        bsid,brids = res
+
+        # only one builder forced, so there should only be one brid
+        self.assertEqual(len(brids), 1)
+
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', {
+                'builderNames': ['a'],
+                'properties': {u'owner': ('user', u'Force Build Form'),
+                                u'p1': ('e', u'Force Build Form'),
+                                u'p2': ('f', u'Force Build Form'),
+                                u'p3': ('g', u'Force Build Form'),
+                                u'p4': ('h', u'Force Build Form'),
+                                u'reason': ('because', u'Force Build Form')},
+                'reason': 'user wants it because',
+                'sourcestamps': [{'branch': 'a',
+                                    'codebase': '',
+                                    'project': 'p',
+                                    'repository': 'd',
+                                    'revision': 'c'}],
+                'waited_for': False}),
+            ])
+        (bsid,
+             dict(reason="user wants it because",
+                  brids=brids,
+                  external_idstring=None,
+                  properties=[ ('owner', ('user', 'Force Build Form')),
+                               ('p1', ('e', 'Force Build Form')),
+                               ('p2', ('f', 'Force Build Form')),
+                               ('p3', ('g', 'Force Build Form')),
+                               ('p4', ('h', 'Force Build Form')),
+                               ('reason', ('because', 'Force Build Form')),
+                               ('scheduler', ('testsched', 'Scheduler')),
+                               ],
+                  sourcestampsetid=100),
+             {'':
+              dict(branch='a', revision='c', repository='d', codebase='',
+                  project='p', sourcestampsetid=100)
+             })
+
     @defer.inlineCallbacks
     def test_force_allBuilders(self):
         sched = self.makeScheduler()
