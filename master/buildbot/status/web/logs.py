@@ -156,7 +156,7 @@ class HTMLLog(Resource):
 
     def render(self, request):
         if 'xml-stylesheet' in self.original.html:
-            request.setHeader("content-type", "text/xsl")
+            request.setHeader("content-type", "text/xml; charset=utf-8")
         else:
             request.setHeader("content-type", "text/html")
 
