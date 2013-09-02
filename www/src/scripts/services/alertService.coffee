@@ -26,6 +26,7 @@ angular.module('app').config ['$httpProvider', ($httpProvider) ->
                 else
                     alert.error res.data
                 $q.reject res
+                console.log res
     ]
 
 ]

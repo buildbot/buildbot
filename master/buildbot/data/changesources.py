@@ -78,6 +78,7 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
 class ChangeSource(base.ResourceType):
 
     name = "changesource"
+    plural = "changesources"
     endpoints = [ ChangeSourceEndpoint, ChangeSourcesEndpoint ]
     keyFields = [ 'changesourceid' ]
 

@@ -5,24 +5,27 @@ angular.module('app').constant("route_config",
     builders:
         caption: "Builders"
         route: "/builders"
-    lastbuilds:
-        caption: "Last Builds"
-        route: "/lastbuilds"
+#    lastbuilds:
+#        caption: "Last Builds"
+#        route: "/lastbuilds"
     changes:
         caption: "Last Changes"
         route: "/changes"
-    buildslaves:
-        caption: "Build Slaves"
-        route: "/buildslaves"
-    buildmasters:
-        caption: "Build Masters"
-        route: "/buildmasters"
-    users:
-        caption: "Users"
-        route: "/users"
-    admin:
-        caption: "Admin"
-        route: "/admin"
+#    buildslaves:
+#        caption: "Build Slaves"
+#        route: "/buildslaves"
+#    buildmasters:
+#        caption: "Build Masters"
+#        route: "/buildmasters"
+    schedulers:
+        caption: "Schedulers"
+        route: "/schedulers"
+#    users:
+#        caption: "Users"
+#        route: "/users"
+#    admin:
+#        caption: "Admin"
+#        route: "/admin"
     about:
         caption: "About"
         route: "/about"
@@ -32,13 +35,13 @@ angular.module('app').constant("route_config",
         route: "/builders/:builder"
         tabid: "builders"
     build:
-        route: "/builders/:builder/:build"
+        route: "/builders/:builder/build/:build"
         tabid: "builders"
     step:
-        route: "/builders/:builder/:build/steps/:step"
+        route: "/builders/:builder/build/:build/steps/:step"
         tabid: "builders"
     log:
-        route: "/builders/:builder/:build/steps/:step/logs/:log"
+        route: "/builders/:builder/build/:build/steps/:step/logs/:log"
         tabid: "builders"
 
     buildslave:

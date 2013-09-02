@@ -14,16 +14,17 @@ Symbols used as parameters to functions used in configuration files should use u
 
 In summary, then:
 
-================== ============
-Symbol Type        Format
-================== ============
-Methods            interCaps
-Functions          interCaps
-Function Arguments under_scores
-Classes            InitialCaps
-Variables          under_scores
-Constants          ALL_CAPS
-================== ============
+====================== ============
+Symbol Type            Format
+====================== ============
+Methods                interCaps
+Functions              interCaps
+Function Arguments     under_scores
+API method Arguments   interCaps
+Classes                InitialCaps
+Variables              under_scores
+Constants              ALL_CAPS
+====================== ============
 
 Twisted Idioms
 --------------
@@ -41,7 +42,7 @@ Just about anything might block - even getters and setters!
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Twisted has some useful, but little-known classes.  
+Twisted has some useful, but little-known classes.
 Brief descriptions follow, but you should consult the API documentation or source code
 for the full details.
 
@@ -63,7 +64,8 @@ operations, many of which may block.
 In all cases where this occurs, there is a danger of pre-emption, so exercise
 the same caution you would if writing a threaded application.
 
-For simple cases, you can use nested callback functions. For more complex cases, deferredGenerator is appropriate.
+For simple cases, you can use nested callback functions. For more complex cases, inlineCallbacks is appropriate.
+In all cases, please prefer maintainability and readability over performance.
 
 Nested Callbacks
 ................
@@ -115,7 +117,9 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
 
 .. note:: do not try to build a loop in this style by chaining multiple
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
-    versions of Twisted. Use ``deferredGenerator`` instead. 
+    versions of Twisted. Use ``inlineCallbacks`` instead.
+
+In most of the cases if you need more than two callbacks in a method, it is more readable and maintainable to use inlineCallbacks.
 
 inlineCallbacks
 ...............
@@ -206,3 +210,183 @@ use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.inte
 Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
 fire, or for one of them to fail. You may attach callbacks and errbacks to a
 ``DeferredList`` just as for a deferred.
+
+
+CoffeeScript Coding Style
+=========================
+
+Buildbot development team is primarily python experts and not front-end experts. We however spent lot of time looking for front end best practices. We are very likely to accept suggestions to this coding-style and best-practices guide.
+
+Here is a summary of what is the expected coding style for buildbot contributions, as long some common gotcha's for python backgrounded developers.
+
+CoffeeScript looks like python
+------------------------------
+
+Buildbot follows Python pep8 coding style as much as possible, except for naming convention (where twisted's interCaps are preferred). The same rules has to be applied for coffeeScript, whenever it makes sense.
+
+Buildbot python naming convention is used for CoffeeScript:
+
+================== ============
+Symbol Type        Format
+================== ============
+Methods            interCaps
+Functions          interCaps
+Function Arguments interCaps
+Classes            InitialCaps
+Controllers        interCaps
+Services           interCaps
+Filters            interCaps
+Constants          ALL_CAPS
+================== ============
+
+Coffeelint should be happy
+--------------------------
+
+Buildbot ships with a Gruntfile containing coffeelint configuration which is expected to pass for buildbot coffeescript code.
+
+CoffeeScript syntax sugar
+-------------------------
+
+CoffeeScript does not have inlineCallbacks, but have some syntax sugar for helping readability of nested callbacks. However, those syntax sugars sometimes leads to surprises. Make sure you check the generated javascript in case of weird behavior.
+
+* Use implicit parenthesis for multi line function calls or object construction:
+
+.. code-block:: coffeescript
+
+    d.then (res) ->
+       $scope.val = res
+
+    d.then((res) ->  # BAD
+       $scope.val = res
+    )  # BAD
+
+.. code-block:: coffeescript
+
+    # push a dictionary into a list
+    l.push
+        k1: v1
+        k2: v2
+
+    # push a dictionary into a list
+    l.push(  # BAD
+        k1: v1
+        k2: v2
+    )  # BAD
+
+    # push a dictionary into a list
+    l.push({  # BAD
+        k1: v1
+        k2: v2
+    })  # BAD
+
+* Use explicit parenthesis for single line function calls
+
+.. code-block:: coffeescript
+
+    myFunc(service.getA(b))  # correct
+
+    myFunc service.getA b
+    # BAD: not enough visually-distinct from:
+    myFunc service.getA, b
+    # which means
+    myFunc(service.getA, b)
+
+* always use return for multiline functions
+
+  Coffeescript "everything is an expression", and default return value is the result of the last expression
+  is considered too error prone for python and js developers which are used to "return None" by default
+  in buildbot code, every multiline function must end with an explicit return statement
+
+.. code-block:: coffeescript
+
+    myFunc = ->
+        if (a)
+            b()
+        # BAD: implicitly returns the return value of b()
+
+    myFunc = ->
+        if (a)
+            b()
+        return null  # correct
+
+    myFunc = ->
+        if (a)
+            return b()  # correct
+        return null  # correct
+
+* never use return for single line functions
+
+    single line functions is equivalent to python lambda functions and thus must not use return
+
+.. code-block:: coffeescript
+
+    # if p resolves with a non-null list, will return the list with all element incremented
+    p = p.then( (res) -> _.each(res, (a) -> a + 1))
+
+CoffeeScript does not include batteries
+---------------------------------------
+
+There is a very limited standard library in JS, and none in CS. However defacto general purpose libraries have emerged.
+
+* JQuery considered harmful to access the dom directly.
+
+    Buildbot ships with JQuery, because it is supposed to be more optimized than AngularJS's own jqlite, and because some 3rd party directives are requiring it.
+    However it must not be used in buildbot services or controllers, and should be avoided in directives.
+    Buildbot UI should follow angularJS best practices and only modify DOM via templates.
+
+* lodash is a clone of underscore js, and provides good utilities for standard types manipulation (array and objects), underscore-string is also available for string manipulation function (e.g. startsWith, endsWith )
+
+* Avoid to use lodash decoration form
+
+    Those are considered tricky to use.
+
+.. code-block:: coffeescript
+
+    _.each(res, (a) -> a + 1)) # good
+    _(res).each((a) -> a + 1)) # to be avoided
+
+* requirejs is used as technical solution for plugin loading. It should not be used appart from this.
+
+* momentjs is used for manipulating dates and displaying them to the user in a human readable form (e.g "one month ago")
+
+$q "A+ promises" VS twisted's deferred
+--------------------------------------
+
+AngularJS $q module implements A+ promises. At first sight, this looks like twisted deferreds.
+
+.. warning:: d.addCallbacks(successCb, errorCb) is not equivalent with p.then(successCb, errorCb)!
+
+* Once a Twisted deferred has been "called", its result is changed with the return value of each callback in the callback queue.
+
+* Once a $q promise has been "resolved", its result is immutable.
+  p.then() itself returns another promise which can be used to alter result of another promise
+
+::
+
+    d = someFunction()
+    @d.addCallback
+    def addOneToResult(res):
+        return res + 1
+    return d # we return the same deferred as the one returned by someFunction()
+
+Translate in coffeeScript to:
+
+.. code-block:: coffeescript
+
+    p = someFunction()
+    p = p.then (res) ->
+        return res + 1
+    return d # we return the another promise as the one returned by someFunction()
+
+* With $q, only the promise creator can resolve it.
+
+.. code-block:: coffeescript
+
+    someFunction = ->
+        d = $q.defer()
+        $timeout ->
+                d.resolve("foo")
+            , 100
+        return d.promise
+    p = someFunction()
+    p.resolve() # cannot work, we can only can "then" method of a promise

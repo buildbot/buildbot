@@ -10,22 +10,25 @@
           td Slaves
           td Current Builds
           td Status
-          td Category
         tr(ng-repeat='builder in builders')
           td
             a(href='#/builders/{{ builder.builderid }}')
               | {{ builder.name }}
           td
-                        span(ng-repeat="slave in builder.slaves")
-                          a(href="#/buildslaves/{{slave}}")
-                            {{ slave }}
-                          span(ng-hide="$last") ,&nbsp;
+            ul.list-inline
+              li(ng-repeat="slave in builder.connected_slaves")
+                a(href="#/buildslaves/{{slave}}")
+                  | {{ slave.name }}
           td
-                      ul
-                        li(data-ng-repeat="build in builder.builds")
-                          a(data-ng-href="#/builders/{{ builder.BuilderName }}/build/{{build}}")
-                            {{ build }}
+            ul.list-inline
+              li(data-ng-repeat="build in builder.running_builds")
+                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.buildid}}")
+                  | {{ build.buildid }}
           td
-            | pending builds
-          td
-            | {{builder.category}}
+            ul.list-inline
+              li(ng-show='builder.connected_slaves.length == 0')
+                | no slaves
+              li(ng-show='builder.running_builds.length == 0')
+                | idle
+              li(ng-show='builder.running_builds.length > 0')
+                | pending builds
