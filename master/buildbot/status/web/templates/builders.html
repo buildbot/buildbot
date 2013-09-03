@@ -51,11 +51,11 @@
                           {% endif %}
 
                           {{ cb.current_step }}
-                          {#
+                          
                           {% if authz.advertiseAction('stopBuild', request) %}
                           {{ forms.stop_build(cb.stop_url, authz, on_all=False, short=True, label='Build') }}
                           {% endif %}
-                          #}
+                          
                       </li>
                       {% endfor %}
                   </ul>
@@ -74,11 +74,11 @@
                         <li>
                           <p class="txt-cont">
                               Cancel all builds
-                          </p>  {#
+                          </p>  
                           {% if authz.advertiseAction('cancelPendingBuild', request) %}
                             {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=False, id='all') }}
                           {% endif %}
-                          #}
+                          
                         </li>
                       {% endif %}
 
@@ -101,11 +101,10 @@
                           {{cb.properties['reason'][0]}}
                           {% endif %}
                          </p>
-                         {#
-                        {% if authz.advertiseAction('cancelPendingBuild', request) %}
-                          {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
+                          {% if authz.advertiseAction('cancelPendingBuild', request) %}
+                            {{ forms.cancel_pending_build(b.builder_url+"/cancelbuild"+builder_arg, authz, short=True, id=cb.id) }}
                           {% endif %}
-                          #}
+                          
                       </li>
                       {% endfor %}
                       </ul>
@@ -117,17 +116,11 @@
                     No jobs
                   </span>
               {% endif %}
-            
-          
       </td>
       <td class="txt-align-left">
-        
         <a href="#">
           <span class="notimpl small-txt">Not implemented</span>
-   
         </a>
-        
-        
       </td>
       {% if b.build_url %}
         <td class="LastBuild {{ b.build_css_class }} ">
@@ -142,12 +135,9 @@
       
       <td>
         {% if b.force_schedulers != {} %}
-        
           <a class="ajaxbtn more-info popup-btn-js" href="#" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
           </a>
-          
         {% endif %}
-
       </td>
       
     </tr>
