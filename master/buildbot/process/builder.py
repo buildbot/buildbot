@@ -165,7 +165,7 @@ class Builder(config.ReconfigurableServiceMixin,
             self.slaves.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
-    def attached(self, slave, remote, commands):
+    def attached(self, slave, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
 
@@ -198,7 +198,7 @@ class Builder(config.ReconfigurableServiceMixin,
         sb = slavebuilder.SlaveBuilder()
         sb.setBuilder(self)
         self.attaching_slaves.append(sb)
-        d = sb.attached(slave, remote, commands)
+        d = sb.attached(slave, commands)
         d.addCallback(self._attached)
         d.addErrback(self._not_attached, slave)
         return d
@@ -362,15 +362,6 @@ class Builder(config.ReconfigurableServiceMixin,
         slavebuilder.buildStarted()
         cleanups.append(lambda : slavebuilder.buildFinished())
 
-        # tell the remote that it's starting a build, too
-        try:
-            yield slavebuilder.remote.callRemote("startBuild")
-        except:
-            log.err(failure.Failure(), 'while calling remote startBuild:')
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
@@ -392,7 +383,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.remote:
+        if not slavebuilder.conn: # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)

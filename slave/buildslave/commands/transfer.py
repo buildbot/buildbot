@@ -28,10 +28,14 @@ class TransferCommand(Command):
 
         # don't use self.sendStatus here, since we may no longer be running
         # if we have been interrupted
-        upd = {'rc': self.rc}
         if self.stderr:
-            upd['stderr'] = self.stderr
-        self.builder.sendUpdate(upd)
+            upd = {
+                'stream': 'stderr',
+                'data': self.stderr,
+                'logName': 'stdio',
+            }
+            self.builder.sendUpdate(upd)
+        self.builder.sendUpdate({'rc': self.rc})
         return res
 
     def interrupt(self):
@@ -52,9 +56,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         - ['workdir']:   base directory to use
         - ['slavesrc']:  name of the slave-side file to read from
-        - ['writer']:    RemoteReference to a transfer._FileWriter object
-        - ['maxsize']:   max size (in bytes) of file to write
-        - ['blocksize']: max size for each data block
+        - ['maxsize']:   max size (in bytes) of file to write, if 0 then size unlimited
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
     debug = False
@@ -62,9 +64,8 @@ class SlaveFileUploadCommand(TransferCommand):
     def setup(self, args):
         self.workdir = args['workdir']
         self.filename = args['slavesrc']
-        self.writer = args['writer']
         self.remaining = args['maxsize']
-        self.blocksize = args['blocksize']
+        self.blocksize = 0xffff # see http://amp-protocol.net/
         self.keepstamp = args.get('keepstamp', False)
         self.stderr = None
         self.rc = 0
@@ -93,23 +94,28 @@ class SlaveFileUploadCommand(TransferCommand):
             if self.debug:
                 log.msg("Cannot open file '%s' for upload" % self.path)
 
-        self.sendStatus({'header': "sending %s" % self.path})
+        self.sendStatus({
+            'stream': 'header',
+            'data': "sending %s" % self.path,
+            'logName': 'stdio',
+        })
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
         def _close_ok(res):
             self.fp = None
-            d1 = self.writer.callRemote("close")
-            def _utime_ok(res):
-                return self.writer.callRemote("utime", accessed_modified)
-            if self.keepstamp:
-                d1.addCallback(_utime_ok)
+            d1 = self.builder.transferFinished()
+            # TODO: send utime via AMP
+            #def _utime_ok(res):
+                # return self.writer.callRemote("utime", accessed_modified)
+            # if self.keepstamp:
+                # d1.addCallback(_utime_ok)
             return d1
         def _close_err(f):
             self.rc = 1
             self.fp = None
             # call remote's close(), but keep the existing failure
-            d1 = self.writer.callRemote("close")
+            d1 = self.builder.transferFinished()
             def eb(f2):
                 log.msg("ignoring error from remote close():")
                 log.err(f2)
@@ -122,7 +128,7 @@ class SlaveFileUploadCommand(TransferCommand):
         return d
 
     def _loop(self, fire_when_done):
-        d = defer.maybeDeferred(self._writeBlock)
+        d = defer.maybeDeferred(self._sendBlock)
         def _done(finished):
             if finished:
                 fire_when_done.callback(None)
@@ -133,16 +139,16 @@ class SlaveFileUploadCommand(TransferCommand):
         d.addCallbacks(_done, _err)
         return None
 
-    def _writeBlock(self):
-        """Write a block of data to the remote writer"""
+    def _sendBlock(self):
+        """Send a block of data over wire"""
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileUploadCommand._writeBlock(): end')
+                log.msg('SlaveFileUploadCommand._sendBlock(): end')
             return True
 
         length = self.blocksize
-        if self.remaining is not None and length > self.remaining:
+        if self.remaining > 0 and length > self.remaining:
             length = self.remaining
 
         if length <= 0:
@@ -155,17 +161,16 @@ class SlaveFileUploadCommand(TransferCommand):
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('SlaveFileUploadCommand._writeBlock(): '+
+            log.msg('SlaveFileUploadCommand._sendBlock(): '+
                     'allowed=%d readlen=%d' % (length, len(data)))
         if len(data) == 0:
             log.msg("EOF: callRemote(close)")
             return True
 
-        if self.remaining is not None:
+        if self.remaining > 0:
             self.remaining = self.remaining - len(data)
             assert self.remaining >= 0
-        d = self.writer.callRemote('write', data)
-        d.addCallback(lambda res: False)
+        d = self.builder.sendChunk(data)
         return d
 
 

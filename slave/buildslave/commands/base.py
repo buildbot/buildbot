@@ -145,7 +145,12 @@ class Command:
         self.startTime = util.now(self._reactor)
         d = defer.maybeDeferred(self.start)
         def commandComplete(res):
-            self.sendStatus({"elapsed": util.now(self._reactor) - self.startTime})
+            elapsed = util.now(self._reactor) - self.startTime
+            self.sendStatus({
+                "stream": "header",
+                "data": "elapsed: %f" % elapsed,
+                "logName": "stdio"
+            })
             self.running = False
             return res
         d.addBoth(commandComplete)
@@ -190,13 +195,13 @@ class Command:
         return rc
 
     def _sendRC(self, res):
-        self.sendStatus({'rc': 0})
+        self.sendStatus({"rc": 0})
 
     def _checkAbandoned(self, why):
         log.msg("_checkAbandoned", why)
         why.trap(AbandonChain)
         log.msg(" abandoning chain", why.value)
-        self.sendStatus({'rc': why.value.args[0]})
+        self.sendStatus({"rc": why.value.args[0]})
         return None
 
 class SourceBaseCommand(Command):
@@ -266,13 +271,22 @@ class SourceBaseCommand(Command):
             try:
                 self._commandPaths[name] = utils.getCommand(name)
             except RuntimeError:
-                self.sendStatus({'stderr' : "could not find '%s'\n" % name})
-                self.sendStatus({'stderr' : "PATH is '%s'\n" % os.environ.get('PATH', '')})
+                error = "could not find '%s'\n" % name
+                path_is = "PATH is '%s'\n" % os.environ.get('PATH', '')
+                self.sendStatus({
+                    "stream": "stderr",
+                    "data": error + path_is,
+                    "logname": "stdio"
+                })
                 raise AbandonChain(-1)
         return self._commandPaths[name]
 
     def start(self):
-        self.sendStatus({'header': "starting " + self.header + "\n"})
+        self.sendStatus({
+            "stream": "header",
+            "data": "starting " + self.header + "\n",
+            "logName": "stdio"
+        })
         self.command = None
 
         # self.srcdir is where the VC system should put the sources
@@ -353,7 +367,11 @@ class SourceBaseCommand(Command):
     def _handleGotRevision(self, res):
         d = defer.maybeDeferred(self.parseGotRevision)
         d.addCallback(lambda got_revision:
-                      self.sendStatus({'got_revision': got_revision}))
+                      self.sendStatus({
+                        "stream": "header",
+                        "data": "got_revision" + got_revision,
+                        "logName": "stdio"
+                      }))
         return d
 
     def parseGotRevision(self):
@@ -412,7 +430,11 @@ class SourceBaseCommand(Command):
         # unrecoverable errors without having to clobber the repo
         self.maybeNotDoVCFallback(rc)
         msg = "update failed, clobbering and trying again"
-        self.sendStatus({'header': msg + "\n"})
+        self.sendStatus({
+            "stream": "header",
+            "data": msg + "\n",
+            "logName": "stdio"
+        })
         log.msg(msg)
         d = self.doClobber(None, self.srcdir)
         d.addCallback(self.doVCFallback2)
@@ -420,7 +442,11 @@ class SourceBaseCommand(Command):
 
     def doVCFallback2(self, res):
         msg = "now retrying VC operation"
-        self.sendStatus({'header': msg + "\n"})
+        self.sendStatus({
+            "stream": "header",
+            "data": msg + "\n",
+            "logName": "stdio"
+        })
         log.msg(msg)
         d = self.doVCFull()
         d.addBoth(self.maybeDoVCRetry)
@@ -461,7 +487,11 @@ class SourceBaseCommand(Command):
                 self.retry = (delay, repeats-1)
                 msg = ("update failed, trying %d more times after %d seconds"
                        % (repeats, delay))
-                self.sendStatus({'header': msg + "\n"})
+                self.sendStatus({
+                    "stream": "header",
+                    "data": msg + "\n",
+                    "logName": "stdio"
+                })
                 log.msg(msg)
                 d = defer.Deferred()
                 # we are going to do a full checkout, so a clobber is
@@ -482,7 +512,11 @@ class SourceBaseCommand(Command):
             def cb(_):
                 return 0 # rc=0
             def eb(f):
-                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
+                self.sendStatus({
+                    "stream": "header",
+                    "data": "exception from rmdirRecursive\n" + f.getTraceback(),
+                    "logName": "stdio"
+                })
                 return -1 # rc=-1
             d.addCallbacks(cb, eb)
             return d
@@ -537,7 +571,11 @@ class SourceBaseCommand(Command):
             def cb(_):
                 return 0 # rc=0
             def eb(f):
-                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
+                self.sendStatus({
+                    "stream": "header",
+                    "data": "exception from copytree\n" + f.getTraceback(),
+                    "logName": "stdio"
+                })
                 return -1 # rc=-1
             d.addCallbacks(cb, eb)
             return d
