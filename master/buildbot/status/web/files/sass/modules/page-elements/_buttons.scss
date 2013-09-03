@@ -46,6 +46,11 @@ a.grey-btn,
     }
 }
 
+.grey-btn + .dataTables_wrapper {
+    margin-right: 10px;
+
+}
+
 .blue-btn {
     @include bgimage(linear-gradient(top, #5585BF 0%, #0B4A7D 100%)); 
     border:1px solid #878787;
@@ -78,7 +83,6 @@ a.grey-btn,
     font-size: 9px;
     padding: 7px 8px;
     position: relative;
-    margin-right: 10px;
 }
 #submitBtn {
     padding: 9px 9px 8px 34px;

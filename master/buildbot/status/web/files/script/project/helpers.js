@@ -6,6 +6,43 @@ define(['jquery'], function ($) {
     helpers = {
         init: function () {
 	
+        // Colums with sorting 
+		var colList = [];
+		$('.tablesorter-js > thead th').each(function(i){
+			
+			if (!$(this).hasClass('no-tablesorter-js')) {
+				colList.push(null);
+			} else {
+				colList.push({'bSortable': false });
+			}
+		});
+		
+		// sort and filter tabless		
+		$('.tablesorter-js').dataTable({
+			"bPaginate": false,
+			"bLengthChange": false,
+			"bFilter": true,
+			"bSort": true,
+			"bInfo": false,
+			"bAutoWidth": false,
+			"bRetrieve": false,
+			"asSorting": true,
+			"bSearchable": true,
+			"aaSorting": [],
+			"aoColumns": colList,
+			"oLanguage": {
+			 	"sSearch": ""
+			 },
+			"bStateSave": true,
+			"fnInitComplete": function() {
+            $('.dataTables_filter input').focus();
+        }
+		});
+
+
+
+		
+
 		// center infobox
 	jQuery.fn.center = function() {
 		var h = $(window).height();

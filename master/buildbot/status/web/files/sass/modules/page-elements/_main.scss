@@ -980,7 +980,7 @@ body.log.interface {
 		font-family: "katana_icons";
 		content: "";
 		font-size: 16px;
-		color:#ABABAB;
+		color:#2B6194;
 
 	}
 	&:hover:before{
@@ -1020,6 +1020,13 @@ Version: 3.4.2 Timestamp: Mon Aug 12 15:04:12 PDT 2013
     margin-left: 9px;
     margin-top: 9px;
     font-weight: bold;
+}
+
+.select-tools-common {
+	float:right; 
+	margin-right:10px;
+	margin-left:10px;
+	margin-bottom:10px;
 }
 
 .select2-container {

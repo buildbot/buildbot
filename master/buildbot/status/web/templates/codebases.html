@@ -11,15 +11,14 @@
 {% block content %}
 
 <div id="formWrapper">
-  <div class="fl-right m-right10">
-      <select autocomplete="off" id="commonBranch_select" name='common_branches' class="select-tools-common">
+  <div class="select-tools-common">
+      <select autocomplete="off" id="commonBranch_select" name='common_branches'>
         <option></option>
       </select>
     </div>
 <form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
   
-    <input value="Show" class="grey-btn fl-right m-bottom10 var-2" type="submit" />
-    
+<input value="Show" class="grey-btn fl-right var-2" type="submit" />
 
 <table class="table-2 no-bg tablesorter-js tablesorter">
    <thead>
