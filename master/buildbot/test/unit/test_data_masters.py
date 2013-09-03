@@ -148,18 +148,18 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
                                             wantData=True, testcase=self)
         # mock out the _masterDeactivated methods this will call
         self.master.data.rtypes.builder = mock.Mock(
-                                    spec=builders.Builder)
+                spec=self.master.data.rtypes.builder)
         self.master.data.rtypes.builder._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
         self.master.data.rtypes.scheduler = mock.Mock(
-                                    spec=builders.Builder)
+                spec=self.master.data.rtypes.scheduler)
         self.master.data.rtypes.scheduler._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
-        self.master.data.rtypes.changesources = mock.Mock(
-                                    spec=changesources.ChangeSource)
-        self.master.data.rtypes.changesources._masterDeactivated.side_effect = \
+        self.master.data.rtypes.changesource = mock.Mock(
+                spec=self.master.data.rtypes.changesource)
+        self.master.data.rtypes.changesource._masterDeactivated.side_effect = \
                             lambda masterid : defer.succeed(None)
 
         self.rtype = masters.Master(self.master)
@@ -282,5 +282,5 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
                 assert_called_with(masterid=14)
         self.master.data.rtypes.scheduler._masterDeactivated. \
                 assert_called_with(masterid=14)
-        self.master.data.rtypes.changesources._masterDeactivated. \
+        self.master.data.rtypes.changesource._masterDeactivated. \
                 assert_called_with(masterid=14)
