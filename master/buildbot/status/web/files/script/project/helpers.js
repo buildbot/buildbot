@@ -6,8 +6,7 @@ define(['jquery'], function ($) {
     helpers = {
         init: function () {
 	
-
-	// center infobox
+		// center infobox
 	jQuery.fn.center = function() {
 		var h = $(window).height();
 	    var w = $(window).width();
@@ -223,24 +222,29 @@ define(['jquery'], function ($) {
 			$('#bowlG').remove();
 			
 			var fw = $($response).find('#formWrapper')
+			
 			$(fw).appendTo($('#content'));
+			
+
+			$('.more-info-box-js-2').fadeIn('fast');
+
+			$('.more-info-box-js-2').center();
 
 			$("#formWrapper .select-tools-js").select2({
-				width:"150px"
+				width: getMaxChildWidth(".select-tools-js")
 			});
 			$("#formWrapper #commonBranch_select").select2({
 				placeholder: "Common branches"
 			});
 
 			comboBox('#formWrapper .select-tools-js');
-
-			$('.more-info-box-js-2').center();
 			
   			clickSort('#select2-drop .select2-results');
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
 			});
-			$('.more-info-box-js-2').fadeIn('fast');
+
+			
 			$('#getForm').attr('action', window.location.href);
 		});
 	});

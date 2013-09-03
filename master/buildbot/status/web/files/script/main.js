@@ -13,9 +13,20 @@ require(['jquery','helpers','setcurrentitem', 'datatables', 'select2'], function
 	 
 	$(document).ready(function() {
 		
+		helpers.init();
 		setCurrentItem.init();
 		
+		// Colums with sorting 
 
+		var colList = [];
+		$('.tablesorter-js > thead th').each(function(i){
+			
+			if (!$(this).hasClass('no-tablesorter-js')) {
+				colList.push(null);
+			} else {
+				colList.push({'bSortable': false });
+			}
+		});
 		
 		// sort and filter tabless		
 		$('.tablesorter-js').dataTable({
@@ -28,15 +39,14 @@ require(['jquery','helpers','setcurrentitem', 'datatables', 'select2'], function
 			"bRetrieve": false,
 			"asSorting": true,
 			"bSearchable": true,
-			"bSortable": true,
-			//"oSearch": {"sSearch": " "}
 			"aaSorting": [],
+			"aoColumns": colList,
 			"oLanguage": {
 			 	"sSearch": ""
 			 },
 			"bStateSave": true
 		});	
 		
-			helpers.init();
+			
 	});
 });
