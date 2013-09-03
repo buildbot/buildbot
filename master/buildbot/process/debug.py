@@ -37,8 +37,9 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
 
-        # debug client
-        config_changed = (self.debug_port != new_config.PBPortnum or
+        # debug client, working only for PB
+        port = new_config.protocols["pb"]["port"]
+        config_changed = (self.debug_port != port or
                           self.debug_password != new_config.debugPassword)
 
         if not new_config.debugPassword or config_changed:
@@ -49,12 +50,12 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
         if new_config.debugPassword and config_changed:
             factory = lambda mind, user : DebugPerspective(self.master)
             self.debug_registration = self.master.pbmanager.register(
-                    new_config.PBPortnum, "debug", new_config.debugPassword,
+                    port, "debug", new_config.debugPassword,
                     factory)
 
         self.debug_password = new_config.debugPassword
         if self.debug_password:
-            self.debug_port = new_config.PBPortnum
+            self.debug_port = port
         else:
             self.debug_port = None
 

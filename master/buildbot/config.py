@@ -71,12 +71,10 @@ class MasterConfig(object):
         self.mergeRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
-        self.AMPPortnum = None
-        self.PBPortnum = None
         self.multiMaster = False
         self.debugPassword = None
         self.manhole = None
-        self.slaveProtos = ["AMP", "PB"]
+        self.protocols = {}
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -108,7 +106,7 @@ class MasterConfig(object):
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "revlink", "schedulers", "AMPPortnum", "PBPortnum", "slaves",
+        "properties", "revlink", "schedulers", "protocols", "slaves",
         "status", "title", "titleURL", "user_managers", "validation"
     ])
 
@@ -207,7 +205,7 @@ class MasterConfig(object):
             config.check_builders()
             config.check_status()
             config.check_horizons()
-            config.check_slavePorts()
+            config.check_ports()
         finally:
             _errors = None
 
@@ -285,9 +283,17 @@ class MasterConfig(object):
         else:
             self.prioritizeBuilders = prioritizeBuilders
 
-        for portType in ['AMPPortnum', 'PBPortnum']:
-            if portType in config_dict:
-                setattr(self, portType, config_dict.get(portType))
+        protocols = config_dict.get('protocols', {})
+        if isinstance(protocols, dict):
+            for proto, options in protocols.iteritems():
+                if not isinstance(proto, str):
+                    error("c['protocols'] keys must be strings")
+                if not isinstance(options, dict):
+                    error("c['protocols']['%s'] must be a dict" % proto)
+        else:
+            error("c['protocols'] must be dict")
+            return
+        self.protocols = protocols
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
@@ -595,25 +601,25 @@ class MasterConfig(object):
             if self.logHorizon > self.buildHorizon:
                 error("logHorizon must be less than or equal to buildHorizon")
 
-    def check_slavePorts(self):
-        ports = [("AMPPortnum", "AMP"), ("PBPortnum", "PB")]
-        atLeastOneSet = False
-        for option, proto in ports:
-            if getattr(self, option, None):
-                atLeastOneSet = True
-                continue
+    def check_ports(self):
+        ports = set()
+        if self.protocols:
+            for proto, options in self.protocols.iteritems():
+                port = options.get("port")
+                if not port:
+                    continue
+                if port in ports:
+                    error("Some of ports in c['protocols'] duplicated")
+                ports.add(port)
 
-            for s in self.slaves:
-                if s.proto == proto:
-                    msg = "%s slaves are configured, but no %s is set" % \
-                        (proto, option)
-                    error(msg)
-
-        if self.debugPassword and not self.PBPortnum:
-            error("debug client is configured, but PBPortnum is not set")
-
-        if self.AMPPortnum == self.PBPortnum:
-            error("AMPPortnum and PBPortnum are can't be set to same value")
+        if ports:
+            return
+        if self.slaves:
+            error("slaves are configured,"
+                " but no ports for protocols in c['protocols'] are set")
+        if self.debugPassword:
+            error("debug client is configured,"
+                " but no ports for protocols in c['protocols'] are set")
 
 
 class BuilderConfig:
