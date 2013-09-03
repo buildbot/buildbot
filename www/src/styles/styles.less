@@ -1,34 +1,16 @@
-@import "bootstrap.less";
+@import "bootstrap/bootstrap.less";
 @import "font-awesome/font-awesome.less";
 
 .ng-cloak {
 	display: none;
 }
 
-.repeat-enter {
-  -webkit-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  -moz-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  -o-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-
-  opacity:0;
-  position:relative;
+.animate-repeat.ng-enter,
+.animate-repeat.ng-leave {
+    transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
 }
-
-.repeat-enter.repeat-enter-active {
-  opacity:1;
-}
-
-.repeat-leave {
-  -webkit-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  -moz-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  -o-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-  transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.5s;
-
-  opacity:1;
-  position:relative;
-}
-
-.repeat-leave.repeat-leave-active {
-  opacity:0;
+.animate-repeat.ng-leave.ng-leave-active,
+.animate-repeat.ng-enter {
+  opacity: 0;
+  margin-top:-70px;
 }
