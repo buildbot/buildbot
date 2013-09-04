@@ -4,6 +4,7 @@ from buildbot.steps.shell import ShellCommand
 import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
+from buildbot.process.slavebuilder import IDLE, BUILDING
 
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
@@ -251,6 +252,9 @@ class AcquireBuildLocks(LoggingBuildStep):
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build"])
         self.build.locks = self.locks
+        # Acquire lock
+        if self.build.slavebuilder.state == IDLE:
+            self.build.slavebuilder.state = BUILDING
         self.build.releaseLockInstanse = self
         self.finished(SUCCESS)
         return
@@ -271,5 +275,7 @@ class ReleaseBuildLocks(LoggingBuildStep):
         self.step_status.setText(["Releasing build locks"])
         self.locks = self.build.locks
         self.releaseLockInstanse = self.build.releaseLockInstanse
+        # release slave lock
+        self.build.slavebuilder.state = IDLE
         self.finished(SUCCESS)
         return
