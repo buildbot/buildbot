@@ -12,6 +12,7 @@ define(['jquery'], function ($) {
 			    url: "/json?filter=0",
 			    dataType: "json",
 			    type: "GET",
+			    cache: false,
 			    success: function (data) {
 			        
 			        var arrayBuilders = [];
@@ -20,7 +21,9 @@ define(['jquery'], function ($) {
 			        $.each(data.builders, function (key, value) {
 	        			arrayBuilders.push(key);
 	        			arrayPending.push(value.pendingBuilds);
-	        			arrayCurrent.push(value.currentBuilds);
+	        			if (value.state == 'building') {
+	        				arrayCurrent.push(value.currentBuilds);
+	        			}
 	    			});
 
 			        function sumVal(arr) {
@@ -39,7 +42,7 @@ define(['jquery'], function ($) {
 	        			arrayProjects.push(key);
 	    			});
 
-	    			$('#jsummary ul').append("<li><span>Total builders</span>" + ' ' + arrayBuilders.length + '</li> ' + "<li><span>Total slaves</span>" + ' ' + arraySlaves.length + '</li> ' + "<li><span>Total pending builds</span>" + ' ' + sumVal(arrayPending) + '</li> ' + "<li><span>Total current builds</span>" + ' ' + sumVal(arrayCurrent) + '</li>')	
+	    			$('#jsummary ul').append("<li><span>Total builders</span>" + ' ' + arrayBuilders.length + '</li> ' + "<li><span>Total slaves</span>" + ' ' + arraySlaves.length + '</li> ' + "<li><span>Total pending builds</span>" + ' ' + sumVal(arrayPending) + '</li> ' + "<li><span>Total current builds</span>" + ' ' + arrayCurrent.length + '</li>')	
 			    }
 			});
 		}
