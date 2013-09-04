@@ -1404,3 +1404,19 @@ disabled look for disabled choices in the results dropdown
     height: 100px;
     overflow: scroll;
 }
+
+
+.rootSummary {
+    font-size: 14px;
+    list-style-type: none;
+    margin: 13px 0 0;
+    padding: 0;
+	li {
+		margin:0 0 15px 0 ;
+		list-style: none;
+		
+		span {
+			font-weight:bold;
+		}
+	}
+}

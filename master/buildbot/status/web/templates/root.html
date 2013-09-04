@@ -8,16 +8,13 @@
 
 {% block content %}
 
-<h1>
+
+<div class="column-1">
+<div class="column-2 welcome-txt">
+<h1 class="head-2">
   Welcome to Katana
   
 </h1>
-<div class="clear">
-</div>
-<div class="column welcome-txt">
-
-<div id="jsummary">
-</div>
 
 <p>
   To get started click one of the buttons in the navigation bar at the top
@@ -51,6 +48,15 @@ Master is shutting down<br/>
 {%- endif -%}
 {%- endif -%}
 
+</div>
+  <div class="column-2 last">
+    <div id="jsummary">
+    <h3 class="head-2">Summary</h3>
+    <ul class="rootSummary">
+    </ul>
+    
+  </div>
+</div>
 </div>
 
 {% endblock %}

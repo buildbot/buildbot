@@ -6,7 +6,43 @@ define(['jquery'], function ($) {
     helpers = {
         init: function () {
 		
+        // json on frontpage
+        if ($('#jsummary').length != 0) {
+	         $.ajax({
+			    url: "/json?filter=0",
+			    dataType: "json",
+			    type: "GET",
+			    success: function (data) {
+			        
+			        var arrayBuilders = [];
+			        var arrayPending = [];
+			        var arrayCurrent = [];
+			        $.each(data.builders, function (key, value) {
+	        			arrayBuilders.push(key);
+	        			arrayPending.push(value.pendingBuilds);
+	        			arrayCurrent.push(value.currentBuilds);
+	    			});
 
+			        function sumVal(arr) {
+			        	var sum = 0;
+						$.each(arr,function(){sum+=parseFloat(this) || 0;});
+						return sum;
+			        };
+					
+	    			var arraySlaves = [];
+			        $.each(data.slaves, function (key) {
+	        			arraySlaves.push(key);
+	    			});
+
+	    			var arrayProjects = [];
+			        $.each(data.project, function (key) {
+	        			arrayProjects.push(key);
+	    			});
+
+	    			$('#jsummary ul').append("<li><span>Total builders</span>" + ' ' + arrayBuilders.length + '</li> ' + "<li><span>Total slaves</span>" + ' ' + arraySlaves.length + '</li> ' + "<li><span>Total pending builds</span>" + ' ' + sumVal(arrayPending) + '</li> ' + "<li><span>Total current builds</span>" + ' ' + sumVal(arrayCurrent) + '</li>')	
+			    }
+			});
+		}
 
         // Colums with sorting 
 		var colList = [];
