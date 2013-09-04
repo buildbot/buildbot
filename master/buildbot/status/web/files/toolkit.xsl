@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="nant.filename" />
@@ -88,19 +88,21 @@
 		
 	<div class="dataTables_filter">
 		
-		
-			<input type="text" placeholder="Free text filter ewfdw" id="filterinput" disabled="false"/>
+		<label class="input-label">
+			<input type="text" placeholder="Free text filter" id="filterinput" />
+		</label>
 			<button class="grey-btn" id="submitFilter">Filter</button>
 			<button class="grey-btn" id="clearFilter">Clear</button>
-				
+
 		<div class="check-boxes-list">
 			<label for="passinput">Passed</label>
 			<input type="checkbox" value="Pass" id="passinput"/>
 			<label for="ignoreinput">ignored</label>
-			<input type="checkbox" checked="checked" value="Ignored" id="ignoreinput"/>
+			<input type="checkbox" value="Ignored" id="ignoreinput"/>
 			<label for="failedinput">Failed</label>
-			<input type="checkbox" checked="checked" value="Failed" id="failedinput"/>
+			<input type="checkbox" value="Failed" id="failedinput"/>
 		</div>
+
 	</div>
 	<h1 class="logo">
       <a href="/">
@@ -115,9 +117,10 @@
 
 <xsl:template name="summaryHeader">
 	<tr>
-		<th class="txt-align-left first-child" id=":i18n:Tests">Tests</th>
+		<th class="txt-align-left first-child" id=":i18n:Tests">All tests</th>
+		<th class="txt-align-left first-child" id=":i18n:Passed">Passed</th>
 		<th class="txt-align-left" id=":i18n:Failures">Failures</th>
-		<th class="txt-align-left" id=":i18n:Errors">Errors</th>
+		<th class="txt-align-left" id=":i18n:Errors">Ignored</th>
 		<th class="txt-align-left" id=":i18n:SuccessRate" colspan="2">Success Rate</th>
 		<th class="txt-align-left" id=":i18n:Time" nowrap="nowrap">Time(s)</th>
 	</tr>
@@ -145,17 +148,28 @@
 		Note : this template must call at the testsuites level
 		=====================================================================
 -->
+
 	<xsl:template name="summary">
 		<h1 class="main-head" id=":i18n:Summary">Summary</h1>
-		<xsl:variable name="runCount" select="@total"/>
-		<xsl:variable name="failureCount" select="@failures"/>
-		<xsl:variable name="ignoreCount" select="@not-run"/>
+		
+		<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
+		<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+
+		<xsl:variable name="runCount" select="count(//test-case)"/>
+
+		<!-- new test counting -->
+		<xsl:variable name="passCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='true'])"/>
+
+		<xsl:variable name="failureCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='false'])"/>
+
+		<xsl:variable name="ignoreCount" select="count(//test-case[translate(@executed,$ucletters,$lcletters)='false'])"/>
+
 		<xsl:variable name="total" select="$runCount + $ignoreCount + $failureCount"/>
 
-		<xsl:variable name="timeCount" select="translate(test-suite/@time,',','.')"/>
+		<xsl:variable name="timeCount" select="format-number(sum(//test-case/@time),'#.000')"/>
+	
+		<xsl:variable name="successRate" select="$runCount div $total"/>		
 
-		<xsl:variable name="successRate" select="$runCount div $total"/>
-		
 		<table class="table-1">
 		<thead>
 			<xsl:call-template name="summaryHeader"/>
@@ -169,10 +183,19 @@
     				<xsl:otherwise>Pass</xsl:otherwise>
     			</xsl:choose>			
 			</xsl:attribute>		
-			<td class="txt-align-left first-child"><xsl:value-of select="$runCount"/></td>
-			<td class="txt-align-left"><xsl:value-of select="$failureCount"/></td>
-			<td class="txt-align-left"><xsl:value-of select="$ignoreCount"/></td>
-			<td class="txt-align-left" nowrap="nowrap">
+			<td class="txt-align-left first-child">
+				<xsl:value-of select="$runCount"/>
+			</td>
+			<td class="txt-align-left">
+				<xsl:value-of select="$passCount"/>
+			</td>
+			<td class="txt-align-left">
+				<xsl:value-of select="$failureCount"/>
+			</td>
+			<td class="txt-align-left">
+				<xsl:value-of select="$ignoreCount"/>
+			</td>
+			<td class="txt-align-left">
 			    <xsl:call-template name="display-percent">
 			        <xsl:with-param name="value" select="$successRate"/>
 			    </xsl:call-template>
@@ -195,9 +218,8 @@
 				</xsl:if>
 			</td>
 			<td class="txt-align-left">
-			    <xsl:call-template name="display-time">
-			        <xsl:with-param name="value" select="$timeCount"/>
-			    </xsl:call-template>
+				<xsl:value-of select="$timeCount"/>
+			
 			</td>
 		</tr>
 		</tbody>

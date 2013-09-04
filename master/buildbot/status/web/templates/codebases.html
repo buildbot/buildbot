@@ -11,15 +11,21 @@
 {% block content %}
 
 <div id="formWrapper">
-<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders" >
-    <input value="Show builders" class="grey-btn fl-right m-bottom15 var-2" type="submit" />
+  <div class="select-tools-common">
+      <select autocomplete="off" id="commonBranch_select" name='common_branches'>
+        <option></option>
+      </select>
+    </div>
+<form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
+  
+<input value="Show" class="grey-btn fl-right var-2" type="submit" />
 
-<table class="table-2 no-bg">
+<table class="table-2 no-bg tablesorter-js tablesorter">
    <thead>
   <tr>
     <th>Codebase</th>
     <th>Url</th>
-    <th id="selectorWidth">Branches</th>
+    <th class="no-tablesorter-js" id="selectorWidth">Branches</th>
   </tr>
 </thead>
 <tbody>
@@ -34,17 +40,20 @@
     </td>
     <td class="txt-align-right">
 
-      <select name='{{cbkey}}_branch' class="select-tools select-tools-js var-2" >
+      <select name='{{cbkey}}_branch' class="select-tools-js" >
+
          {% for b in codebase['branch'] %}
           {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}
-            <option {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
+            <option value="{{b}}" {{(b in request.args[cbkey+'_branch']) and "selected" or ""}}>
+
           {% else %}
-            <option {{(b in codebase['defaultbranch']) and "selected" or ""}}>
+            <option value="{{b}}" {{(b in codebase['defaultbranch']) and "selected" or ""}}>
+
           {% endif %}
+
             {{ b }}
             </option>
           {% endfor %}
-          
       </select>
     </td>
   </tr>
@@ -52,6 +61,7 @@
 {% endfor %}
 </tbody>
 </table>
+
 </form>
 </div>
 {% endblock %}

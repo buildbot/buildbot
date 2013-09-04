@@ -10,19 +10,20 @@
 
 {% block content %}
 <div id="formWrapper">
+    <button id="submitBtn" class="grey-btn var-2 fl-right m-bottom15">Remove selected</button>
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
     <!--
         <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
     -->
-    <button id="submitBtn" class="grey-btn var-2 fl-right m-bottom15">Remove selected</button>
-<table class="table-1 first-child">
+    
+<table class="table-1 first-child tablesorter tablesorter-js tablesorter-col-js">
     <thead>
     <tr>
         <th class="txt-align-left">Builder</th>
         <th class="txt-align-left">Codebases</th>
         <th class="txt-align-left">Reason</th>
-        <th class="txt-align-left">Compatible slaves</th>
-        <th class="select-input">
+        <th class="txt-align-right">Compatible slaves</th>
+        <th class="select-input no-tablesorter-js">
             <label for="selectall">
                 Select all
             </label>
@@ -96,7 +97,7 @@
                 </li>
             </ul>
         </td>
-        <td class="txt-align-left">
+        <td class="txt-align-right">
             <a class="more-info popup-btn-js mod-1" href="#">
               {{ bq.slaves|length }} slaves
             </a>

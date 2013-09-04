@@ -16,7 +16,7 @@
 	margin:0;
 	float:left;
 	@include pie-clearfix;
-	li {
+	&> li {
 		float:left;
 		padding: 0;
 		
@@ -29,7 +29,7 @@
 				margin-left: 0;	
 			}
 
-			a {
+			&>	a {
 			    border-top: 4px solid rgba(31, 81, 133, 0.84);
 	      	 	margin: 0 25px;
     			padding: 13px 0 0;
@@ -39,7 +39,7 @@
 			}
 		}
 
-		a {
+		&> a {
 		    color: rgba(31, 81, 133, 0.84);
 		    display: block;
 		    font-size: 11px;
@@ -52,12 +52,42 @@
 			@include transition(opacity .2s ease-in-out);
 			&:hover {
 				opacity: 0.5;
-				
 			}
 		}
 	}
+	.project-dropdown {
+		position:relative;
+		padding-right:8px;
+		.arrow-down-btn {
+			cursor: pointer;
+			&:after {
+				position: absolute;
+				top:13px;
+				right: 0;
+				@include bgimage(linear-gradient(top, #DFE2EA 0%, #EEF0F5 100%));
+				border: 1px solid #C4C4C4;
+				@include border-radius(4px);
+				color: #292929;
+				content: "";
+				display: inline-block;
+				font-family: katana_icons;
+				font-size: 15px;
+				padding: 1px 6px 1px 7px;
+				@include text-shadow(1px 1px 0 white);		
+				@include box-shadow(1px 1px 0 rgba(255, 255, 255, 0.64));
+			}
+			&:hover:after {
+				@include bgimage(linear-gradient(top, #F2F6FE 0%, #F8FAFF 100%));
+			}
+		}
+		.more-info-box { 
+		    left: 80px;
+    		position: absolute;
+    		top: 39px;
+		}
+		
+	}
 }
-
 
 // sub-menu
 
@@ -80,7 +110,7 @@
 		float: left;
 		font-size: 12px;
 		list-style: none outside none;
-		margin: 0 10px 0 0;
+		margin: 0 12px 0 0;
 		padding: 0;
 		font-weight: bold;
 		letter-spacing:1.1px;
@@ -109,10 +139,13 @@
 		}
 		&:before {
 			@include text-shadow (0 1px 0 #194767);
-			content: "❯";
-			padding-right: 7px;
+			font-family: katana_icons;
+			content: "";
+			padding-right: 12px;
 			font-size: 9px;
-			color: #fff;
+			color: rgba(255, 255, 255, 0.59);
+			font-weight: normal;
+			
 		}
 	}
 }

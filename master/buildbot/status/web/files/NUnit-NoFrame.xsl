@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!--
    This XSL File is based on the NUnitSummary.xsl
@@ -12,7 +12,7 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" >
    <xsl:output method="html" indent="yes"/>
-   <xsl:include href="toolkit.xsl"/>
+   <xsl:include href="/toolkit.xsl"/>
    <xsl:preserve-space elements='a root'/>
 
 <!--
@@ -25,6 +25,7 @@
 	<HTML>
 		<HEAD>
 			<title>Katana test results</title>
+
 			<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css' />	
 		    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css' />
 			<link rel="stylesheet" href="/css/default.css" type="text/css" />
@@ -57,13 +58,11 @@
       <div class="container-inner">
         <h3 class="buildbot-version">
         	Produced by <a href="/">Katana</a>
-          
         </h3>
-        
       </div>
     </footer>
-    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
-	<script type="text/javascript" src="/script/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
+	<script type="text/javascript" src="/script/plugins/jquery-datatables.js"></script>
     <script type="text/javascript" src="/script/log.js"></script>
 		</body>
 	</HTML>
@@ -75,31 +74,44 @@
 			<!-- create an anchor to this class name 
 			<a name="#{generate-id(@name)}"></a>
 			-->
+				<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
+				<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+				
 			
 				<xsl:variable name="testCount" select="count(child::results/test-case)"/>
-				<xsl:variable name="errorCount" select="count(child::results/test-case[@executed='False'])"/>
-				<xsl:variable name="failureCount" select="count(child::results/test-case[@success='False'])"/>
-				<xsl:variable name="runCount" select="$testCount - $errorCount - $failureCount"/>
-				<xsl:variable name="timeCount" select="translate(@time,',','.')"/>
-<div class="table-holder">
+				<xsl:variable name="passCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters)='true'])"/>
+				<xsl:variable name="ignoredCount" select="count(child::results/test-case[translate(@executed,$ucletters,$lcletters)='false'])"/>
+				<xsl:variable name="failureCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters) ='false'])"/>
+				<!--
+				<xsl:variable name="timeCount" select="translate(test-case[@time])"/>
+			-->
+				<xsl:variable name="timeCount" select="format-number(sum(child::results/test-case/@time),'#.000')"/>
+		<div class="table-holder">
 			<ul class="summary-list">
 				<li>
 					<span id=":i18n:Tests">Tests </span>
-					<xsl:value-of select="$runCount"/>
+					<xsl:value-of select="$testCount"/>
 				</li>
 				<li>
-					<span id=":i18n:Errors">Errors </span>
-					<xsl:value-of select="$errorCount"/>
+					<span id=":i18n:Passed">Passed </span>
+					<xsl:value-of select="$passCount"/>
 				</li>
 				<li>
 					<span id=":i18n:Failures">Failures </span>
 					<xsl:value-of select="$failureCount"/>
 				</li>
 				<li>
-					<span id=":i18n:Time">Time(s) </span>
+					<span id=":i18n:Error">Ignored </span>
+					<xsl:value-of select="$ignoredCount"/>
+				</li>
+				
+				<li>
+					<span id=":i18n:Time">Time(s) </span> <xsl:value-of select="$timeCount"/>
+					<!--
 					<xsl:call-template name="display-time">
                         	<xsl:with-param name="value" select="$timeCount"/>
                     </xsl:call-template>				
+                    -->
 				</li>
 			</ul>
 
