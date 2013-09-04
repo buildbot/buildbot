@@ -16,7 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import task, defer
-from buildbot.data import masters, builders, changesources
+from buildbot.data import masters
 from buildbot.util import epoch2datetime
 from buildbot.test.util import endpoint, interfaces
 from buildbot.test.fake import fakemaster, fakedb
