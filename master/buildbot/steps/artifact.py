@@ -255,6 +255,8 @@ class AcquireBuildLocks(LoggingBuildStep):
         # Acquire lock
         if self.build.slavebuilder.state == IDLE:
             self.build.slavebuilder.state = BUILDING
+        if self.build.builder.builder_status.currentBigState == "idle":
+            self.build.builder.builder_status.setBigState("building")
         self.build.releaseLockInstanse = self
         self.finished(SUCCESS)
         return
@@ -277,5 +279,6 @@ class ReleaseBuildLocks(LoggingBuildStep):
         self.releaseLockInstanse = self.build.releaseLockInstanse
         # release slave lock
         self.build.slavebuilder.state = IDLE
+        self.build.builder.builder_status.setBigState("idle")
         self.finished(SUCCESS)
         return
