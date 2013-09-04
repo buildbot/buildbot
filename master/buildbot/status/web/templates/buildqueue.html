@@ -10,11 +10,12 @@
 
 {% block content %}
 <div id="formWrapper">
+    <button id="submitBtn" class="grey-btn var-2 fl-right m-bottom15">Remove selected</button>
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
     <!--
         <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
     -->
-    <button id="submitBtn" class="grey-btn var-2 fl-right m-bottom15">Remove selected</button>
+    
 <table class="table-1 first-child tablesorter tablesorter-js tablesorter-col-js">
     <thead>
     <tr>

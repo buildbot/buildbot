@@ -5,7 +5,9 @@ define(['jquery'], function ($) {
     
     helpers = {
         init: function () {
-	
+		
+
+
         // Colums with sorting 
 		var colList = [];
 		$('.tablesorter-js > thead th').each(function(i){
@@ -328,7 +330,7 @@ define(['jquery'], function ($) {
 			$(fw).appendTo($('#content1'));
 			$('.more-info-box-js-3 .tablesorter-js').removeClass('tablesorter')
 
-			$('.shortcut-js .scLink').each(function(){
+			$('.top-menu .shortcut-js .scLink').each(function(){
 				var scLink = $(this).attr('data-sc');
 				$(this).attr('href', scLink);
 			});
