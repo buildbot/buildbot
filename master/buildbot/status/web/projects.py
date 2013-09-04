@@ -46,7 +46,7 @@ class ProjectsResource(HtmlResource):
                     if '=' in project_path:
                         project_path += "&"
 
-                    project_path += urllib.quote(cbkey, safe='')
+                    project_path += urllib.quote(cbkey, safe='') + "_branch"
 
                     if 'defaultbranch' in cbvalue.keys():
                         branch =  cbvalue['defaultbranch']
@@ -57,7 +57,7 @@ class ProjectsResource(HtmlResource):
                         project_path += "=" + urllib.quote(branch, safe='')
                     else:
                         if len(branch) > 0:
-                            project_path += "=" + branch[0]
+                            project_path += "=" + urllib.quote(branch[0], safe='')
 
             project_shortcut[key] = project_path
 
