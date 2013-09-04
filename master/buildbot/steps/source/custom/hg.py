@@ -11,31 +11,6 @@ class Hg(Mercurial):
         Mercurial.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
-    def full(self):
-        if self.method == 'clobber':
-            yield self.clobber(None)
-            return
-
-        updatable = yield self._sourcedirIsUpdatable()
-        # the below fixes the case when cloning a new repository and selecting a specific rev/named branch
-        command = ['clone', self.repourl]
-        if not updatable:
-            # clone to specific revision / branch
-            if self.revision:
-                command += ['--rev', self.revision]
-            elif self.branchType == 'inrepo':
-                command += ['--rev', self.update_branch]
-            command += "."
-            yield self._dovccmd(command)
-        ##
-        elif self.method == 'clean':
-            yield self.clean(None)
-        elif self.method == 'fresh':
-            yield self.fresh(None)
-        else:
-            raise ValueError("Unknown method, check your configuration")
-
-    @defer.inlineCallbacks
     def parseChanges(self, _):
         self.master = self.build.builder.botmaster.parent
 
@@ -49,7 +24,7 @@ class Hg(Mercurial):
             revrange = '%s:%s' % (currentRev, currentRev)
         else:
             rev= yield self._dovccmd(['log', '-r', lastRev,  r'--template={rev}'], collectStdout=True)
-            revrange =  '%d:%s' % (int(rev.strip()), currentRev)
+            revrange =  '%d:%s' % ((int(rev.strip())+1), currentRev)
 
         # build from latest will have empty rev
         command = ['log', '-b', self.update_branch, '-r', revrange,  r'--template={rev}:{node}\n'
