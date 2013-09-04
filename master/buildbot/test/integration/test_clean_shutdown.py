@@ -25,8 +25,8 @@ from buildbot.test.util import dirs, www
 DEBUG = False
 
 if DEBUG:
-	from sys import stdout
-	log.startLogging(stdout)
+    from sys import stdout
+    log.startLogging(stdout)
 
 # There has *got* to be a better way, but I don't see it.
 # I commonly run these tests from the buildbot directory, where there exists a
@@ -228,6 +228,8 @@ f1.addSteps((
         Trigger(
             schedulerNames=['triggered-with-wait'],
             updateSourceStamp=True,
+            # FIXME(#2019): if this is True, the 'testy' builder blocks indefinitely during clean-shutdown.
+            # http://trac.buildbot.net/ticket/2019
             #waitForFinish=True,
             waitForFinish=False,
         ),
