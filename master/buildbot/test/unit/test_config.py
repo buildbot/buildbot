@@ -309,7 +309,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.failUnless(rv.check_builders.called)
         self.failUnless(rv.check_status.called)
         self.failUnless(rv.check_horizons.called)
-        self.failUnless(rv.check_slavePortnum.called)
+        self.failUnless(rv.check_ports.called)
 
     def test_loadConfig_with_local_import(self):
         self.patch_load_helpers()
@@ -456,11 +456,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_slavePortnum_int(self):
         self.do_test_load_global(dict(slavePortnum=123),
-                slavePortnum='tcp:123')
+                protocols={'pb': {'port': 'tcp:123'}})
 
     def test_load_global_slavePortnum_str(self):
         self.do_test_load_global(dict(slavePortnum='udp:123'),
-                slavePortnum='udp:123')
+                protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_multiMaster(self):
         self.do_test_load_global(dict(multiMaster=1), multiMaster=1)
@@ -952,20 +952,20 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_slavePortnum_set(self):
         self.cfg.slavePortnum = 10
-        self.cfg.check_slavePortnum()
+        self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
     def test_check_slavePortnum_not_set_slaves(self):
         self.cfg.slaves = [ mock.Mock() ]
-        self.cfg.check_slavePortnum()
+        self.cfg.check_ports()
         self.assertConfigError(self.errors,
-                "slaves are configured, but no slavePortnum is set")
+                "slaves are configured, but c['protocols'] not")
 
     def test_check_slavePortnum_not_set_debug(self):
         self.cfg.debugPassword = 'ssh'
-        self.cfg.check_slavePortnum()
+        self.cfg.check_ports()
         self.assertConfigError(self.errors,
-                "debug client is configured, but no slavePortnum is set")
+                "debug client is configured, but c['protocols'] not")
 
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):

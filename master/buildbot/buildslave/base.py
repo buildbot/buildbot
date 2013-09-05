@@ -230,12 +230,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # do we need to re-register?
         if (not self.registration or
             self.password != new.password or
-            new_config.slavePortnum != self.registered_port):
+            new_config.protocols['pb']['port'] != self.registered_port):
             if self.registration:
                 yield self.registration.unregister()
                 self.registration = None
             self.password = new.password
-            self.registered_port = new_config.slavePortnum
+            self.registered_port = new_config.protocols['pb']['port']
             self.registration = self.master.pbmanager.register(
                     self.registered_port, self.slavename,
                     self.password, self.getPerspective)
