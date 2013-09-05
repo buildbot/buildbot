@@ -5,13 +5,13 @@ define(['jquery'], function ($) {
     
     setCurrentItem = {
         init: function () {
-
 			
 				var path = window.location.pathname.split("\/");
-
+				
 				 $('.top-menu a').each(function(index) {
 				 	var thishref = this.href.split("\/");
-				    if(thishref[thishref.length-1].trim().toLowerCase() == path[1].trim().toLowerCase())
+				 	
+				    if(this.id == path[1].trim().toLowerCase() || (this.id == 'home' && path[1].trim().toLowerCase().length === 0))
 				        $(this).parent().addClass("selected");
 				});
 			

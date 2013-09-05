@@ -284,29 +284,38 @@ def ToHtml(text):
         match = re.match(r'^( +)\- (.*)$', line)
         if match:
             if indent < len(match.group(1)):
-                output.append('<ul>')
+                
                 indent = len(match.group(1))
+                
             elif indent > len(match.group(1)):
+
                 while indent > len(match.group(1)):
-                    output.append('</ul>')
+                    #output.append('</ul>')
+
+                    output.append('<br/><br/>')
                     indent -= 2
-            if in_item:
+
+            #if in_item:
+                
                 # Close previous item
-                output.append('</li>')
-            output.append('<li>')
+                #output.append('</li>')
+            #output.append('<li>')
             in_item = True
             line = match.group(2)
+
         elif indent:
             if line.startswith((' ' * indent) + '  '):
                 # List continuation
                 line = line.strip()
+                output.append('<br>')
             else:
                 # List is done
                 if in_item:
-                    output.append('</li>')
+                
+                    #output.append('</li>')
                     in_item = False
                 while indent > 0:
-                    output.append('</ul>')
+                    #output.append('</div>')
                     indent -= 2
 
         if line.startswith('/'):
@@ -321,10 +330,10 @@ def ToHtml(text):
         if not in_item:
             output.append('<br>')
 
-    if in_item:
-        output.append('</li>')
+    #if in_item:
+        #output.append('</li>')
     while indent > 0:
-        output.append('</ul>')
+        #output.append('</div>')
         indent -= 2
     return '\n'.join(output)
 
@@ -702,7 +711,7 @@ status. You may want to use a child instead to reduce the load on the server.
 
 For help on any sub directory, use url /child/help
 """
-    pageTitle = 'Buildbot JSON'
+    pageTitle = 'Katana JSON'
 
     def __init__(self, status):
         JsonResource.__init__(self, status)

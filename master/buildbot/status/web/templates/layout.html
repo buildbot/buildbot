@@ -14,11 +14,24 @@
     {% endif %}
     <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="/css/default.css" type="text/css" />
-    <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;text=atana' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;text=K' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    
+    <!--   
+    <script src="/node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
+
+    <script>
+      var socket = io.connect('http://localhost:8080');
+      socket.on('news', function (data) {
+        console.log(data);
+        socket.emit('my other event', { my: 'data' });
+      });
+    </script>
+    -->
     <script data-main="/script/main" src="/script/require.js"></script>
+
+    
     
 <!--
   <script data-main="/compiled/main" src="/script/require.js"></script>
@@ -47,7 +60,7 @@
         <ul class="top-menu">
           
           <li>
-            <a href="{{ path_to_root or '.' }}">Home</a>
+            <a id="home" href="{{ path_to_root or '.' }}">Home</a>
           </li>
           <!--
           <li>
@@ -64,14 +77,14 @@
           </li>
           -->
           <li class="project-dropdown">
-            <a href="{{ path_to_root }}projects">Projects</a>
+            <a id="projects" href="{{ path_to_root }}projects">Projects</a>
             
             <span id="projectDropdown" class="arrow-down-btn"></span>
             
           </li>
           
           <li>
-            <a href="{{ path_to_root }}buildqueue">Build queue</a>
+            <a id="buildqueue" href="{{ path_to_root }}buildqueue">Build queue</a>
           </li>
           <!--
           <li>
@@ -79,18 +92,21 @@
           </li>
           -->
           <li>
-            <a href="{{ path_to_root }}buildslaves">Build slaves</a>
+            <a id="buildslaves" href="{{ path_to_root }}buildslaves">Build slaves</a>
+          </li>
+          <li>
+            <a id="json" href="{{ path_to_root }}json/help">JSON API</a>
           </li>
           <!--
           <li>
             <a href="{{ path_to_root }}changes">Changesources</a>
           <li>
           -->
-          {% if authz.advertiseAction('showUsersPage', request) %}
-         {% endif %}
-<li>
-            <a href="{{ path_to_root }}json/help">JSON API</a>
-          </li>
+          {#
+            {% if authz.advertiseAction('showUsersPage', request) %}
+           {% endif %}
+         #}
+          
          <!--
          <li>
             <a href="{{ path_to_root }}json/help">JSON API</a>

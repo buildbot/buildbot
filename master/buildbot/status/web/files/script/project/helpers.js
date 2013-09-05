@@ -7,7 +7,7 @@ define(['jquery'], function ($) {
         init: function () {
 		
         // json on frontpage
-        if ($('#jsummary').length != 0) {
+        if ($('#tb-root').length != 0) {
 	         $.ajax({
 			    url: "/json?filter=0",
 			    dataType: "json",
@@ -42,9 +42,10 @@ define(['jquery'], function ($) {
 	        			arrayProjects.push(key);
 	    			});
 
-	    			$('#jsummary ul').append("<li><span>Total builders</span>" + ' ' + arrayBuilders.length + '</li> ' + "<li><span>Total slaves</span>" + ' ' + arraySlaves.length + '</li> ' + "<li><span>Total pending builds</span>" + ' ' + sumVal(arrayPending) + '</li> ' + "<li><span>Total current builds</span>" + ' ' + arrayCurrent.length + '</li>')	
+	    			$('.summary-td').append("<td><span>" + ' ' + arrayBuilders.length + '</span></td> ' + "<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
 			    }
 			});
+		   
 		}
 
         // Colums with sorting 
@@ -76,8 +77,9 @@ define(['jquery'], function ($) {
 			 },
 			"bStateSave": true,
 			"fnInitComplete": function() {
-            $('.dataTables_filter input').focus();
-        }
+				$('.dataTables_filter input').attr('placeholder', 'Filter results')
+            	$('.dataTables_filter input').focus();
+        	}
 		});
 
 

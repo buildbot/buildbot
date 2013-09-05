@@ -40,3 +40,4 @@ _build
 npm-debug.log
 
 master/buildbot/status/web/files/.sass-cache
+master/buildbot/status/web/files/App.js
