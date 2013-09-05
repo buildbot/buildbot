@@ -95,6 +95,8 @@ Features
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

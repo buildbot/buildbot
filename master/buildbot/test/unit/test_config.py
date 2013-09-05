@@ -978,29 +978,29 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertConfigError(self.errors, "logHorizon must be less")
 
-    def test_check_slavePortnum_set(self):
+    def test_check_ports_slavePortnum_set(self):
         self.cfg.slavePortnum = 10
         self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_protocols_set(self):
+    def test_check_ports_protocols_set(self):
         self.cfg.protocols = {"pb": {"port": 10}}
         self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_protocols_not_set_slaves(self):
+    def test_check_ports_protocols_not_set_slaves(self):
         self.cfg.slaves = [ mock.Mock() ]
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                 "slaves are configured, but c['protocols'] not")
 
-    def test_check_protocols_not_set_debug(self):
+    def test_check_ports_protocols_not_set_debug(self):
         self.cfg.debugPassword = 'ssh'
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                 "debug client is configured, but c['protocols'] not")
 
-    def test_check_protocols_port_duplication(self):
+    def test_check_ports_protocols_port_duplication(self):
         self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
