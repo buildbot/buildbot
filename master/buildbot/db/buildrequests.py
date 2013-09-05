@@ -148,7 +148,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
                     .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
                     .where(sourcestamps_tbl.c.codebase == ss['b_codebase']) \
-                    .where(sourcestamps_tbl.c.revision == ss['b_revision'])
+                    .where(sourcestamps_tbl.c.revision == ss['b_revision'])\
+                    .where(sourcestamps_tbl.c.branch == ss['b_branch'])
                 clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
 
             stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
