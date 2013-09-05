@@ -147,7 +147,7 @@ class TestSlaveComm(unittest.TestCase):
 
         # reconfig the master to get it set up
         new_config = self.master.config
-        new_config.slavePortnum = "tcp:0:interface=127.0.0.1"
+        new_config.protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
         new_config.slaves = [ self.buildslave ]
         new_config.builders = [ config.BuilderConfig(name='bldr',
                 slavename='testslave', factory=factory.BuildFactory()) ]

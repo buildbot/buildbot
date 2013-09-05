@@ -47,6 +47,7 @@ global_defaults = dict(
     properties=properties.Properties(),
     mergeRequests=None,
     prioritizeBuilders=None,
+    protocols={},
     slavePortnum=None,
     multiMaster=False,
     debugPassword=None,
@@ -309,7 +310,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.failUnless(rv.check_builders.called)
         self.failUnless(rv.check_status.called)
         self.failUnless(rv.check_horizons.called)
-        self.failUnless(rv.check_slavePortnum.called)
+        self.failUnless(rv.check_ports.called)
 
     def test_loadConfig_with_local_import(self):
         self.patch_load_helpers()
@@ -356,6 +357,29 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                 dict(changeHorizon='yes'))
         self.assertConfigError(self.errors, 'must be an int')
+
+    def test_load_global_protocols_not_dict(self):
+        self.cfg.load_global(self.filename,
+                dict(protocols="test"))
+        self.assertConfigError(self.errors, "c['protocols'] must be dict")
+
+    def test_load_global_when_slavePortnum_and_protocols_set(self):
+        self.cfg.load_global(self.filename,
+                dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
+        self.assertConfigError(self.errors,
+            "Both c['slavePortnum'] and c['protocols']['pb']['port']"
+            " defined, recommended to remove slavePortnum and leave"
+            " only c['protocols']['pb']['port']")
+
+    def test_load_global_protocols_key_int(self):
+        self.cfg.load_global(self.filename,
+                dict(protocols={321: {"port": 123}}))
+        self.assertConfigError(self.errors, "c['protocols'] keys must be strings")
+
+    def test_load_global_protocols_value_not_dict(self):
+        self.cfg.load_global(self.filename,
+                dict(protocols={"pb": 123}))
+        self.assertConfigError(self.errors, "c['protocols']['pb'] must be a dict")
 
     def do_test_load_global(self, config_dict, **expected):
         self.cfg.load_global(self.filename, config_dict)
@@ -456,11 +480,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_slavePortnum_int(self):
         self.do_test_load_global(dict(slavePortnum=123),
-                slavePortnum='tcp:123')
+                protocols={'pb': {'port': 'tcp:123'}})
 
     def test_load_global_slavePortnum_str(self):
         self.do_test_load_global(dict(slavePortnum='udp:123'),
-                slavePortnum='udp:123')
+                protocols={'pb': {'port': 'udp:123'}})
+
+    def test_load_global_protocols_str(self):
+        self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),
+                protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_multiMaster(self):
         self.do_test_load_global(dict(multiMaster=1), multiMaster=1)
@@ -950,22 +978,33 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertConfigError(self.errors, "logHorizon must be less")
 
-    def test_check_slavePortnum_set(self):
+    def test_check_ports_slavePortnum_set(self):
         self.cfg.slavePortnum = 10
-        self.cfg.check_slavePortnum()
+        self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_slavePortnum_not_set_slaves(self):
-        self.cfg.slaves = [ mock.Mock() ]
-        self.cfg.check_slavePortnum()
-        self.assertConfigError(self.errors,
-                "slaves are configured, but no slavePortnum is set")
+    def test_check_ports_protocols_set(self):
+        self.cfg.protocols = {"pb": {"port": 10}}
+        self.cfg.check_ports()
+        self.assertNoConfigErrors(self.errors)
 
-    def test_check_slavePortnum_not_set_debug(self):
-        self.cfg.debugPassword = 'ssh'
-        self.cfg.check_slavePortnum()
+    def test_check_ports_protocols_not_set_slaves(self):
+        self.cfg.slaves = [ mock.Mock() ]
+        self.cfg.check_ports()
         self.assertConfigError(self.errors,
-                "debug client is configured, but no slavePortnum is set")
+                "slaves are configured, but c['protocols'] not")
+
+    def test_check_ports_protocols_not_set_debug(self):
+        self.cfg.debugPassword = 'ssh'
+        self.cfg.check_ports()
+        self.assertConfigError(self.errors,
+                "debug client is configured, but c['protocols'] not")
+
+    def test_check_ports_protocols_port_duplication(self):
+        self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
+        self.cfg.check_ports()
+        self.assertConfigError(self.errors,
+                "Some of ports in c['protocols'] duplicated")
 
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
