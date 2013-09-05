@@ -42,7 +42,7 @@ class TestDebugServices(unittest.TestCase):
         ds.startService()
 
         # start off with no debug password
-        self.config.slavePortnum = '9824'
+        self.config.protocols = {'pb': {'port': '9824'}}
         self.config.debugPassword = None
         yield ds.reconfigService(self.config)
 

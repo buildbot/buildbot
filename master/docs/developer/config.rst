@@ -100,10 +100,10 @@ described in :ref:`developer-Reconfiguration`.
         :py:class:`~buildbot.changes.changes.Change`,
         from :bb:cfg:`codebaseGenerator`
         
-    .. py:attribute:: slavePortnum
+    .. py:attribute:: protocols
 
-        The strports specification for the slave (integer inputs are normalized
-        to a string), or None; based on :bb:cfg:`slavePortnum`.
+        The per-protocol port specification for slave connections.
+        Based on :bb:cfg:`protocols`.
 
     .. py:attribute:: multiMaster
 
