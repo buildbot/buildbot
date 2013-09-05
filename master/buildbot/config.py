@@ -107,7 +107,7 @@ class MasterConfig(object):
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "revlink", "schedulers", "slavePortnum", "protocols",
+        "properties", "protocols", "revlink", "schedulers", "slavePortnum",
         "slaves", "status", "title", "titleURL", "user_managers", "validation"
     ])
 
@@ -291,6 +291,7 @@ class MasterConfig(object):
                     error("c['protocols'] keys must be strings")
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
+                    return
                 if (proto == "pb" and options.get("port") and 
                     'slavePortnum' in config_dict):
                     error("Both c['slavePortnum'] and c['protocols']['pb']['port']"

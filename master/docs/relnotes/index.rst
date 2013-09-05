@@ -90,6 +90,8 @@ Features
 
 * The web status correctly interprets ANSI color escape codes.
 
+* Added new config option ``protocols`` which allows to configure multiple protocols on single master.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

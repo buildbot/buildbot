@@ -33,7 +33,7 @@ class ManualUsersMixin(object):
 
         def __init__(self):
             self.db = fakedb.FakeDBConnector(self)
-            self.slavePortnum = "tcp:9989"
+            self.protocols = {"pb": {"port": "tcp:9989"}}
             self.caches = mock.Mock(name="caches")
             self.caches.get_cache = self.get_cache
 
