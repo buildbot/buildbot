@@ -42,7 +42,7 @@ define(['jquery'], function ($) {
 	        			arrayProjects.push(key);
 	    			});
 
-	    			$('.summary-td').append("<td><span>" + ' ' + arrayBuilders.length + '</span></td> ' + "<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
+	    			$('.summary-td').append("<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
 			    }
 			});
 		   
