@@ -37,9 +37,9 @@ are more suitable for use in MTR.
 """
     def __init__(self, *args, **kwargs):
         self._eqKey = (args, kwargs)
-        return adbapi.ConnectionPool.__init__(self,
-                                              cp_reconnect=True, cp_min=1, cp_max=3,
-                                              *args, **kwargs)
+        adbapi.ConnectionPool.__init__(self,
+                                       cp_reconnect=True, cp_min=1, cp_max=3,
+                                       *args, **kwargs)
 
     def __eq__(self, other):
         if isinstance(other, EqConnectionPool):
