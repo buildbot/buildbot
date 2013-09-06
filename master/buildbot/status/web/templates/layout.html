@@ -18,12 +18,12 @@
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     
-    <!--   
+    <!--    
     <script src="/node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
 
     <script>
       var socket = io.connect('http://localhost:8080');
-      socket.on('news', function (data) {
+      socket.on('JSON changed', function (data) {
         console.log(data);
         socket.emit('my other event', { my: 'data' });
       });

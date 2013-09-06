@@ -1435,4 +1435,6 @@ disabled look for disabled choices in the results dropdown
 	@include text-shadow(-1px -1px 0 #FFFFFF);
 	border:1px solid #CACCD0;
 	padding: 4px 12px;
+	display:inline-block;
+	min-width:15px;
 }

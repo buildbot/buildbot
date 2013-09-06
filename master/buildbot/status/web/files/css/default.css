@@ -4323,8 +4323,12 @@ a.grey-btn:hover,
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000387}}
 #submitBtn {
   padding: 9px 9px 8px 34px;
+  -webkit-box-shadow: 1px 1px 0 white;
+  -moz-box-shadow: 1px 1px 0 white;
+  box-shadow: 1px 1px 0 white;
+  border-bottom: 1px solid #ccc;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000389}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000391}}
 #submitBtn:after {
   color: #2B6194;
   font-family: katana_icons;
@@ -4334,12 +4338,12 @@ a.grey-btn:hover,
   position: absolute;
   top: 5px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000399}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003100}}
 #submitBtn:hover:after {
   color: #A4A4A4;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003103}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003104}}
 .close-btn {
   position: absolute;
   right: 10px;
@@ -4347,7 +4351,7 @@ a.grey-btn:hover,
   cursor: pointer;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003110}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003111}}
 .close-btn:after {
   color: #333333;
   content: "✖";
@@ -6075,6 +6079,8 @@ disabled look for disabled choices in the results dropdown
   text-shadow: -1px -1px 0 white;
   border: 1px solid #CACCD0;
   padding: 4px 12px;
+  display: inline-block;
+  min-width: 15px;
 }
 
 /**
