@@ -100,7 +100,7 @@ package_json.update(base_json)
 # we take angular 1.2.0 which has important new features
 # like ng-animate, and ng-if
 
-ANGULAR_TAG = "v1.2.0-rc.1"
+ANGULAR_TAG = "v1.2.0-rc.2"
 bower_json = {
     "dependencies": {
     "bootstrap": "~3.0.0",
@@ -162,6 +162,7 @@ class bower_install(npm_install):
             self.run_command(command)
         assert json, "Install 'json' or 'simplejson' first"
         json.dump(bower_json, open("bower.json", "w"))
+        self.spawn(['rm', '-rf', 'bower_components'])
         self.spawn(['./node_modules/.bin/bower', 'install'])
 
 cmdclass['bower_install'] = bower_install
