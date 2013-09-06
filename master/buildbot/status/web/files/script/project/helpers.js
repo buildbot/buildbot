@@ -128,7 +128,6 @@ define(['jquery'], function ($) {
 				$('.command_forcebuild').removeClass('form-open');
 				$('.more-info-box-js, .more-info-box-js-2').hide();
 				$('#content').empty();
-				$(this).unbind(e);
 			}
 
 		}); 
