@@ -196,33 +196,3 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             res.close()
             return row.revision
         return self.db.pool.do(thd)
-
-    def findMatchingChanges(self, sourcestamps):
-        def thd(conn):
-            sourcestamps_tbl = self.db.model.sourcestamps
-            changes_tbl = self.db.model.changes
-            sourcestamp_changes_tbl = self.db.model.sourcestamp_changes
-
-            stmt = sa.select([sourcestamps_tbl.c.id])\
-                .where(sourcestamps_tbl.c.sourcestampsetid == sa.bindparam('b_sourcestampsetid')) \
-                .where(sourcestamps_tbl.c.codebase == sa.bindparam('b_codebase')) \
-                .where(sourcestamps_tbl.c.revision == sa.bindparam('b_revision'))
-
-            q = sa.select([sourcestamps_tbl.c.codebase, sourcestamps_tbl.c.id, changes_tbl.c.changeid],
-                                        from_obj= sourcestamps_tbl.join(changes_tbl,
-                                                    (sourcestamps_tbl.c.repository == changes_tbl.c.repository)
-                                                & (sourcestamps_tbl.c.branch == changes_tbl.c.branch)
-                                                & (sourcestamps_tbl.c.revision == changes_tbl.c.revision)
-                                                & (sourcestamps_tbl.c.id.in_(stmt))))
-
-
-            res = conn.execute(q, sourcestamps)
-            rv = res.fetchall()
-            if len(rv) > 0:
-                conn.execute(sourcestamp_changes_tbl.insert(),
-                [ dict(sourcestampid=ssid, changeid=changeid)
-                  for codebase, ssid, changeid in rv ])
-
-            res.close()
-            return rv
-        return self.db.pool.do(thd)
