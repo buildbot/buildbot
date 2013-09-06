@@ -12,6 +12,13 @@ class Hg(Mercurial):
 
     @defer.inlineCallbacks
     def parseChanges(self, _):
+        buildLatestRev = self.build.getProperty("buildLatestRev", False)
+        if type(buildLatestRev) != bool:
+            buildLatestRev = (buildLatestRev.lower() == "true")
+
+        if buildLatestRev == False:
+            defer.returnValue(0)
+
         self.master = self.build.builder.botmaster.parent
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
@@ -41,7 +48,6 @@ class Hg(Mercurial):
             changelist.append(Change(who=author, files=files, comments=comments, when=timestamp, repository=self.repourl, revision=rev, codebase= self.codebase))
 
         sourcestamps = self.build.build_status.getSourceStamps()
-
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:

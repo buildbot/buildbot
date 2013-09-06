@@ -104,7 +104,7 @@ class CheckArtifactExists(ShellCommand):
 
         clean_build = self.build.getProperty("clean_build", False)
         if type(clean_build) != bool:
-            clean_build = clean_build == "True"
+            clean_build = (clean_build.lower() == "true")
 
         if clean_build:
             self.step_status.setText(["Skipping artifact check, making a clean build"])

@@ -164,6 +164,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             sourcestamps_tbl = self.db.model.sourcestamps
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
+            buildsets_prop_tbl = self.db.model.buildset_properties
 
             # we need to filter buildrequests_tbl.c.lastest
             q = sa.select([sa.func.max(buildrequests_tbl.c.id)], from_obj= buildrequests_tbl.join(buildsets_tbl,
@@ -171,6 +172,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                                                             & (buildrequests_tbl.c.buildername == buildername)
                                                             & (buildrequests_tbl.c.complete == 1)
                                                             & (buildrequests_tbl.c.results.in_([SUCCESS, FAILURE])))
+                                                            .join(buildsets_prop_tbl, (buildsets_tbl.c.id == buildsets_prop_tbl.c.buildsetid)
+                                                                & (buildsets_prop_tbl.c.property_name == 'buildLatestRev')
+                                                                & (buildsets_prop_tbl.c.property_value.ilike('%True%')))
                                                             .join(sourcestamps_tbl,
                                                                   (buildsets_tbl.c.sourcestampsetid  == sourcestamps_tbl.c.sourcestampsetid)
                                                                 & (sourcestamps_tbl.c.codebase == codebase)

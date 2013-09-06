@@ -725,6 +725,11 @@ class BuilderControl:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
+        # set buildLatestRev to False when rebuilding
+        if 'buildLatestRev' in properties_dict.keys():
+            (v,s) = properties_dict['buildLatestRev']
+            properties_dict['buildLatestRev'] = (False, s)
+
         ssList = bs.getSourceStamps(absolute=True)
         
         if ssList:
