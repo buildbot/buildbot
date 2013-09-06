@@ -129,7 +129,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
              dict(reason="A build was forced by 'user': because",
                   brids=brids,
                   external_idstring=None,
-                  properties=[ ('owner', ('user', 'Force Build Form')),
+                  properties=[ ('buildLatestRev', (False, 'Force Build Form')),
+                               ('owner', ('user', 'Force Build Form')),
                                ('p1', ('e', 'Force Build Form')),
                                ('p2', ('f', 'Force Build Form')),
                                ('p3', ('g', 'Force Build Form')),
@@ -189,7 +190,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
              dict(reason="A build was forced by 'user': because",
                   brids=brids,
                   external_idstring=None,
-                  properties=[ ('owner', ('user', 'Force Build Form')),
+                  properties=[ ('buildLatestRev', (False, 'Force Build Form')),
+                               ('owner', ('user', 'Force Build Form')),
                                ('p1', ('e', 'Force Build Form')),
                                ('p2', ('f', 'Force Build Form')),
                                ('p3', ('g', 'Force Build Form')),
@@ -243,7 +245,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 raise
             defer.returnValue(None) # success
 
-        expect_props = [ 
+        expect_props = [
+            ('buildLatestRev', (True, 'Force Build Form')),
             ('owner', ('user', 'Force Build Form')),
             ('reason', ('because', 'Force Build Form')),
             ('scheduler', ('testsched', 'Scheduler')),
