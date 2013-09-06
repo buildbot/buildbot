@@ -336,6 +336,12 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return setid
 
         def add_sourcestamp(setid):
+
+            changeids = []
+            for c in self.changes:
+                if c.number is not None:
+                    changeids.append(c.number)
+
             return master.db.sourcestamps.addSourceStamp(
                 sourcestampsetid=setid,
                 branch=self.branch, revision=self.revision,
@@ -344,7 +350,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 patch_body=patch_body, patch_level=patch_level,
                 patch_author=patch_author, patch_comment=patch_comment,
                 patch_subdir=patch_subdir,
-                changeids=[c.number for c in self.changes])
+                changeids=changeids)
 
         def set_ssid(ssid):
             self.ssid = ssid

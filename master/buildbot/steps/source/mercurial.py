@@ -116,9 +116,15 @@ class Mercurial(Source):
         if patch:
             d.addCallback(self.patch, patch)
 
+        print "\n parameters %s,%s,%s\n" %  (self.branch, self.revision, self.repourl)
         d.addCallback(self.parseGotRevision)
+        d.addCallback(self.parseChanges)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
+
+    def parseChanges(self, _):
+        #implement
+        return 0
 
     @defer.inlineCallbacks
     def full(self):

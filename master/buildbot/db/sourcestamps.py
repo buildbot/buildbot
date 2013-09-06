@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from twisted.internet import defer
 from twisted.python import log
 from buildbot.db import base
+from buildbot.status.results import SUCCESS, FAILURE
 
 class SsDict(dict):
     pass
@@ -156,4 +157,72 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             res.close()
 
             return ssdict
+        return self.db.pool.do(thd)
+
+    def findLastBuildRev(self, buildername, codebase, repository, branch):
+        def thd(conn):
+            sourcestamps_tbl = self.db.model.sourcestamps
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db .model.buildsets
+            buildsets_prop_tbl = self.db.model.buildset_properties
+
+            # we need to filter buildrequests_tbl.c.lastest
+            q = sa.select([sa.func.max(buildrequests_tbl.c.id)], from_obj= buildrequests_tbl.join(buildsets_tbl,
+                                                            (buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id)
+                                                            & (buildrequests_tbl.c.buildername == buildername)
+                                                            & (buildrequests_tbl.c.complete == 1)
+                                                            & (buildrequests_tbl.c.results.in_([SUCCESS, FAILURE])))
+                                                            .join(buildsets_prop_tbl, (buildsets_tbl.c.id == buildsets_prop_tbl.c.buildsetid)
+                                                                & (buildsets_prop_tbl.c.property_name == 'buildLatestRev')
+                                                                & (buildsets_prop_tbl.c.property_value.ilike('%True%')))
+                                                            .join(sourcestamps_tbl,
+                                                                  (buildsets_tbl.c.sourcestampsetid  == sourcestamps_tbl.c.sourcestampsetid)
+                                                                & (sourcestamps_tbl.c.codebase == codebase)
+                                                                & (sourcestamps_tbl.c.repository == repository)
+                                                                & (sourcestamps_tbl.c.branch == branch)))
+
+            stmt = sa.select([sourcestamps_tbl.c.revision, buildrequests_tbl.c.id])\
+                .where(sourcestamps_tbl.c.sourcestampsetid == buildsets_tbl.c.sourcestampsetid)\
+                .where(sourcestamps_tbl.c.codebase == codebase)\
+                .where(sourcestamps_tbl.c.repository == repository)\
+                .where(sourcestamps_tbl.c.branch == branch)\
+                .where(buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id)\
+                .where(buildrequests_tbl.c.id.in_(q))
+
+            res = conn.execute(stmt)
+            row = res.fetchone()
+            if not row:
+                return None
+            res.close()
+            return row.revision
+        return self.db.pool.do(thd)
+
+    def findMatchingChanges(self, sourcestamps):
+        def thd(conn):
+            sourcestamps_tbl = self.db.model.sourcestamps
+            changes_tbl = self.db.model.changes
+            sourcestamp_changes_tbl = self.db.model.sourcestamp_changes
+
+            stmt = sa.select([sourcestamps_tbl.c.id])\
+                .where(sourcestamps_tbl.c.sourcestampsetid == sa.bindparam('b_sourcestampsetid')) \
+                .where(sourcestamps_tbl.c.codebase == sa.bindparam('b_codebase')) \
+                .where(sourcestamps_tbl.c.revision == sa.bindparam('b_revision'))
+
+            q = sa.select([sourcestamps_tbl.c.codebase, sourcestamps_tbl.c.id, changes_tbl.c.changeid],
+                                        from_obj= sourcestamps_tbl.join(changes_tbl,
+                                                    (sourcestamps_tbl.c.repository == changes_tbl.c.repository)
+                                                & (sourcestamps_tbl.c.branch == changes_tbl.c.branch)
+                                                & (sourcestamps_tbl.c.revision == changes_tbl.c.revision)
+                                                & (sourcestamps_tbl.c.id.in_(stmt))))
+
+
+            res = conn.execute(q, sourcestamps)
+            rv = res.fetchall()
+            if len(rv) > 0:
+                conn.execute(sourcestamp_changes_tbl.insert(),
+                [ dict(sourcestampid=ssid, changeid=changeid)
+                  for codebase, ssid, changeid in rv ])
+
+            res.close()
+            return rv
         return self.db.pool.do(thd)

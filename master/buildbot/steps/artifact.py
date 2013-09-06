@@ -45,16 +45,17 @@ class CheckArtifactExists(ShellCommand):
         self.build.build_status.updateSourceStamps()
 
         if len(sourcestamps_updated) > 0:
+            update_ss = []
             for key, value in sourcestamps_updated.iteritems():
-                self.build_sourcestamps.append(
+                update_ss.append(
                     {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': build_sourcestampsetid})
 
-            rowsupdated = yield self.master.db.sourcestamps.updateSourceStamps(self.build_sourcestamps)
-        else:
-            # when running rebuild or passing revision as parameter
-            for ss in sourcestamps:
-                self.build_sourcestamps.append(
-                    {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_sourcestampsetid': ss.sourcestampsetid})
+            rowsupdated = yield self.master.db.sourcestamps.updateSourceStamps(update_ss)
+
+        # when running rebuild or passing revision as parameter
+        for ss in sourcestamps:
+            self.build_sourcestamps.append(
+                {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
 
     @defer.inlineCallbacks
     def createSummary(self, log):
@@ -99,11 +100,11 @@ class CheckArtifactExists(ShellCommand):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
-        self.updateSourceStamps()
+        yield self.updateSourceStamps()
 
         clean_build = self.build.getProperty("clean_build", False)
         if type(clean_build) != bool:
-            clean_build = clean_build == "True"
+            clean_build = (clean_build.lower() == "true")
 
         if clean_build:
             self.step_status.setText(["Skipping artifact check, making a clean build"])

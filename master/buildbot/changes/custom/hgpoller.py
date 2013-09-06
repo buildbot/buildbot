@@ -103,11 +103,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, os.linesep.join((
-            '--template={date|hgdate}',
-            '{author}',
-            '{files}',
-            '{desc|strip}'))]
+        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{files}\n{desc|strip}']
         # Mercurial fails with status 255 if rev is unknown
         d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
                                    env=os.environ, errortoo=False )

@@ -19,7 +19,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
-from buildbot.status.results import FAILURE
+from buildbot.status.results import CANCELED
 from buildbot.db import buildrequests
 
 class BuildRequest(object):
@@ -229,7 +229,7 @@ class BuildRequest(object):
         # cancelling a request without running into trouble with dangling
         # references.
         yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
+                                                                CANCELED)
 
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)
