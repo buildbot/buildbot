@@ -16,9 +16,9 @@ module.exports = (grunt) ->
         if firstPass
             return true
         if changedFiles.hasOwnProperty(filepath)
-            setTimeout( ->
+            setTimeout ->
                 delete changedFiles[filepath]
-            , 10000)
+            , 10000
             return true
         return false
 
