@@ -176,8 +176,11 @@ class Git(Source):
             yield self.copy()
             return
 
-        updatable = yield self._sourcedirIsUpdatable()
-        if not updatable:
+        action = yield self._sourcedirIsUpdatable()
+        if action == "clobber":
+            yield self.clobber()
+            return
+        elif action == "clone":
             log.msg("No git repo present, making full clone")
             yield self._fullCloneOrFallback()
         elif self.method == 'clean':
@@ -189,10 +192,13 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def incremental(self):
-        updatable = yield self._sourcedirIsUpdatable()
-
+        action = yield self._sourcedirIsUpdatable()
         # if not updateable, do a full checkout
-        if not updatable:
+        if action == "clobber":
+            yield self.clobber()
+            return
+        elif action == "clone":
+            log.msg("No git repo present, making full clone")
             yield self._fullCloneOrFallback()
             return
 
@@ -478,9 +484,6 @@ class Git(Source):
             return None
         return changes[-1].revision
 
-    def _sourcedirIsUpdatable(self):
-        return self.pathExists(self.build.path_module.join(self.workdir, '.git'))
-
     def _updateSubmodule(self, _):
         if self.submodules:
             return self._dovccmd(['submodule', 'update', '--recursive'])
@@ -515,4 +518,32 @@ class Git(Source):
                 self.supportsBranch = False
             return gitInstalled
         d.addCallback(checkSupport)
+        return d
+
+    def _sourcedirIsUpdatable(self):
+        if self.slaveVersionIsOlderThan('listdir', '2.16'):
+            d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+            def check(exists):
+                if(exists):
+                    return "update"
+                else:
+                    return "clone"
+
+            d.addCallback(check)
+        else:
+            cmd = buildstep.RemoteCommand('listdir', 
+                                          {'dir' : self.workdir,
+                                           'logEnviron' : self.logEnviron,
+                                           'timeout' : self.timeout,})
+            cmd.useLog(self.stdio_log, False)
+            d = self.runCommand(cmd)
+            def check(_):
+                files = cmd.updates['files'][0]
+                if '.git' in files:
+                    return "update"
+                elif len(files) > 0:
+                    return "clobber"
+                else:
+                    return "clone"
+            d.addCallback(check)
         return d

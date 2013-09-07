@@ -455,6 +455,22 @@ It produces two status updates:
 
     0 if the file is found, otherwise 1.
 
+listdir
+.......
+
+This command reads the directory and returns the list with directory contents. It
+takes a single parameter, ``dir``, specifying the directory relative to builder's basedir.
+
+It produces two status updates:
+
+``files``
+
+    The list of files in the directory returned from ``os.listdir``
+
+``rc``
+
+    0 if the ``os.listdir`` does not raise exception, otherwise 1.
+
 Source Commands
 ...............
 
