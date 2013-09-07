@@ -67,6 +67,14 @@ def patch_gatherResults():
         from buildbot.monkeypatches import gatherResults
         gatherResults.patch()
 
+def patch_testcase_assert_raises_regexp():
+    # pythons before 2.7 does not have TestCase.assertRaisesRegexp() method
+    # add our local implementation if needed
+    import sys
+    if sys.version_info[:2] < (2,7):
+        from buildbot.monkeypatches import testcase_assert
+        testcase_assert.patch()
+
 def patch_all(for_tests=False):
     if for_tests:
         from buildbot.monkeypatches import servicechecks
@@ -75,6 +83,7 @@ def patch_all(for_tests=False):
         testcase_patch.patch_testcase_patch()
         from buildbot.monkeypatches import testcase_synctest
         testcase_synctest.patch_testcase_synctest()
+        patch_testcase_assert_raises_regexp()
 
     patch_bug4881()
     patch_bug4520()
