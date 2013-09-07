@@ -30,8 +30,6 @@ class ChangeImportMixin(db.RealDatabaseMixin):
 
     This is a subclass of RealDatabaseMixin, so do not inherit from that class
     separately!
-
-    >>> self.make_pickle(self.make_change(who=u'jimmy'), self.make_change(who='johnny'))
     """
     def make_pickle(self, *changes, **kwargs):
         recode_fn = kwargs.pop('recode_fn', None)
