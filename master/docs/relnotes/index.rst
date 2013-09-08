@@ -92,6 +92,8 @@ Features
 
 * Added new config option ``protocols`` which allows to configure multiple protocols on single master.
 
+* New source step :bb:step:`Darcs` added on master side.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
