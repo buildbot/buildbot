@@ -512,7 +512,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
                 scriptCommand('write_pidfile_and_sleep', pidfile),
                 self.basedir)
         if interruptSignal is not None:
-            s.interruptSignals = [interruptSignal]
+            s.interruptSignal = interruptSignal
         runproc_d = s.start()
 
         pidfile_d = self.waitForPidfile(pidfile)
