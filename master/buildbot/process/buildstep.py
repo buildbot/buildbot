@@ -147,7 +147,7 @@ class RemoteCommand(pb.Referenceable):
 
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
-        
+
         d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
                                 self.commandID, str(why))
         # the slave may not have remote_interruptCommand
@@ -396,6 +396,8 @@ class RemoteShellCommand(RemoteCommand):
             # fixup themselves
             if self.step.slaveVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
+            if not self.step.slaveVersionIsOlderThan("shell", "8.8"):
+                self.args.pop('sigtermTime', None)
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])
         log.msg(what)
