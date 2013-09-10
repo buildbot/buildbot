@@ -78,7 +78,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, maxTime=None, logfiles={},
+                 timeout=20*60, maxTime=None, sigtermTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
                  collectStderr=False,
                  interruptSignal=None, initialStdin=None, decodeRC={0:SUCCESS}):

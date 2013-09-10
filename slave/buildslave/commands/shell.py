@@ -32,6 +32,7 @@ class SlaveShellCommand(base.Command):
                          environ=args.get('env'),
                          timeout=args.get('timeout', None),
                          maxTime=args.get('maxTime', None),
+                         sigtermTime=args.get('sigtermTime', None),
                          sendStdout=args.get('want_stdout', True),
                          sendStderr=args.get('want_stderr', True),
                          sendRC=True,

@@ -94,6 +94,10 @@ Features
 
 * New source step :bb:step:`Darcs` added on master side.
 
+* RemoteShellCommands can be killed by SIGTERM with the sigtermTime parameter before resorting to SIGKILL (:bb:bug: `751`).
+  If the slave's version is less than 0.8.9, the slave will kill the process with SIGKILL regardless of whether sigtermTime
+  is supplied.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -109,6 +113,8 @@ Features
 ~~~~~~~~
 
 * Added zsh and bash tab-completions support for 'buildslave' command.
+* RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
+  before resorting to SIGKILL (:bb:bug: `751`)
 
 Fixes
 ~~~~~
