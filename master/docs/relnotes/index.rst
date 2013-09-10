@@ -76,11 +76,12 @@ Features
 
 * Master-side source steps now respond to the "stop build" button (:bb:bug:`2356`).
 
-* The web hooks now include support for Gitorious. 
+* The web hooks now include support for Gitorious.
 
 * It is now possible to select categories to show in the waterfall help
 
 * RemoteShellCommands can be killed by SIGTERM with the sigtermTime parameter before resorting to SIGKILL (:bb:bug: `751`).
+  If the slave version is not older than 8.8, the slave will kill the process with SIGKILL even if sigtermTime is supplied.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,11 +96,13 @@ Features
 ~~~~~~~~
 
 * Added zsh and bash tab-completions support for 'buildslave' command.
+* RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
+  before resorting to SIGKILL (:bb:bug: `751`)
 
 Fixes
 ~~~~~
 
-* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for 
+* Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for
   buildstep wasn't set or was None (see :bb:pull:`753`) thus keeping watched logfiles open
   (this prevented their removal on Windows in subsequent builds).
 
