@@ -340,20 +340,48 @@ SourceStamps
 </div>
   
 {% if has_changes %}
-    <div class="column">
-      <h2>All Changes:</h2>
+    <div class="column-1 inner">
+      <h2 class="head-2">All Changes</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
             {% if ss.codebase %}
             <h3 id="changes-{{ ss.codebase }}"> {{ ss.codebase }}:</h3>
             {% endif %}
-            <ol>
+            <table class="">
+            </table>
+
+          <!--
+            <table class="table-1 first-child tablesorter tablesorter-js">
+                  <thead>
+                <tr>
+                  <th class="txt-align-left">
+                    Builder
+                  </th>
+                </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      fds
+                    </td>
+                  </tr>
+                </tbody>
+                
+            </table>
+          -->
+            
                   {% for c in ss.changes %}
-                    <li><h3>Change #{{ c.number or c.revision }}</h3>
-                      {{ change(c.asDict()) }}
-                    </li>
+                  
+                    
+                      <h3>
+                        Change #{{ c.number or c.revision }}
+                      </h3>
+                        {{ change(c.asDict()) }}
+                    
+
                   {% endfor %}
-            </ol>
+
+            
             {% endif %}
         {% endfor %}
     </div>
