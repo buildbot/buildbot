@@ -28,7 +28,7 @@ module.exports = function(grunt) {
       }
     },
     // javascript compression. This task is only used for test results.
-    
+    /*
     uglify: {
       my_target: {
         files: {
@@ -36,7 +36,7 @@ module.exports = function(grunt) {
         }
       }
     },
-    
+    */
     requirejs: {
       compile: {
         options: {
@@ -44,10 +44,10 @@ module.exports = function(grunt) {
           paths: {
           jquery: 'script/libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
           //jquery: 'empty:' //Use this to continue using CDN loading
-          select2: 'script/plugins/select2',
-          datatables: 'script/plugins/jquery-datatables',
+          helpers: 'script/project/helpers',
           setcurrentitem: 'script/project/set-current-item',
-          helpers: 'script/project/helpers'
+          datatables: 'script/plugins/jquery-datatables',
+          select2: 'script/plugins/select2'
         },
           name: 'script/main',
           out: 'prod/script/main.js',
