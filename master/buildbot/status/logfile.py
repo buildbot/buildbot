@@ -24,6 +24,7 @@ from twisted.internet import defer, threads, reactor
 from buildbot.util import netstrings
 from buildbot.util.eventual import eventually
 from buildbot import interfaces
+import time
 
 STDOUT = interfaces.LOG_CHANNEL_STDOUT
 STDERR = interfaces.LOG_CHANNEL_STDERR
@@ -458,6 +459,12 @@ class LogFile:
         if isinstance(text, unicode):
             text = text.encode('utf-8')
 
+        lines = text.strip().split('\n')
+        timetext = ""
+        for l in lines:
+            timetext +=  "[%s]   %s\n" % (time.strftime('%X'), l)
+
+        text = timetext
         # notify watchers first, before the chunk gets munged, so that they get
         # a complete picture of the actual log output
         # TODO: is this right, or should the watchers get a picture of the chunks?
