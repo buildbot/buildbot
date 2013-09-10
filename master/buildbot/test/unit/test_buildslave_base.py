@@ -90,7 +90,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield old.startService()
 
         new_config = mock.Mock()
-        new_config.slavePortnum = new_port
+        new_config.protocols = {'pb': {'port': new_port}}
         new_config.slaves = [ new ]
 
         yield old.reconfigService(new_config)
@@ -161,7 +161,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         config = mock.Mock()
-        config.slavePortnum = "tcp:1234"
+        config.protocols = {'pb': {'port': 'tcp:1234'}}
         config.slaves = [ slave ]
 
         yield slave.reconfigService(config)

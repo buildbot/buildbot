@@ -234,8 +234,8 @@ class RunProcess:
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, maxTime=None, initialStdin=None,
-                 keepStdout=False, keepStderr=False,
+                 timeout=None, maxTime=None, sigtermTime=None,
+                 initialStdin=None, keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config",
                  useProcGroup=True):
         """
@@ -324,6 +324,7 @@ class RunProcess:
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
+        self.sigtermTime = sigtermTime
         self.maxTime = maxTime
         self.maxTimeoutTimer = None
         self.killTimer = None
@@ -746,28 +747,45 @@ class RunProcess:
         msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
-    def kill(self, msg):
-        # This may be called by the timeout, or when the user has decided to
-        # abort this build.
-        self._sendBuffers()
-        self._cancelTimers()
-        msg += ", attempting to kill"
-        log.msg(msg)
-        self.sendStatus({'header': "\n" + msg + "\n"})
+    def isDead(self):
+        pid = int(self.process.pid)
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return True # dead
+        return False # alive
 
-        # let the PP know that we are killing it, so that it can ensure that
-        # the exit status comes out right
-        self.pp.killed = True
+    def checkProcess(self):
+        if not self.isDead():
+            hit = self.sendSig(self.interruptSignal)
+        else:
+            hit = 1
+        self.cleanUp(hit)
 
-        # keep track of whether we believe we've successfully killed something
+    def cleanUp(self, hit):
+        if not hit:
+            log.msg("signalProcess/os.kill failed both times")
+
+        if runtime.platformType == "posix":
+            # we only do this under posix because the win32eventreactor
+            # blocks here until the process has terminated, while closing
+            # stderr. This is weird.
+            self.pp.transport.loseConnection()
+
+        if self.deferred:
+            # finished ought to be called momentarily. Just in case it doesn't,
+            # set a timer which will abandon the command.
+            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
+                                       self.doBackupTimeout)
+
+    def sendSig(self, interruptSignal):
         hit = 0
-
         # try signalling the process group
         if not hit and self.useProcGroup and runtime.platformType == "posix":
-            sig = getattr(signal, "SIG"+ self.interruptSignal, None)
+            sig = getattr(signal, "SIG"+ interruptSignal, None)
 
             if sig is None:
-                log.msg("signal module is missing SIG%s" % self.interruptSignal)
+                log.msg("signal module is missing SIG%s" % interruptSignal)
             elif not hasattr(os, "kill"):
                 log.msg("os module is missing the 'kill' function")
             elif self.process.pgid is None:
@@ -788,20 +806,26 @@ class RunProcess:
                     pass
 
         elif runtime.platformType == "win32":
-            if self.interruptSignal == None:
-                log.msg("self.interruptSignal==None, only pretending to kill child")
+            if interruptSignal == None:
+                log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
-                log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
-                subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
-                log.msg("taskkill'd pid %s" % self.process.pid)
-                hit = 1
+                if interruptSignal == "TERM":
+                    log.msg("using TASKKILL PID /T to kill pid %s" % self.process.pid)
+                    subprocess.check_call("TASKKILL /PID %s /T" % self.process.pid)
+                    log.msg("taskkill'd pid %s" % self.process.pid)
+                    hit = 1
+                elif interruptSignal == "KILL":
+                    log.msg("using TASKKILL PID /F /T to kill pid %s" % self.process.pid)
+                    subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
+                    log.msg("taskkill'd pid %s" % self.process.pid)
+                    hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:
             try:
-                log.msg("trying process.signalProcess('%s')" % (self.interruptSignal,))
-                self.process.signalProcess(self.interruptSignal)
-                log.msg(" signal %s sent successfully" % (self.interruptSignal,))
+                log.msg("trying process.signalProcess('%s')" % (interruptSignal,))
+                self.process.signalProcess(interruptSignal)
+                log.msg(" signal %s sent successfully" % (interruptSignal,))
                 hit = 1
             except OSError:
                 log.err("from process.signalProcess:")
@@ -813,20 +837,28 @@ class RunProcess:
                 # been called already or will be called shortly
                 pass
 
-        if not hit:
-            log.msg("signalProcess/os.kill failed both times")
+        return hit
 
-        if runtime.platformType == "posix":
-            # we only do this under posix because the win32eventreactor
-            # blocks here until the process has terminated, while closing
-            # stderr. This is weird.
-            self.pp.transport.loseConnection()
+    def kill(self, msg):
+        # This may be called by the timeout, or when the user has decided to
+        # abort this build.
+        self._sendBuffers()
+        self._cancelTimers()
+        msg += ", attempting to kill"
+        log.msg(msg)
+        self.sendStatus({'header': "\n" + msg + "\n"})
 
-        if self.deferred:
-            # finished ought to be called momentarily. Just in case it doesn't,
-            # set a timer which will abandon the command.
-            self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
-                                       self.doBackupTimeout)
+        # let the PP know that we are killing it, so that it can ensure that
+        # the exit status comes out right
+        self.pp.killed = True
+
+        sendSigterm = self.sigtermTime is not None
+        if sendSigterm:
+            self.sendSig("TERM")
+            self.sigtermTimer = self._reactor.callLater(self.sigtermTime, self.checkProcess)
+        else:
+            hit = self.sendSig(self.interruptSignal)
+            self.cleanUp(hit)
 
     def doBackupTimeout(self):
         log.msg("we tried to kill the process, and it wouldn't die.."
@@ -839,7 +871,7 @@ class RunProcess:
         self.failed(RuntimeError("SIGKILL failed to kill process"))
 
     def _cancelTimers(self):
-        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer'):
+        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer', 'sigtermTimer'):
             timer = getattr(self, timerName, None)
             if timer:
                 timer.cancel()

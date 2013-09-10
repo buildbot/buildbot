@@ -151,8 +151,21 @@ Features
 
 * The web status correctly interprets ANSI color escape codes.
 
+* Added new config option ``protocols`` which allows to configure multiple protocols on single master.
+
+* New source step :bb:step:`Darcs` added on master side.
+
+* RemoteShellCommands can be killed by SIGTERM with the sigtermTime parameter before resorting to SIGKILL (:bb:bug: `751`).
+  If the slave's version is less than 0.8.9, the slave will kill the process with SIGKILL regardless of whether sigtermTime
+  is supplied.
+
+* The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
+  See :bb:bug:`2560`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -164,6 +177,8 @@ Features
 ~~~~~~~~
 
 * Added zsh and bash tab-completions support for 'buildslave' command.
+* RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
+  before resorting to SIGKILL (:bb:bug: `751`)
 
 Fixes
 ~~~~~

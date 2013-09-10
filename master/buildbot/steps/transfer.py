@@ -189,6 +189,17 @@ class _TransferBuildStep(BuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
+    def __init__(self, workdir=None, **buildstep_kwargs):
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.workdir = workdir
+
+    # Check that buildslave version used have implementation for
+    # a remote command. Raise exception if buildslave is to old.
+    def checkSlaveVersion(self, command):
+        if not self.slaveVersion(command):
+            message = "slave is too old, does not know about %s" % command
+            raise BuildSlaveTooOldError(message)
+
     def setDefaultWorkdir(self, workdir):
         if self.workdir is None:
             self.workdir = workdir
@@ -228,11 +239,10 @@ class FileUpload(_TransferBuildStep):
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  keepstamp=False, url=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -243,11 +253,7 @@ class FileUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        version = self.slaveVersion("uploadFile")
-
-        if not version:
-            m = "slave is too old, does not know about uploadFile"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("uploadFile")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -299,11 +305,10 @@ class DirectoryUpload(_TransferBuildStep):
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16*1024,
                  compress=None, url=None, **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if compress not in (None, 'gz', 'bz2'):
@@ -313,11 +318,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        version = self.slaveVersion("uploadDirectory")
-
-        if not version:
-            m = "slave is too old, does not know about uploadDirectory"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("uploadDirectory")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -408,11 +409,10 @@ class FileDownload(_TransferBuildStep):
     def __init__(self, mastersrc, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.mastersrc = mastersrc
         self.slavedest = slavedest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -421,10 +421,7 @@ class FileDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
-        if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+        self.checkSlaveVersion("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -472,23 +469,21 @@ class StringDownload(_TransferBuildStep):
     def __init__(self, s, slavedest,
                  workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, **buildstep_kwargs)
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.s = s
         self.slavedest = slavedest
-        self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
             config.error(
-                'mode must be an integer or None')
+                "StringDownload step's mode must be an integer or None,"
+                " got '%s'" % mode)
         self.mode = mode
 
     def start(self):
-        version = self.slaveVersion("downloadFile")
-        if not version:
-            m = "slave is too old, does not know about downloadFile"
-            raise BuildSlaveTooOldError(m)
+        # we use 'downloadFile' remote command on the slave
+        self.checkSlaveVersion("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that

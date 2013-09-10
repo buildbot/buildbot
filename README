@@ -1,7 +1,11 @@
 BuildBot: build/test automation
   http://buildbot.net
   Brian Warner <warner-buildbot @ lothar . com>
-  Dustin J. Mitchell <dustin@v.igoro.us >
+  Dustin J. Mitchell <dustin@v.igoro.us>
 
 Buildbot consists of two separate components: the master and the slave.  See
 master/README and slave/README for more information.
+
+Related repositories:
+  https://github.com/buildbot/buildbot-media - Buildbot-related media
+  https://github.com/buildbot/buildbot-website - Source for http://buildbot.net

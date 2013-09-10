@@ -18,17 +18,92 @@ from __future__ import with_statement
 import tempfile, os
 import shutil
 import tarfile
+import stat
 from twisted.trial import unittest
 
 from mock import Mock
 
+from buildbot.process import buildstep
 from buildbot.process.properties import Properties
 from buildbot.util import json
 from buildbot.steps import transfer
 from buildbot.status.results import SUCCESS
 from buildbot import config
+from buildbot import interfaces
 from buildbot.test.util import steps
 from buildbot.test.fake.remotecommand import Expect, ExpectRemoteRef
+
+
+# Test buildbot.steps.transfer._FileWriter class.
+class TestFileWriter(unittest.TestCase):
+
+    # test _FileWrite.__init__() method.
+    def testInit(self):
+        #
+        # patch functions called in constructor
+        #
+
+        # patch os.path.exists() to always return False
+        mockedExists = Mock(return_value=False)
+        self.patch(os.path, "exists", mockedExists)
+
+        # capture calls to os.makedirs()
+        mockedMakedirs = Mock()
+        self.patch(os, 'makedirs', mockedMakedirs)
+
+        # capture calls to tempfile.mkstemp()
+        mockedMkstemp = Mock(return_value=(7, "tmpname"))
+        self.patch(tempfile, "mkstemp", mockedMkstemp)
+
+        # capture calls to os.fdopen()
+        mockedFdopen = Mock()
+        self.patch(os, "fdopen", mockedFdopen)
+
+        #
+        # call _FileWriter constructor
+        #
+        destfile = os.path.join("dir", "file")
+        transfer._FileWriter(destfile, 64, stat.S_IRUSR)
+
+        #
+        # validate captured calls
+        #
+        absdir = os.path.dirname(os.path.abspath(os.path.join("dir", "file")))
+        mockedExists.assert_called_once_with(absdir)
+        mockedMakedirs.assert_called_once_with(absdir)
+        mockedMkstemp.assert_called_once_with(dir=absdir)
+        mockedFdopen.assert_called_once_with(7, 'wb')
+
+# Test buildbot.steps.transfer._TransferBuildStep class.
+class TestTransferBuildStep(unittest.TestCase):
+
+    # Test calling checkSlaveVersion() when buildslave have support for
+    # requested remote command.
+    def testCheckSlaveVersionGood(self):
+        # patch BuildStep.slaveVersion() to return success
+        mockedSlaveVersion = Mock()
+        self.patch(buildstep.BuildStep, "slaveVersion", mockedSlaveVersion)
+
+        # check that no exceptions are raised
+        transfer._TransferBuildStep().checkSlaveVersion("foo")
+
+        # make sure slaveVersion() was called with correct arguments
+        mockedSlaveVersion.assert_called_once_with("foo")
+
+    # Test calling checkSlaveVersion() when buildslave is to old to support
+    # requested remote command.
+    def testCheckSlaveVersionTooOld(self):
+        # patch BuildStep.slaveVersion() to return error
+        self.patch(buildstep.BuildStep,
+                   "slaveVersion",
+                   Mock(return_value=None))
+
+        # make sure appropriate exception is raised
+        step = transfer._TransferBuildStep()
+        self.assertRaisesRegexp(interfaces.BuildSlaveTooOldError,
+                                "slave is too old, does not know about foo",
+                                step.checkSlaveVersion, "foo")
+
 
 class TestFileUpload(unittest.TestCase):
     def setUp(self):
@@ -183,6 +258,16 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         return d
 
 class TestStringDownload(unittest.TestCase):
+
+    # check that ConfigErrors is raised on invalid 'mode' argument
+    def testModeConfError(self):
+        self.assertRaisesRegexp(
+            config.ConfigErrors,
+            "StringDownload step's mode must be an integer or None,"
+            " got 'not-a-number'",
+            transfer.StringDownload,
+            "string", "file", mode="not-a-number")
+
     def testBasic(self):
         s = transfer.StringDownload("Hello World", "hello.txt")
         s.build = Mock()

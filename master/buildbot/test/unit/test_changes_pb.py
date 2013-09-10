@@ -89,7 +89,7 @@ class TestPBChangeSource(
     def _test_registration(self, exp_registration, slavePort=None,
                         **constr_kwargs):
         config = mock.Mock()
-        config.slavePortnum = slavePort
+        config.protocols = {'pb': {'port': slavePort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
 
         self.startChangeSource()
@@ -152,7 +152,7 @@ class TestPBChangeSource(
     @defer.inlineCallbacks
     def test_reconfigService_default_changed(self):
         config = mock.Mock()
-        config.slavePortnum = '9876'
+        config.protocols = {'pb': {'port': '9876'}}
         self.attachChangeSource(pb.PBChangeSource())
 
         self.startChangeSource()
@@ -160,7 +160,7 @@ class TestPBChangeSource(
 
         self.assertRegistered('9876', 'change', 'changepw')
 
-        config.slavePortnum = '1234'
+        config.protocols = {'pb': {'port': '1234'}}
 
         yield self.changesource.reconfigService(config)
 
@@ -175,7 +175,7 @@ class TestPBChangeSource(
     def test_reconfigService_default_changed_but_inactive(self):
         """reconfig one that's not active on this master"""
         config = mock.Mock()
-        config.slavePortnum = '9876'
+        config.protocols = {'pb': {'port': '9876'}}
         self.attachChangeSource(pb.PBChangeSource())
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 

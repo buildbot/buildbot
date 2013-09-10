@@ -397,7 +397,7 @@ The Git step takes the following arguments:
 
    ``fresh``
       This remove all other files except those tracked by Git. First
-      it does :command:`git clean -d -f -x` then fetch/checkout to a
+      it does :command:`git clean -d -f -f -x` then fetch/checkout to a
       specified revision(if any). This option is equal to update mode
       with ``ignore_ignores=True`` in old steps.
 
@@ -405,7 +405,7 @@ The Git step takes the following arguments:
       All the files which are tracked by Git and listed ignore files
       are not deleted. Remaining all other files will be deleted
       before fetch/checkout. This is equivalent to :command:`git clean
-      -d -f` then fetch. This is equivalent to
+      -d -f -f` then fetch. This is equivalent to
       ``ignore_ignores=False`` in old steps.
 
    ``copy``
@@ -920,6 +920,8 @@ for example::
 
 .. _Step-Gerrit:
 
+.. bb:step:: Gerrit
+
 Gerrit
 ++++++
 
@@ -934,6 +936,58 @@ Gerrit integration can be also triggered using forced build with property named
 will be translated into a branch name.  This feature allows integrators to build with
 several pending interdependent changes, which at the moment cannot be described properly
 in Gerrit, and can only be described by humans.
+
+
+.. _Step-Darcs:
+
+.. bb:step:: Darcs
+
+Darcs
++++++
+
+.. py:class:: buildbot.steps.source.darcs.Darcs
+
+The :bb:step`Darcs` build step performs a `Darcs <http://darcs.net/>`_
+checkout or update. ::
+
+    from buildbot.steps.source.darcs import Darcs
+    factory.addStep(Darcs(repourl='http://path/to/repo', 
+                          mode='full', method='clobber', retry=(10, 1)))
+
+Darcs step takes the following arguments:
+
+``repourl``
+    (required): The URL at which the Darcs source repository is available.
+
+``mode``
+
+  (optional): defaults to ``'incremental'``.
+  Specifies whether to clean the build tree or not.
+
+    ``incremental``
+      The source is update, but any built files are left untouched.
+
+    ``full``
+      The build tree is clean of any built files.
+      The exact method for doing this is controlled by the ``method`` argument.
+
+
+``method``
+   (optional): defaults to ``copy`` when mode is ``full``.
+   Darcs' incremental mode does not require a method.
+   The full mode has two methods defined:
+
+   ``clobber``
+      It removes the working directory for each build then makes full checkout.
+
+   ``copy``
+      This first checkout source into source directory then copy the
+      ``source`` directory to ``build`` directory then performs
+      the build operation in the copied directory. This way we make
+      fresh builds with very less bandwidth to download source. The
+      behavior of source checkout follows exactly same as
+      incremental. It performs all the incremental checkout behavior
+      in ``source`` directory.
 
 .. _Source-Checkout-Slave-Side:
 

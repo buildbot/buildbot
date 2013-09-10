@@ -130,7 +130,7 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
         # calculate the new port
         port = self.port
         if port is None:
-            port = new_config.slavePortnum
+            port = new_config.protocols['pb']['port']
 
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():

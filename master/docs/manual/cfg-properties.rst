@@ -393,13 +393,13 @@ or, more practically, ::
         implements(IRenderable)
         def getRenderingFor(self, props):
             return time.clock()
-    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=Now())])
+    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=Now())])
 
 This is equivalent to::
 
     @renderer
     def now(props):
         return time.clock()
-    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=now)])
+    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=now)])
 
 Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.
