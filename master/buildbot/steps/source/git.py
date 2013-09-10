@@ -150,7 +150,7 @@ class Git(Source):
         d.addCallback(lambda _: self.sourcedirIsPatched())
         def checkPatched(patched):
             if patched:
-                return self._dovccmd(['clean', '-f', '-d', '-x'])
+                return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
             else:
                 return 0
         d.addCallback(checkPatched)
@@ -217,7 +217,7 @@ class Git(Source):
         yield self._updateSubmodule(None)
 
     def clean(self):
-        command = ['clean', '-f', '-d']
+        command = ['clean', '-f', '-f', '-d']
         d = self._dovccmd(command)
         d.addCallback(self._fetchOrFallback)
         d.addCallback(self._updateSubmodule)
@@ -230,7 +230,7 @@ class Git(Source):
         return d
 
     def fresh(self):
-        command = ['clean', '-f', '-d', '-x']
+        command = ['clean', '-f', '-f', '-d', '-x']
         d = self._dovccmd(command)
         d.addCallback(self._fetchOrFallback)
         d.addCallback(self._updateSubmodule)
@@ -489,7 +489,7 @@ class Git(Source):
 
     def _cleanSubmodule(self, _):
         if self.submodules:
-            command = ['submodule', 'foreach', 'git', 'clean', '-f', '-d']
+            command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             return self._dovccmd(command)
