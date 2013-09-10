@@ -6,7 +6,47 @@ define(['jquery'], function ($) {
     helpers = {
         init: function () {
 		
+        // json on frontpage
+        if ($('#tb-root').length != 0) {
+	         $.ajax({
+			    url: "/json?filter=0",
+			    dataType: "json",
+			    type: "GET",
+			    cache: false,
+			    success: function (data) {
+			        
+			        var arrayBuilders = [];
+			        var arrayPending = [];
+			        var arrayCurrent = [];
+			        $.each(data.builders, function (key, value) {
+	        			arrayBuilders.push(key);
+	        			arrayPending.push(value.pendingBuilds);
+	        			if (value.state == 'building') {
+	        				arrayCurrent.push(value.currentBuilds);
+	        			}
+	    			});
 
+			        function sumVal(arr) {
+			        	var sum = 0;
+						$.each(arr,function(){sum+=parseFloat(this) || 0;});
+						return sum;
+			        };
+					
+	    			var arraySlaves = [];
+			        $.each(data.slaves, function (key) {
+	        			arraySlaves.push(key);
+	    			});
+
+	    			var arrayProjects = [];
+			        $.each(data.project, function (key) {
+	        			arrayProjects.push(key);
+	    			});
+
+	    			$('.summary-td').append("<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
+			    }
+			});
+		   
+		}
 
         // Colums with sorting 
 		var colList = [];
@@ -37,13 +77,10 @@ define(['jquery'], function ($) {
 			 },
 			"bStateSave": true,
 			"fnInitComplete": function() {
-            $('.dataTables_filter input').focus();
-        }
+				$('.dataTables_filter input').attr('placeholder', 'Filter results')
+            	$('.dataTables_filter input').focus();
+        	}
 		});
-
-
-
-		
 
 		// center infobox
 	jQuery.fn.center = function() {
@@ -81,15 +118,20 @@ define(['jquery'], function ($) {
 		});
 	};
 	popUpBtn('.popup-btn-js');
-	
+
 	function closePopUp() {
+			
+
+
 		$(document, '.close-btn').bind('click touchstart', function(e){
 			if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
 				$('.command_forcebuild').removeClass('form-open');
 				$('.more-info-box-js, .more-info-box-js-2').hide();
 				$('#content').empty();
 			}
+
 		}); 
+		
 	}
 	closePopUp();
 	
@@ -264,7 +306,6 @@ define(['jquery'], function ($) {
 			
 			$(fw).appendTo($('#content'));
 			
-
 			$('.more-info-box-js-2').fadeIn('fast');
 
 			$('.more-info-box-js-2').center();
@@ -278,13 +319,23 @@ define(['jquery'], function ($) {
 
 			comboBox('#formWrapper .select-tools-js');
 			
+			$('.select2-drop').bind('click touchstart', function(e){
+				e.stopPropagation();
+				$(this).unbind(e);
+			});	
+
   			clickSort('#select2-drop .select2-results');
 			$(window).resize(function() {
 				$('.more-info-box-js-2').center();
 			});
+			
+			$('#getForm').attr('action', window.location.href);	
+			$('#getForm .grey-btn[type="submit"]').click(function(){
+				$('.more-info-box-js-2').hide();				
+			});
+
 
 			
-			$('#getForm').attr('action', window.location.href);
 		});
 	});
 	
@@ -381,7 +432,6 @@ define(['jquery'], function ($) {
 			        $(this).unbind(e);
 			    }
 			});
-
 
 		});
 
