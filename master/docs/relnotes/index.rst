@@ -81,7 +81,7 @@ Features
 * It is now possible to select categories to show in the waterfall help
 
 * RemoteShellCommands can be killed by SIGTERM with the sigtermTime parameter before resorting to SIGKILL (:bb:bug: `751`).
-  If the slave version is not older than 8.8, the slave will kill the process with SIGKILL even if sigtermTime is supplied.
+  If the slave version is not 0.8.9 or above, the slave will kill the process with SIGKILL even if sigtermTime is supplied.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
