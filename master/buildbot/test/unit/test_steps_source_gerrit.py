@@ -46,7 +46,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -88,7 +88,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',

@@ -98,6 +98,9 @@ Features
   If the slave's version is less than 0.8.9, the slave will kill the process with SIGKILL regardless of whether sigtermTime
   is supplied.
 
+* The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
+  See :bb:bug:`2560`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
