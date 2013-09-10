@@ -397,7 +397,7 @@ The Git step takes the following arguments:
 
    ``fresh``
       This remove all other files except those tracked by Git. First
-      it does :command:`git clean -d -f -x` then fetch/checkout to a
+      it does :command:`git clean -d -f -f -x` then fetch/checkout to a
       specified revision(if any). This option is equal to update mode
       with ``ignore_ignores=True`` in old steps.
 
@@ -405,7 +405,7 @@ The Git step takes the following arguments:
       All the files which are tracked by Git and listed ignore files
       are not deleted. Remaining all other files will be deleted
       before fetch/checkout. This is equivalent to :command:`git clean
-      -d -f` then fetch. This is equivalent to
+      -d -f -f` then fetch. This is equivalent to
       ``ignore_ignores=False`` in old steps.
 
    ``copy``
