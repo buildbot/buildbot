@@ -318,10 +318,9 @@ define(['jquery'], function ($) {
 			});
 
 			comboBox('#formWrapper .select-tools-js');
-			
+		
 			$('.select2-drop').bind('click touchstart', function(e){
 				e.stopPropagation();
-				$(this).unbind(e);
 			});	
 
   			clickSort('#select2-drop .select2-results');
@@ -395,7 +394,6 @@ define(['jquery'], function ($) {
 			        	$(this).remove();	
 			        });
 			        
-			        $(this).unbind(e);
 			    }
 			});
 	
