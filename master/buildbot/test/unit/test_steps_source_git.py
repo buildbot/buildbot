@@ -46,7 +46,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -84,7 +84,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -124,7 +124,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -162,14 +162,14 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'],
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'],
                         logEnviron=True)
             + 0,
             Expect('stat', dict(file='wkdir/.git',
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -224,7 +224,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -270,7 +270,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -311,7 +311,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d'])
+                        command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -682,7 +682,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'])
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -753,7 +753,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'])
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -768,7 +768,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'foreach', 'git', 'clean',
-                                 '-f', '-d', '-x'])
+                                 '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -1356,7 +1356,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'])
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
@@ -1394,7 +1394,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'],
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'],
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1436,7 +1436,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=False))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clean', '-f', '-d', '-x'],
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'],
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
@@ -1828,7 +1828,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=prefix + ['clean', '-f', '-d'])
+                        command=prefix + ['clean', '-f', '-f', '-d'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=prefix + ['fetch', '-t',
