@@ -136,7 +136,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
 
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
     The --db string is stored verbatim in the buildbot.tac file, and
-    evaluated as 'buildbot start' time to pass a DBConnector instance into
+    evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
     """
 
