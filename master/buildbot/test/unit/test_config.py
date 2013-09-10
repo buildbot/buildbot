@@ -57,8 +57,7 @@ global_defaults = dict(
 
 class FakeChangeSource(changes_base.ChangeSource):
     def __init__(self):
-        return changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
-    pass
+        changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
 
 
 class FakeStatusReceiver(status_base.StatusReceiver):
