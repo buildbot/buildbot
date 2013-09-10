@@ -143,25 +143,25 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         # while still open for writing
         fp = self.logfile.getFile()
         fp.seek(0, 0)
-        self.assertEqual(fp.read(), '13:0hello, world,')
+        self.assertIn('hello, world', fp.read())
 
         self.logfile.finish()
 
         # fp is still open after finish()
         fp.seek(0, 0)
-        self.assertEqual(fp.read(), '13:0hello, world,')
+        self.assertIn('hello, world', fp.read())
 
         # but a fresh getFile call works, too
         fp = self.logfile.getFile()
         fp.seek(0, 0)
-        self.assertEqual(fp.read(), '13:0hello, world,')
+        self.assertIn('hello, world', fp.read())
 
         self.pickle_and_restore()
 
         # even after it is pickled
         fp = self.logfile.getFile()
         fp.seek(0, 0)
-        self.assertEqual(fp.read(), '13:0hello, world,')
+        self.assertIn('hello, world', fp.read())
 
         # ..and compressed
         self.config.logCompressionMethod = 'bz2'
@@ -171,7 +171,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
                     os.path.exists(os.path.join(self.basedir, '123-stdio.bz2')))
             fp = self.logfile.getFile()
             fp.seek(0, 0)
-            self.assertEqual(fp.read(), '13:0hello, world,')
+            self.assertIn('hello, world', fp.read())
         d.addCallback(check)
         return d
 
@@ -181,7 +181,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.finish()
         fp = self.logfile.getFile()
         fp.seek(0, 0)
-        self.assertEqual(fp.read(), expected)
+        self.assertIn(expected, fp.read())
 
     def test_addEntry_single(self):
         return self.do_test_addEntry([(0, 'hello, world')],
@@ -284,12 +284,11 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.watchers.append(watcher)
         self.config.logMaxSize = 10
         self.do_test_addEntry([(0, 'x')] * 15,
-                '11:0xxxxxxxxxx,'
                 '64:2\nOutput exceeded 10 bytes, remaining output has been '
                 'truncated\n,')
         logChunk_chunks = [ tuple(args[0][3:])
                             for args in watcher.logChunk.call_args_list ]
-        self.assertEqual(logChunk_chunks, [(0, 'x')] * 15)
+        self.assertEqual([(0, 'x')] * 15, logChunk_chunks)
 
     def test_addStdout(self):
         addEntry = mock.Mock()
