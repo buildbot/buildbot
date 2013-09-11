@@ -42,9 +42,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        base.PollingChangeSource.__init__(self, name=repourl,
-                pollInterval=pollInterval)
-
         if project is None: project = ''
 
         if branch and branches:
@@ -53,6 +50,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             branches = [branch]
         elif not branches:
             branches = ['master']
+
+        for br in branches:
+            base.PollingChangeSource.__init__(self, name=repourl+'-'+br,
+                    pollInterval=pollInterval)
 
         self.repourl = repourl
         self.branches = branches
@@ -195,8 +196,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList.reverse()
         self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes: %s from "%s"'
-                % (self.changeCount, revList, self.repourl) )
+        log.msg('gitpoller: processing %d changes: %s from "%s" (branch %s)'
+                % (self.changeCount, revList, self.repourl, branch) )
 
         for rev in revList:
             dl = defer.DeferredList([

@@ -120,6 +120,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     unittest.TestCase):
 
     REPOURL = 'git@example.com:foo/baz.git'
+    BRANCH = 'master'
     REPOURL_QUOTED = 'git%40example.com%3Afoo%2Fbaz.git'
 
     def setUp(self):
@@ -157,7 +158,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
                 })
             self.master.db.state.assertStateByClass(
-                    name=self.REPOURL, class_name='GitPoller',
+                    name=self.REPOURL+'-'+self.BRANCH, class_name='GitPoller',
                     lastRev={
                         'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
                         })
@@ -271,7 +272,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         def cb(_):
             self.assertAllCommandsRan()
             self.master.db.state.assertStateByClass(
-                    name=self.REPOURL, class_name='GitPoller',
+                    name=self.REPOURL+'-'+self.BRANCH, class_name='GitPoller',
                     lastRev={
                         'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                         })
@@ -507,7 +508,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             self.master.db.state.assertStateByClass(
-                    name=self.REPOURL, class_name='GitPoller',
+                    name=self.REPOURL+'-'+self.BRANCH, class_name='GitPoller',
                     lastRev={
                         'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                         })
@@ -533,7 +534,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         startService = mock.Mock()
         self.patch(base.PollingChangeSource, "startService", startService)
         self.master.db.state.fakeState(
-            name=self.REPOURL, class_name='GitPoller',
+            name=self.REPOURL+'-'+self.BRANCH, class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 
