@@ -460,9 +460,13 @@ class BuildStep(object, properties.PropertiesMixin):
              'useProgress',
              'doStepIf',
              'hideStepIf',
+             'description',
+             'descriptionDone',
              ]
 
     name = "generic"
+    description = None
+    descriptionDone = None
     locks = []
     progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
@@ -492,6 +496,10 @@ class BuildStep(object, properties.PropertiesMixin):
         return self
 
     def describe(self, done=False):
+        if self.descriptionDone and done:
+            return self.descriptionDone
+        elif self.description:
+            return self.description
         return [self.name]
 
     def setBuild(self, build):
