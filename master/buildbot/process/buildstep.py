@@ -792,7 +792,7 @@ class BuildStep(object, properties.PropertiesMixin):
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
-    
+
     @staticmethod
     def _maybeEvaluate(value, *args, **kwargs):
         if callable(value):
