@@ -215,6 +215,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         d.addCallback(lambda _ : self.assertTrue(called[0]))
         return d
 
+    def test_describe(self):
+        description = 'oogaBooga'
+        descriptionDone = 'oogaBooga done!'
+        step = buildstep.BuildStep(description=description,
+                                   descriptionDone=descriptionDone)
+        self.assertEqual(step.describe(), description)
+        self.assertEqual(step.describe(done=True), descriptionDone)
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
