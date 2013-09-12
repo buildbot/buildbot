@@ -1212,5 +1212,4 @@ class ITriggerableScheduler(Interface):
 
 class IBuildStepFactory(Interface):
     def buildStep():
-        """
-        """
+        pass
