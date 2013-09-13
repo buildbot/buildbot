@@ -223,6 +223,10 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(step.describe(), description)
         self.assertEqual(step.describe(done=True), descriptionDone)
 
+        step2 = buildstep.BuildStep()
+        self.assertEqual(step2.describe(), [step2.name])
+        self.assertEqual(step2.describe(done=True), [step2.name])
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 

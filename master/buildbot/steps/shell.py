@@ -73,10 +73,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
                    'slaveEnvironment', 'remote_kwargs', 'command',
                    'description', 'descriptionDone', 'descriptionSuffix']
 
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
-    descriptionSuffix = None # extra information to append to suffix
-
     command = None # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in

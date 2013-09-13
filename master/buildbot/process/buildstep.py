@@ -462,11 +462,13 @@ class BuildStep(object, properties.PropertiesMixin):
              'hideStepIf',
              'description',
              'descriptionDone',
+             'descriptionSuffix',
              ]
 
     name = "generic"
-    description = None
-    descriptionDone = None
+    description = None # set this to a list of short strings to override
+    descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
     locks = []
     progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
