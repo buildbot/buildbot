@@ -261,7 +261,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     @defer.inlineCallbacks
     def _process_changes(self,branchname, lastRev, newRev):
         # get the change list
-        revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
+        revListArgs = [r'--format=%H', '--ancestry-path', '%s..%s' % (lastRev, newRev), '--']
 
         if lastRev is None:
             revListArgs = [r'--format=%H', '%s' % newRev, '-1', '--']
@@ -282,7 +282,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             dl = defer.DeferredList([
                                         self._get_commit_timestamp(rev),
                                         self._get_commit_author(rev),
-                                        self._get_commit_files(rev),
                                         self._get_commit_comments(rev),
                                         ], consumeErrors=True)
 
@@ -294,11 +293,11 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 # just fail on the first error; they're probably all related!
                 raise failures[0]
 
-            timestamp, author, files, comments = [ r[1] for r in results ]
+            timestamp, author, comments = [ r[1] for r in results ]
             yield self.master.addChange(
                 author=author,
                 revision=rev,
-                files=files,
+                files=None,
                 comments=comments,
                 when_timestamp=epoch2datetime(timestamp),
                 branch=branchname,

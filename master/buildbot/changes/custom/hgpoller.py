@@ -99,18 +99,18 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         return os.path.join(self.master.basedir, workdir)
 
     def _getRevDetails(self, rev):
-        """Return a deferred for (date, author, files, comments) of given rev.
+        """Return a deferred for (date, author, comments) of given rev.
 
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{files}\n{desc|strip}']
+        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{desc|strip}']
         # Mercurial fails with status 255 if rev is unknown
         d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, files, comments = output.decode(self.encoding, "replace").split(
-                os.linesep, 3)
+            date, author, comments = output.decode(self.encoding, "replace").split(
+                os.linesep, 2)
 
             if not self.usetimestamps:
                 stamp = None
@@ -121,7 +121,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)
                     raise
-            return stamp, author.strip(), files.split(), comments.strip()
+            return stamp, author.strip(), comments.strip()
 
         d.addCallback(process)
         return d
@@ -251,12 +251,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (len(revNodeList), revNodeList, self._absWorkdir()))
         for rev, node in revNodeList:
-            timestamp, author, files, comments = yield self._getRevDetails(
+            timestamp, author, comments = yield self._getRevDetails(
                 node)
             yield self.master.addChange(
                 author=author,
                 revision=node,
-                files=files,
+                files=None,
                 comments=comments,
                 when_timestamp=epoch2datetime(timestamp),
                 branch=branch,
