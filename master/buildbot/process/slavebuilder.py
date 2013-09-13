@@ -26,15 +26,10 @@ from twisted.python import log
  ) = range(6)
 
 class AbstractSlaveBuilder(pb.Referenceable):
-    """I am the master-side representative for one of the
-    L{buildbot.slave.bot.SlaveBuilder} objects that lives in a remote
-    buildbot. When a remote builder connects, I query it for command versions
-    and then make it available to any Builds that are ready to run. """
-
     def __init__(self):
         self.ping_watchers = []
         self.state = None # set in subclass
-        self.remote = None
+        self.conn = None
         self.slave = None
         self.builder_name = None
         self.locks = None
@@ -81,18 +76,16 @@ class AbstractSlaveBuilder(pb.Referenceable):
         if self.slave:
             self.slave.buildFinished(self)
 
-    def attached(self, slave, remote, commands):
+    def attached(self, slave, commands):
         """
         @type  slave: L{buildbot.buildslave.BuildSlave}
         @param slave: the BuildSlave that represents the buildslave as a
                       whole
-        @type  remote: L{twisted.spread.pb.RemoteReference}
-        @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}
         @type  commands: dict: string -> string, or None
         @param commands: provides the slave's version of each RemoteCommand
         """
         self.state = ATTACHING
-        self.remote = remote
+        self.conn = slave.conn
         self.remoteCommands = commands # maps command name to version
         if self.slave is None:
             self.slave = slave
@@ -104,10 +97,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         d = defer.succeed(None)
 
         d.addCallback(lambda _:
-            self.remote.callRemote("setMaster", self))
-
-        d.addCallback(lambda _:
-            self.remote.callRemote("print", "attached"))
+            self.conn.remotePrint(message="attached"))
 
         def setIdle(res):
             self.state = IDLE
@@ -141,7 +131,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
                 self.ping_watchers.insert(0, d2)
                 # I think it will make the tests run smoother if the status
                 # is updated before the ping completes
-            Ping().ping(self.remote).addCallback(self._pong)
+            Ping().ping(self.conn).addCallback(self._pong)
 
         def reset_state(res):
             if self.state == PINGING:
@@ -168,16 +158,16 @@ class AbstractSlaveBuilder(pb.Referenceable):
         if self.slave:
             self.slave.removeSlaveBuilder(self)
         self.slave = None
-        self.remote = None
+        self.conn = None
         self.remoteCommands = None
 
 
 class Ping:
     running = False
 
-    def ping(self, remote):
+    def ping(self, conn):
         assert not self.running
-        if not remote:
+        if not conn:
             # clearly the ping must fail
             return defer.succeed(False)
         self.running = True
@@ -185,24 +175,21 @@ class Ping:
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the slave.. using 'print'
         # for this purpose is kind of silly.
-        remote.callRemote("print", "ping").addCallbacks(self._pong,
+        conn.remotePrint(message="ping").addCallbacks(self._pong,
                                                         self._ping_failed,
-                                                        errbackArgs=(remote,))
+                                                        errbackArgs=(conn,))
         return self.d
 
     def _pong(self, res):
         log.msg("ping finished: success")
         self.d.callback(True)
 
-    def _ping_failed(self, res, remote):
+    def _ping_failed(self, res, conn):
         log.msg("ping finished: failure")
         # the slave has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
-        remote.broker.transport.loseConnection()
-        # TODO: except, if they actually did manage to get this far, they'll
-        # probably reconnect right away, and we'll do this game again. Maybe
-        # it would be better to leave them in the PINGING state.
+        conn.loseConnection()
         self.d.callback(False)
 
 

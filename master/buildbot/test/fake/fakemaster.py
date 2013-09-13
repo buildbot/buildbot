@@ -20,6 +20,7 @@ from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
 import mock
+from buildbot.test.fake import bslavemanager
 
 class FakeCache(object):
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
@@ -95,6 +96,7 @@ class FakeMaster(object):
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
+        self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
