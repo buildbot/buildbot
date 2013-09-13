@@ -142,8 +142,10 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         bs = buildstep.BuildStep()
         bs.buildslave = slave.FakeSlave()
         bs.remote = 'dummy'
+        bs.build = fakebuild.FakeBuild()
+        bs.build.builder.name = 'fake'
         cmd = buildstep.RemoteShellCommand("build", ["echo", "hello"])
-        cmd.run = lambda self, remote : SUCCESS
+        cmd.run = lambda self, remote, builder_name : SUCCESS
         bs.runCommand(cmd)
         self.assertEqual(bs.cmd, cmd)
 

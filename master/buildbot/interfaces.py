@@ -1082,8 +1082,14 @@ class ILogObserver(Interface):
         pass
 
 class IBuildSlave(Interface):
-    # this is a marker interface for the BuildSlave class
-    pass
+    # callback methods from the manager
+
+    def buildslaveConnected(connection):
+        pass
+
+    def buildslaveDisconnected():
+        pass
+
 
 class ILatentBuildSlave(IBuildSlave):
     """A build slave that is not always running, but can run when requested.
