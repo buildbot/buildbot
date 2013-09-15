@@ -18,8 +18,14 @@ the system.  In this tutorial no configuration or code changes are done.
 This tutorial assumes that you are running on Unix, but might be adaptable
 easily to Windows.
 
-*For the quickest way through, you should be able to cut and paste each shell
-block from this tutorial directly into a terminal.*
+For the :ref:`fastest way through in Linux <first-run-docker-label>`, you
+can use Docker, the linux container engine. Docker automates all the
+deployment steps for you.
+
+For a more manual approach, you should be able to cut and paste each shell
+block from this tutorial directly into a terminal.
+
+.. _getting-code-label:
 
 Getting the code
 ----------------
@@ -164,7 +170,7 @@ a web page similar to:
 .. image:: _images/index.png
    :alt: index page
 
-Click on the 
+Click on the
 `Waterfall Display link <http://localhost:8010/waterfall>`_
 and you get this:
 

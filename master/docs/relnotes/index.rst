@@ -101,6 +101,9 @@ Features
 * The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
   See :bb:bug:`2560`.
 
+* Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
+  using :ref:`Docker <first-run-docker-label>`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
