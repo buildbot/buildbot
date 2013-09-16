@@ -63,26 +63,38 @@ def formatInterval(eta):
     eta_parts.append("%d secs" % eta)
     return ", ".join(eta_parts)
 
+def calculateDayPart(eta, amount, partname):
+    part = (eta / amount)
+    text = "%d %s" % (part, partname)
+    if part > 2:
+        text = "%d %ss" % (part, partname)
+    return text
+
 def formatIntervalDays(eta):
     eta_parts = []
     if eta > 2628000:
-        eta_parts.append("%d months" % (eta / 2628000))
+        text = calculateDayPart(eta, 2628000, "month")
+        eta_parts.append(text)
         eta %= 2628000
         return ", ".join(eta_parts)
     if eta > 604800:
-        eta_parts.append("%d weeks" % (eta / 604800))
+        text = calculateDayPart(eta, 604800, "week")
+        eta_parts.append(text)
         eta %= 604800
         return ", ".join(eta_parts)
     if eta > 86400:
-        eta_parts.append("%d days" % (eta / 86400))
+        text = calculateDayPart(eta, 86400, "day")
+        eta_parts.append(text)
         eta %= 86400
         return ", ".join(eta_parts)
     if eta > 3600:
-        eta_parts.append("%d hrs" % (eta / 3600))
+        text = calculateDayPart(eta, 3600, "hour")
+        eta_parts.append(text)
         eta %= 3600
         return ", ".join(eta_parts)
     if eta > 60:
-        eta_parts.append("%d mins" % (eta / 60))
+        text = calculateDayPart(eta, 60, "minute")
+        eta_parts.append(text)
         eta %= 60
     eta_parts.append("%d secs" % eta)
     return ", ".join(eta_parts)
