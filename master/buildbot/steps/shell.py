@@ -156,13 +156,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setCommand(self, command):
         self.command = command
 
-    def describe(self, done=False):
-        desc = self._describe(done)
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
-
     def _describe(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
