@@ -619,25 +619,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             log.msg("no remote; slave is already shut down")
             return
 
-        # First, try the "new" way - calling our own remote's shutdown
-        # method.  The method was only added in 0.8.3, so ignore NoSuchMethod
-        # failures.
-        def new_way():
-            return self.conn.remoteShutdown()
-
-        if (yield new_way()):
-            return # done!
-
-        # Now, the old way.  Look for a builder with a remote reference to the
-        # client side slave.  If we can find one, then call "shutdown" on the
-        # remote builder, which will cause the slave buildbot process to exit.
-        def old_way():
-            d = None
-            for b in self.slavebuilders.values():
-                if b.conn:
-                    d = b.conn.remoteShutdownOldWay(self.slavename)
-            return d
-        yield old_way()
+        return self.conn.remoteShutdown(self)
 
     def maybeShutdown(self):
         """Shut down this slave if it has been asked to shut down gracefully,
