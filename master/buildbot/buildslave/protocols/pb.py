@@ -150,35 +150,51 @@ class Connection(base.Connection, pb.Avatar):
     def doKeepalive(self):
         return self.mind.callRemote('print', message="keepalive")
 
-    def remoteShutdown(self):
-        d = self.mind.callRemote('shutdown')
-        d.addCallback(lambda _ : True) # successful shutdown request
-        def check_nsm(f):
-            f.trap(pb.NoSuchMethod) 
-            return False # fall through to the old way
-        d.addErrback(check_nsm)
-        def check_connlost(f):
-            f.trap(pb.PBConnectionLost)
-            return True # the slave is gone, so call it finished
-        d.addErrback(check_connlost)
-        return d
-
-    def remoteShutdownOldWay(self, slavename):
-        log.msg("Shutting down (old) slave: %s" % slavename)
-        d = self.mind.callRemote('shutdown')
-        # The remote shutdown call will not complete successfully since the
-        # buildbot process exits almost immediately after getting the
-        # shutdown request.
-        # Here we look at the reason why the remote call failed, and if
-        # it's because the connection was lost, that means the slave
-        # shutdown as expected.
-        if d:
-            def _errback(why):
-                if why.check(pb.PBConnectionLost):
-                    log.msg("Lost connection to %s" % slavename)
-                else:
-                    log.err("Unexpected error when trying to shutdown %s" % slavename)
-            d.addErrback(_errback)
+    def remoteShutdown(self, buildslave):
+        # First, try the "new" way - calling our own remote's shutdown
+        # method. The method was only added in 0.8.3, so ignore NoSuchMethod
+        # failures.
+        def new_way():
+            d = self.mind.callRemote('shutdown')
+            d.addCallback(lambda _ : True) # successful shutdown request
+            def check_nsm(f):
+                f.trap(pb.NoSuchMethod) # TODO: handle this in buildslave/protocols
+                return False # fall through to the old way
+            d.addErrback(check_nsm)
+            def check_connlost(f):
+                f.trap(pb.PBConnectionLost) # TODO: handle this in buildslave/protocols
+                return True # the slave is gone, so call it finished
+            d.addErrback(check_connlost)
             return d
-        log.err("Couldn't find remote builder to shut down slave")
-        return defer.succeed(None)
+
+        if (yield new_way()):
+            return # done!
+
+        # Now, the old way. Look for a builder with a remote reference to the
+        # client side slave. If we can find one, then call "shutdown" on the
+        # remote builder, which will cause the slave buildbot process to exit.
+        def old_way():
+            d = None
+            for b in buildslave.slavebuilders.values():
+                if b.remote:
+                    d = b.mind.callRemote("shutdown")
+                    break
+
+            if d:
+                log.msg("Shutting down (old) slave: %s" % buildslave.slavename)
+                # The remote shutdown call will not complete successfully since the
+                # buildbot process exits almost immediately after getting the
+                # shutdown request.
+                # Here we look at the reason why the remote call failed, and if
+                # it's because the connection was lost, that means the slave
+                # shutdown as expected.
+                def _errback(why):
+                    if why.check(pb.PBConnectionLost):
+                        log.msg("Lost connection to %s" % buildslave.slavename)
+                    else:
+                        log.err("Unexpected error when trying to shutdown %s" % buildslave.slavename)
+                d.addErrback(_errback)
+                return d
+            log.err("Couldn't find remote builder to shut down slave")
+            return defer.succeed(None)
+        yield old_way()
