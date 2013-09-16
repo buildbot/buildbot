@@ -117,9 +117,9 @@
               {% endif %}
       </td>
       <td class="txt-align-left">
-        <a href="#">
-          <span class="notimpl small-txt">Not implemented</span>
-        </a>
+          {% if b.last_run %}
+             {{ b.last_run }} ago <span class="small-txt">({{b.elapsed}})</span>
+          {% endif %}
       </td>
       {% if b.build_url %}
         <td class="LastBuild {{ b.build_css_class }} ">

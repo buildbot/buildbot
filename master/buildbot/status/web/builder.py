@@ -653,6 +653,12 @@ class BuildersResource(HtmlResource):
 
                 bld['build_label'] = label
                 bld['build_text'] = " ".join(b.getText())
+                (start, end) = b.getTimes()
+                bld['start'] = time.ctime(start)
+                if end:
+                    bld['end'] = time.ctime(end)
+                    bld['elapsed'] = util.formatInterval(end - start)
+                    bld['last_run'] = util.formatIntervalDays(util.now() - end)
                 bld['build_css_class'] = build_get_class(b)
 
             current_box = ICurrentBox(builder).getBox(status, brcounts)
