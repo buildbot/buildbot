@@ -51,6 +51,12 @@
 
 .offline,td.offline {
     background-color: #E7E7E7;
+    @include text-shadow(0 1px 0 #fff);
+}
+
+.idle,td.idle {
+    background-color: #F5F5F5;
+    @include text-shadow(0 1px 0 #fff);
 }
 
 .table-1 .offline  {
@@ -1403,4 +1409,33 @@ disabled look for disabled choices in the results dropdown
     width: 100px;
     height: 100px;
     overflow: scroll;
+}
+
+
+.rootSummary {
+    font-size: 14px;
+    list-style-type: none;
+    margin: 13px 0 0;
+    padding: 0;
+	li {
+		margin:0 0 15px 0 ;
+		list-style: none;
+		
+		span {
+			font-weight:bold;
+		}
+	}
+}
+
+.summary-circles span {
+	background-color: #EEF0F5;
+	//@include bgimage (linear-gradient(top, #3A669A 0%, #6AA1CD 100%));
+	@include border-radius(24px);
+	@include box-shadow(0 1px 1px #FFFFFF inset, 1px 1px 2px transparent);
+	@include text-shadow(-1px -1px 0 #FFFFFF);
+	border:1px solid #CACCD0;
+	padding: 4px 12px;
+	display:inline-block;
+	min-width:15px;
+	text-align:center;
 }

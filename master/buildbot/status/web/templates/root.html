@@ -8,16 +8,12 @@
 
 {% block content %}
 
-<h1>
-  Welcome to Katana
-  
-</h1>
-<div class="clear">
-</div>
-<div class="column welcome-txt">
 
-<div id="jsummary">
-</div>
+<div class="column-1">
+<div class="column-2 welcome-txt">
+<h1 class="head-2">
+  Welcome to Katana
+</h1>
 
 <p>
   To get started click one of the buttons in the navigation bar at the top
@@ -51,6 +47,26 @@ Master is shutting down<br/>
 {%- endif -%}
 {%- endif -%}
 
+</div>
+<div class="column-2 last">
+<h2 class="head-2">
+  Summary
+</h2>
+<table id="tb-root" class="table-1 summary-circles">
+    <thead>
+      <tr>
+        <th>Slaves</th>
+        <th>Pending builds</th>  
+      </tr>
+    </thead>
+    <body>
+      <tr class="summary-td">
+          
+      </tr>
+    </body>
+</table>
+
+</div>
 </div>
 
 {% endblock %}

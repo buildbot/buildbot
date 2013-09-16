@@ -8,13 +8,13 @@ require.config({
 	}
 });
 
-require(['jquery','helpers','setcurrentitem', 'datatables', 'select2'], function($, setCurrentItem, helpers) {
+require(['jquery','setcurrentitem','helpers', 'datatables', 'select2'], function($, setCurrentItem, helpers) {
 	'use strict';
 	 
 	$(document).ready(function() {
 		
-		helpers.init();
 		setCurrentItem.init();
-				
+		helpers.init();
+
 	});
 });

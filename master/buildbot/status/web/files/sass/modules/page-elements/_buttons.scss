@@ -86,6 +86,8 @@ a.grey-btn,
 }
 #submitBtn {
     padding: 9px 9px 8px 34px;
+    @include box-shadow(1px 1px 0 #FFFFFF);
+    border-bottom:1px solid #ccc;
     &:after {
         color: #2B6194;
         font-family: katana_icons;
@@ -94,7 +96,6 @@ a.grey-btn,
         left: 12px;
         position: absolute;
         top: 5px;
-
     }
     &:hover:after {
         color: #A4A4A4;     

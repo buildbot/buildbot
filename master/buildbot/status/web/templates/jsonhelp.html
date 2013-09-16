@@ -1,28 +1,43 @@
 {% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+{% block submenu %}
+  <nav class="sub-menu-container root">
+  </nav>
+{% endblock %}
+
 {% block content %}
+<div class="column-1">
+	<div class="column-2">
+		{#
+		<p>{{ text }}</p>
+		<h2 class="head-2">More Help:</h2>
 
-<p>{{ text }}</p>
-<h2>More Help:</h2>
-
-{% if level != 1 %}
-<p><a href="../help">Parent's Help</a></p>
-{% endif %}
-
-{% if children %}
-<p>Child Nodes</p>
-<ul>
-{% for child in children %}
-    <li><a href="{{ child|e }}">{{ child|e }}</a>
-        (<a href="{{ child|e }}/help">{{ child|e }}/help</a>)
-    </li>
-{% endfor %}
-</ul>
-{% endif %}
-
-<h2>Flags:</h2>
-{{ flags }}
-
-<h2>Examples:</h2>
-{{ examples }}
+		{% if level != 1 %}
+		<p><a href="../help">Parent's Help</a></p>
+		{% endif %}
+		#}
+		{#
+		{% if children %}
+			<p>Child Nodes</p>
+			<ul>
+			{% for child in children %}
+			    <li><a href="{{ child|e }}">{{ child|e }}</a>
+			        (<a href="{{ child|e }}/help">{{ child|e }}/help</a>)
+			    </li>
+			{% endfor %}
+			</ul>
+		{% endif %}
+		#}
+		<h2 class="head-2">Examples</h2>
+		<div class="examples-list">
+			{{ examples }}
+		</div>
+		
+	</div>
+	<div class="column-2 last">
+		<h2 class="head-2">Flags</h2>
+		{{ flags }}		
+	</div>
+</div>
 
 {% endblock %}

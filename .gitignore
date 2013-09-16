@@ -40,7 +40,4 @@ _build
 npm-debug.log
 
 master/buildbot/status/web/files/.sass-cache
-master/buildbot/status/web/templates/node
-master/buildbot/status/web/files/node_modules/socket.io/node_modules/socket.io-client/node_modules/.bin/uglifyjs
-
-master/buildbot/status/web/files/node_modules/socket.io/node_modules/socket.io-client/node_modules/.bin/wscat
+master/buildbot/status/web/files/App.js
