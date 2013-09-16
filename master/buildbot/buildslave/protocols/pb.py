@@ -103,21 +103,26 @@ class Connection(base.Connection, pb.Avatar):
     def remotePrint(self, message):
         return self.mind.callRemote('print', message=message)
 
+    @defer.inlineCallbacks
     def remoteGetSlaveInfo(self):
-        def format_results(res):
-            _, info = res[0]
-            _, commands = res[1]
-            _, version = res[2]
-            info["version"] = version
-            info["commands"] = commands
-            return info
-        dl = defer.DeferredList([
-            self.mind.callRemote('getSlaveInfo'),
-            self.mind.callRemote('getCommands'),
-            self.mind.callRemote('getVersion'),
-        ])
-        dl.addCallback(format_results)
-        return dl
+        info = {}
+        try:
+            info = yield self.mind.callRemote('getSlaveInfo')
+        except pb.NoSuchMethod, e:
+            log.msg("BuildSlave.info_unavailable")
+            log.msg(e)
+
+        try:
+            info["slave_commands"] = yield self.mind.callRemote('getCommands')
+        except pb.NoSuchMethod, e:
+            log.msg("BuildSlave.getCommands is unavailable - ignoring")
+
+        try:
+            info["version"] = yield self.mind.callRemote('getVersion')
+        except pb.NoSuchMethod, e:
+            log.msg("BuildSlave.getVersion is unavailable - ignoring")
+
+        defer.returnValue(info)
 
     def remoteSetBuilderList(self, builders):
         def cache_builders(builders):
@@ -141,3 +146,20 @@ class Connection(base.Connection, pb.Avatar):
         return slavebuilder.callRemote('startCommand',
             RCInstance, commandID, remote_command, args
         )
+
+    def doKeepalive(self):
+        return self.mind.callRemote('print', message="keepalive")
+
+    def remoteShutdown(self):
+        d = self.mind.callRemote('shutdown')
+        d.addCallback(lambda _ : True) # successful shutdown request
+        def check_nsm(f):
+            f.trap(pb.NoSuchMethod) 
+            return False # fall through to the old way
+        d.addErrback(check_nsm)
+        def check_connlost(f):
+            f.trap(pb.PBConnectionLost)
+            return True # the slave is gone, so call it finished
+        d.addErrback(check_connlost)
+        return d
+

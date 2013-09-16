@@ -169,7 +169,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
     def _lockReleased(self):
         """One of the locks for this slave was released; try scheduling
-        builds."""                # TODO: info{} might have other keys
+        builds."""
         if not self.botmaster:
             return # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
@@ -288,19 +288,20 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             self.missing_timer.cancel()
             self.missing_timer = None
 
-    def doKeepalive(self):
-        pass # TODO: this should be done at the protocol level
-
     def stopKeepaliveTimer(self):
         if self.keepalive_timer:
             self.keepalive_timer.cancel()
             self.keepalive_timer = None
 
-    def startKeepaliveTimer(self):
+    def startKeepaliveTimer(self, conn):
         assert self.keepalive_interval
+        d = conn.doKeepalive()
+        def _failed(why):
+            log.msg("Keepalive for '%s' failed: %s" % (self.slavename, why))
+        d.addErrback(_failed)
+
         log.msg("Starting buildslave keepalive timer for '%s'" % \
                                         (self.slavename, ))
-        self.doKeepalive()
 
     def isConnected(self):
         return self.conn
@@ -396,16 +397,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                 state["slave_basedir"] = info.get("basedir", None)
                 state["slave_system"] = info.get("system", None)
                 state["version"] = info.get("version", "(unknown)")
-                state["slave_commands"] = info.get("commands", {})
-            def _info_unavailable(why):
-                # why.trap(pb.NoSuchMethod) # TODO: do we need this?
-                # maybe an old slave, doesn't implement remote_getSlaveInfo
-                log.msg("BuildSlave.info_unavailable")
-                log.err(why)
-            d1.addCallbacks(_got_info, _info_unavailable)
+                state["slave_commands"] = info.get("slave_commands", {})
+            d1.addCallback(_got_info)
             return d1
 
-        d.addCallback(lambda _: self.startKeepaliveTimer())
+        d.addCallback(lambda _: self.startKeepaliveTimer(conn))
 
         @d.addCallback
         def _accept_slave(res):
@@ -619,7 +615,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def shutdown(self):
         """Shutdown the slave"""
-        if not self.slave:
+        if not self.conn:
             log.msg("no remote; slave is already shut down")
             return
 
@@ -627,17 +623,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # method.  The method was only added in 0.8.3, so ignore NoSuchMethod
         # failures.
         def new_way():
-            d = self.slave.callRemote('shutdown')
-            d.addCallback(lambda _ : True) # successful shutdown request
-            def check_nsm(f):
-                f.trap(pb.NoSuchMethod) # TODO: handle this in buildslave/protocols
-                return False # fall through to the old way
-            d.addErrback(check_nsm)
-            def check_connlost(f):
-                f.trap(pb.PBConnectionLost) # TODO: handle this in buildslave/protocols
-                return True # the slave is gone, so call it finished
-            d.addErrback(check_connlost)
-            return d
+            return self.conn.remoteShutdown()
 
         if (yield new_way()):
             return # done!
