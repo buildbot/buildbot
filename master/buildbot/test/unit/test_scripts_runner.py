@@ -186,6 +186,11 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(db='foo://bar')
         self.assertOptions(opts, exp)
 
+    def test_db_invalid(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "could not parse database URL 'inv_db_url'",
+                                self.parse, "--db=inv_db_url")
+
     def test_db_basedir(self):
         path = r'c:\foo\bar' if runtime.platformType == "win32" else '/foo/bar'
         opts = self.parse('-f', path)
