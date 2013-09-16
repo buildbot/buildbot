@@ -276,6 +276,9 @@ class TestAbstractBuildSlave(unittest.TestCase):
             def remoteSetBuilderList(self, builders):
                 return self.callRemote('setBuilderList', builders)
 
+            def doKeepalive(self):
+                return self.callRemote('print', "fake keepalive")
+
         return Bot()
 
     @defer.inlineCallbacks
@@ -287,10 +290,11 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.attached(bot)
 
         self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(3, len(bot.commands))
+        self.assertEqual(4, len(bot.commands))
         self.assertEqual(bot.commands[0], ('print', 'attached'))
         self.assertEqual(bot.commands[1], ('getSlaveInfo',))
-        self.assertEqual(bot.commands[2], ('setBuilderList',[]))
+        self.assertEqual(bot.commands[2], ('print','fake keepalive'))
+        self.assertEqual(bot.commands[3], ('setBuilderList',[]))
 
     @defer.inlineCallbacks
     def test_attached_callRemote_print_raises(self):
@@ -303,7 +307,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         # just check that things still go on
         self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(3, len(bot.commands))
+        self.assertEqual(4, len(bot.commands))
 
     @defer.inlineCallbacks
     def test_attached_callRemote_getSlaveInfo(self):
@@ -322,13 +326,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
             'basedir': 'TheBaseDir',
             'system': 'TheSlaveSystem',
             'version': 'version',
-            'commands': COMMANDS,
+            'slave_commands': COMMANDS,
         }))
         yield slave.attached(bot)
 
         # check that things were all good
         self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(3, len(bot.commands))
+        self.assertEqual(4, len(bot.commands))
 
         # check the values get set right
         self.assertEqual(slave.slave_status.getAdmin(),     "TheAdmin")
