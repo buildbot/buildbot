@@ -634,27 +634,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         def old_way():
             d = None
             for b in self.slavebuilders.values():
-                if b.remote:
-                    d = b.remote.callRemote("shutdown")
-                    break
-
-            if d:
-                log.msg("Shutting down (old) slave: %s" % self.slavename)
-                # The remote shutdown call will not complete successfully since the
-                # buildbot process exits almost immediately after getting the
-                # shutdown request.
-                # Here we look at the reason why the remote call failed, and if
-                # it's because the connection was lost, that means the slave
-                # shutdown as expected.
-                def _errback(why):
-                    if why.check(pb.PBConnectionLost):
-                        log.msg("Lost connection to %s" % self.slavename)
-                    else:
-                        log.err("Unexpected error when trying to shutdown %s" % self.slavename)
-                d.addErrback(_errback)
-                return d
-            log.err("Couldn't find remote builder to shut down slave")
-            return defer.succeed(None)
+                if b.conn:
+                    d = b.conn.remoteShutdownOldWay(self.slavename)
+            return d
         yield old_way()
 
     def maybeShutdown(self):
