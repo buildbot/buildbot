@@ -41,11 +41,11 @@ class Hg(Mercurial):
         revNodeList = [rn.split(':', 1) for rn in stdout.strip().split()]
 
         changelist = []
-        for rev, node in revNodeList:
-            timestamp, author, files, comments = yield self._getRevDetails(
+        for rev, node in reversed(revNodeList):
+            timestamp, author, comments = yield self._getRevDetails(
                 node)
 
-            changelist.append(Change(who=author, files=files, comments=comments, when=timestamp, repository=self.repourl, revision=rev, codebase= self.codebase))
+            changelist.append(Change(who=author, files=None, comments=comments, when=timestamp, repository=self.repourl, revision=node, codebase= self.codebase))
 
         sourcestamps = self.build.build_status.getSourceStamps()
 
@@ -65,15 +65,15 @@ class Hg(Mercurial):
         """Return a deferred for (date, author, files, comments) of given rev.
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{files}\n{desc|strip}']
+        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{desc|strip}']
 
         # Mercurial fails with status 255 if rev is unknown
         d = self._dovccmd(args, collectStdout=True)
 
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, files, comments = output.decode('utf-8', "replace").split(
-                os.linesep, 3)
+            date, author, comments = output.decode('utf-8', "replace").split(
+                os.linesep, 2)
 
             try:
                 stamp = float(date.split()[0])
@@ -82,7 +82,7 @@ class Hg(Mercurial):
                         'to timestamp' % date)
                 raise
 
-            return stamp, author.strip(), files.split(), comments.strip()
+            return stamp, author.strip(), comments.strip()
 
         d.addCallback(process)
         return d

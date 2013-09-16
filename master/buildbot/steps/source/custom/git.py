@@ -18,6 +18,13 @@ class GitCommand(Git):
 
     @defer.inlineCallbacks
     def parseChanges(self, _):
+        buildLatestRev = self.build.getProperty("buildLatestRev", False)
+        if type(buildLatestRev) != bool:
+            buildLatestRev = (buildLatestRev.lower() == "true")
+
+        if buildLatestRev == False:
+            defer.returnValue(0)
+
         self.master = self.build.builder.botmaster.parent
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
@@ -26,7 +33,7 @@ class GitCommand(Git):
 
         currentRev  = sourcestamps_updated[self.codebase]
 
-        revListArgs = ['log', self.escapeParameter(r'--format=%H'), '%s..%s' % (lastRev, currentRev), '--']
+        revListArgs = ['log', self.escapeParameter(r'--format=%H'), '--ancestry-path', '%s..%s' % (lastRev,currentRev), '--']
 
         if lastRev is None or lastRev == '' or currentRev == lastRev:
             revListArgs = ['log', self.escapeParameter(r'--format=%H'), '%s' % currentRev, '-1', '--']
@@ -34,7 +41,6 @@ class GitCommand(Git):
         results = yield self._dovccmd(revListArgs, collectStdout=True)
 
         revList = results.split()
-        revList.reverse()
         self.changeCount = len(revList)
 
         changelist = []
@@ -48,16 +54,13 @@ class GitCommand(Git):
                 when = timestamp
             args = ['log', '--no-walk', self.escapeParameter(r'--format=%aN <%aE>'), rev, '--']
             author = yield self._dovccmd(args, collectStdout=True)
-            args = ['log', '-m', '--name-only', '--no-walk', self.escapeParameter(r'--format=%n'), rev, '--']
-            filelist = yield self._dovccmd(args, collectStdout=True)
             args = ['log', '--no-walk', self.escapeParameter(r'--format=%s%n%b'), rev, '--']
             comments = yield self._dovccmd(args, collectStdout=True)
             comments = comments.decode(self.encoding)
 
-            changelist.append(Change(who=author, files=filelist.split(), comments=comments, when=when, repository=self.repourl, revision=rev, codebase= self.codebase))
+            changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, revision=rev, codebase= self.codebase))
 
         sourcestamps = self.build.build_status.getSourceStamps()
-
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:
