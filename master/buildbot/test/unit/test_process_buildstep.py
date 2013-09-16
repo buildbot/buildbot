@@ -216,8 +216,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         return d
 
     def test_describe(self):
-        description = 'oogaBooga'
-        descriptionDone = 'oogaBooga done!'
+        description = ['oogaBooga']
+        descriptionDone = ['oogaBooga done!']
         step = buildstep.BuildStep(description=description,
                                    descriptionDone=descriptionDone)
         self.assertEqual(step.describe(), description)
@@ -227,6 +227,22 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(step2.describe(), [step2.name])
         self.assertEqual(step2.describe(done=True), [step2.name])
 
+    def test_describe_suffix(self):
+        description = ['oogaBooga']
+        descriptionDone = ['oogaBooga done!']
+        descriptionSuffix = ['oogaBooga suffix']
+
+        step = buildstep.BuildStep(description=description,
+                                   descriptionDone=descriptionDone,
+                                   descriptionSuffix=descriptionSuffix)
+        self.assertEqual(step.describe(), description + descriptionSuffix)
+        self.assertEqual(step.describe(done=True),
+                         descriptionDone + descriptionSuffix)
+
+        step2 = buildstep.BuildStep(descriptionSuffix=descriptionSuffix)
+        self.assertEqual(step2.describe(), [step2.name] + descriptionSuffix)
+        self.assertEqual(step2.describe(done=True),
+                         [step2.name] + descriptionSuffix)
 
 class TestLoggingBuildStep(unittest.TestCase):
 
