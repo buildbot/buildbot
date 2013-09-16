@@ -113,6 +113,11 @@
 	tr:first-child td {
 		border-top:none;
 	}
+	&.var-1 {
+		td, th {
+			text-align:left;
+		}
+	}
 }
 
 .table-1.first-child tr td:first-child,
@@ -1003,6 +1008,7 @@ body.log.interface {
 }
 
   .tool-tip {
+  		display:none;
 	  	background-color:#eee;
 	    border: 1px solid #ccc;
 	    border-radius: 7px 7px 7px 7px;
@@ -1012,8 +1018,21 @@ body.log.interface {
 	    text-shadow: 0 1px 0 #FFFFFF;
 	    top: -10px;
 	    z-index: 1;
+	    white-space: normal;
+    	width: 200px;
 	}
 
+.ellipsis-comment {
+	width:175px;
+   	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;	
+}
+
+.codebase-change-txt {
+	color:#666;
+}
 
 /*
 Version: 3.4.2 Timestamp: Mon Aug 12 15:04:12 PDT 2013

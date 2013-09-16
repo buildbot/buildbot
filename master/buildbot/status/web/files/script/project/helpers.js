@@ -332,25 +332,26 @@ define(['jquery'], function ($) {
 			$('#getForm').attr('action', window.location.href);	
 			$('#getForm .grey-btn[type="submit"]').click(function(){
 				$('.more-info-box-js-2').hide();				
-			});
-
-
-			
+			});			
 		});
 	});
 	
 	// tooltip for long txtstrings
-	$('.ellipsis-js').hover(function(){
-		var tthis = $(this);
-		var txt = $(this).text();
-		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
-		$(this).css('overflow', 'visible')
-		$(this).append(toolTip);
-	}, function(){
-		$(this).css('overflow', 'hidden');
-		$('.tool-tip', this).remove();
-	});
 
+	$('.ellipsis-js').parent().hover(function(){
+		var txt = $('.ellipsis-js', this).text();
+		
+		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
+
+		$(this).append($(toolTip).css({
+			'top':$('.ellipsis-js', this).position().top,
+			'left':$('.ellipsis-js', this).position().left
+		}).fadeIn('fast'));
+
+	}, function(){
+		$('.tool-tip').remove();
+	});
+		
 	//parse reason string
 	$('.codebases-list .reason-txt').each(function(){
 		var rTxt = $(this).text().trim();

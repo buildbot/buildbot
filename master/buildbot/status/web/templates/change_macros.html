@@ -1,14 +1,17 @@
 {% macro change(c) %}
 
-<table class="table-1">
+<table class="table-1 var-1">
   {% set row_class=cycler('alt','') %}
    
   <tr class="{{ row_class.next() }}">
+  
     {% if c.category %}
       <th class="left">Category</th>
     {% endif %}
     <th class="left">Changed by</th>
-    <th class="left">Time & date</th>
+    <th class="left">
+      Time & date
+    </th>
     
   {% if c.repository %}
   
@@ -26,12 +29,17 @@
   
     <th class="left">Revision</th>
     
-
   {% endif %}
+  {% if c.comments %}
+    <th>Comments</th>
+  {% endif %}
+  
+  <th>Changed files</th>
 
   </tr>
     
   <tr class="{{ row_class.next() }}">
+    
     {% if c.category %}
       <td>{{ c.category }}</td>
     {% endif %}
@@ -40,49 +48,52 @@
   
     {% if c.repository %}
   
-  
-    <td>{{ c.repository|repolink }}</td>
+    <td>
+      <div class="ellipsis ellipsis-js">
+        {{ c.repository|repolink }}
+      </div>
+    </td>
   
   {% endif %} {% if c.project %}
-  
   
     <td>{{ c.project|projectlink }}</td>
   
   {% endif %} {% if c.branch %}
   
-  
     <td>{{ c.branch|e }}</td>
   {% endif %} {% if c.rev %}
-    <td>{%- if c.revlink -%}<a href="{{ c.revlink }}">{{ c.rev|e }}</a>
+    <td>{%- if c.revlink -%}<a href="{{ c.revlink }}">#{{ c.rev|e }}</a>
     {%- else -%}{{ c.rev|revlink(c.repository) }} {%- endif -%}</td>
   
   {% endif %}
-
-
-  </tr>
   
-
+  {% if c.comments %}
+    <td>
+      <div class="ellipsis ellipsis-js">
+        {{ c.comments|changecomment(c.project) }}
+      </div>
+    </td>
+  {% endif %}
   
+  <td>
+    <ul>
+      {% for f in c.files -%}
+      <li class="{{ loop.cycle('alt', '') }}">{%- if f.url %}<a
+        href="{{ f.url }}"><b>{{ f.name|e }}</b></a></li>
+      {%- else %}
+      <b>{{ f.name|e }}</b>
+      {%- endif -%}
+      </li>
+      {% else %}
+      <li>no files</li>
+      {% endfor %}
+    </ul>
+  </td>
+
+  </tr>  
 </table>
 
-{% if c.comments %}
-<h3>Comments</h3>
-<pre class="comments">{{ c.comments|changecomment(c.project) }}</pre>
-{% endif %}
 
-<h3 class="files">Changed files</h3>
-<ul>
-  {% for f in c.files -%}
-  <li class="{{ loop.cycle('alt', '') }}">{%- if f.url %}<a
-    href="{{ f.url }}"><b>{{ f.name|e }}</b></a></li>
-  {%- else %}
-  <b>{{ f.name|e }}</b>
-  {%- endif -%}
-  </li>
-  {% else %}
-  <li>no files</li>
-  {% endfor %}
-</ul>
 
 {% if c.properties %}
 <h3>Properties</h3>
