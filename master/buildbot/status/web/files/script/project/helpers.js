@@ -337,16 +337,17 @@ define(['jquery'], function ($) {
 	});
 	
 	// tooltip for long txtstrings
-
+	$(".ellipsis").dotdotdot();
+	
 	$('.ellipsis-js').parent().hover(function(){
-		var txt = $('.ellipsis-js', this).text();
+		var txt = $('.ellipsis-js', this).attr('data-txt');
 		
 		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
 
 		$(this).append($(toolTip).css({
 			'top':$('.ellipsis-js', this).position().top,
-			'left':$('.ellipsis-js', this).position().left
-		}).fadeIn('fast'));
+			'left':$('.ellipsis-js', this).position().left - 20
+		}).show());
 
 	}, function(){
 		$('.tool-tip').remove();

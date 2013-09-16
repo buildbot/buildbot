@@ -1000,38 +1000,41 @@ body.log.interface {
 }
 
 .ellipsis {
+	max-height:45px;
 	width:175px;
-   	white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+   	white-space: normal;
+   	word-wrap: normal;
+    //overflow: hidden;
+    //text-overflow: ellipsis;
     position: relative;
 }
 
-  .tool-tip {
-  		display:none;
-	  	background-color:#eee;
-	    border: 1px solid #ccc;
-	    border-radius: 7px 7px 7px 7px;
-	    left: 0;
-	    padding: 10px;
-	    position: absolute;
-	    text-shadow: 0 1px 0 #FFFFFF;
-	    top: -10px;
-	    z-index: 1;
-	    white-space: normal;
-    	width: 200px;
-	}
+.revision.ellipsis {
+	height:auto;
+	display:block;
+	overflow:hidden;
+}
 
-.ellipsis-comment {
-	width:175px;
-   	white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;	
+.tool-tip {
+	display:none;
+	background-color:rgba(238, 238, 238, 0.89);
+	border: 1px solid #ccc;
+	@include border-radius(7px);
+	left: 0;
+	padding: 10px;
+	position: absolute;
+	@include text-shadow(0 1px 0 #FFF);
+	top: 100px;
+	z-index: 1;
+	white-space: normal;
+	word-wrap: break-word;
+	max-width: 200px;
+	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
 }
 
 .codebase-change-txt {
 	color:#666;
+	@include text-shadow(0 1px 0 #FFF);
 }
 
 /*

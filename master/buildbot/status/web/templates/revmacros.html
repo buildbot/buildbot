@@ -1,11 +1,11 @@
 {# both macro pairs must have the same signature #}
 
 {% macro id_replace(rev, url) -%}
-  <span class="revision" title="Revision {{ rev }}"><a href="{{ url }}">
+  <a class="revision ellipsis ellipsis-js" data-txt="{{ rev }}" href="{{ url }}">
   {%- if rev|length > 40 %}{{ rev[:40] }}...
   {%- else %}{{ rev }}
   {%- endif -%}  
-  </a></span>
+  </a>
 {%- endmacro %}
 
 {% macro shorten_replace(short, rev, url) %}
