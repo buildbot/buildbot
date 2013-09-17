@@ -362,6 +362,15 @@ class Builder(config.ReconfigurableServiceMixin,
         slavebuilder.buildStarted()
         cleanups.append(lambda : slavebuilder.buildFinished())
 
+        # tell the remote that it's starting a build, too
+        try:
+            yield slavebuilder.conn.remoteStartBuild()
+        except:
+            log.err(failure.Failure(), 'while calling remote startBuild:')
+            run_cleanups()
+            defer.returnValue(False)
+            return
+
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 

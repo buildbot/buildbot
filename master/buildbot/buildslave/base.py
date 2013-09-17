@@ -298,12 +298,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         if not self.conn:
             return
         self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-            self.conn.doKeepalive)
-
-        d = self.conn.doKeepalive()
-        def _failed(why):
-            log.msg("Keepalive for '%s' failed" % self.slavename)
-        d.addErrback(_failed)
+            self.conn.doKeepalive) # TODO: move this to the protocol level
 
         log.msg("Starting buildslave keepalive timer for '%s'" % \
                                         (self.slavename, ))
