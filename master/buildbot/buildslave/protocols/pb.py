@@ -16,7 +16,7 @@
 from __future__ import absolute_import
 
 from twisted.python import log
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from buildbot.buildslave.protocols import base
 from twisted.spread import pb
 
@@ -78,6 +78,9 @@ class Connection(base.Connection, pb.Avatar):
     def __init__(self, master, buildslave, mind):
         base.Connection.__init__(self, master, buildslave)
         self.mind = mind
+        keepalive_timer = None
+        keepalive_interval = None
+
 
     # methods called by the PBManager
 
@@ -96,6 +99,7 @@ class Connection(base.Connection, pb.Avatar):
     # disconnection handling
 
     def loseConnection(self):
+        self.stopKeepaliveTimer()
         self.mind.broker.transport.loseConnection()
 
     # methods to send messages to the slave
@@ -201,3 +205,18 @@ class Connection(base.Connection, pb.Avatar):
 
     def remoteStartBuild(self):
         return self.mind.callRemote('startBuild')
+
+    def updateKeepaliveInterval(self, keepalive_interval):
+        self.keepalive_interval = keepalive_interval
+        self.stopKeepaliveTimer()
+        self.startKeepaliveTimer()
+
+    def stopKeepaliveTimer(self):
+        if self.keepalive_timer:
+            self.keepalive_timer.cancel()
+            self.keepalive_timer = None
+
+    def startKeepaliveTimer(self):
+        assert self.keepalive_interval
+        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
+            self.doKeepalive)
