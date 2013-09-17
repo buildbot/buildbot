@@ -293,11 +293,16 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             self.keepalive_timer.cancel()
             self.keepalive_timer = None
 
-    def startKeepaliveTimer(self, conn):
+    def startKeepaliveTimer(self):
         assert self.keepalive_interval
-        d = conn.doKeepalive()
+        if not self.conn:
+            return
+        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
+            self.conn.doKeepalive)
+
+        d = self.conn.doKeepalive()
         def _failed(why):
-            log.msg("Keepalive for '%s' failed: %s" % (self.slavename, why))
+            log.msg("Keepalive for '%s' failed" % self.slavename)
         d.addErrback(_failed)
 
         log.msg("Starting buildslave keepalive timer for '%s'" % \
@@ -376,6 +381,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.slave_status.setGraceful(False)
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
+        self.conn = conn
 
         d = defer.succeed(None)
 
@@ -401,7 +407,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             d1.addCallback(_got_info)
             return d1
 
-        d.addCallback(lambda _: self.startKeepaliveTimer(conn))
+        d.addCallback(lambda _: self.startKeepaliveTimer())
 
         @d.addCallback
         def _accept_slave(res):
@@ -413,7 +419,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             self.slave_basedir = state.get("slave_basedir")
             self.slave_system = state.get("slave_system")
 
-            self.conn = conn
             self.conn.notifyOnDisconnect(self.detached)
 
             if self.slave_system == "nt":

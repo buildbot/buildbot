@@ -158,11 +158,11 @@ class Connection(base.Connection, pb.Avatar):
             d = self.mind.callRemote('shutdown')
             d.addCallback(lambda _ : True) # successful shutdown request
             def check_nsm(f):
-                f.trap(pb.NoSuchMethod) # TODO: handle this in buildslave/protocols
+                f.trap(pb.NoSuchMethod)
                 return False # fall through to the old way
             d.addErrback(check_nsm)
             def check_connlost(f):
-                f.trap(pb.PBConnectionLost) # TODO: handle this in buildslave/protocols
+                f.trap(pb.PBConnectionLost)
                 return True # the slave is gone, so call it finished
             d.addErrback(check_connlost)
             return d
