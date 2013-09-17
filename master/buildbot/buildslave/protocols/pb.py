@@ -82,12 +82,12 @@ class Connection(base.Connection, pb.Avatar):
     def __init__(self, master, buildslave, mind):
         base.Connection.__init__(self, master, buildslave)
         self.mind = mind
-        self.startKeepaliveTimer()
 
     # methods called by the PBManager
 
     @defer.inlineCallbacks
     def attached(self, mind):
+        self.startKeepaliveTimer()
         # pbmanager calls perspective.attached; pass this along to the
         # buildslave
         yield self.buildslave.attached(self)
@@ -95,6 +95,7 @@ class Connection(base.Connection, pb.Avatar):
         yield self
 
     def detached(self, mind):
+        self.stopKeepaliveTimer()
         self.mind = None
         self.notifyDisconnected()
 
@@ -209,7 +210,7 @@ class Connection(base.Connection, pb.Avatar):
         return self.mind.callRemote('startBuild')
 
     def stopKeepaliveTimer(self):
-        if self.keepalive_timer:
+        if self.keepalive_timer and self.keepalive_timer.active():
             self.keepalive_timer.cancel()
             self.keepalive_timer = None
 
