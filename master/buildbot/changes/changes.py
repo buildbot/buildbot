@@ -140,7 +140,9 @@ class Change:
                 self.codebase)
 
     def __cmp__(self, other):
-      return self.number - other.number
+        if self.number is not None and self.other is not None:
+            return self.number - other.number
+        return 0
 
     def asText(self):
         data = ""
