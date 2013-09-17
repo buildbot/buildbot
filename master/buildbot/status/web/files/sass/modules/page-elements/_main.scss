@@ -191,8 +191,8 @@
 			@include text-shadow (0 1px 0 #fff);
 		}
 		&.sorting:hover,
-		th.sorting_asc:hover,
-		th.sorting_desc:hover {
+		&.sorting_asc:hover,
+		&.sorting_desc:hover {
 			background-color: #E5E7EB;
 			cursor: pointer;
 		}

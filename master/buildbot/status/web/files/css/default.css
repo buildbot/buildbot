@@ -4635,9 +4635,7 @@ a.grey-btn:hover,
   text-shadow: 0 1px 0 white;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003195}}
-.tablesorter th.sorting:hover,
-.tablesorter th th.sorting_asc:hover,
-.tablesorter th th.sorting_desc:hover {
+.tablesorter th.sorting:hover, .tablesorter th.sorting_asc:hover, .tablesorter th.sorting_desc:hover {
   background-color: #E5E7EB;
   cursor: pointer;
 }
