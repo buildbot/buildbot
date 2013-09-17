@@ -198,3 +198,6 @@ class Connection(base.Connection, pb.Avatar):
             log.err("Couldn't find remote builder to shut down slave")
             return defer.succeed(None)
         yield old_way()
+
+    def remoteStartBuild(self):
+        return self.mind.callRemote('startBuild')
