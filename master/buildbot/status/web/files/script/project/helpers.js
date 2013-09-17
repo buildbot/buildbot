@@ -412,6 +412,7 @@ define(['jquery'], function ($) {
 	
 	// run build with default parameters
 	$('.run-build-js').click(function(e){
+		$('.more-info-box-js-3').remove();
 		e.preventDefault();
 		var datab = $(this).prev().attr('data-b');
 		var dataindexb = $(this).prev().attr('data-indexb');
@@ -427,7 +428,6 @@ define(['jquery'], function ($) {
 	$('.ajaxbtn').click(function(e){
 		e.preventDefault();
 		var datab = $(this).attr('data-b');
-		
 		var dataindexb = $(this).attr('data-indexb');
 		
 		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
