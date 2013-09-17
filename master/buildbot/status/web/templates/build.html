@@ -345,20 +345,16 @@ SourceStamps
         {% for ss in sourcestamps %}
             {% if ss.changes %}
             {% if ss.codebase %}
-              <h3 class="codebase-change-txt" id="changes-{{ ss.codebase }}"> 
+              <h3 class="codebase-change-txt" id="changes-{{ ss.codebase }}">
                 {{ ss.codebase }}
               </h3>
             {% endif %}
-          
+            <table class="table-1 var-1">
             {% for c in ss.changes %}
-              {#
-                <h3>
-                  Change #{{ c.number or c.revision }}
-                </h3>
-              #}
+              
             {{ change(c.asDict()) }}
             {% endfor %}
-           
+           </table>
             {% endif %}
 
         {% endfor %}

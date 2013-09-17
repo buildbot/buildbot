@@ -337,7 +337,9 @@ define(['jquery'], function ($) {
 	});
 	
 	// tooltip for long txtstrings
-	$(".ellipsis-js").dotdotdot();
+	if ($('.ellipsis-js').length) {
+		$(".ellipsis-js").dotdotdot();
+	}
 
 	function toolTip(ellipsis) {
 		$(ellipsis).parent().hover(function(){
@@ -419,9 +421,10 @@ define(['jquery'], function ($) {
 		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 		$('body').append(preloader).show();
 		$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {
-			$('#bowlG').remove();		
-			$(data).appendTo('body');
-			$('.command_forcebuild .grey-btn').trigger('click');
+			$('#bowlG').remove();
+			$('<div/>').addClass('formCont').hide().appendTo('body')		
+			$(data).appendTo('.formCont')
+			$('.formCont .command_forcebuild .grey-btn').trigger('click');
 		});
 	});
 
