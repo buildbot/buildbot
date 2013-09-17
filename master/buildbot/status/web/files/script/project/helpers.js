@@ -337,22 +337,27 @@ define(['jquery'], function ($) {
 	});
 	
 	// tooltip for long txtstrings
-	$(".ellipsis").dotdotdot();
-	
-	$('.ellipsis-js').parent().hover(function(){
-		var txt = $('.ellipsis-js', this).attr('data-txt');
-		
-		var toolTip = $('<div/>').addClass('tool-tip').text(txt);
+	$(".ellipsis-js").dotdotdot();
 
-		$(this).append($(toolTip).css({
-			'top':$('.ellipsis-js', this).position().top,
-			'left':$('.ellipsis-js', this).position().left - 20
-		}).show());
+	function toolTip(ellipsis) {
+		$(ellipsis).parent().hover(function(){
+			
+			var txt = $(ellipsis, this).attr('data-txt');
+			
+			var toolTip = $('<div/>').addClass('tool-tip').text(txt);
 
-	}, function(){
-		$('.tool-tip').remove();
-	});
+			$(this).append($(toolTip).css({
+				'top':$(ellipsis, this).position().top -10,
+				'left':$(ellipsis, this).position().left - 20
+			}).show());
+
+		}, function(){
+			$('.tool-tip').remove();
+		});
+	}
 		
+	toolTip('.ellipsis-js');
+
 	//parse reason string
 	$('.codebases-list .reason-txt').each(function(){
 		var rTxt = $(this).text().trim();
@@ -405,14 +410,29 @@ define(['jquery'], function ($) {
 
 	});
 	
-	$('.ajaxbtn').click(function(){
+	// run build with default parameters
+	$('.run-build-js').click(function(e){
+		e.preventDefault();
+		var datab = $(this).prev().attr('data-b');
+		var dataindexb = $(this).prev().attr('data-indexb');
+		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+		$('body').append(preloader).show();
+		$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {
+			$('#bowlG').remove();		
+			$(data).appendTo('body');
+			$('.command_forcebuild .grey-btn').trigger('click');
+		});
+	});
+
+	$('.ajaxbtn').click(function(e){
+		e.preventDefault();
 		var datab = $(this).attr('data-b');
 		
 		var dataindexb = $(this).attr('data-indexb');
 		
 		var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 		$('body').append(preloader).show();
-		var mib3 = $('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Force build</h3><div id="content1"></div></div>');
+		var mib3 = $('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
 		$(mib3).insertAfter($(this));
 
 		$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {

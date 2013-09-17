@@ -1,7 +1,7 @@
 {# both macro pairs must have the same signature #}
 
 {% macro id_replace(rev, url) -%}
-  <a class="revision ellipsis ellipsis-js" data-txt="{{ rev }}" href="{{ url }}">
+  <a target="_blank" class="revision" data-txt="{{ rev }}" href="{{ url }}">
   {%- if rev|length > 40 %}{{ rev[:40] }}...
   {%- else %}{{ rev }}
   {%- endif -%}  

@@ -984,29 +984,13 @@ body.log.interface {
 	margin-bottom:3px;	
 }
 
-
-.delete-icon {
-	display:inline-block;
-	&:before {
-		font-family: "katana_icons";
-		content: "";
-		font-size: 16px;
-		color:#2B6194;
-
-	}
-	&:hover:before{
-		color:#ccc;
-	}	
-}
-
 .ellipsis {
 	max-height:45px;
 	width:175px;
    	white-space: normal;
-   	word-wrap: normal;
-    //overflow: hidden;
-    //text-overflow: ellipsis;
+   	word-wrap: break-word;
     position: relative;
+
 }
 
 .revision.ellipsis {

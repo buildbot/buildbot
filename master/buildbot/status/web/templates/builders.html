@@ -22,7 +22,7 @@
       Status
     </th>
     <th class="no-tablesorter-js">
-      Force build
+      Run build
     </th>
   </tr>
   </thead>
@@ -134,7 +134,9 @@
       
       <td>
         {% if b.force_schedulers != {} %}
-          <a class="ajaxbtn more-info popup-btn-js" href="#" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
+          <a class="ajaxbtn more-info" title="Run custom build" href="#" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
+          </a>
+          <a class="run-build-js run-build" title="Run build with default values"  href="#">
           </a>
         {% endif %}
       </td>

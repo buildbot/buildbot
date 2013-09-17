@@ -60,7 +60,12 @@
   
   {% endif %} {% if c.project %}
   
-    <td>{{ c.project|projectlink }}</td>
+    <td>
+      
+        {{ c.project|projectlink }}
+      
+    </td>
+
   
   {% endif %} {% if c.branch %}
   
@@ -71,7 +76,11 @@
     
     <td>
       {%- if c.revlink -%}<a href="{{ c.revlink }}">#{{ c.rev|e }}</a>
-      {%- else -%}{{ c.rev|revlink(c.repository) }} {%- endif -%}
+      {%- else -%}
+        <div class="ellipsis">
+          {{ c.rev|revlink(c.repository) }} 
+        </div>
+      {%- endif -%}
     </td>
   
   {% endif %}
