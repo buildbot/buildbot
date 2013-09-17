@@ -240,6 +240,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.access = new.access
         self.notify_on_missing = new.notify_on_missing
         self.keepalive_interval = new.keepalive_interval
+        if self.conn:
+            self.conn.updateKeepaliveInterval(new.keepalive_interval)
 
         if self.missing_timeout != new.missing_timeout:
             running_missing_timer = self.missing_timer
@@ -289,19 +291,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             self.missing_timer = None
 
     def stopKeepaliveTimer(self):
-        if self.keepalive_timer:
-            self.keepalive_timer.cancel()
-            self.keepalive_timer = None
+        if self.conn:
+            self.conn.stopKeepaliveTimer()
 
     def startKeepaliveTimer(self):
-        assert self.keepalive_interval
-        if not self.conn:
-            return
-        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-            self.conn.doKeepalive) # TODO: move this to the protocol level
-
-        log.msg("Starting buildslave keepalive timer for '%s'" % \
-                                        (self.slavename, ))
+        if self.conn:
+            self.conn.startKeepaliveTimer()
+            log.msg("Starting buildslave keepalive timer for '%s'" % self.slavename)
 
     def isConnected(self):
         return self.conn
@@ -377,6 +373,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
+        self.conn.keepalive_interval = getattr(self, "keepalive_interval", None)
 
         d = defer.succeed(None)
 
@@ -447,7 +444,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.master.status.slaveDisconnected(self.slavename)
-        self.stopKeepaliveTimer()
+        if self.conn:
+            self.conn.stopKeepaliveTimer()
         self.releaseLocks()
 
         # notify watchers, but do so in the next reactor iteration so that

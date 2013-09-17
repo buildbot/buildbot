@@ -15,7 +15,7 @@
 
 import mock
 from twisted.spread import pb
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, base
 from twisted.cred import credentials
 from twisted.trial import unittest
 from twisted.python import log
@@ -27,6 +27,8 @@ from buildbot.status import master
 from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
 from buildbot.buildslave import manager as bslavemanager
+
+base.DelayedCall.debug = True
 
 class FakeSlaveBuilder(pb.Referenceable):
     """
@@ -202,6 +204,7 @@ class TestSlaveComm(unittest.TestCase):
 
     def slaveSideDisconnect(self, slave):
         """Disconnect from the slave side"""
+        print slave
         slave.master_persp.broker.transport.loseConnection()
 
     @defer.inlineCallbacks
