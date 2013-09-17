@@ -45,7 +45,7 @@ class Hg(Mercurial):
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
-            changelist.append(Change(who=author, files=None, comments=comments, when=timestamp, repository=self.repourl, revision=node, codebase= self.codebase))
+            changelist.append(Change(who=author, files=None, comments=comments, when=timestamp, repository=self.repourl, branch=self.update_branch, revision=node, codebase= self.codebase))
 
         sourcestamps = self.build.build_status.getSourceStamps()
 

@@ -58,7 +58,7 @@ class GitCommand(Git):
             comments = yield self._dovccmd(args, collectStdout=True)
             comments = comments.decode(self.encoding)
 
-            changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, revision=rev, codebase= self.codebase))
+            changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, branch= self.branch,revision=rev, codebase= self.codebase))
 
         sourcestamps = self.build.build_status.getSourceStamps()
 
