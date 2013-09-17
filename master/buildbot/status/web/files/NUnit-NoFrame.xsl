@@ -25,9 +25,7 @@
 	<HTML>
 		<HEAD>
 			<title>Katana test results</title>
-
-			<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css' />	
-		    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css' />
+			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
 			<link rel="stylesheet" href="/css/default.css" type="text/css" />
 			<link rel="stylesheet" href="/css/log.css" type="text/css" />
 		</HEAD>
@@ -61,9 +59,14 @@
         </h3>
       </div>
     </footer>
-    <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
-	<script type="text/javascript" src="/script/plugins/jquery-datatables.js"></script>
-    <script type="text/javascript" src="/script/log.js"></script>
+    <!--
+    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
+	<script type="text/javascript" src="/prod/script/plugins/jquery-datatables.js"></script>
+    
+    	<script type="text/javascript" src="/prod/script/log.js"></script>
+	-->
+    <script type="text/javascript" src="/prod/script/logoutput.min.js"></script>
+    
 		</body>
 	</HTML>
 </xsl:template>
@@ -89,24 +92,27 @@
 		<div class="table-holder">
 			<ul class="summary-list">
 				<li>
-					<span id=":i18n:Tests">Tests </span>
+					<b id="Tests">Tests </b>
 					<xsl:value-of select="$testCount"/>
 				</li>
 				<li>
-					<span id=":i18n:Passed">Passed </span>
+					<b id="Passed">Passed </b>
 					<xsl:value-of select="$passCount"/>
 				</li>
 				<li>
-					<span id=":i18n:Failures">Failures </span>
-					<xsl:value-of select="$failureCount"/>
+					<b id="Failures">Failures </b>
+					<span class="failures-count">
+						<xsl:value-of select="$failureCount"/>
+					</span>
 				</li>
 				<li>
-					<span id=":i18n:Error">Ignored </span>
-					<xsl:value-of select="$ignoredCount"/>
+					<b id="Error">Ignored </b>
+					<span class="ignored-count">
+						<xsl:value-of select="$ignoredCount"/>
+					</span>
 				</li>
-				
 				<li>
-					<span id=":i18n:Time">Time(s) </span> <xsl:value-of select="$timeCount"/>
+					<b id="Time">Time(s) </b> <xsl:value-of select="$timeCount"/>
 					<!--
 					<xsl:call-template name="display-time">
                         	<xsl:with-param name="value" select="$timeCount"/>
@@ -130,8 +136,10 @@
 					</xsl:apply-templates>
 				</tbody>
 			</table>
-			<a class="back-top-top" href="#top" id=":i18n:Backtotop">Back to top</a>
-</div>
+			<a class="back-top-top" href="#top" id=":i18n:Backtotop">
+				Back to top
+			</a>
+		</div>
 		</xsl:for-each>
 	</xsl:template>
 	

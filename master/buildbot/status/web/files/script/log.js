@@ -2,11 +2,29 @@
 // sort and filter tables logs
 
 //$(document).ready(function() {
+
+
 		$("#filterinput").val("");
 		$('.check-boxes-list input').attr('checked', false);
 		
 		var th = $('.table-holder');
 
+		//  sort failues and ignored first
+		var failIgnoreArray = [];
+		$(th).each(function(){	
+			if ($('.ignored-count',this).text() > 0) {
+				failIgnoreArray.push($(this))
+			} else if ($('.failures-count',this).text() > 0) {
+				failIgnoreArray.push($(this))
+			}
+		});
+		
+		failIgnoreArray.reverse();
+		$(failIgnoreArray).each(function(){
+			$(this).insertAfter('#summaryTable')	
+		});
+		
+		// insert one input field for all tables
 		$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
 		    var settings = $.fn.dataTableSettings;
 		     
@@ -44,7 +62,7 @@
 			"bSort": true,
 			"bInfo": false,
 			"bSortable": true,
-			"aaSorting": [],
+			"aaSorting": [[ 1, "asc" ]],
 			"bAutoWidth": false
 		});
 
@@ -85,14 +103,14 @@
 		}
 		
 		});
-
 		
 		$('#submitFilter').click(function(){
-			inputVal($("#filterinput").val());
-			
+			inputVal($("#filterinput").val());	
 		});
+
 		$('#clearFilter').click(function(){
 			location.reload();
 		});
-	
+		
+
  //}); 

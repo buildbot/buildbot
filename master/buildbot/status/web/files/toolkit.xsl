@@ -170,7 +170,7 @@
 	
 		<xsl:variable name="successRate" select="$runCount div $total"/>		
 
-		<table class="table-1">
+		<table class="table-1" id="summaryTable">
 		<thead>
 			<xsl:call-template name="summaryHeader"/>
 		</thead>
