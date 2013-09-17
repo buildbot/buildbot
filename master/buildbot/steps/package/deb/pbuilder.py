@@ -37,7 +37,7 @@ class DebPbuilder(WarningCountingShellCommand):
     description = ["pdebuilding"]
     descriptionDone = ["pdebuild"]
 
-    warningPattern = ".*(warning[: ]|\sW: ).*"
+    warningPattern = r".*(warning[: ]|\sW: ).*"
 
     architecture = None
     distribution = 'stable'
@@ -116,7 +116,7 @@ class DebPbuilder(WarningCountingShellCommand):
         if self.extrapackages:
             self.command += ['--extrapackages', " ".join(self.extrapackages)]
 
-        self.suppressions.append((None, re.compile("\.pbuilderrc does not exist"), None, None))
+        self.suppressions.append((None, re.compile(r"\.pbuilderrc does not exist"), None, None))
 
     # Check for Basetgz
     def start(self):

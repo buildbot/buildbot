@@ -30,7 +30,7 @@ def naturalSort(l):
         except ValueError:
             return s
     def key_func(item):
-        return [try_int(s) for s in re.split('(\d+)', item)]
+        return [try_int(s) for s in re.split(r'(\d+)', item)]
     # prepend integer keys to each element, sort them, then strip the keys
     keyed_l = [ (key_func(i), i) for i in l ]
     keyed_l.sort()

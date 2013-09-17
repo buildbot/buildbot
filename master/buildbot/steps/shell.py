@@ -679,7 +679,7 @@ class PerlModuleTest(Test):
             test_summary_report_index = lines.index("Test Summary Report")
             del lines[0:test_summary_report_index + 2]
 
-            re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
+            re_test_result = re.compile(r"^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
 
             mos = map(lambda line: re_test_result.search(line), lines)
             test_result_lines = [mo.groups() for mo in mos if mo]
@@ -694,7 +694,7 @@ class PerlModuleTest(Test):
                     total = int(line[2])
 
         else: # Nope, it's the old version
-            re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
+            re_test_result = re.compile(r"^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
 
             mos = map(lambda line: re_test_result.search(line), lines)
             test_result_lines = [mo.groups() for mo in mos if mo]

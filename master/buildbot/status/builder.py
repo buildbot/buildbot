@@ -130,7 +130,7 @@ class BuilderStatus(styles.Versioned):
         """
         existing_builds = [int(f)
                            for f in os.listdir(self.basedir)
-                           if re.match("^\d+$", f)]
+                           if re.match(r"^\d+$", f)]
         if existing_builds:
             self.nextBuildNumber = max(existing_builds) + 1
         else:

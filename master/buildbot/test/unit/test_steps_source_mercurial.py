@@ -106,7 +106,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir\.buildbot-patched',
+            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
             Expect('stat', dict(file=r'wkdir\.hg',

@@ -200,12 +200,12 @@ class CreateSlaveOptions(MakerBase):
                 raise usage.UsageError("%s parameter needs to be an number"
                                                                     % argument)
 
-        if not re.match('^\d+$', self['log-count']) and \
+        if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
             raise usage.UsageError("log-count parameter needs to be an number"
                                    " or None")
 
-        if not re.match('^\d+$', self['umask']) and \
+        if not re.match(r'^\d+$', self['umask']) and \
                 self['umask'] != 'None':
             raise usage.UsageError("umask parameter needs to be an number"
                                    " or None")

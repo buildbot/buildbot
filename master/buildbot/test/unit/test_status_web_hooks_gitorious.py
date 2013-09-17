@@ -24,7 +24,7 @@ from twisted.trial import unittest
 # Sample Gitorious commit payload
 # source: http://gitorious.org/gitorious/pages/WebHooks
 
-gitJsonPayload = """
+gitJsonPayload = r"""
 {
   "after": "df5744f7bc8663b39717f87742dc94f52ccbf4dd",
   "before": "b4ca2d38e756695133cbd0e03d078804e1dc6610",

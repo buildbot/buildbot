@@ -215,7 +215,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
                 shortText = "%s\n" % ' '.join(bs.getText()).encode('ascii', 'replace')
 
                 # ignore steps that haven't happened
-                if not re.match(".*[^\s].*", shortText):
+                if not re.match(r".*[^\s].*", shortText):
                     continue
                 # we ignore TinderboxPrint's here so we can do things like:
                 # ShellCommand(command=['echo', 'TinderboxPrint:', ...])
