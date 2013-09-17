@@ -3,46 +3,9 @@
 
   {% set row_class=cycler('alt','') %}
    
-  <tr class="{{ row_class.next() }}">
-  
-    {% if c.category %}
-      <th>Category</th>
-    {% endif %}
-    <th>Changed by</th>
-    <th>
-      Time & date
-    </th>
-    
-  {% if c.repository %}
-  
-    <th>Repository</th>
-  
-  {% endif %} {% if c.project %}
-  
-    <th>Project</th>
-    
-  {% endif %} {% if c.branch %}
 
-    <th>Branch</th>
     
-  {% endif %} {% if c.rev %}
-  
-    <th>Revision</th>
-    
-  {% endif %}
-  {% if c.comments %}
-    <th>Comments</th>
-  {% endif %}
-  
-  {% if c.properties %}
-  <th>
-    Properties
-  </th>
-  {% endif %}     
-
-  </tr>
-    
-  <tr class="{{ row_class.next() }}">
+  <tr >
     
     {% if c.category %}
       <td>{{ c.category }}</td>
