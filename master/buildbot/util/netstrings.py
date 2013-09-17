@@ -48,8 +48,6 @@ class NetstringParser(basic.NetstringReceiver):
         self.strings = []
 
     def feed(self, data):
-        """
-        """
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!
         if self.brokenPeer:
