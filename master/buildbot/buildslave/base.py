@@ -53,7 +53,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None):
+                 properties={}, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
