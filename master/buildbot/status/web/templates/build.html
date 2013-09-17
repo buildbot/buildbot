@@ -224,13 +224,13 @@ SourceStamps
 
   <li>
 <a class="dropdown-info grey-btn popup-btn-js" href="#">
-  Forced build properties
+  Custom build properties
 </a>
 
   <div class="more-info-box more-info-box-js">
     <span href="#" class="close-btn">
     </span>
-    <h3>Overview of forced build properties</h3>
+    <h3>Overview of custom build properties</h3>
 
     <table class="table-2">
       <tr>
@@ -340,51 +340,29 @@ SourceStamps
 </div>
   
 {% if has_changes %}
-    <div class="column-1 inner">
+    
       <h2 class="head-2">All Changes</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
             {% if ss.codebase %}
-            <h3 id="changes-{{ ss.codebase }}"> {{ ss.codebase }}:</h3>
+              <h3 class="codebase-change-txt" id="changes-{{ ss.codebase }}"> 
+                {{ ss.codebase }}
+              </h3>
             {% endif %}
-            <table class="">
-            </table>
-
-          <!--
-            <table class="table-1 first-child tablesorter tablesorter-js">
-                  <thead>
-                <tr>
-                  <th class="txt-align-left">
-                    Builder
-                  </th>
-                </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      fds
-                    </td>
-                  </tr>
-                </tbody>
-                
-            </table>
-          -->
-            
-                  {% for c in ss.changes %}
-                  
-                    
-                      <h3>
-                        Change #{{ c.number or c.revision }}
-                      </h3>
-                        {{ change(c.asDict()) }}
-                    
-
-                  {% endfor %}
-
-            
+          
+            {% for c in ss.changes %}
+              {#
+                <h3>
+                  Change #{{ c.number or c.revision }}
+                </h3>
+              #}
+            {{ change(c.asDict()) }}
+            {% endfor %}
+           
             {% endif %}
+
         {% endfor %}
-    </div>
+    
 {% endif %}
 
 {% endblock %}

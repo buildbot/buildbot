@@ -30,7 +30,7 @@ a.grey-btn,
 .grey-btn,
 .clear-btn,
 .blue-btn {
-	@include bgimage(linear-gradient(bottom , #CED3D7 0%, #FFFFFF 100%)); 
+	@include bgimage(linear-gradient(bottom, #CED3D7 0%, #FFFFFF 100%)); 
     border: 1px solid #D9D9D9;
     @include border-radius(7px);
     color: #333333;
@@ -48,7 +48,6 @@ a.grey-btn,
 
 .grey-btn + .dataTables_wrapper {
     margin-right: 10px;
-
 }
 
 .blue-btn {
@@ -78,12 +77,25 @@ a.grey-btn,
     }
 }
 
-
 .grey-btn.var-2 {
     font-size: 9px;
     padding: 7px 8px;
     position: relative;
 }
+
+.delete-icon {
+    display:inline-block;
+    &:before {
+        font-family: "katana_icons";
+        content: "";
+        font-size: 16px;
+        color:#2B6194;
+    }
+    &:hover:before{
+        color:#ccc;
+    }   
+}
+
 #submitBtn {
     padding: 9px 9px 8px 34px;
     @include box-shadow(1px 1px 0 #FFFFFF);
@@ -101,6 +113,16 @@ a.grey-btn,
         color: #A4A4A4;     
     }
 }
+ 
+.run-build {
+    margin-left: 3px;
+    &:after {
+        font-family: katana_icons;
+        content: "";
+        font-size: 14px;
+    }
+}
+
 .close-btn {
 	position: absolute;
     right: 10px;

@@ -147,12 +147,12 @@
   </li>
   <li>
       <a class="dropdown-info grey-btn popup-btn-js" href="#">
-        Force build
+        Run build
       </a>
         <div class="more-info-box more-info-box-js">
           <span href="#" class="close-btn">
           </span>
-          <h3>Force build</h3>
+          <h3>Run custom build</h3>
 
           {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
             {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}

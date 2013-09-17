@@ -44,6 +44,7 @@ module.exports = function(grunt) {
           paths: {
           jquery: 'script/libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
           //jquery: 'empty:' //Use this to continue using CDN loading
+          dotdotdot: 'script/plugins/jquery-dotdotdot',
           helpers: 'script/project/helpers',
           setcurrentitem: 'script/project/set-current-item',
           datatables: 'script/plugins/jquery-datatables',
