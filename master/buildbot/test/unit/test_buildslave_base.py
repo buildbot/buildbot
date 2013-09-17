@@ -250,7 +250,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
-    def test_slave_remotePrint(self):
+    def test_attached_remotePrint(self):
         slave = self.createBuildslave()
         yield slave.startService()
 
