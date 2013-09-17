@@ -75,12 +75,14 @@ class Listener(base.Listener):
 
 class Connection(base.Connection, pb.Avatar):
 
+    # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
+    keepalive_timer = None
+    keepalive_interval = 3600
+
     def __init__(self, master, buildslave, mind):
         base.Connection.__init__(self, master, buildslave)
         self.mind = mind
-        keepalive_timer = None
-        keepalive_interval = None
-
+        self.startKeepaliveTimer()
 
     # methods called by the PBManager
 
@@ -205,11 +207,6 @@ class Connection(base.Connection, pb.Avatar):
 
     def remoteStartBuild(self):
         return self.mind.callRemote('startBuild')
-
-    def updateKeepaliveInterval(self, keepalive_interval):
-        self.keepalive_interval = keepalive_interval
-        self.stopKeepaliveTimer()
-        self.startKeepaliveTimer()
 
     def stopKeepaliveTimer(self):
         if self.keepalive_timer:

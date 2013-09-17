@@ -50,7 +50,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.missing_timeout, 3600)
         self.assertEqual(bs.properties.getProperty('slavename'), 'bot')
         self.assertEqual(bs.access, [])
-        self.assertEqual(bs.keepalive_interval, 3600)
 
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
@@ -59,14 +58,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 notify_on_missing=['me@me.com'],
                 missing_timeout=120,
                 properties={'a':'b'},
-                locks=[lock1, lock2],
-                keepalive_interval=60)
+                locks=[lock1, lock2])
+
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
         self.assertEqual(bs.missing_timeout, 120)
         self.assertEqual(bs.properties.getProperty('a'), 'b')
         self.assertEqual(bs.access, [lock1, lock2])
-        self.assertEqual(bs.keepalive_interval, 60)
 
     def test_constructor_notify_on_missing_not_list(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
@@ -98,14 +96,12 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 max_builds=2,
                 notify_on_missing=['me@me.com'],
                 missing_timeout=120,
-                properties={'a':'b'},
-                keepalive_interval=60)
+                properties={'a':'b'})
         new = self.ConcreteBuildSlave('bot', 'pass',
                 max_builds=3,
                 notify_on_missing=['her@me.com'],
                 missing_timeout=121,
-                properties={'a':'c'},
-                keepalive_interval=61)
+                properties={'a':'c'})
 
         old.updateSlave = mock.Mock(side_effect=lambda : defer.succeed(None))
 
@@ -115,7 +111,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
         self.assertEqual(old.missing_timeout, 121)
         self.assertEqual(old.properties.getProperty('a'), 'c')
-        self.assertEqual(old.keepalive_interval, 61)
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateSlave.called)
 

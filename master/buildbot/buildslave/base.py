@@ -47,15 +47,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
     subclassed to add extra functionality."""
 
     implements(IBuildSlave)
-    keepalive_timer = None
-    keepalive_interval = None
 
     # reconfig slaves after builders
     reconfig_priority = 64
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None, keepalive_interval=3600):
+                 properties={}, locks=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -105,7 +103,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                     'notify_on_missing arg %r is not a string' % (i,))
         self.missing_timeout = missing_timeout
         self.missing_timer = None
-        self.keepalive_interval = keepalive_interval
 
         # a protocol connection, if we're currently connected
         self.conn = None
@@ -239,9 +236,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.max_builds = new.max_builds
         self.access = new.access
         self.notify_on_missing = new.notify_on_missing
-        self.keepalive_interval = new.keepalive_interval
-        if self.conn:
-            self.conn.updateKeepaliveInterval(new.keepalive_interval)
 
         if self.missing_timeout != new.missing_timeout:
             running_missing_timer = self.missing_timer
@@ -289,15 +283,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         if self.missing_timer:
             self.missing_timer.cancel()
             self.missing_timer = None
-
-    def stopKeepaliveTimer(self):
-        if self.conn:
-            self.conn.stopKeepaliveTimer()
-
-    def startKeepaliveTimer(self):
-        if self.conn:
-            self.conn.startKeepaliveTimer()
-            log.msg("Starting buildslave keepalive timer for '%s'" % self.slavename)
 
     def isConnected(self):
         return self.conn
@@ -373,7 +358,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
-        self.conn.keepalive_interval = getattr(self, "keepalive_interval", None)
 
         d = defer.succeed(None)
 
@@ -398,8 +382,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                 state["slave_commands"] = info.get("slave_commands", {})
             d1.addCallback(_got_info)
             return d1
-
-        d.addCallback(lambda _: self.startKeepaliveTimer())
 
         @d.addCallback
         def _accept_slave(res):
@@ -444,8 +426,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.master.status.slaveDisconnected(self.slavename)
-        if self.conn:
-            self.conn.stopKeepaliveTimer()
         self.releaseLocks()
 
         # notify watchers, but do so in the next reactor iteration so that
