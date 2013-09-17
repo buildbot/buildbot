@@ -34,10 +34,11 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
-    def createBuildslave(self, name='bot', password='pass', **kwargs):
+    def createBuildslave(self, name='bot', password='pass', attached=False, **kwargs):
         slave = self.ConcreteBuildSlave(name, password, **kwargs)
         slave.master = self.master
         slave.botmaster = self.botmaster
+        if attached: slave.conn = mock.Mock()
         return slave
 
     def test_constructor_minimal(self):
@@ -248,77 +249,28 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
-    def createRemoteBot(self):
-        class Bot():
-            def __init__(self):
-                self.commands = []
-                self.response = {
-                    'getSlaveInfo': mock.Mock(return_value=defer.succeed({}))
-                }
-
-            def callRemote(self, command, *args):
-                self.commands.append((command,) + args)
-                response = self.response.get(command)
-                if response:
-                    return response(*args)
-                return defer.succeed(None)
-
-            def remotePrint(self, message):
-                return self.callRemote('print', message)
-
-            def remoteGetSlaveInfo(self):
-                return self.callRemote('getSlaveInfo')
-
-            def notifyOnDisconnect(self, callback):
-                # Called during attached()
-                pass
-
-            def remoteSetBuilderList(self, builders):
-                return self.callRemote('setBuilderList', builders)
-
-            def doKeepalive(self):
-                return self.callRemote('print', "fake keepalive")
-
-        return Bot()
-
     @defer.inlineCallbacks
-    def test_attached_checkRemoteCalls(self):
+    def test_slave_remotePrint(self):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        bot = self.createRemoteBot()
-        yield slave.attached(bot)
-
-        self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(4, len(bot.commands))
-        self.assertEqual(bot.commands[0], ('print', 'attached'))
-        self.assertEqual(bot.commands[1], ('getSlaveInfo',))
-        self.assertEqual(bot.commands[2], ('print','fake keepalive'))
-        self.assertEqual(bot.commands[3], ('setBuilderList',[]))
-
-    @defer.inlineCallbacks
-    def test_attached_callRemote_print_raises(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
-
-        bot = self.createRemoteBot()
-        bot.response['print'] = mock.Mock(return_value=defer.fail(ValueError()))
-        yield slave.attached(bot)
+        conn = mock.Mock()
+        conn.remotePrint.return_value = defer.fail(ValueError())
+        slave.attached(conn)
 
         # just check that things still go on
         self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(4, len(bot.commands))
 
     @defer.inlineCallbacks
-    def test_attached_callRemote_getSlaveInfo(self):
+    def test_attached_remoteGetSlaveInfo(self):
         slave = self.createBuildslave()
         yield slave.startService()
 
         ENVIRON = {}
         COMMANDS = {'cmd1': '1', 'cmd2': '1'}
 
-        bot = self.createRemoteBot()
-        bot.response['getSlaveInfo'] = mock.Mock(return_value=defer.succeed({
+        conn = mock.Mock()
+        conn.remoteGetSlaveInfo.return_value = defer.succeed({
             'admin':   'TheAdmin',
             'host':    'TheHost',
             'access_uri': 'TheURI',
@@ -327,12 +279,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
             'system': 'TheSlaveSystem',
             'version': 'version',
             'slave_commands': COMMANDS,
-        }))
-        yield slave.attached(bot)
-
-        # check that things were all good
-        self.assertEqual(True, slave.slave_status.isConnected())
-        self.assertEqual(4, len(bot.commands))
+        })
+        yield slave.attached(conn)
 
         # check the values get set right
         self.assertEqual(slave.slave_status.getAdmin(),     "TheAdmin")
@@ -348,8 +296,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        bot = self.createRemoteBot()
-        yield slave.attached(bot)
+        conn = mock.Mock()
+        yield slave.attached(conn)
 
         self.assertEqual(self.botmaster.buildsStartedForSlaves, ["bot"])
 
@@ -367,14 +315,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        bot = self.createRemoteBot()
-        bot.response['getSlaveInfo'] = mock.Mock(return_value=defer.succeed({
+        conn = mock.Mock()
+        conn.remoteGetSlaveInfo.return_value = defer.succeed({
             'admin':   'TheAdmin',
             'host':    'TheHost',
             'access_uri': 'TheURI',
             'version': 'TheVersion',
-        }))
-        yield slave.attached(bot)
+        })
+        yield slave.attached(conn)
 
         self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
         self.assertEqual(slave.slave_status.getHost(),    'TheHost')
@@ -389,3 +337,18 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(buildslave['slaveinfo']['access_uri'], 'TheURI')
         self.assertEqual(buildslave['slaveinfo']['version'], 'TheVersion')
 
+    @defer.inlineCallbacks
+    def test_slave_shutdown(self):
+        slave = self.createBuildslave(attached=True)
+        yield slave.startService()
+
+        yield slave.shutdown()
+        slave.conn.remoteShutdown.assert_called_with(slave)
+
+    @defer.inlineCallbacks
+    def test_slave_shutdown_not_connected(self):
+        slave = self.createBuildslave(attached=False)
+        yield slave.startService()
+
+        # No exceptions should be raised here
+        yield slave.shutdown()

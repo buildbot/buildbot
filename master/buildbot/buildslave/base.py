@@ -619,7 +619,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             log.msg("no remote; slave is already shut down")
             return
 
-        return self.conn.remoteShutdown(self)
+        yield self.conn.remoteShutdown(self)
 
     def maybeShutdown(self):
         """Shut down this slave if it has been asked to shut down gracefully,
