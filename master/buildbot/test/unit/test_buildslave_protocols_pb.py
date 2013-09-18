@@ -69,7 +69,6 @@ class TestConnection(unittest.TestCase):
         self.mind = mock.Mock()
         self.buildslave = mock.Mock()
 
-
     def test_constructor(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
 
