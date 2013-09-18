@@ -24,7 +24,7 @@ import os
 import exceptions
 
 from twisted.python import log
-from twisted.internet import defer, utils
+from twisted.internet import defer, utils, protocol, reactor
 
 from buildbot import util
 from buildbot.changes import base
@@ -32,6 +32,20 @@ from buildbot.changes import base
 class P4PollerError(Exception):
     """Something went wrong with the poll. This is used as a distinctive
     exception type so that unit tests can detect and ignore it."""
+    
+class TicketLoginProtocol(protocol.ProcessProtocol):
+    """ Twisted process protocol to run `p4 login` and enter our password
+        in the stdin."""
+    def __init__(self, deferred, stdin):
+        self.deferred = deferred
+        self.stdin = stdin
+        
+    def connectionMade(self):
+        self.transport.write(self.stdin)
+        self.transport.closeStdin()
+
+    def processEnded(self, reason):
+        self.deferred.callback(reason.value.exitCode)
 
 def get_simple_split(branchfile):
     """Splits the branchfile argument and assuming branch is
@@ -69,6 +83,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
+                 use_tickets=False,
                  server_tz=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
@@ -88,6 +103,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.split_file = split_file
         self.encoding = encoding
         self.project = project
+        self.use_tickets = use_tickets
         self.server_tz = server_tz
 
     def describe(self):
@@ -102,15 +118,41 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         env = dict([(e, os.environ.get(e)) for e in self.env_vars if os.environ.get(e)])
         d = utils.getProcessOutput(self.p4bin, args, env)
         return d
+        
+    def _acquireTicket(self):
+        log.msg("P4Poller: acquiring P4 ticket...")
+        
+        command = [self.p4bin, ]
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        command.extend(['login'])
+        command = [c.encode('utf-8') for c in command]
+        log.msg("P4Poller: %s" % command)
+        
+        stdin = self.p4passwd + "\n"
+        
+        d = defer.Deferred()
+        protocol = TicketLoginProtocol(d, stdin)
+        reactor.spawnProcess(protocol, self.p4bin, command)
+        return d
 
     @defer.inlineCallbacks
     def _poll(self):
+        if self.last_change is None and self.use_tickets and self.p4passwd:
+            # For the first poll, acquire a ticket. After that,
+            # we're going to assume the ticket will stay valid because
+            # we poll often enough to re-activate it.
+            # TODO: Some servers may have some aggressive ticket expiry policy, so add options to re-acquire the ticket every N hours.
+            yield self._acquireTicket()
+    
         args = []
         if self.p4port:
             args.extend(['-p', self.p4port])
         if self.p4user:
             args.extend(['-u', self.p4user])
-        if self.p4passwd:
+        if not self.use_tickets and self.p4passwd:
             args.extend(['-P', self.p4passwd])
         args.extend(['changes'])
         if self.last_change is not None:
