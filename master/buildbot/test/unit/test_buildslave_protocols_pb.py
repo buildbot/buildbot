@@ -31,23 +31,23 @@ class TestListener(unittest.TestCase):
     def test_updateRegistration_simple(self):
         listener = pb.Listener(self.master)
         reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
-        self.assertEqual([('tcp:1234', 'example', 'pass')],
-            self.master.pbmanager._registrations)
-        self.assertEqual(('pass', 'tcp:1234', reg.result), listener._registrations['example'])
+        self.assertEqual(self.master.pbmanager._registrations,
+            [('tcp:1234', 'example', 'pass')])
+        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg.result))
 
     def test_updateRegistration_pass_changed(self):
         listener = pb.Listener(self.master)
         reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = listener.updateRegistration('example', 'pass1', 'tcp:1234')
-        self.assertEqual(('pass1', 'tcp:1234', reg1.result), listener._registrations['example'])
-        self.assertEqual([('tcp:1234', 'example')], self.master.pbmanager._unregistrations)
+        self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1.result))
+        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     def test_updateRegistration_port_changed(self):
         listener = pb.Listener(self.master)
         reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = listener.updateRegistration('example', 'pass', 'tcp:4321')
-        self.assertEqual(('pass', 'tcp:4321', reg1.result), listener._registrations['example'])
-        self.assertEqual([('tcp:1234', 'example')], self.master.pbmanager._unregistrations)
+        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1.result))
+        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     def test_getPerspective(self):
         listener = pb.Listener(self.master)
@@ -60,7 +60,7 @@ class TestListener(unittest.TestCase):
         conn = listener._getPerspective(mind, buildslave.slavename)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
-        self.assertEqual(True, isinstance(conn.result, pb.Connection))
+        self.assertEqual(isinstance(conn.result, pb.Connection), True)
 
 
 class TestConnection(unittest.TestCase):
@@ -79,11 +79,11 @@ class TestConnection(unittest.TestCase):
 
     def test_attached(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        att = conn.attached(self.mind) # att should Connection instance, but it's None
+        att = conn.attached(self.mind)
 
-        self.assertNotEqual(None, conn.keepalive_timer)
+        self.assertNotEqual(conn.keepalive_timer, None)
         self.buildslave.attached.assert_called_with(conn)
-        # self.assertEqual(att, conn) # will fail, why?
+        self.assertEqual(att.result, conn)
 
         conn.detached(self.mind)
 
@@ -92,14 +92,14 @@ class TestConnection(unittest.TestCase):
         conn.attached(self.mind)
         conn.detached(self.mind)
 
-        self.assertEqual(None, conn.keepalive_timer)
-        self.assertEqual(None, conn.mind)
+        self.assertEqual(conn.keepalive_timer, None)
+        self.assertEqual(conn.mind, None)
 
     def test_loseConnection(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         conn.loseConnection()
 
-        self.assertEqual(None, conn.keepalive_timer)
+        self.assertEqual(conn.keepalive_timer, None)
         conn.mind.broker.transport.loseConnection.assert_called_with()
 
     def test_remotePrint(self):
@@ -121,7 +121,7 @@ class TestConnection(unittest.TestCase):
         info = conn.remoteGetSlaveInfo()
 
         r = {'info': 'test', 'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
-        self.assertEqual(r, info.result)
+        self.assertEqual(info.result, r)
         calls = [mock.call('getSlaveInfo'), mock.call('getCommands'), mock.call('getVersion')]
         self.mind.callRemote.assert_has_calls(calls)
 
@@ -131,8 +131,8 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         r = conn.remoteSetBuilderList(builders)
 
-        self.assertEqual(builders, r.result)
-        self.assertEqual(builders, conn.builders)
+        self.assertEqual(r.result, builders)
+        self.assertEqual(conn.builders, builders)
         self.mind.callRemote.assert_called_with('setBuilderList', builders)
 
     def test_startCommands(self):
@@ -177,8 +177,7 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
 
         conn.startKeepaliveTimer()
-        self.assertNotEqual(None, conn.keepalive_timer)
+        self.assertNotEqual(conn.keepalive_timer, None)
 
         conn.stopKeepaliveTimer()
-        self.assertEqual(None, conn.keepalive_timer)
-
+        self.assertEqual(conn.keepalive_timer, None)

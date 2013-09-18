@@ -92,7 +92,7 @@ class Connection(base.Connection, pb.Avatar):
         # buildslave
         yield self.buildslave.attached(self)
         # and then return a reference to the avatar
-        yield self
+        defer.returnValue(self)
 
     def detached(self, mind):
         self.stopKeepaliveTimer()
