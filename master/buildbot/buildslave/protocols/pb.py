@@ -157,6 +157,7 @@ class Connection(base.Connection, pb.Avatar):
     def doKeepalive(self):
         return self.mind.callRemote('print', message="keepalive")
 
+    @defer.inlineCallbacks
     def remoteShutdown(self, buildslave):
         # First, try the "new" way - calling our own remote's shutdown
         # method. The method was only added in 0.8.3, so ignore NoSuchMethod

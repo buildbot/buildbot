@@ -16,6 +16,7 @@
 from twisted.application import service
 from twisted.internet import defer
 
+
 class FakeBuildslaveManager(service.MultiService):
 
     def __init__(self, master):
@@ -32,19 +33,30 @@ class FakeBuildslaveManager(service.MultiService):
     def register(self, buildslave):
         # TODO: doc that reg.update must be called, too
         buildslaveName = buildslave.slavename
-        reg = FakeBuildslaveRegistration()
+        reg = FakeBuildslaveRegistration(buildslave)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
         del self.registrations[registration.buildslave.slavename]
 
+    def getBuildslaveByName(self, buildslaveName):
+        return self.registrations[buildslaveName].buildslave
+
+    def newConnection(self, conn, buildslaveName):
+        assert buildslaveName not in self.connections
+        self.connections[buildslaveName] = conn
+        def remove():
+            del self.connections[buildslaveName]
+        return defer.succeed(True)
+
 
 class FakeBuildslaveRegistration(object):
 
-    def __init__(self):
+    def __init__(self, buildslave):
         self.updates = []
         self.unregistered = False
+        self.buildslave = buildslave
 
     def unregister(self):
         assert not self.unregistered, "called twice"

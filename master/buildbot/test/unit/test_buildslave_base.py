@@ -81,7 +81,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def do_test_reconfigService(self, old, new, existingRegistration=True):
         old.master = self.master
         if existingRegistration:
-            old.registration = bslavemanager.FakeBuildslaveRegistration()
+            old.registration = bslavemanager.FakeBuildslaveRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
         yield old.startService()
 
