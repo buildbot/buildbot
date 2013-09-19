@@ -101,6 +101,8 @@ Features
 * The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
   See :bb:bug:`2560`.
 
+* TODO: update version in deprecation warning.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
