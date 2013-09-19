@@ -2216,13 +2216,13 @@ One problem with specifying a database is that each reload of the
 configuration will get a new instance of ``ConnectionPool`` (even if the
 connection parameters are the same). To avoid that Buildbot thinks the builder
 configuration has changed because of this, use the
-:class:`process.mtrlogobserver.EqConnectionPool` subclass of
+:class:`steps.mtrlogobserver.EqConnectionPool` subclass of
 :class:`ConnectionPool`, which implements an equiality operation that avoids
 this problem.
 
 Example use::
 
-    from buildbot.process.mtrlogobserver import MTR, EqConnectionPool
+    from buildbot.steps.mtrlogobserver import MTR, EqConnectionPool
     myPool = EqConnectionPool("MySQLdb", "host", "buildbot", "password", "db")
     myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
                           command=["perl", "mysql-test-run.pl", "--force"]))
