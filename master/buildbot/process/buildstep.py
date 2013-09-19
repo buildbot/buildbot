@@ -149,8 +149,7 @@ class RemoteCommand(pb.Referenceable):
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
 
-        d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
-                                self.commandID, str(why))
+        d = self.conn.remoteInterruptCommand(self.commandID, str(why))
         # the slave may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d

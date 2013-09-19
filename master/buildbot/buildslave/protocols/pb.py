@@ -219,3 +219,7 @@ class Connection(base.Connection, pb.Avatar):
         assert self.keepalive_interval
         self.keepalive_timer = reactor.callLater(self.keepalive_interval,
             self.doKeepalive)
+
+    def remoteInterruptCommand(self, commandID, why):
+        return defer.maybeDeferred(self.mind.callRemote, "interruptCommand",
+            commandID, why)
