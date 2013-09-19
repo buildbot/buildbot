@@ -177,7 +177,7 @@ BasicBuildFactory
 .. py:class:: buildbot.process.factory.BasicBuildFactory
 
 This is a subclass of :class:`GNUAutoconf` which assumes the source is in CVS,
-and uses ``mode='clobber'``  to always build from a clean working copy.
+and uses ``mode='full'`` and ``method='clobber'``  to always build from a clean working copy.
 
 .. _BasicSVN:
 
@@ -190,7 +190,7 @@ BasicSVN
 
 .. py:class:: buildbot.process.factory.BasicSVN
 
-This class is similar to :class:`BasicBuildFactory`, but uses SVN instead of CVS.
+This class is similar to :class:`QuickBuildFactory`, but uses SVN instead of CVS.
 
 .. _QuickBuildFactory:
 
@@ -204,13 +204,13 @@ QuickBuildFactory
 .. py:class:: buildbot.process.factory.QuickBuildFactory
 
 The :class:`QuickBuildFactory` class is a subclass of :class:`GNUAutoconf` which
-assumes the source is in CVS, and uses ``mode='update'`` to get incremental
+assumes the source is in CVS, and uses ``mode='incremental'`` to get incremental
 updates.
 
 The difference between a `full build` and a `quick build` is that
 quick builds are generally done incrementally, starting with the tree
 where the previous build was performed. That simply means that the
-source-checkout step should be given a ``mode='update'`` flag, to
+source-checkout step should be given a ``mode='incremental'`` flag, to
 do the source update in-place.
 
 In addition to that, this class sets the :attr:`useProgress` flag to ``False``.

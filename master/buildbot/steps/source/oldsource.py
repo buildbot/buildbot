@@ -18,10 +18,31 @@ from warnings import warn
 from email.Utils import formatdate
 from twisted.python import log
 from twisted.internet import defer
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 from zope.interface import implements
 from buildbot.process.buildstep import RemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.steps.source.base import Source
+
+warningString = "The slave-side %s step is deprecated and will be removed in a future version.  Please switch to the corresponding master-side step."
+
+
+attributes = {
+    "Git": "Git",
+    "Mercurial": "Mercurial",
+    "CVS": "CVS",
+    "Subversion": "SVN",
+    "Darcs": "Darcs",
+    "Repo": "Repo",
+    "Bzr": "Bzr",
+    "Perforce": "P4",
+    "Monotone": "Monotone"}
+
+for attr in attributes:
+    deprecatedModuleAttribute(Version("Buildbot", 0, 8, 9),
+                              warningString %(attr),
+                              "buildbot.steps.source", attributes[attr])
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)

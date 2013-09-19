@@ -101,6 +101,10 @@ Features
 * The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
   See :bb:bug:`2560`.
 
+* The slave-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
+  Please convert any use of slave-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
+  TODO: update version in deprecation warning.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -19,7 +19,8 @@ from twisted.python import deprecate, versions
 from buildbot import interfaces, util
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
-from buildbot.steps.source import CVS, SVN
+from buildbot.steps.source.cvs import CVS
+from buildbot.steps.source.svn import SVN
 from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
 
 # deprecated, use BuildFactory.addStep
@@ -166,10 +167,11 @@ class BasicBuildFactory(GNUAutoconf):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check", cvsCopy=False):
-        mode = "clobber"
+        mode = "full"
+        method = "clobber"
         if cvsCopy:
-            mode = "copy"
-        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+            method = "copy"
+        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -182,7 +184,7 @@ class QuickBuildFactory(BasicBuildFactory):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check", cvsCopy=False):
-        mode = "update"
+        mode = "incremental"
         source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
@@ -195,7 +197,7 @@ class BasicSVN(GNUAutoconf):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check"):
-        source = SVN(svnurl=svnurl, mode="update")
+        source = SVN(svnurl=svnurl, mode="incremental")
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
