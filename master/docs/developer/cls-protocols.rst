@@ -60,3 +60,43 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Take list with wanted builders and send them to slave, return list with
         created builders
+
+    .. py:method:: startCommands(RCInstance, builder_name, commandID, remote_command, args)
+
+        :param RCInstance: buildbot.process.buildstep.RemoteCommand instance
+        :param builder_name: self explanatory
+        :type builder_name: string
+        :param commandID: command number
+        :type commandID: string
+        :param remote_command: command which will be executed on slave
+        :type remote_command: string
+        :param args: arguments for that command
+        :type args: List
+        :returns: Deferred
+
+        Start command on slave
+
+    .. py:method:: remoteShutdown(buildslave)
+
+        :param buildslave: buildbot.buildslave.base.BuildSlave instance
+        :returns: Deferred
+
+        Shutdown slave, "buildslave" required to shutdown old slaves(saved for
+        backward compatability) 
+
+    .. py:method:: remoteStartBuild()
+
+        :returns: Deferred
+
+        Just starts build
+
+    .. py:method:: remoteInterruptCommand(commandID, why)
+
+        :param commandID: command number
+        :type commandID: string
+        :param why: reason to interrupt
+        :type why: string
+        :returns: Deferred
+
+        Interrupt command with given CommandID on slave, print reason "why" to
+        slave logs

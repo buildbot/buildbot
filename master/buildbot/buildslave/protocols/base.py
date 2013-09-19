@@ -57,3 +57,15 @@ class Connection(object):
 
     def remoteSetBuilderList(self, builders):
         raise NotImplementedError
+
+    def startCommands(self, RCInstance, builder_name, commandID, remote_command, args):
+        raise NotImplementedError
+
+    def remoteShutdown(self, buildslave):
+        raise NotImplementedError
+
+    def remoteStartBuild(self):
+        raise NotImplementedError
+
+    def remoteInterruptCommand(self, commandID, why):
+        raise NotImplementedError
