@@ -51,7 +51,19 @@ from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, Results
 
-VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
+# Email parsing can be complex. We try to take a very liberal
+# approach. The local part of an email address matches ANY non
+# whitespace character. Rather allow a malformed email address than
+# croaking on a valid (the matching of domains should be correct
+# though; requiring the domain to not be a top level domain). With
+# these regular expressions, we can match the following:
+#
+#    full.name@example.net
+#    Full Name <full.name@example.net>
+#    <full.name@example.net>
+VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
+VALID_EMAIL = re.compile(r"^(?:%s|(.+\s+)?<%s>\s*)$" % ((VALID_EMAIL_ADDR,)*2))
+VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 ENCODING = 'utf8'
 LOG_ENCODING = 'utf-8'

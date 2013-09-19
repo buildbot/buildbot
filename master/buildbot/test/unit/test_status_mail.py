@@ -23,6 +23,7 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.process import properties
+from buildbot.config import ConfigErrors
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
@@ -809,6 +810,30 @@ class TestMailNotifier(unittest.TestCase):
 
         mn.buildMessage(builder.name, [build1, build2], build1.result)
         self.assertEqual(m['To'], "tyler@mayhem.net, user2@example.net")
+
+    def test_valid_emails(self):
+        valid_emails = [
+            'foo+bar@example.com',            # + comment in local part
+            'nobody@example.com.',            # root dot
+            'My Name <my.name@example.com>',  # With full name
+            '<my.name@example.com>',          # With <>
+            'My Name <my.name@example.com.>', # With full name (root dot)
+            'egypt@example.xn--wgbh1c']       # IDN TLD (.misr, Egypt)
+
+        # If any of these email addresses fail, the test fails by
+        # MailNotifier raising a ConfigErrors exception.
+        MailNotifier('foo@example.com', extraRecipients=valid_emails)
+
+    def test_invalid_email(self):
+        for invalid in ['@', 'foo', 'foo@', '@example.com', 'foo@invalid',
+                        'foobar@ex+ample.com',        # + in domain part
+                        'foo bar@example.net',        # whitespace in local part
+                        'Foo\nBar <foo@example.org>', # newline in name
+                        'test@example..invalid']:     # empty label (..)
+            self.assertRaises(
+                ConfigErrors, MailNotifier,
+                'foo@example.com', extraRecipients=[invalid])
+
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
     unibody = u'Unicode body with non-ascii (%s).' % funny_chars
