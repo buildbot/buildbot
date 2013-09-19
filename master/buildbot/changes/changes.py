@@ -140,7 +140,7 @@ class Change:
                 self.codebase)
 
     def __cmp__(self, other):
-        if self.number is not None and self.other is not None:
+        if self.number is not None and other is not None:
             return self.number - other.number
         return 0
 
