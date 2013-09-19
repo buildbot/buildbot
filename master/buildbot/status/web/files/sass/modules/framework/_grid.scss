@@ -5,18 +5,18 @@
 * @author Simon Holm
 */
 
+// table widths
+.tw1 {
+	width:60px;
+}
  
-//forthcoming mediaqueries
- $bkpt-small: 370px;
-
-
 .container-inner {
 	width: 960px;
 	margin: 0 auto;
 	//@include breakpoint($bkpt-small) {
 	//content: yellow; }
 }
-
+ 
 /* column container */
 div.column {
 	margin: 0 20px 20px 0;
