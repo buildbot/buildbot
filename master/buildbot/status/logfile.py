@@ -459,12 +459,13 @@ class LogFile:
         if isinstance(text, unicode):
             text = text.encode('utf-8')
 
-        lines = text.strip().split('\n')
-        timetext = ""
-        for l in lines:
-            timetext +=  "[%s]   %s\n" % (time.strftime('%X'), l)
+        if (self.filename.endswith("stdio")):
+            lines = text.strip().split('\n')
+            timetext = ""
+            for l in lines:
+                timetext +=  "[%s]   %s\n" % (time.strftime('%X'), l)
 
-        text = timetext
+            text = timetext
         # notify watchers first, before the chunk gets munged, so that they get
         # a complete picture of the actual log output
         # TODO: is this right, or should the watchers get a picture of the chunks?
