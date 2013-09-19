@@ -113,7 +113,7 @@ class MasterConfig(object):
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
-        "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
+        "mq", "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
         "properties", "protocols", "revlink", "schedulers", "slavePortnum",
         "slaves", "status", "title", "titleURL", "user_managers", "validation",
         'www'
