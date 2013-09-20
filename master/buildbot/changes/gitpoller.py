@@ -93,8 +93,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         status = ""
         if not self.master:
             status = "[STOPPED - check log]"
-        str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-                % (self.repourl, ', '.join(self.branches), status))
+        if self.branches is True:
+            branches = 'all branches'
+        else:
+            branches = 'branches: %s' % ', '.join(self.branches)
+        str = ('GitPoller watching the remote git repository %s, %s %s'
+                % (self.repourl, branches, status))
         return str
 
     @defer.inlineCallbacks
