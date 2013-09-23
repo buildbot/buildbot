@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+from twisted.internet import defer, reactor, task
 from twisted.application import service
+from twisted.python import log
+from twisted.python.failure import Failure
 from buildbot.buildslave.protocols import pb as bbpb
 from buildbot import config
 
@@ -53,6 +55,7 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
                         service.MultiService):
 
     name = "buildslaves"
+    PING_TIMEOUT = 10
 
     def __init__(self, master):
         service.MultiService.__init__(self)
@@ -91,14 +94,27 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
     def _unregister(self, registration):
         del self.registrations[registration.buildslave.slavename]
 
+    @defer.inlineCallbacks
     def newConnection(self, conn, buildslaveName):
-        # TODO: this should arbitrate default connections, rather than
-        # just assert
-        assert buildslaveName not in self.connections
+        if buildslaveName in self.connections:
+            old_conn = self.connections[buildslaveName]
+            # returns:
+            # (None, 0) if ping was successfull, that means old connection stil alive
+            # (None, 1) if timeout expired and old slave didn't respond
+            res, pos = yield defer.DeferredList(
+                [old_conn.remotePrint("master got a duplicate connection"),
+                task.deferLater(reactor, self.PING_TIMEOUT, lambda : None)],
+                fireOnOneCallback=True
+            )
+            if pos == 0:
+                # if we get here then old connection still alives and new should
+                # be rejected
+                defer.returnValue(Failure(RuntimeError("rejecting duplicate slave")))
+
         self.connections[buildslaveName] = conn
         def remove():
             del self.connections[buildslaveName]
         conn.notifyOnDisconnect(remove)
 
         # accept the connection
-        return defer.succeed(True)
+        defer.returnValue(True)

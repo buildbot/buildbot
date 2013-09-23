@@ -71,7 +71,7 @@ class Listener(base.Listener):
             defer.returnValue(conn)
         else:
             # TODO: return something more useful
-            raise RuntimeError('rejected')
+            raise RuntimeError("rejecting duplicate slave")
 
 class Connection(base.Connection, pb.Avatar):
 
