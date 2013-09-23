@@ -337,9 +337,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         @return: a Deferred that fires when the attachment is complete
         """
 
-        # the botmaster should ensure this.
-        assert not self.isConnected()
-
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
         # set up the subscription point for eventual detachment; TODO: get rid of this and use the conn directly
