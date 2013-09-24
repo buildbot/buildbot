@@ -355,6 +355,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
+        self._old_builder_list = None # clear builder list before proceed
 
         d = defer.succeed(None)
 

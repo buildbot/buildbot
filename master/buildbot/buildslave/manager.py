@@ -97,19 +97,28 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def newConnection(self, conn, buildslaveName):
         if buildslaveName in self.connections:
+            log.msg("Got duplication connection from '%s'"
+                " starting arbitration procedure" % buildslaveName)
             old_conn = self.connections[buildslaveName]
             # returns:
             # (None, 0) if ping was successfull, that means old connection stil alive
             # (None, 1) if timeout expired and old slave didn't respond
-            res, pos = yield defer.DeferredList(
-                [old_conn.remotePrint("master got a duplicate connection"),
-                task.deferLater(reactor, self.PING_TIMEOUT, lambda : None)],
-                fireOnOneCallback=True
-            )
-            if pos == 0:
-                # if we get here then old connection still alives and new should
-                # be rejected
-                defer.returnValue(Failure(RuntimeError("rejecting duplicate slave")))
+            try:
+                res, pos = yield defer.DeferredList(
+                    [old_conn.remotePrint("master got a duplicate connection"),
+                    task.deferLater(reactor, self.PING_TIMEOUT, lambda : None)],
+                    fireOnOneCallback=True
+                )
+                if pos == 0:
+                    # if we get here then old connection still alives and new should
+                    # be rejected
+                    defer.returnValue(
+                        Failure(RuntimeError("rejecting duplicate slave"))
+                    )
+            except Exception, e:
+                log.msg("Got error while trying to ping connected slave %s:"
+                    "%s" % (buildslaveName, e))
+            log.msg("Old connection for '%s' was lost, accepting new" % buildslaveName)
 
         self.connections[buildslaveName] = conn
         def remove():

@@ -29,7 +29,6 @@ class AbstractSlaveBuilder(pb.Referenceable):
     def __init__(self):
         self.ping_watchers = []
         self.state = None # set in subclass
-        self.conn = None
         self.slave = None
         self.builder_name = None
         self.locks = None
@@ -85,7 +84,6 @@ class AbstractSlaveBuilder(pb.Referenceable):
         @param commands: provides the slave's version of each RemoteCommand
         """
         self.state = ATTACHING
-        self.conn = slave.conn
         self.remoteCommands = commands # maps command name to version
         if self.slave is None:
             self.slave = slave
@@ -97,7 +95,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         d = defer.succeed(None)
 
         d.addCallback(lambda _:
-            self.conn.remotePrint(message="attached"))
+            self.slave.conn.remotePrint(message="attached"))
 
         def setIdle(res):
             self.state = IDLE
@@ -131,7 +129,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
                 self.ping_watchers.insert(0, d2)
                 # I think it will make the tests run smoother if the status
                 # is updated before the ping completes
-            Ping().ping(self.conn).addCallback(self._pong)
+            Ping().ping(self.slave.conn).addCallback(self._pong)
 
         def reset_state(res):
             if self.state == PINGING:
@@ -158,7 +156,6 @@ class AbstractSlaveBuilder(pb.Referenceable):
         if self.slave:
             self.slave.removeSlaveBuilder(self)
         self.slave = None
-        self.conn = None
         self.remoteCommands = None
 
 
