@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, reactor, task
+from twisted.internet import defer
 from twisted.application import service
 from twisted.python import log
 from twisted.python.failure import Failure
 from buildbot.buildslave.protocols import pb as bbpb
 from buildbot import config
+from buildbot.util import misc
 
 class BuildslaveRegistration(object):
 
@@ -104,17 +105,16 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
             # (None, 0) if ping was successfull, that means old connection stil alive
             # (None, 1) if timeout expired and old slave didn't respond
             try:
-                res, pos = yield defer.DeferredList(
-                    [old_conn.remotePrint("master got a duplicate connection"),
-                    task.deferLater(reactor, self.PING_TIMEOUT, lambda : None)],
-                    fireOnOneCallback=True
+                yield misc.cancelAfter(self.PING_TIMEOUT,
+                    old_conn.remotePrint("master got a duplicate connection"))
+                # if we get here then old connection is still alive, and new
+                # should be rejected
+                defer.returnValue(
+                    Failure(RuntimeError("rejecting duplicate slave"))
                 )
-                if pos == 0:
-                    # if we get here then old connection still alives and new should
-                    # be rejected
-                    defer.returnValue(
-                        Failure(RuntimeError("rejecting duplicate slave"))
-                    )
+            except defer.CancelledError:
+                log.msg("Connected slave '%s' ping timed out after %d seconds"
+                        % (buildslaveName, self.PING_TIMEOUT))
             except Exception, e:
                 log.msg("Got error while trying to ping connected slave %s:"
                     "%s" % (buildslaveName, e))
