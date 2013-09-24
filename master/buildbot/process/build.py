@@ -226,7 +226,7 @@ class Build(properties.PropertiesMixin):
         # then narrow SlaveLocks down to the right slave
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
                         for l, a in self.locks ]
-        self.conn = slavebuilder.conn
+        self.conn = slavebuilder.slave.conn
         self.conn.notifyOnDisconnect(self.lostRemote) # TODO: save subscription
 
         metrics.MetricCountEvent.log('active_builds', 1)

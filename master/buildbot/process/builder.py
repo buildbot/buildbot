@@ -364,7 +364,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.conn.remoteStartBuild()
+            yield slavebuilder.slave.conn.remoteStartBuild(build.builder.name)
         except:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
@@ -392,7 +392,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.conn: # TODO: replace with isConnected()
+        if not slavebuilder.slave.conn: # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)

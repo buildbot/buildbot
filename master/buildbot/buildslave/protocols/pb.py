@@ -207,8 +207,9 @@ class Connection(base.Connection, pb.Avatar):
             return defer.succeed(None)
         yield old_way()
 
-    def remoteStartBuild(self):
-        return self.mind.callRemote('startBuild')
+    def remoteStartBuild(self, builder_name):
+        slavebuilder = self.builders.get(builder_name)
+        return slavebuilder.callRemote('startBuild')
 
     def stopKeepaliveTimer(self):
         if self.keepalive_timer and self.keepalive_timer.active():
