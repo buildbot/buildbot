@@ -209,6 +209,6 @@ def in_reactor(f):
 
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
-    'safeTranslate', 'LRUCache', 'none_or_str',
+    'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
     'diffSets', 'makeList', 'in_reactor' ]
