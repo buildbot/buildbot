@@ -250,6 +250,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         conn = mock.Mock()
+        conn.info = {}
         conn.remotePrint.return_value = defer.fail(ValueError())
         slave.attached(conn)
 
@@ -265,7 +266,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         COMMANDS = {'cmd1': '1', 'cmd2': '1'}
 
         conn = mock.Mock()
-        conn.remoteGetSlaveInfo.return_value = defer.succeed({
+        conn.info = {
             'admin':   'TheAdmin',
             'host':    'TheHost',
             'access_uri': 'TheURI',
@@ -274,7 +275,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
             'system': 'TheSlaveSystem',
             'version': 'version',
             'slave_commands': COMMANDS,
-        })
+        }
         yield slave.attached(conn)
 
         # check the values get set right
@@ -292,6 +293,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         conn = mock.Mock()
+        conn.info = {}
         yield slave.attached(conn)
 
         self.assertEqual(self.botmaster.buildsStartedForSlaves, ["bot"])
@@ -311,12 +313,12 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         conn = mock.Mock()
-        conn.remoteGetSlaveInfo.return_value = defer.succeed({
+        conn.info = {
             'admin':   'TheAdmin',
             'host':    'TheHost',
             'access_uri': 'TheURI',
             'version': 'TheVersion',
-        })
+        }
         yield slave.attached(conn)
 
         self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')

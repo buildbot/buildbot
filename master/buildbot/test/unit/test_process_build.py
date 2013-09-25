@@ -131,7 +131,7 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.conn,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     in step.method_calls)
 
     def testStopBuild(self):
@@ -283,8 +283,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.conn,), {})
-                                in step.method_calls)
+        self.assertIn(('startStep', (slavebuilder.slave.conn,), {}),
+                    step.method_calls)
         self.assertEquals(claimCount[0], 1)
 
     def testBuildLocksOrder(self):
@@ -364,7 +364,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.conn,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assert_(b.currentStep is None)
@@ -397,7 +397,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.conn,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, EXCEPTION)
@@ -430,7 +430,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.conn,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, RETRY)
