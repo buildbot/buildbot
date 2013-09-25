@@ -362,12 +362,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.slave_basedir = conn.info.get("basedir", None)
         self.slave_system = conn.info.get("system", None)
 
-        try:
-            self.conn.notifyOnDisconnect(self.detached)
-        except Exception, e:
-            print e
-            self.conn = None
-            defer.returnValue(None)
+        self.conn.notifyOnDisconnect(self.detached)
 
         if self.slave_system == "nt":
             self.path_module = namedModule("ntpath")

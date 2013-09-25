@@ -245,19 +245,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
-    def test_attached_remotePrint(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
-
-        conn = mock.Mock()
-        conn.info = {}
-        conn.remotePrint.return_value = defer.fail(ValueError())
-        slave.attached(conn)
-
-        # just check that things still go on
-        self.assertEqual(True, slave.slave_status.isConnected())
-
-    @defer.inlineCallbacks
     def test_attached_remoteGetSlaveInfo(self):
         slave = self.createBuildslave()
         yield slave.startService()
