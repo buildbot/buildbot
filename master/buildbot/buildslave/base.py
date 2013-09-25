@@ -177,8 +177,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
         self.slave_status.setAdmin(info.get("admin"))
         self.slave_status.setHost(info.get("host"))
-        self.slave_status.setAccessURI(info.get("access_uri"))
-        self.slave_status.setVersion(info.get("version"))
+        self.slave_status.setAccessURI(info.get("access_uri", None))
+        self.slave_status.setVersion(info.get("version", "(unknown)"))
 
     def _saveSlaveInfoDict(self):
         slaveinfo = {
@@ -330,12 +330,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         if buildFinished:
             self.slave_status.buildFinished(buildFinished)
 
-    @metrics.countMethod('AbstractBuildSlave.attached()')
+    @defer.inlineCallbacks
     def attached(self, conn):
-        """This is called when the slave connects.
-
-        @return: a Deferred that fires when the attachment is complete
-        """
+        """This is called when the slave connects."""
 
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
@@ -357,59 +354,35 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.conn = conn
         self._old_builder_list = None # clear builder list before proceed
 
-        d = defer.succeed(None)
+        self.slave_status.setConnected(True)
 
-        @d.addCallback
-        def _log_attachment_on_slave(res):
-            d1 = conn.remotePrint(message="attached")
-            d1.addErrback(lambda why: None)
-            return d1
+        self._applySlaveInfo(conn.info)
+        self.slave_commands = conn.info.get("slave_commands", {})
+        self.slave_environ = conn.info.get("environ", {})
+        self.slave_basedir = conn.info.get("basedir", None)
+        self.slave_system = conn.info.get("system", None)
 
-        @d.addCallback
-        def _get_info(res):
-            d1 = conn.remoteGetSlaveInfo()
-            def _got_info(info):
-                log.msg("Got slaveinfo from '%s'" % self.slavename)
-                state["admin"] = info.get("admin")
-                state["host"] = info.get("host")
-                state["access_uri"] = info.get("access_uri", None)
-                state["slave_environ"] = info.get("environ", {})
-                state["slave_basedir"] = info.get("basedir", None)
-                state["slave_system"] = info.get("system", None)
-                state["version"] = info.get("version", "(unknown)")
-                state["slave_commands"] = info.get("slave_commands", {})
-            d1.addCallback(_got_info)
-            return d1
-
-        @d.addCallback
-        def _accept_slave(res):
-            self.slave_status.setConnected(True)
-
-            self._applySlaveInfo(state)
-            self.slave_commands = state.get("slave_commands")
-            self.slave_environ = state.get("slave_environ")
-            self.slave_basedir = state.get("slave_basedir")
-            self.slave_system = state.get("slave_system")
-
+        try:
             self.conn.notifyOnDisconnect(self.detached)
+        except Exception, e:
+            print e
+            self.conn = None
+            defer.returnValue(None)
 
-            if self.slave_system == "nt":
-                self.path_module = namedModule("ntpath")
-            else:
-                # most everything accepts / as separator, so posix should be a
-                # reasonable fallback
-                self.path_module = namedModule("posixpath")
-            log.msg("bot attached")
-            self.messageReceivedFromSlave()
-            self.stopMissingTimer()
-            self.botmaster.master.status.slaveConnected(self.slavename)
+        if self.slave_system == "nt":
+            self.path_module = namedModule("ntpath")
+        else:
+            # most everything accepts / as separator, so posix should be a
+            # reasonable fallback
+            self.path_module = namedModule("posixpath")
+        log.msg("bot attached")
+        self.messageReceivedFromSlave()
+        self.stopMissingTimer()
+        self.botmaster.master.status.slaveConnected(self.slavename)
 
-        d.addCallback(lambda _: self._saveSlaveInfoDict())
-        d.addCallback(lambda _: self.updateSlave())
-        d.addCallback(lambda _:
-                self.botmaster.maybeStartBuildsForSlave(self.slavename))
-
-        return d
+        yield self._saveSlaveInfoDict()
+        yield self.updateSlave()
+        yield self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def messageReceivedFromSlave(self):
         now = time.time()

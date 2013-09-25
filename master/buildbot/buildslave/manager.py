@@ -101,9 +101,6 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
             log.msg("Got duplication connection from '%s'"
                 " starting arbitration procedure" % buildslaveName)
             old_conn = self.connections[buildslaveName]
-            # returns:
-            # (None, 0) if ping was successfull, that means old connection stil alive
-            # (None, 1) if timeout expired and old slave didn't respond
             try:
                 yield misc.cancelAfter(self.PING_TIMEOUT,
                     old_conn.remotePrint("master got a duplicate connection"))
@@ -113,13 +110,26 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
                     Failure(RuntimeError("rejecting duplicate slave"))
                 )
             except defer.CancelledError:
+                old_conn.loseConnection()
                 log.msg("Connected slave '%s' ping timed out after %d seconds"
                         % (buildslaveName, self.PING_TIMEOUT))
             except Exception, e:
+                old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected slave %s:"
                     "%s" % (buildslaveName, e))
             log.msg("Old connection for '%s' was lost, accepting new" % buildslaveName)
 
+        try:
+            yield conn.remotePrint(message="attached")
+            info = yield conn.remoteGetSlaveInfo()
+            log.msg("Got slaveinfo from '%s'" % buildslaveName)
+        except Exception, e:
+            log.msg("Failed to communicate with slave '%s'\n"
+                "%s" % (buildslaveName, e)
+            )
+            defer.returnValue(False)
+
+        conn.info = info
         self.connections[buildslaveName] = conn
         def remove():
             del self.connections[buildslaveName]

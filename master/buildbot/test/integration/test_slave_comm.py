@@ -15,7 +15,7 @@
 
 import mock
 from twisted.spread import pb
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, base
 from twisted.cred import credentials
 from twisted.trial import unittest
 from twisted.python import log
@@ -28,7 +28,7 @@ from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
 from buildbot.buildslave import manager as bslavemanager
 
-
+#base.DelayedCall.debug = True
 class FakeSlaveBuilder(pb.Referenceable):
     """
     Fake slave-side SlaveBuilder object
@@ -241,7 +241,7 @@ class TestSlaveComm(unittest.TestCase):
         yield self.detach_d
 
         # flush the exception logged for this on the master
-        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
@@ -253,7 +253,7 @@ class TestSlaveComm(unittest.TestCase):
 
         # monkeypatch that slave to fail with PBConnectionLost when its
         # remote_print method is called
-        def remote_print(what):
+        def remote_print(message):
             raise pb.PBConnectionLost("fake!")
         slave1.remote_print = remote_print
 
@@ -268,5 +268,3 @@ class TestSlaveComm(unittest.TestCase):
 
         # flush the exception logged for this on the slave
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
-
-    test_duplicate_slave_old_dead.skip = "Needs arbitration between slaves with similar credentials"
