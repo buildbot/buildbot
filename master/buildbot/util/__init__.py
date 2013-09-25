@@ -211,4 +211,4 @@ __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'LRUCache', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffLists', 'makeList', 'in_reactor' ]
+    'diffSets', 'makeList', 'in_reactor' ]
