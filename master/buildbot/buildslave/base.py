@@ -421,8 +421,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         try:
             commands = yield bot.callRemote("getCommands")
             state["slave_commands"] = commands
-        except AttributeError:
-            pass
         except pb.NoSuchMethod:
             log.msg("BuildSlave.getCommands is unavailable - ignoring")
 
