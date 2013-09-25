@@ -167,10 +167,14 @@ class TestConnection(unittest.TestCase):
 
     def test_remoteStartBuild(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        conn.remoteStartBuild()
+        builders = {'builder': mock.Mock()}
+        self.mind.callRemote.return_value = defer.succeed(builders)
+        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn.remoteSetBuilderList(builders)
 
-        self.mind.callRemote.assert_called_with('startBuild')
+        conn.remoteStartBuild('builder')
 
+        builders['builder'].callRemote.assert_called_with('startBuild')
 
     def test_startStopKeepaliveTimer(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)

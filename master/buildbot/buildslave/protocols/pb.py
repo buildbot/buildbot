@@ -78,6 +78,7 @@ class Connection(base.Connection, pb.Avatar):
     # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
     keepalive_timer = None
     keepalive_interval = 3600
+    info = None
 
     def __init__(self, master, buildslave, mind):
         base.Connection.__init__(self, master, buildslave)
