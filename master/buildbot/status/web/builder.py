@@ -214,8 +214,6 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
 
     if "list" in field.type:
         choices = field.getChoices(master, sch, buildername)
-        if choices:
-            default = choices[0]
         default_props[pname+".choices"] = choices
             
     default = req.args.get(pname, [default])[0]
