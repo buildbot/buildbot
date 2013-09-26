@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import warnings
 from twisted.trial import unittest
 
-from buildbot.steps.source import Repo
+with warnings.catch_warnings():
+    # ignore deprecation warnings
+    warnings.simplefilter('ignore')
+    from buildbot.steps.source import Repo
 
 class RepoURL(unittest.TestCase):
 
