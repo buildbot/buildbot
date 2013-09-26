@@ -23,7 +23,7 @@ import re
 from twisted.internet import defer
 from twisted.web import html, resource, server
 
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, path_to_root
 from buildbot.util import json
 
 
@@ -344,7 +344,7 @@ class HelpResource(HtmlResource):
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
-                'href="../%sjson' % (self.parent_level * '../'))
+                'href="%s' % path_to_root(request) + 'json')
 
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
