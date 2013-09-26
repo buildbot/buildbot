@@ -145,7 +145,7 @@ class Connection(base.Connection, pb.Avatar):
     def perspective_keepalive(self):
         log.msg('keepalive from slave') # TODO: temporary
 
-    def perspective_shutdown(self):
+    def shutdownRequested(self):
         self.buildslave.perspective_shutdown()
 
     def startCommands(self, RCInstance, builder_name, commandID, remote_command, args):
