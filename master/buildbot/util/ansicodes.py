@@ -15,7 +15,7 @@
 
 import re
 
-ANSI_RE = re.compile(r"^((\d+)(;\d+)*)([a-zA-Z])")
+ANSI_RE = re.compile(r"^((\d+)(;\d+)*)?([a-zA-Z])")
 
 
 def parse_ansi_sgr(ansi_entry):
@@ -29,7 +29,11 @@ def parse_ansi_sgr(ansi_entry):
         mode = res.group(4)
         ansi_entry = ansi_entry[len(res.group(0)):]
         if mode == 'm':
-            classes = res.group(1).split(";")
+            classes = res.group(1)
+            if classes:
+                classes = res.group(1).split(";")
+            else:
+                classes = []
     else:
         # illegal code, restore the CSI
         ansi_entry = "\033[" + ansi_entry
