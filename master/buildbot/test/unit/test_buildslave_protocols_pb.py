@@ -185,7 +185,7 @@ class TestConnection(unittest.TestCase):
         conn.stopKeepaliveTimer()
         self.assertEqual(conn.keepalive_timer, None)
 
-    def test_shutdownRequested(self):
+    def test_perspective_shutdown(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        conn.shutdownRequested()
-        conn.buildslave.perspective_shutdown.assert_called_with()
+        conn.perspective_shutdown()
+        conn.buildslave.shutdownRequested.assert_called_with()
