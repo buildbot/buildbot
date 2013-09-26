@@ -3342,6 +3342,9 @@ parameters are the following:
 ``headers``
     Dictionary of headers to send.
 
+``other params``
+    Any other keywords supported by the ``requests`` api can be passed to this step
+
 When the method is known in advance, class with the name of the method can also
 be used. In this case, it is not necessary to specify the method.
 
