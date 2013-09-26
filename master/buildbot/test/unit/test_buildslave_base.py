@@ -336,3 +336,11 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         # No exceptions should be raised here
         yield slave.shutdown()
+
+    @defer.inlineCallbacks
+    def test_shutdownRequested(self):
+        slave = self.createBuildslave(attached=False)
+        yield slave.startService()
+
+        yield slave.shutdownRequested()
+        self.assertEqual(slave.slave_status.getGraceful(), True)

@@ -458,6 +458,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         d.addCallback(sentBuilderList)
         return d
 
+    def shutdownRequested(self):
+        log.msg("slave %s wants to shut down" % self.slavename)
+        self.slave_status.setGraceful(True)
+
     def addSlaveBuilder(self, sb):
         self.slavebuilders[sb.builder_name] = sb
 
@@ -895,7 +899,3 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 self._setBuildWaitTimer()
         d.addCallback(_substantiated)
         return d
-
-    def perspective_shutdown(self):
-        log.msg("slave %s wants to shut down" % self.slavename)
-        self.slave_status.setGraceful(True)
