@@ -37,14 +37,14 @@ class TestListener(unittest.TestCase):
 
     def test_updateRegistration_pass_changed(self):
         listener = pb.Listener(self.master)
-        reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
+        listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1.result))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     def test_updateRegistration_port_changed(self):
         listener = pb.Listener(self.master)
-        reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
+        listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1.result))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
@@ -55,7 +55,7 @@ class TestListener(unittest.TestCase):
         buildslave.slavename = 'test'
         mind = mock.Mock()
 
-        reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
+        listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.buildslaves.register(buildslave)
         conn = listener._getPerspective(mind, buildslave.slavename)
 

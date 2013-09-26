@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, task, reactor
 from buildbot import config, locks
 from buildbot.buildslave import base
-from buildbot.test.fake import fakemaster, pbmanager, fakedb, bslavemanager
+from buildbot.test.fake import fakemaster, fakedb, bslavemanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 
 class TestAbstractBuildSlave(unittest.TestCase):

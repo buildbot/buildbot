@@ -15,9 +15,7 @@
 
 
 from twisted.python import log, reflect
-from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
-from twisted.spread import pb
 from twisted.application import service
 
 from buildbot.process.builder import Builder

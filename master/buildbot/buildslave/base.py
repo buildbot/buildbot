@@ -21,7 +21,6 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
-from twisted.spread import pb
 from twisted.python.reflect import namedModule
 
 from buildbot.status.slave import SlaveStatus
@@ -336,10 +335,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this slave to all the
         # Builders that care about it.
-
-        # we accumulate slave information in this 'state' dictionary, then
-        # set it atomically if we make it far enough through the process
-        state = {}
 
         # Reset graceful shutdown status
         self.slave_status.setGraceful(False)
