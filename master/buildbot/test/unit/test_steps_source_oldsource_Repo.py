@@ -13,12 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import with_statement
+import sys
 import warnings
 from twisted.trial import unittest
 
-with warnings.catch_warnings():
-    # ignore deprecation warnings
-    warnings.simplefilter('ignore')
+# suppress warnings on Python-2.6 and higher; catch_warnings doesn't
+# exist in 2.5
+if sys.version >= (2,6):
+    with warnings.catch_warnings():
+        # ignore deprecation warnings
+        warnings.simplefilter('ignore')
+        from buildbot.steps.source import Repo
+        assert Repo
+else:
     from buildbot.steps.source import Repo
 
 class RepoURL(unittest.TestCase):
