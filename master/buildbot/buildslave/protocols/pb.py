@@ -143,7 +143,7 @@ class Connection(base.Connection, pb.Avatar):
     # perspective methods called by the slave
 
     def perspective_keepalive(self):
-        log.msg('keepalive from slave') # TODO: temporary
+        self.buildslave.messageReceivedFromSlave()
 
     def perspective_shutdown(self):
         self.buildslave.shutdownRequested()

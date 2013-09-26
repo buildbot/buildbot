@@ -26,9 +26,6 @@ class Listener(config.ReconfigurableServiceMixin, service.MultiService):
 
 class Connection(object):
 
-    # TODO: handle sending and receiving keepalives
-    # TODO: handle tracking last-heard-from time
-
     def __init__(self, master, buildslave):
         self.master = master
         self.buildslave = buildslave
