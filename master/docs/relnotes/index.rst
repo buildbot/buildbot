@@ -107,6 +107,9 @@ Features
 
 * New source step :bb:step:`Monotone` added on master side.
 
+* Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
+  using :ref:`Docker <first-run-docker-label>`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
