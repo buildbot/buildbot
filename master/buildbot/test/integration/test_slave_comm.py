@@ -15,7 +15,7 @@
 
 import mock
 from twisted.spread import pb
-from twisted.internet import defer, reactor, base
+from twisted.internet import defer, reactor
 from twisted.cred import credentials
 from twisted.trial import unittest
 from twisted.python import log
@@ -28,7 +28,7 @@ from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
 from buildbot.buildslave import manager as bslavemanager
 
-#base.DelayedCall.debug = True
+
 class FakeSlaveBuilder(pb.Referenceable):
     """
     Fake slave-side SlaveBuilder object
@@ -185,8 +185,7 @@ class TestSlaveComm(unittest.TestCase):
             slavebuildslave.setMasterPerspective(persp)
 
             self.detach_d = defer.Deferred()
-            self.buildslave.subscribeToDetach(lambda :
-                        self.detach_d.callback(None))
+            self.buildslave._test_detached = lambda : self.detach_d.callback(None)
 
             return slavebuildslave
         login_d.addCallback(logged_in)
