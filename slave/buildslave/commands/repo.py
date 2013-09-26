@@ -57,7 +57,7 @@ class Repo(SourceBaseCommand):
         self.jobs = args.get('jobs')
 
         self.sourcedata = "%s %s" % (self.manifest_url, self.manifest_file)
-        self.re_change = re.compile(".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
+        self.re_change = re.compile(r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
         self.re_head = re.compile("^HEAD is now at ([0-9a-f]+)...")
 
     def _fullSrcdir(self):

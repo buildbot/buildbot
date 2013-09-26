@@ -27,7 +27,7 @@ from buildbot.status.web.base import HtmlResource, path_to_root
 from buildbot.util import json
 
 
-_IS_INT = re.compile('^[-+]?\d+$')
+_IS_INT = re.compile(r'^[-+]?\d+$')
 
 
 FLAGS = """\

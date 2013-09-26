@@ -745,7 +745,7 @@ def revlinkfilter(replace, templates):
 
 
 def changelinkfilter(changelink):
-    ''' Returns function that does regex search/replace in
+    r'''Returns function that does regex search/replace in
         comments to add links to bug ids and similar.
 
         @param changelink:

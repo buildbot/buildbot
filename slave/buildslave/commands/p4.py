@@ -63,7 +63,7 @@ class P4Base(SourceBaseCommand):
             # 'p4 -c clien-name change -m 1 "#have"' will produce an output like:
             # "Change 28147 on 2008/04/07 by p4user@hostname..."
             # The number after "Change" is the one we want.
-            m = re.match('Change\s+(\d+)\s+', c.stdout)
+            m = re.match(r'Change\s+(\d+)\s+', c.stdout)
             if m:
                 return m.group(1)
             return None

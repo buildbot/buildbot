@@ -51,7 +51,7 @@ from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, Results
 
-VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
+VALID_EMAIL = re.compile(r"[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
 ENCODING = 'utf8'
 LOG_ENCODING = 'utf-8'

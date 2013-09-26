@@ -42,7 +42,7 @@ from twisted.trial import unittest
 #         }
 #     ]
 # }
-googleCodeJsonBody = '{"repository_path":"https://code.google.com/p/webhook-test/","project_name":"webhook-test","revisions":[{"added":[],"parents":["6574485e26a09a0e743e0745374056891d6a836a"],"author":"Louis Opter \u003Clouis@lse.epitech.net\u003E","url":"http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/","timestamp":1324082130,"message":"Print a message","path_count":1,"removed":[],"modified":["/CMakeLists.txt"],"revision":"68e5df283a8e751cdbf95516b20357b2c46f93d4"}],"revision_count":1}'
+googleCodeJsonBody = r'{"repository_path":"https://code.google.com/p/webhook-test/","project_name":"webhook-test","revisions":[{"added":[],"parents":["6574485e26a09a0e743e0745374056891d6a836a"],"author":"Louis Opter \u003Clouis@lse.epitech.net\u003E","url":"http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/","timestamp":1324082130,"message":"Print a message","path_count":1,"removed":[],"modified":["/CMakeLists.txt"],"revision":"68e5df283a8e751cdbf95516b20357b2c46f93d4"}],"revision_count":1}'
 
 class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
     def setUp(self):

@@ -538,7 +538,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir\.buildbot-patched',
+            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
             Expect('stat', dict(file=r'wkdir\.svn',

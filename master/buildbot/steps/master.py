@@ -124,7 +124,7 @@ class MasterShellCommand(BuildStep):
                     self.env[key] = os.pathsep.join(self.env[key])
 
             # do substitution on variable values matching pattern: ${name}
-            p = re.compile('\${([0-9a-zA-Z_]*)}')
+            p = re.compile(r'\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
