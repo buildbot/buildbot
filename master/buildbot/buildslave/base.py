@@ -29,7 +29,6 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot import config
 
@@ -106,8 +105,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
         # a protocol connection, if we're currently connected
         self.conn = None
-
-        self.detached_subs = None
 
         self._old_builder_list = None
 
@@ -336,9 +333,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
-        # set up the subscription point for eventual detachment; TODO: get rid of this and use the conn directly
-        self.detached_subs = subscription.SubscriptionPoint("detached")
-
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this slave to all the
         # Builders that care about it.
@@ -393,24 +387,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.master.status.slaveDisconnected(self.slavename)
         self.releaseLocks()
-
-        # notify watchers, but do so in the next reactor iteration so that
-        # any further detached() action by subclasses happens first
-        def notif():
-            subs = self.detached_subs
-            self.detached_subs = None
-            subs.deliver()
-        eventually(notif)
-
-    def subscribeToDetach(self, callback):
-        """
-        Request that C{callable} be invoked with no arguments when the
-        L{detached} method is invoked.
-
-        @returns: L{Subscription}
-        """
-        assert self.detached_subs, "detached_subs is only set if attached"
-        return self.detached_subs.subscribe(callback)
 
     def disconnect(self):
         """Forcibly disconnect the slave.
@@ -617,6 +593,7 @@ class BuildSlave(AbstractBuildSlave):
         AbstractBuildSlave.detached(self)
         self.botmaster.slaveLost(self)
         self.startMissingTimer()
+        self._test_detached()
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
@@ -625,6 +602,9 @@ class BuildSlave(AbstractBuildSlave):
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect
         self.maybeShutdown()
+
+    def _test_detached(self): # hook for tests
+        pass
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
     """A build slave that will start up a slave instance when needed.
@@ -915,3 +895,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 self._setBuildWaitTimer()
         d.addCallback(_substantiated)
         return d
+
+    def perspective_shutdown(self):
+        log.msg("slave %s wants to shut down" % self.slavename)
+        self.slave_status.setGraceful(True)
