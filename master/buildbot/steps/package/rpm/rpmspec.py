@@ -28,8 +28,8 @@ class RpmSpec(ShellCommand):
     """
 
     #initialize spec info vars and get them from the spec file
-    n_regex = re.compile('^Name:[ ]*([^\s]*)')
-    v_regex = re.compile('^Version:[ ]*([0-9\.]*)')
+    n_regex = re.compile(r'^Name:[ ]*([^\s]*)')
+    v_regex = re.compile(r'^Version:[ ]*([0-9\.]*)')
 
     def __init__(self, specfile=None, **kwargs):
         """

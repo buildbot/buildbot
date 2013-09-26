@@ -145,11 +145,11 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         base.BasedirMixin.postOptions(self)
 
         # validate 'log-size' parameter
-        if not re.match('^\d+$', self['log-size']):
+        if not re.match(r'^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
 
         # validate 'log-count' parameter
-        if not re.match('^\d+$', self['log-count']) and \
+        if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
             raise usage.UsageError("log-count parameter needs to be an int " +
                                    " or None")

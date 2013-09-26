@@ -402,7 +402,7 @@ class Interpolate(util.ComparableMixin, object):
     implements(IRenderable)
     compare_attrs = ('fmtstring', 'args', 'kwargs')
 
-    identifier_re = re.compile('^[\w-]*$')
+    identifier_re = re.compile(r'^[\w-]*$')
 
     def __init__(self, fmtstring, *args, **kwargs):
         self.fmtstring = fmtstring

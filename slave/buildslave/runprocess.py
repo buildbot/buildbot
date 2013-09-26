@@ -302,7 +302,7 @@ class RunProcess:
                 environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"
 
             # do substitution on variable values matching pattern: ${name}
-            p = re.compile('\${([0-9a-zA-Z_]*)}')
+            p = re.compile(r'\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}

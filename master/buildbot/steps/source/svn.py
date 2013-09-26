@@ -385,8 +385,8 @@ class SVN(Source):
 
     @staticmethod
     def svnUriCanonicalize(uri):
-        collapse = re.compile('([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
-        server_authority = re.compile('^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
+        collapse = re.compile(r'([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
+        server_authority = re.compile(r'^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
         default_port = {   'http': '80',
                            'https': '443',
                            'svn': '3690'}
