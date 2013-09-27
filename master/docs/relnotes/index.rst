@@ -14,6 +14,8 @@ Master
 Features
 ~~~~~~~~
 
+* The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
+
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.

@@ -460,9 +460,15 @@ class BuildStep(object, properties.PropertiesMixin):
              'useProgress',
              'doStepIf',
              'hideStepIf',
+             'description',
+             'descriptionDone',
+             'descriptionSuffix',
              ]
 
     name = "generic"
+    description = None # set this to a list of short strings to override
+    descriptionDone = None # alternate description when the step is complete
+    descriptionSuffix = None # extra information to append to suffix
     locks = []
     progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
@@ -491,8 +497,18 @@ class BuildStep(object, properties.PropertiesMixin):
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def describe(self, done=False):
+    def _describe(self, done=False):
+        if self.descriptionDone and done:
+            return self.descriptionDone
+        elif self.description:
+            return self.description
         return [self.name]
+
+    def describe(self, done=False):
+        desc = self._describe(done)
+        if self.descriptionSuffix:
+            desc = desc + self.descriptionSuffix
+        return desc
 
     def setBuild(self, build):
         self.build = build
@@ -784,7 +800,7 @@ class BuildStep(object, properties.PropertiesMixin):
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
-    
+
     @staticmethod
     def _maybeEvaluate(value, *args, **kwargs):
         if callable(value):

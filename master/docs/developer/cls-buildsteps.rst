@@ -9,7 +9,7 @@ This section describes the base classes.  The "leaf" classes are described in :d
 BuildStep
 ---------
 
-.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: BuildStep(name, description, descriptionDone, descriptionSuffix, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     All constructor arguments must be given as keyword arguments.
     Each constructor parameter is copied to the corresponding attribute.
@@ -17,6 +17,18 @@ BuildStep
     .. py:attribute:: name
 
         The name of the step.
+
+    .. py:attribute:: description
+
+        The description of the step.
+
+    .. py:attribute:: descriptionDone
+
+        The description of the step after it has finished.
+
+    .. py:attribute:: descriptionSuffix
+
+        Any extra information to append to the description.
 
     .. py:attribute:: locks
 
