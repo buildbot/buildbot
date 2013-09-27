@@ -31,7 +31,6 @@ class FakeBuildslaveManager(service.MultiService):
         self.connections = {}
 
     def register(self, buildslave):
-        # TODO: doc that reg.update must be called, too
         buildslaveName = buildslave.slavename
         reg = FakeBuildslaveRegistration(buildslave)
         self.registrations[buildslaveName] = reg

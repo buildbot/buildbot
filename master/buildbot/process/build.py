@@ -62,6 +62,7 @@ class Build(properties.PropertiesMixin):
     results = None
     stopped = False
     set_runtime_properties = True
+    subs = None
 
     def __init__(self, requests):
         self.requests = requests
@@ -227,7 +228,7 @@ class Build(properties.PropertiesMixin):
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
                         for l, a in self.locks ]
         self.conn = slavebuilder.slave.conn
-        self.conn.notifyOnDisconnect(self.lostRemote) # TODO: save subscription
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
@@ -529,8 +530,8 @@ class Build(properties.PropertiesMixin):
 
         self.finished = True
         if self.conn:
-            # XXX TODO: unsubscribe from the corresponding subscription
-            # self.conn.dontNotifyOnDisconnect(self.lostRemote)
+            self.subs.unsubscribe()
+            self.subs = None
             self.conn = None
         self.results = results
 
