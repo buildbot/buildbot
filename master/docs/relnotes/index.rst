@@ -115,6 +115,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
+* The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

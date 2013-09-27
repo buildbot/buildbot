@@ -25,8 +25,8 @@ from buildbot.changes import p4poller, svnpoller
 modules.extend([p4poller, svnpoller])
 from buildbot.clients import base, sendchange, tryclient
 modules.extend([base, sendchange, tryclient])
-from buildbot.process import mtrlogobserver, subunitlogobserver
-modules.extend([mtrlogobserver, subunitlogobserver])
+from buildbot.process import subunitlogobserver
+modules.extend([subunitlogobserver])
 from buildbot.scripts import checkconfig, logwatcher, reconfig, runner
 modules.extend([checkconfig, logwatcher, reconfig, runner])
 from buildbot.status import client, html, status_gerrit, status_push
@@ -39,8 +39,8 @@ from buildbot.status.web import console, feeds, grid, logs, olpb, root, slaves
 modules.extend([console, feeds, grid, logs, olpb, root, slaves])
 from buildbot.status.web import status_json, step, tests, waterfall
 modules.extend([status_json, step, tests, waterfall])
-from buildbot.steps import master, maxq, python, python_twisted, subunit
-modules.extend([master, maxq, python, python_twisted, subunit])
+from buildbot.steps import master, maxq, python, python_twisted, subunit, mtrlogobserver
+modules.extend([master, maxq, python, python_twisted, subunit, mtrlogobserver])
 from buildbot.steps import trigger, vstudio
 modules.extend([trigger, vstudio])
 from buildbot.steps.package.rpm import rpmbuild, rpmlint, rpmspec
