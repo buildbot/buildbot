@@ -92,6 +92,53 @@ Arguments common to all :class:`BuildStep` subclasses:
     if ``True``, this build step will always be run, even if a previous buildstep
     with ``haltOnFailure=True`` has failed.
 
+.. index:: Buildstep Parameter; description
+
+``description``
+    This will be used to describe the command (on the Waterfall display)
+    while the command is still running. It should be a single
+    imperfect-tense verb, like `compiling` or `testing`. The preferred
+    form is a list of short strings, which allows the HTML
+    displays to create narrower columns by emitting a <br> tag between each
+    word. You may also provide a single string.
+
+.. index:: Buildstep Parameter; descriptionDone
+
+``descriptionDone``
+    This will be used to describe the command once it has finished. A
+    simple noun like `compile` or `tests` should be used. Like
+    ``description``, this may either be a list of short strings or a
+    single string.
+
+    If neither ``description`` nor ``descriptionDone`` are set, the
+    actual command arguments will be used to construct the description.
+    This may be a bit too wide to fit comfortably on the Waterfall
+    display.
+
+    All subclasses of :py:class:`BuildStep` will contain the description
+    attributes. Consequently, you could add a :py:class:`ShellCommand`
+    step like so:
+
+    ::
+
+        from buildbot.steps.shell import ShellCommand
+        f.addStep(ShellCommand(command=["make", "test"],
+                               description=["testing"],
+                               descriptionDone=["tests"]))
+
+.. index:: Buildstep Parameter; descriptionSuffix
+
+``descriptionSuffix``
+    This is an optional suffix appended to the end of the description (ie,
+    after ``description`` and ``descriptionDone``). This can be used to distinguish
+    between build steps that would display the same descriptions in the waterfall.
+    This parameter may be set to list of short strings, a single string, or ``None``.
+
+    For example, a builder might use the ``Compile`` step to build two different
+    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
+    respectively for each step, which will result in the full descriptions
+    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
+
 .. index:: Buildstep Parameter; doStepIf
 
 ``doStepIf``
@@ -950,7 +997,7 @@ The :bb:step`Darcs` build step performs a `Darcs <http://darcs.net/>`_
 checkout or update. ::
 
     from buildbot.steps.source.darcs import Darcs
-    factory.addStep(Darcs(repourl='http://path/to/repo', 
+    factory.addStep(Darcs(repourl='http://path/to/repo',
                           mode='full', method='clobber', retry=(10, 1)))
 
 Darcs step takes the following arguments:
@@ -1859,41 +1906,6 @@ The :bb:step:`ShellCommand` arguments are:
 ``maxTime``
     if the command takes longer than this many seconds, it will be
     killed. This is disabled by default.
-
-``description``
-    This will be used to describe the command (on the Waterfall display)
-    while the command is still running. It should be a single
-    imperfect-tense verb, like `compiling` or `testing`. The preferred
-    form is a list of short strings, which allows the HTML
-    displays to create narrower columns by emitting a <br> tag between each
-    word. You may also provide a single string.
-
-``descriptionDone``
-    This will be used to describe the command once it has finished. A
-    simple noun like `compile` or `tests` should be used. Like
-    ``description``, this may either be a list of short strings or a
-    single string.
-
-    If neither ``description`` nor ``descriptionDone`` are set, the
-    actual command arguments will be used to construct the description.
-    This may be a bit too wide to fit comfortably on the Waterfall
-    display. ::
-
-        from buildbot.steps.shell import ShellCommand
-        f.addStep(ShellCommand(command=["make", "test"],
-                               description=["testing"],
-                               descriptionDone=["tests"]))
-
-``descriptionSuffix``
-    This is an optional suffix appended to the end of the description (ie,
-    after ``description`` and ``descriptionDone``). This can be used to distinguish
-    between build steps that would display the same descriptions in the waterfall.
-    This parameter may be set to list of short strings, a single string, or ``None``.
-
-    For example, a builder might use the ``Compile`` step to build two different
-    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
-    respectively for each step, which will result in the full descriptions
-    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
 
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the
