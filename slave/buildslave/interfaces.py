@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+# disable pylint warnings triggered by interface definitions
+# pylint: disable=no-self-argument
+# pylint: disable=no-method-argument
 
 from zope.interface import Interface
 
