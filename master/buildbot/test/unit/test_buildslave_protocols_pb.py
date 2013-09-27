@@ -188,4 +188,12 @@ class TestConnection(unittest.TestCase):
     def test_perspective_shutdown(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         conn.perspective_shutdown()
+
         conn.buildslave.shutdownRequested.assert_called_with()
+        conn.buildslave.messageReceivedFromSlave.assert_called_with()
+
+    def test_perspective_keepalive(self):
+        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn.perspective_keepalive()
+
+        conn.buildslave.messageReceivedFromSlave.assert_called_with()

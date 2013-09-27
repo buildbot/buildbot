@@ -146,6 +146,7 @@ class Connection(base.Connection, pb.Avatar):
         self.buildslave.messageReceivedFromSlave()
 
     def perspective_shutdown(self):
+        self.buildslave.messageReceivedFromSlave()
         self.buildslave.shutdownRequested()
 
     def startCommands(self, RCInstance, builder_name, commandID, remote_command, args):
