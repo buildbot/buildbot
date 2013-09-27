@@ -122,8 +122,10 @@
 	padding-left:15px;
 }
 
-.tablesorter .first-child {
+.tablesorter .first-child,
+.case-names {
 	width:550px;
+	font-weight:bold;
 }
 .table-1 {
 	table-layout: fixed; 
@@ -163,8 +165,8 @@ span.ignored {
 
 .table-1 tr td.FailureDetail:first-child {
 	color:#666;
-	padding-left: 40px;
-	
+	padding-left: 15px;
+	white-space: pre-line;
 }
 .Pass {
 	 border-top: 1px solid #FFFFFF;
@@ -204,7 +206,6 @@ a.summarie:visited {
 }
 .method{
 	color:#000;
-	font-weight:normal;
 }
 a.method{
 	text-decoration: none;

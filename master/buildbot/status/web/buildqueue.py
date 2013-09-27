@@ -63,6 +63,8 @@ class BuildQueueResource(HtmlResource):
 
         cxt['buildqueue'] =  buildqueue
 
+        
+        
         template = req.site.buildbot_service.templates.get_template("buildqueue.html")
         defer.returnValue(template.render(**cxt))
 

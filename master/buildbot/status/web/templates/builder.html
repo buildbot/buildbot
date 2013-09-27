@@ -10,9 +10,6 @@
 {% block content %}
 
 
-<!--
-  <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
--->
 <div class="column-1">
 <div class="column-2">
 
@@ -80,7 +77,7 @@
       {% else %}
           {{ b.num_changes }} changes
       {% endif %}    
-      <br>
+      <br/>
       {% if 'owner' in b.properties %}
         <b>Forced build</b>
         by {{b.properties['owner'][0]}}
@@ -111,38 +108,45 @@
     <a class="dropdown-info grey-btn popup-btn-js" href="#">
         Build slaves
     </a>
-        <div class="more-info-box more-info-box-js">
-          <span href="#" class="close-btn">
+      <div class="more-info-box more-info-box-js">
+          <span class="close-btn">
           </span>
           <h3>Overview</h3>
           
-                <table class="table-1">
-                {% if slaves %}
+            <table class="table-1">
+              <thead>
+              {% if slaves %}
                 <tr>
-                  <th>Name</th>
+                  <th class="txt-align-left">Name</th>
                   <th>Status</th>
                   <th>Admin</th>
                 </tr>
-                {% endif %}
-                {% for s in slaves %}
-                  {%- if loop.last or loop.index0 == 0 %}
-                      <tr class='last'>
-                        {%- else -%}
-                      <tr>
-                  {%- endif -%}
-                  <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
-                  {% if s.connected %}
-                    <td class="idle">connected</td>
-                    <td>{{ s.admin|email if s.admin else ""}}</td>
-                  {% else %}
-                    <td class="offline">offline</td> 
-                    <td/>
-                  {% endif %}
-                  </tr>
+              {% endif %}
+              </thead>
+              <tbody>
+              {% for s in slaves %}
+              <tr>
+                <td class="txt-align-left">
+                  <b>
+                    <a href="{{ s.link|e }}">
+                      {{ s.name|e }}
+                    </a>
+                  </b>
+                </td>
+                {% if s.connected %}
+                  <td class="idle">connected</td>
+                  <td>{{ s.admin|email if s.admin else ""}}</td>
                 {% else %}
-                  <td>no slaves attached</td>
-                {% endfor %}
-                </table>
+                  <td class="offline">offline</td>
+                  <td>&nbsp;</td>
+                {% endif %}
+                
+              {% else %}
+                <td>no slaves attached</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
       </div>
   </li>
   <li>
@@ -150,7 +154,7 @@
         Run build
       </a>
         <div class="more-info-box more-info-box-js">
-          <span href="#" class="close-btn">
+          <span class="close-btn">
           </span>
           <h3>Run custom build</h3>
 

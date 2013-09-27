@@ -40,17 +40,15 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
-          baseUrl: '.',
+          baseUrl: 'script/',
           paths: {
-          jquery: 'script/libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
+          jquery: 'libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
           //jquery: 'empty:' //Use this to continue using CDN loading
-          dotdotdot: 'script/plugins/jquery-dotdotdot',
-          helpers: 'script/project/helpers',
-          setcurrentitem: 'script/project/set-current-item',
-          datatables: 'script/plugins/jquery-datatables',
-          select2: 'script/plugins/select2'
+          dotdotdot: 'plugins/jquery-dotdotdot',
+          datatables: 'plugins/jquery-datatables',
+          select2: 'plugins/select2'
         },
-          name: 'script/main',
+          name: 'main',
           out: 'prod/script/main.js',
           removeCombined: false
         }
@@ -62,7 +60,7 @@ module.exports = function(grunt) {
           files: [
               '<%= meta.srcPath %>/**/*.scss'
           ],
-          tasks: ['compass']
+          tasks: ['compass:dev']
       }
     }
   });

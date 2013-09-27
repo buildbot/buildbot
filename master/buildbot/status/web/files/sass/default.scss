@@ -522,6 +522,12 @@ form.command_forcebuild {
 	clear:both;
 }
 
+@include breakpoint($bkpt-small) {
+	form.command_forcebuild {
+		width: auto;
+	}	
+}
+
 form.command_forcebuild .force-textarea > .label {
     display: block;
 }

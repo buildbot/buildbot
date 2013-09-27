@@ -41,3 +41,5 @@ npm-debug.log
 
 master/buildbot/status/web/files/.sass-cache
 master/buildbot/status/web/files/App.js
+
+master/buildbot/status/web/files/testfail.xml

@@ -66,36 +66,36 @@
 <h2 class="head-2">
   Timing
 </h2>
-
-<table class="table-2 m-bottom">
-  <tr>
+<div class="dataTables_wrapper">
+  <table class="table-2 m-bottom">
+    <tr>
+      <td>
+        Start
+      </td>
+      <td>
+        {{ start }}
+      </td>
+    </tr>
+  {% if end %}
+    <tr>
+      <td>
+        End
+      </td>
     <td>
-      Start
-    </td>
-    <td>
-      {{ start }}
-    </td>
-  </tr>
-{% if end %}
-  <tr>
-    <td>
-      End
-    </td>
-  <td>
-    {{ end }}
-  </td>
-</tr>
-{% endif %}
-  <tr>
-    <td>
-      Elapsed
-    </td>
-    <td>
-      {{ elapsed }}
+      {{ end }}
     </td>
   </tr>
-</table>
-
+  {% endif %}
+    <tr>
+      <td>
+        Elapsed
+      </td>
+      <td>
+        {{ elapsed }}
+      </td>
+    </tr>
+  </table>
+</div>
 <h2 class="head-2">
 {% if sourcestamps|count == 1 %}
 SourceStamp
@@ -106,6 +106,7 @@ SourceStamps
 
 {% for ss in sourcestamps %}
 <h3>{{ ss.codebase }}</h3>
+<div class="dataTables_wrapper">
     <table class="table-2 m-bottom">
     
 
@@ -148,6 +149,7 @@ SourceStamps
       <tr><td colspan="2">Build of most recent revision</td></tr>
     {% endif %}
     </table>
+</div>
 {% endfor %}
 
 {#
@@ -179,7 +181,7 @@ SourceStamps
 
 <ul class="btn-list horisontal">
   <li>
-<a class="dropdown-info grey-btn popup-btn-js" href="#">
+<a class="more-info popup-btn-js mod-1" href="#">
   Build Properties
 </a>
 
@@ -187,44 +189,44 @@ SourceStamps
     <span href="#" class="close-btn">
     </span>
     <h3>Overview of build properties</h3>
-    
-    <table class="table-2">
-    <tr>
-      <th>Name</th>
-      <th>Value</th>
-      <th>Source</th>
-    </tr>
-
-    {% for p in properties %}
-    {% if p.source != "Force Build Form" %}
+    <div class="dataTables_wrapper">
+      <table class="table-2">
       <tr>
-        <td>{{ p.name|e }}</td>
-        {% if p.short_value %}
-            <td>{{ p.short_value|e }} .. [property value too long]</td>
-        {% else %}
-            {% if p.value is not mapping %}
-                <td>{{ p.value|e }}</td>
-            {% else %}
-                <td>
-                    <table class="info" width="100%">
-                        {%- for key, value in p.value.items() recursive %}
-                            <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
-                        {% endfor %}
-                    </table>
-                </td>
-            {% endif %}
-        {% endif %}
-        <td>{{ p.source|e }}</td>
+        <th>Name</th>
+        <th>Value</th>
+        <th>Source</th>
       </tr>
-    {% endif %}
-    {% endfor %}
-    </table>
 
+      {% for p in properties %}
+      {% if p.source != "Force Build Form" %}
+        <tr>
+          <td>{{ p.name|e }}</td>
+          {% if p.short_value %}
+              <td>{{ p.short_value|e }} .. [property value too long]</td>
+          {% else %}
+              {% if p.value is not mapping %}
+                  <td>{{ p.value|e }}</td>
+              {% else %}
+                  <td>
+                      <table class="info" width="100%">
+                          {%- for key, value in p.value.items() recursive %}
+                              <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
+                          {% endfor %}
+                      </table>
+                  </td>
+              {% endif %}
+          {% endif %}
+          <td>{{ p.source|e }}</td>
+        </tr>
+      {% endif %}
+      {% endfor %}
+      </table>
+  </div>
 </div>
 </li>
 
   <li>
-<a class="dropdown-info grey-btn popup-btn-js" href="#">
+<a class="more-info popup-btn-js mod-1" href="#">
   Custom build properties
 </a>
 
@@ -232,7 +234,7 @@ SourceStamps
     <span href="#" class="close-btn">
     </span>
     <h3>Overview of custom build properties</h3>
-
+    <div class="dataTables_wrapper">
     <table class="table-2">
       <tr>
         <th>Name</th>
@@ -258,7 +260,7 @@ SourceStamps
         {% endif %}    
       {% endfor %}
     </table>
-
+    </div>
 </div>
 </li>
 </ul>
@@ -341,7 +343,7 @@ SourceStamps
 </div>
   
 {% if has_changes %}
-    
+  <div class="container-inner">
       <h2 class="head-2">All Changes</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
@@ -350,23 +352,25 @@ SourceStamps
                           {{ ss.codebase }}
                         </h3>
                       {% endif %}
-            <table class="table-1 var-1">
-            {% for c in ss.changes %}
+            <div class="dataTables_wrapper">
+              <table class="table-1 var-1">
+                {% for c in ss.changes %}
 
-                {% if loop.index == 1 %}
-                  {{ changeth(c.asDict()) }}                 
-                {% endif %}
-                {% if c.category %}
-                    <th>Category</th>
-                {% endif %}
+                    {% if loop.index == 1 %}
+                      {{ changeth(c.asDict()) }}                 
+                    {% endif %}
+                    {% if c.category %}
+                        <th>Category</th>
+                    {% endif %}
 
-              {{ change(c.asDict()) }}
-            {% endfor %}
-           </table>
-            {% endif %}
-
+                  {{ change(c.asDict()) }}
+                {% endfor %}
+              </table>
+            </div>
+              {% endif %}
+            
         {% endfor %}
-    
+  </div>
 {% endif %}
 
 {% endblock %}

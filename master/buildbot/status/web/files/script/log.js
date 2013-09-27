@@ -12,10 +12,15 @@
 		//  sort failues and ignored first
 		var failIgnoreArray = [];
 		$(th).each(function(){	
-			if ($('.ignored-count',this).text() > 0) {
+			var igCount = $('.ignored-count',this).text() > 0;
+			var failCount = $('.failures-count',this).text() > 0;
+			if (igCount && !failCount) {
 				failIgnoreArray.push($(this))
-			} else if ($('.failures-count',this).text() > 0) {
-				failIgnoreArray.push($(this))
+			} else if (failCount && !igCount ) {
+				failIgnoreArray.splice(0,0,$(this))
+			}
+			else if (igCount) {
+				failIgnoreArray.splice(0,0,$(this))
 			}
 		});
 		
@@ -54,6 +59,7 @@
 		    return this;
 		};
 
+		//console.log(colList)
 		var oTable = $('.tablesorter-log-js').dataTable({
 			"asSorting": true,
 			"bSearchable": true,			
@@ -63,10 +69,9 @@
 			"bInfo": false,
 			"bSortable": true,
 			"aaSorting": [[ 1, "asc" ]],
+			"aoColumns": [{'bSortable': false },null,{'bSortable': false }],
 			"bAutoWidth": false
 		});
-
-		
 
 /* Add event listeners to the two range filtering inputs */
 		

@@ -4,7 +4,7 @@
 * @section page-elements
 * @author Simon Holm
 */
-
+  
 .success {
 	background-color: #DDE6D6;
 }
@@ -58,8 +58,9 @@
     background-color: #F5F5F5;
     @include text-shadow(0 1px 0 #fff);
 }
-
-.table-1 .offline  {
+ 
+.table-1 .offline,
+.table-1 .idle  {
 	border-top: 1px solid #FFFFFF;
 }
 
@@ -69,6 +70,20 @@
 }
 
 // tables
+
+
+.dataTables_wrapper {
+	clear:both;
+	overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@include breakpoint($bkpt-large) {
+	.dataTables_wrapper {
+		overflow: visible;	 	
+	}
+}
+
 .table-1,
 .table-2 {
 	width:100%;
@@ -130,6 +145,9 @@
 }
 
 .table-1 { 
+	tr:nth-child(2) td{
+		border-top:none;
+	}
 	.more-info:after {
 		display: inline-block;
 	}
@@ -219,7 +237,8 @@
 	}
 }
 
-.katana-main .dataTables_filter {
+.katana-main .dataTables_filter {display:none;}
+.filter-table-input {
 	margin-bottom: 23px;
 	label {
 		position: relative;
@@ -363,6 +382,11 @@ div.last {
 	.skipped {
 		&:before {
 			content:"Skipped";				
+		}	
+	}
+	.exception {
+		&:before {
+			content:"Exception";				
 		}	
 	}
 	li {
@@ -1038,7 +1062,6 @@ Version: 3.4.2 Timestamp: Mon Aug 12 15:04:12 PDT 2013
 
 .select-tools-common {
 	float:right; 
-	margin-right:10px;
 	margin-left:10px;
 	margin-bottom:10px;
 }
@@ -1446,4 +1469,105 @@ disabled look for disabled choices in the results dropdown
 	display:inline-block;
 	min-width:15px;
 	text-align:center;
+}
+
+@include breakpoint($bkpt-small) {
+	.more-info-box {
+		 min-width:inherit;
+		 width: 80%;
+
+
+		.table-1 {
+			display: block;
+	    	position: relative;
+	    	width: 100%;
+	    	text-align: left;
+	    	border-collapse: collapse;
+	    	border-spacing: 0;
+	    	thead {
+	    		display: block;
+	    		float: left;
+	    	}
+	    	tbody {
+	    		display: block;
+			    overflow-x: auto;
+			    position: relative;
+			    white-space: nowrap;
+			    width: auto;
+			    display: -webkit-box;
+			    tr {
+			    	 display: inline-block;
+			    	 /*
+			    	 margin: -7px 0;
+			    	 */
+			    }
+	    	}
+
+	    	&.first-child tr th:first-child {
+	    		border-left:none;
+	    	}
+			th, td, tr {
+				display: block;
+			}
+			th {
+				border-top:none;
+				border-bottom:1px solid #ccc;
+			}
+			td {
+				border-top:none;
+			}
+			tr:last-child td {
+				padding-bottom:15px;
+				border-bottom:1px solid #ccc;
+			}
+
+			tr td:last-child {
+				border-bottom:none;
+			}
+
+			tr th:last-child {
+				@include border-radius(0);
+			}
+			 tr th:first-child {
+			 	@include border-radius(4px 0 0 0 );
+			 }
+			tr:nth-child(2) td,
+			tr:first-child td {
+				border-top:none;
+				@include border-radius(0);
+			}
+			tr:first-child th,
+			tbody tr:first-child td {
+				padding-left:10px;
+			}
+			
+		}
+	}
+
+	.select-tools-common {
+		//float: left;
+		//margin-left: 0;
+	}
+	.step-list {
+		.result {
+			clear: both;
+		    float: none;
+		    margin-bottom: 14px;
+		}
+	}
+	
+	.filter-table-input input {
+		width: 67px;
+	}
+}
+@include breakpoint($bkpt-small-portrait) {
+	.select2-container {
+		max-width: 120px;
+	}
+}
+
+@include breakpoint($bkpt-small-height) {
+	.more-info-box {
+		max-height:250px;
+	}
 }

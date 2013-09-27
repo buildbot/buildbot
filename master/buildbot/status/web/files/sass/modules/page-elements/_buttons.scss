@@ -83,6 +83,38 @@ a.grey-btn,
     position: relative;
 }
 
+.codebases .grey-btn {
+    float:right;
+}
+
+@include breakpoint($bkpt-small) {
+    .codebases .grey-btn {
+        //float:left;   
+    }
+    .grey-btn + .dataTables_wrapper {
+        margin-right: 0;
+    }
+}
+
+/*
+@include breakpoint($bkpt-small) {
+    .grey-btn.var-2 {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+}
+
+
+    @include breakpoint($bkpt-medium) {
+        .grey-btn.var-2 {
+            position: relative;
+            right: 0;
+            top: 0;
+        }
+    }
+*/
+
 .delete-icon {
     display:inline-block;
     &:before {
@@ -108,6 +140,7 @@ a.grey-btn,
         left: 12px;
         position: absolute;
         top: 5px;
+        line-height: 19px;
     }
     &:hover:after {
         color: #A4A4A4;     

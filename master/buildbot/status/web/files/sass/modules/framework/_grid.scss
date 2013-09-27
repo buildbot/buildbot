@@ -4,17 +4,41 @@
 * @section framework
 * @author Simon Holm
 */
-
- 
+  
 //forthcoming mediaqueries
- $bkpt-small: 370px;
+$bkpt-small: 0 570px;
+$bkpt-small-portrait: (0 570px )(orientation portrait);
+$bkpt-medium: 570px 1000px;
+$bkpt-large: min-width 1000px;
+$bkpt-xlarge: min-width 1600px;
 
-
+$bkpt-small-height: (max-height 460px)(orientation landscape);
+// create $breakpoint variables like so
+// assume min-width (by default) if only a number
+/*
+$breakpoint-medium-width: 500px;
+$breakpoint-medium-width-em: 30em;
+// set min-width/max-width if both values are numbers
+$breakpoint-medium-not-wide: 500px 700px;
+// set min/max of feature if there are two numbers
+$breakpoint-medium-height: height 300px 700px;
+// if one value is a string, assume a feature/value pair
+$breakpoint-kind-of-wide: min-width 700px;
+$breakpoint-not-too-wide: max-width 700px;
+// for multidimensional lists, assume each item is a feature value pair
+$breakpoint-wide-portrait: (max-width 700px) (orientation portrait);
+// handle one-sided features (ie. monochrome)
+$breakpoint-wide-portrait-mono: (max-width 700px) (orientation portrait) (monochrome);
+$breakpoint-mono: monochrome;
+$breakpoint-hi-rez: 2 device-pixel-ratio;
+*/
 .container-inner {
-	width: 960px;
+	clear:both;
 	margin: 0 auto;
-	//@include breakpoint($bkpt-small) {
-	//content: yellow; }
+	width: 1500px;
+	position:relative;
+	padding:0 8px;
+	//@include box-sizing(border-box);
 }
 
 /* column container */
@@ -69,9 +93,67 @@ div.column-1 {
 	}
 }
 
-.m-top20 {
-	margin-top:20px;
+.m-top20 {margin-top:20px;}
+ 
+@include breakpoint($bkpt-small) {
+	.container-inner {
+		width: 100%;
+		@include box-sizing(border-box);
+	}
+	div.column-1 {
+		padding:15px;
+		width: 100%;
+		@include box-sizing(border-box);
+	}
+	.column-2 {
+		float: none;
+		width: 100%;
+		margin: 0 0 20px;
+		border-bottom: 1px solid #D7D7D7;
+		padding-bottom: 20px;
+		&:before {
+			background-color: transparent;
+		    margin: 0;
+		    width: auto;
+		}
+	}
 }
 
+@include breakpoint($bkpt-medium) {
+	.container-inner {
+		width: 100%;
+		@include box-sizing(border-box);
+	}
+	div.column-1 {
+		padding:15px;
+		width: 100%;
+		@include box-sizing(border-box);
+	}
+	.column-2 {
+		float: none;
+		width: 100%;
+		margin: 0 0 20px;
+		border-bottom: 1px solid #D7D7D7;
+		padding-bottom: 20px;
+		&:before {
+			background-color: transparent;
+		    margin: 0;
+		    width: auto;
+		}
+	}
+}	
 
+@include breakpoint($bkpt-large) {
+	.container-inner {
+		width: 960px;
+	}
+}
 
+@include breakpoint($bkpt-xlarge) {
+	.container-inner {
+		width: 1500px;
+	}
+	.column-2 {
+		width: 710px;	
+	}
+}

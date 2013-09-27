@@ -11,11 +11,17 @@
 {% block content %}
 <div id="formWrapper">
     <button id="submitBtn" class="grey-btn var-2 fl-right m-bottom15">Remove selected</button>
+    <div class="filter-table-input">
+        <label>
+            <input type="text" id="filterTableInput" placeholder="Filter results">
+        </label>
+    </div>
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
     <!--
+    
         <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
     -->
-    
+        
 <table class="table-1 first-child tablesorter tablesorter-js tablesorter-col-js">
     <thead>
     <tr>
@@ -39,7 +45,7 @@
         </td>
         <td class="txt-align-left">
 
-            <a class="more-info popup-btn-js mod-1" href="#">
+            <a class="more-info popup-btn-js mod-1" href="#" data-att="">
               {{bq.sourcestamps|length}} Codebase 
             </a>
              <div class="more-info-box more-info-box-js">
@@ -65,16 +71,33 @@
                         {% for sskey, value in bq.sourcestamps.iteritems() %}
                             <tr>
                                 <td class="txt-align-left">
-                                    {{sskey}}
+                                    {% if sskey %}
+                                        {{sskey}}
+                                    {% else %} 
+                                        &nbsp;
+                                    {% endif %}
                                 </td>
                                 <td class="txt-align-left">
-                                    {{value.repository}}
+                                    {% if value.repository %}
+                                        {{value.repository}}
+                                    {% else %} 
+                                        &nbsp;
+                                    {% endif %}
                                 </td>
                                 <td class="txt-align-left">
-                                    {{value.branch}}
+                                    {% if value.branch %}
+                                        {{value.branch}}
+                                    {% else %} 
+                                        &nbsp;
+                                    {% endif %}
                                 </td>
                                 <td class="txt-align-left">
-                                    {{value.revision}}
+                                    {% if value.revision %}
+                                        {{value.revision}}
+                                    {% else %} 
+                                        &nbsp;
+                                    {% endif %}  
+                                    
                                 </td>
                             </tr>
                         {% endfor %}

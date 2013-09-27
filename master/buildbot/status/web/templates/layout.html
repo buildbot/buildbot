@@ -5,7 +5,7 @@
   <head>
     {% block head %}
     <meta charset="utf-8">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% if metatags %}
       {{ metatags }}
     {% endif %}
@@ -13,37 +13,19 @@
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
     <title>{{ pageTitle|e }}</title>
-    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     
-    <!--    
-    <script src="/node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js"></script>
-
-    <script>
-      var socket = io.connect('http://localhost:8080');
-      socket.on('JSON changed', function (data) {
-        console.log(data);
-        socket.emit('my other event', { my: 'data' });
-      });
-    </script>
-    -->
-    <script data-main="/script/main" src="/script/require.js"></script>
-
-<!--
-  <script data-main="/compiled/main" src="/script/require.js"></script>
-
-    
-    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
-    <script type="text/javascript" src="/script/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="/script/select2.js"></script>
-    <script type="text/javascript" src="/script/default.js"></script>
-    -->
     {% endblock %}
+
+    <script data-main="/prod/script/main" src="/script/require.js"></script>
+
   </head>
   <body class="interface katana-main">
   
+
     {% block header -%}
  
     <header class="header">
@@ -55,6 +37,14 @@
               <span>K</span>atana
             </a>
           </h1>    
+          <ul class="smartphone-nav">
+            <li>
+            </li>
+            <li>
+            </li>
+            <li>
+            </li>
+          </ul>
         <ul class="top-menu">
           
           <li>

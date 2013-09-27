@@ -45,6 +45,16 @@ h1.logo a {
 	}
 }
 
+@include breakpoint($bkpt-small) {
+	h1.logo a {
+		padding-top: 17px;
+		font-size: 19px;
+		span {
+			font-size: 17px;
+		}
+	}
+}
+
 .logo a:hover {
 	opacity: 0.5;
 }

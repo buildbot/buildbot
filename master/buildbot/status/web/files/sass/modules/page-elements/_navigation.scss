@@ -87,6 +87,84 @@
 		}
 		
 	}
+	
+}
+
+.submenu {
+	display:none;		
+	li {
+		margin-bottom:5px;
+		&:last-child {
+			margin-bottom:10px;
+		}
+		a {
+			font-size: 11px;
+		}
+	}
+}
+
+@include breakpoint($bkpt-small) {
+	
+	ul.top-menu {
+		display: none;
+		z-index:1;
+		float:none;
+		position:absolute;
+		background-color: #eee;
+		right: 10px;
+		left: 10px;
+    	top: 36px;
+    	padding:5px 18px 5px 13px;
+    	@include box-shadow(1px 1px 5px rgba(0, 0, 0, 0.55));
+		@include border-radius(7px);
+		.project-dropdown {
+			 padding-right: 0;
+			.arrow-down-btn:after {
+				right: 0;
+	    		top: 8px;
+				font-size: 13px;
+				padding: 1px 5px 0 6px;
+			}
+		}
+		&>li {
+			float: none;
+			border-bottom: 1px solid #CCCCCC;
+			&:last-child {
+				padding: 0;	
+				border-bottom:none;
+			}
+			&.selected {
+				border-bottom: 1px solid #CCCCCC;
+			}
+			&.selected > a {
+				color: #666;
+				border-top: none;
+			}
+			&.selected > a, 
+			& > a {
+				padding: 10px 0;
+				text-transform: none;
+				font-size: 11px;
+				margin: 0;
+			}
+		}
+	}
+	.smartphone-nav {
+		float:right;
+		margin: 10px 0;
+		cursor: pointer;
+		li {
+			background-color:#2B6194;
+			@include border-radius(3px);
+			margin-top: 3px;
+			width: 20px;
+			height: 3px;
+			&:first-child {
+				margin-top: 0;	
+			} 
+		}
+		
+	}
 }
 
 // sub-menu
@@ -95,7 +173,7 @@
 	@include bgimage(linear-gradient(top, #0A3569 0%, #417FB1 100%)); 
     border-bottom: 1px solid #FFFFFF;
     border-top: 1px solid #FFFFFF;
-    
+    @include pie-clearfix;
 	margin-bottom:22px;
 	&.root {
 		height: 39px;
@@ -103,12 +181,13 @@
 }
 
 .breadcrumbs-nav {
-		@include pie-clearfix;
+		//@include pie-clearfix;
+		display:inline-block;
 		padding:13px 0 12px 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.59);
-		float: left;
 		font-size: 11px;
+		float: left;
 		list-style: none outside none;
 		margin: 0 12px 0 0;
 		padding: 0;
@@ -131,6 +210,7 @@
 				position: absolute;
 			    right: -22px;
 			    top: -2px;
+			    line-height: 18px;
 			    &:hover:after {
 			    	background:none;
 
@@ -145,16 +225,26 @@
 			font-size: 9px;
 			color: rgba(255, 255, 255, 0.59);
 			font-weight: normal;
-			
 		}
 	}
 }
-
-
+@include breakpoint($bkpt-small) {
+	.wrap {
+		overflow-y: auto;
+    	-webkit-overflow-scrolling: touch;
+	}
+	.breadcrumbs-nav {
+		white-space: nowrap;
+		& > li {
+			&:first-child {
+				padding-left:8px;
+			}
+		}
+	}
+}
 .chrome.win .breadcrumbs-nav li:before{
 	content: ">";
 	font-weight:bold;
-
 }
 
 .breadcrumbs-nav li:first-child:before,

@@ -134,9 +134,9 @@
 -->
 <xsl:template name="classesSummaryHeader">
 	<tr>
-		<th class="txt-align-left first-child " id=":i18n:Name">Name</th>
+		<th class="txt-align-left first-child" id=":i18n:Name">Name</th>
 		<th id=":i18n:Status">Status</th>
-		<th id=":i18n:Time" >Time(s)</th>
+		<th id=":i18n:Time">Time(s)</th>
 	</tr>
 </xsl:template>
 
@@ -256,13 +256,13 @@
 				<!-- If failure, add click on the test method name and color red -->
 				<xsl:choose>
 					<xsl:when test="$result = 'Failure' or $result = 'Error'">
-						<a title="Show/Hide message error">
-						<xsl:attribute name="href">javascript:Toggle('<xsl:value-of select="$newid"/>')</xsl:attribute>
-						<xsl:attribute name="class">error case-names link-1</xsl:attribute>
+						<span>
+						
+						<xsl:attribute name="class">error case-names</xsl:attribute>
 						<xsl:call-template name="GetLastSegment">
 							<xsl:with-param name="value" select="./@name" />
 						</xsl:call-template>
-						</a>
+						</span>
 					</xsl:when>
 					<xsl:when test="$result = 'Ignored'">
 						<xsl:call-template name="GetLastSegment">

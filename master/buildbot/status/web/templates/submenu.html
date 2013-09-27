@@ -45,18 +45,21 @@
 	] -%}
 
 	<nav class="sub-menu-container">
-	  <ul class="breadcrumbs-nav container-inner">
-	{% for href, id, caption in navigation_bar %}
-	
-		{% if id == active_page %}
-			<li>{{caption|e}}</li>
-		{% elif loop.index == 3 and pathNum >= 3 %}
-			<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info popup-btn-js-2" href="#"></a></li>	
-		{% elif loop.index <= pathNum %}
-			<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
-		{% endif %}
-	{% endfor %}
-	</ul>
+		<div class="container-inner">
+			<div class="wrap">
+			  <ul class="breadcrumbs-nav wrap">
+				{% for href, id, caption in navigation_bar %}
+					{% if id == active_page %}
+						<li>{{caption|e}}</li>
+					{% elif loop.index == 3 and pathNum >= 3 %}
+						<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info popup-btn-js-2" href="#"></a></li>	
+					{% elif loop.index <= pathNum %}
+						<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+					{% endif %}
+				{% endfor %}
+				</ul>
+			</div>
+		</div>
 	<div class="more-info-box more-info-box-js-2">
 	  <span class="close-btn">
 	  </span>
@@ -82,15 +85,19 @@
 	] -%}
 
 	<nav class="sub-menu-container">
-	  <ul class="breadcrumbs-nav container-inner">
-	{% for href, id, caption in navigation_bar_slaves %}
-		{% if id == active_page %}
-			<li>{{caption|e}}</li>
-		{% elif loop.index <= pathNum %}
-			<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
-		{% endif %}
-	{% endfor %}
-	</ul>
+		<div class="container-inner">
+			<div class="wrap">
+				<ul class="breadcrumbs-nav ">
+				{% for href, id, caption in navigation_bar_slaves %}
+					{% if id == active_page %}
+						<li>{{caption|e}}</li>
+					{% elif loop.index <= pathNum %}
+						<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+					{% endif %}
+				{% endfor %}
+				</ul>
+			</div>
+		</div>
 	</nav>
 
 {% endmacro %}
@@ -103,15 +110,19 @@
 	] -%}	
 	
 	<nav class="sub-menu-container">
-	  <ul class="breadcrumbs-nav container-inner">
-	{% for href, id, caption in navigation_bar_buildqueue %}
-		{% if id == active_page %}
-			<li>{{caption|e}}</li>
-		{% elif loop.index <= pathNum %}
-			<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
-		{% endif %}
-	{% endfor %}
-	</ul>
+	<div class="container-inner">
+		<div class="wrap">
+			<ul class="breadcrumbs-nav ">
+			{% for href, id, caption in navigation_bar_buildqueue %}
+				{% if id == active_page %}
+					<li>{{caption|e}}</li>
+				{% elif loop.index <= pathNum %}
+					<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+				{% endif %}
+			{% endfor %}
+			</ul>
+		</div>
+	</div>
 	</nav>
 
 {% endmacro %}
