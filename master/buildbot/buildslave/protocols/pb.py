@@ -149,10 +149,10 @@ class Connection(base.Connection, pb.Avatar):
         self.buildslave.messageReceivedFromSlave()
         self.buildslave.shutdownRequested()
 
-    def startCommands(self, RCInstance, builder_name, commandID, remote_command, args):
-        slavebuilder = self.builders.get(builder_name)
+    def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
+        slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startCommand',
-            RCInstance, commandID, remote_command, args
+            remoteCommand, commandId, commandName, args
         )
 
     def doKeepalive(self):
