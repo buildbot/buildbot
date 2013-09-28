@@ -27,10 +27,6 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Register a callback to be called if slave gets disconnected
 
-    .. py:method:: notifyDisconnected()
-
-        Execute callback set by notifyOnDisconnect
-
     .. py:method:: loseConnection()
 
         Close connection
@@ -81,16 +77,17 @@ to know about protocol calls or handle protocol specific exceptions.
         Shutdown slave, "buildslave" required to shutdown old slaves (saved for
         backward compatability) 
 
-    .. py:method:: remoteStartBuild()
+    .. py:method:: remoteStartBuild(builderName)
 
+        :param builderName name of the builder for which the build is starting
         :returns: Deferred
 
         Just starts build
 
-    .. py:method:: remoteInterruptCommand(commandID, why)
+    .. py:method:: remoteInterruptCommand(commandId, why)
 
-        :param commandID: command number
-        :type commandID: string
+        :param commandId: command number
+        :type commandId: string
         :param why: reason to interrupt
         :type why: string
         :returns: Deferred

@@ -208,8 +208,8 @@ class Connection(base.Connection, pb.Avatar):
             return defer.succeed(None)
         yield old_way()
 
-    def remoteStartBuild(self, builder_name):
-        slavebuilder = self.builders.get(builder_name)
+    def remoteStartBuild(self, builderName):
+        slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startBuild')
 
     def stopKeepaliveTimer(self):
@@ -222,6 +222,6 @@ class Connection(base.Connection, pb.Avatar):
         self.keepalive_timer = reactor.callLater(self.keepalive_interval,
             self.doKeepalive)
 
-    def remoteInterruptCommand(self, commandID, why):
+    def remoteInterruptCommand(self, commandId, why):
         return defer.maybeDeferred(self.mind.callRemote, "interruptCommand",
-            commandID, why)
+            commandId, why)
