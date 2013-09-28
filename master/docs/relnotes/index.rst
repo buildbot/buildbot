@@ -119,6 +119,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
 
+* The buildmaster now requires at least Twisted-11.0.0.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
