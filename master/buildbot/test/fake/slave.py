@@ -15,3 +15,4 @@
 
 class FakeSlave(object):
     slave_system = 'posix'
+    slavename = 'fakeslave'
