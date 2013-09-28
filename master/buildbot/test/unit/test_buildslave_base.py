@@ -18,6 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, task, reactor
 from buildbot import config, locks
 from buildbot.buildslave import base
+from buildbot.buildslave.protocols import base as protocols_base
 from buildbot.test.fake import fakemaster, fakedb, bslavemanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 
@@ -38,7 +39,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.ConcreteBuildSlave(name, password, **kwargs)
         slave.master = self.master
         slave.botmaster = self.botmaster
-        if attached: slave.conn = mock.Mock()
+        if attached:
+            slave.conn = mock.Mock(spec=protocols_base.Connection)
         return slave
 
     def test_constructor_minimal(self):
@@ -327,7 +329,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         yield slave.shutdown()
-        slave.conn.remoteShutdown.assert_called_with(slave)
+        slave.conn.remoteShutdown.assert_called_with()
 
     @defer.inlineCallbacks
     def test_slave_shutdown_not_connected(self):
