@@ -65,7 +65,7 @@ c['schedulers'].append(Scheduler(name="all", branch=None,
 cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
 cvsmodule = "buildbot"
 from buildbot.process import factory
-from buildbot.steps.source import CVS
+from buildbot.steps.source.cvs import CVS
 from buildbot.steps.shell import Compile
 from buildbot.steps.python_twisted import Trial
 f1 = factory.BuildFactory()
@@ -103,7 +103,8 @@ c['schedulers'].append(Scheduler(name="all", branch=None,
 cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
 cvsmodule = "buildbot"
 from buildbot.process import factory
-from buildbot.steps.source import CVS
+# old source is deprecated, so we use the new source
+from buildbot.steps.source.cvs import CVS
 from buildbot.steps.shell import Compile
 from buildbot.steps.python_twisted import Trial
 f1 = factory.BuildFactory()

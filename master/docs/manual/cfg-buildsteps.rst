@@ -92,6 +92,53 @@ Arguments common to all :class:`BuildStep` subclasses:
     if ``True``, this build step will always be run, even if a previous buildstep
     with ``haltOnFailure=True`` has failed.
 
+.. index:: Buildstep Parameter; description
+
+``description``
+    This will be used to describe the command (on the Waterfall display)
+    while the command is still running. It should be a single
+    imperfect-tense verb, like `compiling` or `testing`. The preferred
+    form is a list of short strings, which allows the HTML
+    displays to create narrower columns by emitting a <br> tag between each
+    word. You may also provide a single string.
+
+.. index:: Buildstep Parameter; descriptionDone
+
+``descriptionDone``
+    This will be used to describe the command once it has finished. A
+    simple noun like `compile` or `tests` should be used. Like
+    ``description``, this may either be a list of short strings or a
+    single string.
+
+    If neither ``description`` nor ``descriptionDone`` are set, the
+    actual command arguments will be used to construct the description.
+    This may be a bit too wide to fit comfortably on the Waterfall
+    display.
+
+    All subclasses of :py:class:`BuildStep` will contain the description
+    attributes. Consequently, you could add a :py:class:`ShellCommand`
+    step like so:
+
+    ::
+
+        from buildbot.steps.shell import ShellCommand
+        f.addStep(ShellCommand(command=["make", "test"],
+                               description=["testing"],
+                               descriptionDone=["tests"]))
+
+.. index:: Buildstep Parameter; descriptionSuffix
+
+``descriptionSuffix``
+    This is an optional suffix appended to the end of the description (ie,
+    after ``description`` and ``descriptionDone``). This can be used to distinguish
+    between build steps that would display the same descriptions in the waterfall.
+    This parameter may be set to list of short strings, a single string, or ``None``.
+
+    For example, a builder might use the ``Compile`` step to build two different
+    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
+    respectively for each step, which will result in the full descriptions
+    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
+
 .. index:: Buildstep Parameter; doStepIf
 
 ``doStepIf``
@@ -918,6 +965,8 @@ for example::
                                                   )
                         ))
 
+.. bb:step:: Gerrit
+
 .. _Step-Gerrit:
 
 .. bb:step:: Gerrit
@@ -937,6 +986,7 @@ will be translated into a branch name.  This feature allows integrators to build
 several pending interdependent changes, which at the moment cannot be described properly
 in Gerrit, and can only be described by humans.
 
+.. bb:step:: Darcs
 
 .. _Step-Darcs:
 
@@ -951,7 +1001,7 @@ The :bb:step`Darcs` build step performs a `Darcs <http://darcs.net/>`_
 checkout or update. ::
 
     from buildbot.steps.source.darcs import Darcs
-    factory.addStep(Darcs(repourl='http://path/to/repo', 
+    factory.addStep(Darcs(repourl='http://path/to/repo',
                           mode='full', method='clobber', retry=(10, 1)))
 
 Darcs step takes the following arguments:
@@ -988,6 +1038,81 @@ Darcs step takes the following arguments:
       behavior of source checkout follows exactly same as
       incremental. It performs all the incremental checkout behavior
       in ``source`` directory.
+
+
+.. bb:step:: Monotone
+
+.. _Step-Monotone:
+
+Monotone
+++++++++
+
+.. py:class:: buildbot.steps.source.mtn.Monotone
+
+The :bb:step:`Monotone <Monotone>` build step performs a `Monotone <http://www.monotone.ca/>`_
+checkout or update. ::
+
+    from buildbot.steps.source.mtn import Monotone
+    factory.addStep(Darcs(repourl='http://path/to/repo',
+                          mode='full', method='clobber', branch='some.branch.name',
+			  retry=(10, 1)))
+
+
+Monotone step takes the following arguments:
+
+``repourl``
+    the URL at which the Monotone source repository is available.
+
+``branch``
+    this specifies the name of the branch to use when a Build does not
+    provide one of its own.
+
+``progress``
+    this is a boolean that has a pull from the repository use
+    ``--ticker=dot`` instead of the default ``--ticker=none``.
+
+
+``mode``
+
+  (optional): defaults to ``'incremental'``.
+  Specifies whether to clean the build tree or not.
+
+    ``incremental``
+      The source is update, but any built files are left untouched.
+
+    ``full``
+      The build tree is clean of any built files.
+      The exact method for doing this is controlled by the ``method`` argument.
+
+
+``method``
+
+   (optional): defaults to ``copy`` when mode is ``full``.
+   Monotone's incremental mode does not require a method.
+   The full mode has four methods defined:
+
+   ``clobber``
+      It removes the build directory entirely then makes full clone
+      from repo. This can be slow as it need to clone whole repository.
+
+   ``clean``
+      This remove all other files except those tracked and ignored by Monotone. It will remove
+      all the files that appear in :command:`mtn ls unknown`. Then it will pull from 
+      remote and update the working directory.
+
+   ``fresh``
+      This remove all other files except those tracked by Monotone. It will remove
+      all the files that appear in :command:`mtn ls ignored` and :command:`mtn ls unknows`.
+      Then pull and update similar to ``clean``
+
+   ``copy``
+      This first checkout source into source directory then copy the
+      ``source`` directory to ``build`` directory then performs the
+      build operation in the copied directory. This way we make fresh
+      builds with very less bandwidth to download source. The behavior
+      of source checkout follows exactly same as incremental. It
+      performs all the incremental checkout behavior in ``source``
+      directory.
 
 .. _Source-Checkout-Slave-Side:
 
@@ -1571,7 +1696,7 @@ Monotone (Slave-Side)
 +++++++++++++++++++++
 
 The :bb:step:`Monotone <Monotone (Slave-Side)>` build step performs a
-`Monotone <http://www.monotone.ca>`_, (aka ``mtn``) checkout
+`Monotone <http://www.monotone.ca>`__, (aka ``mtn``) checkout
 or update.
 
 The Monotone step takes the following arguments:
@@ -1785,41 +1910,6 @@ The :bb:step:`ShellCommand` arguments are:
 ``maxTime``
     if the command takes longer than this many seconds, it will be
     killed. This is disabled by default.
-
-``description``
-    This will be used to describe the command (on the Waterfall display)
-    while the command is still running. It should be a single
-    imperfect-tense verb, like `compiling` or `testing`. The preferred
-    form is a list of short strings, which allows the HTML
-    displays to create narrower columns by emitting a <br> tag between each
-    word. You may also provide a single string.
-
-``descriptionDone``
-    This will be used to describe the command once it has finished. A
-    simple noun like `compile` or `tests` should be used. Like
-    ``description``, this may either be a list of short strings or a
-    single string.
-
-    If neither ``description`` nor ``descriptionDone`` are set, the
-    actual command arguments will be used to construct the description.
-    This may be a bit too wide to fit comfortably on the Waterfall
-    display. ::
-
-        from buildbot.steps.shell import ShellCommand
-        f.addStep(ShellCommand(command=["make", "test"],
-                               description=["testing"],
-                               descriptionDone=["tests"]))
-
-``descriptionSuffix``
-    This is an optional suffix appended to the end of the description (ie,
-    after ``description`` and ``descriptionDone``). This can be used to distinguish
-    between build steps that would display the same descriptions in the waterfall.
-    This parameter may be set to list of short strings, a single string, or ``None``.
-
-    For example, a builder might use the ``Compile`` step to build two different
-    codebases. The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`,
-    respectively for each step, which will result in the full descriptions
-    `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.
 
 ``logEnviron``
     If this option is ``True`` (the default), then the step's logfile will describe the
@@ -2220,13 +2310,13 @@ One problem with specifying a database is that each reload of the
 configuration will get a new instance of ``ConnectionPool`` (even if the
 connection parameters are the same). To avoid that Buildbot thinks the builder
 configuration has changed because of this, use the
-:class:`process.mtrlogobserver.EqConnectionPool` subclass of
+:class:`steps.mtrlogobserver.EqConnectionPool` subclass of
 :class:`ConnectionPool`, which implements an equiality operation that avoids
 this problem.
 
 Example use::
 
-    from buildbot.process.mtrlogobserver import MTR, EqConnectionPool
+    from buildbot.steps.mtrlogobserver import MTR, EqConnectionPool
     myPool = EqConnectionPool("MySQLdb", "host", "buildbot", "password", "db")
     myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
                           command=["perl", "mysql-test-run.pl", "--force"]))

@@ -77,7 +77,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + ExpectShell.log('stdio',
                 stdout='git version 1.7.5')
             + 0,
-            Expect('stat', dict(file='wkdir\.buildbot-patched',
+            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
             Expect('stat', dict(file=r'wkdir\.git',
@@ -190,8 +190,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['patch', '-p1', '--remove-empty-files',
-                                 '--force', '--forward', '-i', '.buildbot-diff'])
+                        command=['git', 'apply', '--index', '-p', '1'],
+                        initialStdin='patch')
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
                                  logEnviron=True))
@@ -245,8 +245,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['patch', '-p1', '--remove-empty-files',
-                                 '--force', '--forward', '-i', '.buildbot-diff'])
+                        command=['git', 'apply', '--index', '-p', '1'],
+                        initialStdin='patch')
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])

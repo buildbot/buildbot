@@ -73,10 +73,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
                    'slaveEnvironment', 'remote_kwargs', 'command',
                    'description', 'descriptionDone', 'descriptionSuffix']
 
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
-    descriptionSuffix = None # extra information to append to suffix
-
     command = None # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in
@@ -159,13 +155,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def setCommand(self, command):
         self.command = command
-
-    def describe(self, done=False):
-        desc = self._describe(done)
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
 
     def _describe(self, done=False):
         """Return a list of short strings to describe this step, for the
@@ -679,7 +668,7 @@ class PerlModuleTest(Test):
             test_summary_report_index = lines.index("Test Summary Report")
             del lines[0:test_summary_report_index + 2]
 
-            re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
+            re_test_result = re.compile(r"^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
 
             mos = map(lambda line: re_test_result.search(line), lines)
             test_result_lines = [mo.groups() for mo in mos if mo]
@@ -694,7 +683,7 @@ class PerlModuleTest(Test):
                     total = int(line[2])
 
         else: # Nope, it's the old version
-            re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
+            re_test_result = re.compile(r"^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
 
             mos = map(lambda line: re_test_result.search(line), lines)
             test_result_lines = [mo.groups() for mo in mos if mo]

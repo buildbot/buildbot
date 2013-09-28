@@ -102,13 +102,6 @@ class Mercurial(Source):
         d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
-        def checkPatched(patched):
-            if patched:
-                return self._dovccmd(['--config', 'extensions.purge=', 'purge'])
-            else:
-                return 0
-        d.addCallback(checkPatched)
-
         if self.branchType == 'dirname':
             self.repourl = self.repourl + (branch or '')
             self.branch = self.defaultBranch
@@ -371,3 +364,7 @@ class Mercurial(Source):
         d.addCallback(check)
         return d
 
+    def applyPatch(self, patch):
+        d = self._dovccmd(['import', '--no-commit', '-p', str(patch[0]), '-'],
+               initialStdin=patch[1])
+        return d

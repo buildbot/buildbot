@@ -74,6 +74,9 @@ class TestBuildFactory(unittest.TestCase):
     def test_addStep_ArgumentsInTheWrongPlace(self):
         factory = BuildFactory()
         self.assertRaises(TypeError, factory.addStep, BuildStep(), name="name")
+        # this also raises a deprecation error, which we don't care about (see
+        # test_s)
+        self.flushWarnings()
 
     def test_addSteps(self):
         factory = BuildFactory()

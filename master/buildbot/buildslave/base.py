@@ -1046,7 +1046,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return why
         d.addCallbacks(_sent, _set_failed)
         def _substantiated(res):
-            log.msg("Slave %s substantiated \o/" % self.slavename)
+            log.msg(r"Slave %s substantiated \o/" % self.slavename)
             self.substantiated = True
             if not self.substantiation_deferred:
                 log.msg("No substantiation deferred for %s" % self.slavename)

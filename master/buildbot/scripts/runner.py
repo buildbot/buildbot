@@ -24,6 +24,7 @@ from __future__ import with_statement
 from twisted.python import usage, reflect
 import re
 import sys
+import sqlalchemy as sa
 from buildbot.scripts import base
 
 
@@ -140,18 +141,31 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
 
       --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
     The --db string is stored verbatim in the buildbot.tac file, and
-    evaluated as 'buildbot start' time to pass a DBConnector instance into
+    evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
     """
 
     def postOptions(self):
         base.BasedirMixin.postOptions(self)
-        if not re.match('^\d+$', self['log-size']):
+
+        # validate 'log-size' parameter
+        if not re.match(r'^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
-        if not re.match('^\d+$', self['log-count']) and \
+
+        # validate 'log-count' parameter
+        if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
             raise usage.UsageError("log-count parameter needs to be an int " +
                                    " or None")
+
+        # validate 'db' parameter
+        try:
+            # check if sqlalchemy will be able to parse specified URL
+            sa.engine.url.make_url(self['db'])
+        except sa.exc.ArgumentError:
+            raise usage.UsageError("could not parse database URL '%s'"
+                                   % self['db'])
+
 
 class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.stop.stop"

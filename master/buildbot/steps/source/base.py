@@ -185,8 +185,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
-    def applyPatch(self, patchlevel):
-        patch_command = ['patch', '-p%s' % patchlevel, '--remove-empty-files',
+    def applyPatch(self, patch):
+        patch_command = ['patch', '-p%s' % patch[0], '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
         cmd = buildstep.RemoteShellCommand(self.workdir,
                                            patch_command,
@@ -204,7 +204,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         return d
 
     def patch(self, _, patch):
-        patchlevel = patch[0]
         diff = patch[1]
         root = None
         if len(patch) >= 3:
@@ -239,7 +238,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         d = _downloadFile(diff, ".buildbot-diff")
         d.addCallback(lambda _ : _downloadFile("patched\n", ".buildbot-patched"))
-        d.addCallback(lambda _: self.applyPatch(patchlevel))
+        d.addCallback(lambda _: self.applyPatch(patch))
         cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)

@@ -207,8 +207,8 @@ class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
     def test_simple(self):
         self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
         self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
-        self.properties.setProperty('slavename', 'testSlave', source='SetPropery', runtime=True)
-        self.expectOutcome(result=SUCCESS, status_text=["SetProperty"])
+        self.properties.setProperty('slavename', 'testSlave', source='SetProperty', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=["Set"])
         self.expectProperty('testProperty', 'sch=force, slave=testSlave', source='SetProperty')
         return self.runStep()
 
@@ -224,6 +224,6 @@ class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(master.LogRenderable(content=Interpolate('sch=%(prop:scheduler)s, slave=%(prop:slavename)s')))
         self.properties.setProperty('scheduler', 'force', source='TestSetProperty', runtime=True)
         self.properties.setProperty('slavename', 'testSlave', source='TestSetProperty', runtime=True)
-        self.expectOutcome(result=SUCCESS, status_text=['LogRenderable'])
+        self.expectOutcome(result=SUCCESS, status_text=['Logged'])
         self.expectLogfile('Output', pprint.pformat('sch=force, slave=testSlave'))
         return self.runStep()

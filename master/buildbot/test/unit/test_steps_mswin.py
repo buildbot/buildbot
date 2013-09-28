@@ -60,35 +60,36 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_copy(self):
-        return self._run_simple_test('D:\source', 'E:\dest')
+        return self._run_simple_test(r'D:\source', r'E:\dest')
 
     def test_copy_files(self):
         return self._run_simple_test(
-                'D:\source', 'E:\dest', files=['a.txt', 'b.txt', '*.log'],
+                r'D:\source', r'E:\dest', files=['a.txt', 'b.txt', '*.log'],
                 expected_args=['a.txt', 'b.txt', '*.log']
             )
 
     def test_copy_recursive(self):
         return self._run_simple_test(
-                'D:\source', 'E:\dest', recursive=True,
+                r'D:\source', r'E:\dest', recursive=True,
                 expected_args=['/E']
             )
 
     def test_mirror_files(self):
         return self._run_simple_test(
-                'D:\source', 'E:\dest', files=['*.foo'], mirror=True,
+                r'D:\source', r'E:\dest', files=['*.foo'], mirror=True,
                 expected_args=['*.foo', '/MIR']
             )
 
     def test_move_files(self):
         return self._run_simple_test(
-                'D:\source', 'E:\dest', files=['*.foo'], move=True,
+                r'D:\source', r'E:\dest', files=['*.foo'], move=True,
                 expected_args=['*.foo', '/MOVE']
             )
 
     def test_exclude(self):
         return self._run_simple_test(
-                'D:\source', 'E:\dest', files=['blah*'], exclude=['*.foo', '*.bar'],
+                r'D:\source', r'E:\dest',
+                files=['blah*'], exclude=['*.foo', '*.bar'],
                 expected_args=['blah*', '/XF', '*.foo', '*.bar']
             )
 
@@ -97,25 +98,25 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
         # Codes that mean uneventful copies (including no copy at all).
         for i in [0, 1]:
             yield self._run_simple_test(
-                    'D:\source', 'E:\dest', expected_code=i,
+                    r'D:\source', r'E:\dest', expected_code=i,
                     expected_res=SUCCESS
                 )
 
         # Codes that mean some mismatched or extra files were found.
         for i in range(2, 8):
             yield self._run_simple_test(
-                    'D:\source', 'E:\dest', expected_code=i,
+                    r'D:\source', r'E:\dest', expected_code=i,
                     expected_res=WARNINGS
                 )
         # Codes that mean errors have been encountered.
         for i in range(8, 32):
             yield self._run_simple_test(
-                    'D:\source', 'E:\dest', expected_code=i,
+                    r'D:\source', r'E:\dest', expected_code=i,
                     expected_res=FAILURE
                 )
 
         # bit 32 is meaningless
         yield self._run_simple_test(
-                'D:\source', 'E:\dest', expected_code=32,
+                r'D:\source', r'E:\dest', expected_code=32,
                 expected_res=EXCEPTION
             )

@@ -516,3 +516,7 @@ class Git(Source):
             return gitInstalled
         d.addCallback(checkSupport)
         return d
+    def applyPatch(self, patch):
+        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
+                          initialStdin=patch[1])
+        return d

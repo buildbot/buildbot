@@ -19,6 +19,10 @@ from distutils.version import LooseVersion
 from buildbot import monkeypatches
 monkeypatches.patch_all(for_tests=True)
 
+# enable deprecation warnings
+import warnings
+warnings.filterwarnings('always', category=DeprecationWarning)
+
 # import mock so we bail out early if it's not installed
 try:
     import mock

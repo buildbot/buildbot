@@ -114,16 +114,16 @@ class CVSMaildirSource(MaildirSource):
         theTime =  datetime.datetime.utcfromtimestamp(float(when))
         rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
 
-        catRE           = re.compile( '^Category:\s*(\S.*)')
-        cvsRE           = re.compile( '^CVSROOT:\s*(\S.*)')
-        cvsmodeRE       = re.compile( '^Cvsmode:\s*(\S.*)')
-        filesRE         = re.compile( '^Files:\s*(\S.*)')
-        modRE           = re.compile( '^Module:\s*(\S.*)')
-        pathRE          = re.compile( '^Path:\s*(\S.*)')
-        projRE          = re.compile( '^Project:\s*(\S.*)')
-        singleFileRE    = re.compile( '(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
-        tagRE           = re.compile( '^\s+Tag:\s*(\S.*)')
-        updateRE        = re.compile( '^Update of:\s*(\S.*)')
+        catRE           = re.compile(r'^Category:\s*(\S.*)')
+        cvsRE           = re.compile(r'^CVSROOT:\s*(\S.*)')
+        cvsmodeRE       = re.compile(r'^Cvsmode:\s*(\S.*)')
+        filesRE         = re.compile(r'^Files:\s*(\S.*)')
+        modRE           = re.compile(r'^Module:\s*(\S.*)')
+        pathRE          = re.compile(r'^Path:\s*(\S.*)')
+        projRE          = re.compile(r'^Project:\s*(\S.*)')
+        singleFileRE    = re.compile(r'(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
+        tagRE           = re.compile(r'^\s+Tag:\s*(\S.*)')
+        updateRE        = re.compile(r'^Update of:\s*(\S.*)')
         comments = ""
         branch = None
         cvsroot = None
@@ -211,9 +211,9 @@ class CVSMaildirSource(MaildirSource):
                 log.msg('CVSMaildirSource can\'t get path from file list. Ignoring mail')
                 return
             fileList = fileList[len(path):].strip()
-            singleFileRE = re.compile( '(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            singleFileRE = re.compile(r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
         elif cvsmode == '1.12':
-            singleFileRE = re.compile( '(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            singleFileRE = re.compile(r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
             if path is None:
                 raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
-"""
+r"""
 Buildbot metrics module
 
 Keeps track of counts and timings of various internal buildbot

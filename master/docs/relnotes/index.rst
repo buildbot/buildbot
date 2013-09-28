@@ -75,6 +75,8 @@ Master
 Features
 ~~~~~~~~
 
+* The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
+
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
@@ -162,10 +164,21 @@ Features
 * The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
   See :bb:bug:`2560`.
 
+* The slave-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
+  Please convert any use of slave-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
+  TODO: update version in deprecation warning.
+
+* New source step :bb:step:`Monotone` added on master side.
+
+* Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
+  using :ref:`Docker <first-run-docker-label>`.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
+
+* The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

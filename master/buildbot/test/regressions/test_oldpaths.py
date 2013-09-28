@@ -13,9 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-
 from twisted.trial import unittest
 from buildbot.util import pickle
+
+def deprecatedImport(fn):
+    def wrapper(self):
+        fn(self)
+        warnings = self.flushWarnings()
+        # on older Pythons, this warning appears twice, so use collapse it
+        if len(warnings) == 2 and warnings[0] == warnings[1]:
+            del warnings[1]
+        self.assertEqual(len(warnings), 1, "got: %r" % (warnings,))
+        self.assertEqual(warnings[0]['category'], DeprecationWarning)
+    return wrapper
 
 class OldImportPaths(unittest.TestCase):
     """
@@ -145,42 +155,52 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.steps.source import Source
         assert Source
 
+    @deprecatedImport
     def test_steps_source_CVS(self):
         from buildbot.steps.source import CVS
         assert CVS
 
+    @deprecatedImport
     def test_steps_source_SVN(self):
         from buildbot.steps.source import SVN
         assert SVN
 
+    @deprecatedImport
     def test_steps_source_Git(self):
         from buildbot.steps.source import Git
         assert Git
 
+    @deprecatedImport
     def test_steps_source_Darcs(self):
         from buildbot.steps.source import Darcs
         assert Darcs
 
+    @deprecatedImport
     def test_steps_source_Repo(self):
         from buildbot.steps.source import Repo
         assert Repo
 
+    @deprecatedImport
     def test_steps_source_Bzr(self):
         from buildbot.steps.source import Bzr
         assert Bzr
 
+    @deprecatedImport
     def test_steps_source_Mercurial(self):
         from buildbot.steps.source import Mercurial
         assert Mercurial
 
+    @deprecatedImport
     def test_steps_source_P4(self):
         from buildbot.steps.source import P4
         assert P4
 
+    @deprecatedImport
     def test_steps_source_Monotone(self):
         from buildbot.steps.source import Monotone
         assert Monotone
 
+    @deprecatedImport
     def test_steps_source_BK(self):
         from buildbot.steps.source import BK
         assert BK

@@ -106,7 +106,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir\.buildbot-patched',
+            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
             Expect('stat', dict(file=r'wkdir\.hg',
@@ -208,10 +208,6 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', '--config',
-                                 'extensions.purge=', 'purge'])
-            + 0,
             Expect('stat', dict(file='wkdir/.hg',
                                       logEnviron=True))
             + 0,
@@ -246,8 +242,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['patch', '-p1', '--remove-empty-files',
-                                 '--force', '--forward', '-i', '.buildbot-diff'])
+                        command=[ 'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
+                        initialStdin='patch')
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
                                  logEnviron=True))
@@ -275,10 +271,6 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                       logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', '--config',
-                                 'extensions.purge=', 'purge'])
-            + 0,
             Expect('stat', dict(file='wkdir/.hg',
                                       logEnviron=True))
             + 0,
@@ -313,8 +305,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['patch', '-p1', '--remove-empty-files',
-                                 '--force', '--forward', '-i', '.buildbot-diff'])
+                        command=[ 'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
+                        initialStdin='patch')
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])

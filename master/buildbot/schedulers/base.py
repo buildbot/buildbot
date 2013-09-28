@@ -137,8 +137,8 @@ class BaseScheduler(ClusteredService, StateMixin):
         if change_filter and not change_filter.filter_change(change):
             return
         if change.codebase not in self.codebases:
-            log.msg(format='change contains codebase %(codebase)s that is'
-                'not processed by scheduler %(scheduler)s',
+            log.msg(format='change contains codebase %(codebase)s that is '
+                'not processed by scheduler %(name)s',
                 codebase=change.codebase, name=self.name)
             return
         if fileIsImportant:

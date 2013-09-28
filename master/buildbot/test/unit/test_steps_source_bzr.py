@@ -69,7 +69,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['bzr', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir\.buildbot-patched',
+            Expect('stat', dict(file=r'wkdir\.buildbot-patched',
                                 logEnviron=True))
             + 1,
             Expect('stat', dict(file=r'wkdir\.bzr',

@@ -92,17 +92,17 @@ missingFilenameResult = deepcopy(goodUnparsedResult)
 missingFilenameResult = missingFilenameResult.replace(file2, "")
 
 duplicateLogResult = deepcopy(goodUnparsedResult)
-duplicateLogResult = re.sub("<log>"+log1+"</log>",
+duplicateLogResult = re.sub(r"<log>"+log1+"</log>",
                             "<log>blah</log><log>blah</log>",
                             duplicateLogResult)
 
 duplicateFilesResult = deepcopy(goodUnparsedResult)
-duplicateFilesResult = re.sub("<files>\s*</files>",
+duplicateFilesResult = re.sub(r"<files>\s*</files>",
                               "<files></files><files></files>",
                               duplicateFilesResult)
 
 missingCiResult = deepcopy(goodUnparsedResult)
-r = re.compile("<ci.*</ci>", re.DOTALL | re.MULTILINE)
+r = re.compile(r"<ci.*</ci>", re.DOTALL | re.MULTILINE)
 missingCiResult = re.sub(r, "", missingCiResult)
 
 badResultMsgs = { 'badUnparsedResult':

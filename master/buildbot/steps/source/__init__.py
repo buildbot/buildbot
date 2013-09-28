@@ -13,9 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 from buildbot.steps.source.base import Source
 from buildbot.steps.source.oldsource import CVS, \
     SVN, Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone, BK
+
+warningString = "The slave-side %s step is deprecated and will be removed in a future version.  Please switch to the corresponding master-side step."
+
+oldClasses = [ "CVS", "SVN", "Git", "Darcs", "Repo", "Bzr", "Mercurial", "P4",
+               "Monotone", "BK" ]
+
+for oldClass in oldClasses:
+    deprecatedModuleAttribute(Version("Buildbot", 0, 8, 9),
+                              warningString %(oldClass),
+                              "buildbot.steps.source", oldClass)
 
 _hush_pyflakes = [ Source, CVS, SVN, \
      Git, Darcs, Repo, Bzr, Mercurial, P4, Monotone, BK ]

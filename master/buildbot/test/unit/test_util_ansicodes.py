@@ -23,6 +23,9 @@ class TestAnsiCodes(unittest.TestCase):
         ret = parse_ansi_sgr(string)
         self.assertEqual(ret, expected)
 
+    def test_ansi0m(self):
+        self.runTest("mfoo", ("foo", []))
+
     def test_ansi1m(self):
         self.runTest("33mfoo", ("foo", ["33"]))
 

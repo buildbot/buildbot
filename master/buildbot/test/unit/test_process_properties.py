@@ -1015,6 +1015,7 @@ class TestProperties(unittest.TestCase):
         self.assertIn('x', self.props.runtime)
 
     def test_setProperty_no_source(self):
+        # pylint: disable=no-value-for-parameter
         self.assertRaises(TypeError, lambda :
                 self.props.setProperty('x', 'y'))
 

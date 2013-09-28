@@ -202,7 +202,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                             self.objectid, less_than=max_changeid+1)
 
     def getPendingBuildTimes(self):
-        # This isn't locked, since the caller expects and immediate value,
+        # This isn't locked, since the caller expects an immediate value,
         # and in any case, this is only an estimate.
         return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
