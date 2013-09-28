@@ -452,6 +452,15 @@ buildbot.util.misc
     Tests can monkey-patch the ``_quiet`` method of the class to be notified
     when all planned invocations are complete.
 
+.. py:function:: cancelAfter(seconds, deferred)
+
+    :param seconds: timeout in seconds
+    :param deferred: deferred to cancel after timeout expires
+    :returns: the deferred passed to the function
+
+    Cancel the given deferred after the given time has elapsed, if it has not already been fired.
+    Whent his occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
+
 buildbot.util.netstrings
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

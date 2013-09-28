@@ -168,7 +168,7 @@ class Dispatcher(service.Service):
         d.addCallback(done)
 
         return d
-    
+
     # ICredentialsChecker
 
     def requestAvatarId(self, creds):
