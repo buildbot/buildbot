@@ -18,6 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.buildslave.protocols import pb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import protocols as util_protocols
 
 class TestListener(unittest.TestCase):
     def setUp(self):
@@ -62,6 +63,12 @@ class TestListener(unittest.TestCase):
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertEqual(isinstance(conn.result, pb.Connection), True)
 
+class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
+                        unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        self.conn = pb.Connection(self.master, mock.Mock(), mock.Mock())
 
 class TestConnection(unittest.TestCase):
     def setUp(self):

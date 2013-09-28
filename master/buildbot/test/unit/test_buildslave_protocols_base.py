@@ -18,6 +18,7 @@ import mock
 from twisted.trial import unittest
 from buildbot.buildslave.protocols import base
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import protocols
 
 
 class TestListener(unittest.TestCase):
@@ -27,7 +28,8 @@ class TestListener(unittest.TestCase):
         self.assertEqual(listener.master, master)
 
 
-class TestConnection(unittest.TestCase):
+class TestConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
+
     def setUp(self):
         self.master = fakemaster.make_master()
         self.buildslave = mock.Mock()
@@ -41,18 +43,6 @@ class TestConnection(unittest.TestCase):
         cb = mock.Mock()
 
         self.conn.notifyOnDisconnect(cb)
+        self.assertEqual(cb.call_args_list, [])
         self.conn.notifyDisconnected()
         self.assertNotEqual(cb.call_args_list, [])
-
-    def test_loseConnection(self):
-        self.assertRaises(NotImplementedError, self.conn.loseConnection)
-
-    def test_remotePrint(self):
-        self.assertRaises(NotImplementedError, self.conn.remotePrint, message='err')
-
-    def test_remoteGetSlaveInfo(self):
-        self.assertRaises(NotImplementedError, self.conn.remoteGetSlaveInfo)
-
-    def test_remoteSetBuilderList(self):
-        b = ["builder1", "builder2"]
-        self.assertRaises(NotImplementedError, self.conn.remoteSetBuilderList, b)
