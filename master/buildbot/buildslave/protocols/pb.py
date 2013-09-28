@@ -159,7 +159,7 @@ class Connection(base.Connection, pb.Avatar):
         return self.mind.callRemote('print', message="keepalive")
 
     @defer.inlineCallbacks
-    def remoteShutdown(self, buildslave):
+    def remoteShutdown(self):
         # First, try the "new" way - calling our own remote's shutdown
         # method. The method was only added in 0.8.3, so ignore NoSuchMethod
         # failures.
@@ -184,13 +184,13 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the slave buildbot process to exit.
         def old_way():
             d = None
-            for b in buildslave.slavebuilders.values():
+            for b in self.buildslave.slavebuilders.values():
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break
 
             if d:
-                log.msg("Shutting down (old) slave: %s" % buildslave.slavename)
+                log.msg("Shutting down (old) slave: %s" % self.buildslave.slavename)
                 # The remote shutdown call will not complete successfully since the
                 # buildbot process exits almost immediately after getting the
                 # shutdown request.
@@ -199,7 +199,7 @@ class Connection(base.Connection, pb.Avatar):
                 # shutdown as expected.
                 def _errback(why):
                     if why.check(pb.PBConnectionLost):
-                        log.msg("Lost connection to %s" % buildslave.slavename)
+                        log.msg("Lost connection to %s" % self.buildslave.slavename)
                     else:
                         log.err("Unexpected error when trying to shutdown %s" % buildslave.slavename)
                 d.addErrback(_errback)

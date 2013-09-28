@@ -69,13 +69,11 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Start command on slave
 
-    .. py:method:: remoteShutdown(buildslave)
+    .. py:method:: remoteShutdown()
 
-        :param buildslave: buildbot.buildslave.base.BuildSlave instance
         :returns: Deferred
 
-        Shutdown slave, "buildslave" required to shutdown old slaves (saved for
-        backward compatability) 
+        Shutdown the slave, causing its process to halt permanently.
 
     .. py:method:: remoteStartBuild(builderName)
 

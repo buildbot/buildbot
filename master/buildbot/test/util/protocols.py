@@ -54,7 +54,7 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
 
     def test_sig_remoteShutdown(self):
         @self.assertArgSpecMatches(self.conn.remoteShutdown)
-        def remoteShutdown(self, buildslave):
+        def remoteShutdown(self):
             pass
 
     def test_sig_remoteStartBuild(self):

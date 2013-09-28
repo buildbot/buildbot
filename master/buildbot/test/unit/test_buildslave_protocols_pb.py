@@ -165,10 +165,8 @@ class TestConnection(unittest.TestCase):
     def test_remoteShutdown(self):
         self.mind.callRemote.return_value = defer.succeed(None)
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        buildslave = None
-        # "buildslave" required to shutdown slave in "old way", since
-        # this feature deprecated and hard to test in reality it's not tested
-        conn.remoteShutdown(buildslave)
+        # note that we do not test the "old way", as it is now *very* old.
+        conn.remoteShutdown()
 
         self.mind.callRemote.assert_called_with('shutdown')
 
