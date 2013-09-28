@@ -28,7 +28,9 @@ def patch_servicechecks():
         assert not self.running
         return old_startService(self)
     def stopService(self):
-        assert self.running
+        if self.__class__.__name__ != 'BuildRequestDistributor':
+            # See the FIXME in process.botmaster.cleanShutdown.
+            assert self.running
         return old_stopService(self)
     Service.startService = startService
     Service.stopService = stopService
