@@ -33,6 +33,7 @@ from buildbot import interfaces
 from buildbot.process.builder import BuilderControl
 from buildbot.db import connector
 from buildbot.schedulers.manager import SchedulerManager
+from buildbot.buildslave import manager as bslavemanager
 from buildbot.process.botmaster import BotMaster
 from buildbot.process import debug
 from buildbot.process import metrics
@@ -121,6 +122,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         self.pbmanager = buildbot.pbmanager.PBManager()
         self.pbmanager.setServiceParent(self)
+
+        self.buildslaves = bslavemanager.BuildslaveManager(self)
+        self.buildslaves.setServiceParent(self)
 
         self.change_svc = ChangeManager(self)
         self.change_svc.setServiceParent(self)

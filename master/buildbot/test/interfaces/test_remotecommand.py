@@ -50,7 +50,7 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_run(self):
         cmd = self.makeRemoteCommand()
         @self.assertArgSpecMatches(cmd.run)
-        def run(self, step, remote):
+        def run(self, step, conn, builder_name):
             pass
 
     def test_signature_useLog(self):
