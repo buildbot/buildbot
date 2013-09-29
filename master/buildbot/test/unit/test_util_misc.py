@@ -153,18 +153,18 @@ class TestCancelAfter(unittest.TestCase):
 
     def test_timeout_succeeds(self):
         c = task.Clock()
-        d = misc.cancelAfter(10, self.d)
+        d = misc.cancelAfter(10, self.d, _reactor=c)
         self.assertFalse(d.called)
-        c.advance(10)
+        c.advance(11)
         d.callback("result")  # ignored
         self.assertTrue(d.called)
         self.assertFailure(d, defer.CancelledError)
 
     def test_timeout_fails(self):
         c = task.Clock()
-        d = misc.cancelAfter(10, self.d)
+        d = misc.cancelAfter(10, self.d, _reactor=c)
         self.assertFalse(d.called)
-        c.advance(10)
+        c.advance(11)
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
         self.assertFailure(d, defer.CancelledError)
