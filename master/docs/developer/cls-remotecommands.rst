@@ -1,7 +1,7 @@
 RemoteCommands
 ==============
 
-.. py:currentmodule:: buildbot.process.buildstep
+.. py:currentmodule:: buildbot.process.remotecommand
 
 Most of the action in build steps consists of performing operations on the
 slave.  This is accomplished via :class:`RemoteCommand` and its subclasses.
@@ -163,11 +163,11 @@ RemoteCommand
 
         Similar to :meth:`useLog`, but the logfile is only actually added when
         an update arrives for it.  The callback, ``activateCallback``, will be
-        called with the :class:`~buildbot.process.buildstep.RemoteCommand`
+        called with the :class:`~buildbot.process.remotecommand.RemoteCommand`
         instance when the first update for the log is delivered.
 
     With that finished, run the command using the inherited
-    :meth:`~buildbot.process.buildstep.RemoteCommand.run` method.  During the
+    :meth:`~buildbot.process.remotecommand.RemoteCommand.run` method.  During the
     run, you can inject data into the logfiles with any of these methods:
 
     .. py:method:: addStdout(data)

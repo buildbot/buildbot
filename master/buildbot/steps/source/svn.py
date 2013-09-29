@@ -22,7 +22,7 @@ from string import lower
 from twisted.python import log
 from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
@@ -164,7 +164,7 @@ class SVN(Source):
 
         # if we're copying, copy; otherwise, export from source to build
         if self.method == 'copy':
-            cmd = buildstep.RemoteCommand('cpdir',
+            cmd = remotecommand.RemoteCommand('cpdir',
                     { 'fromdir': 'source', 'todir':self.workdir,
                       'logEnviron': self.logEnviron })
         else:
@@ -179,7 +179,7 @@ class SVN(Source):
                 export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
 
-            cmd = buildstep.RemoteShellCommand('', export_cmd,
+            cmd = remotecommand.RemoteShellCommand('', export_cmd,
                     env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
 
@@ -210,7 +210,7 @@ class SVN(Source):
         if self.extra_args:
             command.extend(self.extra_args)
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['svn'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -264,7 +264,7 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
+        cmd = remotecommand.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -363,7 +363,7 @@ class SVN(Source):
         defer.returnValue(0)
 
     def checkSvn(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['svn', '--version'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout)
