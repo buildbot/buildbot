@@ -3323,7 +3323,7 @@ HTTP Requests
 
 Using the :bb:step:`HTTPStep` step, it is possible to perform HTTP requests in order to trigger another REST service about the progress of the build.
 
-.. note:: This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <http://python-request.org>`_ Python libraries.
+.. note:: This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <http://python-requests.org>`_ Python libraries.
 
 The parameters are the following:
 
@@ -3347,12 +3347,19 @@ The parameters are the following:
 ``other params``
     Any other keywords supported by the ``requests`` api can be passed to this step
 
+    .. note::
+
+        The entire Buildbot master process shares a single Requests ``Session`` object.
+        This has the advantage of supporting connection re-use and other HTTP/1.1 features.
+        However, it also means that any cookies or other state changed by one step will be visible to other steps, causing unexpected results.
+        This behavior may change in future versions.
+
 When the method is known in advance, class with the name of the method can also be used.
 In this case, it is not necessary to specify the method.
 
 Example::
 
-    from buildbot.steps.HTTPStep import POST
+    from buildbot.steps.http import POST
     from buildbot.process.properties import Property
     f.addStep(
         POST( 'http://myRESTService.example.com/builds',

@@ -27,6 +27,11 @@ try:
 except ImportError:
     txrequests = requests = None
 
+# This step uses a global Session object, which encapsulates a thread pool as
+# well as state such as cookies and authentication.  This state may pose
+# problems for users, where one step may get a cookie that is subsequently used
+# by another step in a different build.
+
 _session = None
 def getSession():
     global _session
