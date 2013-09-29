@@ -24,7 +24,7 @@ except ImportError:
     from StringIO import StringIO
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -172,7 +172,7 @@ class _DirectoryWriter(_FileWriter):
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = buildstep.RemoteCommand(remote_command, args,  decodeRC={None:SUCCESS, 0:SUCCESS})
+    self = remotecommand.RemoteCommand(remote_command, args,  decodeRC={None:SUCCESS, 0:SUCCESS})
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self

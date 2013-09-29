@@ -18,7 +18,7 @@
 from twisted.python import log
 from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
@@ -138,7 +138,7 @@ class Monotone(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,
                                                 'timeout': self.timeout,})
         cmd.useLog(self.stdio_log, False)
@@ -147,7 +147,7 @@ class Monotone(Source):
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
+            cmd = remotecommand.RemoteCommand('cpdir',
                                           {'fromdir': 'source',
                                            'todir':'build',
                                            'logEnviron': self.logEnviron,
@@ -164,7 +164,7 @@ class Monotone(Source):
         return d
 
     def checkMonotone(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['mtn', '--version'],
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['mtn', '--version'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout)
@@ -293,7 +293,7 @@ class Monotone(Source):
         if not command:
             raise ValueError("No command specified")
         workdir = wkdir or self.workdir
-        cmd = buildstep.RemoteShellCommand(workdir, command,
+        cmd = remotecommand.RemoteShellCommand(workdir, command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,

@@ -60,7 +60,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
     .. py:method:: startCommands(remoteCommand, builderName, commandId, commandName, args)
 
-        :param remoteCommand: buildbot.process.buildstep.RemoteCommand instance
+        :param remoteCommand: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :param builderName: self explanatory
         :type builderName: string
         :param commandId: command number
