@@ -283,7 +283,7 @@ BuildStep
 
         :returns: Deferred
 
-        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.buildstep.RemoteCommand.run`.
+        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
 
     .. py:method:: addURL(name, url)
 
@@ -371,7 +371,7 @@ LoggingBuildStep
 
     .. py:method:: startCommand(command)
 
-        :param command: the :class:`~buildbot.process.buildstep.RemoteCommand`
+        :param command: the :class:`~buildbot.process.remotecommand.RemoteCommand`
             instance to start
 
         .. note::
@@ -412,7 +412,7 @@ LoggingBuildStep
         :returns: step result from :mod:`buildbot.status.results`
 
         This hook should decide what result the step should have.
-        The default implementation invokes ``log_eval_func`` if it exists, and looks at :attr:`~buildbot.process.buildstep.RemoteCommand.rc` to distinguish :data:`~buildbot.status.results.SUCCESS` from :data:`~buildbot.status.results.FAILURE`.
+        The default implementation invokes ``log_eval_func`` if it exists, and looks at :attr:`~buildbot.process.remotecommand.RemoteCommand.rc` to distinguish :data:`~buildbot.status.results.SUCCESS` from :data:`~buildbot.status.results.FAILURE`.
 
     The remaining methods provide an embarrassment of ways to set the summary of the step that appears in the various status interfaces.
     The easiest way to affect this output is to override :meth:`~BuildStep.describe`.

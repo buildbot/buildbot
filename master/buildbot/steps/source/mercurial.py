@@ -18,7 +18,7 @@
 from twisted.python import log
 from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
@@ -164,7 +164,7 @@ class Mercurial(Source):
 
 
     def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -229,7 +229,7 @@ class Mercurial(Source):
                  abandonOnFailure=True):
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -297,7 +297,7 @@ class Mercurial(Source):
                 if self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
+                    cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,
                                                             'logEnviron':
                                                             self.logEnviron,})
                     cmd.useLog(self.stdio_log, False)
@@ -311,7 +311,7 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
+            cmd = remotecommand.RemoteCommand('rmdir', {'dir': filename,
                                                     'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)

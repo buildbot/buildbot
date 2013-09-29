@@ -209,3 +209,9 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.steps.source import BK
         assert BK
 
+    def test_buildstep_remotecommand(self):
+        from buildbot.process.buildstep import RemoteCommand, \
+                LoggedRemoteCommand, RemoteShellCommand
+        assert RemoteCommand
+        assert LoggedRemoteCommand
+        assert RemoteShellCommand

@@ -18,7 +18,7 @@ from twisted.internet import defer, reactor
 from distutils.version import LooseVersion
 
 from buildbot import config as bbconfig
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -238,7 +238,7 @@ class Git(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,
                                                 'timeout': self.timeout,})
         cmd.useLog(self.stdio_log, False)
@@ -247,7 +247,7 @@ class Git(Source):
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
+            cmd = remotecommand.RemoteCommand('cpdir',
                                           {'fromdir': 'source',
                                            'todir':'build',
                                            'logEnviron': self.logEnviron,
@@ -316,7 +316,7 @@ class Git(Source):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
-        cmd = buildstep.RemoteShellCommand(self.workdir,
+        cmd = remotecommand.RemoteShellCommand(self.workdir,
                                            full_command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
@@ -461,7 +461,7 @@ class Git(Source):
 
     def _doClobber(self):
         """Remove the work directory"""
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,
                                                 'timeout': self.timeout,})
         cmd.useLog(self.stdio_log, False)

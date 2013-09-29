@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.test.util import interfaces
-from buildbot.test.fake import remotecommand
+from buildbot.test.fake import remotecommand as fakeremotecommand
 from twisted.trial import unittest
 from buildbot.status.results import SUCCESS
 
@@ -92,11 +92,11 @@ class Tests(interfaces.InterfaceTests):
 
 class TestRunCommand(unittest.TestCase, Tests):
 
-    remoteCommandClass = buildstep.RemoteCommand
-    remoteShellCommandClass = buildstep.RemoteShellCommand
+    remoteCommandClass = remotecommand.RemoteCommand
+    remoteShellCommandClass = remotecommand.RemoteShellCommand
 
 
 class TestFakeRunCommand(unittest.TestCase, Tests):
 
-    remoteCommandClass = remotecommand.FakeRemoteCommand
-    remoteShellCommandClass = remotecommand.FakeRemoteShellCommand
+    remoteCommandClass = fakeremotecommand.FakeRemoteCommand
+    remoteShellCommandClass = fakeremotecommand.FakeRemoteShellCommand

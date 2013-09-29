@@ -20,7 +20,7 @@ from twisted.python import log, failure
 from twisted.spread import pb
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
 from buildbot import config
@@ -119,7 +119,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        valid_rsc_args = inspect.getargspec(buildstep.RemoteShellCommand.__init__)[0]
+        valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
         for arg in kwargs.keys():
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
@@ -258,7 +258,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # create the actual RemoteShellCommand instance now
         kwargs = self.buildCommandKwargs(warnings)
-        cmd = buildstep.RemoteShellCommand(**kwargs)
+        cmd = remotecommand.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
 
         self.startCommand(cmd, warnings)
@@ -496,7 +496,7 @@ class WarningCountingShellCommand(ShellCommand):
             'maxsize': None,
             'blocksize': 32*1024,
             }
-        cmd = buildstep.RemoteCommand('uploadFile', args, ignore_updates=True)
+        cmd = remotecommand.RemoteCommand('uploadFile', args, ignore_updates=True)
         d = self.runCommand(cmd)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)

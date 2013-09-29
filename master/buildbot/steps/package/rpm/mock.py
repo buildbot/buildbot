@@ -20,7 +20,7 @@ Steps and objects related to mock building.
 import re
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot import config
 
 class MockStateObserver(buildstep.LogLineObserver):
@@ -91,7 +91,7 @@ class Mock(ShellCommand):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': 
                 map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
                 self.mock_logfiles)})
         d = self.runCommand(cmd)

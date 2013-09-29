@@ -22,7 +22,7 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from buildbot.steps.slave import CompositeStepMixin
 from buildbot.steps.transfer import _FileReader
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 
 class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
@@ -188,7 +188,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     def applyPatch(self, patch):
         patch_command = ['patch', '-p%s' % patch[0], '--remove-empty-files',
                          '--force', '--forward', '-i', '.buildbot-diff']
-        cmd = buildstep.RemoteShellCommand(self.workdir,
+        cmd = remotecommand.RemoteShellCommand(self.workdir,
                                            patch_command,
                                            env=self.env,
                                            logEnviron=self.logEnviron)
@@ -224,7 +224,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 'workdir': self.workdir,
                 'mode' : None
                 }
-            cmd = buildstep.RemoteCommand('downloadFile', args)
+            cmd = remotecommand.RemoteCommand('downloadFile', args)
             cmd.useLog(self.stdio_log, False)
             log.msg("Downloading file: %s" % (filename))
             d = self.runCommand(cmd)
@@ -239,7 +239,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         d = _downloadFile(diff, ".buildbot-diff")
         d.addCallback(lambda _ : _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d.addCallback(lambda _: self.runCommand(cmd))

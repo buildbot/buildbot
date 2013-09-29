@@ -18,7 +18,7 @@ import os
 from twisted.python import log
 from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -122,7 +122,7 @@ class Bzr(Source):
             raise ValueError("Unknown method, check your configuration")
 
     def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -139,13 +139,13 @@ class Bzr(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 'build',
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': 'build',
                                                 'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self.incremental())
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
+            cmd = remotecommand.RemoteCommand('cpdir',
                                           {'fromdir': 'source',
                                            'todir':'build',
                                            'logEnviron': self.logEnviron,})
@@ -221,7 +221,7 @@ class Bzr(Source):
         return lastChange
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['bzr'] + command,
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['bzr'] + command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,

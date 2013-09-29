@@ -124,6 +124,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The buildmaster now requires at least Twisted-11.0.0.
 
+* The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:module:`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

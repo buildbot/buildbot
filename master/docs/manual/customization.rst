@@ -577,14 +577,14 @@ The whole thing looks like this::
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
 To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
 Make sure the log gets closed when it finishes.
-When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
+When giving a Logfile to a :class:`~buildbot.process.remotecommand.RemoteShellCommand`, just ask it to close the log when the command completes::
 
     log = self.addLog('output')
     cmd.useLog(log, closeWhenFinished=True)
