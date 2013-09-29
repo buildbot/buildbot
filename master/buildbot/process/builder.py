@@ -46,7 +46,6 @@ class Builder(config.ReconfigurableServiceMixin,
     def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
-        self._builderid = None # filled in by getBuilderId
 
         # this is filled on demand by getBuilderId; don't access it directly
         self._builderid = None
@@ -118,6 +117,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # additional locking around this function.
         if self._builderid:
             return defer.succeed(self._builderid)
+        # buildbot.config should ensure this is already unicode, but it doesn't
+        # hurt to check again
         name = ascii2unicode(self.name)
         d = self.master.data.updates.findBuilderId(name)
         @d.addCallback

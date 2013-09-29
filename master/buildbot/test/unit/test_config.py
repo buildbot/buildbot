@@ -1090,6 +1090,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda : config.BuilderConfig(name='_a',
                 factory=self.factory, slavenames=['a']))
 
+    def test_utf8_name(self):
+        self.assertRaisesConfigError(
+            "builder names must be unicode or ASCII",
+            lambda : config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
+                factory=self.factory, slavenames=['a']))
+
     def test_no_factory(self):
         self.assertRaisesConfigError(
             "builder 'a' has no factory",
@@ -1166,6 +1172,13 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             properties={},
             mergeRequests=None,
             description=None)
+
+    def test_unicode_name(self):
+        cfg = config.BuilderConfig(
+            name=u'a \N{SNOWMAN} c', slavename='a', factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg,
+            name=u'a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(

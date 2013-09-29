@@ -62,6 +62,9 @@ Nine
 
 * SQLAlchemy-Migrate-0.6.1 is no longer supported.
 
+* Bulider names are now restricted to unicode strings or ASCII bytestrings.
+  Encoded bytestrings are not accepted.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
