@@ -1055,7 +1055,7 @@ checkout or update. ::
     from buildbot.steps.source.mtn import Monotone
     factory.addStep(Darcs(repourl='http://path/to/repo',
                           mode='full', method='clobber', branch='some.branch.name',
-			  retry=(10, 1)))
+                          retry=(10, 1)))
 
 
 Monotone step takes the following arguments:
@@ -3312,3 +3312,66 @@ framework. ::
 The single argument, ``testdir``, specifies where the tests should be run.
 This directory will be passed to the ``run_maxq.py`` command, and the results
 analyzed.
+
+.. index:: HTTP Requests
+.. bb:step:: HTTPStep
+.. bb:step:: POST
+.. bb:step:: GET
+.. bb:step:: PUT
+.. bb:step:: DELETE
+.. bb:step:: HEAD
+.. bb:step:: OPTIONS
+
+HTTP Requests
++++++++++++++
+
+Using the :bb:step:`HTTPStep` step, it is possible to perform HTTP requests in order to trigger another REST service about the progress of the build.
+
+.. note:: This step requires the `txrequests <https://pypi.python.org/pypi/txrequests>`_ and `requests <http://python-requests.org>`_ Python libraries.
+
+The parameters are the following:
+
+``url``
+    (mandatory) The URL where to send the request
+
+``method``
+    The HTTP method to use (out of ``POST``, ``GET``, ``PUT``, ``DELETE``,
+    ``HEAD`` or ``OPTIONS``), default to ``POST``.
+
+``params``
+    Dictionary of URL parameters to append to the URL.
+
+``data``
+    The body to attach the request.
+    If a dictionary is provided, form-encoding will take place.
+
+``headers``
+    Dictionary of headers to send.
+
+``other params``
+    Any other keywords supported by the ``requests`` api can be passed to this step
+
+    .. note::
+
+        The entire Buildbot master process shares a single Requests ``Session`` object.
+        This has the advantage of supporting connection re-use and other HTTP/1.1 features.
+        However, it also means that any cookies or other state changed by one step will be visible to other steps, causing unexpected results.
+        This behavior may change in future versions.
+
+When the method is known in advance, class with the name of the method can also be used.
+In this case, it is not necessary to specify the method.
+
+Example::
+
+    from buildbot.steps.http import POST
+    from buildbot.process.properties import Property
+    f.addStep(
+        POST( 'http://myRESTService.example.com/builds',
+            data = {
+            'builder': Property('buildername'),
+        'buildnumber': Property('buildnumber'),
+        'slavename': Property('slavename'),
+        'revision': Property('got_revision'),
+            }
+            )
+        )

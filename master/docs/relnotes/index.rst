@@ -173,12 +173,17 @@ Features
 * Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
   using :ref:`Docker <first-run-docker-label>`.
 
+* The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
+  This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
 * The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
+
+* The buildmaster now requires at least Twisted-11.0.0.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

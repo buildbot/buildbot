@@ -128,6 +128,7 @@ setup_args = {
               "buildbot.www",
               "buildbot.changes",
               "buildbot.buildslave",
+              "buildbot.buildslave.protocols",
               "buildbot.steps",
               "buildbot.steps.package",
               "buildbot.steps.package.deb",
@@ -194,7 +195,7 @@ else:
 
     if sys.version_info[:2] >= (2, 6):
         setup_args['install_requires'] += [
-            'twisted >= 9.0.0',
+            'twisted >= 11.0.0',
             'Jinja2 >= 2.1',
         ]
     else:
@@ -204,7 +205,7 @@ else:
         # Python 2.5 starting from 4.0.0 release.
         # Jinja2 dropped Python 2.5 support in 2.7 release.
         setup_args['install_requires'] += [
-            'twisted >= 9.0.0, <= 12.1.0',
+            'twisted >= 11.0.0, <= 12.1.0',
             'zope.interface < 4.0.0',
             'Jinja2 >= 2.1, < 2.7',
         ]

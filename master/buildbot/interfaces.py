@@ -1067,7 +1067,7 @@ class ILogObserver(Interface):
         pass
 
 class IBuildSlave(Interface):
-    # this is a marker interface for the BuildSlave class
+    # callback methods from the manager
     pass
 
 class ILatentBuildSlave(IBuildSlave):

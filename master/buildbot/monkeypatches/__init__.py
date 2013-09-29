@@ -86,6 +86,8 @@ def patch_all(for_tests=False):
         from buildbot.monkeypatches import testcase_synctest
         testcase_synctest.patch_testcase_synctest()
         patch_testcase_assert_raises_regexp()
+        from buildbot.monkeypatches import decorators
+        decorators.patch()
 
     patch_bug4881()
     patch_bug4520()

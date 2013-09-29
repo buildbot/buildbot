@@ -44,9 +44,9 @@ class FakeRemoteCommand(object):
         if collectStderr:
             self.stderr = ''
 
-    def run(self, step, remote):
+    def run(self, step, conn, builder_name):
         # delegate back to the test case
-        return self.testcase._remotecommand_run(self, step, remote)
+        return self.testcase._remotecommand_run(self, step, conn, builder_name)
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
         if not logfileName:
