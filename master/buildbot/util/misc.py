@@ -73,7 +73,8 @@ def cancelAfter(seconds, deferred, _reactor=reactor):
     # cancel the delayedCall when the underlying deferred fires
     @deferred.addBoth
     def cancelTimer(x):
-        delayedCall.cancel()
+        if delayedCall.active():
+            delayedCall.cancel()
         return x
 
     return deferred
