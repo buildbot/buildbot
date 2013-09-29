@@ -20,10 +20,10 @@ Steps and objects related to mock building.
 import re
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.process import buildstep, remotecommand
+from buildbot.process import logobserver, remotecommand
 from buildbot import config
 
-class MockStateObserver(buildstep.LogLineObserver):
+class MockStateObserver(logobserver.LogLineObserver):
     _line_re = re.compile(r'^.*State Changed: (.*)$')
 
     def outLineReceived(self, line):

@@ -684,7 +684,7 @@ returns the :class:`LogFile` object. You then add text to this :class:`LogFile` 
 calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
 are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
 closed. It may be useful to create and populate a :class:`LogFile` like this
-from a :class:`LogObserver` method - see :ref:`Adding-LogObservers`.
+from a :class:`~buildbot.process.logobserver.LogObserver` method - see :ref:`Adding-LogObservers`.
 
 The ``logfiles=`` argument to :bb:step:`ShellCommand` (see
 :bb:step:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
@@ -730,7 +730,7 @@ run than by merely tracking the number of bytes that have been written
 to stdout. This improves the accuracy and the smoothness of the ETA
 display.
 
-To accomplish this, you will need to attach a :class:`LogObserver` to
+To accomplish this, you will need to attach a :class:`~buildbot.process.logobserver.LogObserver` to
 one of the log channels, most commonly to the :file:`stdio` channel but
 perhaps to another one which tracks a log file. This observer is given
 all text as it is emitted from the command, and has the opportunity to
@@ -739,15 +739,15 @@ some event has occurred (like a source file being compiled), it can
 use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
 progress that this event represents.
 
-There are a number of pre-built :class:`LogObserver` classes that you
+There are a number of pre-built :class:`~buildbot.process.logobserver.LogObserver` classes that you
 can choose from (defined in :mod:`buildbot.process.buildstep`, and of
 course you can subclass them to add further customization. The
-:class:`LogLineObserver` class handles the grunt work of buffering and
+:class:`~buildbot.process.logobserver.LogLineObserver` class handles the grunt work of buffering and
 scanning for end-of-line delimiters, allowing your parser to operate
 on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
 length are dropped; the maximum defaults to 16384 bytes, but you can
 change it by calling :meth:`setMaxLineLength()` on your
-:class:`LogLineObserver` instance.  Use ``sys.maxint`` for effective
+:class:`~buildbot.process.logobserver.LogLineObserver` instance.  Use ``sys.maxint`` for effective
 infinity.)
 
 For example, let's take a look at the :class:`TrialTestCaseCounter`,
@@ -768,7 +768,7 @@ well-defined than the `[OK]` lines.
 
 The parser class looks like this::
 
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
     
     class TrialTestCaseCounter(LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
@@ -940,7 +940,7 @@ This will involve writing a new :class:`BuildStep` (probably named
 definition itself will look something like this::
 
     from buildbot.steps.shell import ShellCommand
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
     
     class FNURRRGHCounter(LogLineObserver):
         numTests = 0

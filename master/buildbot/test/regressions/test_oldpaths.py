@@ -215,3 +215,10 @@ class OldImportPaths(unittest.TestCase):
         assert RemoteCommand
         assert LoggedRemoteCommand
         assert RemoteShellCommand
+
+    def test_buildstep_logobserver(self):
+        from buildbot.process.buildstep import LogObserver, \
+                LogLineObserver, OutputProgressObserver
+        assert LogObserver
+        assert LogLineObserver
+        assert OutputProgressObserver

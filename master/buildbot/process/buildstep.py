@@ -27,7 +27,7 @@ from buildbot import interfaces, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
-from buildbot.process import remotecommand, properties
+from buildbot.process import remotecommand, logobserver, properties
 from buildbot.util.eventual import eventually
 
 class BuildStepFailed(Exception):
@@ -37,7 +37,12 @@ class BuildStepFailed(Exception):
 RemoteCommand = remotecommand.RemoteCommand
 LoggedRemoteCommand = remotecommand.LoggedRemoteCommand
 RemoteShellCommand = remotecommand.RemoteShellCommand
-_hush_pyflakes = [ RemoteCommand, LoggedRemoteCommand, RemoteShellCommand ]
+LogObserver = logobserver.LogObserver
+LogLineObserver = logobserver.LogLineObserver
+OutputProgressObserver = logobserver.OutputProgressObserver
+_hush_pyflakes = [
+    RemoteCommand, LoggedRemoteCommand, RemoteShellCommand,
+    LogObserver, LogLineObserver, OutputProgressObserver ]
 
 class LogObserver:
     implements(interfaces.ILogObserver)

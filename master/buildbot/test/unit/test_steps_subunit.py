@@ -19,7 +19,6 @@ from zope.interface import implements
 from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.steps import subunit
-from buildbot.process import subunitlogobserver
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
@@ -36,7 +35,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
         self.logobserver.warningio = StringIO.StringIO()
-        self.patch(subunitlogobserver, 'SubunitLogObserver',
+        self.patch(subunit, 'SubunitLogObserver',
                                 lambda : self.logobserver)
         return self.setUpBuildStep()
 
