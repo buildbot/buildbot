@@ -112,6 +112,9 @@ Features
 * Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
   using :ref:`Docker <first-run-docker-label>`.
 
+* The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
+  This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
