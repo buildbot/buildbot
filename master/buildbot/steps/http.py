@@ -1,15 +1,29 @@
-# use the 'requests' lib: http://python-requests.org
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from buildbot import config
 from twisted.internet import defer
 
+# use the 'requests' lib: http://python-requests.org
 try:
     import txrequests
     import requests
 except ImportError:
-    config.error("Please install txrequests to use this step (pip install txrequests)")
+    txrequests = requests = None
 
 _session = None
 def getSession():
@@ -26,6 +40,7 @@ def closeSession():
     global _session
     if _session is not None:
         _session.close()
+        _session = None
 
 class HTTPStep(BuildStep):
 
@@ -33,26 +48,30 @@ class HTTPStep(BuildStep):
     description = 'Requesting'
     descriptionDone = 'Requested'
     requestsParams = [ "method", "url", "params", "data", "headers",
-                        "cookies", "files", "auth",
-                        "timeout", "allow_redirects", "proxies",
-                        "hooks", "stream", "verify", "cert" ]
+                       "cookies", "files", "auth",
+                       "timeout", "allow_redirects", "proxies",
+                       "hooks", "stream", "verify", "cert" ]
     renderables = requestsParams
 
     def __init__(self, url, method, description=None, descriptionDone=None, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        if txrequests is None or requests is None:
+            config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
         self.session = getSession()
+        self.method = method
+        self.url = url
         self.requestkwargs = {'method': method, 'url': url}
         for p in HTTPStep.requestsParams:
             v = kwargs.pop(p, None)
+            self.__dict__[p] = v
             if v is not None:
                 self.requestkwargs[p] = v
-
         if method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
             config.error("Wrong method given: '%s' is not known" % method)
         if description is not None:
             self.description = description
         if descriptionDone is not None:
             self.descriptionDone = descriptionDone
+        BuildStep.__init__(self, **kwargs)
 
     def start(self):
         self.doRequest()
@@ -76,7 +95,6 @@ class HTTPStep(BuildStep):
             else:
                 log.addHeader('\t%s\n' % data)
 
-
         try:
             r = yield self.session.request(**self.requestkwargs)
         except requests.exceptions.ConnectionError, e:
@@ -87,10 +105,10 @@ class HTTPStep(BuildStep):
         if r.history:
             log.addStdout('\nRedirected %d times:\n\n' % len(r.history))
             for rr in r.history:
-                self.log_request(rr)
+                self.log_response(rr)
                 log.addStdout('=' * 60 + '\n')
 
-        self.log_request(r)
+        self.log_response(r)
 
         log.finish()
 
@@ -100,25 +118,25 @@ class HTTPStep(BuildStep):
         else:
             self.finished(FAILURE)
 
-    def log_request(self, request):
+    def log_response(self, response):
         log = self.getLog('log')
 
         log.addHeader('Request Header:\n')
-        for k, v in request.request.headers.iteritems():
+        for k, v in response.request.headers.iteritems():
             log.addHeader('\t%s: %s\n' % (k, v))
 
-        log.addStdout('URL: %s\n' % request.url)
+        log.addStdout('URL: %s\n' % response.url)
 
-        if request.status_code == requests.codes.ok:
-            log.addStdout('Status: %s\n' % request.status_code)
+        if response.status_code == requests.codes.ok:
+            log.addStdout('Status: %s\n' % response.status_code)
         else:
-            log.addStderr('Status: %s\n' % request.status_code)
+            log.addStderr('Status: %s\n' % response.status_code)
 
         log.addHeader('Response Header:\n')
-        for k, v in request.headers.iteritems():
+        for k, v in response.headers.iteritems():
             log.addHeader('\t%s: %s\n' % (k, v))
 
-        log.addStdout(' ------ Content ------\n%s' % request.text)
+        log.addStdout(' ------ Content ------\n%s' % response.text)
 
     def describe(self, done=False):
         if done:
