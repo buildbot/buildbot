@@ -32,11 +32,6 @@ The master has several child services:
     PB connections, potentially on multiple ports, and dispatching those
     connections to appropriate components based on the supplied username.
 
-``master.buildslaves``
-    A :py:class:`buildbot.buildslave.manager.BuildslaveManager` instance that
-    provides wrapper around multiple master-slave protocols(e.g. PB) to unify
-    calls for them from higher level code 
-
 ``master.change_svc``
     A :py:class:`buildbot.changes.manager.ChangeManager` instance that manages
     the active change sources, as well as the stream of changes received from

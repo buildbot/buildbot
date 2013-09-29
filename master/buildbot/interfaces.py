@@ -1082,7 +1082,7 @@ class ILogObserver(Interface):
         pass
 
 class IBuildSlave(Interface):
-    # callback methods from the manager
+    # this is a marker interface for the BuildSlave class
     pass
 
 class ILatentBuildSlave(IBuildSlave):

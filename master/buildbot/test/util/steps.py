@@ -204,9 +204,9 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.conn = mock.Mock(name="SlaveBuilder(connection)")
+        self.remote = mock.Mock(name="SlaveBuilder(remote)")
         # TODO: self.step.setupProgress()
-        d = self.step.startStep(self.conn)
+        d = self.step.startStep(self.remote)
         def check(result):
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
@@ -229,9 +229,9 @@ class BuildStepMixin(object):
 
     # callbacks from the running step
 
-    def _remotecommand_run(self, command, step, conn, builder_name):
+    def _remotecommand_run(self, command, step, remote):
         self.assertEqual(step, self.step)
-        self.assertEqual(conn, self.conn)
+        self.assertEqual(remote, self.remote)
         got = (command.remote_command, command.args)
 
         if not self.expected_remote_commands:

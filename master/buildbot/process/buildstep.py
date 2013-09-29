@@ -63,11 +63,10 @@ class RemoteCommand(pb.Referenceable):
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
-    def run(self, step, conn, builder_name):
+    def run(self, step, remote):
         self.active = True
         self.step = step
-        self.conn = conn
-        self.builder_name = builder_name
+        self.remote = remote
 
         # generate a new command id
         cmd_id = RemoteCommand._commandCounter
@@ -113,8 +112,8 @@ class RemoteCommand(pb.Referenceable):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
-        d = self.conn.startCommands(self, self.builder_name, self.commandID,
-            self.remote_command, self.args)
+        d = self.remote.callRemote("startCommand", self, self.commandID,
+                                   self.remote_command, self.args)
         return d
 
     def _finished(self, failure=None):
@@ -137,19 +136,20 @@ class RemoteCommand(pb.Referenceable):
         if not self.active:
             log.msg(" but this RemoteCommand is already inactive")
             return defer.succeed(None)
-        if not self.conn:
-            log.msg(" but our .conn went away")
+        if not self.remote:
+            log.msg(" but our .remote went away")
             return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
             log.msg("RemoteCommand.disconnect: lost slave")
-            self.conn = None
+            self.remote = None
             self._finished(why)
             return defer.succeed(None)
 
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
 
-        d = self.conn.remoteInterruptCommand(self.commandID, str(why))
+        d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
+                                self.commandID, str(why))
         # the slave may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d
@@ -798,7 +798,7 @@ class BuildStep(object, properties.PropertiesMixin):
     def runCommand(self, c):
         self.cmd = c
         c.buildslave = self.buildslave
-        d = c.run(self, self.remote, self.build.builder.name)
+        d = c.run(self, self.remote)
         return d
 
     @staticmethod

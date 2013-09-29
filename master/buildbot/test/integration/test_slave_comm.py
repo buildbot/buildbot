@@ -26,8 +26,6 @@ from buildbot import pbmanager, buildslave, config
 from buildbot.status import master
 from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
-from buildbot.buildslave import manager as bslavemanager
-
 
 class FakeSlaveBuilder(pb.Referenceable):
     """
@@ -52,8 +50,8 @@ class FakeSlaveBuildSlave(pb.Referenceable):
             self.master_persp = None
         persp.broker.notifyOnDisconnect(clear_persp)
 
-    def remote_print(self, message):
-        log.msg("SLAVE-SIDE: remote_print(%r)" % (message,))
+    def remote_print(self, what):
+        log.msg("SLAVE-SIDE: remote_print(%r)" % (what,))
 
     def remote_getSlaveInfo(self):
         return { 'info' : 'here' }
@@ -77,7 +75,7 @@ class FakeBuilder(builder.Builder):
         builder.Builder.__init__(self, name)
         self.builder_status = mock.Mock()
 
-    def attached(self, slave, commands):
+    def attached(self, slave, remote, commands):
         assert commands == { 'x' : 1 }
         return defer.succeed(None)
 
@@ -116,9 +114,6 @@ class TestSlaveComm(unittest.TestCase):
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
         self.pbmanager.startService()
 
-        self.buildslaves = self.master.buildslaves = bslavemanager.BuildslaveManager(self.master)
-        self.buildslaves.startService()
-
         self.botmaster = botmaster.BotMaster(self.master)
         self.botmaster.startService()
 
@@ -136,12 +131,11 @@ class TestSlaveComm(unittest.TestCase):
         return defer.gatherResults([
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
-            self.buildslaves.stopService(),
         ])
 
     @defer.inlineCallbacks
     def addSlave(self, **kwargs):
-        """test_duplicate_slave_old_dead
+        """
         Create a master-side slave instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{BuildSlave} constructor.
@@ -159,11 +153,10 @@ class TestSlaveComm(unittest.TestCase):
                 slavename='testslave', factory=factory.BuildFactory()) ]
 
         yield self.botmaster.reconfigService(new_config)
-        yield self.buildslaves.reconfigService(new_config)
 
         # as part of the reconfig, the slave registered with the pbmanager, so
         # get the port it was assigned
-        self.port = self.buildslave.registration.getPBPort()
+        self.port = self.buildslave.registration.getPort()
 
     def connectSlave(self, waitForBuilderList=True):
         """
@@ -184,9 +177,9 @@ class TestSlaveComm(unittest.TestCase):
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
-            slavebuildslave.detach_d = defer.Deferred()
-            self.buildslave._test_detached = lambda : \
-                            slavebuildslave.detach_d.callback(None)
+            self.detach_d = defer.Deferred()
+            self.buildslave.subscribeToDetach(lambda :
+                        self.detach_d.callback(None))
 
             return slavebuildslave
         login_d.addCallback(logged_in)
@@ -217,7 +210,7 @@ class TestSlaveComm(unittest.TestCase):
         self.slaveSideDisconnect(slave)
 
         # wait for the resulting detach
-        yield slave.detach_d
+        yield self.detach_d
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
@@ -238,7 +231,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave1)
 
-        yield slave1.detach_d
+        yield self.detach_d
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -253,7 +246,7 @@ class TestSlaveComm(unittest.TestCase):
 
         # monkeypatch that slave to fail with PBConnectionLost when its
         # remote_print method is called
-        def remote_print(message):
+        def remote_print(what):
             raise pb.PBConnectionLost("fake!")
         slave1.remote_print = remote_print
 
@@ -264,7 +257,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave2)
 
-        yield slave1.detach_d
+        yield self.detach_d
 
         # flush the exception logged for this on the slave
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
