@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import re, shlex, random
+import re, shlex, random, sys
 from string import join, capitalize, lower
 
 from zope.interface import implements
@@ -91,7 +91,7 @@ class ForceOptions(usage.Options):
             self['reason'] = " ".join(args)
 
 
-class IrcBuildRequest:
+class BuildRequest:
     hasStarted = False
     timer = None
 
@@ -124,16 +124,26 @@ class IrcBuildRequest:
         d = s.waitUntilFinished()
         d.addCallback(self.parent.watchedBuildFinished)
 
-class IRCContact(base.StatusReceiver):
+class Contact(base.StatusReceiver):
     implements(IStatusReceiver)
     """I hold the state for a single user's interaction with the buildbot.
 
     There will be one instance of me for each user who interacts personally
     with the buildbot. There will be an additional instance for each
     'broadcast contact' (chat rooms, IRC channels as a whole).
+
+    @cvar bot: StatusBot this contact belongs to
+    @type bot: L{StatusBot<buildbot.status.words.StatusBot>}
+    @cvar channel: Channel this contact is on, might be None in case of privmsgs
+    @type channel: any type
+    @cvar user: User ID representing this contact
+    @type user: any type
+
+    @note The parameters @p user and @p channel will be passed on to StatusBot
+        methods, such as StatusBot.groupChat and StatusBot.chat
     """
 
-    def __init__(self, bot, dest):
+    def __init__(self, bot, user, channel=None):
         self.bot = bot
         self.master = bot.master
         self.notify_events = {}
@@ -142,13 +152,19 @@ class IRCContact(base.StatusReceiver):
         self.useRevisions = bot.useRevisions
         self.useColors = bot.useColors
         self.reported_builds = [] # tuples (when, buildername, buildnum)
-        self.add_notification_events(bot.notify_events)
 
-        # when people send us public messages ("buildbot: command"),
-        # self.dest is the name of the channel ("#twisted"). When they send
-        # us private messages (/msg buildbot command), self.dest is their
-        # username.
-        self.dest = dest
+        # automatically subscribe if this contact is a channel
+        if channel and not user:
+            self.add_notification_events(bot.notify_events)
+
+        self.user = user
+        self.channel = channel
+
+    def _setMuted(self, muted):
+        self.muted = muted
+
+    def _isMuted(self):
+        return self.muted
 
     # silliness
 
@@ -224,17 +240,25 @@ class IRCContact(base.StatusReceiver):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
         try:
-            return shlex.split(args)
+            # see http://bugs.python.org/issue1170
+            # shlex only supports unicode input in Python 2.7.3+
+            if isinstance(args, unicode):
+                if sys.hexversion >= 0x020703F0:
+                    return shlex.split(args)
+                else:
+                    return shlex.split(str(args))
+            else:
+                return shlex.split(args)
         except ValueError, e:
             raise UsageError(e)
 
-    def command_HELLO(self, args, who):
+    def command_HELLO(self, args):
         self.send("yes?")
 
-    def command_VERSION(self, args, who):
+    def command_VERSION(self, args):
         self.send("buildbot-%s at your service" % version)
 
-    def command_LIST(self, args, who):
+    def command_LIST(self, args):
         args = self.splitArgs(args)
         if len(args) == 0:
             raise UsageError, "try 'list builders'"
@@ -252,7 +276,7 @@ class IRCContact(base.StatusReceiver):
             return
     command_LIST.usage = "list builders - List configured builders"
 
-    def command_STATUS(self, args, who):
+    def command_STATUS(self, args):
         args = self.splitArgs(args)
         if len(args) == 0:
             which = "all"
@@ -311,7 +335,7 @@ class IRCContact(base.StatusReceiver):
         if self.subscribed:
             self.unsubscribe_from_build_events()
 
-    def command_NOTIFY(self, args, who):
+    def command_NOTIFY(self, args):
         args = self.splitArgs(args)
 
         if not args:
@@ -342,7 +366,7 @@ class IRCContact(base.StatusReceiver):
 
     command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
-    def command_WATCH(self, args, who):
+    def command_WATCH(self, args):
         args = self.splitArgs(args)
         if len(args) != 1:
             raise UsageError("try 'watch <builder>'")
@@ -500,7 +524,7 @@ class IRCContact(base.StatusReceiver):
             if buildurl:
                 self.send("Build details are at %s" % buildurl)
 
-    def command_FORCE(self, args, who):
+    def command_FORCE(self, args):
         errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
         args = self.splitArgs(args)
         if not args:
@@ -557,19 +581,19 @@ class IRCContact(base.StatusReceiver):
 
         bc = self.getControl(which)
 
-        reason = "forced: by %s: %s" % (self.describeUser(who), reason)
+        reason = "forced: by %s: %s" % (self.describeUser(), reason)
         ss = SourceStamp(branch=branch, revision=revision)
         d = bc.submitBuildRequest(ss, reason, props=properties.asDict())
         def subscribe(buildreq):
-            ireq = IrcBuildRequest(self, self.useRevisions)
-            buildreq.subscribe(ireq.started)
+            req = BuildRequest(self, self.useRevisions)
+            buildreq.subscribe(req.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 
 
     command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
 
-    def command_STOP(self, args, who):
+    def command_STOP(self, args):
         args = self.splitArgs(args)
         if len(args) < 3 or args[0] != 'build':
             raise UsageError, "try 'stop build WHICH <REASON>'"
@@ -578,7 +602,7 @@ class IRCContact(base.StatusReceiver):
 
         buildercontrol = self.getControl(which)
 
-        r = "stopped: by %s: %s" % (self.describeUser(who), reason)
+        r = "stopped: by %s: %s" % (self.describeUser(), reason)
 
         # find an in-progress build
         builderstatus = self.getBuilder(which)
@@ -630,7 +654,7 @@ class IRCContact(base.StatusReceiver):
             str += ", ".join(t)
         self.send(str)
 
-    def command_LAST(self, args, who):
+    def command_LAST(self, args):
         args = self.splitArgs(args)
 
         if len(args) == 0:
@@ -666,20 +690,20 @@ class IRCContact(base.StatusReceiver):
         commands.sort()
         return commands
 
-    def describeUser(self, user):
-        if self.dest[0] == '#':
-            return "IRC user <%s> on channel %s" % (user, self.dest)
-        return "IRC user <%s> (privmsg)" % user
+    def describeUser(self):
+        if self.channel:
+            return "User <%s> on channel %s" % (self.user, self.channel)
+        return "User <%s> (privmsg)" % self.user
 
     # commands
 
-    def command_MUTE(self, args, who):
+    def command_MUTE(self, args):
         # The order of these is important! ;)
         self.send("Shutting up for now.")
         self.muted = True
     command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
 
-    def command_UNMUTE(self, args, who):
+    def command_UNMUTE(self, args):
         if self.muted:
             # The order of these is important! ;)
             self.muted = False
@@ -688,7 +712,7 @@ class IRCContact(base.StatusReceiver):
             self.send("You hadn't told me to be quiet, but it's the thought that counts, right?")
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
-    def command_HELP(self, args, who):
+    def command_HELP(self, args):
         args = self.splitArgs(args)
         if len(args) == 0:
             self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
@@ -713,33 +737,33 @@ class IRCContact(base.StatusReceiver):
             self.send("No usage info for " + ' '.join(["'%s'" % arg for arg in args]))
     command_HELP.usage = "help <command> [<arg> [<subarg> ...]] - Give help for <command> or one of it's arguments"
 
-    def command_SOURCE(self, args, who):
+    def command_SOURCE(self, args):
         self.send("My source can be found at "
                   "https://github.com/buildbot/buildbot")
     command_SOURCE.usage = "source - the source code for Buildbot"
 
-    def command_COMMANDS(self, args, who):
+    def command_COMMANDS(self, args):
         commands = self.build_commands()
         str = "buildbot commands: " + ", ".join(commands)
         self.send(str)
     command_COMMANDS.usage = "commands - List available commands"
 
-    def command_DESTROY(self, args, who):
-        if self.bot.nickname not in args:
+    def command_DESTROY(self, args):
+        if self.bot.getCurrentNickname(self) not in args:
             self.act("readies phasers")
 
-    def command_DANCE(self, args, who):
+    def command_DANCE(self, args):
         reactor.callLater(1.0, self.send, "<(^.^<)")
         reactor.callLater(2.0, self.send, "<(^.^)>")
         reactor.callLater(3.0, self.send, "(>^.^)>")
         reactor.callLater(3.5, self.send, "(7^.^)7")
         reactor.callLater(5.0, self.send, "(>^.^<)")
 
-    def command_SHUTDOWN(self, args, who):
+    def command_SHUTDOWN(self, args):
         if args not in ('check','start','stop','now'):
             raise UsageError("try 'shutdown check|start|stop|now'")
 
-        if not self.bot.factory.allowShutdown:
+        if not self.bot.factory or not self.bot.factory.allowShutdown:
             raise UsageError("shutdown control is not enabled")
 
         botmaster = self.master.botmaster
@@ -775,26 +799,26 @@ class IRCContact(base.StatusReceiver):
     # communication with the user
 
     def send(self, message):
-        if not self.muted:
-            self.bot.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+        if self.muted:
+            return
+
+        if self.channel:
+            self.bot.groupChat(self.channel, message)
+        else:
+            self.bot.chat(self.user, message)
 
     def act(self, action):
-        if not self.muted:
-            self.bot.describe(self.dest, action.encode("ascii", "replace"))
+        if self.muted:
+            return
+
+        self.bot.describe(self.channel, action)
 
     # main dispatchers for incoming messages
 
     def getCommandMethod(self, command):
         return getattr(self, 'command_' + command.upper(), None)
 
-    def handleMessage(self, message, who):
-        # a message has arrived from 'who'. For broadcast contacts (i.e. when
-        # people do an irc 'buildbot: command'), this will be a string
-        # describing the sender of the message in some useful-to-log way, and
-        # a single Contact may see messages from a variety of users. For
-        # unicast contacts (i.e. when people do an irc '/msg buildbot
-        # command'), a single Contact will only ever see messages from a
-        # single user.
+    def handleMessage(self, message):
         message = message.lstrip()
         if self.silly.has_key(message):
             self.doSilly(message)
@@ -812,7 +836,7 @@ class IRCContact(base.StatusReceiver):
             return defer.succeed(None)
 
         if meth:
-            d = defer.maybeDeferred(meth, args.strip(), who)
+            d = defer.maybeDeferred(meth, args.strip())
             @d.addErrback
             def usageError(f):
                 f.trap(UsageError)
@@ -825,45 +849,111 @@ class IRCContact(base.StatusReceiver):
             return d
         return defer.succeed(None)
 
-    def handleAction(self, data, user):
+    def handleAction(self, action):
         # this is sent when somebody performs an action that mentions the
-        # buildbot (like '/me kicks buildbot'). 'user' is the name/nick/id of
+        # buildbot (like '/me kicks buildbot'). self.user is the name/nick/id of
         # the person who performed the action, so if their action provokes a
         # response, they can be named.  This is 100% silly.
-        if not data.endswith("s "+ self.bot.nickname):
+        if not action.endswith("s "+ self.bot.getCurrentNickname(self)):
             return
-        words = data.split()
+
+        words = action.split()
         verb = words[-2]
         if verb == "kicks":
             response = "%s back" % verb
         else:
-            response = "%s %s too" % (verb, user)
+            response = "%s %s too" % (verb, self.user)
         self.act(response)
 
+class StatusBot:
+    """Abstract status bot"""
 
-class IrcStatusBot(irc.IRCClient):
-    """I represent the buildbot to an IRC server.
-    """
-    contactClass = IRCContact
+    contactClass = Contact
 
-    def __init__(self, nickname, password, channels, pm_to_nicks, status,
-            categories, notify_events, noticeOnChannel=False,
+    def __init__(self, status, categories, notify_events, noticeOnChannel=False,
             useRevisions=False, showBlameList=False, useColors=True):
-        self.nickname = nickname
-        self.channels = channels
-        self.pm_to_nicks = pm_to_nicks
-        self.password = password
-        self.status = status
-        self.master = status.master
+
         self.categories = categories
         self.notify_events = notify_events
-        self.hasQuit = 0
-        self.contacts = {}
         self.noticeOnChannel = noticeOnChannel
         self.useColors = useColors
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self.contacts = {}
+
+        # set the factory from the outside, used to shutdown the bot if != None
+        self.factory = None
+        self.status = status
+        self.master = status.master if status else None
+        self.control = None
+
+    def groupChat(self, channel, message):
+        """Write out message or notice to target @p channel
+
+        @sa self.noticeOnChannel
+        """
+        raise NotImplementedError()
+
+    def chat(self, user, message):
+        """Write out message to target @p user"""
+        raise NotImplementedError()
+
+    def describe(self, dest, action):
+        """Write out @p action to @p dest
+
+        @type dest: The type of either a user or a channel
+        @cvar dest: Destination, user or channel
+        @type action: string
+        @cvar action: The action message
+
+        @note This relates to writing "/me ACTION" on channel X in IRC"
+        """
+        raise NotImplementedError()
+
+    def getCurrentNickName(self, contact):
+        """Get current name
+
+        @param contact Instance of Contact
+            (e.g. on Jabber you may have different nicks in different channels,
+            hence we need to know in which context we are"""
+        raise NotImplementedError()
+
+    def getContact(self, user, channel=None):
+        """Get an Contact instance of @p user on @p channel
+
+        @param user: single user ID (nick, JID)
+        @param channel: A room (channel, MUC) or a"""
+
+        if (channel, user) in self.contacts:
+            return self.contacts[(channel, user)]
+        new_contact = self.contactClass(self, user, channel)
+        self.contacts[(channel, user)] = new_contact
+        return new_contact
+
+    def log(self, msg):
+        log.msg("%s: %s" % (self, msg))
+
+
+class IrcStatusBot(StatusBot, irc.IRCClient):
+    """I represent the buildbot to an IRC server.
+    """
+
+    def __init__(self, nickname, password, channels, pm_to_nicks, status,
+            categories, notify_events, noticeOnChannel=False,
+            useRevisions=False, showBlameList=False, useColors=True,
+            ):
+        StatusBot.__init__(self, status, categories, notify_events, noticeOnChannel, useRevisions, showBlameList, useColors)
+
+        self.nickname = nickname
+        self.channels = channels
+        self.pm_to_nicks = pm_to_nicks
+        self.password = password
+        self.hasQuit = 0
         self._keepAliveCall = task.LoopingCall(lambda: self.ping(self.nickname))
+
+    def getCurrentNickname(self, contact):
+        # nickname is the same for all channels, hence ignore the parameter
+        return self.nickname
 
     def connectionMade(self):
         irc.IRCClient.connectionMade(self)
@@ -874,23 +964,19 @@ class IrcStatusBot(irc.IRCClient):
             self._keepAliveCall.stop()
         irc.IRCClient.connectionLost(self, reason)
 
-    def msgOrNotice(self, dest, message):
-        if self.noticeOnChannel and dest[0] == '#':
-            self.notice(dest, message)
+    # the following methods are used to send out data to the server
+
+    def groupChat(self, channel, message):
+        if self.noticeOnChannel and channel:
+            self.notice(channel, message.encode("ascii", "replace"))
         else:
-            self.msg(dest, message)
+            self.msg(channel, message.encode("ascii", "replace"))
 
-    def getContact(self, name):
-        name = name.lower() # nicknames and channel names are case insensitive
-        if name in self.contacts:
-            return self.contacts[name]
-        new_contact = self.contactClass(self, name)
-        self.contacts[name] = new_contact
-        return new_contact
+    def chat(self, user, message):
+        self.msg(user, message.encode("ascii", "replace"))
 
-    def log(self, msg):
-        log.msg("%s: %s" % (self, msg))
-
+    def describe(self, dest, action):
+        irc.IRCClient.describe(self, dest, action.encode("ascii", "replace"))
 
     # the following irc.IRCClient methods are called when we have input
 
@@ -899,22 +985,28 @@ class IrcStatusBot(irc.IRCClient):
         # channel is '#twisted' or 'buildbot' (for private messages)
         if channel == self.nickname:
             # private message
-            contact = self.getContact(user)
-            contact.handleMessage(message, user)
+            contact = self.getContact(user, channel=None)
+            contact.handleMessage(message)
             return
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
-        contact = self.getContact(channel)
+        contact = self.getContact(user, channel)
         if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
             message = message[len("%s:" % self.nickname):]
-            contact.handleMessage(message, user)
+            contact.handleMessage(message)
 
     def action(self, user, channel, data):
         user = user.split('!', 1)[0] # rest is ~user@hostname
-        # somebody did an action (/me actions) in the broadcast channel
-        contact = self.getContact(channel)
+        if channel == self.nickname:
+            # action received in private data
+            contact = self.getContact(user, channel=None)
+            contact.handleMessage(data)
+            return
+
+        # else: somebody did an action (/me actions) in the broadcast channel
+        contact = self.getContact(user, channel)
         if self.nickname in data:
-            contact.handleAction(data, user)
+            contact.handleAction(data)
 
     def signedOn(self):
         if self.password:
@@ -933,7 +1025,7 @@ class IrcStatusBot(irc.IRCClient):
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
         # trigger contact contructor, which in turn subscribes to notify events
-        self.getContact(channel)
+        self.getContact(user=None, channel=channel)
 
     def left(self, channel):
         self.log("I have left %s" % (channel,))
@@ -1006,7 +1098,6 @@ class IrcStatusFactory(ThrottledClientFactory):
                           useRevisions = self.useRevisions,
                           showBlameList = self.showBlameList)
         p.factory = self
-        p.status = self.status
         p.control = self.control
         self.p = p
         return p

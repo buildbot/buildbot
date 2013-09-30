@@ -18,14 +18,24 @@ from twisted.trial import unittest
 from twisted.application import internet
 from twisted.internet import task, reactor
 from buildbot.status import words
+from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util import compat, config
+
+class FakeStatusBot(words.StatusBot):
+
+    def __init__(self, *args, **kwargs):
+        words.StatusBot.__init__(self, *args, **kwargs)
+
+    def getCurrentNickname(self, contact):
+        return 'nick'
 
 class TestIrcContactChannel(unittest.TestCase):
 
     def setUp(self):
-        self.bot = mock.Mock(name='IRCStatusBot-instance')
-        self.bot.nickname = 'nick'
-        self.bot.notify_events = { 'success' : 1, 'failure' : 1 }
+        self.bot = FakeStatusBot(status = mock.Mock(name='status'),
+            categories=None,
+            notify_events = { 'success' : 1, 'failure' : 1 }
+        )
 
         # fake out subscription/unsubscription
         self.subscribed = False
@@ -35,6 +45,9 @@ class TestIrcContactChannel(unittest.TestCase):
         def unsubscribe(contact):
             self.subscribed = False
         self.bot.status.unsubscribe = unsubscribe
+
+        # fake out factory
+        self.bot.factory = mock.Mock(name='IRCStatusBot-instance.factory')
 
         # fake out clean shutdown
         self.bot.master = mock.Mock(name='IRCStatusBot-instance.master')
@@ -47,7 +60,7 @@ class TestIrcContactChannel(unittest.TestCase):
             self.bot.master.botmaster.shuttingDown = False
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
-        self.contact = words.IRCContact(self.bot, '#buildbot')
+        self.contact = words.Contact(self.bot, 'me', '#buildbot')
 
     def patch_send(self):
         self.sent = []
@@ -61,7 +74,7 @@ class TestIrcContactChannel(unittest.TestCase):
             self.actions.append(msg)
         self.contact.act = act
 
-    def do_test_command(self, command, args='', who='me', clock_ticks=None,
+    def do_test_command(self, command, args='', clock_ticks=None,
             exp_usage=True, exp_UsageError=False, allowShutdown=False,
             shuttingDown=False):
         cmd = getattr(self.contact, 'command_' + command.upper())
@@ -78,13 +91,13 @@ class TestIrcContactChannel(unittest.TestCase):
 
         if exp_UsageError:
             try:
-                cmd(args, who)
+                cmd(args)
             except words.UsageError:
                 return
             else:
                 self.fail("no UsageError")
         else:
-            cmd(args, who)
+            cmd(args)
         if clock_ticks:
             clock.pump(clock_ticks)
 
@@ -244,18 +257,16 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_send(self):
         events = []
-        def msgOrNotice(dest, msg):
+        def groupChat(dest, msg):
             events.append((dest, msg))
-        self.contact.bot.msgOrNotice = msgOrNotice
+        self.contact.bot.groupChat = groupChat
 
         self.contact.send("unmuted")
-        self.contact.send(u"unmuted, unicode \N{SNOWMAN}")
         self.contact.muted = True
         self.contact.send("muted")
 
         self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode ?'),
+            ('#buildbot', 'unmuted')
         ])
 
     def test_act(self):
@@ -265,19 +276,17 @@ class TestIrcContactChannel(unittest.TestCase):
         self.contact.bot.describe = describe
 
         self.contact.act("unmuted")
-        self.contact.act(u"unmuted, unicode \N{SNOWMAN}")
         self.contact.muted = True
         self.contact.act("muted")
 
         self.assertEqual(events, [
-            ('#buildbot', 'unmuted'),
-            ('#buildbot', 'unmuted, unicode ?'),
+            ('#buildbot', 'unmuted')
         ])
 
     def test_handleMessage_silly(self):
         silly_prompt = self.contact.silly.keys()[0]
         self.contact.doSilly = mock.Mock()
-        d = self.contact.handleMessage(silly_prompt, 'me')
+        d = self.contact.handleMessage(silly_prompt)
         @d.addCallback
         def cb(_):
             self.contact.doSilly.assert_called_with(silly_prompt)
@@ -285,23 +294,23 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
-        d = self.contact.handleMessage('testy', 'me')
+        d = self.contact.handleMessage('testy')
         @d.addCallback
         def cb(_):
-            self.contact.command_TESTY.assert_called_with('', 'me')
+            self.contact.command_TESTY.assert_called_with('')
         return d
 
     def test_handleMessage_long_command(self):
         self.contact.command_TESTY = mock.Mock()
-        d = self.contact.handleMessage('testy   westy boo', 'me')
+        d = self.contact.handleMessage('testy   westy boo')
         @d.addCallback
         def cb(_):
-            self.contact.command_TESTY.assert_called_with('westy boo', 'me')
+            self.contact.command_TESTY.assert_called_with('westy boo')
         return d
 
     def test_handleMessage_excited(self):
         self.patch_send()
-        d = self.contact.handleMessage('hi!', 'me')
+        d = self.contact.handleMessage('hi!')
         @d.addCallback
         def cb(_):
             self.assertEqual(len(self.sent), 1) # who cares what it says..
@@ -310,10 +319,10 @@ class TestIrcContactChannel(unittest.TestCase):
     @compat.usesFlushLoggedErrors
     def test_handleMessage_exception(self):
         self.patch_send()
-        def command_TESTY(msg, who):
+        def command_TESTY(msg):
             raise RuntimeError("FAIL")
         self.contact.command_TESTY = command_TESTY
-        d = self.contact.handleMessage('testy boom', 'me')
+        d = self.contact.handleMessage('testy boom')
         @d.addCallback
         def cb(_):
             self.assertEqual(self.sent,
@@ -323,10 +332,10 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_handleMessage_UsageError(self):
         self.patch_send()
-        def command_TESTY(msg, who):
+        def command_TESTY(msg):
             raise words.UsageError("oh noes")
         self.contact.command_TESTY = command_TESTY
-        d = self.contact.handleMessage('testy boom', 'me')
+        d = self.contact.handleMessage('testy boom')
         @d.addCallback
         def cb(_):
             self.assertEqual(self.sent, [ "oh noes" ])
@@ -334,17 +343,17 @@ class TestIrcContactChannel(unittest.TestCase):
 
     def test_handleAction_ignored(self):
         self.patch_act()
-        self.contact.handleAction('waves hi', 'me')
+        self.contact.handleAction('waves hi')
         self.assertEqual(self.actions, [])
 
     def test_handleAction_kick(self):
         self.patch_act()
-        self.contact.handleAction('kicks nick', 'me')
+        self.contact.handleAction('kicks nick')
         self.assertEqual(self.actions, ['kicks back'])
 
     def test_handleAction_stpuid(self):
         self.patch_act()
-        self.contact.handleAction('stupids nick', 'me')
+        self.contact.handleAction('stupids nick')
         self.assertEqual(self.actions, ['stupids me too'])
 
     def test_unclosed_quote(self):
@@ -357,20 +366,50 @@ class TestIrcContactChannel(unittest.TestCase):
         self.do_test_command('last', args='args\'', exp_UsageError=True)
         self.do_test_command('help', args='args\'', exp_UsageError=True)
 
+    def test_subscription_states(self):
+        sent = []
+        def send(message):
+            sent.append(message)
+
+        self.bot.notify_events = { 'success' : 1, 'failure' : 1 }
+        buildStatus = FakeBuildStatus(name='build')
+
+        # channels should be automatically subscribed
+        c = self.bot.getContact(None, channel='#ch1')
+        c.send = send
+        self.assertTrue(c.subscribed)
+        c.buildFinished(None, buildStatus, None)
+        self.assertTrue(len(sent) == 1)
+        sent[:] = []
+
+        # users in channels shouldn't be subscribed to anything
+        c = self.bot.getContact('jimmy', channel='#ch1')
+        self.assertFalse(c.subscribed)
+        self.contact.buildFinished(None, buildStatus, None)
+        self.assertTrue(len(sent) == 0)
+        sent[:] = []
+
+        # users seen in private chats shouldn't be subscribed to anything
+        c = self.bot.getContact('jimmy', channel='#ch1')
+        self.assertFalse(c.subscribed)
+        self.contact.buildFinished(None, buildStatus, None)
+        self.assertTrue(len(sent) == 0)
+        sent[:] = []
 
 class FakeContact(object):
 
-    def __init__(self, bot, name):
+    def __init__(self, bot, user, channel):
         self.bot = bot
-        self.name = name
+        self.user = user
+        self.channel = channel
         self.messages = []
         self.actions = []
 
-    def handleMessage(self, message, user):
-        self.messages.append((message, user))
+    def handleMessage(self, message):
+        self.messages.append(message)
 
-    def handleAction(self, data, user):
-        self.actions.append((data, user))
+    def handleAction(self, data):
+        self.actions.append(data)
 
 
 class TestIrcStatusBot(unittest.TestCase):
@@ -380,27 +419,31 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def makeBot(self, *args, **kwargs):
         if not args:
-            args = ('nick', 'pass', ['#ch'], [], self.status, [], {})
+            args = ('nick', 'pass', ['#ch'], [], self.status, None, {})
         return words.IrcStatusBot(*args, **kwargs)
 
-    def test_msgOrNotice(self):
+    def test_groupChat(self):
         b = self.makeBot(noticeOnChannel=False)
         b.notice = lambda d, m : evts.append(('n', d, m))
         b.msg = lambda d, m : evts.append(('m', d, m))
 
         evts = []
-        b.msgOrNotice('nick', 'hi')
-        self.assertEqual(evts, [('m', 'nick', 'hi')])
-
-        evts = []
-        b.msgOrNotice('#chan', 'hi')
+        b.groupChat('#chan', 'hi')
         self.assertEqual(evts, [('m', '#chan', 'hi')])
 
         b.noticeOnChannel = True
 
         evts = []
-        b.msgOrNotice('#chan', 'hi')
+        b.groupChat('#chan', 'hi')
         self.assertEqual(evts, [('n', '#chan', 'hi')])
+
+    def test_chat(self):
+        b = self.makeBot(noticeOnChannel=False)
+        b.msg = lambda d, m : evts.append(('m', d, m))
+
+        evts = []
+        b.chat('nick', 'hi')
+        self.assertEqual(evts, [('m', 'nick', 'hi')])
 
     def test_getContact(self):
         b = self.makeBot()
@@ -410,15 +453,7 @@ class TestIrcStatusBot(unittest.TestCase):
         c1b = b.getContact('c1')
 
         self.assertIdentical(c1, c1b)
-        self.assertIsInstance(c2, words.IRCContact)
-
-    def test_getContact_case_insensitive(self):
-        b = self.makeBot()
-
-        c1 = b.getContact('c1')
-        c1b = b.getContact('C1')
-
-        self.assertIdentical(c1, c1b)
+        self.assertIsInstance(c2, words.Contact)
 
     def test_privmsg_user(self):
         b = self.makeBot()
@@ -426,7 +461,7 @@ class TestIrcStatusBot(unittest.TestCase):
         b.privmsg('jimmy!~foo@bar', 'nick', 'hello')
 
         c = b.getContact('jimmy')
-        self.assertEqual(c.messages, [('hello', 'jimmy')])
+        self.assertEqual(c.messages, ['hello'])
 
     def test_privmsg_user_uppercase(self):
         b = self.makeBot('NICK', 'pass', ['#ch'], [], self.status, [], {})
@@ -434,7 +469,7 @@ class TestIrcStatusBot(unittest.TestCase):
         b.privmsg('jimmy!~foo@bar', 'NICK', 'hello')
 
         c = b.getContact('jimmy')
-        self.assertEqual(c.messages, [('hello', 'jimmy')])
+        self.assertEqual(c.messages, ['hello'])
 
     def test_privmsg_channel_unrelated(self):
         b = self.makeBot()
@@ -449,15 +484,16 @@ class TestIrcStatusBot(unittest.TestCase):
         b.contactClass = FakeContact
         b.privmsg('jimmy!~foo@bar', '#ch', 'nick: hello')
 
-        c = b.getContact('#ch')
-        self.assertEqual(c.messages, [(' hello', 'jimmy')])
+        c = b.getContact('jimmy', '#ch')
+        self.assertEqual(c.user, 'jimmy')
+        self.assertEqual(c.messages, [' hello'])
 
     def test_action_unrelated(self):
         b = self.makeBot()
         b.contactClass = FakeContact
         b.action('jimmy!~foo@bar', '#ch', 'waves')
 
-        c = b.getContact('#ch')
+        c = b.getContact('jimmy', '#ch')
         self.assertEqual(c.actions, [])
 
     def test_action_unrelated_buildbot(self):
@@ -465,7 +501,7 @@ class TestIrcStatusBot(unittest.TestCase):
         b.contactClass = FakeContact
         b.action('jimmy!~foo@bar', '#ch', 'waves at buildbot')# b.nickname is not 'buildbot'
 
-        c = b.getContact('#ch')
+        c = b.getContact('jimmy', '#ch')
         self.assertEqual(c.actions, [])
 
     def test_action_related(self):
@@ -473,8 +509,9 @@ class TestIrcStatusBot(unittest.TestCase):
         b.contactClass = FakeContact
         b.action('jimmy!~foo@bar', '#ch', 'waves at nick')
 
-        c = b.getContact('#ch')
-        self.assertEqual(c.actions, [('waves at nick', 'jimmy')])
+        c = b.getContact('jimmy', '#ch')
+        self.assertEqual(c.user, 'jimmy')
+        self.assertEqual(c.actions, ['waves at nick'])
 
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
@@ -498,21 +535,20 @@ class TestIrcStatusBot(unittest.TestCase):
         ])
         self.assertEqual(sorted(b.contacts.keys()),
                 # channels don't get added until joined() is called
-                sorted(['jimmy', 'bobby']))
+                sorted([(None, 'jimmy'), (None, 'bobby')]))
 
     def test_joined(self):
         b = self.makeBot()
         b.joined('#ch1')
         b.joined('#ch2')
         self.assertEqual(sorted(b.contacts.keys()),
-                sorted(['#ch1', '#ch2']))
+                sorted([('#ch1', None), ('#ch2', None)]))
 
     def test_other(self):
         # these methods just log, but let's get them covered anyway
         b = self.makeBot()
         b.left('#ch1')
         b.kickedFrom('#ch1', 'dustin', 'go away!')
-
 
 class TestIrcStatusFactory(unittest.TestCase):
 
