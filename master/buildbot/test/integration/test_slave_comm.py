@@ -186,8 +186,9 @@ class TestSlaveComm(unittest.TestCase):
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
-            self.detach_d = defer.Deferred()
-            self.buildslave._test_detached = lambda : self.detach_d.callback(None)
+            slavebuildslave.detach_d = defer.Deferred()
+            self.buildslave._test_detached = lambda : \
+                            slavebuildslave.detach_d.callback(None)
 
             return slavebuildslave
         login_d.addCallback(logged_in)
@@ -218,7 +219,7 @@ class TestSlaveComm(unittest.TestCase):
         self.slaveSideDisconnect(slave)
 
         # wait for the resulting detach
-        yield self.detach_d
+        yield slave.detach_d
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
@@ -239,7 +240,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave1)
 
-        yield self.detach_d
+        yield slave1.detach_d
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -265,7 +266,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave2)
 
-        yield self.detach_d
+        yield slave1.detach_d
 
         # flush the exception logged for this on the slave
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
