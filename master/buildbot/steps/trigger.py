@@ -159,6 +159,8 @@ class Trigger(LoggingBuildStep):
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            if self.ended:
+                return
         else:
             # do something to handle errors
             for d in dl:
