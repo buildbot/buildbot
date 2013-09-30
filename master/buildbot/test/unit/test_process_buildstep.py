@@ -22,6 +22,7 @@ from buildbot.process import remotecommand
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakebuild
@@ -103,6 +104,11 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def start(self):
             eventually(self.finished, 0)
 
+    class SkippingBuildStep(buildstep.BuildStep):
+
+        def start(self):
+            return SKIPPED
+
     def setUp(self):
         return self.setUpBuildStep()
 
@@ -162,6 +168,43 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         cmd.run = lambda self, remote, builder_name: SUCCESS
         bs.runCommand(cmd)
         self.assertEqual(bs.cmd, cmd)
+
+    @defer.inlineCallbacks
+    def test_start_returns_SKIPPED(self):
+        self.setupStep(self.SkippingBuildStep())
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_false(self):
+        self.setupStep(self.FakeBuildStep(doStepIf=False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_returns_false(self):
+        self.setupStep(self.FakeBuildStep(doStepIf=lambda step: False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_returns_deferred_false(self):
+        self.setupStep(self.FakeBuildStep(
+            doStepIf=lambda step: defer.succeed(False)))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
 
     def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)

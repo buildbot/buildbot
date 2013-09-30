@@ -4,7 +4,10 @@ BuildSteps
 .. py:module:: buildbot.process.buildstep
 
 There are a few parent classes that are used as base classes for real buildsteps.
-This section describes the base classes.  The "leaf" classes are described in :doc:`../manual/cfg-buildsteps`.
+This section describes the base classes.
+The "leaf" classes are described in :doc:`../manual/cfg-buildsteps`.
+
+See :ref:`Writing-New-BuildSteps` for a guide to implementing new steps.
 
 BuildStep
 ---------
@@ -154,28 +157,31 @@ BuildStep
         The deferred will errback if the step encounters an exception, including an exception on the slave side (or if the slave goes away altogether).
         Normal build/test failures will *not* cause an errback.
 
+    .. py:method:: run()
+
+        :returns: result via Deferred
+
+        Execute the step.
+        When this method returns (or when the Deferred it returns fires), the step is complete.
+        The method's return value must be an integer, giving the result of the step -- a constant from :mod:`buildbot.status.results`.
+        If the method raises an exception or its Deferred fires with failure, then the step will be completed with an EXCEPTION result.
+        Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
+
+        Subclasses should override this method.
+        Do *not* call :py:meth:`finished` or :py:meth:`failed` from this method.
+
     .. py:method:: start()
 
         :returns: ``None`` or :data:`~buildbot.status.results.SKIPPED`,
             optionally via a Deferred.
 
         Begin the step.
-        Subclasses should override this method to do local processing, fire off remote commands, etc.
-        The parent method raises :exc:`NotImplementedError`.
+        BuildSteps written before Buildbot-0.9.0 often override this method instead of :py:meth:`run`, but this approach is deprecated.
 
-        When the step is done, it should call :meth:`finished`, with a result -- a constant from :mod:`buildbot.status.results`.
-        The result will be handed off to the :class:`~buildbot.process.build.Build`.
+        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.status.results`.
+        The result will be handed off to the :py:class:`~buildbot.process.build.Build`.
 
         If the step encounters an exception, it should call :meth:`failed` with a Failure object.
-        This method automatically fails the whole build with an exception.
-        A common idiom is to add :meth:`failed` as an errback on a Deferred::
-
-            cmd = RemoteCommand(args)
-            d = self.runCommand(cmd)
-            def suceed(_):
-                self.finished(results.SUCCESS)
-            d.addCallback(succeed)
-            d.addErrback(self.failed)
 
         If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.status.results.SKIPPED`.
         In this case, it is not necessary to call :meth:`finished` directly.
@@ -186,6 +192,7 @@ BuildStep
 
         A call to this method indicates that the step is finished and the build should analyze the results and perhaps proceed to the next step.
         The step should not perform any additional processing after calling this method.
+        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: failed(failure)
 
@@ -195,6 +202,7 @@ BuildStep
 
         This method handles :exc:`BuildStepFailed` specially, by calling ``finished(FAILURE)``.
         This provides subclasses with a shortcut to stop execution of a step by raising this failure in a context where :meth:`failed` will catch it.
+        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: interrupt(reason)
 

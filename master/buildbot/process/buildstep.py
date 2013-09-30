@@ -39,10 +39,14 @@ from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
-from buildbot.util.eventual import eventually
 
 
 class BuildStepFailed(Exception):
+    pass
+
+
+class BuildStepCancelled(Exception):
+    # used internally for signalling
     pass
 
 # old import paths for these classes
@@ -210,7 +214,6 @@ class BuildStep(object, properties.PropertiesMixin):
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
-        self.deferred = defer.Deferred()
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
                       for access in self.locks]
@@ -235,8 +238,7 @@ class BuildStep(object, properties.PropertiesMixin):
             yield self.acquireLocks()
 
             if self.stopped:
-                self.finished(CANCELLED)
-                defer.returnValue((yield self.deferred))
+                raise BuildStepCancelled
 
             # ste up progress
             if self.progress:
@@ -262,29 +264,71 @@ class BuildStep(object, properties.PropertiesMixin):
                 dl.append(d)
             yield defer.gatherResults(dl)
 
-            try:
-                if doStep:
-                    result = yield defer.maybeDeferred(self.start)
-                    if result == SKIPPED:
-                        doStep = False
-            except:
-                log.msg("BuildStep.startStep exception in .start")
-                self.failed(Failure())
-
-            if not doStep:
+            # run -- or skip -- the step
+            if doStep:
+                results = yield self.run()
+            else:
                 self.step_status.setText(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
-                # this return value from self.start is a shortcut to finishing
-                # the step immediately; we skip calling finished() as
-                # subclasses may have overridden that an expect it to be called
-                # after start() (bug #837)
-                eventually(self._finishFinished, SKIPPED)
-        except Exception:
-            self.failed(Failure())
+                results = SKIPPED
 
-        # and finally, wait for self.deferred to get triggered and return its
-        # value
-        defer.returnValue((yield self.deferred))
+        except BuildStepCancelled:
+            results = CANCELLED
+
+        except BuildStepFailed:
+            results = FAILURE
+            # fall through to the end
+
+        except Exception:
+            why = Failure()
+            log.err(why, "BuildStep.failed; traceback follows")
+            # log the exception to the user, too
+            try:
+                self.addCompleteLog("err.text", why.getTraceback())
+                self.addHTMLLog("err.html", formatFailure(why))
+            except Exception:
+                log.err(Failure(), "error while formatting exceptions")
+
+            self.step_status.setText([self.name, "exception"])
+            self.step_status.setText2([self.name])
+
+            results = EXCEPTION
+
+        if self.stopped and results != RETRY:
+            # We handle this specially because we don't care about
+            # the return code of an interrupted command; we know
+            # that this should just be exception due to interrupt
+            # At the same time we must respect RETRY status because it's used
+            # to retry interrupted build due to some other issues for example
+            # due to slave lost
+            if results == CANCELLED:
+                self.step_status.setText(self.describe(True) +
+                                         ["cancelled"])
+                self.step_status.setText2(["cancelled"])
+            else:
+                # leave RETRY as-is, but change anything else to EXCEPTION
+                if results != RETRY:
+                    results = EXCEPTION
+                self.step_status.setText(self.describe(True) +
+                                         ["interrupted"])
+                self.step_status.setText2(["interrupted"])
+
+        if self.progress:
+            self.progress.finish()
+
+        self.step_status.stepFinished(results)
+        hidden = self.hideStepIf
+        if callable(hidden):
+            try:
+                hidden = hidden(results, self)
+            except Exception:
+                results = EXCEPTION
+                hidden = False
+        self.step_status.setHidden(hidden)
+
+        self.releaseLocks()
+
+        defer.returnValue(results)
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
@@ -307,8 +351,36 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.setWaitingForLocks(False)
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
+    def run(self):
+        self._start_running = True
+        self._start_deferred = defer.Deferred()
+        try:
+            # start() can return a Deferred, but the step isn't finished
+            # at that point.  But if it returns SKIPPED, then finish will
+            # never be called.
+            results = yield self.start()
+            if results == SKIPPED:
+                self.step_status.setText(self.describe(True) + ['skipped'])
+                self.step_status.setSkipped(True)
+            else:
+                results = yield self._start_deferred
+        finally:
+            self._start_running = False
+        defer.returnValue(results)
+
+    def finished(self, results):
+        assert self._start_running, \
+            "finished() can only be called from old steps implementing start()"
+        self._start_deferred.callback(results)
+
+    def failed(self, why):
+        assert self._start_running, \
+            "failed() can only be called from old steps implementing start()"
+        self._start_deferred.errback(why)
+
     def start(self):
-        raise NotImplementedError("your subclass must implement this method")
+        raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
         self.stopped = True
@@ -325,88 +397,6 @@ class BuildStep(object, properties.PropertiesMixin):
             else:
                 # This should only happen if we've been interrupted
                 assert self.stopped
-
-    def finished(self, results):
-        if self.stopped and results != RETRY:
-            # We handle this specially because we don't care about
-            # the return code of an interrupted command; we know
-            # that this should just be exception due to interrupt
-            # At the same time we must respect RETRY status because it's used
-            # to retry interrupted build due to some other issues for example
-            # due to slave lost
-            if results == CANCELLED:
-                self.step_status.setText(self.describe(True) +
-                                         ["cancelled"])
-                self.step_status.setText2(["cancelled"])
-            else:
-                # leave RETRY as-is, but change anything else to EXCEPTION
-                if results != RETRY:
-                    results = EXCEPTION
-                self.step_status.setText(self.describe(True) +
-                                         ["interrupted"])
-                self.step_status.setText2(["interrupted"])
-
-        self._finishFinished(results)
-
-    def _finishFinished(self, results):
-        # internal function to indicate that this step is done; this is separated
-        # from finished() so that subclasses can override finished()
-        if self.progress:
-            self.progress.finish()
-
-        try:
-            hidden = self._maybeEvaluate(self.hideStepIf, results, self)
-        except Exception:
-            why = Failure()
-            self.addHTMLLog("err.html", formatFailure(why))
-            self.addCompleteLog("err.text", why.getTraceback())
-            results = EXCEPTION
-            hidden = False
-
-        self.step_status.stepFinished(results)
-        self.step_status.setHidden(hidden)
-
-        self.releaseLocks()
-        self.deferred.callback(results)
-
-    def failed(self, why):
-        # This can either be a BuildStepFailed exception/failure, meaning we
-        # should call self.finished, or it can be a real exception, which should
-        # be recorded as such.
-        if why.check(BuildStepFailed):
-            self.finished(FAILURE)
-            return
-
-        log.err(why, "BuildStep.failed; traceback follows")
-        try:
-            if self.progress:
-                self.progress.finish()
-            try:
-                self.addCompleteLog("err.text", why.getTraceback())
-                self.addHTMLLog("err.html", formatFailure(why))
-            except Exception:
-                log.err(Failure(), "error while formatting exceptions")
-
-            # could use why.getDetailedTraceback() for more information
-            self.step_status.setText([self.name, "exception"])
-            self.step_status.setText2([self.name])
-            self.step_status.stepFinished(EXCEPTION)
-
-            hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
-            self.step_status.setHidden(hidden)
-        except Exception:
-            log.err(Failure(), "exception during failure processing")
-            # the progress stuff may still be whacked (the StepStatus may
-            # think that it is still running), but the build overall will now
-            # finish
-
-        try:
-            self.releaseLocks()
-        except Exception:
-            log.err(Failure(), "exception while releasing locks")
-
-        log.msg("BuildStep.failed now firing callback")
-        self.deferred.callback(EXCEPTION)
 
     # utility methods that BuildSteps may find useful
 
@@ -476,12 +466,6 @@ class BuildStep(object, properties.PropertiesMixin):
         c.buildslave = self.buildslave
         d = c.run(self, self.remote, self.build.builder.name)
         return d
-
-    @staticmethod
-    def _maybeEvaluate(value, *args, **kwargs):
-        if callable(value):
-            value = value(*args, **kwargs)
-        return value
 
 components.registerAdapter(
     BuildStep._getStepFactory,

@@ -514,15 +514,17 @@ parts of the repo URL in the sourcestamp, or lookup in a lookup table
 based on repo URL. As long as there is a permanent 1:1 mapping between
 repos and workdir, this will work.
 
+.. _Writing-New-BuildSteps:
+
 Writing New BuildSteps
 ----------------------
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
-One way to do this is to write a custom :class:`BuildStep`.
+One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
 Once written, this Step can be used in the :file:`master.cfg` file.
 
 The best reason for writing a custom :class:`BuildStep` is to better parse the results of the command being run.
-For example, a :class:`BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
+For example, a :class:`~buildbot.process.buildstep.BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
 
 Buildbot has acquired a large fleet of build steps, and sports a number of knobs and hooks to make steps easier to write.
 This section may seem a bit overwhelming, but most custom steps will only need to apply one or two of the techniques outlined here.
@@ -579,6 +581,16 @@ The whole thing looks like this::
                 **kwargs):
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
+
+Step Execution Process
+~~~~~~~~~~~~~~~~~~~~~~
+
+A step's execution occurs in its :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
+When this method returns (more accurately, when the Deferred it returns fires), the step is complete.
+The method's result must be an integer, giving the result of the step.
+Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
+
+The :bb:step:`ShellCommand` class implements this ``run`` method, and in most cases steps subclassing ``ShellCommand`` simply implement some of the subsidiary methods that its ``run`` method calls.
 
 Running Commands
 ~~~~~~~~~~~~~~~~
