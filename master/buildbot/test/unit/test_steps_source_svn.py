@@ -1730,6 +1730,22 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
 
+
+#
+# svn.SVN.svnUriCanonicalize() test method factory
+#
+# given input string and expected result create a test method that
+# will call svn.SVN.svnUriCanonicalize() with the input and check
+# that expected result is returned
+#
+# @param input: test input
+# @param exp: expected result
+#
+def _makeSUCTest(input, exp):
+    return lambda self: self.assertEqual(
+                            svn.SVN.svnUriCanonicalize(input), exp)
+
+
 class TestGetUnversionedFiles(unittest.TestCase):
     def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -1814,11 +1830,6 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
-
-
-    def _makeSUCTest(input, exp):
-        return lambda self : self.assertEqual(
-                svn.SVN.svnUriCanonicalize(input), exp)
 
     test_svnUriCanonicalize_empty = _makeSUCTest(
         "", "")
