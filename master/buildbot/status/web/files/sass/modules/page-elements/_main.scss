@@ -1560,6 +1560,44 @@ disabled look for disabled choices in the results dropdown
 		width: 67px;
 	}
 }
+
+.alert {
+  color: #c30000;
+  background-color: #f2dcdc;
+  padding: 5px 5px 5px 25px;
+  margin-bottom: 20px;
+  border-top:1px solid #ccc;
+  border-bottom:1px solid #ccc;
+  border-color: #c30000;
+  font-size: 20px;
+}
+ 
+form.command_forcebuild {
+	width: 320px;
+	clear:both;
+}
+
+form.command_forcebuild .force-textarea > .label {
+    display: block;
+}
+
+form.command_forcebuild .force-nested > .label {
+	font-weight: bold;
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-top:15px;
+    font-size: 14px;
+}
+
+@include breakpoint($bkpt-small) {
+	form.command_forcebuild {
+		width: auto;
+	}	
+}
+
+
+
+
 @include breakpoint($bkpt-small-portrait) {
 	.select2-container {
 		max-width: 120px;
@@ -1569,5 +1607,11 @@ disabled look for disabled choices in the results dropdown
 @include breakpoint($bkpt-small-height) {
 	.more-info-box {
 		max-height:250px;
+	}
+}
+
+@include breakpoint($bkpt-large-height) {
+	.more-info-box {
+		max-height:550px;
 	}
 }

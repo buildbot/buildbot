@@ -82,46 +82,48 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 		}
 
         // Colums with sorting 
-		var colList = [];
-		$('.tablesorter-js > thead th').each(function(i){
-			
-			if (!$(this).hasClass('no-tablesorter-js')) {
-				colList.push(null);
-			} else {
-				colList.push({'bSortable': false });
-			}
-		});
-		
-
-
-		// sort and filter tabless		
-		 var oTable = $('.tablesorter-js').dataTable({
-			"bPaginate": false,
-			"bLengthChange": false,
-			"bFilter": true,
-			"bSort": true,
-			"bInfo": false,
-			"bAutoWidth": false,
-			"bRetrieve": false,
-			"asSorting": true,
-			"bSearchable": true,
-			"aaSorting": [],
-			"aoColumns": colList,
-			"oLanguage": {
-			 	"sSearch": ""
-			 },
-			"bStateSave": true
-		});
-
-		if ($('.tablesorter-js').length) {
-			
-			$('#filterTableInput').focus();
-
-			$('#filterTableInput').keydown(function(event) {
-				console.log($(this).val())
-				oTable.fnFilter($(this).val());
+        (function($) {
+			var colList = [];
+			$('.tablesorter-js > thead th').each(function(i){
+				
+				if (!$(this).hasClass('no-tablesorter-js')) {
+					colList.push(null);
+				} else {
+					colList.push({'bSortable': false });
+				}
 			});
-		}
+			
+
+
+			// sort and filter tabless		
+			 var oTable = $('.tablesorter-js').dataTable({
+				"bPaginate": false,
+				"bLengthChange": false,
+				"bFilter": true,
+				"bSort": true,
+				"bInfo": false,
+				"bAutoWidth": false,
+				"bRetrieve": false,
+				"asSorting": true,
+				"bSearchable": true,
+				"aaSorting": [],
+				"aoColumns": colList,
+				"oLanguage": {
+				 	"sSearch": ""
+				 },
+				"bStateSave": true
+			});
+
+			if ($('.tablesorter-js').length) {
+				$('#filterTableInput').focus();
+
+				$('#filterTableInput').keydown(function(event) {
+					oTable.fnFilter($(this).val());
+				});
+			}
+
+		})(jQuery);
+
 
 	// check all in tables
 	$(function selectAll() {
@@ -173,6 +175,12 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 		}, function(){
 			$('.tool-tip').remove();
 		});
+		// ios fix
+		$(document).bind('click touchstart', function(e){
+			$('.tool-tip').remove();
+			$(this).unbind(e);
+		});
+
 	}
 		
 	toolTip('.ellipsis-js');

@@ -10,16 +10,22 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 			jQuery.fn.center = function() {
 				var h = $(window).height();
 			    var w = $(window).width();
+			    var tu = this.outerHeight(); 
+			    var tw = this.outerWidth(); 
+			    
+			    this.css("position", "absolute");
 
 			    // adjust height to browser height
-			    //this.css('height',(h < 300) ? 200 : '');
 
-				this.css("position", "absolute");
-				this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
-				this.css("left", ($(window).width() - this.outerWidth()) / 2 + $(window).scrollLeft() + "px");
+			    if (h < tu) {
+			    	this.css("top", (h - tu + (tu - h) + 10) / 2 + $(window).scrollTop() + "px");
+			    } else {
+			    	this.css("top", (h - tu) / 2 + $(window).scrollTop() + "px");
+			    }
+				
+				this.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
 				return this;
 			};
-
 
 			// validate the forcebuildform
 			function validateForm() {
@@ -62,7 +68,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 
 				$(classBtn).click(function(e){
 					e.preventDefault();
-					$('.cloned').hide();
+					$('.cloned').remove();
 					$('.command_forcebuild').removeClass('form-open');
 
 					var clonedInfoBox = $(this).next().clone().addClass('cloned');
@@ -88,8 +94,8 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 						$('.command_forcebuild').removeClass('form-open');
 						$('.more-info-box-js, .more-info-box-js-2').hide();
 						$('#content').empty();
+						$('.cloned').remove();
 					}
-
 				}); 
 				
 			}
@@ -103,7 +109,10 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				var path = $('#pathToCodeBases').attr('href');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
-				
+				var mib3 = $('<div class="more-info-box more-info-box-js-2"><span class="close-btn"></span><h3>Codebases</h3><div id="content"></div></div>');
+				$(mib3).appendTo('body');
+
+
 				$.get(path)
 				.done(function(data) {
 					var $response=$(data);
@@ -115,9 +124,11 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 					
 					$('#content .filter-table-input').remove();
 
-					$('.more-info-box-js-2').fadeIn('fast');
-
-					$('.more-info-box-js-2').center();
+					$(mib3).center().fadeIn('fast');
+					
+					$(window).resize(function() {
+						$(mib3).center();
+					});
 
 					$("#formWrapper .select-tools-js").select2({
 						width: selectors.getMaxChildWidth(".select-tools-js")
@@ -141,7 +152,10 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 					$('#getForm').attr('action', window.location.href);	
 					$('#getForm .grey-btn[type="submit"]').click(function(){
 						$('.more-info-box-js-2').hide();				
-					});			
+					});
+
+					closePopUp();
+
 				});
 			});
 

@@ -186,8 +186,8 @@ SourceStamps
 </a>
 
   <div class="more-info-box more-info-box-js">
-    <span href="#" class="close-btn">
-    </span>
+    <a href="#" class="close-btn">
+    </a>
     <h3>Overview of build properties</h3>
     <div class="dataTables_wrapper">
       <table class="table-2">
@@ -208,7 +208,7 @@ SourceStamps
                   <td>{{ p.value|e }}</td>
               {% else %}
                   <td>
-                      <table class="info" width="100%">
+                      <table class="info" >
                           {%- for key, value in p.value.items() recursive %}
                               <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
                           {% endfor %}
@@ -231,8 +231,8 @@ SourceStamps
 </a>
 
   <div class="more-info-box more-info-box-js">
-    <span href="#" class="close-btn">
-    </span>
+    <a href="#" class="close-btn">
+    </a>
     <h3>Overview of custom build properties</h3>
     <div class="dataTables_wrapper">
     <table class="table-2">

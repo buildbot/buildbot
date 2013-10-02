@@ -52,6 +52,20 @@ module.exports = function(grunt) {
           out: 'prod/script/main.js',
           removeCombined: false
         }
+      },
+      compileLog: {
+        options: {
+          baseUrl: 'script/testresults',
+          paths: {
+          jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
+          //jquery: 'empty:' //Use this to continue using CDN loading
+          
+          datatables: '../plugins/jquery-datatables'
+        },
+          name: 'testresults-main',
+          out: 'prod/script/testresults/testresults-main.js',
+          removeCombined: false
+        }
       }
     },
     // watch
@@ -60,20 +74,25 @@ module.exports = function(grunt) {
           files: [
               '<%= meta.srcPath %>/**/*.scss'
           ],
-          tasks: ['compass:dev']
+          tasks: ['compass:dev'],
+          options: {
+            livereload: true // refreshes the browser on changes install an extension for your browser for this
+          }
+          
       }
     }
   });
 
   // Load plugins here
   grunt.loadNpmTasks('grunt-contrib-compass');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-watch'); // run grunt watch for converting sass files to css in realtime
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
 
   // Define your tasks here
-  grunt.registerTask('default', ['compass']);
-  grunt.registerTask('default', ['uglify']);
-  grunt.registerTask('default', ['requirejs']);
+  grunt.registerTask('default', ['compass']); 
+  grunt.registerTask('default', ['uglify']); 
+  grunt.registerTask('default', ['requirejs']); 
+  grunt.registerTask('prod', ['compass:prod', 'requirejs:compile', 'requirejs:compileLog']); // grunt prod for production 
 
 };

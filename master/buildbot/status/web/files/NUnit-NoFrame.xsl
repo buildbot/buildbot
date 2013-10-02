@@ -28,6 +28,7 @@
 			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
 			<link rel="stylesheet" href="prod/css/default.css" type="text/css" />
 			<link rel="stylesheet" href="prod/css/log.css" type="text/css" />
+			
 		</HEAD>
 		<body class="interface log-main">
 			
@@ -59,15 +60,16 @@
         </h3>
       </div>
     </footer>
-    <!--
-    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
-	
-    <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
-	<script type="text/javascript" src="/script/plugins/jquery-datatables.js"></script>
-    <script type="text/javascript" src="/script/log.js"></script>
-	-->
-	
-    <script type="text/javascript" src="/prod/script/logoutput.min.js"></script>
+
+			<script type="text/javascript">
+			      var require = {
+			          baseUrl: "prod/script/testresults",
+			          urlArgs : "bust=insertVariable",
+			          deps : ['testresults-main']
+			      };
+			</script>
+
+			<script src="/script/require.js"></script>
 		</body>
 	</HTML>
 </xsl:template>

@@ -20,10 +20,14 @@
   {% endif %}
 
     <td>{{ b.time }} </td>
-    <td>{{ b.rev|shortrev(b.rev_repo) }}</td>
+    <td class="txt-align-left">
+      <div class="ellipsis">
+        {{ b.rev|shortrev(b.rev_repo) }}
+      </div>
+    </td>
     <td class="{{ b.class }}">{{ b.results }}</td>
   {%- if include_builder %}    
-    <td><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
+    <td class="txt-align-left"><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
   {% endif %}
     <td><a href="{{ b.buildurl }}">#{{ b.buildnum }}</a></td> 
     
@@ -38,10 +42,10 @@
 <table class="table-1"> 
   <tr>
     <th>Time</th>
-    <th>Revision</th>
+    <th class="txt-align-left">Revision</th>
     <th>Result</th>
      {%- if include_builder %}   
-    <th>Builder</th>
+    <th class="txt-align-left">Builder</th>
      {% endif %}
     <th>Build #</th>
     
