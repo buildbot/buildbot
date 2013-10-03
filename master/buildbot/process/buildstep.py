@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
 from twisted.python import log
+from twisted.python import util as twutil
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -83,6 +84,17 @@ class _BuildStepFactory(util.ComparableMixin):
             log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
                     % (self.factory, self.args, self.kwargs))
             raise
+
+
+def _maybeUnhandled(fn):
+    def wrap(self, *args, **kwargs):
+        d = fn(self, *args, **kwargs)
+        if self._start_unhandled_deferreds is not None:
+            self._start_unhandled_deferreds.append(d)
+        return d
+    wrap.func_original = fn
+    twutil.mergeFunctionMetadata(fn, wrap)
+    return wrap
 
 
 class BuildStep(object, properties.PropertiesMixin):
@@ -161,6 +173,8 @@ class BuildStep(object, properties.PropertiesMixin):
         self._acquiringLock = None
         self.stopped = False
         self.master = None
+
+        self._start_unhandled_deferreds = None
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
@@ -354,12 +368,26 @@ class BuildStep(object, properties.PropertiesMixin):
 
     @defer.inlineCallbacks
     def run(self):
-        self._start_running = True
         self._start_deferred = defer.Deferred()
+        unhandled = self._start_unhandled_deferreds = []
         try:
+            # monkey-patch self.step_status.{setText,setText2} to add their
+            # deferreds to _start_unhandled_deferreds
             # start() can return a Deferred, but the step isn't finished
             # at that point.  But if it returns SKIPPED, then finish will
             # never be called.
+            def setText(txt, old=self.step_status.setText):
+                d = defer.maybeDeferred(old, txt)
+                unhandled.append(d)
+                return d
+            self.step_status.setText = setText
+
+            def setText2(txt, old=self.step_status.setText2):
+                d = defer.maybeDeferred(old, txt)
+                unhandled.append(d)
+                return d
+            self.step_status.setText2 = setText2
+
             results = yield self.start()
             if results == SKIPPED:
                 self.step_status.setText(self.describe(True) + ['skipped'])
@@ -367,16 +395,29 @@ class BuildStep(object, properties.PropertiesMixin):
             else:
                 results = yield self._start_deferred
         finally:
-            self._start_running = False
+            self._start_deferred = None
+            unhandled = self._start_unhandled_deferreds
+            self._start_unhandled_deferreds = None
+
+        # Wait for any possibly-unhandled deferreds.  If any fail, change the
+        # result to EXCEPTION and log.
+        if unhandled:
+            unhandled_results = yield defer.DeferredList(unhandled,
+                                                         consumeErrors=True)
+            for success, res in unhandled_results:
+                if not success:
+                    log.err(res, "from an asynchronous method executed in an old-style step")
+                    results = EXCEPTION
+
         defer.returnValue(results)
 
     def finished(self, results):
-        assert self._start_running, \
+        assert self._start_deferred, \
             "finished() can only be called from old steps implementing start()"
         self._start_deferred.callback(results)
 
     def failed(self, why):
-        assert self._start_running, \
+        assert self._start_deferred, \
             "failed() can only be called from old steps implementing start()"
         self._start_deferred.errback(why)
 
@@ -426,6 +467,7 @@ class BuildStep(object, properties.PropertiesMixin):
                 return l
         raise KeyError("no log named '%s'" % (name,))
 
+    @_maybeUnhandled
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)
         loog = self.step_status.addLog(name)
@@ -434,11 +476,14 @@ class BuildStep(object, properties.PropertiesMixin):
             loog.addStdout(text[start:start + size])
         loog.finish()
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
+    @_maybeUnhandled
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
         self.step_status.addHTMLLog(name, html)
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
     def addLogObserver(self, logname, observer):
         assert interfaces.ILogObserver.providedBy(observer)
@@ -459,8 +504,10 @@ class BuildStep(object, properties.PropertiesMixin):
                 observer.setLog(current_logs[logname])
                 self._pendingLogObservers.remove((logname, observer))
 
+    @_maybeUnhandled
     def addURL(self, name, url):
         self.step_status.addURL(name, url)
+        return defer.succeed(None)
 
     def runCommand(self, command):
         self.cmd = command
