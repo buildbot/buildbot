@@ -8,7 +8,8 @@
 //forthcoming mediaqueries
 $bkpt-small: 0 570px;
 $bkpt-small-portrait: (0 570px )(orientation portrait);
-$bkpt-medium: 570px 1024px;
+$bkpt-medium-1: 0 1024px;
+$bkpt-medium: 571px 1024px;
 $bkpt-large: min-width 1024px;
 $bkpt-large2: min-width 1400px;
 $bkpt-xlarge: min-width 1600px;

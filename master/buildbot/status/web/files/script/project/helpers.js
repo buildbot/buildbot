@@ -5,25 +5,63 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
     
     helpers = {
         init: function () {
-		
-		// only for testing		
-    	$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
 
-    	var ws = $(window).width() + ' ' +  $(window).height();
+			function sumVal(arr) {
+			  var sum = 0;
+			  $.each(arr,function(){
+			  	sum+=parseFloat(this) || 0;
+			  });
+			  return sum;
+			};
 
-    	$('.windowsize').html(ws);
-    	    	
-        $(window).resize(function(event) {
-        	ws = $(window).width() + ' ' +  $(window).height();
-        	$('.windowsize').html(ws);
-        });
+			if ($('#tb-root').length != 0) {
+			    
+				// creating a new websocket
+				var socket = io.connect('http://localhost:8000');
+				// on every message recived we print the new datas inside the #container div
+				socket.on('notification', function (data) {
+				  
+				  $.each(data.builders, function() {
+				  
+				    var arraySlaves = [];
 
+				    $.each(data.slaves, function (key) {
+				      arraySlaves.push(key);
+				    });
+
+				    var arrayPending = [];
+				    $.each(data.builders, function (key, value) {
+				        arrayPending.push(value.pendingBuilds);
+				    });
+
+				    $('#slavesNr').html(arraySlaves.length);
+				    $('#pendingBuilds').html(sumVal(arrayPending));
+				    
+				  });
+
+				});
+			}
+
+			/*
+				// only for testing		
+				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
+
+				var ws = $(window).width() + ' ' +  $(window).height();
+
+				$('.windowsize').html(ws);
+				    	
+			    $(window).resize(function(event) {
+			    	ws = $(window).width() + ' ' +  $(window).height();
+			    	$('.windowsize').html(ws);
+			    });
+			*/
         // submenu overflow on small screens
         
-        var isSmallScreen = screenSize.isSmallScreen();
+        var isMediumScreen = screenSize.isMediumScreen();
                 
         function menuItemWidth() {
-        	if (isSmallScreen){	
+        	
+        	if (isMediumScreen){	
 	        	var wEl = 0;
 	        	$('.breadcrumbs-nav li').each(function(){
 		        	wEl += $(this).outerWidth();
@@ -32,14 +70,20 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 	        } else {
 	        	$('.breadcrumbs-nav').width('');	
 	        }
+	        
         }
         menuItemWidth();
 		$(window).resize(function() {
-			isSmallScreen = screenSize.isSmallScreen();
+			isMediumScreen = screenSize.isMediumScreen();
 			menuItemWidth();			  
 		});
 		
         // json on frontpage
+        
+        /*
+        if ($('#tb-root').length != 0) {
+
+        });
         if ($('#tb-root').length != 0) {
 	         $.ajax({
 			    url: "/json?filter=0",
@@ -78,8 +122,10 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 	    			$('.summary-td').append("<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
 			    }
 			});
+		
 		   
 		}
+		*/
 
         // Colums with sorting 
         (function($) {

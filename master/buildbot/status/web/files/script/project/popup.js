@@ -154,7 +154,11 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 						$('.more-info-box-js-2').hide();				
 					});
 
-					closePopUp();
+					$(document, '.close-btn').bind('click touchstart', function(e){
+						if (!$(e.target).closest('.more-info-box-js-2').length || $(e.target).closest('.close-btn').length ) {
+							$(mib3).remove();
+						}
+					});
 
 				});
 			});

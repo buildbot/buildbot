@@ -181,9 +181,8 @@
 }
 
 .breadcrumbs-nav {
-		//@include pie-clearfix;
 		display:inline-block;
-		padding:13px 0 12px 0;
+		padding:13px 0 11px 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.59);
 		font-size: 11px;
@@ -193,6 +192,7 @@
 		padding: 0;
 		font-weight: bold;
 		letter-spacing:1.1px;
+		line-height:12px;
 		&:first-child {
 			padding-left:123px;
 		}
@@ -228,7 +228,10 @@
 		}
 	}
 }
-@include breakpoint($bkpt-small) {
+ 
+
+
+@include breakpoint($bkpt-medium-1) {
 	.wrap {
 		overflow-y: auto;
     	-webkit-overflow-scrolling: touch;
@@ -242,10 +245,7 @@
 		}
 	}
 }
-.chrome.win .breadcrumbs-nav li:before{
-	content: ">";
-	font-weight:bold;
-}
+
 
 .breadcrumbs-nav li:first-child:before,
 .chrome.win .breadcrumbs-nav li:first-child:before {

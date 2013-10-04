@@ -1595,23 +1595,8 @@ form.command_forcebuild .force-nested > .label {
 	}	
 }
 
-
-
-
 @include breakpoint($bkpt-small-portrait) {
 	.select2-container {
 		max-width: 120px;
-	}
-}
-
-@include breakpoint($bkpt-small-height) {
-	.more-info-box {
-		max-height:250px;
-	}
-}
-
-@include breakpoint($bkpt-large-height) {
-	.more-info-box {
-		max-height:550px;
 	}
 }
