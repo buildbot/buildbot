@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import httplib, urllib
-import getopt
 import optparse
 import textwrap
 import getpass
@@ -11,6 +10,7 @@ import os
 #   http://lists.debian.org/debian-python/2010/02/msg00016.html
 try:
     import json # python 2.6
+    assert json # silence pyflakes
 except ImportError:
     import simplejson as json # python 2.4 to 2.5
 try:
