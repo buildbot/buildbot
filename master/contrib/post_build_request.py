@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Portions Copyright Buildbot Team Members
+# Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
+
 import httplib, urllib
 import optparse
 import textwrap
@@ -163,8 +180,8 @@ parser.add_option("-P", "--project", dest='project', metavar="PROJ",
             """))
 parser.add_option("-v", "--verbose", dest='verbosity', action="count",
             help=textwrap.dedent("""\
-            Print more detail. If specified once, show status. If secified twice,
-            print all data returned. Normally this will be the json version of the Change.
+            Print more detail. Shows the response status and reason received from the master. If
+            specified twice, it also shows the raw response.
             """))
 parser.add_option("-H", "--host", dest='host', metavar="HOST",
             default='localhost:8010',
@@ -210,15 +227,12 @@ else:
     response = conn.getresponse()
     data = response.read()
     exitCode=0
-    if response.status is not 200:
+    if response.status is not 202:
         exitCode=1
     if options.verbosity >= 1:
         print response.status, response.reason
-        if response.status is 200:
-            res =json.loads(data)
-            print "Request %d at %s" % (res[0]['number'], res[0]['at'])
         if options.verbosity >= 2:
-            print "Raw response %s" % (data)
+            print "Raw response: %s" % (data)
     conn.close()
     os._exit(exitCode)
 
