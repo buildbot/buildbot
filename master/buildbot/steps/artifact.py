@@ -204,9 +204,9 @@ class UploadArtifact(ShellCommand):
         ShellCommand.start(self)
 
 class DownloadArtifact(ShellCommand):
-    name = "DonwloadArtifact"
-    description="DonwloadArtifact"
-    descriptionDone="DonwloadArtifact finished"
+    name = "DownloadArtifact"
+    description="DownloadArtifact"
+    descriptionDone="DownloadArtifact finished"
 
     def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None, artifactServer=None, artifactServerDir=None, **kwargs):
         self.artifactBuilderName = artifactBuilderName
@@ -218,7 +218,7 @@ class DownloadArtifact(ShellCommand):
         self.master = None
         name = "DownloadArtifact %s" % artifactBuilderName
         description = "DownloadArtifact %s" % artifactBuilderName
-        descriptionDone="DonwloadArtifact %s finished" % artifactBuilderName
+        descriptionDone="DownloadArtifact %s finished" % artifactBuilderName
         ShellCommand.__init__(self, name=name, description=description, descriptionDone=descriptionDone,  **kwargs)
 
     @defer.inlineCallbacks
