@@ -158,6 +158,8 @@ Fixes
 
 * The source steps now correctly interpolate properties in ``env``.
 
+* ``GerritStatusPush`` now supports setting scores with Gerrit 2.6 and newer
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

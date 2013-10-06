@@ -24,6 +24,10 @@ from buildbot.status.builder import Results
 from buildbot.status.builder import SUCCESS
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
+from distutils.version import LooseVersion
+
+# Cache the version that the gerrit server is running for this many seconds
+GERRIT_VERSION_CACHE_TIMEOUT = 600
 
 
 def defaultReviewCB(builderName, build, result, status, arg):
@@ -61,10 +65,58 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.gerrit_server = server
         self.gerrit_username = username
         self.gerrit_port = port
+        self.gerrit_version = None
+        self.gerrit_version_time = 0
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
         self.startCB = startCB
         self.startArg = startArg
+
+    def _gerritCmd(self, *args):
+        return ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port, "gerrit"] + list(args)
+
+    class VersionPP(ProcessProtocol):
+        def __init__(self, func):
+            self.func = func
+            self.gerrit_version = None
+
+        def outReceived(self, data):
+            vstr = "gerrit version "
+            if not data.startswith(vstr):
+                print "Error: Cannot interpret gerrit version info:", data
+                return
+            vers = data[len(vstr):]
+            print "gerrit version:", vers
+            self.gerrit_version = LooseVersion(vers)
+
+        def errReceived(self, data):
+            print "gerriterr:", data
+
+        def processEnded(self, status_object):
+            if status_object.value.exitCode:
+                print "gerrit version status: ERROR:", status_object
+                return
+            if self.gerrit_version:
+                self.func(self.gerrit_version)
+
+    def getCachedVersion(self):
+        if self.gerrit_version is None:
+            return None
+        if time.time() - self.gerrit_version_time > GERRIT_VERSION_CACHE_TIMEOUT:
+            # cached version has expired
+            self.gerrit_version = None
+        return self.gerrit_version
+
+    def processVersion(self, gerrit_version, func):
+        self.gerrit_version = gerrit_version
+        self.gerrit_version_time = time.time()
+        func()
+
+    def callWithVersion(self, func):
+        command = self._gerritCmd("version")
+        callback = lambda gerrit_version: self.processVersion(gerrit_version, func)
+
+        reactor.spawnProcess(self.VersionPP(callback), command[0], command)
 
     class LocalPP(ProcessProtocol):
 
@@ -140,16 +192,31 @@ class GerritStatusPush(StatusReceiverMultiService):
                 return
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
-        command = ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port,
-                   "gerrit", "review", "--project %s" % str(project)]
+        gerrit_version = self.getCachedVersion()
+        if (verified or reviewed) and gerrit_version is None:
+            self.callWithVersion(lambda: self.sendCodeReview(project, revision, message, verified, reviewed))
+            return
+
+        command = self._gerritCmd("review", "--project %s" % str(project))
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
+
         if verified:
-            command.extend(["--verified %d" % int(verified)])
+            assert(gerrit_version)
+            if gerrit_version < LooseVersion("2.6"):
+                command.extend(["--verified %d" % int(verified)])
+            else:
+                command.extend(["--label Verified=%d" % int(verified)])
+
         if reviewed:
-            command.extend(["--code-review %d" % int(reviewed)])
+            assert(gerrit_version)
+            if gerrit_version < LooseVersion("2.6"):
+                command.extend(["--code-review %d" % int(reviewed)])
+            else:
+                command.extend(["--label Code-Review=%d" % int(reviewed)])
+
         command.append(str(revision))
         print command
-        reactor.spawnProcess(self.LocalPP(self), "ssh", command)
+        reactor.spawnProcess(self.LocalPP(self), command[0], command)
 
 # vim: set ts=4 sts=4 sw=4 et:
