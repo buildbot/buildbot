@@ -146,6 +146,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
+
 Fixes
 ~~~~~
 
