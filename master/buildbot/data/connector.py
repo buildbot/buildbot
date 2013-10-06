@@ -45,6 +45,7 @@ class DataConnector(service.Service):
         'buildbot.data.masters',
         'buildbot.data.sourcestamps',
         'buildbot.data.schedulers',
+        'buildbot.data.forceschedulers',
         'buildbot.data.root',
     ]
 
