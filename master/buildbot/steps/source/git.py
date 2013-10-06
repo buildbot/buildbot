@@ -414,8 +414,15 @@ class Git(Source):
         """Retry if clone failed"""
 
         args = []
+        switchToBranch = False
         if self.supportsBranch and self.branch != 'HEAD':
-            args += ['--branch', self.branch]
+            if self.branch.startswith('refs/'):
+                # we can't choose this branch from 'git clone' directly; we
+                # must do so after the clone
+                switchToBranch = True
+                args += ['--no-checkout']
+            else:
+                args += ['--branch', self.branch]
         if shallowClone:
             args += ['--depth', '1']
         if self.reference:
@@ -430,6 +437,9 @@ class Git(Source):
             abandonOnFailure = True
         # If it's a shallow clone abort build step
         d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+
+        if switchToBranch:
+            d.addCallback(lambda _: self._fetch(None))
 
         def _retry(res):
             if self.stopped or res == 0:  # or shallow clone??
