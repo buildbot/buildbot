@@ -133,7 +133,7 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
-        self.slave = slave.FakeSlave()
+        self.slave = slave.FakeSlave(self.master)
         self.builder = self.createBuilder()
         self.build = Build([r])
         self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)

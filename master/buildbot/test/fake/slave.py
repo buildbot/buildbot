@@ -13,7 +13,45 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
+from buildbot.process import properties
+from buildbot.test.fake import fakeprotocol
+from twisted.internet import defer
+
 
 class FakeSlave(object):
-    slave_system = 'posix'
-    slavename = 'fakeslave'
+    slavename = 'test'
+
+    def __init__(self, master):
+        self.master = master
+        self.conn = fakeprotocol.FakeConnection(master, self)
+        self.properties = properties.Properties()
+
+    def acquireLocks(self):
+        pass
+
+    def releaseLocks(self):
+        pass
+
+    def attached(self, conn):
+        self.slave_system = 'posix'
+        self.path_module = os.path
+        self.buildslaveid = 1234
+        self.slave_basedir = '/sl'
+        return defer.succeed(None)
+
+    def detached(self):
+        pass
+
+    def addSlaveBuilder(self, sb):
+        pass
+
+    def removeSlaveBuilder(self, sb):
+        pass
+
+    def buildFinished(self, sb):
+        pass
+
+    def canStartBuild(self):
+        pass

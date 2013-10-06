@@ -173,7 +173,7 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        master = self.builder.botmaster.master
+        master = self.builder.master
         props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change

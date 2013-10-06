@@ -1529,6 +1529,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             self.reqs[brid].complete = 1
             self.reqs[brid].results = results
             self.reqs[brid].complete_at = complete_at
+        return defer.succeed(None)
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         old_epoch = _reactor.seconds() - old

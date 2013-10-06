@@ -414,7 +414,7 @@ class Builder(config.ReconfigurableServiceMixin,
             bid, number = yield self.master.db.builds.addBuild(
                 builderid=builderid, buildrequestid=req.id,
                 buildslaveid=buildslaveid, masterid=self.master.masterid,
-                state_strings=['created'])
+                state_strings=[u'created'])
             bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
@@ -520,7 +520,9 @@ class Builder(config.ReconfigurableServiceMixin,
                 builderid=builderid,
                 complete_at=complete_at_epoch,
                 results=results)
-            self.master.mq.produce(key, msg)
+            # TODO: when buildrequests are defined in the data API
+            (key, msg)
+            #self.master.mq.produce(key, msg)
 
         # check for completed buildsets -- one call for each build request with
         # a unique bsid

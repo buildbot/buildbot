@@ -256,11 +256,11 @@ BuildStep
     The following methods are provided as utilities to subclasses.
     These methods should only be invoked after the step is started.
 
-    .. py:method:: slaveVersion(command, oldVersion=None)
+    .. py:method:: slaveVersion(command, oldversion=None)
 
         :param command: command to examine
         :type command: string
-        :param oldVersion: return value if the slave does not specify a version
+        :param oldversion: return value if the slave does not specify a version
         :returns: string
 
         Fetch the version of the named command, as specified on the slave.
