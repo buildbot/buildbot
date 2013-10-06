@@ -104,7 +104,8 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = slave.FakeSlave()
+        self.master = fakemaster.make_master(testcase=self)
+        self.buildslave = step.buildslave = slave.FakeSlave(self.master)
 
         # step.step_status
 

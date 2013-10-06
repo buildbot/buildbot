@@ -14,13 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
+import os.path
 import weakref
 
 from buildbot import config
+from buildbot import interfaces
+from buildbot.status import build
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from twisted.internet import defer
+from zope.interface import implements
 
 
 class FakeCache(object):
@@ -51,14 +55,30 @@ class FakeCaches(object):
 
 class FakeStatus(object):
 
+    def __init__(self, master):
+        self.master = master
+        self.lastBuilderStatus = None
+
     def builderAdded(self, name, basedir, category=None, description=None):
-        return FakeBuilderStatus()
+        bs = FakeBuilderStatus(self.master)
+        self.lastBuilderStatus = bs
+        return bs
 
     def slaveConnected(self, name):
         pass
 
+    def build_started(self, brid, buildername, build_status):
+        pass
+
 
 class FakeBuilderStatus(object):
+
+    implements(interfaces.IBuilderStatus)
+
+    def __init__(self, master):
+        self.master = master
+        self.basedir = os.path.join(master.basedir, 'bldr')
+        self.lastBuildStatus = None
 
     def setDescription(self, description):
         self._description = description
@@ -81,6 +101,17 @@ class FakeBuilderStatus(object):
     def setBigState(self, state):
         pass
 
+    def newBuild(self):
+        bld = build.BuildStatus(self, self.master, 3)
+        self.lastBuildStatus = bld
+        return bld
+
+    def buildStarted(self, builderStatus):
+        pass
+
+    def addPointEvent(self, text):
+        pass
+
 
 class FakeMaster(object):
 
@@ -99,13 +130,16 @@ class FakeMaster(object):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
-        self.status = FakeStatus()
+        self.status = FakeStatus(self)
         self.status.master = self
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
 
     def subscribeToBuildRequests(self, callback):
+        pass
+
+    def maybeBuildsetComplete(self, bsid):
         pass
 
     # work around http://code.google.com/p/mock/issues/detail?id=105

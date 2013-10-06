@@ -25,6 +25,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake.fakemaster import FakeBotMaster
+from buildbot.test.fake import slave
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -130,6 +131,7 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
+        self.slave = slave.FakeSlave(self.master)
         self.builder = self.createBuilder()
         self.build = Build([r])
         self.build.master = self.master

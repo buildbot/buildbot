@@ -29,6 +29,7 @@ from buildbot.test.fake import remotecommand
 from buildbot.test.fake import slave
 from buildbot.test.util import compat
 from buildbot.test.util import config
+from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
@@ -54,6 +55,19 @@ class OldStyleStep(buildstep.BuildStep):
 
     def start(self):
         pass
+
+
+class FailingCustomStep(buildstep.LoggingBuildStep):
+
+    flunkOnFailure = True
+    def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
+        buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
+        self.exception = exception
+
+    @defer.inlineCallbacks
+    def start(self):
+        yield defer.succeed(None)
+        raise self.exception()
 
 
 class NewStyleStep(buildstep.BuildStep):
@@ -167,7 +181,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = slave.FakeSlave()
+        bs.buildslave = slave.FakeSlave(master=None)  # master is not used here
         bs.remote = 'dummy'
         cmd = buildstep.RemoteShellCommand("build", ["echo", "hello"])
         cmd.run = lambda self, remote: SUCCESS
@@ -280,6 +294,16 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
+    def test_step_raising_exception_in_start(self):
+        self.setupStep(FailingCustomStep(exception=ValueError))
+        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
+        d = self.runStep()
+
+        @d.addCallback
+        def cb(_):
+            self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
+        return d
+
     def test_isNewStyle(self):
         self.assertFalse(OldStyleStep().isNewStyle())
         self.assertTrue(NewStyleStep().isNewStyle())
@@ -315,47 +339,6 @@ class TestLoggingBuildStep(unittest.TestCase):
         self.assertEqual(status, WARNINGS, "evaluateCommand didn't call log_eval_func or overrode its results")
 
 
-class FailingCustomStep(buildstep.LoggingBuildStep):
-
-    def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
-        buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
-        self.exception = exception
-
-    @defer.inlineCallbacks
-    def start(self):
-        yield defer.succeed(None)
-        raise self.exception()
-
-
-class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
-
-    def setUp(self):
-        return self.setUpBuildStep()
-
-    def tearDown(self):
-        return self.tearDownBuildStep()
-
-    def test_step_raising_buildstepfailed_in_start(self):
-        self.setupStep(FailingCustomStep())
-        self.expectOutcome(result=FAILURE, status_text=["generic"])
-        return self.runStep()
-
-    def test_step_raising_exception_in_start(self):
-        self.setupStep(FailingCustomStep(exception=ValueError))
-        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
-        d = self.runStep()
-
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
-        return d
-
-    def test_step_raising_connectionlost_in_start(self):
-        self.setupStep(FailingCustomStep(exception=error.ConnectionLost))
-        self.expectOutcome(result=RETRY, status_text=["generic", "exception", "slave", "lost"])
-        return self.runStep()
-
-
 class TestRemoteShellCommand(unittest.TestCase):
 
     def test_obfuscated_arguments(self):
@@ -384,3 +367,163 @@ class TestRemoteShellCommand(unittest.TestCase):
         cmd = buildstep.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
         self.assertEqual(cmd.fake_command, command)
+
+
+class InterfaceTests(interfaces.InterfaceTests):
+
+    # ensure that steps.BuildStepMixin creates a convincing facsimile of the
+    # real BuildStep
+
+    def test_signature_attributes(self):
+        for attr in [
+            'name',
+            'description',
+            'descriptionDone',
+            'descriptionSuffix',
+            'locks',
+            'progressMetrics',
+            'useProgress',
+            'doStepIf',
+            'hideStepIf',
+            'haltOnFailure',
+            'flunkOnWarnings',
+            'flunkOnFailure',
+            'warnOnWarnings',
+            'warnOnFailure',
+            'alwaysRun',
+            'build',
+            'buildslave',
+            'step_status',
+            'progress',
+            'stopped',
+        ]:
+            self.failUnless(hasattr(self.step, attr))
+
+    def test_signature_setBuild(self):
+        @self.assertArgSpecMatches(self.step.setBuild)
+        def setBuild(self, build):
+            pass
+
+    def test_signature_setBuildSlave(self):
+        @self.assertArgSpecMatches(self.step.setBuildSlave)
+        def setBuildSlave(self, buildslave):
+            pass
+
+    def test_signature_setDefaultWorkdir(self):
+        @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
+        def setDefaultWorkdir(self, workdir):
+            pass
+
+    def test_signature_setStepStatus(self):
+        @self.assertArgSpecMatches(self.step.setStepStatus)
+        def setStepStatus(self, step_status):
+            pass
+
+    def test_signature_setupProgress(self):
+        @self.assertArgSpecMatches(self.step.setupProgress)
+        def setupProgress(self):
+            pass
+
+    def test_signature_startStep(self):
+        @self.assertArgSpecMatches(self.step.startStep)
+        def startStep(self, remote):
+            pass
+
+    def test_signature_run(self):
+        @self.assertArgSpecMatches(self.step.run)
+        def run(self):
+            pass
+
+    def test_signature_start(self):
+        @self.assertArgSpecMatches(self.step.start)
+        def start(self):
+            pass
+
+    def test_signature_finished(self):
+        @self.assertArgSpecMatches(self.step.finished)
+        def finished(self, results):
+            pass
+
+    def test_signature_failed(self):
+        @self.assertArgSpecMatches(self.step.failed)
+        def failed(self, why):
+            pass
+
+    def test_signature_interrupt(self):
+        @self.assertArgSpecMatches(self.step.interrupt)
+        def interrupt(self, reason):
+            pass
+
+    def test_signature_describe(self):
+        @self.assertArgSpecMatches(self.step.describe)
+        def describe(self, done=False):
+            pass
+
+    def test_signature_setProgress(self):
+        @self.assertArgSpecMatches(self.step.setProgress)
+        def setProgress(self, metric, value):
+            pass
+
+    def test_signature_slaveVersion(self):
+        @self.assertArgSpecMatches(self.step.slaveVersion)
+        def slaveVersion(self, command, oldversion=None):
+            pass
+
+    def test_signature_slaveVersionIsOlderThan(self):
+        @self.assertArgSpecMatches(self.step.slaveVersionIsOlderThan)
+        def slaveVersionIsOlderThan(self, command, minversion):
+            pass
+
+    def test_signature_getSlaveName(self):
+        @self.assertArgSpecMatches(self.step.getSlaveName)
+        def getSlaveName(self):
+            pass
+
+    def test_signature_runCommand(self):
+        @self.assertArgSpecMatches(self.step.runCommand)
+        def runCommand(self, command):
+            pass
+
+    def test_signature_addURL(self):
+        @self.assertArgSpecMatches(self.step.addURL)
+        def addURL(self, name, url):
+            pass
+
+    def test_signature_addLog(self):
+        @self.assertArgSpecMatches(self.step.addLog)
+        def addLog(self, name):
+            pass
+
+    def test_signature_getLog(self):
+        @self.assertArgSpecMatches(self.step.getLog)
+        def getLog(self, name):
+            pass
+
+    def test_signature_addCompleteLog(self):
+        @self.assertArgSpecMatches(self.step.addCompleteLog)
+        def addCompleteLog(self, name, text):
+            pass
+
+    def test_signature_addHTMLLog(self):
+        @self.assertArgSpecMatches(self.step.addHTMLLog)
+        def addHTMLLog(self, name, html):
+            pass
+
+    def test_signature_addLogObserver(self):
+        @self.assertArgSpecMatches(self.step.addLogObserver)
+        def addLogObserver(self, logname, observer):
+            pass
+
+
+class TestFakeInterface(unittest.TestCase,
+        steps.BuildStepMixin, InterfaceTests):
+
+    def setUp(self):
+        self.setupStep(buildstep.BuildStep())
+
+
+class TestRealInterface(unittest.TestCase,
+                 InterfaceTests):
+
+    def setUp(self):
+        self.step = buildstep.BuildStep()

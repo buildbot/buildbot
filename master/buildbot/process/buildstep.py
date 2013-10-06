@@ -136,6 +136,7 @@ class BuildStep(object, properties.PropertiesMixin):
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
     build = None
+    buildslave = None
     step_status = None
     progress = None
 
@@ -488,10 +489,10 @@ class BuildStep(object, properties.PropertiesMixin):
     def addURL(self, name, url):
         self.step_status.addURL(name, url)
 
-    def runCommand(self, c):
-        self.cmd = c
-        c.buildslave = self.buildslave
-        d = c.run(self, self.remote)
+    def runCommand(self, command):
+        self.cmd = command
+        command.buildslave = self.buildslave
+        d = command.run(self, self.remote)
         return d
 
     @staticmethod
