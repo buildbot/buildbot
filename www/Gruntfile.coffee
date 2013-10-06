@@ -155,7 +155,8 @@ module.exports = (grunt) ->
                         'test/dataspec'    # test mocks in dev mode
                         'test/mocks/*'     # test mocks in dev mode
                         'app'              # app needs libs
-                        '{routes,views,config,*/**}'    # remaining angularjs components
+                        'routes'           # default routes first
+                        '{views,config,*/**}'    # remaining angularjs components
                         'run'     # run has to be in the end, because it is triggering
                                   # angular's own DI
                     ]
