@@ -90,9 +90,9 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 			function closePopUp() {
 					
 				$(document, '.close-btn').bind('click touchstart', function(e){
-					if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .more-info-box-js-2, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
+					if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
 						$('.command_forcebuild').removeClass('form-open');
-						$('.more-info-box-js, .more-info-box-js-2').hide();
+						$('.more-info-box-js').hide();
 						$('#content').empty();
 						$('.cloned').remove();
 					}
@@ -104,30 +104,30 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 			// display popup box with external content	
 			$('#getBtn').click(function() {
 
-				$('.more-info-box-js, .more-info-box-js-2').hide();
+				$('.more-info-box-js').hide();
 				$('#content').empty();
 				var path = $('#pathToCodeBases').attr('href');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
-				var mib3 = $('<div class="more-info-box more-info-box-js-2"><span class="close-btn"></span><h3>Codebases</h3><div id="content"></div></div>');
-				$(mib3).appendTo('body');
+				var mib = $('<div class="more-info-box more-info-box-js"><span class="close-btn"></span><h3>Codebases</h3><div id="content"></div></div>');
+				$(mib).appendTo('body');
 
 
 				$.get(path)
 				.done(function(data) {
-					var $response=$(data);
+					
 					$('#bowlG').remove();
 					
-					var fw = $($response).find('#formWrapper')
+					var fw = $(data).find('#formWrapper')
 					
 					$(fw).appendTo($('#content'));
 					
 					$('#content .filter-table-input').remove();
 
-					$(mib3).center().fadeIn('fast');
+					$(mib).center().fadeIn('fast');
 					
 					$(window).resize(function() {
-						$(mib3).center();
+						$(mib).center();
 					});
 
 					$("#formWrapper .select-tools-js").select2({
@@ -146,17 +146,17 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 
 		  			selectors.clickSort('#select2-drop .select2-results');
 					$(window).resize(function() {
-						$('.more-info-box-js-2').center();
+						$('.more-info-box-js').center();
 					});
 					
 					$('#getForm').attr('action', window.location.href);	
 					$('#getForm .grey-btn[type="submit"]').click(function(){
-						$('.more-info-box-js-2').hide();				
+						$('.more-info-box-js').hide();				
 					});
 
 					$(document, '.close-btn').bind('click touchstart', function(e){
-						if (!$(e.target).closest('.more-info-box-js-2').length || $(e.target).closest('.close-btn').length ) {
-							$(mib3).remove();
+						if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+							$(mib).remove();
 						}
 					});
 
@@ -170,7 +170,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
-				var mib3 = $('<div class="more-info-box more-info-box-js-3"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
+				var mib3 = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
 				$(mib3).appendTo('body');
 
 				$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {

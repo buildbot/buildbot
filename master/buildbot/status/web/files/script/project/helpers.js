@@ -6,17 +6,21 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
     helpers = {
         init: function () {
 
-			function sumVal(arr) {
+			
+
+			
+			    
+				// creating a new websocket
+
+				/*
+				function sumVal(arr) {
 			  var sum = 0;
 			  $.each(arr,function(){
 			  	sum+=parseFloat(this) || 0;
 			  });
 			  return sum;
 			};
-
-			if ($('#tb-root').length != 0) {
-			    
-				// creating a new websocket
+				if ($('#tb-root').length != 0) {
 				var socket = io.connect('http://localhost:8000');
 				// on every message recived we print the new datas inside the #container div
 				socket.on('notification', function (data) {
@@ -41,6 +45,48 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 
 				});
 			}
+			*/
+
+			if ($('#tb-root').length != 0) {
+				$.ajax({
+					url: "/json?filter=0",
+					dataType: "json",
+					type: "GET",
+					cache: false,
+					success: function (data) {
+					var arrayBuilders = [];
+					var arrayPending = [];
+					var arrayCurrent = [];
+					$.each(data.builders, function (key, value) {
+					arrayBuilders.push(key);
+					arrayPending.push(value.pendingBuilds);
+					if (value.state == 'building') {
+					arrayCurrent.push(value.currentBuilds);
+					}
+					});
+
+					function sumVal(arr) {
+					var sum = 0;
+					$.each(arr,function(){sum+=parseFloat(this) || 0;});
+					return sum;
+					};
+					var arraySlaves = [];
+					$.each(data.slaves, function (key) {
+					arraySlaves.push(key);
+					});
+
+					var arrayProjects = [];
+					$.each(data.project, function (key) {
+					arrayProjects.push(key);
+					});
+					
+					$('#slavesNr').text(arraySlaves.length);
+					$('#pendingBuilds').text(sumVal(arrayPending));
+					
+					}
+				});
+			}
+
 
 			/*
 				// only for testing		
@@ -247,7 +293,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 	
 	// run build with default parameters
 	$('.run-build-js').click(function(e){
-		$('.more-info-box-js-3').remove();
+		$('.remove-js').remove();
 		e.preventDefault();
 		var datab = $(this).prev().attr('data-b');
 		var dataindexb = $(this).prev().attr('data-indexb');

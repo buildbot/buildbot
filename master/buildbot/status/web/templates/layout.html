@@ -13,7 +13,7 @@
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
     <title>{{ pageTitle|e }}</title>
-    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css?bust=12345" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
@@ -24,18 +24,16 @@
   -->
     <script type="text/javascript">
       var require = {
-          baseUrl: "/script/",
-          urlArgs : "bust=1234",
+          baseUrl: "/prod/script/",
+          urlArgs : "bust=12345",
           deps : ['main']
       };
     </script>
 
-    <script src="/script/require.js?bust=1234"></script>
+    <script src="/script/require.js?bust=12345"></script>
  
   </head>
   <body class="interface katana-main">
-  
-
     {% block header -%}
  
     <header class="header">

@@ -10,7 +10,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 			$(window).resize(function() {
 				isSmallScreen = screenSize.isSmallScreen();
 				if (isSmallScreen){	
-	    			$('.responsive-remove').remove();
+	    			$('.remove-js').remove();
 	    		} else {
 	    			$('.top-menu').show();
 	    			$('.submenu').remove();	
@@ -39,7 +39,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 
 					var path = "/projects";
 					if (!isSmallScreen){
-						var mib = $('<div class="more-info-box more-info-box-js-3 responsive-remove"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
+						var mib = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
 						$(mib).insertAfter($(this));
 					} else if ($('.submenu').length) {
 						$('.submenu').slideUp('fast', function(){
@@ -54,7 +54,8 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 
 							var fw = $($response).find('.tablesorter-js');
 							$(fw).appendTo($('#content1'));
-							$('.more-info-box-js-3 .tablesorter-js').removeClass('tablesorter')
+							
+							$('.tablesorter-js', mib).removeClass('tablesorter')
 
 							$('.top-menu .shortcut-js .scLink').each(function(){
 								var scLink = $(this).attr('data-sc');
