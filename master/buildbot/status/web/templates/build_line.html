@@ -21,9 +21,7 @@
 
     <td>{{ b.time }} </td>
     <td class="txt-align-left">
-      <div class="ellipsis">
         {{ b.rev|shortrev(b.rev_repo) }}
-      </div>
     </td>
     <td class="{{ b.class }}">{{ b.results }}</td>
   {%- if include_builder %}    

@@ -1012,11 +1012,10 @@ body.log.interface {
 
 .ellipsis {
 	max-height:45px;
-	width:175px;
+	max-width:300px;
    	white-space: normal;
    	word-wrap: break-word;
     position: relative;
-
 }
 
 .revision.ellipsis {
@@ -1024,6 +1023,8 @@ body.log.interface {
 	display:block;
 	overflow:hidden;
 }
+ 
+.full {display:none;}
 
 .tool-tip {
 	display:none;
@@ -1038,7 +1039,7 @@ body.log.interface {
 	z-index: 1;
 	white-space: normal;
 	word-wrap: break-word;
-	max-width: 200px;
+	max-width: 325px;
 	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
 }
 
@@ -1592,7 +1593,13 @@ form.command_forcebuild .force-nested > .label {
 @include breakpoint($bkpt-small) {
 	form.command_forcebuild {
 		width: auto;
+	}
+	.ellipsis {
+		max-width:100px;
 	}	
+	.tool-tip {
+		max-width: 175px;
+	}
 }
 
 @include breakpoint($bkpt-small-portrait) {

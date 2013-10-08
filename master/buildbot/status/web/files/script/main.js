@@ -8,12 +8,12 @@ require.config({
 	}
 });
 
-require(['jquery','project/selectors','project/popup','project/screen-size','project/project-drop-down','project/set-current-item','dotdotdot','project/helpers','datatables','select2','libs/socket-io'], 
-	function($, selectors, popup, screenSize, projectDropDown, setCurrentItem, dotdotdot, helpers ) {
+require(['jquery','project/set-current-item','project/selectors','project/popup','project/screen-size','project/project-drop-down','dotdotdot','project/helpers','datatables','select2','libs/socket-io'], 
+	function($, setCurrentItem,selectors, popup, screenSize, projectDropDown, dotdotdot, helpers ) {
 	'use strict';
 
 	$(document).ready(function() {
-		
+		setCurrentItem.init();
 		// codebases combobox selector
 		if ($('#commonBranch_select').length) {
 			selectors.comboBox('.select-tools-js');
@@ -24,7 +24,7 @@ require(['jquery','project/selectors','project/popup','project/screen-size','pro
 		}
 		popup.init();
 		projectDropDown.init();
-		setCurrentItem.init();
+		
 		helpers.init();	
 
 	});

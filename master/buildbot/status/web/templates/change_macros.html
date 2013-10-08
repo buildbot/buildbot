@@ -40,9 +40,9 @@
     <td>
       {%- if c.revlink -%}<a href="{{ c.revlink }}">#{{ c.rev|e }}</a>
       {%- else -%}
-        <div class="ellipsis">
-          {{ c.rev|revlink(c.repository) }} 
-        </div>
+        
+          {{ c.rev|shortrev(c.repository) }} 
+        
       {%- endif -%}
     </td>
   
