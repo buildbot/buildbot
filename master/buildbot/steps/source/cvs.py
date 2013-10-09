@@ -304,6 +304,23 @@ class CVS(Source):
             defer.returnValue(False)
             return
 
+        # if there are sticky dates (from an earlier build with revision),
+        # we can't update (unless we remove those tags with cvs update -A)
+        myFileWriter.buffer = ""
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Entries', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc is not None and cmd.rc != 0:
+            defer.returnValue(False)
+            return
+        # fields are separated by slashes, the last field contains the date
+        # the last line just contains a single "D"
+        for line in [l.split('/') for l in myFileWriter.buffer.splitlines() if len(l) > 1]:
+            if line[-1].startswith('D'):
+                defer.returnValue(False)
+                return
+
         defer.returnValue(True)
 
     def parseGotRevision(self, res):
