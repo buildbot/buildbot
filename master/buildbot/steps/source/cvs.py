@@ -143,20 +143,20 @@ class CVS(Source):
                                                 'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)        
-        oldworkdir = self.workdir
+        old_workdir = self.workdir
         self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
         def copy(_):
             cmd = buildstep.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir':'build',
+                                          {'fromdir': self.srcdir,
+                                           'todir': old_workdir,
                                            'logEnviron': self.logEnviron,})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
         d.addCallback(copy)
         def resetWorkdir(_):
-            self.workdir = oldworkdir
+            self.workdir = old_workdir
             return 0
         d.addCallback(resetWorkdir)
         return d
