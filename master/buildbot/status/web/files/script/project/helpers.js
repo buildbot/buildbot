@@ -6,88 +6,84 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
     helpers = {
         init: function () {
 
-			
-
-			
-			    
-				// creating a new websocket
-
-				/*
-				function sumVal(arr) {
-			  var sum = 0;
-			  $.each(arr,function(){
-			  	sum+=parseFloat(this) || 0;
-			  });
-			  return sum;
-			};
-				if ($('#tb-root').length != 0) {
-				var socket = io.connect('http://localhost:8000');
-				// on every message recived we print the new datas inside the #container div
-				socket.on('notification', function (data) {
-				  
-				  $.each(data.builders, function() {
-				  
-				    var arraySlaves = [];
-
-				    $.each(data.slaves, function (key) {
-				      arraySlaves.push(key);
-				    });
-
-				    var arrayPending = [];
-				    $.each(data.builders, function (key, value) {
-				        arrayPending.push(value.pendingBuilds);
-				    });
-
-				    $('#slavesNr').html(arraySlaves.length);
-				    $('#pendingBuilds').html(sumVal(arrayPending));
-				    
-				  });
-
-				});
-			}
-			*/
-
+			// creating a new websocket
 			if ($('#tb-root').length != 0) {
-				$.ajax({
-					url: "/json?filter=0",
-					dataType: "json",
-					type: "GET",
-					cache: false,
-					success: function (data) {
-					var arrayBuilders = [];
-					var arrayPending = [];
-					var arrayCurrent = [];
-					$.each(data.builders, function (key, value) {
-					arrayBuilders.push(key);
-					arrayPending.push(value.pendingBuilds);
-					if (value.state == 'building') {
-					arrayCurrent.push(value.currentBuilds);
-					}
-					});
+				(function( $ ) {
+					 var sock = null;
+			         var ellog = null;
 
-					function sumVal(arr) {
-					var sum = 0;
-					$.each(arr,function(){sum+=parseFloat(this) || 0;});
-					return sum;
-					};
-					var arraySlaves = [];
-					$.each(data.slaves, function (key) {
-					arraySlaves.push(key);
-					});
+			            var wsuri;
+			            ellog = document.getElementById('log');
 
-					var arrayProjects = [];
-					$.each(data.project, function (key) {
-					arrayProjects.push(key);
-					});
-					
-					$('#slavesNr').text(arraySlaves.length);
-					$('#pendingBuilds').text(sumVal(arrayPending));
-					
-					}
-				});
-			}
+			            if (window.location.protocol === "file:") {
+			               wsuri = "ws://localhost:9000";
+			            } else {
+			               wsuri = "ws://" + window.location.hostname + ":9000";
+			            }
 
+			            if ("WebSocket" in window) {
+			               sock = new WebSocket(wsuri);
+			            } else if ("MozWebSocket" in window) {
+			               sock = new MozWebSocket(wsuri);
+			            } else {
+			               log("Browser does not support WebSocket!");
+			               window.location = "http://autobahn.ws/unsupportedbrowser";
+			            }
 
+			            if (sock) {
+			               sock.onopen = function() {
+			                  log("Connected to " + wsuri);
+			               }
+
+			               sock.onclose = function(e) {
+			                  log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
+			                  sock = null;
+			               }
+
+			               sock.onmessage = function(e) {
+			                  log(e.data);
+			               }
+			            }
+			         
+			         
+			        function sumVal(arr) {
+			          var sum = 0;
+			          $.each(arr,function(){
+			            sum+=parseFloat(this) || 0;
+			          });
+			          return sum;
+			        };
+
+			         function log(m) {
+
+			            try {
+
+			                var obj = JSON.parse(m);
+			                  $.each(obj.builders, function() {
+
+			                      
+			                      var arraySlaves = [];
+
+			                      $.each(obj.slaves, function (key) {
+			                        arraySlaves.push(key);
+			                      });
+
+			                      var arrayPending = [];
+			                      $.each(obj.builders, function (key, value) {
+			                          arrayPending.push(value.pendingBuilds);
+			                      });
+
+			                      $('#slavesNr').html(arraySlaves.length);
+			                      $('#pendingBuilds').html(sumVal(arrayPending));
+			                    
+			                  });
+			            }
+			            catch(err) {
+			            }
+			           
+			         };
+		         })( jQuery );
+    		 }
 			/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -124,54 +120,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 			menuItemWidth();			  
 		});
 		
-        // json on frontpage
-        
-        /*
-        if ($('#tb-root').length != 0) {
 
-        });
-        if ($('#tb-root').length != 0) {
-	         $.ajax({
-			    url: "/json?filter=0",
-			    dataType: "json",
-			    type: "GET",
-			    cache: false,
-			    success: function (data) {
-			        
-			        var arrayBuilders = [];
-			        var arrayPending = [];
-			        var arrayCurrent = [];
-			        $.each(data.builders, function (key, value) {
-	        			arrayBuilders.push(key);
-	        			arrayPending.push(value.pendingBuilds);
-	        			if (value.state == 'building') {
-	        				arrayCurrent.push(value.currentBuilds);
-	        			}
-	    			});
-
-			        function sumVal(arr) {
-			        	var sum = 0;
-						$.each(arr,function(){sum+=parseFloat(this) || 0;});
-						return sum;
-			        };
-					
-	    			var arraySlaves = [];
-			        $.each(data.slaves, function (key) {
-	        			arraySlaves.push(key);
-	    			});
-
-	    			var arrayProjects = [];
-			        $.each(data.project, function (key) {
-	        			arrayProjects.push(key);
-	    			});
-
-	    			$('.summary-td').append("<td><span>" + ' ' + arraySlaves.length + '</span></td> ' + "<td><span>" + ' ' + sumVal(arrayPending) + '</span></td> ')	
-			    }
-			});
-		
-		   
-		}
-		*/
 
         // Colums with sorting 
         (function($) {
