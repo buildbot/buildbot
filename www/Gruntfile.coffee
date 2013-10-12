@@ -228,15 +228,13 @@ module.exports = (grunt) ->
 
                         'scripts/scripts.min.js'
                         'styles/styles.min.css'
+                        'index.html'
                     ]
                     dest: "./#{project_name}/"
                     expand: true
                 ,
-                    dest: "./#{project_name}/index.html"
-                    src: './.temp/index.min.html'
-                ,
                     dest: "./#{project_name}/require.js"
-                    src: './src/script/libs/require.js'
+                    src: './.temp/scripts/libs/require.js'
                 ]
             # Task is run when the watched index.template file is modified.
             index:
