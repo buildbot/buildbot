@@ -24,7 +24,7 @@ except ImportError:
     from StringIO import StringIO
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process import buildstep, remotecommand
+from buildbot.process import remotecommand
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
