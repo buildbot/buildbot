@@ -190,18 +190,20 @@ class Connection(base.Connection, pb.Avatar):
                     break
 
             if d:
-                log.msg("Shutting down (old) slave: %s" % self.buildslave.slavename)
-                # The remote shutdown call will not complete successfully since the
-                # buildbot process exits almost immediately after getting the
-                # shutdown request.
+                name = self.buildslave.slavename
+                log.msg("Shutting down (old) slave: %s" % name)
+                # The remote shutdown call will not complete successfully since
+                # the buildbot process exits almost immediately after getting
+                # the shutdown request.
                 # Here we look at the reason why the remote call failed, and if
                 # it's because the connection was lost, that means the slave
                 # shutdown as expected.
                 def _errback(why):
                     if why.check(pb.PBConnectionLost):
-                        log.msg("Lost connection to %s" % self.buildslave.slavename)
+                        log.msg("Lost connection to %s" % name)
                     else:
-                        log.err("Unexpected error when trying to shutdown %s" % buildslave.slavename)
+                        log.err("Unexpected error when trying to shutdown %s"
+                                                                        % name)
                 d.addErrback(_errback)
                 return d
             log.err("Couldn't find remote builder to shut down slave")
