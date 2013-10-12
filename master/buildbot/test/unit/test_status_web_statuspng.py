@@ -15,7 +15,6 @@
 # Copyright 2013 (c) - Manba Team
 
 import os
-import random
 
 
 from twisted.trial import unittest
