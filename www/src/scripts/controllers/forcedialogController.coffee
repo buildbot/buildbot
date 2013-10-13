@@ -3,30 +3,59 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
         url: "/force/:scheduler",
         onEnter: ["$stateParams", "$state", "$modal", "buildbotService"
             ($stateParams, $state, $modal, buildbotService) ->
-                # FIXME: create a data api to get one forcescheduler by name
-                buildbotService.all('forceschedulers').getList().then (schedulers) ->
-                    filtered_scheds = []
-                    for scheduler in schedulers
-                        if scheduler.name == $stateParams.scheduler
-                            break
+                scheduler = buildbotService.one('forceschedulers', $stateParams.scheduler)
+                scheduler.get().then (schedulers) ->
                     modal = {}
                     modal.modal = $modal.open
                         templateUrl: "views/forcedialog.html"
-                        controller: ModalInstanceCtrl
+                        controller: forceDialogController
                         resolve:
                            scheduler: -> scheduler
+                           schedulers: -> schedulers
                            modal: -> modal
 
-                    modal.modal.result.then (result) ->
+                    # We exit the state if the dialog is closed or dismissed
+                    goUp = (result) ->
                         $state.go "^"
+                    modal.modal.result.then(goUp, goUp)
             ]
-    ModalInstanceCtrl = [ "$scope", "$state", "modal", "scheduler",
-        ($scope, $state, modal, scheduler) ->
+    forceDialogController = [ "$scope", "$state", "modal", "scheduler", "schedulers",
+        ($scope, $state, modal, scheduler, schedulers) ->
+            # prepare default values
+            prepareFields = (fields) ->
+                for field in fields
+                    if field.type == "nested"
+                        prepareFields(field.fields)
+                    else
+                        field.value = field.default
+            prepareFields(schedulers[0].all_fields)
             angular.extend $scope,
-                sch: scheduler
+                rootfield:
+                    type: "nested"
+                    layout: "simple"
+                    fields: schedulers[0].all_fields
+                    columns: 1
+                sch: schedulers[0]
                 ok: ->
-                    modal.modal.close()
+                    params = {}
+                    fields_ref = {}
+                    gatherFields = (fields) ->
+                        for field in fields
+                            if field.type == "nested"
+                                gatherFields(field.fields)
+                            else
+                                params[field.fullName] = field.value
+                                fields_ref[field.fullName] = field
+
+                    gatherFields(schedulers[0].all_fields)
+                    scheduler.control("force", params)
+                    .then (res) ->
+                        modal.modal.close(res)
+                    ,   (err) ->
+                        if err.data.error.code == -32602
+                            for k, v of err.data.error.message
+                                fields_ref[k].errors = v
                 cancel: ->
-                    modal.modal.close()
+                    modal.modal.dismiss()
     ]
 ]

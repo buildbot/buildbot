@@ -1,5 +1,5 @@
-div.form-group
+basefield
     label.control-label.col-sm-2(for="{{field.name}}")
-        | {{field.label}}
+        | {{field.label}} {{field.value}}
     .col-sm-10
-        input.form-control(type='text', value="{{field.value}}")
+        input.form-control(type='text', ng-model="field.value")

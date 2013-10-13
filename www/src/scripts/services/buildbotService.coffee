@@ -4,7 +4,7 @@ angular.module('app').factory 'EventSource', ->
         return new EventSource(url)
 BASEURLAPI = 'api/v2/'
 BASEURLSSE = 'sse/'
-
+jsonrpc2_id = 1
 angular.module('app').factory 'buildbotService',
 ['$log', 'Restangular', 'EventSource',
     ($log, Restangular, EventSource) ->
@@ -61,6 +61,17 @@ angular.module('app').factory 'buildbotService',
                         source = new EventSource(route)
                         elem.source = source
                     elem.source.addEventListener(event, onEvent)
+
+                elem.control = (method, params) ->
+                    # do jsonrpc2.0 like POST
+                    id = jsonrpc2_id++
+                    req =
+                        method: method
+                        id: id
+                        params: params
+                        jsonrpc: "2.0"
+                    return elem.post("", req)
+
                 return elem
             RestangularConfigurer.setBaseUrl(BASEURLAPI)
             RestangularConfigurer.setOnElemRestangularized(onElemRestangularized)

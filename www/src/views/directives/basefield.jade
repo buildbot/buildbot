@@ -1,0 +1,6 @@
+div
+    //- should switch to popover when this is fixed: https://github.com/angular-ui/bootstrap/issues/590
+    .alert.alert-danger.col-sm-10.col-sm-offset-2(ng-if="field.errors")
+        | {{field.errors}}
+    div.form-group(ng-class="{'has-warning': field.warnings,'has-error': field.errors}")
+        div(ng-transclude)
