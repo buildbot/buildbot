@@ -74,8 +74,8 @@ install:
 
 # Tests running commands
 script:
-  - trial buildbot.test
-  - trial buildslave.test
+  - trial --reporter=text --rterrors buildbot.test
+  - trial --reporter=text --rterrors buildslave.test
 
   # Run additional tests only in latest configuration
   - "[ $IS_LATEST = false ] || make pylint"
