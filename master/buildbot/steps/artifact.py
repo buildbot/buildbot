@@ -13,6 +13,75 @@ def mkdt(epoch):
     if epoch:
         return epoch2datetime(epoch)
 
+@defer.inlineCallbacks
+def updateSourceStamps(master, build, build_sourcestamps):
+    # every build will generate at least one sourcestamp
+    sourcestamps = build.build_status.getSourceStamps()
+
+    build_sourcestampsetid = sourcestamps[0].sourcestampsetid
+
+    sourcestamps_updated = build.build_status.getAllGotRevisions()
+    build.build_status.updateSourceStamps()
+
+    if len(sourcestamps_updated) > 0:
+        update_ss = []
+        for key, value in sourcestamps_updated.iteritems():
+            update_ss.append(
+                {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': build_sourcestampsetid})
+
+        rowsupdated = yield master.db.sourcestamps.updateSourceStamps(update_ss)
+
+    # when running rebuild or passing revision as parameter
+    for ss in sourcestamps:
+        build_sourcestamps.append(
+            {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
+
+class FindPreviousSuccessfullBuild(LoggingBuildStep):
+    name = "Find previous successfull build"
+    description="Find previous successfull build"
+    descriptionDone="Find previous successfull build finished"
+
+    def __init__(self, **kwargs):
+        self.build_sourcestamps = []
+        self.master = None
+        LoggingBuildStep.__init__(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def start(self):
+        if self.master is None:
+            self.master = self.build.builder.botmaster.parent
+
+        yield updateSourceStamps(self.master, self.build, self.build_sourcestamps)
+
+        clean_build = self.build.getProperty("clean_build", False)
+        if type(clean_build) != bool:
+            clean_build = (clean_build.lower() == "true")
+
+        if clean_build:
+            self.step_status.setText(["Skipping previous build check, making a clean build"])
+            self.finished(SKIPPED)
+            return
+
+        prevBuildRequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
+
+        if prevBuildRequest:
+            build = yield self.master.db.builds.getBuildsForRequest(prevBuildRequest['brid'])
+            if build > 0:
+                build_num = build[0]['number']
+                url = yield self.master.status.getURLForBuildRequest(prevBuildRequest['brid'], self.build.builder.config.name, build_num)
+                self.addURL(url['text'], url['path'])
+                brid = self.build.requests[0].id
+                # we are not building but reusing a previous build
+                reuse = yield self.master.db.buildrequests.reusePreviousBuild(brid, prevBuildRequest['brid'])
+                self.step_status.stepFinished(SUCCESS)
+                self.build.result = SUCCESS
+                self.build.allStepsDone()
+                return
+
+        self.step_status.setText(["Running build, previous sucessful build not found"])
+        self.finished(SUCCESS)
+        return
+
 class CheckArtifactExists(ShellCommand):
     name = "CheckArtifactExists"
     description="CheckArtifactExists"
@@ -33,29 +102,6 @@ class CheckArtifactExists(ShellCommand):
         self.artifactURL = None
         self.stopBuild = stopBuild
         ShellCommand.__init__(self, **kwargs)
-
-    @defer.inlineCallbacks
-    def updateSourceStamps(self):
-        # every build will generate at least one sourcestamp
-        sourcestamps = self.build.build_status.getSourceStamps()
-
-        build_sourcestampsetid = sourcestamps[0].sourcestampsetid
-
-        sourcestamps_updated = self.build.build_status.getAllGotRevisions()
-        self.build.build_status.updateSourceStamps()
-
-        if len(sourcestamps_updated) > 0:
-            update_ss = []
-            for key, value in sourcestamps_updated.iteritems():
-                update_ss.append(
-                    {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': build_sourcestampsetid})
-
-            rowsupdated = yield self.master.db.sourcestamps.updateSourceStamps(update_ss)
-
-        # when running rebuild or passing revision as parameter
-        for ss in sourcestamps:
-            self.build_sourcestamps.append(
-                {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
 
     @defer.inlineCallbacks
     def createSummary(self, log):
@@ -87,7 +133,7 @@ class CheckArtifactExists(ShellCommand):
             if self.stopBuild:
                 # update buildrequest (artifactbrid) with self.artifactBuildrequest
                 brid = self.build.requests[0].id
-                reuse = yield self.master.db.buildrequests.reusePreviouslyGeneratedArtifact(brid, self.artifactBuildrequest['brid'])
+                reuse = yield self.master.db.buildrequests.reusePreviousBuild(brid, self.artifactBuildrequest['brid'])
                 self.step_status.stepFinished(SUCCESS)
                 self.build.result = SUCCESS
                 self.build.allStepsDone()
@@ -100,7 +146,7 @@ class CheckArtifactExists(ShellCommand):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
-        yield self.updateSourceStamps()
+        yield updateSourceStamps(self.master, self.build, self.build_sourcestamps)
 
         clean_build = self.build.getProperty("clean_build", False)
         if type(clean_build) != bool:

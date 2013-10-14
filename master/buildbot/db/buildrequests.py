@@ -183,7 +183,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return buildrequest
         return self.db.pool.do(thd)
 
-    def reusePreviouslyGeneratedArtifact(self, brid, artifactbrid):
+    def reusePreviousBuild(self, brid, artifactbrid):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
