@@ -127,7 +127,7 @@ class Connection(base.Connection, pb.Avatar):
 
         try:
             info["version"] = yield self.mind.callRemote('getVersion')
-        except pb.NoSuchMethod, e:
+        except pb.NoSuchMethod:
             log.msg("BuildSlave.getVersion is unavailable - ignoring")
 
         defer.returnValue(info)

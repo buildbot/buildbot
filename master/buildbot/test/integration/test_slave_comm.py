@@ -44,6 +44,16 @@ class FakeSlaveBuildSlave(pb.Referenceable):
     def __init__(self, callWhenBuilderListSet):
         self.callWhenBuilderListSet = callWhenBuilderListSet
         self.master_persp = None
+        self._detach_deferreds = []
+        self._detached = False
+
+    def waitForDetach(self):
+        if self._detached:
+            return defer.succeed(None)
+        else:
+            d = defer.Deferred()
+            self._detach_deferreds.append(d)
+            return d
 
     def setMasterPerspective(self, persp):
         self.master_persp = persp
@@ -51,6 +61,12 @@ class FakeSlaveBuildSlave(pb.Referenceable):
         def clear_persp():
             self.master_persp = None
         persp.broker.notifyOnDisconnect(clear_persp)
+        def fire_deferreds():
+            self._detached = True
+            self._detach_deferreds, deferreds = None, self._detach_deferreds
+            for d in deferreds:
+                d.callback(None)
+        persp.broker.notifyOnDisconnect(fire_deferreds)
 
     def remote_print(self, message):
         log.msg("SLAVE-SIDE: remote_print(%r)" % (message,))
@@ -91,6 +107,18 @@ class FakeBuilder(builder.Builder):
         return defer.succeed(None)
 
 
+class MyBuildSlave(buildslave.BuildSlave):
+
+    def attached(self, conn):
+        self.detach_d = defer.Deferred()
+        return buildslave.BuildSlave.attached(self, conn)
+
+    def detached(self):
+        buildslave.BuildSlave.detached(self)
+        self.detach_d, d = None, self.detach_d
+        d.callback(None)
+
+
 class TestSlaveComm(unittest.TestCase):
     """
     Test handling of connections from slaves as integrated with
@@ -105,8 +133,6 @@ class TestSlaveComm(unittest.TestCase):
     @ivar slavebuildslave: slave-side L{FakeSlaveBuildSlave} instance
     @ivar port: TCP port to connect to
     @ivar connector: outbound TCP connection from slave to master
-    @ivar detach_d: Defererd that will fire when C{buildslave.detached} is
-    called
     """
 
     def setUp(self):
@@ -130,28 +156,34 @@ class TestSlaveComm(unittest.TestCase):
         self.port = None
         self.slavebuildslave = None
         self.connector = None
-        self.detach_d = None
+        self._detach_deferreds = []
+
+        # patch in our FakeBuilder for the regular Builder class
+        self.patch(botmaster, 'Builder', FakeBuilder)
 
     def tearDown(self):
         if self.connector:
             self.connector.disconnect()
-        return defer.gatherResults([
+        deferreds = self._detach_deferreds + [
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
             self.buildslaves.stopService(),
-        ])
+        ]
+
+        # if the buildslave is still attached, wait for it to detach, too
+        if self.buildslave and self.buildslave.detach_d:
+            deferreds.append(self.buildslave.detach_d)
+
+        return defer.gatherResults(deferreds)
 
     @defer.inlineCallbacks
     def addSlave(self, **kwargs):
-        """test_duplicate_slave_old_dead
+        """
         Create a master-side slave instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{BuildSlave} constructor.
         """
-        self.buildslave = buildslave.BuildSlave("testslave", "pw", **kwargs)
-
-        # patch in our FakeBuilder for the regular Builder class
-        self.patch(botmaster, 'Builder', FakeBuilder)
+        self.buildslave = MyBuildSlave("testslave", "pw", **kwargs)
 
         # reconfig the master to get it set up
         new_config = self.master.config
@@ -186,9 +218,11 @@ class TestSlaveComm(unittest.TestCase):
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
+            # set up to hear when the slave side disconnects
             slavebuildslave.detach_d = defer.Deferred()
-            self.buildslave._test_detached = lambda : \
-                            slavebuildslave.detach_d.callback(None)
+            persp.broker.notifyOnDisconnect(lambda :
+                    slavebuildslave.detach_d.callback(None))
+            self._detach_deferreds.append(slavebuildslave.detach_d)
 
             return slavebuildslave
         login_d.addCallback(logged_in)
@@ -219,7 +253,7 @@ class TestSlaveComm(unittest.TestCase):
         self.slaveSideDisconnect(slave)
 
         # wait for the resulting detach
-        yield slave.detach_d
+        yield slave.waitForDetach()
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
@@ -240,7 +274,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave1)
 
-        yield slave1.detach_d
+        yield slave1.waitForDetach()
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -256,6 +290,7 @@ class TestSlaveComm(unittest.TestCase):
         # monkeypatch that slave to fail with PBConnectionLost when its
         # remote_print method is called
         def remote_print(message):
+            slave1.master_persp.broker.transport.loseConnection()
             raise pb.PBConnectionLost("fake!")
         slave1.remote_print = remote_print
 
@@ -266,7 +301,7 @@ class TestSlaveComm(unittest.TestCase):
         # disconnect both and wait for that to percolate
         self.slaveSideDisconnect(slave2)
 
-        yield slave1.detach_d
+        yield slave1.waitForDetach()
 
         # flush the exception logged for this on the slave
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
