@@ -10,6 +10,10 @@
       li
         a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}")
           | {{build.number}}
+      li.pull-right
+        button.btn.btn-default Rebuild
+      li.pull-right
+        button.btn.btn-default Promote
   .row
     .col-sm-6
       h4 Steps

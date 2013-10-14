@@ -1,1 +1,1 @@
-angular.module 'app', ['restangular', 'ui.bootstrap', 'templates-views', 'ngRoute', 'ngAnimate']
+angular.module 'app', ['restangular', 'ui.bootstrap', 'templates-views', 'ui.router', 'ngAnimate']

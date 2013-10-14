@@ -1,24 +1,26 @@
 angular.module('app').directive 'topmenu',
-['$log', 'route_config', ($log, route_config) ->
+['$log', ($log) ->
     controller = [
-        '$scope', '$element', '$rootScope', ($scope, $element, $rootScope) ->
+        '$scope', '$element', 'topMenuStates', ($scope, $element, topMenuStates) ->
+
             $scope.tabs = []
-            $scope.select = (tab) ->
-                return if tab.selected is true
-                angular.forEach $scope.tabs, (tab) ->
-                    tab.selected = false
+            select = (state) ->
+                return if !state
+                for tab in $scope.tabs
+                    if tab.name == state.data.tabid
+                        tab.data.selected = true
+                    else
+                        tab.data.selected = false
+            @addTab = (tab) ->
+                select(tab)
+                $scope.tabs.push(tab)
 
-                tab.selected = true
+            for tab in topMenuStates
+                if tab.data.caption?
+                    @addTab(tab)
 
-            @addTab = (tab, tabId) ->
-                $scope.select tab if $scope.tabs.length is 0
-                $scope.tabs.push tab
-
-            for id, tab of route_config
-                if tab.caption?
-                    @addTab(tab, id)
-
-            $rootScope.$watch("selectedTab", $scope.select)
+            $scope.$on "$stateChangeSuccess", (ev, state) ->
+                select(state)
         ]
     controller: controller
     replace: true

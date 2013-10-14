@@ -20,13 +20,9 @@ angular.module('app').config ['$httpProvider', ($httpProvider) ->
          return (promise) ->
             promise.then (res)->
                 res
-            , (res) ->
-                if res.config.url.indexOf("views") == 0 and res.status == 404
-                    alert.error "view does not exist: " + res.config.url
-                else
-                    alert.error res.data
+            , (res, bla) ->
+                alert.error res.toString()
                 $q.reject res
-                console.log res
     ]
 
 ]

@@ -969,8 +969,6 @@ for example::
 
 .. _Step-Gerrit:
 
-.. bb:step:: Gerrit
-
 Gerrit
 ++++++
 

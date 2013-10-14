@@ -15,6 +15,7 @@
 
 import traceback
 import re
+import copy
 from twisted.internet import defer
 import email.utils as email_utils
 
@@ -34,13 +35,15 @@ class BaseParameter(object):
     name = ""
     parentName = None
     label = ""
-    type = []
+    type = ""
+    subtype = ""
     default = ""
     required = False
     multiple = False
     regex = None
     debug=True
     hide = False
+    css_class = ""
 
     @property
     def fullName(self):
@@ -130,10 +133,17 @@ class BaseParameter(object):
     def parse_from_arg(self, s):
         return s
 
+    def toJsonDict(self):
+        ret = {}
+        for i in dir(self):
+            v = getattr(self, i)
+            if not callable(v) and not i.startswith("__"):
+                ret[i] = v
+        return ret
 
 class FixedParameter(BaseParameter):
     """A fixed parameter that cannot be modified by the user."""
-    type = ["fixed"]
+    type = "fixed"
     hide = True
     default = ""
 
@@ -143,7 +153,7 @@ class FixedParameter(BaseParameter):
 
 class StringParameter(BaseParameter):
     """A simple string parameter"""
-    type = ["text"]
+    type = "text"
     size = 10
 
     def parse_from_arg(self, s):
@@ -152,7 +162,7 @@ class StringParameter(BaseParameter):
 
 class TextParameter(StringParameter):
     """A generic string parameter that may span multiple lines"""
-    type = ["textarea"]
+    type = "textarea"
     cols = 80
     rows = 20
 
@@ -162,14 +172,14 @@ class TextParameter(StringParameter):
 
 class IntParameter(StringParameter):
     """An integer parameter"""
-    type = ["int"]
+    type = "int"
 
     parse_from_arg = int # will throw an exception if parse fail
 
 
 class BooleanParameter(BaseParameter):
     """A boolean parameter"""
-    type = ["bool"]
+    type = "bool"
 
     def getFromKwargs(self, kwargs):
         return kwargs.get(self.fullName, None) == [True]
@@ -177,7 +187,7 @@ class BooleanParameter(BaseParameter):
 
 class UserNameParameter(StringParameter):
     """A username parameter to supply the 'owner' of a build"""
-    type = ["text"]
+    type = "text"
     default = ""
     size = 30
     need_email = True
@@ -200,7 +210,7 @@ class ChoiceStringParameter(BaseParameter):
     """A list of strings, allowing the selection of one of the predefined values.
        The 'strict' parameter controls whether values outside the predefined list
        of choices are allowed"""
-    type = ["list"]
+    type = "list"
     choices = []
     strict = True
 
@@ -214,7 +224,8 @@ class ChoiceStringParameter(BaseParameter):
 
 class InheritBuildParameter(ChoiceStringParameter):
     """A parameter that takes its values from another build"""
-    type = ChoiceStringParameter.type + ["inherit"]
+    type = ChoiceStringParameter.type
+    subtype = "inherit"
     name = "inherit"
     compatible_builds = None
 
@@ -298,12 +309,20 @@ class NestedParameter(BaseParameter):
        The result of a NestedParameter is typically a dictionary, with the key/value
        being the name/value of the children.
     """
-    type = ['nested']
+    type = 'nested'
     fields = None
-    
+    columns = None
     def __init__(self, name, fields, **kwargs):
         BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
-        
+        # reasonable defaults for the number of columns
+        if self.columns is None:
+            if len(fields) >= 4:
+                self.columns = 2
+            else:
+                self.columns = 1
+        if self.columns > 4:
+            config.error("UI only support up to 4 columns in nested parameters")
+
         # fix up the child nodes with the parent (use None for now):
         self.setParent(None)
     
@@ -338,11 +357,17 @@ class NestedParameter(BaseParameter):
             # if there's no name, collapse this nest all the way
             d = properties
         d.update(kwargs[self.fullName])
-        
+
+    def toJsonDict(self):
+        ret = BaseParameter.toJsonDict(self)
+        ret['fields'] = [ field.toJsonDict() for field in self.fields ]
+        return ret
+
 class AnyPropertyParameter(NestedParameter):
     """A generic property parameter, where both the name and value of the property
        must be given."""
-    type = NestedParameter.type + ["any"]
+    type = NestedParameter.type
+    subtype = "any"
 
     def __init__(self, name, **kw):
         fields = [
@@ -374,10 +399,10 @@ class AnyPropertyParameter(NestedParameter):
             raise ValidationError("bad property name='%s', value='%s'" % (pname, pvalue))
         properties[pname] = pvalue
 
-
 class CodebaseParameter(NestedParameter):
     """A parameter whose result is a codebase specification instead of a property"""
-    type = NestedParameter.type + ["codebase"]
+    type = NestedParameter.type
+    subtype = "codebase"
     codebase = ''
     
     def __init__(self,

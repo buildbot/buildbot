@@ -155,7 +155,8 @@ module.exports = (grunt) ->
                         'test/dataspec'    # test mocks in dev mode
                         'test/mocks/*'     # test mocks in dev mode
                         'app'              # app needs libs
-                        '{routes,views,config,*/**}'    # remaining angularjs components
+                        'routes'           # default routes first
+                        '{views,config,*/**}'    # remaining angularjs components
                         'run'     # run has to be in the end, because it is triggering
                                   # angular's own DI
                     ]
@@ -227,15 +228,13 @@ module.exports = (grunt) ->
 
                         'scripts/scripts.min.js'
                         'styles/styles.min.css'
+                        'index.html'
                     ]
                     dest: "./#{project_name}/"
                     expand: true
                 ,
-                    dest: "./#{project_name}/index.html"
-                    src: './.temp/index.min.html'
-                ,
                     dest: "./#{project_name}/require.js"
-                    src: './src/script/libs/require.js'
+                    src: './.temp/scripts/libs/require.js'
                 ]
             # Task is run when the watched index.template file is modified.
             index:
