@@ -592,7 +592,6 @@ class BuildSlave(AbstractBuildSlave):
         AbstractBuildSlave.detached(self)
         self.botmaster.slaveLost(self)
         self.startMissingTimer()
-        self._test_detached()
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
@@ -602,8 +601,6 @@ class BuildSlave(AbstractBuildSlave):
         # builders, then it's safe to disconnect
         self.maybeShutdown()
 
-    def _test_detached(self): # hook for tests
-        pass
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
     """A build slave that will start up a slave instance when needed.
