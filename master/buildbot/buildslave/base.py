@@ -28,7 +28,7 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.util import subscription, ascii2unicode
+from buildbot.util import ascii2unicode
 from buildbot.util.eventual import eventually
 from buildbot import config
 

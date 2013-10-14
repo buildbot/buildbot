@@ -75,6 +75,13 @@ def patch_testcase_assert_raises_regexp():
         from buildbot.monkeypatches import testcase_assert
         testcase_assert.patch()
 
+def patch_python14653():
+    # this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
+    import sys
+    if sys.version_info[:3] < (2, 7, 4):
+        from buildbot.monkeypatches import python14653
+        python14653.patch()
+
 def patch_all(for_tests=False):
     if for_tests:
         from buildbot.monkeypatches import servicechecks
@@ -95,3 +102,4 @@ def patch_all(for_tests=False):
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
     patch_gatherResults()
+    patch_python14653()

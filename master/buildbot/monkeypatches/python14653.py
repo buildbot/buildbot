@@ -13,22 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+import calendar
+import time
 
-def patch_servicechecks():
-    """
-    Patch startService and stopService so that they check the previous state
-    first.
+def fixed_mktime_tz(data):
+    if data[9] is None:
+        # No zone info, so localtime is better assumption than GMT
+        return time.mktime(data[:8] + (-1,))
+    else:
+        t = calendar.timegm(data)
+        return t - data[9]
 
-    (used for debugging only)
-    """
-    from twisted.application.service import Service
-    old_startService = Service.startService
-    old_stopService = Service.stopService
-    def startService(self):
-        assert not self.running, "%r already running" % (self,)
-        return old_startService(self)
-    def stopService(self):
-        assert self.running, "%r already stopped" % (self,)
-        return old_stopService(self)
-    Service.startService = startService
-    Service.stopService = stopService
+def patch():
+    # Fix for http://bugs.python.org/issue14653 for Python 2.7.3 and below.
+    # Required to fix http://trac.buildbot.net/ticket/2522 issue
+
+    import email.utils
+    email.utils.mktime_tz = fixed_mktime_tz

@@ -35,6 +35,11 @@ def WriteFile(path, buf):
 
 class IQueue(Interface):
     """Abstraction of a queue."""
+
+    # disable pylint warnings triggered by this interface definition
+    # pylint: disable=no-self-argument
+    # pylint: disable=no-method-argument
+
     def pushItem(item):
         """Adds an individual item to the end of the queue.
 

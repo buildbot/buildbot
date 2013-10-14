@@ -17,9 +17,10 @@
 
 Define the interfaces that are implemented by various buildbot classes.
 """
-# E0211: Method has no argument
-# E0213: Method should have "self" as first argument
-# pylint: disable-msg=E0211,E0213
+
+# disable pylint warnings triggered by interface definitions
+# pylint: disable=no-self-argument
+# pylint: disable=no-method-argument
 
 from zope.interface import Interface, Attribute
 
