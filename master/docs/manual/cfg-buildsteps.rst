@@ -969,8 +969,6 @@ for example::
 
 .. _Step-Gerrit:
 
-.. bb:step:: Gerrit
-
 Gerrit
 ++++++
 
@@ -989,8 +987,6 @@ in Gerrit, and can only be described by humans.
 .. bb:step:: Darcs
 
 .. _Step-Darcs:
-
-.. bb:step:: Darcs
 
 Darcs
 +++++
