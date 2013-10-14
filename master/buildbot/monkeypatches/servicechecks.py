@@ -25,10 +25,10 @@ def patch_servicechecks():
     old_startService = Service.startService
     old_stopService = Service.stopService
     def startService(self):
-        assert not self.running
+        assert not self.running, "%r already running" % (self,)
         return old_startService(self)
     def stopService(self):
-        assert self.running
+        assert self.running, "%r already stopped" % (self,)
         return old_stopService(self)
     Service.startService = startService
     Service.stopService = stopService
