@@ -37,7 +37,7 @@ def updateSourceStamps(master, build, build_sourcestamps):
             {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
 
 class FindPreviousSuccessfulBuild(LoggingBuildStep):
-    name = "Find previous successful build"
+    name = "Find Previous Successful Build"
     description="Find previous successful build"
     descriptionDone="Find previous successful build finished"
 
