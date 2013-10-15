@@ -36,10 +36,10 @@ def updateSourceStamps(master, build, build_sourcestamps):
         build_sourcestamps.append(
             {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
 
-class FindPreviousSuccessfullBuild(LoggingBuildStep):
-    name = "Find previous successfull build"
-    description="Find previous successfull build"
-    descriptionDone="Find previous successfull build finished"
+class FindPreviousSuccessfulBuild(LoggingBuildStep):
+    name = "Find previous successful build"
+    description="Find previous successful build"
+    descriptionDone="Find previous successful build finished"
 
     def __init__(self, **kwargs):
         self.build_sourcestamps = []
