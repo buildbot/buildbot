@@ -330,7 +330,7 @@ class GitExtractor(SourceStampExtractor):
         remote = self.config.get("branch." + self.branch + ".remote")
         ref = self.config.get("branch." + self.branch + ".merge")
         if remote and ref:
-            remote_branch = ref.split("/", 3)[-1]
+            remote_branch = ref.split("/", 2)[-1]
             d = self.dovc(["rev-parse", remote + "/" + remote_branch])
             d.addCallback(self.override_baserev)
             return d
