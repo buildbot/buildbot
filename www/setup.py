@@ -88,7 +88,7 @@ package_json = {
         "grunt-coffeelint": "~0.0.7",
         "grunt-requiregen": "~0.1.0",
         "grunt-karma": "~0.6.0",
-        "bower": "~1.1.0"
+        "bower": "~1.2.7"
     },
     "engines": {
         "node": "0.8.x",
@@ -106,9 +106,9 @@ bower_json = {
     "bootstrap": "~3.0.0",
     "font-awesome": "latest",
     "angular": ANGULAR_TAG,
-    "angular-route": ANGULAR_TAG,
     "angular-animate": ANGULAR_TAG,
-    "angular-bootstrap": "latest",
+    "angular-bootstrap": "~0.6.0",
+    "angular-ui-router": "~0.2.0",
     "restangular": "latest",
     "lodash": "latest",
     "html5shiv": "~3.6.2",
@@ -283,8 +283,9 @@ class develop(setuptools.command.develop.develop):
     ]
 
     def run(self):
-        for command in self.get_sub_commands():
-            self.run_command(command)
+        if MODE == 'SRC':
+            for command in self.get_sub_commands():
+                self.run_command(command)
         setuptools.command.develop.develop.run(self)
 
 cmdclass['develop'] = develop

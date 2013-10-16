@@ -24,6 +24,7 @@ from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
 from buildbot.schedulers.forcesched import CodebaseParameter, BaseParameter
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import json
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
 
@@ -317,6 +318,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                          expectKind=None, # None=one prop, Exception=exception, dict=many props
                          owner='user',
                          value=None, req=None,
+                         expectJson=None,
                          **kwargs):
 
         name = kwargs.setdefault('name', 'p1')
@@ -329,6 +331,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
 
         self.assertEqual(prop.name, name)
         self.assertEqual(prop.label, kwargs.get('label', prop.name))
+        if expectJson is not None:
+            self.assertEqual(json.dumps(prop.toJsonDict()), expectJson)
 
         sched = self.makeScheduler(properties=[prop])
 
@@ -373,35 +377,54 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
 
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
-                                klass=StringParameter)
+                              klass=StringParameter,
+                              expectJson='{"regex": null, "required": false, "hide": false, '
+                              '"name": "p1", "default": "", "css_class": "", '
+                              '"parentName": null, "label": "p1", "subtype": "", '
+                              '"debug": true, "multiple": false, "fullName": "p1", "type": "text", '
+                              '"size": 10}')
 
     def test_IntParameter(self):
-        self.do_ParameterTest(value="123", expect=123, klass=IntParameter)
+        self.do_ParameterTest(value="123", expect=123, klass=IntParameter,
+                              expectJson='{"regex": null, "required": false, "hide": false, '
+                              '"name": "p1", "default": "", "css_class": "", '
+                              '"parentName": null, "label": "p1", "subtype": "", '
+                              '"debug": true, "multiple": false, "fullName": "p1", "type": "int", '
+                              '"size": 10}')
 
 
     def test_FixedParameter(self):
         self.do_ParameterTest(value="123", expect="321", klass=FixedParameter,
-                default="321")
-
+                              default="321",
+                              expectJson='{"regex": null, "required": false, "hide": true, '
+                              '"name": "p1", "default": "321", "css_class": "", '
+                              '"parentName": null, "label": "p1", "subtype": "", '
+                              '"debug": true, "multiple": false, "fullName": "p1", "type": "fixed"}')
 
     def test_BooleanParameter_True(self):
         req = dict(p1=True,reason='because')
         self.do_ParameterTest(value="123", expect=True, klass=BooleanParameter,
-                req=req)
-
+                              req=req,
+                              expectJson='{"regex": null, "required": false, "hide": false, '
+                              '"name": "p1", "default": "", "css_class": "", '
+                              '"parentName": null, "label": "p1", "subtype": "", '
+                              '"debug": true, "multiple": false, "fullName": "p1", "type": "bool"}')
 
     def test_BooleanParameter_False(self):
         req = dict(p2=True,reason='because')
         self.do_ParameterTest(value="123", expect=False,
-                klass=BooleanParameter, req=req)
-
+                              klass=BooleanParameter, req=req)
 
     def test_UserNameParameter(self):
         email = "test <test@buildbot.net>"
         self.do_ParameterTest(value=email, expect=email,
-                klass=UserNameParameter(),
-                name="username", label="Your name:")
-
+                              klass=UserNameParameter(),
+                              name="username", label="Your name:",
+                              expectJson='{"regex": null, "parentName": null, "hide": false, '
+                              '"name": "username", "default": "", "css_class": "", '
+                              '"need_email": true, "label": "Your name:", "subtype": "", '
+                              '"debug": true, "multiple": false, "fullName": "username", '
+                              '"size": 30, "type": "text", "required": false}')
 
     def test_UserNameParameterError(self):
         for value in ["test","test@buildbot.net","<test@buildbot.net>"]:
@@ -411,11 +434,14 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                     klass=UserNameParameter(debug=False),
                     name="username", label="Your name:")
 
-
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',
-                klass=ChoiceStringParameter, choices=['t1','t2'])
-
+                klass=ChoiceStringParameter, choices=['t1','t2'],
+                expectJson='{"regex": null, "required": false, "hide": false, '
+                '"name": "p1", "subtype": "", "default": "", "css_class": "", '
+                '"parentName": null, "choices": ["t1", "t2"], "strict": true, '
+                '"debug": true, "multiple": false, "fullName": "p1", '
+                '"label": "p1", "type": "list"}')
 
     def test_ChoiceParameterError(self):
         self.do_ParameterTest(value='t3',
@@ -430,9 +456,16 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 klass=ChoiceStringParameter, choices=['t1','t2'])
 
 
+
     def test_ChoiceParameterMultiple(self):
         self.do_ParameterTest(value=['t1','t2'], expect=['t1','t2'],
-                klass=ChoiceStringParameter,choices=['t1','t2'], multiple=True)
+                klass=ChoiceStringParameter,choices=['t1','t2'], multiple=True,
+                expectJson='{"regex": null, "required": false, "hide": false, '
+                '"name": "p1", "subtype": "", "default": "", "css_class": "", '
+                '"parentName": null, "choices": ["t1", "t2"], "strict": true, '
+                '"debug": true, "multiple": true, "fullName": "p1", '
+                '"label": "p1", "type": "list"}')
+
 
 
     def test_ChoiceParameterMultipleError(self):
@@ -442,14 +475,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 multiple=True, debug=False)
 
-
     def test_NestedParameter(self):
         fields = [
             IntParameter(name="foo")
         ]
         self.do_ParameterTest(req=dict(p1_foo='123', reason="because"),
                               expect=dict(foo=123),
-                              klass=NestedParameter, fields=fields)
+                              klass=NestedParameter, fields=fields,
+                              expectJson='{"regex": null, "required": false, "hide": false, '
+                              '"name": "p1", "default": "", "css_class": "", '
+                              '"parentName": null, "label": "p1", "subtype": "", '
+                              '"fields": [{"regex": null, "required": false, "hide": false, '
+                              '"name": "foo", "default": "", "css_class": "", '
+                              '"parentName": "p1", "label": "foo", "subtype": "", "debug": true, '
+                              '"multiple": false, "fullName": "p1_foo", "type": "int", '
+                              '"size": 10}], "debug": true, "multiple": false, '
+                              '"fullName": "p1", "type": "nested", "columns": 1}')
 
     def test_NestedNestedParameter(self):
         fields = [
