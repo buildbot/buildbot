@@ -15,7 +15,6 @@
 
 import traceback
 import re
-import copy
 from twisted.internet import defer
 import email.utils as email_utils
 

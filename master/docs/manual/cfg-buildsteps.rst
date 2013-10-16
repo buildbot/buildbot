@@ -988,8 +988,6 @@ in Gerrit, and can only be described by humans.
 
 .. _Step-Darcs:
 
-.. bb:step:: Darcs
-
 Darcs
 +++++
 
