@@ -57,9 +57,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'branch': u'br/4321',
                        'revlink': u'http://buildbot.net',
                        'codebase': None,
-                       'project': u'pr',
                        'revision': u'abcdef',
-                       'revlink': u'http://buildbot.net',
                        'src': None,
                        'when_timestamp': None,
                        'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
@@ -71,8 +69,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                                        u'event.change.branch': u'br',
                                        u'event.type': u'patchset-created',
                                        u'event.patchSet.revision': u'abcdef',
-                                       u'event.patchSet.number': u'12'},
-                                       u'revision': u'abcdef'}
+                                       u'event.patchSet.number': u'12'}}
 
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
