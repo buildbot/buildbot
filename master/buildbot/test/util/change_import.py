@@ -31,6 +31,11 @@ class ChangeImportMixin(db.RealDatabaseMixin):
     This is a subclass of RealDatabaseMixin, so do not inherit from that class
     separately!
     """
+
+    # on postgres, at least, many of these tests can take longer than the default
+    # 120s (!!)
+    timeout = 240
+
     def make_pickle(self, *changes, **kwargs):
         recode_fn = kwargs.pop('recode_fn', None)
         cm = OldChangeMaster()
