@@ -18,8 +18,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, task, reactor
 from buildbot import config, locks
 from buildbot.buildslave import base
-from buildbot.buildslave.protocols import base as protocols_base
-from buildbot.test.fake import fakemaster, fakedb, bslavemanager
+from buildbot.test.fake import fakemaster, fakedb, bslavemanager, fakeprotocol
 from buildbot.test.fake.botmaster import FakeBotMaster
 
 class TestAbstractBuildSlave(unittest.TestCase):
@@ -40,7 +39,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave.master = self.master
         slave.botmaster = self.botmaster
         if attached:
-            slave.conn = mock.Mock(spec=protocols_base.Connection)
+            slave.conn = fakeprotocol.FakeConnection(self.master, slave)
         return slave
 
     def test_constructor_minimal(self):
@@ -254,7 +253,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         ENVIRON = {}
         COMMANDS = {'cmd1': '1', 'cmd2': '1'}
 
-        conn = mock.Mock()
+        conn = fakeprotocol.FakeConnection(slave.master, slave)
         conn.info = {
             'admin':   'TheAdmin',
             'host':    'TheHost',
@@ -281,7 +280,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        conn = mock.Mock()
+        conn = fakeprotocol.FakeConnection(slave.master, slave)
         conn.info = {}
         yield slave.attached(conn)
 
@@ -301,7 +300,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        conn = mock.Mock()
+        conn = fakeprotocol.FakeConnection(slave.master, slave)
         conn.info = {
             'admin':   'TheAdmin',
             'host':    'TheHost',
@@ -329,7 +328,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         yield slave.shutdown()
-        slave.conn.remoteShutdown.assert_called_with()
+        self.assertEqual(slave.conn.remoteCalls, [('remoteShutdown',)])
 
     @defer.inlineCallbacks
     def test_slave_shutdown_not_connected(self):

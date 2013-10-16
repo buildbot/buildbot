@@ -17,7 +17,7 @@
 import mock
 from twisted.trial import unittest
 from buildbot.buildslave.protocols import base
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemaster, fakeprotocol
 from buildbot.test.util import protocols
 
 
@@ -26,6 +26,14 @@ class TestListener(unittest.TestCase):
         master = fakemaster.make_master()
         listener = base.Listener(master)
         self.assertEqual(listener.master, master)
+
+
+class TestFakeConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        self.buildslave = mock.Mock()
+        self.conn = fakeprotocol.FakeConnection(self.master, self.buildslave)
 
 
 class TestConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
