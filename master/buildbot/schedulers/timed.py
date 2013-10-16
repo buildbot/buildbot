@@ -202,9 +202,10 @@ class Periodic(Timed):
 
     def __init__(self, name, builderNames, periodicBuildTimer,
             reason="The Periodic scheduler named '%(name)s' triggered this build",
-            branch=None, properties={}, onlyImportant=False):
+            branch=None, properties={}, onlyImportant=False,
+            codebases=base.BaseScheduler.DefaultCodebases):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                    properties=properties, reason=reason)
+                    properties=properties, reason=reason, codebases=codebases)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
