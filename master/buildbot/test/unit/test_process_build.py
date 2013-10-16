@@ -22,6 +22,7 @@ from buildbot.process.properties import Properties
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION, CANCELLED
 from buildbot.locks import SlaveLock
 from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.test.fake import slave, fakeprotocol
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot import config
 
@@ -109,8 +110,10 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
+        self.slave = slave.FakeSlave()
         self.builder = self.createBuilder()
         self.build = Build([r])
+        self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)
         self.build.setBuilder(self.builder)
 
     def createBuilder(self):
@@ -477,7 +480,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(SUCCESS, step)
         self.assertEqual(terminate, False)
@@ -487,7 +489,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
@@ -498,7 +499,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.flunkOnFailure = False
         step.haltOnFailure = True
@@ -510,7 +510,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.flunkOnFailure = True
         step.flunkOnWarnings = True
@@ -523,7 +522,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.warnOnWarnings = False
         terminate = b.stepDone(WARNINGS, step)
@@ -534,7 +532,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
@@ -544,7 +541,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
@@ -554,7 +550,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS, WARNINGS]
         b.result = WARNINGS
-        b.conn = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
@@ -564,7 +559,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.warnOnFailure = True
         step.flunkOnFailure = False
@@ -576,7 +570,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         terminate = b.stepDone(WARNINGS, step)
@@ -587,7 +580,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.conn = Mock()
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         self.haltOnFailure = True
@@ -599,7 +591,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [FAILURE]
         b.result = FAILURE
-        b.conn = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
@@ -609,7 +600,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [RETRY]
         b.result = RETRY
-        b.conn = Mock()
         step = FakeBuildStep()
         step.alwaysRun = True
         b.stepDone(WARNINGS, step)

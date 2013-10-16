@@ -106,6 +106,21 @@ class Connection(base.Connection, pb.Avatar):
         self.stopKeepaliveTimer()
         self.mind.broker.transport.loseConnection()
 
+    # keepalive handling
+
+    def doKeepalive(self):
+        return self.mind.callRemote('print', message="keepalive")
+
+    def stopKeepaliveTimer(self):
+        if self.keepalive_timer and self.keepalive_timer.active():
+            self.keepalive_timer.cancel()
+            self.keepalive_timer = None
+
+    def startKeepaliveTimer(self):
+        assert self.keepalive_interval
+        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
+            self.doKeepalive)
+
     # methods to send messages to the slave
 
     def remotePrint(self, message):
@@ -116,13 +131,12 @@ class Connection(base.Connection, pb.Avatar):
         info = {}
         try:
             info = yield self.mind.callRemote('getSlaveInfo')
-        except pb.NoSuchMethod, e:
-            log.msg("BuildSlave.info_unavailable")
-            log.msg(e)
+        except pb.NoSuchMethod:
+            log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
 
         try:
             info["slave_commands"] = yield self.mind.callRemote('getCommands')
-        except pb.NoSuchMethod, e:
+        except pb.NoSuchMethod:
             log.msg("BuildSlave.getCommands is unavailable - ignoring")
 
         try:
@@ -140,23 +154,11 @@ class Connection(base.Connection, pb.Avatar):
         d.addCallback(cache_builders)
         return d
 
-    # perspective methods called by the slave
-
-    def perspective_keepalive(self):
-        self.buildslave.messageReceivedFromSlave()
-
-    def perspective_shutdown(self):
-        self.buildslave.messageReceivedFromSlave()
-        self.buildslave.shutdownRequested()
-
     def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startCommand',
             remoteCommand, commandId, commandName, args
         )
-
-    def doKeepalive(self):
-        return self.mind.callRemote('print', message="keepalive")
 
     @defer.inlineCallbacks
     def remoteShutdown(self):
@@ -214,16 +216,15 @@ class Connection(base.Connection, pb.Avatar):
         slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startBuild')
 
-    def stopKeepaliveTimer(self):
-        if self.keepalive_timer and self.keepalive_timer.active():
-            self.keepalive_timer.cancel()
-            self.keepalive_timer = None
-
-    def startKeepaliveTimer(self):
-        assert self.keepalive_interval
-        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-            self.doKeepalive)
-
     def remoteInterruptCommand(self, commandId, why):
         return defer.maybeDeferred(self.mind.callRemote, "interruptCommand",
             commandId, why)
+
+    # perspective methods called by the slave
+
+    def perspective_keepalive(self):
+        self.buildslave.messageReceivedFromSlave()
+
+    def perspective_shutdown(self):
+        self.buildslave.messageReceivedFromSlave()
+        self.buildslave.shutdownRequested()

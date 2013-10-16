@@ -50,6 +50,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
         :param builders: list with wanted builders
         :type builders: List
+        :returns: Deferred containing PB references XXX
 
         Take list with wanted builders and send them to slave, return list with
         created builders
