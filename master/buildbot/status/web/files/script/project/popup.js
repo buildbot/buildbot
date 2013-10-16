@@ -63,7 +63,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				});
 				
 			}
-
+/*
 			function popUpBtn(classBtn, classHide){
 
 				$(classBtn).click(function(e){
@@ -100,7 +100,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				
 			}
 			closePopUp();
-
+*/
 			// display popup box with external content	
 			$('#getBtn').click(function() {
 
@@ -173,7 +173,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				var mib3 = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
 				$(mib3).appendTo('body');
 
-				$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {
+				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
 
 					$('#bowlG').remove();
 					$(data).appendTo($('#content1'));

@@ -42,7 +42,7 @@ currently connected clients.
 
    def tick(self):
       self.tickcount += 1
-      self.broadcast("'tick %d' from server" % self.tickcount)
+      self.broadcast(self.tickcount)
       reactor.callLater(1, self.tick)
 
    def register(self, client):
@@ -57,11 +57,23 @@ currently connected clients.
 
    def broadcast(self, msg):
       response = urllib2.urlopen('http://localhost:8001/json?as_text=1')
+      if msg:
+         print msg
+         responsestate = urllib2.urlopen('http://localhost:8001/json?as_text=1')
+      else:
+         responsestate = urllib2.urlopen(msg) 
+         
+         
+         
 
       data = response.read();
-      #print "broadcasting message '%s' .." % msg
+      datares = responsestate.read();
+      #datastate = responsestate.read();
+      print "broadcasting message '%s' .." % msg
       for c in self.clients:
          c.sendMessage(data)
+      for c in self.clients:
+         c.sendMessage(datares)
 
          #print "message sent to " + c.peerstr
 
