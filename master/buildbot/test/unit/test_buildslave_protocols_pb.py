@@ -16,6 +16,7 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.spread import pb as twisted_pb
 from buildbot.buildslave.protocols import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
@@ -29,27 +30,31 @@ class TestListener(unittest.TestCase):
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
+    @defer.inlineCallbacks
     def test_updateRegistration_simple(self):
         listener = pb.Listener(self.master)
-        reg = listener.updateRegistration('example', 'pass', 'tcp:1234')
+        reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
             [('tcp:1234', 'example', 'pass')])
-        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg.result))
+        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
+    @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
         listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = listener.updateRegistration('example', 'pass1', 'tcp:1234')
-        self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1.result))
+        reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
+        self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
+    @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
         listener = pb.Listener(self.master)
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        reg1 = listener.updateRegistration('example', 'pass', 'tcp:4321')
-        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1.result))
+        reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
+        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1))
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
+    @defer.inlineCallbacks
     def test_getPerspective(self):
         listener = pb.Listener(self.master)
         buildslave = mock.Mock()
@@ -58,10 +63,10 @@ class TestListener(unittest.TestCase):
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.master.buildslaves.register(buildslave)
-        conn = listener._getPerspective(mind, buildslave.slavename)
+        conn = yield listener._getPerspective(mind, buildslave.slavename)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
-        self.assertEqual(isinstance(conn.result, pb.Connection), True)
+        self.assertIsInstance(conn, pb.Connection)
 
 class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
                         unittest.TestCase):
@@ -83,13 +88,14 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(conn.master, self.master)
         self.assertEqual(conn.buildslave, self.buildslave)
 
+    @defer.inlineCallbacks
     def test_attached(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        att = conn.attached(self.mind)
+        att = yield conn.attached(self.mind)
 
         self.assertNotEqual(conn.keepalive_timer, None)
         self.buildslave.attached.assert_called_with(conn)
-        self.assertEqual(att.result, conn)
+        self.assertEqual(att, conn)
 
         conn.detached(self.mind)
 
@@ -113,31 +119,52 @@ class TestConnection(unittest.TestCase):
         conn.remotePrint(message='test')
         conn.mind.callRemote.assert_called_with('print', message='test')
 
+    @defer.inlineCallbacks
     def test_remoteGetSlaveInfo(self):
         def side_effect(*args, **kwargs):
             if 'getSlaveInfo' in args:
-                return {'info': 'test'}
+                return defer.succeed({'info': 'test'})
             if 'getCommands' in args:
-                return {'x': 1, 'y': 2}
+                return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
-                return 'TheVersion'
+                return defer.succeed('TheVersion')
 
         self.mind.callRemote.side_effect = side_effect
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        info = conn.remoteGetSlaveInfo()
+        info = yield conn.remoteGetSlaveInfo()
 
         r = {'info': 'test', 'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
-        self.assertEqual(info.result, r)
+        self.assertEqual(info, r)
         calls = [mock.call('getSlaveInfo'), mock.call('getCommands'), mock.call('getVersion')]
         self.mind.callRemote.assert_has_calls(calls)
 
+    @defer.inlineCallbacks
+    def test_remoteGetSlaveInfo_getSlaveInfo_fails(self):
+        def side_effect(*args, **kwargs):
+            if 'getSlaveInfo' in args:
+                return defer.fail(twisted_pb.NoSuchMethod())
+            if 'getCommands' in args:
+                return defer.succeed({'x': 1, 'y': 2})
+            if 'getVersion' in args:
+                return defer.succeed('TheVersion')
+
+        self.mind.callRemote.side_effect = side_effect
+        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        info = yield conn.remoteGetSlaveInfo()
+
+        r = {'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
+        self.assertEqual(info, r)
+        calls = [mock.call('getSlaveInfo'), mock.call('getCommands'), mock.call('getVersion')]
+        self.mind.callRemote.assert_has_calls(calls)
+
+    @defer.inlineCallbacks
     def test_remoteSetBuilderList(self):
         builders = ['builder1', 'builder2']
         self.mind.callRemote.return_value = defer.succeed(builders)
         conn = pb.Connection(self.master, self.buildslave, self.mind)
-        r = conn.remoteSetBuilderList(builders)
+        r = yield conn.remoteSetBuilderList(builders)
 
-        self.assertEqual(r.result, builders)
+        self.assertEqual(r, builders)
         self.assertEqual(conn.builders, builders)
         self.mind.callRemote.assert_called_with('setBuilderList', builders)
 

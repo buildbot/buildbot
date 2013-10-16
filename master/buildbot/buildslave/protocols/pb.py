@@ -131,13 +131,12 @@ class Connection(base.Connection, pb.Avatar):
         info = {}
         try:
             info = yield self.mind.callRemote('getSlaveInfo')
-        except pb.NoSuchMethod, e:
-            log.msg("BuildSlave.info_unavailable")
-            log.msg(e)
+        except pb.NoSuchMethod:
+            log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
 
         try:
             info["slave_commands"] = yield self.mind.callRemote('getCommands')
-        except pb.NoSuchMethod, e:
+        except pb.NoSuchMethod:
             log.msg("BuildSlave.getCommands is unavailable - ignoring")
 
         try:
