@@ -513,13 +513,9 @@ class BuildLineMixin:
         '''
         builder_name = build.getBuilder().getName()
         results = build.getResults()
-        text = build.getText()
         css_class = css_classes.get(results, "")
         
         rev_list = self.get_rev_list(build)
-
-        if isinstance(text, list):
-            text = " ".join(text)
 
         values = {'class': css_class,
                   'builder_name': builder_name,
@@ -532,7 +528,6 @@ class BuildLineMixin:
                   'multiple_revs': (len(rev_list) > 1),
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
-                  'text': text,
                   'include_builder': include_builder,
                   'reason': build.getReason(),
                   'interested_users': build.getInterestedUsers(),
