@@ -19,7 +19,7 @@ from twisted.internet import defer, task
 from buildbot.util import service
 from buildbot.test.util import compat
 
-class DeferredStartStop(service.Service):
+class DeferredStartStop(service.AsyncService):
 
     def startService(self):
         self.d = defer.Deferred()
@@ -75,6 +75,16 @@ class AsyncMultiService(unittest.TestCase):
         @d.addErrback
         def check(f):
             f.check(RuntimeError)
+
+    def test_child_starts_on_sSP(self):
+        d = self.svc.startService()
+        self.assertTrue(d.called)
+
+        child = DeferredStartStop()
+        d = child.setServiceParent(self.svc)
+        self.assertFalse(d.called)
+        child.d.callback(None)
+        self.assertTrue(d.called)
 
 
 class ClusteredService(unittest.TestCase):

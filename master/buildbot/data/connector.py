@@ -16,8 +16,7 @@
 import inspect
 from twisted.python import reflect
 from twisted.internet import defer
-from twisted.application import service
-from buildbot.util import pathmatch
+from buildbot.util import pathmatch, service
 from buildbot.data import exceptions, base, resultspec
 
 class Updates(object):
@@ -30,7 +29,7 @@ class RTypes(object):
     pass
 
 
-class DataConnector(service.Service):
+class DataConnector(service.AsyncService):
 
     submodules = [
         'buildbot.data.builders',

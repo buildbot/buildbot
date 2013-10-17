@@ -16,11 +16,11 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from twisted.application import service
+from buildbot.util import service
 from buildbot.process import debug
 from buildbot import config
 
-class FakeManhole(service.Service):
+class FakeManhole(service.AsyncService):
     pass
 
 class TestDebugServices(unittest.TestCase):

@@ -156,7 +156,17 @@ class ClusteredService(service.Service, util.ComparableMixin):
             log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
 
 
-class AsyncMultiService(service.MultiService):
+class AsyncService(service.Service):
+
+    def setServiceParent(self, parent):
+        if self.parent is not None:
+            self.disownServiceParent()
+        parent = service.IServiceCollection(parent, parent)
+        self.parent = parent
+        return self.parent.addService(self)
+
+
+class AsyncMultiService(AsyncService, service.MultiService):
 
     def startService(self):
         service.Service.startService(self)
@@ -177,9 +187,16 @@ class AsyncMultiService(service.MultiService):
         # pass the first error in a child service up to our caller
         return defer.gatherResults(l, consumeErrors=True)
 
-    # N.B.: addService (and thus a child's setServiceParent) is not modified to
-    # return a Deferred.
-
-# copy Service here for convenience
-Service = service.Service
-_hush_pyflakes = [ Service ]
+    def addService(self, service):
+        if service.name is not None:
+            if service.name in self.namedServices:
+                raise RuntimeError("cannot have two services with same name"
+                                   " '%s'" % service.name)
+            self.namedServices[service.name] = service
+        self.services.append(service)
+        if self.running:
+            # It may be too late for that, but we will do our best
+            service.privilegedStartService()
+            return service.startService()
+        else:
+            return defer.succeed(None)

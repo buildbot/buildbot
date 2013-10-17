@@ -59,7 +59,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.AsyncMultiService
 
             for src in added:
                 src.master = self.master
-                src.setServiceParent(self)
+                yield src.setServiceParent(self)
 
         num_sources = len(list(self))
         assert num_sources == len(new_config.change_sources)

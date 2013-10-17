@@ -17,7 +17,7 @@
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
-from twisted.application import service
+from buildbot.util import service
 from buildbot.process import metrics
 from buildbot.util import epoch2datetime, ascii2unicode
 from buildbot.process.buildrequest import BuildRequest
@@ -300,7 +300,7 @@ class BasicBuildChooser(BuildChooserBase):
         return self.bldr.canStartBuild(slave, breq)
 
 
-class BuildRequestDistributor(service.Service):
+class BuildRequestDistributor(service.AsyncService):
     """
     Special-purpose class to handle distributing build requests to builders by
     calling their C{maybeStartBuild} method.
@@ -335,7 +335,7 @@ class BuildRequestDistributor(service.Service):
         # quiesce.  First, let the parent stopService succeed between
         # activities; then the loop will stop calling itself, since
         # self.running is false.
-        yield self.activity_lock.run(service.Service.stopService, self)
+        yield self.activity_lock.run(service.AsyncService.stopService, self)
 
         # now let any outstanding calls to maybeStartBuildsOn to finish, so
         # they don't get interrupted in mid-stride.  This tends to be

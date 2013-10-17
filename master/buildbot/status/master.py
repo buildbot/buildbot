@@ -80,7 +80,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         for sr in new_config.status:
             sr.master = self.master
-            sr.setServiceParent(self)
+            yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,

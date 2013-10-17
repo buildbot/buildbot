@@ -62,15 +62,14 @@ class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService
         # manhole
         if new_config.manhole != self.manhole:
             if self.manhole:
-                yield defer.maybeDeferred(lambda :
-                        self.manhole.disownServiceParent())
+                yield self.manhole.disownServiceParent()
                 self.manhole.master = None
                 self.manhole = None
 
             if new_config.manhole:
                 self.manhole = new_config.manhole
                 self.manhole.master = self.master
-                self.manhole.setServiceParent(self)
+                yield self.manhole.setServiceParent(self)
 
         # chain up
         yield config.ReconfigurableServiceMixin.reconfigService(self,

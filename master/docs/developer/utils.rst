@@ -711,6 +711,8 @@ buildbot.util.service
 
 This module implements some useful subclasses of Twisted services.
 
+The first two classes are more robust implementations of two Twisted classes, and should be used universally in Buildbot code.
+
 .. class:: AsyncMultiService
 
     This class is similar to :py:class:`twisted.application.service.MultiService`, except that it handles Deferreds returned from child services` ``startService`` and ``stopService`` methods.
@@ -723,6 +725,11 @@ This module implements some useful subclasses of Twisted services.
 
     This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores failures in the ``stopService`` process.
     With :py:class:`AsyncMultiService`, any errors in a child's ``stopService`` will be propagated to the parent's ``stopService`` method.
+
+.. class:: AsyncService
+
+    This class is similar to :py:class:`twisted.application.service.Service`, except that its ``setServiceParent`` method will return a Deferred.
+    That Deferred will fire after the ``startService`` method has completed, if the service was started because the new parent was already running.
 
 .. index:: Service utilities; ClusteredService
 

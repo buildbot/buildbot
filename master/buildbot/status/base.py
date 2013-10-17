@@ -92,7 +92,7 @@ class StatusReceiverMultiService(StatusReceiverBase, service.AsyncMultiService,
     def __init__(self):
         service.AsyncMultiService.__init__(self)
 
-class StatusReceiverService(StatusReceiverBase, service.Service,
+class StatusReceiverService(StatusReceiverBase, service.AsyncService,
                                  util.ComparableMixin):
     pass
 

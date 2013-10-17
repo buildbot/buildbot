@@ -210,12 +210,11 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 slave.master = None
                 slave.botmaster = None
 
-                yield defer.maybeDeferred(lambda :
-                        slave.disownServiceParent())
+                yield slave.disownServiceParent()
 
             for n in added_names:
                 slave = new_by_name[n]
-                slave.setServiceParent(self)
+                yield slave.setServiceParent(self)
                 self.slaves[n] = slave
 
         metrics.MetricCountEvent.log("num_slaves",
@@ -262,7 +261,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
                 builder.botmaster = self
                 builder.master = self.master
-                builder.setServiceParent(self)
+                yield builder.setServiceParent(self)
 
         self.builderNames = self.builders.keys()
 

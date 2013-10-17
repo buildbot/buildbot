@@ -99,7 +99,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                         # as an instance attribute
                         self._getPort = lambda : self.port_service._port
 
-                self.port_service.setServiceParent(self)
+                yield self.port_service.setServiceParent(self)
 
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)

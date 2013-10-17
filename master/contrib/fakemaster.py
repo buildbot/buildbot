@@ -21,6 +21,7 @@ from zope.interface import implements
 from twisted.internet import stdio
 from twisted.protocols import basic
 
+from buildbot.util import service
 from buildbot.process.buildstep import RemoteShellCommand
 
 class Dispatcher:

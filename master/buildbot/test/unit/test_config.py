@@ -1239,7 +1239,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
 
 class FakeService(config.ReconfigurableServiceMixin,
-                    service.Service):
+                    service.AsyncService):
 
     succeed = True
     call_index = 1

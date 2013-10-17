@@ -97,7 +97,7 @@ class Registration(object):
         return disp.port.getHost().port
 
 
-class Dispatcher(service.Service):
+class Dispatcher(service.AsyncService):
     implements(portal.IRealm, checkers.ICredentialsChecker)
 
     credentialInterfaces = [ credentials.IUsernamePassword,
@@ -121,7 +121,7 @@ class Dispatcher(service.Service):
     def stopService(self):
         # stop listening on the port when shut down
         d = defer.maybeDeferred(self.port.stopListening)
-        d.addCallback(lambda _ : service.Service.stopService(self))
+        d.addCallback(lambda _ : service.AsyncService.stopService(self))
         return d
 
     def register(self, username, password, pfactory):
