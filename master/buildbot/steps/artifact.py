@@ -38,8 +38,8 @@ def updateSourceStamps(master, build, build_sourcestamps):
 
 class FindPreviousSuccessfulBuild(LoggingBuildStep):
     name = "Find Previous Successful Build"
-    description="Find previous successful build"
-    descriptionDone="Find previous successful build finished"
+    description="Searching for a previous successful build at the appropriate revision(s)..."
+    descriptionDone="Searching complete."
 
     def __init__(self, **kwargs):
         self.build_sourcestamps = []
@@ -83,9 +83,9 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
         return
 
 class CheckArtifactExists(ShellCommand):
-    name = "CheckArtifactExists"
-    description="CheckArtifactExists"
-    descriptionDone="CheckArtifactExists finished"
+    name = "Check if Artifact Exists"
+    description="Checking if artifacts exist from a previous build at the appropriate revision(s)..."
+    descriptionDone="Searching complete."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, stopBuild=True,**kwargs):
         self.master = None
@@ -187,9 +187,9 @@ class CheckArtifactExists(ShellCommand):
 
 class CreateArtifactDirectory(ShellCommand):
 
-    name = "CreateArtifactDirectory"
-    description="CreateArtifactDirectory"
-    descriptionDone="CreateArtifactDirectory finished"
+    name = "Create Remote Artifact Directory"
+    description="Creating the artifact directory on the remote artifacts server..."
+    descriptionDone="Remote artifact directory created."
 
     def __init__(self,  artifactDirectory=None, artifactServer=None, artifactServerDir=None,  **kwargs):
         self.artifactDirectory = artifactDirectory
@@ -213,9 +213,9 @@ class CreateArtifactDirectory(ShellCommand):
 
 class UploadArtifact(ShellCommand):
 
-    name = "UploadArtifact"
-    description="UploadArtifact"
-    descriptionDone="UploadArtifact finished"
+    name = "Upload Artifact(s)"
+    description="Uploading artifact(s) to remote artifact server..."
+    descriptionDone="Artifact(s) uploaded."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
         self.artifact=artifact
@@ -250,9 +250,9 @@ class UploadArtifact(ShellCommand):
         ShellCommand.start(self)
 
 class DownloadArtifact(ShellCommand):
-    name = "DownloadArtifact"
-    description="DownloadArtifact"
-    descriptionDone="DownloadArtifact finished"
+    name = "Download Artifact(s)"
+    description="Downloading artifact(s) from the remote artifacts server..."
+    descriptionDone="Artifact(s) downloaded."
 
     def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None, artifactServer=None, artifactServerDir=None, **kwargs):
         self.artifactBuilderName = artifactBuilderName
@@ -289,9 +289,9 @@ class DownloadArtifact(ShellCommand):
 from buildbot import locks
 
 class AcquireBuildLocks(LoggingBuildStep):
-    name = "AcquireBuilderLocks"
-    description="AcquireBuilderLocks"
-    descriptionDone="AcquireBuilderLocks finished"
+    name = "Acquire Builder Locks"
+    description="Acquiring builder locks..."
+    descriptionDone="Builder locks acquired."
 
     def __init__(self, hideStepIf = True, **kwargs):
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, **kwargs)
@@ -312,9 +312,9 @@ class AcquireBuildLocks(LoggingBuildStep):
         return
 
 class ReleaseBuildLocks(LoggingBuildStep):
-    name = "ReleaseBuilderLocks"
-    description="ReleaseBuilderLocks"
-    descriptionDone="ReleaseBuilderLocks finished"
+    name = "Release Builder Locks"
+    description="Releasing builder locks..."
+    descriptionDone="Build locks released."
 
     def __init__(self, hideStepIf = True, **kwargs):
         self.releaseLockInstanse
