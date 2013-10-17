@@ -2,6 +2,8 @@ all: docs.tgz
 
 .PHONY: images images-png images-eps tutorial manual
 
+SHELL = /bin/bash
+
 VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
 TAR_TRANSFORM = $(shell if [[ `tar --version` =~ "bsdtar" ]]; then echo "-s '/^html/$(VERSION)/'"; else echo "--transform 's/^html/$(VERSION)/'"; fi)
