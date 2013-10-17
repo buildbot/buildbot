@@ -22,6 +22,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes import pb
+from buildbot import config
 from buildbot.test.util import changesource, pbmanager
 from buildbot.util import epoch2datetime
 
@@ -61,17 +62,24 @@ class TestPBChangeSource(
     @defer.inlineCallbacks
     def _test_registration(self, exp_registration, slavePort=None,
                         **constr_kwargs):
-        config = mock.Mock()
-        config.protocols = {'pb': {'port': slavePort}}
+        cfg = mock.Mock()
+        cfg.protocols = {'pb': {'port': slavePort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
 
         self.startChangeSource()
-        yield self.changesource.reconfigService(config)
+        if not exp_registration:
+            # if it's not registered, it should raise a ConfigError.
+            try:
+                yield self.changesource.reconfigService(cfg)
+            except config.ConfigErrors:
+                pass
+            else:
+                self.fail("Expected ConfigErrors")
+        else:
+            yield self.changesource.reconfigService(cfg)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
-        else:
-            self.assertNotRegistered()
 
         yield self.stopChangeSource()
 

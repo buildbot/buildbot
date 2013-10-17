@@ -48,7 +48,6 @@ global_defaults = dict(
     mergeRequests=None,
     prioritizeBuilders=None,
     protocols={},
-    slavePortnum=None,
     multiMaster=False,
     debugPassword=None,
     manhole=None,
