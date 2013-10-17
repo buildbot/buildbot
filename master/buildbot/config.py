@@ -71,7 +71,6 @@ class MasterConfig(object):
         self.mergeRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
-        self.slavePortnum = None
         self.multiMaster = False
         self.debugPassword = None
         self.manhole = None
