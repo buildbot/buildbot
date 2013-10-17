@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
-from buildbot.util import subscription
+from buildbot.util import subscription, service
 from buildbot import config
 
-class Listener(config.ReconfigurableServiceMixin, service.MultiService):
+class Listener(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.master = master
 
 

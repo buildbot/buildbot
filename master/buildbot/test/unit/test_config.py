@@ -22,9 +22,9 @@ import mock
 import __builtin__
 from zope.interface import implements
 from twisted.trial import unittest
-from twisted.application import service
 from twisted.internet import defer
 from buildbot import config, buildslave, interfaces, revlinks, locks
+from buildbot.util import service
 from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -1257,7 +1257,7 @@ class FakeService(config.ReconfigurableServiceMixin,
 
 
 class FakeMultiService(config.ReconfigurableServiceMixin,
-                    service.MultiService):
+                    service.AsyncMultiService):
 
     def reconfigService(self, new_config):
         self.called = True

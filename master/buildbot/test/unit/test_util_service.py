@@ -16,14 +16,72 @@
 import mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
-import buildbot.util.service
+from buildbot.util import service
 from buildbot.test.util import compat
+
+class DeferredStartStop(service.Service):
+
+    def startService(self):
+        self.d = defer.Deferred()
+        return self.d
+
+    def stopService(self):
+        self.d = defer.Deferred()
+        return self.d
+
+
+class AsyncMultiService(unittest.TestCase):
+
+    def setUp(self):
+        self.svc = service.AsyncMultiService()
+
+    @defer.inlineCallbacks
+    def test_empty(self):
+        yield self.svc.startService()
+        yield self.svc.stopService()
+
+    def test_waits_for_child_services(self):
+        child = DeferredStartStop()
+        child.setServiceParent(self.svc)
+
+        d = self.svc.startService()
+        self.assertFalse(d.called)
+        child.d.callback(None)
+        self.assertTrue(d.called)
+
+        d = self.svc.stopService()
+        self.assertFalse(d.called)
+        child.d.callback(None)
+        self.assertTrue(d.called)
+
+    def test_child_fails(self):
+        child = DeferredStartStop()
+        child.setServiceParent(self.svc)
+
+        d = self.svc.startService()
+        self.assertFalse(d.called)
+        child.d.errback(RuntimeError('oh noes'))
+        self.assertTrue(d.called)
+
+        @d.addErrback
+        def check(f):
+            f.check(RuntimeError)
+
+        d = self.svc.stopService()
+        self.assertFalse(d.called)
+        child.d.errback(RuntimeError('oh noes'))
+        self.assertTrue(d.called)
+
+        @d.addErrback
+        def check(f):
+            f.check(RuntimeError)
+
 
 class ClusteredService(unittest.TestCase):
     SVC_NAME = 'myName'
     SVC_ID = 20
 
-    class DummyService(buildbot.util.service.ClusteredService):
+    class DummyService(service.ClusteredService):
         pass
 
     def setUp(self):

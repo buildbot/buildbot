@@ -22,7 +22,7 @@ import datetime
 from zope.interface import implements
 from twisted.python import log, components, failure
 from twisted.internet import defer, reactor, task
-from twisted.application import service, internet
+from twisted.application import internet
 
 import buildbot
 import buildbot.pbmanager
@@ -44,6 +44,7 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot import monkeypatches
 from buildbot import config
@@ -55,7 +56,7 @@ class LogRotation(object):
         self.rotateLength = 1 * 1000 * 1000 
         self.maxRotatedFiles = 10
 
-class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
+class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
@@ -66,7 +67,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     UNCLAIMED_BUILD_FACTOR = 6
 
     def __init__(self, basedir, configFileName="master.cfg", umask=None):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("buildmaster")
 
         self.umask = umask
@@ -236,7 +237,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             # call the parent method
             yield defer.maybeDeferred(lambda :
-                    service.MultiService.startService(self))
+                    service.AsyncMultiService.startService(self))
 
             # give all services a chance to load the new configuration, rather
             # than the base configuration
@@ -257,7 +258,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     @defer.inlineCallbacks
     def stopService(self):
         if self.running:
-            yield service.MultiService.stopService(self)
+            yield service.AsyncMultiService.stopService(self)
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                     name=self.name, masterid=self.masterid)

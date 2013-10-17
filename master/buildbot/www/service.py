@@ -15,16 +15,16 @@
 
 import pkg_resources
 from twisted.internet import defer
-from twisted.application import strports, service
+from twisted.application import strports
 from twisted.web import server, static
 from buildbot import config
-from buildbot.util import json
+from buildbot.util import json, service
 from buildbot.www import rest, ws, sse
 
-class WWWService(config.ReconfigurableServiceMixin, service.MultiService):
+class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('www')
         self.master = master
 

@@ -15,14 +15,14 @@
 
 from twisted.python import log
 from twisted.internet import defer
-from twisted.application import service
+from buildbot.util import service
 from buildbot.pbutil import NewCredPerspective
 from buildbot import interfaces, config
 
-class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
+class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('debug_services')
         self.master = master
 
@@ -86,7 +86,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
         # manhole will get stopped as a sub-service
 
         yield defer.maybeDeferred(lambda :
-                service.MultiService.stopService(self))
+                service.AsyncMultiService.stopService(self))
 
         # clean up
         if self.manhole:

@@ -16,14 +16,13 @@
 
 from twisted.python import log, reflect
 from twisted.internet import defer, reactor
-from twisted.application import service
-
+from buildbot.util import service
 from buildbot.process.builder import Builder
 from buildbot import interfaces, locks, config, util
 from buildbot.process import metrics
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
 
-class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
+class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
     It provides them with BuildSlaves, and distributes build requests to
@@ -32,7 +31,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
     debug = 0
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("botmaster")
         self.master = master
 
@@ -148,7 +147,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
                 buildRequestAdded,
                 ('buildrequest', None, None, None, 'unclaimed'))
-        service.MultiService.startService(self)
+        service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -287,7 +286,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
-        return service.MultiService.stopService(self)
+        return service.AsyncMultiService.stopService(self)
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.

@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from twisted.application import service
+from buildbot.util import service
 from twisted.python.reflect import namedObject
 
-class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
+class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     classes = {
         'simple' : {
@@ -27,7 +27,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.MultiService):
     }
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('mq')
         self.master = master
         self.impl = None # set in setup

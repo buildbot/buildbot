@@ -15,7 +15,7 @@ import sys
 from twisted.internet import reactor, defer
 from twisted.cred import portal, checkers
 from twisted.spread import pb
-from twisted.application import strports, service
+from twisted.application import strports
 from zope.interface import implements
 
 from twisted.internet import stdio
@@ -113,9 +113,9 @@ class CmdInterface(basic.LineReceiver):
         d = self.bot.runCommand(line)
         d.addBoth(_done)
 
-class FakeMaster(service.MultiService):
+class FakeMaster(service.AsyncMultiService):
     def __init__(self, port):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("fakemaster")
 
         self.dispatcher = Dispatcher()
@@ -127,7 +127,7 @@ class FakeMaster(service.MultiService):
         self.stdio = CmdInterface()
 
     def startService(self):
-        service.MultiService.startService(self)
+        service.AsyncMultiService.startService(self)
         self.slavePort = strports.service(self.slavePort, self.slavefactory)
         self.slavePort.setServiceParent(self)
 

@@ -154,3 +154,32 @@ class ClusteredService(service.Service, util.ComparableMixin):
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
             log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
+
+
+class AsyncMultiService(service.MultiService):
+
+    def startService(self):
+        service.Service.startService(self)
+        l = []
+        for svc in self:
+            # handle any deferreds, passing up errors and success
+            l.append(defer.maybeDeferred(svc.startService))
+        return defer.gatherResults(l, consumeErrors=True)
+
+    def stopService(self):
+        service.Service.stopService(self)
+        l = []
+        services = list(self)
+        services.reverse()
+        for svc in services:
+            l.append(defer.maybeDeferred(svc.stopService))
+        # unlike MultiService, consume errors in each individual deferred, and
+        # pass the first error in a child service up to our caller
+        return defer.gatherResults(l, consumeErrors=True)
+
+    # N.B.: addService (and thus a child's setServiceParent) is not modified to
+    # return a Deferred.
+
+# copy Service here for convenience
+Service = service.Service
+_hush_pyflakes = [ Service ]

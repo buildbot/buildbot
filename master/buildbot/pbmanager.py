@@ -18,11 +18,12 @@ from twisted.spread import pb
 from twisted.python import failure, log
 from twisted.internet import defer
 from twisted.cred import portal, checkers, credentials, error
-from twisted.application import service, strports
+from twisted.application import strports
+from buildbot.util import service
 
 debug = False
 
-class PBManager(service.MultiService):
+class PBManager(service.AsyncMultiService):
     """
     A centralized manager for PB ports and authentication on them.
 
@@ -30,7 +31,7 @@ class PBManager(service.MultiService):
     with a password and a perspective factory.
     """
     def __init__(self):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('pbmanager')
         self.dispatchers = {}
 

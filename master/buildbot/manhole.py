@@ -21,7 +21,7 @@ import types
 import binascii
 import base64
 from twisted.python import log
-from twisted.application import service, strports
+from twisted.application import strports
 from twisted.cred import checkers, portal
 from twisted.conch import manhole, telnet
 try:
@@ -35,7 +35,7 @@ from twisted.conch.insults import insults
 from twisted.internet import protocol
 
 from buildbot import config
-from buildbot.util import ComparableMixin
+from buildbot.util import ComparableMixin, service
 from zope.interface import implements # requires Twisted-2.0 or later
 
 # makeTelnetProtocol and _TelnetRealm are for the TelnetManhole
@@ -106,7 +106,7 @@ if conchc:
             return 0
 
 
-class _BaseManhole(service.MultiService):
+class _BaseManhole(service.AsyncMultiService):
     """This provides remote access to a python interpreter (a read/exec/print
     loop) embedded in the buildmaster via an internal SSH server. This allows
     detailed inspection of the buildmaster state. It is of most use to
@@ -142,7 +142,7 @@ class _BaseManhole(service.MultiService):
         #c = conchc.SSHPublicKeyDatabase() # ~/.ssh/authorized_keys
         # and I can't get UNIXPasswordDatabase to work
 
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         if type(port) is int:
             port = "tcp:%d" % port
         self.port = port # for comparison later
@@ -178,7 +178,7 @@ class _BaseManhole(service.MultiService):
 
 
     def startService(self):
-        service.MultiService.startService(self)
+        service.AsyncMultiService.startService(self)
         if self.using_ssh:
             via = "via SSH"
         else:
