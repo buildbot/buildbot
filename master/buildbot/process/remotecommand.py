@@ -286,8 +286,18 @@ class RemoteShellCommand(RemoteCommand):
                  initialStdin=None, decodeRC={0:SUCCESS}):
 
         self.command = command # stash .command, set it later
-        self.fake_command = [w[2] if (isinstance(w, tuple) and len(w) == 3 and w[0] =='obfuscated')
-                             else w for w in self.command]
+        if isinstance(self.command, basestring):
+            # Single string command doesn't support obfuscation.
+            self.fake_command = command
+        else:
+            # Try to obfuscate command.
+            def obfuscate(arg):
+                if isinstance(arg, tuple) and len(arg) == 3 and arg[0] =='obfuscated':
+                    return arg[2]
+                else:
+                    return arg
+            self.fake_command = map(obfuscate, self.command)
+
         if env is not None:
             # avoid mutating the original master.cfg dictionary. Each
             # ShellCommand gets its own copy, any start() methods won't be
