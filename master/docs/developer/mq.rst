@@ -55,7 +55,7 @@ For a filter to match a routing key, it must have the same length, and each elem
 
     This is an abstract parent class for MQ connectors, and defines the
     interface.  It should not be instantiated directly.  It is a subclass of
-    :py:class:`twisted.application.service.Service`, and subclasses can
+    :py:class:`buildbot.util.service.AsyncService`, and subclasses can
     override service methods to start and stop the connector.
 
     .. py:method:: produce(routing_key, data)

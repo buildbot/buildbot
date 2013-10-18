@@ -170,9 +170,7 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
         self.status.subscribe(self)
 
     def setServiceParent(self, parent):
-        status.base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.status = parent.getStatus()
-
         self._transmit('startup')
-
         self._subscribe()
+        return status.base.StatusReceiverMultiService.setServiceParent(self, parent)

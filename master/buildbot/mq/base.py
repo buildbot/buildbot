@@ -15,9 +15,9 @@
 
 from twisted.python import log, failure
 from twisted.internet import defer
-from twisted.application import service
+from buildbot.util import service
 
-class MQBase(service.Service):
+class MQBase(service.AsyncService):
 
     def __init__(self, master):
         self.setName('mq-implementation')

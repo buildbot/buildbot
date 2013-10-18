@@ -19,7 +19,7 @@ import os, urllib
 from twisted.python import log
 from twisted.persisted import styles
 from twisted.internet import defer
-from twisted.application import service
+from buildbot.util import service
 from zope.interface import implements
 from buildbot import config, interfaces, util
 from buildbot.util import bbcollections, pickle
@@ -27,11 +27,11 @@ from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
 
-class Status(config.ReconfigurableServiceMixin, service.MultiService):
+class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
         self.basedir = master.basedir
@@ -60,7 +60,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._change_consumer = self.master.mq.startConsuming(
                 self.change_consumer_cb, ('change', None, 'new'))
 
-        return service.MultiService.startService(self)
+        return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -80,7 +80,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         for sr in new_config.status:
             sr.master = self.master
-            sr.setServiceParent(self)
+            yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
@@ -99,7 +99,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             self._change_consumer.stopConsuming()
             self._change_consumer = None
 
-        return service.MultiService.stopService(self)
+        return service.AsyncMultiService.stopService(self)
 
     # clean shutdown
 

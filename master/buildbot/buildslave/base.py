@@ -20,7 +20,6 @@ from email.Utils import formatdate
 from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
-from twisted.application import service
 from twisted.python.reflect import namedModule
 
 from buildbot.status.slave import SlaveStatus
@@ -28,13 +27,13 @@ from buildbot.status.mail import MailNotifier
 from buildbot.process import metrics
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
-from buildbot.util import ascii2unicode
+from buildbot.util import ascii2unicode, service
 from buildbot.util.eventual import eventually
 from buildbot import config
 
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin,
-                        service.MultiService):
+                        service.AsyncMultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
@@ -69,7 +68,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         """
         name = ascii2unicode(name)
 
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.slavename = name
         self.password = password
 
@@ -189,7 +188,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # botmaster needs to set before setServiceParent which calls startService
         self.botmaster = parent
         self.master = parent.master
-        service.MultiService.setServiceParent(self, parent)
+        return service.AsyncMultiService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks
     def startService(self):
@@ -200,7 +199,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                                                         self.slavename)
 
         yield self._getSlaveInfo()
-        yield service.MultiService.startService(self)
+        yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -249,7 +248,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        yield service.MultiService.stopService(self)
+        yield service.AsyncMultiService.stopService(self)
 
     def findNewSlaveInstance(self, new_config):
         # TODO: called multiple times per reconfig; use 1-element cache?

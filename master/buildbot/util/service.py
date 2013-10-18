@@ -154,3 +154,49 @@ class ClusteredService(service.Service, util.ComparableMixin):
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
             log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
+
+
+class AsyncService(service.Service):
+
+    def setServiceParent(self, parent):
+        if self.parent is not None:
+            self.disownServiceParent()
+        parent = service.IServiceCollection(parent, parent)
+        self.parent = parent
+        return self.parent.addService(self)
+
+
+class AsyncMultiService(AsyncService, service.MultiService):
+
+    def startService(self):
+        service.Service.startService(self)
+        l = []
+        for svc in self:
+            # handle any deferreds, passing up errors and success
+            l.append(defer.maybeDeferred(svc.startService))
+        return defer.gatherResults(l, consumeErrors=True)
+
+    def stopService(self):
+        service.Service.stopService(self)
+        l = []
+        services = list(self)
+        services.reverse()
+        for svc in services:
+            l.append(defer.maybeDeferred(svc.stopService))
+        # unlike MultiService, consume errors in each individual deferred, and
+        # pass the first error in a child service up to our caller
+        return defer.gatherResults(l, consumeErrors=True)
+
+    def addService(self, service):
+        if service.name is not None:
+            if service.name in self.namedServices:
+                raise RuntimeError("cannot have two services with same name"
+                                   " '%s'" % service.name)
+            self.namedServices[service.name] = service
+        self.services.append(service)
+        if self.running:
+            # It may be too late for that, but we will do our best
+            service.privilegedStartService()
+            return service.startService()
+        else:
+            return defer.succeed(None)
