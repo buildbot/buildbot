@@ -73,7 +73,7 @@ class AsyncMultiService(unittest.TestCase):
         self.assertTrue(d.called)
 
         @d.addErrback
-        def check(f):
+        def check_again(f):
             f.check(RuntimeError)
 
     def test_child_starts_on_sSP(self):
