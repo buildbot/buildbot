@@ -151,9 +151,9 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     q = q.where((bs_tbl.c.complete == 0) |
                                 (bs_tbl.c.complete == None))
             if branch:
-              q = q.where(ss_tbl.c.branch == branch)
+                q = q.where(ss_tbl.c.branch == branch)
             if repository:
-              q = q.where(ss_tbl.c.repository == repository)
+                q = q.where(ss_tbl.c.repository == repository)
             res = conn.execute(q)
             return list(reversed([ self._row2dict(row)
                                   for row in res.fetchall() ]))

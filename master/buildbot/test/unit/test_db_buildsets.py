@@ -420,11 +420,11 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def test_getRecentBuildsets_noRepoMatch(self):
-          d = self.insert_test_getRecentBuildsets_data()
-          d.addCallback(lambda _ :
-                  self.db.buildsets.getRecentBuildsets(2, branch='branch_a',
-                                                       repository='bad_repo'))
-          def check(bsdictlist):
-              self.assertEqual(bsdictlist, [])
-          d.addCallback(check)
-          return d
+        d = self.insert_test_getRecentBuildsets_data()
+        d.addCallback(lambda _ :
+            self.db.buildsets.getRecentBuildsets(2, branch='branch_a',
+                                                 repository='bad_repo'))
+        def check(bsdictlist):
+            self.assertEqual(bsdictlist, [])
+        d.addCallback(check)
+        return d

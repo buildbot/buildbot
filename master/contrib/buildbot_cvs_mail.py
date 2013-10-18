@@ -119,7 +119,7 @@ X-Mailer: Python buildbot-cvs-mail %(version)s
         print >> s, 'CVSROOT: %s' % options.cvsroot
         print >> s, 'Files: %s' % fileList
         if options.path:
-             print >> s, 'Path: %s' % options.path
+            print >> s, 'Path: %s' % options.path
         print >> s, 'Project: %s' % options.project
         s.write(sys.stdin.read())
         print >> s
