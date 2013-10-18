@@ -128,11 +128,11 @@ class FakeMaster(service.AsyncMultiService):
         self.stdio = CmdInterface()
 
     def startService(self):
-        service.AsyncMultiService.startService(self)
         self.slavePort = strports.service(self.slavePort, self.slavefactory)
         self.slavePort.setServiceParent(self)
 
         stdio.StandardIO(self.stdio)
+        return service.AsyncMultiService.startService(self)
 
     def getPerspective(self, mind, avatarID):
         self.bot = FakeBot()

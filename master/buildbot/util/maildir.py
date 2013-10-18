@@ -54,7 +54,6 @@ class MaildirService(service.AsyncMultiService):
         self.curdir = os.path.join(self.basedir, "cur")
 
     def startService(self):
-        service.AsyncMultiService.startService(self)
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir("invalid maildir '%s'" % self.basedir)
         try:
@@ -73,6 +72,7 @@ class MaildirService(service.AsyncMultiService):
             self.timerService = internet.TimerService(self.pollinterval, self.poll)
             self.timerService.setServiceParent(self)
         self.poll()
+        return service.AsyncMultiService.startService(self)
 
 
     def dnotify_callback(self):

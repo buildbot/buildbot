@@ -147,7 +147,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
                 buildRequestAdded,
                 ('buildrequest', None, None, None, 'unclaimed'))
-        service.AsyncMultiService.startService(self)
+        return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):

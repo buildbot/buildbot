@@ -178,12 +178,12 @@ class _BaseManhole(service.AsyncMultiService):
 
 
     def startService(self):
-        service.AsyncMultiService.startService(self)
         if self.using_ssh:
             via = "via SSH"
         else:
             via = "via telnet"
         log.msg("Manhole listening %s on port %s" % (via, self.port))
+        return service.AsyncMultiService.startService(self)
 
 
 class TelnetManhole(_BaseManhole, ComparableMixin):

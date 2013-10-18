@@ -84,8 +84,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService
 
         # manhole will get stopped as a sub-service
 
-        yield defer.maybeDeferred(lambda :
-                service.AsyncMultiService.stopService(self))
+        service.AsyncMultiService.stopService(self)
 
         # clean up
         if self.manhole:

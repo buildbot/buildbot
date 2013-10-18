@@ -236,8 +236,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                                     name=self.name)
 
             # call the parent method
-            yield defer.maybeDeferred(lambda :
-                    service.AsyncMultiService.startService(self))
+            yield service.AsyncMultiService.startService(self)
 
             # give all services a chance to load the new configuration, rather
             # than the base configuration
