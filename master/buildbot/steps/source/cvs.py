@@ -265,6 +265,16 @@ class CVS(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    def _cvsEntriesContainStickyDates(self, entries):
+        for line in entries.splitlines():
+            if line == 'D': # the last line contains just a single 'D'
+                pass
+            elif line.split('/')[-1].startswith('D'):
+                # fields are separated by slashes, the last field contains the tag or date
+                # sticky dates start with 'D'
+                return True
+        return False # no sticky dates
+
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         myFileWriter = StringFileWriter()
@@ -314,12 +324,8 @@ class CVS(Source):
         if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)
             return
-        # fields are separated by slashes, the last field contains the date
-        # the last line just contains a single "D"
-        for line in [l.split('/') for l in myFileWriter.buffer.splitlines() if len(l) > 1]:
-            if line[-1].startswith('D'):
-                defer.returnValue(False)
-                return
+        if self._cvsEntriesContainStickyDates(myFileWriter.buffer):
+            defer.returnValue(False)
 
         defer.returnValue(True)
 
