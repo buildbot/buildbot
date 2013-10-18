@@ -18,11 +18,12 @@ from twisted.spread import pb
 from twisted.python import failure, log
 from twisted.internet import defer
 from twisted.cred import portal, checkers, credentials, error
-from twisted.application import service, strports
+from twisted.application import strports
+from buildbot.util import service
 
 debug = False
 
-class PBManager(service.MultiService):
+class PBManager(service.AsyncMultiService):
     """
     A centralized manager for PB ports and authentication on them.
 
@@ -30,7 +31,7 @@ class PBManager(service.MultiService):
     with a password and a perspective factory.
     """
     def __init__(self):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('pbmanager')
         self.dispatchers = {}
 
@@ -96,7 +97,7 @@ class Registration(object):
         return disp.port.getHost().port
 
 
-class Dispatcher(service.Service):
+class Dispatcher(service.AsyncService):
     implements(portal.IRealm, checkers.ICredentialsChecker)
 
     credentialInterfaces = [ credentials.IUsernamePassword,
@@ -120,7 +121,7 @@ class Dispatcher(service.Service):
     def stopService(self):
         # stop listening on the port when shut down
         d = defer.maybeDeferred(self.port.stopListening)
-        d.addCallback(lambda _ : service.Service.stopService(self))
+        d.addCallback(lambda _ : service.AsyncService.stopService(self))
         return d
 
     def register(self, username, password, pfactory):

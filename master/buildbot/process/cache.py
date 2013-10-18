@@ -15,9 +15,9 @@
 
 from buildbot.util import lru
 from buildbot import config
-from twisted.application import service
+from buildbot.util import service
 
-class CacheManager(config.ReconfigurableServiceMixin, service.Service):
+class CacheManager(config.ReconfigurableServiceMixin, service.AsyncService):
     """
     A manager for a collection of caches, each for different types of objects
     and with potentially-overlapping key spaces.

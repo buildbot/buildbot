@@ -16,8 +16,9 @@
 import textwrap
 from twisted.internet import defer
 from twisted.python import log
-from twisted.application import internet, service
+from twisted.application import internet
 from buildbot import config
+from buildbot.util import service
 from buildbot.db import enginestrategy, exceptions
 from buildbot.db import pool, model, changes, changesources, schedulers, sourcestamps
 from buildbot.db import state, buildsets, buildrequests
@@ -34,7 +35,7 @@ upgrade_message = textwrap.dedent("""\
     want to make a backup of your buildmaster before doing so.
     """).strip()
 
-class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
+class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -47,7 +48,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
     CLEANUP_PERIOD = 3600
 
     def __init__(self, master, basedir):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('db')
         self.master = master
         self.basedir = basedir

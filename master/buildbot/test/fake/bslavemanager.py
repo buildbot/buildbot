@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 
 
-class FakeBuildslaveManager(service.MultiService):
+class FakeBuildslaveManager(service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('buildslaves')
         self.master = master
 
