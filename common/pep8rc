@@ -3,11 +3,11 @@ show-source = yes
 statistics = yes
 count = yes
 #max-line-length = 80
+exclude = master/contrib/buildbot_json.py
 
 # List of currently ignored PEP8 issues.  Some of them definetely should be
 # enabled in future.
 #
-# E111 indentation is not a multiple of four
 # E121 continuation line indentation is not a multiple of four
 # E122 continuation line missing indentation or outdented
 # E123 closing bracket does not match indentation of opening bracket's line
@@ -53,4 +53,4 @@ count = yes
 # W602 deprecated form of raising exception
 # W604 backticks are deprecated, use 'repr()'
 
-ignore = E111,E121,E122,E123,E124,E125,E126,E127,E128,E201,E202,E203,E211,E221,E222,E225,E226,E227,E228,E231,E241,E251,E261,E262,E271,E272,E301,E302,E303,E401,E501,E502,E701,E703,E711,E712,E721,W191,W291,W292,W293,W391,W601,W602,W604
+ignore = E121,E122,E123,E124,E125,E126,E127,E128,E201,E202,E203,E211,E221,E222,E225,E226,E227,E228,E231,E241,E251,E261,E262,E271,E272,E301,E302,E303,E401,E501,E502,E701,E703,E711,E712,E721,W191,W291,W292,W293,W391,W601,W602,W604

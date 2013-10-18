@@ -139,7 +139,7 @@ class Change:
                 self.codebase)
 
     def __cmp__(self, other):
-      return self.number - other.number
+        return self.number - other.number
 
     def asText(self):
         data = ""
