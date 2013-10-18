@@ -262,9 +262,9 @@ class DownloadArtifact(ShellCommand):
         self.artifactServerDir = artifactServerDir
         self.artifactDestination = artifactDestination or artifact
         self.master = None
-        name = "DownloadArtifact %s" % artifactBuilderName
-        description = "DownloadArtifact %s" % artifactBuilderName
-        descriptionDone="DownloadArtifact %s finished" % artifactBuilderName
+        name = "Download Artifact %s" % artifactBuilderName
+        description = "Downloading artifact '%s'..." % artifactBuilderName
+        descriptionDone="Downloaded '%s'." % artifactBuilderName
         ShellCommand.__init__(self, name=name, description=description, descriptionDone=descriptionDone,  **kwargs)
 
     @defer.inlineCallbacks
