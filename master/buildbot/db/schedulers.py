@@ -132,9 +132,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def getScheduler(self, schedulerid):
-         sch = yield self.getSchedulers(_schedulerid=schedulerid)
-         if sch:
-             defer.returnValue(sch[0])
+        sch = yield self.getSchedulers(_schedulerid=schedulerid)
+        if sch:
+            defer.returnValue(sch[0])
 
     def getSchedulers(self, active=None, masterid=None, _schedulerid=None):
         def thd(conn):
