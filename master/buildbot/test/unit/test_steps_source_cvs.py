@@ -127,6 +127,11 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(uploadString('mozilla/browser/'))
             + 0,
+            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                        slavesrc='Entries', workdir='wkdir/CVS',
+                        writer=ExpectRemoteRef(shell.StringFileWriter)))
+            + Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvsdiscard'])
             + 0,
@@ -512,6 +517,9 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
             + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                         slavesrc='Root', workdir='wkdir/CVS',
                         writer=ExpectRemoteRef(shell.StringFileWriter)))
