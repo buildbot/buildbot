@@ -63,6 +63,13 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(props,
                 [('got_revision', '2012-09-09 12:09:33 +0000')])
 
+    def test_cvsEntriesContainStickyDates(self):
+        step = cvs.CVS(cvsroot="x", cvsmodule="m", mode='full', method='clean')
+        self.assertEqual(step._cvsEntriesContainStickyDates('D'),False)
+        self.assertEqual(step._cvsEntriesContainStickyDates('/file/1.1/Fri May 17 23:20:00//TMOZILLA_1_0_0_BRANCH\nD'),False)
+        self.assertEqual(step._cvsEntriesContainStickyDates('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'),True)
+        self.assertEqual(step._cvsEntriesContainStickyDates('/file1/1.1/Fri May 17 23:20:00//\n/file2/1.1.2.3/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'),True)
+
     def test_mode_full_clean(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
