@@ -197,8 +197,8 @@ class CVSMaildirSource(MaildirSource):
         #  modified_file.c 1.1,1.2
 
         if fileList is None:
-           log.msg('CVSMaildirSource Mail with no files. Ignoring')
-           return None       # We don't have any files. Email not from CVS
+            log.msg('CVSMaildirSource Mail with no files. Ignoring')
+            return None       # We don't have any files. Email not from CVS
 
         if cvsmode == '1.11':
             # Please, no repo paths with spaces!

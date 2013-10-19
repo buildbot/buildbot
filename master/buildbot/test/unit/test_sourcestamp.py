@@ -190,6 +190,6 @@ class TestBuilderBuildCreation(unittest.TestCase):
                            revision='1'),
             ]
         for ch in chgs:  # mock the DB changeid (aka build number) to match rev
-          ch.number = int(ch.revision)
+            ch.number = int(ch.revision)
         ss = sourcestamp.SourceStamp(changes=chgs)
         self.assertEquals(ss.revision, '3')

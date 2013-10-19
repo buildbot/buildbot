@@ -26,7 +26,7 @@ def stop(config, signame="TERM", wait=False):
     quiet = config['quiet']
 
     if config['clean']:
-      signame = 'USR1'
+        signame = 'USR1'
 
     if not base.isBuildmasterDir(config['basedir']):
         return 1

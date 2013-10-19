@@ -508,15 +508,15 @@ class ForceScheduler(base.BaseScheduler):
         """
 
         if not self.checkIfType(name, str):
-           config.error("ForceScheduler name must be a unicode string: %r" %
-                        name)
+            config.error("ForceScheduler name must be a unicode string: %r" %
+                         name)
 
         if not name:
-           config.error("ForceScheduler name must not be empty: %r " %
-                        name)
+            config.error("ForceScheduler name must not be empty: %r " %
+                         name)
 
         if not self.checkIfListOfType(builderNames, str):
-           config.error("ForceScheduler builderNames must be a list of strings: %r" %
+            config.error("ForceScheduler builderNames must be a list of strings: %r" %
                          builderNames)
 
         if self.checkIfType(reason, BaseParameter):
@@ -588,12 +588,12 @@ class ForceScheduler(base.BaseScheduler):
         isListOfType = True
 
         if self.checkIfType(obj, list):
-           for item in obj:
-               if not self.checkIfType(item, chkType):
-                  isListOfType = False
-                  break
+            for item in obj:
+                if not self.checkIfType(item, chkType):
+                    isListOfType = False
+                    break
         else:
-           isListOfType = False
+            isListOfType = False
 
         return isListOfType
 

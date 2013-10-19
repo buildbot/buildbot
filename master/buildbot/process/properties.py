@@ -336,7 +336,7 @@ class _Lookup(util.ComparableMixin, object):
         index = build.render(self.index)
         value, index = yield defer.gatherResults([value, index])
         if not value.has_key(index):
-           rv = yield build.render(self.default)
+            rv = yield build.render(self.default)
         else:
             if self.defaultWhenFalse:
                 rv = yield build.render(value[index])

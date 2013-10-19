@@ -45,12 +45,12 @@ class ForceAction(ActionResource):
         # decode all of the args
         encoding = getRequestCharset(req)
         for name, argl in req.args.iteritems():
-           if name == "checkbox":
-               # damn html's ungeneric checkbox implementation...
-               for cb in argl:
-                   args[cb.decode(encoding)] = True
-           else:
-               args[name] = [ arg.decode(encoding) for arg in argl ]
+            if name == "checkbox":
+                # damn html's ungeneric checkbox implementation...
+                for cb in argl:
+                    args[cb.decode(encoding)] = True
+            else:
+                args[name] = [ arg.decode(encoding) for arg in argl ]
 
         for sch in master.allSchedulers():
             if schedulername == sch.name:

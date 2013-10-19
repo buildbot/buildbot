@@ -15,3 +15,6 @@ pylint:
 
 pyflakes:
 	pyflakes master/buildbot slave/buildslave
+
+pep8:
+	pep8 --config=common/pep8rc master slave

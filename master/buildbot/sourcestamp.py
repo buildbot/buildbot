@@ -323,7 +323,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             patch_level = self.patch[0]
             patch_body = self.patch[1]
             if len(self.patch) > 2:
-              patch_subdir = self.patch[2]
+                patch_subdir = self.patch[2]
 
         patch_author = None
         patch_comment = None

@@ -169,7 +169,7 @@ class Repo(SourceBaseCommand):
             os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml"%(self._fullSrcdir()))
         command = ['sync']
         if self.jobs:
-          command.append('-j' + str(self.jobs))
+            command.append('-j' + str(self.jobs))
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
         return self._repoCmd(command, self._didSync)
