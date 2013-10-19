@@ -45,6 +45,11 @@ matrix:
     - python: "2.7"
       env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.2
 
+before_script:
+  # Disable SSH host key checking. Otherwize ssh will ask confirmation from
+  # command prompt.
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
 # Dependencies installation commands
 install:
   # Fetch objects and tags from upstream git repository.
