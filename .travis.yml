@@ -47,6 +47,20 @@ matrix:
 
 # Dependencies installation commands
 install:
+  # Fetch objects and tags from upstream git repository.
+  # Required for proper work of `git describe`.
+  - git describe || true
+  - git remote add upstream git@github.com:buildbot/buildbot.git
+  - git fetch upstream --tags
+  - git fetch origin --tags
+  - |
+    DEPTH=300;
+    while [ "$(git describe 2> /dev/null)" == "" ]; do
+      DEPTH=$(($DEPTH+200));
+      git fetch origin --depth=$DEPTH --quiet;
+    done
+  - git describe
+
   # zope.interface dropped Python 2.5 support in 4.0.0
   - "[ $TRAVIS_PYTHON_VERSION != '2.5' ] || pip install 'zope.interface<4.0.0'"
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
