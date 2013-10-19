@@ -389,7 +389,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='source',
                         command=['cvs', '-z3', 'update', '-dP'])
             + 0,
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
+            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
                              'logEnviron': True})
             + 0,
             )
@@ -428,7 +428,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
                                  '-z3', 'checkout', '-d', 'source', 'mozilla/browser/'])
             + 0,
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
+            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
                              'logEnviron': True})
             + 0,
             )
