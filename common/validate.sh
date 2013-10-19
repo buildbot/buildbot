@@ -97,6 +97,9 @@ if [ $master_res != 0 ] || [ $slave_res != 0 ]; then
     not_ok "failed pylint";
 fi
 
+status "running pep8"
+pep8 --config=common/pep8rc master slave || not_ok "failed pep8"
+
 status "building docs"
 make -C master/docs VERSION=latest clean html || not_ok "docs failed"
 
