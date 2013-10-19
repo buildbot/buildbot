@@ -265,6 +265,16 @@ class CVS(Source):
         d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
+    def _cvsEntriesContainStickyDates(self, entries):
+        for line in entries.splitlines():
+            if line == 'D': # the last line contains just a single 'D'
+                pass
+            elif line.split('/')[-1].startswith('D'):
+                # fields are separated by slashes, the last field contains the tag or date
+                # sticky dates start with 'D'
+                return True
+        return False # no sticky dates
+
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         myFileWriter = StringFileWriter()
@@ -303,6 +313,19 @@ class CVS(Source):
         if myFileWriter.buffer.strip() != self.cvsmodule:
             defer.returnValue(False)
             return
+
+        # if there are sticky dates (from an earlier build with revision),
+        # we can't update (unless we remove those tags with cvs update -A)
+        myFileWriter.buffer = ""
+        cmd = buildstep.RemoteCommand('uploadFile',
+                dict(slavesrc='Entries', **args),
+                ignore_updates=True)
+        yield self.runCommand(cmd)
+        if cmd.rc is not None and cmd.rc != 0:
+            defer.returnValue(False)
+            return
+        if self._cvsEntriesContainStickyDates(myFileWriter.buffer):
+            defer.returnValue(False)
 
         defer.returnValue(True)
 
