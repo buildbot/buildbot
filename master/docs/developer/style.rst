@@ -14,16 +14,17 @@ Symbols used as parameters to functions used in configuration files should use u
 
 In summary, then:
 
-================== ============
-Symbol Type        Format
-================== ============
-Methods            interCaps
-Functions          interCaps
-Function Arguments under_scores
-Classes            InitialCaps
-Variables          under_scores
-Constants          ALL_CAPS
-================== ============
+====================== ============
+Symbol Type            Format
+====================== ============
+Methods                interCaps
+Functions              interCaps
+Function Arguments     under_scores
+API method Arguments   interCaps
+Classes                InitialCaps
+Variables              under_scores
+Constants              ALL_CAPS
+====================== ============
 
 Twisted Idioms
 --------------
@@ -41,7 +42,7 @@ Just about anything might block - even getters and setters!
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Twisted has some useful, but little-known classes.  
+Twisted has some useful, but little-known classes.
 Brief descriptions follow, but you should consult the API documentation or source code
 for the full details.
 
@@ -63,7 +64,8 @@ operations, many of which may block.
 In all cases where this occurs, there is a danger of pre-emption, so exercise
 the same caution you would if writing a threaded application.
 
-For simple cases, you can use nested callback functions. For more complex cases, deferredGenerator is appropriate.
+For simple cases, you can use nested callback functions. For more complex cases, inlineCallbacks is appropriate.
+In all cases, please prefer maintainability and readability over performance.
 
 Nested Callbacks
 ................
@@ -115,7 +117,9 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
 
 .. note:: do not try to build a loop in this style by chaining multiple
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
-    versions of Twisted. Use ``deferredGenerator`` instead. 
+    versions of Twisted. Use ``inlineCallbacks`` instead.
+
+In most of the cases if you need more than two callbacks in a method, it is more readable and maintainable to use inlineCallbacks.
 
 inlineCallbacks
 ...............

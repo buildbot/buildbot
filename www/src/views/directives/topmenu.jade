@@ -1,0 +1,3 @@
+ul.nav.navbar-nav
+  li(ng-repeat='tab in tabs', ng-class='{active:tab.data.selected}')
+    a(href='{{tab.data.tabhash}}') {{tab.data.caption}}

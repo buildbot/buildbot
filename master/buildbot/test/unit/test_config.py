@@ -52,11 +52,13 @@ global_defaults = dict(
     multiMaster=False,
     debugPassword=None,
     manhole=None,
+    www=dict(port=None, url='http://localhost:8080/', plugins={}),
 )
 
 
 class FakeChangeSource(changes_base.ChangeSource):
-    pass
+    def __init__(self):
+        changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
 
 
 class FakeStatusReceiver(status_base.StatusReceiver):
@@ -166,8 +168,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected = dict(
             #validation,
             db=dict(
-                db_url='sqlite:///state.sqlite',
-                db_poll_interval=None),
+                db_url='sqlite:///state.sqlite'),
+            mq=dict(type='simple'),
             metrics = None,
             caches = dict(Changes=10, Builds=15),
             schedulers = {},
@@ -539,31 +541,47 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_defaults(self):
         self.cfg.load_db(self.filename, {})
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=None))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_db_url(self):
         self.cfg.load_db(self.filename, dict(db_url='abcd'))
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=None))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_db_poll_interval(self):
+        # value is ignored, but no error
         self.cfg.load_db(self.filename, dict(db_poll_interval=2))
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=2))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_dict(self):
+        # db_poll_interval value is ignored, but no error
         self.cfg.load_db(self.filename,
             dict(db=dict(db_url='abcd', db_poll_interval=10)))
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=10))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
         self.cfg.load_db(self.filename,
             dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
         self.assertConfigError(self.errors, "unrecognized keys in")
 
-    def test_load_db_not_int(self):
-        self.cfg.load_db(self.filename,
-            dict(db=dict(db_url='abcd', db_poll_interval='ten')))
-        self.assertConfigError(self.errors, "must be an int")
+
+    def test_load_mq_defaults(self):
+        self.cfg.load_mq(self.filename, {})
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_explicit_type(self):
+        self.cfg.load_mq(self.filename,
+                dict(mq=dict(type='simple')))
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_unk_type(self):
+        self.cfg.load_mq(self.filename, dict(mq=dict(type='foo')))
+        self.assertConfigError(self.errors, "mq type 'foo' is not known")
+
+    def test_load_mq_unk_keys(self):
+        self.cfg.load_mq(self.filename,
+            dict(mq=dict(bar='bar')))
+        self.assertConfigError(self.errors, "unrecognized keys in")
 
 
     def test_load_metrics_defaults(self):
@@ -771,6 +789,45 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_user_managers(self.filename,
                 dict(user_managers=[um]))
         self.assertResults(user_managers=[um])
+
+
+    def test_load_www_default(self):
+        self.cfg.load_www(self.filename, {})
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                                    plugins={}))
+
+    def test_load_www_port(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(port=9888)))
+        self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
+                                    plugins={}))
+
+    def test_load_www_plugin(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(plugins={'waterfall': {'foo':'bar'}})))
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                                    plugins={'waterfall':{'foo':'bar'}}))
+
+    def test_load_www_url_no_slash(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(url='http://foo', port=20)))
+        self.assertResults(www=dict(port=20, url='http://foo/',
+                                    plugins={}))
+
+    def test_load_www_allowed_origins(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(url='http://foo',
+                    allowed_origins=['a', 'b'])))
+        self.assertResults(www=dict(port=None, url='http://foo/',
+                                    allowed_origins=['a', 'b'],
+                                    plugins={}))
+
+    def test_load_www_unknown(self):
+        self.cfg.load_www(self.filename,
+                dict(www=dict(foo="bar")))
+        self.assertConfigError(self.errors,
+            "unknown www configuration parameter(s) foo")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
@@ -1033,6 +1090,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda : config.BuilderConfig(name='_a',
                 factory=self.factory, slavenames=['a']))
 
+    def test_utf8_name(self):
+        self.assertRaisesConfigError(
+            "builder names must be unicode or ASCII",
+            lambda : config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
+                factory=self.factory, slavenames=['a']))
+
     def test_no_factory(self):
         self.assertRaisesConfigError(
             "builder 'a' has no factory",
@@ -1109,6 +1172,13 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             properties={},
             mergeRequests=None,
             description=None)
+
+    def test_unicode_name(self):
+        cfg = config.BuilderConfig(
+            name=u'a \N{SNOWMAN} c', slavename='a', factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg,
+            name=u'a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(

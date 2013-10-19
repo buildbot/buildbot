@@ -67,12 +67,12 @@ class FakeRequest(Mock):
 
     # cribed from twisted.web.test._util._render
     def test_render(self, resource):
-          result = resource.render(self)
-          if isinstance(result, str):
-              self.write(result)
-              self.finish()
-              return self.deferred
-          elif result is server.NOT_DONE_YET:
-              return self.deferred
-          else:
-              raise ValueError("Unexpected return value: %r" % (result,))
+        result = resource.render(self)
+        if isinstance(result, str):
+            self.write(result)
+            self.finish()
+            return self.deferred
+        elif result is server.NOT_DONE_YET:
+            return self.deferred
+        else:
+            raise ValueError("Unexpected return value: %r" % (result,))

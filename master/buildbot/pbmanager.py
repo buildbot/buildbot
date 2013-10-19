@@ -63,7 +63,7 @@ class PBManager(service.MultiService):
         if not disp.users:
             disp = self.dispatchers[registration.portstr]
             del self.dispatchers[registration.portstr]
-            return disp.disownServiceParent()
+            return defer.maybeDeferred(disp.disownServiceParent)
         return defer.succeed(None)
 
 class Registration(object):
@@ -168,7 +168,7 @@ class Dispatcher(service.Service):
         d.addCallback(done)
 
         return d
-    
+
     # ICredentialsChecker
 
     def requestAvatarId(self, creds):

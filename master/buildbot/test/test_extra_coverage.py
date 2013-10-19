@@ -29,18 +29,12 @@ from buildbot.process import subunitlogobserver
 modules.extend([subunitlogobserver])
 from buildbot.scripts import checkconfig, logwatcher, reconfig, runner
 modules.extend([checkconfig, logwatcher, reconfig, runner])
-from buildbot.status import client, html, status_gerrit, status_push
-modules.extend([client, html, status_gerrit, status_push])
+from buildbot.status import client, status_gerrit
+modules.extend([client, status_gerrit])
 from buildbot.status import tinderbox, words
 modules.extend([tinderbox, words])
-from buildbot.status.web import baseweb, build, builder, buildstatus, changes
-modules.extend([baseweb, build, builder, buildstatus, changes])
-from buildbot.status.web import console, feeds, grid, logs, olpb, root, slaves
-modules.extend([console, feeds, grid, logs, olpb, root, slaves])
-from buildbot.status.web import status_json, step, tests, waterfall
-modules.extend([status_json, step, tests, waterfall])
-from buildbot.steps import master, maxq, python, python_twisted, subunit, mtrlogobserver
-modules.extend([master, maxq, python, python_twisted, subunit, mtrlogobserver])
+from buildbot.steps import master, maxq, python, python_twisted, subunit
+modules.extend([master, maxq, python, python_twisted, subunit])
 from buildbot.steps import trigger, vstudio
 modules.extend([trigger, vstudio])
 from buildbot.steps.package.rpm import rpmbuild, rpmlint, rpmspec

@@ -54,6 +54,8 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
@@ -96,6 +98,8 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
         ]
@@ -693,6 +697,16 @@ class UserOptions(base.SubcommandOptions):
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
 
+class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.dataspec.dataspec"
+    optParameters  = [
+        ['out', 'o', "dataspec.json", "output to specified path"],
+        ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
+        ]
+    def getSynopsis(self):
+        return "Usage:   buildbot dataspec [options]"
+
+
 
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
@@ -727,7 +741,9 @@ class Options(usage.Options):
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
         ['user', None, UserOptions,
-         "Manage users in buildbot's database"]
+         "Manage users in buildbot's database"],
+        ['dataspec', None, DataSpecOption,
+         "Output data api spec"]
         ]
 
     def opt_version(self):

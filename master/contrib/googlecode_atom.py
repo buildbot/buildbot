@@ -169,12 +169,13 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
         # Skip calling addChange() if this is the first successful poll.
         if self.lastChange is not None:
             for change in change_list:
-                yield self.master.addChange(author=change["author"],
-                                          revision=change["revision"],
-                                          files=change["files"],
-                                          comments=change["comments"],
-                                          when_timestamp=change["when"],
-                                          branch=self.branch,
-                                          src=self.src)
+                yield self.master.data.updates.addChange(
+                        author=change["author"],
+                        revision=change["revision"],
+                        files=change["files"],
+                        comments=change["comments"],
+                        when_timestamp=change["when"],
+                        branch=self.branch,
+                        src=self.src)
         if change_list:
             self.lastChange = change_list[-1]["revision"]

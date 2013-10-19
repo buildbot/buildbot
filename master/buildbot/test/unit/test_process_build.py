@@ -19,9 +19,10 @@ from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.process.build import Build
 from buildbot.process.properties import Properties
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION, CANCELLED
 from buildbot.locks import SlaveLock
 from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.test.fake import slave, fakeprotocol
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot import config
 
@@ -109,8 +110,10 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
+        self.slave = slave.FakeSlave()
         self.builder = self.createBuilder()
         self.build = Build([r])
+        self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)
         self.build.setBuilder(self.builder)
 
     def createBuilder(self):
@@ -131,7 +134,7 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     in step.method_calls)
 
     def testStopBuild(self):
@@ -151,7 +154,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
 
         self.assert_( ('interrupt', ('stop it',), {}) in step.method_calls)
 
@@ -192,7 +195,7 @@ class TestBuild(unittest.TestCase):
 
         d = b.startBuild(FakeBuildStatus(), None, slavebuilder)
         def check(ign):
-            self.assertEqual(b.result, EXCEPTION)
+            self.assertEqual(b.result, CANCELLED)
             self.assert_( ('interrupt', ('stop it',), {}) in step1.method_calls)
             self.assert_(step2Started[0])
         d.addCallback(check)
@@ -283,8 +286,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                in step.method_calls)
+        self.assertIn(('startStep', (slavebuilder.slave.conn,), {}),
+                    step.method_calls)
         self.assertEquals(claimCount[0], 1)
 
     def testBuildLocksOrder(self):
@@ -364,7 +367,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assert_(b.currentStep is None)
@@ -397,10 +400,10 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assert_(b.currentStep is None)
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
@@ -430,12 +433,12 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
+        self.assert_( ('startStep', (slavebuilder.slave.conn,), {})
                                     not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, RETRY)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
-        self.build.build_status.setText.assert_called_with(["retry", "lost", "remote"])
+        self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
     def testStopBuildWaitingForStepLocks(self):
@@ -471,13 +474,12 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(gotLocks, [True])
         self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)
-        self.assertEqual(b.result, EXCEPTION)
+        self.assertEqual(b.result, CANCELLED)
 
     def testStepDone(self):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(SUCCESS, step)
         self.assertEqual(terminate, False)
@@ -487,7 +489,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
@@ -498,7 +499,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.flunkOnFailure = False
         step.haltOnFailure = True
@@ -510,7 +510,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = []
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.flunkOnFailure = True
         step.flunkOnWarnings = True
@@ -523,7 +522,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.warnOnWarnings = False
         terminate = b.stepDone(WARNINGS, step)
@@ -534,7 +532,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
@@ -544,7 +541,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
@@ -554,7 +550,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS, WARNINGS]
         b.result = WARNINGS
-        b.remote = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
@@ -564,7 +559,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.warnOnFailure = True
         step.flunkOnFailure = False
@@ -576,7 +570,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         terminate = b.stepDone(WARNINGS, step)
@@ -587,7 +580,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [SUCCESS]
         b.result = SUCCESS
-        b.remote = Mock()
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         self.haltOnFailure = True
@@ -599,7 +591,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [FAILURE]
         b.result = FAILURE
-        b.remote = Mock()
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
@@ -609,7 +600,6 @@ class TestBuild(unittest.TestCase):
         b = self.build
         b.results = [RETRY]
         b.result = RETRY
-        b.remote = Mock()
         step = FakeBuildStep()
         step.alwaysRun = True
         b.stepDone(WARNINGS, step)

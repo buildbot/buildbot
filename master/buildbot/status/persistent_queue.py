@@ -18,7 +18,7 @@ from __future__ import with_statement
 
 from collections import deque
 import os
-import cPickle as pickle
+from buildbot.util import pickle
 
 from zope.interface import implements, Interface
 

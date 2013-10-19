@@ -26,8 +26,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def tearDown(self):
         return self.tearDownChangeSource()
 
-    def newChangeSource(self, host, user):
-        s = gerritchangesource.GerritChangeSource(host, user)
+    def newChangeSource(self, host, user, **kwargs):
+        s = gerritchangesource.GerritChangeSource(host, user, **kwargs)
         self.attachChangeSource(s)
         return s
 
@@ -36,6 +36,13 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def test_describe(self):
         s = self.newChangeSource('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
+
+    def test_name(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
+
+        s = self.newChangeSource('somehost', 'someuser', name="MyName")
+        self.assertEqual("MyName", s.name)
 
     # TODO: test the backoff algorithm
 
@@ -49,6 +56,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'project': u'pr',
                        'branch': u'br/4321',
                        'revlink': u'http://buildbot.net',
+                       'codebase': None,
+                       'revision': u'abcdef',
+                       'src': None,
+                       'when_timestamp': None,
                        'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
                                        u'event.change.subject': u'fix 1234',
                                        u'event.change.project': u'pr',
@@ -58,8 +69,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                                        u'event.change.branch': u'br',
                                        u'event.type': u'patchset-created',
                                        u'event.patchSet.revision': u'abcdef',
-                                       u'event.patchSet.number': u'12'},
-                                       u'revision': u'abcdef'}
+                                       u'event.patchSet.number': u'12'}}
 
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
@@ -77,8 +87,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         )))
 
         def check(_):
-            self.failUnlessEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
         d.addCallback(check)

@@ -13,16 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 from twisted.trial import unittest
 from buildbot.status import master, client
-from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster, fakedb
 
 class TestStatusClientPerspective(unittest.TestCase):
 
     def makeStatusClientPersp(self):
-        m = mock.Mock(name='master')
-        self.db = m.db = fakedb.FakeDBConnector(self)
+        m = fakemaster.make_master(testcase=self, wantDb=True)
+        self.db = m.db
         m.basedir = r'C:\BASEDIR'
         s = master.Status(m) 
         persp = client.StatusClientPerspective(s)
@@ -31,8 +30,7 @@ class TestStatusClientPerspective(unittest.TestCase):
     def test_getBuildSets(self):
         persp = self.makeStatusClientPersp()
         self.db.insertTestData([
-            fakedb.SourceStampSet(id=234),
-            fakedb.Buildset(id=91, sourcestampsetid=234, complete=0,
+            fakedb.Buildset(id=91, complete=0,
                     complete_at=298297875, results=-1, submitted_at=266761875,
                     external_idstring='extid', reason='rsn1'),
         ])

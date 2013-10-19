@@ -34,13 +34,15 @@ class BaseParameter(object):
     name = ""
     parentName = None
     label = ""
-    type = []
+    type = ""
+    subtype = ""
     default = ""
     required = False
     multiple = False
     regex = None
     debug=True
     hide = False
+    css_class = ""
 
     @property
     def fullName(self):
@@ -130,10 +132,17 @@ class BaseParameter(object):
     def parse_from_arg(self, s):
         return s
 
+    def toJsonDict(self):
+        ret = {}
+        for i in dir(self):
+            v = getattr(self, i)
+            if not callable(v) and not i.startswith("__"):
+                ret[i] = v
+        return ret
 
 class FixedParameter(BaseParameter):
     """A fixed parameter that cannot be modified by the user."""
-    type = ["fixed"]
+    type = "fixed"
     hide = True
     default = ""
 
@@ -143,7 +152,7 @@ class FixedParameter(BaseParameter):
 
 class StringParameter(BaseParameter):
     """A simple string parameter"""
-    type = ["text"]
+    type = "text"
     size = 10
 
     def parse_from_arg(self, s):
@@ -152,7 +161,7 @@ class StringParameter(BaseParameter):
 
 class TextParameter(StringParameter):
     """A generic string parameter that may span multiple lines"""
-    type = ["textarea"]
+    type = "textarea"
     cols = 80
     rows = 20
 
@@ -162,14 +171,14 @@ class TextParameter(StringParameter):
 
 class IntParameter(StringParameter):
     """An integer parameter"""
-    type = ["int"]
+    type = "int"
 
     parse_from_arg = int # will throw an exception if parse fail
 
 
 class BooleanParameter(BaseParameter):
     """A boolean parameter"""
-    type = ["bool"]
+    type = "bool"
 
     def getFromKwargs(self, kwargs):
         return kwargs.get(self.fullName, None) == [True]
@@ -177,7 +186,7 @@ class BooleanParameter(BaseParameter):
 
 class UserNameParameter(StringParameter):
     """A username parameter to supply the 'owner' of a build"""
-    type = ["text"]
+    type = "text"
     default = ""
     size = 30
     need_email = True
@@ -200,7 +209,7 @@ class ChoiceStringParameter(BaseParameter):
     """A list of strings, allowing the selection of one of the predefined values.
        The 'strict' parameter controls whether values outside the predefined list
        of choices are allowed"""
-    type = ["list"]
+    type = "list"
     choices = []
     strict = True
 
@@ -214,7 +223,8 @@ class ChoiceStringParameter(BaseParameter):
 
 class InheritBuildParameter(ChoiceStringParameter):
     """A parameter that takes its values from another build"""
-    type = ChoiceStringParameter.type + ["inherit"]
+    type = ChoiceStringParameter.type
+    subtype = "inherit"
     name = "inherit"
     compatible_builds = None
 
@@ -298,12 +308,20 @@ class NestedParameter(BaseParameter):
        The result of a NestedParameter is typically a dictionary, with the key/value
        being the name/value of the children.
     """
-    type = ['nested']
+    type = 'nested'
     fields = None
-    
+    columns = None
     def __init__(self, name, fields, **kwargs):
         BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
-        
+        # reasonable defaults for the number of columns
+        if self.columns is None:
+            if len(fields) >= 4:
+                self.columns = 2
+            else:
+                self.columns = 1
+        if self.columns > 4:
+            config.error("UI only support up to 4 columns in nested parameters")
+
         # fix up the child nodes with the parent (use None for now):
         self.setParent(None)
     
@@ -338,11 +356,17 @@ class NestedParameter(BaseParameter):
             # if there's no name, collapse this nest all the way
             d = properties
         d.update(kwargs[self.fullName])
-        
+
+    def toJsonDict(self):
+        ret = BaseParameter.toJsonDict(self)
+        ret['fields'] = [ field.toJsonDict() for field in self.fields ]
+        return ret
+
 class AnyPropertyParameter(NestedParameter):
     """A generic property parameter, where both the name and value of the property
        must be given."""
-    type = NestedParameter.type + ["any"]
+    type = NestedParameter.type
+    subtype = "any"
 
     def __init__(self, name, **kw):
         fields = [
@@ -374,10 +398,10 @@ class AnyPropertyParameter(NestedParameter):
             raise ValidationError("bad property name='%s', value='%s'" % (pname, pvalue))
         properties[pname] = pvalue
 
-
 class CodebaseParameter(NestedParameter):
     """A parameter whose result is a codebase specification instead of a property"""
-    type = NestedParameter.type + ["codebase"]
+    type = NestedParameter.type
+    subtype = "codebase"
     codebase = ''
     
     def __init__(self,
@@ -448,7 +472,8 @@ class ForceScheduler(base.BaseScheduler):
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
     """
-    compare_attrs = ( 'name', 'builderNames',
+    compare_attrs = base.BaseScheduler.compare_attrs + \
+                   ( 'builderNames',
                      'reason', 'username',
                      'forcedProperties' )
 
@@ -508,15 +533,15 @@ class ForceScheduler(base.BaseScheduler):
         """
 
         if not self.checkIfType(name, str):
-           config.error("ForceScheduler name must be a unicode string: %r" %
-                        name)
+            config.error("ForceScheduler name must be a unicode string: %r" %
+                         name)
 
         if not name:
-           config.error("ForceScheduler name must not be empty: %r " %
-                        name)
+            config.error("ForceScheduler name must not be empty: %r " %
+                         name)
 
         if not self.checkIfListOfType(builderNames, str):
-           config.error("ForceScheduler builderNames must be a list of strings: %r" %
+            config.error("ForceScheduler builderNames must be a list of strings: %r" %
                          builderNames)
 
         if self.checkIfType(reason, BaseParameter):
@@ -574,7 +599,7 @@ class ForceScheduler(base.BaseScheduler):
 
         if properties:
             self.forcedProperties.extend(properties)
-            
+
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
@@ -588,20 +613,14 @@ class ForceScheduler(base.BaseScheduler):
         isListOfType = True
 
         if self.checkIfType(obj, list):
-           for item in obj:
-               if not self.checkIfType(item, chkType):
-                  isListOfType = False
-                  break
+            for item in obj:
+                if not self.checkIfType(item, chkType):
+                    isListOfType = False
+                    break
         else:
-           isListOfType = False
+            isListOfType = False
 
         return isListOfType
-
-    def startService(self):
-        pass
-
-    def stopService(self):
-        pass
 
     @defer.inlineCallbacks
     def gatherPropertiesAndChanges(self, **kwargs):
@@ -633,7 +652,7 @@ class ForceScheduler(base.BaseScheduler):
         if builderNames is None:
             builderNames = self.builderNames
         else:
-            builderNames = set(builderNames).intersection(self.builderNames)
+            builderNames = list(set(builderNames).intersection(self.builderNames))
 
         if not builderNames:
             defer.returnValue(None)
@@ -657,8 +676,13 @@ class ForceScheduler(base.BaseScheduler):
 
         r = self.reasonString % {'owner': owner, 'reason': reason}
 
+        # turn sourcestamps into a list
+        for cb, ss in sourcestamps.iteritems():
+            ss['codebase'] = cb
+        sourcestamps = sourcestamps.values()
+
         # everything is validated, we can create our source stamp, and buildrequest
-        res = yield self.addBuildsetForSourceStampSetDetails(
+        res = yield self.addBuildsetForSourceStampsWithDefaults(
             reason = r,
             sourcestamps = sourcestamps,
             properties = properties,

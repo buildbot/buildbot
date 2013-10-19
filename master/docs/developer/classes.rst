@@ -14,9 +14,14 @@ The sections contained here document classes that can be used or subclassed.
     cls-buildfactory
     cls-remotecommands
     cls-buildsteps
+    cls-basescheduler
     cls-forcesched
     cls-irenderable
     cls-iproperties
+    cls-clusteredservice
+    cls-resultspec
+    cls-protocols
+    cls-bslavemanager
 
 .. todo::
 

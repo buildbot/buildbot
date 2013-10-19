@@ -21,7 +21,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.scripts import create_master
 from buildbot.db import connector, model
-from buildbot.test.util import dirs, misc
+from buildbot.test.util import dirs, misc, www
 
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
@@ -46,7 +46,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
         functions = [ 'makeBasedir', 'makeTAC', 'makeSampleConfig',
-                      'makePublicHtml', 'makeTemplatesDir', 'createDB' ]
+                      'makePublicHtml', 'createDB' ]
         repls = {}
         calls = []
         for fn in functions:
@@ -78,8 +78,8 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
             self.assertInStdout('buildmaster configured in')
         return d
 
-class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                                unittest.TestCase):
+class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
+                                misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
@@ -191,13 +191,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_makePublicHtml(self):
         create_master.makePublicHtml(mkconfig(basedir='test', quiet=True))
         self.assertTrue(os.path.exists(
-            os.path.join('test', 'public_html', 'robots.txt')))
-        self.assertWasQuiet()
-
-    def test_makeTemplatesDir(self):
-        create_master.makeTemplatesDir(mkconfig(basedir='test', quiet=True))
-        self.assertTrue(os.path.exists(
-            os.path.join('test', 'templates', 'README.txt')))
+            os.path.join('test', 'public_html')))
         self.assertWasQuiet()
 
     @defer.inlineCallbacks

@@ -11,17 +11,7 @@ Buildbot.
 .. toctree::
     :maxdepth: 2
 
-    master-overview
-    definitions
-    style
-    tests
-    config
-    utils
-    database
-    results
-    formats
-    webstatus
-    master-slave
-    encodings
-    metrics
+    general
+    apis
     classes
+

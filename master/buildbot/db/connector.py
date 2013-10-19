@@ -18,12 +18,10 @@ from twisted.internet import defer
 from twisted.python import log
 from twisted.application import internet, service
 from buildbot import config
-from buildbot.db import enginestrategy
-from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
-from buildbot.db import state, buildsets, buildrequests, builds, buildslaves, users
-
-class DatabaseNotReadyError(Exception):
-    pass
+from buildbot.db import enginestrategy, exceptions
+from buildbot.db import pool, model, changes, changesources, schedulers, sourcestamps
+from buildbot.db import state, buildsets, buildrequests
+from buildbot.db import builds, buildslaves, users, masters, builders, steps
 
 upgrade_message = textwrap.dedent("""\
 
@@ -63,15 +61,18 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.pool = None # set up in reconfigService
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
+        self.changesources = changesources.ChangeSourcesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
-        self.sourcestampsets = sourcestampsets.SourceStampSetsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.buildslaves = buildslaves.BuildslavesConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
+        self.masters = masters.MastersConnectorComponent(self)
+        self.builders = builders.BuildersConnectorComponent(self)
+        self.steps = steps.StepsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                 self._doCleanup)
@@ -95,7 +96,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
                 if not res:
                     for l in upgrade_message.split('\n'):
                         log.msg(l)
-                    raise DatabaseNotReadyError()
+                    raise exceptions.DatabaseNotReadyError()
             d.addCallback(check_current)
         else:
             d = defer.succeed(None)

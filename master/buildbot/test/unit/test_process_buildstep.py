@@ -18,10 +18,10 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
-from buildbot.test.fake import fakebuild, remotecommand, slave
+from buildbot.test.fake import fakebuild, remotecommand as fakeremotecommand, slave
 from buildbot.test.util import config, steps, compat
 from buildbot.util.eventual import eventually
 
@@ -38,7 +38,7 @@ class FakeStepStatus:
 class TestRegexLogEvaluator(unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
-        cmd = remotecommand.FakeRemoteCommand('cmd', {})
+        cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
         cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
         cmd.rc = rc
         return cmd
@@ -142,8 +142,10 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         bs = buildstep.BuildStep()
         bs.buildslave = slave.FakeSlave()
         bs.remote = 'dummy'
-        cmd = buildstep.RemoteShellCommand("build", ["echo", "hello"])
-        cmd.run = lambda self, remote : SUCCESS
+        bs.build = fakebuild.FakeBuild()
+        bs.build.builder.name = 'fake'
+        cmd = remotecommand.RemoteShellCommand("build", ["echo", "hello"])
+        cmd.run = lambda self, remote, builder_name : SUCCESS
         bs.runCommand(cmd)
         self.assertEqual(bs.cmd, cmd)
 
@@ -247,7 +249,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 class TestLoggingBuildStep(unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
-        cmd = remotecommand.FakeRemoteCommand('cmd', {})
+        cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
         cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
         cmd.rc = rc
         return cmd
@@ -308,31 +310,3 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
         return d
 
 
-class TestRemoteShellCommand(unittest.TestCase):
-
-    def test_obfuscated_arguments(self):
-        command = ["echo",
-            ("obfuscated", "real", "fake"),
-            "test",
-            ("obfuscated", "real2", "fake2"),
-            ("not obfuscated", "a", "b"),
-            ("obfuscated"),  # not obfuscated
-            ("obfuscated", "test"),  # not obfuscated
-            ("obfuscated", "1", "2", "3"),  # not obfuscated)
-            ]
-        cmd = buildstep.RemoteShellCommand("build", command)
-        self.assertEqual(cmd.command, command)
-        self.assertEqual(cmd.fake_command, ["echo",
-            "fake",
-            "test",
-            "fake2",
-            ("not obfuscated", "a", "b"),
-            ("obfuscated"),  # not obfuscated
-            ("obfuscated", "test"),  # not obfuscated
-            ("obfuscated", "1", "2", "3"),  # not obfuscated)
-            ])
-
-        command = "echo test"
-        cmd = buildstep.RemoteShellCommand("build", command)
-        self.assertEqual(cmd.command, command)
-        self.assertEqual(cmd.fake_command, command)

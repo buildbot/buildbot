@@ -25,7 +25,7 @@ class ObjDict(dict):
     pass
 
 class StateConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def getObjectId(self, name, class_name):
         # defer to a cached method that only takes one parameter (a tuple)
@@ -38,8 +38,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             objects_tbl = self.db.model.objects
 
-            self.check_length(objects_tbl.c.name, name)
-            self.check_length(objects_tbl.c.class_name, class_name)
+            self.checkLength(objects_tbl.c.name, name)
+            self.checkLength(objects_tbl.c.class_name, class_name)
 
             def select():
                 q = sa.select([ objects_tbl.c.id ],
@@ -111,7 +111,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
             except:
                 raise TypeError("Error encoding JSON for %r" % (value,))
 
-            self.check_length(object_state_tbl.c.name, name)
+            self.checkLength(object_state_tbl.c.name, name)
 
             def update():
                 q = object_state_tbl.update(

@@ -1,0 +1,29 @@
+@import "bootstrap/bootstrap.less";
+@import "font-awesome/font-awesome.less";
+
+.ng-cloak {
+	display: none;
+}
+
+.animate-repeat.ng-enter,
+.animate-repeat.ng-leave {
+    transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+}
+.animate-repeat.ng-leave.ng-leave-active,
+.animate-repeat.ng-enter {
+  opacity: 0;
+  margin-top:-70px;
+}
+
+.breadcrumb .btn {
+  height: 29px;
+  margin-top: -5px;
+  padding-top: 4px;
+}
+.breadcrumb > li + li.pull-right:before {
+content: "";
+padding: 0 2px;
+}
+.modal.fade.in {
+	display: block !important;
+}

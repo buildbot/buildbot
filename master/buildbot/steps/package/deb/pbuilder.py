@@ -24,7 +24,7 @@ import time
 from twisted.python import log
 
 from buildbot.steps.shell import WarningCountingShellCommand
-from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.process.buildstep import FAILURE
 from buildbot import config
 
@@ -120,7 +120,7 @@ class DebPbuilder(WarningCountingShellCommand):
 
     # Check for Basetgz
     def start(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.basetgz})
+        cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.checkBasetgz(cmd))
         d.addErrback(self.failed)
@@ -142,7 +142,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.components:
                 command += ['--components', self.components]
 
-            cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
+            cmd = remotecommand.RemoteShellCommand(self.getWorkdir(), command)
 
             stdio_log = stdio_log = self.addLog("pbuilder")
             cmd.useLog(stdio_log, True, "stdio")
@@ -161,7 +161,7 @@ class DebPbuilder(WarningCountingShellCommand):
                 command = ['sudo', self.pbuilder, '--update',
                            self.baseOption, self.basetgz]
 
-                cmd = buildstep.RemoteShellCommand(self.getWorkdir(), command)
+                cmd = remotecommand.RemoteShellCommand(self.getWorkdir(), command)
                 stdio_log = stdio_log = self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
                 d = self.runCommand(cmd)

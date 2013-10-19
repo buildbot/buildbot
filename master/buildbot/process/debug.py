@@ -17,9 +17,7 @@ from twisted.python import log
 from twisted.internet import defer
 from twisted.application import service
 from buildbot.pbutil import NewCredPerspective
-from buildbot.sourcestamp import SourceStamp
 from buildbot import interfaces, config
-from buildbot.process.properties import Properties
 
 class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -106,15 +104,6 @@ class DebugPerspective(NewCredPerspective):
 
     def detached(self, mind):
         pass
-
-    def perspective_requestBuild(self, buildername, reason, branch,
-                            revision, properties={}):
-        c = interfaces.IControl(self.master)
-        bc = c.getBuilder(buildername)
-        ss = SourceStamp(branch, revision)
-        bpr = Properties()
-        bpr.update(properties, "remote requestBuild")
-        return bc.submitBuildRequest(ss, reason, bpr)
 
     def perspective_pingBuilder(self, buildername):
         c = interfaces.IControl(self.master)

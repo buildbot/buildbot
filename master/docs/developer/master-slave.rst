@@ -145,7 +145,7 @@ Commands
 --------
 
 Actual work done by the slave is represented on the master side by a
-:class:`buildbot.process.buildstep.RemoteCommand` instance.
+:class:`buildbot.process.remotecommand.RemoteCommand` instance.
 
 The command instance keeps a reference to the slave-side
 :class:`buildslave.bot.SlaveBuilder`, and calls methods like
@@ -156,10 +156,10 @@ keeps a reference to the command, and calls the following methods on it:
 Master-Side RemoteCommand Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:meth:`~buildbot.process.buildstep.RemoteCommand.remote_update`
+:meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`
     Update information about the running command.  See below for the format.
 
-:meth:`~buildbot.process.buildstep.RemoteCommand.remote_complete`
+:meth:`~buildbot.process.remotecommand.RemoteCommand.remote_complete`
     Signal that the command is complete, either successfully or with a Twisted failure.
 
 .. _master-slave-updates:
@@ -168,17 +168,17 @@ Updates
 -------
 
 Updates from the slave, sent via
-:meth:`~buildbot.process.buildstep.RemoteCommand.remote_update`, are a list of
+:meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`, are a list of
 individual update elements.  Each update element is, in turn, a list of the
 form ``[data, 0]`` where the 0 is present for historical reasons.  The data is
 a dictionary, with keys describing the contents.  The updates are handled by
-:meth:`~buildbot.process.buildstep.RemoteCommand.remoteUpdate`.
+:meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`.
 
 Updates with different keys can be combined into a single dictionary or
 delivered sequentially as list elements, at the slave's option.
 
 To summarize, an ``updates`` parameter to
-:meth:`~buildbot.process.buildstep.RemoteCommand.remote_update` might look like
+:meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update` might look like
 this::
 
     [

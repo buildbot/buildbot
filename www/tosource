@@ -1,0 +1,3 @@
+# helper to use node binaries installed in this directory
+# obvious usage: ". tosource"
+export PATH=`pwd`/node_modules/.bin:$PATH

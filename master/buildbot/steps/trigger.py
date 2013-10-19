@@ -110,10 +110,10 @@ class Trigger(LoggingBuildStep):
                 codebase = ss.get('codebase','')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
-            return ss_for_trigger
+            return ss_for_trigger.values()
 
         if self.alwaysUseLatest:
-            return {}
+            return []
 
         # start with the sourcestamps from current build
         ss_for_trigger = {}
@@ -128,7 +128,7 @@ class Trigger(LoggingBuildStep):
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        return ss_for_trigger
+        return ss_for_trigger.values()
 
     @defer.inlineCallbacks
     def start(self):
@@ -148,20 +148,22 @@ class Trigger(LoggingBuildStep):
         dl = []
         triggered_names = []
         for sch in triggered_schedulers:
-            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set))
+            idsDeferred, resultsDeferred = sch.trigger(
+                waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
+                set_props=props_to_set
+            )
+            dl.append(resultsDeferred)
             triggered_names.append(sch.name)
         self.step_status.setText(['triggered'] + triggered_names)
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
         else:
+            rclist = ()
             # do something to handle errors
             for d in dl:
                 d.addErrback(log.err,
                     '(ignored) while invoking Triggerable schedulers:')
-            rclist = None
-            self.end(SUCCESS)
-            return
 
         was_exception = was_failure = False
         brids = {}
@@ -194,7 +196,7 @@ class Trigger(LoggingBuildStep):
                 for was_cb, builddicts in res:
                     if was_cb:
                         for build in builddicts:
-                            bn = brid_to_bn[build['brid']]
+                            bn = brid_to_bn[build['buildrequestid']]
                             num = build['number']
 
                             url = master.status.getURLForBuild(bn, num)
@@ -202,9 +204,8 @@ class Trigger(LoggingBuildStep):
 
                 return self.end(result)
 
-            builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
+            builddicts = [master.db.builds.getBuilds(buildrequestid=br) for br in brids.values()]
             dl = defer.DeferredList(builddicts, consumeErrors=1)
             dl.addCallback(add_links)
 
         self.end(result)
-        return

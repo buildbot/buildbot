@@ -1,0 +1,40 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href="#/builders")
+          | Builders
+      li
+        a(href="#/builders/{{builder.id}}")
+          | {{builder.name}}
+      li.pull-right(ng-repeat='sch in forceschedulers')
+        a.btn.btn-default(href="#/builders/{{builder.id}}/force/{{sch.name}}", ng-init="sch.toggle=false") {{sch.name}}
+  .row
+    table.table.table-hover.table-striped.table-condensed
+      tr
+        td id
+        td Status
+        td Started At
+        td Duration
+        td Owner
+        td Results
+      tr(ng-repeat='build in builds | orderBy:"-started_at"')
+          td
+            a(href='#/builders/{{ builder.id }}/build/{{build.buildid}}',title='{{build}}')
+              | {{ build.buildid }}
+          td
+            span(ng-show="build.complete")
+              | Done
+            span(ng-hide="build.complete")
+              i.icon-spinner.icon-spin.icon-large
+          td
+            span(title="{{build.started_at | dateformat:'LLL'}}")
+              | {{build.started_at | timeago }}
+          td
+            span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
+              | {{(build.complete_at - build.started_at)| duration }}
+          td
+          td
+            ul.list-inline
+              li(ng-repeat='st in build.state_strings')
+                | {{st}}

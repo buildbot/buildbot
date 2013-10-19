@@ -15,7 +15,7 @@
 
 import mock
 from buildbot import interfaces
-from buildbot.process import buildstep
+from buildbot.process import buildstep, remotecommand as real_remotecommand
 from buildbot.test.fake import remotecommand, fakebuild, slave
 
 
@@ -42,10 +42,11 @@ class BuildStepMixin(object):
         # make an (admittedly global) reference to this test case so that
         # the fakes can call back to us
         remotecommand.FakeRemoteCommand.testcase = self
-        self.patch(buildstep, 'RemoteCommand',
-                remotecommand.FakeRemoteCommand)
-        self.patch(buildstep, 'RemoteShellCommand',
-                remotecommand.FakeRemoteShellCommand)
+        for module in buildstep, real_remotecommand:
+            self.patch(module, 'RemoteCommand',
+                    remotecommand.FakeRemoteCommand)
+            self.patch(module, 'RemoteShellCommand',
+                    remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
 
     def tearDownBuildStep(self):
@@ -204,9 +205,9 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.remote = mock.Mock(name="SlaveBuilder(remote)")
+        self.conn = mock.Mock(name="SlaveBuilder(connection)")
         # TODO: self.step.setupProgress()
-        d = self.step.startStep(self.remote)
+        d = self.step.startStep(self.conn)
         def check(result):
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
@@ -229,9 +230,9 @@ class BuildStepMixin(object):
 
     # callbacks from the running step
 
-    def _remotecommand_run(self, command, step, remote):
+    def _remotecommand_run(self, command, step, conn, builder_name):
         self.assertEqual(step, self.step)
-        self.assertEqual(remote, self.remote)
+        self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
 
         if not self.expected_remote_commands:

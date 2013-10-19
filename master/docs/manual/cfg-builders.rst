@@ -164,8 +164,6 @@ stamps are compatible if:
 * either both source stamps are associated with changes, or neither ar
   associated with changes but they have matching revisions.
 
-This algorithm is implemented by the :class:`SourceStamp` method :func:`canBeMergedWith`.
-
 A configuration value of ``False`` indicates that requests should never be
 merged.
 

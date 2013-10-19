@@ -43,7 +43,7 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   ####### PROJECT IDENTITY
 
   # the 'title' string will appear at the top of this buildbot
-  # installation's html.WebStatus home page (linked to the
+  # installation's home page (linked to the
   # 'titleURL') and is embedded in the title of the waterfall HTML page.
 
   c['title'] = "Pyflakes"
@@ -294,8 +294,7 @@ Further down, look for the WebStatus configuration::
    c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
 
 The ``auth.BasicAuth()`` define authorized users and their passwords.  You can
-change these or add new ones.  See :bb:status:`WebStatus` for more about the
-WebStatus configuration.
+change these or add new ones.
 
 Debugging with Manhole
 ----------------------

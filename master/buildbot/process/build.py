@@ -23,7 +23,7 @@ from twisted.internet import defer, error
 
 from buildbot import interfaces
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status
+  RETRY, SKIPPED, CANCELLED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -62,6 +62,7 @@ class Build(properties.PropertiesMixin):
     results = None
     stopped = False
     set_runtime_properties = True
+    subs = None
 
     def __init__(self, requests):
         self.requests = requests
@@ -226,8 +227,8 @@ class Build(properties.PropertiesMixin):
         # then narrow SlaveLocks down to the right slave
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
                         for l, a in self.locks ]
-        self.remote = slavebuilder.remote
-        self.remote.notifyOnDisconnect(self.lostRemote)
+        self.conn = slavebuilder.slave.conn
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
@@ -371,7 +372,7 @@ class Build(properties.PropertiesMixin):
         is complete."""
         if not self.steps:
             return None
-        if not self.remote:
+        if not self.conn:
             return None
         if self.terminate or self.stopped:
             # Run any remaining alwaysRun steps, and skip over the others
@@ -392,7 +393,7 @@ class Build(properties.PropertiesMixin):
         if not s:
             return self.allStepsDone()
         self.currentStep = s
-        d = defer.maybeDeferred(s.startStep, self.remote)
+        d = defer.maybeDeferred(s.startStep, self.conn)
         d.addCallback(self._stepDone, s)
         d.addErrback(self.buildException)
 
@@ -419,7 +420,7 @@ class Build(properties.PropertiesMixin):
         self.results.append(result)
         if text:
             self.text.extend(text)
-        if not self.remote:
+        if not self.conn:
             terminate = True
 
         possible_overall_result = result
@@ -439,7 +440,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY):
+        elif result in (EXCEPTION, RETRY, CANCELLED):
             terminate = True
 
         # if we skipped this step, then don't adjust the build status
@@ -448,19 +449,19 @@ class Build(properties.PropertiesMixin):
 
         return terminate
 
-    def lostRemote(self, remote=None):
+    def lostRemote(self, conn=None):
         # the slave went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
-        self.remote = None
+        self.conn = None
         if self.currentStep:
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
         else:
             self.result = RETRY
-            self.text = ["lost", "remote"]
+            self.text = ["lost", "connection"]
             self.stopped = True
             if self._acquiringLock:
                 lock, access, d = self._acquiringLock
@@ -484,7 +485,7 @@ class Build(properties.PropertiesMixin):
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.result = EXCEPTION
+        self.result = CANCELLED
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -500,6 +501,8 @@ class Build(properties.PropertiesMixin):
             text = ["exception"]
         elif self.result == RETRY:
             text = ["retry"]
+        elif self.result == CANCELLED:
+            text = ["cancelled"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
@@ -528,9 +531,10 @@ class Build(properties.PropertiesMixin):
         abandoned."""
 
         self.finished = True
-        if self.remote:
-            self.remote.dontNotifyOnDisconnect(self.lostRemote)
-            self.remote = None
+        if self.conn:
+            self.subs.unsubscribe()
+            self.subs = None
+            self.conn = None
         self.results = results
 
         log.msg(" %s: build finished" % self)

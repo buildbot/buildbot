@@ -19,9 +19,9 @@ from twisted.internet import defer, reactor
 from twisted.trial import unittest
 from buildbot import config
 from buildbot.master import BuildMaster
-from buildbot.test.util import dirs
+from buildbot.test.util import dirs, www
 
-class RunMaster(dirs.DirsMixin, unittest.TestCase):
+class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basdir')
@@ -96,7 +96,6 @@ from buildbot.changes.filter import ChangeFilter
 from buildbot.process.factory import BuildFactory
 from buildbot.steps.shell import ShellCommand
 from buildbot.config import BuilderConfig
-from buildbot.status import html
 c['slaves'] = [BuildSlave ("local1", "localpw")]
 c['slavePortnum'] = 0
 c['change_source'] = []
@@ -117,7 +116,6 @@ c['builders'].append(
       slavenames=["local1"],
       factory=f1))
 c['status'] = []
-c['status'].append(html.WebStatus(http_port=0))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
