@@ -115,6 +115,9 @@ Features
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
 
+* The Git step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
+  so that it will receive any newly added submodules.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
