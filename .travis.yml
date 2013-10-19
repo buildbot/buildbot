@@ -73,6 +73,7 @@ install:
   - "[ $IS_LATEST = false ] || pip install pylint"
   - "[ $IS_LATEST = false ] || pip install pyflakes"
   - "[ $IS_LATEST = false ] || pip install sphinx"
+  - "[ $IS_LATEST = false ] || pip install pep8"
 
 # Tests running commands
 script:
@@ -83,6 +84,7 @@ script:
   - "[ $IS_LATEST = false ] || make pylint"
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
+  - "[ $IS_LATEST = false ] || make pep8"
 
 notifications:
   email: false

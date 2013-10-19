@@ -178,7 +178,7 @@ class GerritChangeSource(base.ChangeSource):
         self.lastStreamProcessStart = util.now()
         args = [ self.username+"@"+self.gerritserver,"-p", str(self.gerritport)]
         if self.identity_file is not None:
-          args = args + [ '-i', self.identity_file ]
+            args = args + [ '-i', self.identity_file ]
         self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
           [ "ssh" ] + args + [ "gerrit", "stream-events" ])
 

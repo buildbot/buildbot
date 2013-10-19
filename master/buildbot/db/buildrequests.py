@@ -75,12 +75,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                              reqs_tbl.c.id == claims_tbl.c.brid)
 
             if branch or repository:
-              from_clause = from_clause.join(bsets_tbl,
-                                             reqs_tbl.c.buildsetid ==
-                                             bsets_tbl.c.id)
-              from_clause = from_clause.join(sstamps_tbls,
-                                             bsets_tbl.c.sourcestampsetid ==
-                                             sstamps_tbls.c.sourcestampsetid)
+                from_clause = from_clause.join(bsets_tbl,
+                                               reqs_tbl.c.buildsetid ==
+                                               bsets_tbl.c.id)
+                from_clause = from_clause.join(sstamps_tbls,
+                                               bsets_tbl.c.sourcestampsetid ==
+                                               sstamps_tbls.c.sourcestampsetid)
 
             q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
             if claimed is not None:
@@ -105,9 +105,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
 
             if branch is not None:
-              q = q.where(sstamps_tbls.c.branch == branch)
+                q = q.where(sstamps_tbls.c.branch == branch)
             if repository is not None:
-              q = q.where(sstamps_tbls.c.repository == repository)
+                q = q.where(sstamps_tbls.c.repository == repository)
 
             res = conn.execute(q)
 

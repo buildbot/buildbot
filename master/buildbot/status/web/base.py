@@ -241,8 +241,8 @@ class ActionResource(resource.Resource, AccessorMixin):
 
         @param request: the web request
         @returns: URL via Deferred
-		  can also return (URL, alert_msg) to display simple
-		  feedback to user in case of failure
+          can also return (URL, alert_msg) to display simple
+          feedback to user in case of failure
         """
 
     def render(self, request):
