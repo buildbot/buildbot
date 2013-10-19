@@ -55,7 +55,7 @@ install:
   # Fetch objects and tags from upstream git repository.
   # Required for proper work of `git describe`.
   - git describe || true
-  - git remote add upstream https://github.com/buildbot/buildbot.git
+  - git remote add upstream git://github.com/buildbot/buildbot.git
   - git fetch upstream --tags
   - git fetch origin --tags
   - |
