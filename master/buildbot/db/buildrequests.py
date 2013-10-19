@@ -64,12 +64,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # for branches, we need to join to the buildset and its
             # sourcestamps
             if branch or repository:
-              from_clause = from_clause.join(bsets_tbl,
-                                reqs_tbl.c.buildsetid == bsets_tbl.c.id)
-              from_clause = from_clause.join(bsss_tbl,
-                                bsets_tbl.c.id == bsss_tbl.c.buildsetid)
-              from_clause = from_clause.join(sstamps_tbl,
-                                bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+                from_clause = from_clause.join(bsets_tbl,
+                        reqs_tbl.c.buildsetid == bsets_tbl.c.id)
+                from_clause = from_clause.join(bsss_tbl,
+                        bsets_tbl.c.id == bsss_tbl.c.buildsetid)
+                from_clause = from_clause.join(sstamps_tbl,
+                        bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
 
             q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
             if claimed is not None:
@@ -94,9 +94,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
 
             if branch is not None:
-              q = q.where(sstamps_tbl.c.branch == branch)
+                q = q.where(sstamps_tbl.c.branch == branch)
             if repository is not None:
-              q = q.where(sstamps_tbl.c.repository == repository)
+                q = q.where(sstamps_tbl.c.repository == repository)
 
             res = conn.execute(q)
 

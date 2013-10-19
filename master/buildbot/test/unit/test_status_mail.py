@@ -226,7 +226,7 @@ class TestMailNotifier(unittest.TestCase):
         build2.getBuilder.return_value = builder1
 
         def fakeGetBuilder(buildername):
-          return {"Builder1": builder1, "Builder2": builder2}[buildername]
+            return {"Builder1": builder1, "Builder2": builder2}[buildername]
 
 
         self.db = self.master.db

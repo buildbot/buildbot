@@ -58,9 +58,9 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def getChangeSource(self, changesourceid):
-         cs = yield self.getChangeSources(_changesourceid=changesourceid)
-         if cs:
-             defer.returnValue(cs[0])
+        cs = yield self.getChangeSources(_changesourceid=changesourceid)
+        if cs:
+            defer.returnValue(cs[0])
 
     def getChangeSources(self, active=None, masterid=None, _changesourceid=None):
         def thd(conn):

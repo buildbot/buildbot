@@ -29,7 +29,7 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_specfile(self):
-    	self.assertRaises(config.ConfigErrors, lambda :
+        self.assertRaises(config.ConfigErrors, lambda :
                     rpmbuild.RpmBuild())
 
     def test_success(self):

@@ -388,8 +388,8 @@ class SimpleConfig(dict):
         already = False
         for cs in self['change_source']:
             if cs.repourl == repourl:
-               log.msg("There's already a changesource for %s.  Hope it has the branch you wanted." % cs.repourl)
-               already = True
+                log.msg("There's already a changesource for %s.  Hope it has the branch you wanted." % cs.repourl)
+                already = True
         if not already:
             self['change_source'].append(
                 # Fuzz the interval to avoid slamming the git server and hitting the MaxStartups or MaxSessions limits

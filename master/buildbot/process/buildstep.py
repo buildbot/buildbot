@@ -304,14 +304,14 @@ class BuildStep(object, properties.PropertiesMixin):
             # to retry interrupted build due to some other issues for example
             # due to slave lost
             if results == CANCELLED:
-              self.step_status.setText(self.describe(True) +
-                                   ["cancelled"])
-              self.step_status.setText2(["cancelled"])
+                self.step_status.setText(self.describe(True) +
+                                         ["cancelled"])
+                self.step_status.setText2(["cancelled"])
             else:
-              results = EXCEPTION
-              self.step_status.setText(self.describe(True) +
-                                   ["interrupted"])
-              self.step_status.setText2(["interrupted"])
+                results = EXCEPTION
+                self.step_status.setText(self.describe(True) +
+                                         ["interrupted"])
+                self.step_status.setText2(["interrupted"])
 
         self._finishFinished(results)
 
