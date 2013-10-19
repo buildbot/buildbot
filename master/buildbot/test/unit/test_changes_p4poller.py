@@ -35,20 +35,20 @@ third_p4changes = \
 change_4_log = \
 """Change 4 by mpatel@testclient on 2006/04/13 21:55:39
 
-	short desc truncated because this is a long description.
+\tshort desc truncated because this is a long description.
 """
 
 change_3_log = \
 u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
 
-	short desc truncated because this is a long description.
+\tshort desc truncated because this is a long description.
     ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
 """
 
 change_2_log = \
 """Change 2 by slamb@testclient on 2006/04/13 21:46:23
 
-	creation
+\tcreation
 """
 
 p4change = {
