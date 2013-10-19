@@ -115,6 +115,11 @@ Features
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
 
+Fixes
+~~~~~
+
+* Fixed and Issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
