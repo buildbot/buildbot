@@ -120,7 +120,7 @@ Features
 Fixes
 ~~~~~
 
-* Fixed and Issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
+* Fixed an issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
