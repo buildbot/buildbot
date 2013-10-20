@@ -1052,10 +1052,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='source',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
+            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
                              'logEnviron': True, 'timeout': 1200})
             + 0,
-            ExpectShell(workdir='build',
+            ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
