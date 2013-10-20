@@ -46,9 +46,9 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
         def remoteSetBuilderList(self, builders):
             pass
 
-    def test_sig_startCommands(self):
-        @self.assertArgSpecMatches(self.conn.startCommands)
-        def startCommands(self, remoteCommand, builderName, commandId,
+    def test_sig_remoteStartCommand(self):
+        @self.assertArgSpecMatches(self.conn.remoteStartCommand)
+        def remoteStartCommand(self, remoteCommand, builderName, commandId,
                                 commandName, args):
             pass
 

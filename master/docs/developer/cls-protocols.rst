@@ -55,7 +55,7 @@ to know about protocol calls or handle protocol specific exceptions.
         Take list with wanted builders and send them to slave, return list with
         created builders
 
-    .. py:method:: startCommands(remoteCommand, builderName, commandId, commandName, args)
+    .. py:method:: remoteStartCommand(remoteCommand, builderName, commandId, commandName, args)
 
         :param remoteCommand: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :param builderName: self explanatory
