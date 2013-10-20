@@ -122,6 +122,9 @@ Fixes
 
 * Fixed an issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
+* The Git step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
+  so that it will receive any newly added submodules.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
