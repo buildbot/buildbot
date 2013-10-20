@@ -9,6 +9,7 @@ _ESC=$'\e'
 GREEN="$_ESC[0;32m"
 MAGENTA="$_ESC[0;35m"
 RED="$_ESC[0;31m"
+LTCYAN="$_ESC[1;36m"
 YELLOW="$_ESC[1;33m"
 NORM="$_ESC[0;0m"
 
@@ -23,7 +24,7 @@ fi
 
 status() {
     echo ""
-    echo "${YELLOW}-- ${*} --${NORM}"
+    echo "${LTCYAN}-- ${*} --${NORM}"
 }
 
 ok=true
@@ -32,6 +33,11 @@ not_ok() {
     ok=false
     echo "${RED}** ${*} **${NORM}"
     problem_summary="$problem_summary"$'\n'"${RED}**${NORM} ${*}"
+}
+
+warning() {
+    echo "${YELLOW}** ${*} **${NORM}"
+    problem_summary="$problem_summary"$'\n'"${YELLOW}**${NORM} ${*} (warning)"
 }
 
 check_tabs() {
@@ -80,10 +86,10 @@ run_tests || not_ok "tests failed"
 
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
-check_long_lines && not_ok "$REVRANGE adds long lines"
+check_long_lines && warning "$REVRANGE adds long lines"
 
 status "checking for release notes"
-check_relnotes || not_ok "$REVRANGE does not add release notes"
+check_relnotes || warning "$REVRANGE does not add release notes"
 
 status "running pyflakes"
 sandbox/bin/pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
