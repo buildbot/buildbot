@@ -292,7 +292,7 @@ class MasterConfig(object):
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
                     return
-                if (proto == "pb" and options.get("port") and 
+                if (proto == "pb" and options.get("port") and
                     'slavePortnum' in config_dict):
                     error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
                         " defined, recommended to remove slavePortnum and leave"

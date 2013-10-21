@@ -42,7 +42,7 @@ class croniter(object):
         { }
     )
 
-    LOWMAP = ( 
+    LOWMAP = (
         {},
         {},
         {0: 1},
@@ -53,7 +53,7 @@ class croniter(object):
 
     bad_length = 'Exactly 5 or 6 columns has to be specified for iterator' \
                  'expression.'
-    
+
     def __init__(self, expr_format, start_time=time()):
         if isinstance(start_time, datetime):
             start_time = mktime(start_time.timetuple())
@@ -96,7 +96,7 @@ class croniter(object):
                 else:
                     if not star_or_int_re.search(t):
                         t = self.ALPHACONV[i][t.lower()]
-            
+
                     try:
                         t = int(t)
                     except:
@@ -108,7 +108,7 @@ class croniter(object):
                     if t != '*' and (int(t) < self.RANGES[i][0] or
                                      int(t) > self.RANGES[i][1]):
                         raise ValueError("[%s] is not acceptable, out of range" % expr_format)
-                    
+
                     res.append(t)
 
             res.sort()
@@ -147,7 +147,7 @@ class croniter(object):
         if ret_type == datetime:
             result = datetime.fromtimestamp(result)
         return result
-    
+
     def _calc(self, now, expanded, is_prev):
         if is_prev:
             nearest_diff_method = self._get_prev_nearest_diff
@@ -155,7 +155,7 @@ class croniter(object):
         else:
             nearest_diff_method = self._get_next_nearest_diff
             sign = 1
-            
+
         offset = len(expanded) == 6 and 1 or 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
@@ -235,7 +235,7 @@ class croniter(object):
                 if expanded[5][0] != '*':
                     diff_sec = nearest_diff_method(d.second, expanded[5], 60)
                     if diff_sec != None and diff_sec != 0:
-                        d += relativedelta(seconds = diff_sec)                        
+                        d += relativedelta(seconds = diff_sec)
                         return True, d
             else:
                 d += relativedelta(second = 0)
@@ -246,7 +246,7 @@ class croniter(object):
                      proc_minute,
                      proc_hour,
                      proc_day_of_week,
-                     proc_day_of_month,                     
+                     proc_day_of_month,
                      proc_month]
         else:
             procs = [proc_month,

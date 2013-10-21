@@ -4,7 +4,7 @@
   <span class="revision" title="Revision {{ rev }}"><a href="{{ url }}">
   {%- if rev|length > 40 %}{{ rev[:40] }}...
   {%- else %}{{ rev }}
-  {%- endif -%}  
+  {%- endif -%}
   </a></span>
 {%- endmacro %}
 
@@ -12,11 +12,11 @@
   <div class="revision">
       <div class="short" title="Revision {{ rev }}">
           <a href="{{ url }}">{{ short }}...</a>
-      </div> 
+      </div>
       <div class="full">
           <a href="{{ url }}">{{ rev }}</a>
       </div>
-  </div> 
+  </div>
 {% endmacro %}
 
 {% macro id(rev, url) -%}
@@ -29,7 +29,7 @@
 
 {% macro shorten(short, rev, url) %}
   <div class="revision">
-      <div class="short" title="Revision {{ rev }}">{{ short }}...</div> 
+      <div class="short" title="Revision {{ rev }}">{{ short }}...</div>
       <div class="full">{{ rev }}</div>
-  </div> 
+  </div>
 {% endmacro %}

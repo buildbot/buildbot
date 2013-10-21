@@ -45,7 +45,7 @@ are automatically compressed after the step has finished.
 
 The buildslaves that are started on-demand are called "latent" buildslaves.
 Buildbot ships with an abstract base class for building latent buildslaves, and
-a concrete implementation for AWS EC2. 
+a concrete implementation for AWS EC2.
 
 *** Customized MailNotifier messages (#175)
 

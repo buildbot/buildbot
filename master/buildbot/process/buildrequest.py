@@ -136,7 +136,7 @@ class BuildRequest(object):
 
     def requestsHaveSameCodebases(self, other):
         self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())      
+        other_codebases = set(other.sources.iterkeys())
         return self_codebases == other_codebases
 
     def requestsHaveChangesForSameCodebases(self, other):
@@ -144,18 +144,18 @@ class BuildRequest(object):
         # comparable sourcestamps, that means sourcestamps with the same codebase.
         # This means that both requests must have exact the same set of codebases
         # If not then merge cannot be performed.
-        # The second requirement is that both request have the changes in the 
+        # The second requirement is that both request have the changes in the
         # same codebases.
         #
-        # Normaly a scheduler always delivers the same set of codebases: 
+        # Normaly a scheduler always delivers the same set of codebases:
         #   sourcestamps with and without changes
         # For the case a scheduler is not configured with a set of codebases
-        # it delivers only a set with sourcestamps that have changes. 
+        # it delivers only a set with sourcestamps that have changes.
         self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())      
+        other_codebases = set(other.sources.iterkeys())
         if self_codebases != other_codebases:
             return False
-            
+
         for c in self_codebases:
             # Check either both or neither have changes
             if ((len(self.sources[c].changes) > 0)
@@ -163,7 +163,7 @@ class BuildRequest(object):
                 return False
         # all codebases tested, no differences found
         return True
-        
+
     def canBeMergedWith(self, other):
         """
         Returns if both requests can be merged

@@ -2,7 +2,7 @@
 REM This file is used to run buildbot when installed into a python installation or deployed in virtualenv
 
 setlocal
-set BB_BUILDBOT="%~dp0buildbot" 
+set BB_BUILDBOT="%~dp0buildbot"
 
 IF EXIST "%~dp0..\python.exe" (
   REM Normal system install of python (buildbot.bat is in scripts dir, just below python.exe)

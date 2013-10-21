@@ -146,7 +146,7 @@ class TestSourceStampsConnectorComponent(
             self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv',
             sourcestampsetid=234, repository='rep', codebase = 'cb',
                 project='prj', patch_body=None,
-                patch_level=None, patch_subdir=None, 
+                patch_level=None, patch_subdir=None,
                 patch_author=None, patch_comment=None, changeids=set([])))
         d.addCallback(check)
         return d

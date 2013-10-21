@@ -85,7 +85,7 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
         self.addAResult(test, FAILURE, 'FAILURE', err)
-        self.step.setProgress('tests failed', len(self.failures) + 
+        self.step.setProgress('tests failed', len(self.failures) +
             len(self.errors))
 
     expectedTests = 0

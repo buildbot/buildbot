@@ -49,7 +49,7 @@ class StatusResourceBuildTest(HtmlResource):
                         result_css = css_classes[tr.getResults()],
                         b = b,
                         tr = tr))
-        
+
         template = req.site.buildbot_service.templates.get_template("testresult.html")
         return template.render(**cxt)
 

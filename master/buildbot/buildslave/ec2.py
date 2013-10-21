@@ -117,7 +117,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 if r.name == region:
                     region_found = r
 
-            
+
             if region_found is not None:
                 self.conn = boto.ec2.connect_to_region(region,
                                      aws_access_key_id=identifier,

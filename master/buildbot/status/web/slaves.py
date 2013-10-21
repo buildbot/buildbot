@@ -84,10 +84,10 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             return PauseActionResource(slave, path == "pause")
         return Redirect(path_to_slave(req, slave))
 
-    def content(self, request, ctx):        
+    def content(self, request, ctx):
         s = self.getStatus(request)
         slave = s.getSlave(self.slavename)
-        
+
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
@@ -99,15 +99,15 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         current_builds = []
         for b in my_builders:
             for cb in b.getCurrentBuilds():
-                if cb.getSlavename() == self.slavename:                    
+                if cb.getSlavename() == self.slavename:
                     current_builds.append(self.get_line_values(request, cb))
 
         try:
             max_builds = int(request.args.get('numbuilds')[0])
         except:
             max_builds = 10
-           
-        recent_builds = []    
+
+        recent_builds = []
         n = 0
         for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
             if rb.getSlavename() == self.slavename:
@@ -126,9 +126,9 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             pause_url = request.childLink("pause")
 
         ctx.update(dict(slave=slave,
-                        slavename = self.slavename,  
-                        current = current_builds, 
-                        recent = recent_builds, 
+                        slavename = self.slavename,
+                        current = current_builds,
+                        recent = recent_builds,
                         shutdown_url = request.childLink("shutdown"),
                         pause_url = pause_url,
                         authz = self.getAuthz(request),
@@ -178,12 +178,12 @@ class BuildSlavesResource(HtmlResource):
                 info['builders'] = []
                 for b in used_by_builder.get(name, []):
                     info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
-                                        
+
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
             info['connectCount'] = slave.getConnectCount()
             info['paused'] = slave.isPaused()
-            
+
             info['admin'] = slave.getAdmin() or u''
             last = slave.lastMessageReceived()
             if last:

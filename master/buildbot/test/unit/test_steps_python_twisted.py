@@ -115,7 +115,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
         return self.runStep()
-        
+
     def testProperties(self):
         self.setupStep(python_twisted.Trial(workdir='build',
                                      tests = Property('test_list'),

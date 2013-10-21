@@ -286,7 +286,7 @@ class Sphinx(ShellCommand):
 
         warnings = []
         for line in log.getText().split('\n'):
-            if (line.startswith('build succeeded') 
+            if (line.startswith('build succeeded')
                 or line.startswith('no targets are out of date.')):
                 self.success = True
             else:

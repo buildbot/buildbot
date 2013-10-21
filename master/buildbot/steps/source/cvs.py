@@ -70,7 +70,7 @@ class CVS(Source):
             d.addCallback(lambda _: self.incremental())
         elif self.mode == 'full':
             d.addCallback(lambda _: self.full())
-        
+
         if patch:
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
@@ -122,7 +122,7 @@ class CVS(Source):
             return res
         d.addCallback(lambda _: checkRemoval(cmd.rc))
         return d
-        
+
     def clobber(self):
         d = self._clobber()
         d.addCallback(lambda _: self.doCheckout(self.workdir))
@@ -142,7 +142,7 @@ class CVS(Source):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)        
+        d = self.runCommand(cmd)
         old_workdir = self.workdir
         self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
@@ -160,7 +160,7 @@ class CVS(Source):
             return 0
         d.addCallback(resetWorkdir)
         return d
-        
+
     def purge(self, ignore_ignores):
         command = ['cvsdiscard']
         if ignore_ignores:
@@ -177,7 +177,7 @@ class CVS(Source):
             return cmd.rc
         d.addCallback(evaluate)
         return d
-        
+
     def doCheckout(self, dir):
         command = ['-d', self.cvsroot, '-z3', 'checkout', '-d', dir ]
         command = self.global_options + command + self.extra_options
@@ -196,7 +196,7 @@ class CVS(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

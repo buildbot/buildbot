@@ -264,10 +264,10 @@ Revisions are always strings.
 
 `CVS`
     :attr:`revision` is the seconds since the epoch as an integer.
-   
+
 `SVN`
     :attr:`revision` is the revision number
-    
+
 `Darcs`
     :attr:`revision` is a large string, the output of :command:`darcs changes --context`
 
@@ -276,7 +276,7 @@ Revisions are always strings.
 
 `P4`
     :attr:`revision` is the transaction number
-    
+
 `Git`
     :attr:`revision` is a short string (a SHA1 hash), the output of e.g.
     :command:`git rev-parse`
@@ -301,16 +301,16 @@ same as Darcs.
 
 `CVS`
     branch='warner-newfeature', files=['src/foo.c']
-    
+
 `SVN`
     branch='branches/warner-newfeature', files=['src/foo.c']
-    
+
 `Darcs`
     branch='warner-newfeature', files=['src/foo.c']
-    
+
 `Mercurial`
     branch='warner-newfeature', files=['src/foo.c']
-    
+
 `Git`
     branch='warner-newfeature', files=['src/foo.c']
 
@@ -354,7 +354,7 @@ change - this is the *tree stable timer*.  The timer allows multiple commits to
 be "batched" together.  This is particularly useful in distributed version
 control systems, where a developer may push a long sequence of changes all at
 once.  To save resources, it's often desirable only to test the most recent
-change. 
+change.
 
 Schedulers can also filter out the changes they are interested in, based on a
 number of criteria.  For example, a scheduler that only builds documentation
@@ -368,7 +368,7 @@ referred to as "build coordination".
 
 Periodic builds (those which are run every N seconds rather than after
 new Changes arrive) are triggered by a special :class:`Periodic`
-Scheduler subclass. 
+Scheduler subclass.
 
 Each Scheduler creates and submits :class:`BuildSet` objects to the
 :class:`BuildMaster`, which is then responsible for making sure the
@@ -444,9 +444,9 @@ BuildRequests
 -------------
 
 A :class:`BuildRequest` is a request to build a specific set of source
-code (specified by one ore more source stamps) on a single :class:`Builder`. 
-Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. 
-when an associated buildslave becomes free). :class:`BuildRequest`\s are 
+code (specified by one ore more source stamps) on a single :class:`Builder`.
+Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e.
+when an associated buildslave becomes free). :class:`BuildRequest`\s are
 prioritized from oldest to newest, so when a buildslave becomes free, the
 :class:`Builder` with the oldest :class:`BuildRequest` is run.
 
@@ -459,8 +459,8 @@ Builder) to define *how* it gets built.
 
 The :class:`BuildRequest` may be mergeable with other compatible
 :class:`BuildRequest`\s. Builds that are triggered by incoming :class:`Change`\s
-will generally be mergeable. Builds that are triggered by user requests are generally not, 
-unless they are multiple requests to build the *latest sources* of the same branch. 
+will generally be mergeable. Builds that are triggered by user requests are generally not,
+unless they are multiple requests to build the *latest sources* of the same branch.
 A merge of buildrequests is performed per codebase, thus on changes having the same codebase.
 
 .. _Builder:
@@ -649,7 +649,7 @@ The build provides a list of users who are interested in the build -- the
 expanded, e.g., to include the current build sherrif or a module's maintainer.
 
 If desired, the buildbot can notify the interested users until the problem is
-resolved.  
+resolved.
 
 .. _Email-Addresses:
 
@@ -758,7 +758,7 @@ the ``got_revision`` property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
 easily-accessible directory for later testing.
 
-.. note:: 
+.. note::
     In builds with more than one codebase, the ``got_revision`` property is a dictionary, keyed by codebase.
 
 Some projects want to perform nightly builds as well as building in response to

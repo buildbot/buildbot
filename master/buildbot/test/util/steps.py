@@ -194,7 +194,7 @@ class BuildStepMixin(object):
         Expect a logfile with the given contents
         """
         self.exp_logfiles[logfile] = contents
-    
+
     def expectHidden(self, hidden):
         """
         Set whether the step is expected to be hidden.

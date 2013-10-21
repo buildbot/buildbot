@@ -691,7 +691,7 @@ def _tryremove(filename, timeout, retries):
         os.unlink(filename)
     except OSError:
         if retries > 0:
-            reactor.callLater(timeout, _tryremove, filename, timeout * 4, 
+            reactor.callLater(timeout, _tryremove, filename, timeout * 4,
                               retries - 1)
         else:
             log.msg("giving up on removing %s after over %d seconds" %

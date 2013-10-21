@@ -20,7 +20,7 @@
   </head>
   <body class="interface">
     {% block header -%}
-    <div class="header">    
+    <div class="header">
         <a href="{{ path_to_root or '.' }}">Home</a>
         {% if authz.advertiseAction('view', request) %}
         - <a href="{{ path_to_root }}waterfall">Waterfall</a>
@@ -37,7 +37,7 @@
         - <a href="{{ path_to_root }}json/help">JSON API</a>
         - <a href="{{ path_to_root }}about">About</a>
         {% endif %}
-    <div class="auth">    
+    <div class="auth">
     {% if authz.authenticated(request) %}
     {{ authz.getUsernameHTML(request) }}
     |<a href="{{ path_to_root }}logout">Logout</a>
@@ -56,20 +56,20 @@
 
     {%- block barecontent -%}
     <hr/>
-    
+
     {% if alert_msg != "" %}
-    <div class="alert">    
+    <div class="alert">
     {{ alert_msg }}
     </div>
     {% endif %}
 
     <div class="content">
-      {%- block content -%}     
+      {%- block content -%}
       {%- endblock -%}
     </div>
     {%- endblock -%}
 
-    {%- block footer -%} 
+    {%- block footer -%}
     <div class="footer" style="clear:both">
       <hr/>
       <a href="http://buildbot.net/">BuildBot</a> ({{version}})

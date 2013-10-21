@@ -19,16 +19,16 @@
 # but "the rest" is pretty minimal
 
 from buildbot.util import json
-    
+
 def getChanges(request, options=None):
         """
         Consumes a naive build notification (the default for now)
         basically, set POST variables to match commit object parameters:
         revision, revlink, comments, branch, who, files, links
-        
+
         files, links and properties will be de-json'd, the rest are interpreted as strings
         """
-        
+
         def firstOrNothing( value ):
             """
             Small helper function to return the first value (if value is a list)
@@ -53,7 +53,7 @@ def getChanges(request, options=None):
             properties = json.loads( args.get('properties')[0] )
         else:
             properties = {}
-            
+
         revision = firstOrNothing(args.get('revision'))
         when     = firstOrNothing(args.get('when'))
         if when is not None:
@@ -68,7 +68,7 @@ def getChanges(request, options=None):
         revlink = firstOrNothing(args.get('revlink'))
         repository = firstOrNothing(args.get('repository'))
         project = firstOrNothing(args.get('project'))
-              
+
         chdict = dict(author=author, files=files, comments=comments,
                 isdir=isdir, revision=revision, when=when,
                 branch=branch, category=category, revlink=revlink,

@@ -241,12 +241,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
-        
+
         # check for the interruptSignal flag
         if kwargs.has_key('interruptSignal') and self.slaveVersionIsOlderThan("shell", "2.15"):
             warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
-        
+
         return kwargs
 
     def start(self):
@@ -379,7 +379,7 @@ class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory " 
+    directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None

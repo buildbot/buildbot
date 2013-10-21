@@ -419,7 +419,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             self.sources = [self.source]
             del self.source
         self.wasUpgraded = True
-        
+
     def checkLogfiles(self):
         # check that all logfiles exist, and remove references to any that
         # have been deleted (e.g., by purge())

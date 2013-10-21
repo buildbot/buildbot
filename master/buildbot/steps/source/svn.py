@@ -82,7 +82,7 @@ class SVN(Source):
             else:
                 return 0
         d.addCallback(checkPatched)
-                
+
         if self.mode == 'full':
             d.addCallback(self.full)
         elif self.mode == 'incremental':
@@ -390,7 +390,7 @@ class SVN(Source):
         default_port = {   'http': '80',
                            'https': '443',
                            'svn': '3690'}
-        
+
         relative_schemes = ['http', 'https', 'svn']
         quote = lambda uri: urllib.quote(uri, "!$&'()*+,-./:=@_~")
 
@@ -408,7 +408,7 @@ class SVN(Source):
                 authority = "%s@%s" % (userinfo, authority)
             if port and port != default_port.get(scheme, None):
                 authority = "%s:%s" % (authority, port)
-        
+
         if scheme in relative_schemes:
             last_path = path
             while 1:
@@ -440,7 +440,7 @@ class SVN(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()
@@ -453,4 +453,4 @@ class SVN(Source):
         if self.retry:
             d.addCallback(_retry)
         return d
-        
+

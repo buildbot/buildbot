@@ -71,7 +71,7 @@ class chainedProtocolFactory:
     # chainedProtocolFactory()
     def __init__(self, namespace):
         self.namespace = namespace
-    
+
     def __call__(self):
         return insults.ServerProtocol(manhole.ColoredManhole, self.namespace)
 

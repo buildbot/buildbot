@@ -71,7 +71,7 @@ The config file starts with a series of ``import`` statements, which make
 various kinds of :class:`Step`\s and :class:`Status` targets available for
 later use. The main ``BuildmasterConfig`` dictionary is created, then it is
 populated with a variety of keys, described section-by-section in subsequent
-chapters. 
+chapters.
 
 .. _Predefined-Config-File-Symbols:
 

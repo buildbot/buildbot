@@ -87,7 +87,7 @@ def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
     ss_list = build.getSourceStamps()
-    
+
     prev = build.getPreviousBuild()
 
     text = ""
@@ -266,12 +266,12 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  relayhost: string
         @param relayhost: the host to which the outbound SMTP connection
                           should be made. Defaults to 'localhost'
-                          
+
         @type  buildSetSummary: boolean
         @param buildSetSummary: if True, this notifier will only send a summary
                                 email when a buildset containing any of its
                                 watched builds completes
-                                
+
         @type  lookup:    implementor of {IEmailLookup}
         @param lookup:    object which provides IEmailLookup, which is
                           responsible for mapping User names for Interested
@@ -307,7 +307,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                              values may be WithProperties instances.
 
         @type useTls: boolean
-        @param useTls: Send emails using TLS and authenticate with the 
+        @param useTls: Send emails using TLS and authenticate with the
                        smtp host. Defaults to False.
 
         @type smtpUser: string
@@ -407,14 +407,14 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.buildSetSummary:
             self.buildSetSubscription = \
             self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
- 
+
         base.StatusReceiverMultiService.startService(self)
 
     def stopService(self):
         if self.buildSetSubscription is not None:
             self.buildSetSubscription.unsubscribe()
             self.buildSetSubscription = None
-            
+
         return base.StatusReceiverMultiService.stopService(self)
 
     def disownServiceParent(self):
@@ -479,7 +479,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             # rearrange this.
             return self.buildMessage(name, [build], results)
         return None
-    
+
     def _gotBuilds(self, res, buildset):
         builds = []
         for (builddictlist, builder) in res:
@@ -490,7 +490,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         if builds:
             self.buildMessage("(whole buildset)", builds, buildset['results'])
-        
+
     def _gotBuildRequests(self, breqs, buildset):
         dl = []
         for breq in breqs:
@@ -506,11 +506,11 @@ class MailNotifier(base.StatusReceiverMultiService):
     def _gotBuildSet(self, buildset, bsid):
         d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
         d.addCallback(self._gotBuildRequests, buildset)
-        
+
     def buildsetFinished(self, bsid, result):
         d = self.master.db.buildsets.getBuildset(bsid=bsid)
         d.addCallback(self._gotBuildSet, bsid)
-            
+
         return d
 
     def getCustomMesgData(self, mode, name, build, results, master_status):
@@ -668,9 +668,9 @@ class MailNotifier(base.StatusReceiverMultiService):
                     m[k] = v
             d.addCallback(lambda _: m)
             return d
-    
+
         return defer.succeed(m)
-    
+
     def buildMessageDict(self, name, build, results):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
@@ -681,15 +681,14 @@ class MailNotifier(base.StatusReceiverMultiService):
         else:
             msgdict = self.messageFormatter(self.mode, name, build, results,
                                             self.master_status)
-        
-        return msgdict
 
+        return msgdict
 
     def buildMessage(self, name, builds, results):
         patches = []
         logs = []
         msgdict = {"body":""}
-        
+
         for build in builds:
             ss_list = build.getSourceStamps()
             if self.addPatch:
@@ -698,7 +697,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                         patches.append(ss.patch)
             if self.addLogs:
                 logs.extend(build.getLogs())
-            
+
             tmp = self.buildMessageDict(name=build.getBuilder().name,
                                         build=build, results=build.results)
             msgdict['body'] += tmp['body']
@@ -776,7 +775,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def sendmail(self, s, recipients):
         result = defer.Deferred()
-        
+
         if have_ssl and self.useTls:
             client_factory = ssl.ClientContextFactory()
             client_factory.method = SSLv3_METHOD
@@ -787,7 +786,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             useAuth = True
         else:
             useAuth = False
-        
+
         if not ESMTPSenderFactory:
             raise RuntimeError("twisted-mail is not installed - cannot "
                                "send mail")
@@ -799,7 +798,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             requireAuthentication=useAuth)
 
         reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
-        
+
         return result
 
     def sendMessage(self, m, recipients):

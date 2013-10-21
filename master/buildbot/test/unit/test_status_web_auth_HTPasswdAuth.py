@@ -31,7 +31,7 @@ class TestHTPasswdAuth(unittest.TestCase):
 
     @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_des(self):
-        for key in ('buildmaster','buildslave','buildbot'):                
+        for key in ('buildmaster','buildslave','buildbot'):
             if self.htpasswd.authenticate('des'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('des'+key))
 

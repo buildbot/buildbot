@@ -30,7 +30,7 @@ class Trigger(LoggingBuildStep):
 
     def __init__(self, schedulerNames=[], sourceStamp = None, sourceStamps = None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={}, 
+                 waitForFinish=False, set_properties={},
                  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(

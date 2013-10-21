@@ -29,7 +29,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     def setUp(self):
         self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
         self.setUpGetProcessOutput()
-        
+
     dummyRevStr = '12345abcde'
     def _perform_git_output_test(self, methodToTest, args,
                                  desiredGoodOutput, desiredGoodResult,
@@ -47,7 +47,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             # we should get an Exception with empty output from git
             return methodToTest(self.dummyRevStr)
         d.addCallback(call_empty)
-    
+
         def cb_empty(_):
             if emptyRaisesException:
                 self.fail("getProcessOutput should have failed on empty output")
@@ -66,7 +66,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         def call_exception(_):
             return methodToTest(self.dummyRevStr)
         d.addCallback(call_exception)
-    
+
         def cb_exception(_):
             self.fail("getProcessOutput should have failed on stderr output")
         def eb_exception(f):
@@ -83,30 +83,30 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         def call_desired(_):
             return methodToTest(self.dummyRevStr)
         d.addCallback(call_desired)
-    
+
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
         d.addCallback(cb_desired)
         d.addCallback(lambda _: self.assertAllCommandsRan())
-        
+
     def test_get_commit_author(self):
         authorStr = 'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
                 ['log', '--no-walk', '--format=%aN <%aE>', self.dummyRevStr, '--'],
                 authorStr, authorStr)
-        
+
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
         return self._perform_git_output_test(self.poller._get_commit_comments,
                 ['log', '--no-walk', '--format=%s%n%b', self.dummyRevStr, '--'],
                 commentStr, commentStr)
-        
+
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
         return self._perform_git_output_test(self.poller._get_commit_files,
                 ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
                 filesStr, filesStr.split(), emptyRaisesException=False)
-        
+
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
@@ -130,7 +130,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.poller.master = self.master
         d.addCallback(create_poller)
         return d
-        
+
     def tearDown(self):
         return self.tearDownChangeSource()
 

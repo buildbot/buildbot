@@ -288,7 +288,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b'])
         self.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          codebase='', repository='svn://...', 
+                          codebase='', repository='svn://...',
                           project='world-domination'),
         ])
         d = sched.addBuildsetForChanges(reason='power', changeids=[13],
@@ -340,7 +340,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                     })
         d.addCallback(check)
         return d
-        
+
     def test_addBuildsetForChanges_multiple_changes_single_codebase(self):
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'])
         self.db.insertTestData([
@@ -374,22 +374,22 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_addBuildsetForChanges_codebases_set_multiple_changed_codebases(self):
         codebases = { 'cbA':dict(
-                            repository='svn://A..', 
-                            branch='stable', 
+                            repository='svn://A..',
+                            branch='stable',
                             revision='13579'),
                       'cbB':dict(
-                            repository='svn://B..', 
-                            branch='stable', 
+                            repository='svn://B..',
+                            branch='stable',
                             revision='24680'),
                       'cbC':dict(
-                            repository='svn://C..', 
-                            branch='stable', 
+                            repository='svn://C..',
+                            branch='stable',
                             revision='12345'),
                       'cbD':dict(
                             repository='svn://D..')}
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
-        sched = self.makeScheduler(name='n', builderNames=['b', 'c'], 
+        sched = self.makeScheduler(name='n', builderNames=['b', 'c'],
                                    codebases=codebases)
         self.db.insertTestData([
             fakedb.Change(changeid=12, branch='trunk', revision='9282',

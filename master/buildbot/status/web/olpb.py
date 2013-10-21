@@ -110,7 +110,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         cxt['builds'] = map(lambda b: self.get_line_values(req, b), g)
         cxt.update(dict(num_builds=numbuilds,
                         builder_name=self.builder_name,
-                        branches=branches))    
+                        branches=branches))
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuildonebuilder.html')
         return template.render(**cxt)

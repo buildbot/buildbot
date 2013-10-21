@@ -103,7 +103,7 @@ class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
-    
+
     def tearDown(self):
         return self.tearDownBuildStep()
 

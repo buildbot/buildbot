@@ -190,9 +190,9 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                     'ANYBRANCH': ANYBRANCH,
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                    })
-        
+
         sortedBuilderNames = sorted(status.getBuilderNames())
-        
+
         cxt['builders'] = []
 
         for bn in sortedBuilderNames:
@@ -258,14 +258,14 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                     })
 
         sortedBuilderNames = sorted(status.getBuilderNames())
-        
+
         cxt['sorted_builder_names'] = sortedBuilderNames
         cxt['builder_builds'] = builder_builds = []
         cxt['builders'] = builders = []
         cxt['range'] = range(len(stamps))
         if rev_order == "desc":
             cxt['range'].reverse()
-        
+
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
 

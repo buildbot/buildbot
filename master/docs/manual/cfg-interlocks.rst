@@ -61,7 +61,7 @@ Time for a few examples. Below a master lock is defined to protect a data base,
 and a slave lock is created to limit the number of builds at each slave. ::
 
     from buildbot import locks
-    
+
     db_lock = locks.MasterLock("database")
     build_lock = locks.SlaveLock("slave_builds",
                                  maxCount = 1,
@@ -98,30 +98,30 @@ To illustrate use of locks, a few examples. ::
     from buildbot import locks
     from buildbot.steps import source, shell
     from buildbot.process import factory
-    
+
     db_lock = locks.MasterLock("database")
     build_lock = locks.SlaveLock("slave_builds",
                                  maxCount = 1,
                                  maxCountForSlave = { 'fast': 3, 'new': 2 })
-    
+
     f = factory.BuildFactory()
     f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
     f.addStep(shell.ShellCommand(command="make all"))
     f.addStep(shell.ShellCommand(command="make test",
                                  locks=[db_lock.access('exclusive')]))
-    
+
     b1 = {'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,
            'locks': [build_lock.access('counting')] }
-    
+
     b2 = {'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f,
            'locks': [build_lock.access('counting')] }
-    
+
     b3 = {'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f,
            'locks': [build_lock.access('counting')] }
-    
+
     b4 = {'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f,
            'locks': [build_lock.access('counting')] }
-    
+
     c['builders'] = [b1, b2, b3, b4]
 
 Here we have four slaves :data:`b1`, :data:`b2`, :data:`b3`, and :data:`b4`. Each
@@ -154,4 +154,4 @@ preferred.
     situation that only a few locks are available, and they are immediately grabbed
     by another build. As a result, it may take a long time before all locks needed
     by the starved build are free at the same time.
-    
+

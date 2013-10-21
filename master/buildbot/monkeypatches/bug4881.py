@@ -126,7 +126,7 @@ class _FDDetector(object):
         """
         Check if /dev/fd works, if so, use that.  Otherwise, check if
         /proc/%d/fd exists, if so use that.
-        
+
         Otherwise, ask resource.getrlimit, if that throws an exception, then
         fallback to _fallbackFDImplementation.
         """

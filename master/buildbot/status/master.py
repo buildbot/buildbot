@@ -160,7 +160,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             build = thing
             bldr = build.getBuilder()
             return self.getURLForBuild(bldr.getName(), build.getNumber())
-            
+
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
@@ -222,7 +222,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getBuilderNames(self, categories=None):
         if categories == None:
             return util.naturalSort(self.botmaster.builderNames) # don't let them break it
-        
+
         l = []
         # respect addition order
         for name in self.botmaster.builderNames:

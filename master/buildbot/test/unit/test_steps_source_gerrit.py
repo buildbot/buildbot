@@ -20,7 +20,7 @@ from buildbot.test.util import config, sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
 class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
-    
+
     def setUp(self):
         return self.setUpSourceStep()
 

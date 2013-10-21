@@ -24,7 +24,7 @@ real ones.
 
 Buildslaves with an unrecognized slavename or a non-matching password will be
 rejected when they attempt to connect, and a message describing the problem
-will be written to the log file (see :ref:`Logfiles`). 
+will be written to the log file (see :ref:`Logfiles`).
 
 A configuration for two slaves would look like::
 

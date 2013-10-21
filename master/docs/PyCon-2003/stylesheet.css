@@ -26,7 +26,7 @@ pre
 }
 
 .shell
-{ 
+{
   background-color: #ffffdd;
 }
 
@@ -51,7 +51,7 @@ pre
   background-color: #ddddff;
 }
 
-.doit 
+.doit
 {
   border: thin blue dashed ;
   background-color: #0ef
@@ -81,7 +81,7 @@ pre
 
 .py-src-string
 {
-  
+
   color: #115511
 }
 
@@ -90,7 +90,7 @@ pre
   display: block; /* IE hack; prevents following line from being sucked into the py-listing box. */
 }
 
-.py-listing 
+.py-listing
 {
   margin: 1ex;
   border: thin solid black;
@@ -104,7 +104,7 @@ pre
   border-bottom: thin solid black;
 }
 
-.py-listing .python 
+.py-listing .python
 {
   margin-top: 0;
   margin-bottom: 0;

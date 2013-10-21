@@ -37,21 +37,21 @@ class TestHTPasswdAprAuth(unittest.TestCase):
 
     @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_des(self):
-        for key in ('buildmaster','buildslave','buildbot'):                
+        for key in ('buildmaster','buildslave','buildbot'):
             if self.htpasswd.authenticate('des'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('des'+key))
 
     def test_authenticate_md5(self):
         if not self.htpasswd.apr:
             raise unittest.SkipTest("libaprutil-1 not found")
-        for key in ('buildmaster','buildslave','buildbot'):                
+        for key in ('buildmaster','buildslave','buildbot'):
             if self.htpasswd.authenticate('md5'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('md5'+key))
 
     def test_authenticate_sha(self):
         if not self.htpasswd.apr:
             raise unittest.SkipTest("libaprutil-1 not found")
-        for key in ('buildmaster','buildslave','buildbot'):                
+        for key in ('buildmaster','buildslave','buildbot'):
             if self.htpasswd.authenticate('sha'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('sha'+key))
 

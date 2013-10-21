@@ -118,13 +118,13 @@ class TextLog(Resource):
             req.setHeader("Cache-Control", "no-cache")
 
         if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")                
-            
+            self.template = req.site.buildbot_service.templates.get_template("logs.html")
+
             data = self.template.module.page_header(
                     pageTitle = "Log File contents",
                     texturl = req.childLink("text"),
                     path_to_root = path_to_root(req))
-            data = data.encode('utf-8')                   
+            data = data.encode('utf-8')
             req.write(data)
 
         self.original.subscribeConsumer(ChunkConsumer(req, self))
@@ -135,7 +135,7 @@ class TextLog(Resource):
             req.setHeader("content-type", "text/plain; charset=utf-8")
         else:
             req.setHeader("content-type", "text/html; charset=utf-8")
-        
+
     def finished(self):
         if not self.req:
             return
@@ -150,7 +150,7 @@ class TextLog(Resource):
         # break the cycle, the Request's .notifications list includes the
         # Deferred (from req.notifyFinish) that's pointing at us.
         self.req = None
-        
+
         # release template
         self.template = None
 

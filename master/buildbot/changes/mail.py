@@ -78,7 +78,7 @@ class CVSMaildirSource(MaildirSource):
                  repository='', properties={}):
         MaildirSource.__init__(self, maildir, prefix, category, repository)
         self.properties = properties
-        
+
     def parse(self, m, prefix=None):
         """Parse messages sent by the 'buildbot-cvs-mail' program.
         """
@@ -99,7 +99,7 @@ class CVSMaildirSource(MaildirSource):
         # part of the mail header, so use that.
         # This assumes cvs is being access via ssh or pserver, so the time
         # will be the CVS server's time.
-        
+
         # calculate a "revision" based on that timestamp, or the current time
         # if we're unable to parse the date.
         log.msg('Processing CVS mail')
@@ -108,7 +108,7 @@ class CVSMaildirSource(MaildirSource):
             when = util.now()
         else:
             when = mktime_tz(dateTuple)
-            
+
         theTime =  datetime.datetime.utcfromtimestamp(float(when))
         rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -179,7 +179,7 @@ class CVSMaildirSource(MaildirSource):
         #   repo/path file,old-version,new-version file2,old-version,new-version
         # Version 1.12 lists files as:
         #   file1 old-version new-version file2 old-version new-version
-        # 
+        #
         # files consists of tuples of 'file-name old-version new-version'
         # The versions are either dotted-decimal version numbers, ie 1.1
         # or NONE. New files are of the form 'NONE NUMBER', while removed
@@ -191,7 +191,7 @@ class CVSMaildirSource(MaildirSource):
         #  my_module new_file.c,NONE,1.1
         #  my_module removed.txt,1.2,NONE
         #  my_module modified_file.c,1.1,1.2
-        # While cvs version 1.12 gives us       
+        # While cvs version 1.12 gives us
         #  new_file.c NONE 1.1
         #  removed.txt 1.2 NONE
         #  modified_file.c 1.1,1.2
@@ -216,7 +216,7 @@ class CVSMaildirSource(MaildirSource):
                 raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:
             raise ValueError('Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
-        
+
         log.msg("CVSMaildirSource processing filelist: %s" % fileList)
         while(fileList):
             m = singleFileRE.match(fileList)
@@ -227,11 +227,11 @@ class CVSMaildirSource(MaildirSource):
             else:
                 log.msg('CVSMaildirSource no files matched regex. Ignoring')
                 return None   # bail - we couldn't parse the files that changed
-        # Now get comments    
+        # Now get comments
         while lines:
             line = lines.pop(0)
             comments += line
-            
+
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
@@ -374,7 +374,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 #   Subject: [Branch ~knielsen/maria/tmp-buildbot-test] Rev 2701: test add file
 #   To: Joe <joe@acme.com>
 #   ...
-#   
+#
 #   ------------------------------------------------------------
 #   revno: 2701
 #   committer: Joe <joe@acme.com>
@@ -384,15 +384,15 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 #     test add file
 #   added:
 #     test-add-file
-#   
-#   
+#
+#
 #   --
-#   
+#
 #   https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test
-#   
+#
 #   You are subscribed to branch lp:~knielsen/maria/tmp-buildbot-test.
 #   To unsubscribe from this branch go to https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test/+edit-subscription.
-# 
+#
 # [end of mail]
 
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
