@@ -171,10 +171,13 @@ class Trigger(LoggingBuildStep):
 
         was_exception = was_failure = False
         brids = {}
+        brids_result = {}
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, some_brids = results
                 brids.update(some_brids)
+                for val in some_brids.values():
+                    brids_result[val] = results
 
             if not was_cb:
                 was_exception = True
@@ -193,9 +196,6 @@ class Trigger(LoggingBuildStep):
 
         if brids:
             master = self.build.builder.botmaster.parent
-            def setStepStatus(urllist):
-                for url in urllist:
-                    self.step_status.addURL(url['text'], url['path'])
 
             @defer.inlineCallbacks
             def add_links_multimaster(res):
@@ -209,14 +209,11 @@ class Trigger(LoggingBuildStep):
                             num = build['number']
 
                             url = yield master.status.getURLForBuildRequest(build['brid'], bn, num)
-                            masterurl.append(url)
-
-                setStepStatus(masterurl)
+                            self.step_status.addURL(url['text'], url['path'], brids_result[build['brid']])
             
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
                 brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
-
                 for was_cb, builddicts in res:
                     if was_cb:
                         for build in builddicts:
@@ -224,7 +221,7 @@ class Trigger(LoggingBuildStep):
                             num = build['number']
 
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn,num), url)
+                            self.step_status.addURL("%s #%d" % (bn,num), url, result= brids_result[build['brid']])
 
             builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
