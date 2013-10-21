@@ -70,7 +70,6 @@ class Change(unittest.TestCase):
             Changed By: dustin
             Comments: fix whitespaceProperties:
               notest: no
-
             '''), text), text)
 
     def test_asDict(self):
