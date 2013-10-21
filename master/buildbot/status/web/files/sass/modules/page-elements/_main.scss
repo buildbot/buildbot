@@ -439,6 +439,24 @@ div.last {
 		list-style:none;
 		padding:0;
 		margin:0 0 1px ;
+		a {
+			&.success {
+				color:#DDE6D6;
+			}
+			&.failure {
+				color:#DDE6D6;
+			}
+			&.skipped {
+				color:#CBDCE6;
+			}
+			&.warnings {
+				color:#CBDCE6;
+			}
+			&.exception,
+			&.retry {
+				color:#DDD7DD;
+			}
+		}
 	}
 }
 
