@@ -439,23 +439,22 @@ div.last {
 		list-style:none;
 		padding:0;
 		margin:0 0 1px ;
-		a {
-			&.success {
-				color:#DDE6D6;
-			}
-			&.failure {
-				color:#DDE6D6;
-			}
-			&.skipped {
-				color:#CBDCE6;
-			}
-			&.warnings {
-				color:#CBDCE6;
-			}
-			&.exception,
-			&.retry {
-				color:#DDD7DD;
-			}
+		
+		a.log-list-success {
+			color:#DDE6D6;
+		}
+		a.log-list-failure {
+			color:#DDE6D6;
+		}
+		a.log-list-skipped {
+			color:#CBDCE6;
+		}
+		a.log-list-warnings {
+			color:#CBDCE6;
+		}
+		a.log-list-exception,
+		a.log-list-retry {
+			color:#DDD7DD;
 		}
 	}
 }
