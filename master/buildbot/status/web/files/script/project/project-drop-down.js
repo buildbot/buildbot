@@ -1,4 +1,4 @@
-define(['jquery', 'project/screen-size'], function ($, screenSize) {
+define(['jquery', 'screensize'], function ($, screenSize) {
 
     "use strict";
     var projectDropDown;
@@ -10,7 +10,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 			$(window).resize(function() {
 				isSmallScreen = screenSize.isSmallScreen();
 				if (isSmallScreen){	
-	    			$('.remove-js').remove();
+	    			$('.project-dropdown-js').remove();
 	    		} else {
 	    			$('.top-menu').show();
 	    			$('.submenu').remove();	
@@ -39,7 +39,7 @@ define(['jquery', 'project/screen-size'], function ($, screenSize) {
 
 					var path = "/projects";
 					if (!isSmallScreen){
-						var mib = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
+						var mib = $('<div class="more-info-box project-dropdown-js"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
 						$(mib).insertAfter($(this));
 					} else if ($('.submenu').length) {
 						$('.submenu').slideUp('fast', function(){

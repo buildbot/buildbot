@@ -677,6 +677,7 @@ class BuildersResource(HtmlResource):
         buildForceContext(cxt, req, self.getBuildmaster(req))
 
         cxt['fbuildsch'] = req.args
+        cxt['rt_update'] = req.args
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))
