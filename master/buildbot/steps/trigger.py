@@ -155,8 +155,8 @@ class Trigger(LoggingBuildStep):
 
         for sch in triggered_schedulers:
             dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredbybrid=triggeredbybrid))
-            triggered_names.append(sch.name)
-        self.step_status.setText(['triggered'] + triggered_names)
+            triggered_names.append("'%s'" % sch.name)
+        self.step_status.setText(['Triggered:'] + triggered_names)
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
