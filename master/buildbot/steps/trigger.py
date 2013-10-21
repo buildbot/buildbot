@@ -193,11 +193,11 @@ class Trigger(LoggingBuildStep):
 
         if brids:
             master = self.build.builder.botmaster.parent
-            def setStepStatus(res):
-                for (re, url) in res:                  
+            def setStepStatus(urllist):
+                for url in urllist:
                     self.step_status.addURL(url['text'], url['path'])
-                return self.end(result)
 
+            @defer.inlineCallbacks
             def add_links_multimaster(res):
                 # reverse the dictionary lookup for brid to builder name
                 brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
@@ -208,10 +208,10 @@ class Trigger(LoggingBuildStep):
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
 
-                            masterurl.append(master.status.getURLForBuildRequest(build['brid'], bn, num))
+                            url = yield master.status.getURLForBuildRequest(build['brid'], bn, num)
+                            masterurl.append(url)
 
-                        urllist = defer.DeferredList(masterurl, consumeErrors=1)
-                        urllist.addCallback(setStepStatus)
+                setStepStatus(masterurl)
             
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
@@ -226,14 +226,12 @@ class Trigger(LoggingBuildStep):
                             url = master.status.getURLForBuild(bn, num)
                             self.step_status.addURL("%s #%d" % (bn,num), url)
 
-                return self.end(result)
-
             builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
-            dl = defer.DeferredList(builddicts, consumeErrors=1)
+            res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
             if master.config.multiMaster:
-                dl.addCallback(add_links_multimaster)
+                yield add_links_multimaster(res_builds)
             else:
-                dl.addCallback(add_links)
+                add_links(res_builds)
 
         self.end(result)
         return
