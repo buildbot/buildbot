@@ -45,7 +45,7 @@ class Monotone(SourceBaseCommand):
 
         self.repourl = args['repourl']
         self.branch = args['branch']
-        
+
         self.revision = args.get('revision', None)
         self.progress = args.get('progress', False)
 
@@ -156,7 +156,7 @@ class Monotone(SourceBaseCommand):
                 c = runprocess.RunProcess(self.builder, [self.mtn, 'db', 'init',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c
@@ -168,7 +168,7 @@ class Monotone(SourceBaseCommand):
                                                          'db', 'migrate',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c

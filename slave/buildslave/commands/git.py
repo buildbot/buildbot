@@ -109,7 +109,7 @@ class Git(SourceBaseCommand):
         # For further information about this, see the commit message
         command = ['branch', '-M', self.branch]
         return self._dovccmd(command, self._initSubmodules, False)
-        
+
     def _didFetch(self, res):
         if self.revision:
             head = self.revision

@@ -2,7 +2,7 @@
 REM This file is used to run buildslave when installed into a python installation or deployed in virtualenv
 
 setlocal
-set BB_BUILDSLAVE="%~dp0buildslave" 
+set BB_BUILDSLAVE="%~dp0buildslave"
 
 IF EXIST "%~dp0..\python.exe" (
   REM Normal system install of python (buildslave.bat is in scripts dir, just below python.exe)
