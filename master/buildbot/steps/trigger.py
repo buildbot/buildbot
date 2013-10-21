@@ -21,7 +21,7 @@ from twisted.internet import defer
 from buildbot import config
 
 class Trigger(LoggingBuildStep):
-    name = "trigger"
+    name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
                     'updateSourceStamp', 'alwaysUseLatest' ]
