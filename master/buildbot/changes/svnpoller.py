@@ -366,7 +366,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     else:
                         branches[branch]['files'].append(filename)
 
-                    if not "action" in branches[branch]:
+                    if "action" not in branches[branch]:
                         branches[branch]['action'] = action
 
                     for key in ("repository", "project", "codebase"):
