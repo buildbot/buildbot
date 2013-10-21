@@ -441,20 +441,20 @@ div.last {
 		margin:0 0 1px ;
 		
 		a.log-list-success {
-			color:#DDE6D6;
+			color:#699644;
 		}
 		a.log-list-failure {
-			color:#DDE6D6;
+			color:#672D2D;
 		}
 		a.log-list-skipped {
-			color:#CBDCE6;
+			color:#687781;
 		}
 		a.log-list-warnings {
-			color:#CBDCE6;
+			color:#51778F;
 		}
 		a.log-list-exception,
 		a.log-list-retry {
-			color:#DDD7DD;
+			color:#693E69;
 		}
 	}
 }
