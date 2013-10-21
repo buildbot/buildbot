@@ -318,7 +318,7 @@ SourceStamps
       {% endfor %}
     
       {% for u in s.urls %}
-        <li><a class="{{ u.result }}" title="{{ u.result }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        <li><a class="log-list-{{ u.result }}" title="{{ u.result }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
       {% endfor %}
     </ul>  
     
