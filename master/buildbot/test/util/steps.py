@@ -158,6 +158,9 @@ class BuildStepMixin(object):
         self.exp_logfiles = {}
         self.exp_hidden = False
 
+        # check that the step's name is not None
+        self.assertNotEqual(step.name, None)
+
         return step
 
     def expectCommands(self, *exp):
