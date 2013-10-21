@@ -105,7 +105,7 @@ class CommandTestMixin:
         my_updates = []
         for update in self.get_updates():
             try:
-                if update.has_key('elapsed'):
+                if "elapsed" in update:
                     continue
             except:
                 pass

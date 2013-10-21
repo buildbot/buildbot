@@ -298,7 +298,7 @@ class RunProcess:
                     # turned in to a string.
                     environ[key] = os.pathsep.join(environ[key])
 
-            if environ.has_key('PYTHONPATH'):
+            if "PYTHONPATH" in environ:
                 environ['PYTHONPATH'] += os.pathsep + "${PYTHONPATH}"
 
             # do substitution on variable values matching pattern: ${name}
