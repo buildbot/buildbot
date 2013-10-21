@@ -1,9 +1,10 @@
-define(['jquery'], function ($) {
+define(['jquery', 'select2'], function ($) {
 
     "use strict";
     var selectors;
 
 	selectors = {
+
 		//Set the highest with on both selectors
 		getMaxChildWidth: function(sel) {
 			    var max = 80;

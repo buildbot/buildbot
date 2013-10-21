@@ -1,33 +1,60 @@
 require.config({
 	paths: {
 		'jquery': 'libs/jQuery-2-0-3',
-		'selector':'project/selectors',
+		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
-		'datatables': 'plugins/jquery-datatables',
-		'dotdotdot': 'plugins/jquery-dotdotdot'
+		'datatables-plugin': 'plugins/jquery-datatables',
+		'dataTables': 'project/dataTables',
+		'dotdotdot': 'plugins/jquery-dotdotdot',
+		'realtime': 'project/realtime',
+		'screensize': 'project/screen-size',
+		'currentitem': 'project/set-current-item',
+		'helpers': 'project/helpers',
+		'projectdropdown': 'project/project-drop-down',
+		'popup': 'project/popup'
 	}
 });
 
-require(['jquery','project/set-current-item','project/realtime','project/selectors','project/popup','project/screen-size','project/project-drop-down','dotdotdot','project/helpers','datatables','select2'], 
-	function($,setCurrentItem,realtime,selectors, popup, screenSize, projectDropDown, dotdotdot, helpers ) {
+require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'], 
+	function($,setCurrentItem, popup, screenSize, projectDropDown, helpers ) {
 	'use strict';
 
 	$(document).ready(function() {
 
 		setCurrentItem.init();
-		realtime.init();
+		
+		if ($('.tablesorter-js').length > 0) {
+			require(['dataTables'],
+	        function(dataTables) {
+	        	dataTables.init();
+	        });
+		}
 
+		if ($('.realtime').length > 0) {
+			require(['realtime'],
+	        function(realtime) {
+	        	realtime.init();
+	        });
+		}		
 
-					
+		// tooltip for long txtstrings
+		if ($('.ellipsis-js').length) {
+			require(['dotdotdot'],
+	        function(dotdotdot) {
+	        	$(".ellipsis-js").dotdotdot();
+	        });
+			
+		}
 
 		// codebases combobox selector
-		if ($('#commonBranch_select').length) {
-			selectors.comboBox('.select-tools-js');
+		if ($('#commonBranch_select').length || $('.select-tools-js').length) {
+			require(['selectors'],
+		        function(selectors) {
+			        selectors.comboBox('.select-tools-js');	
+			        selectors.init();
+		    });
 		}
-		// General codebases selectors
-		if ($('.select-tools-js').length) {
-			selectors.init();
-		}
+		
 		popup.init();
 		projectDropDown.init();
 		

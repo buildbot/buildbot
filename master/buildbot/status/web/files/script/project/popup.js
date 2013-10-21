@@ -1,4 +1,4 @@
-define(['jquery', 'project/selectors'], function ($, selectors) {
+define(['jquery'], function ($) {
 
     "use strict";
     var popup;
@@ -101,6 +101,51 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 			}
 			closePopUp();
 */
+
+			$('.popup-btn-js').each(function(i){
+				$(this).attr('data-in', i)
+			});
+
+			$('.popup-btn-js').click(function(){
+				var thisi = $(this).attr('data-in');
+				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+				$('body').append(preloader).show();
+				$.ajax({
+						url:'',
+						cache: false,
+						dataType: "html",
+						data: {
+							rt_update:'pending'
+						},
+						success: function(data) {
+							$('#bowlG').remove();
+							var doc = document.createElement('html');
+		 					doc.innerHTML = data;
+							
+							var pendListRes = $('.more-info-box-js', doc);
+							
+							var mib;
+							$(pendListRes).each(function(i){
+								if (i == thisi) {
+									mib = $(this);
+								}
+							});
+							$(mib).appendTo('body').center().fadeIn('fast');
+		
+							$(window).resize(function() {
+								$(mib).center();
+							});
+
+							$(document, '.close-btn').bind('click touchstart', function(e){
+							if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+								$(mib).remove();
+							}
+				});
+						}
+				});
+				
+			});
+
 			// display popup box with external content	
 			$('#getBtn').click(function() {
 
@@ -130,23 +175,27 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 						$(mib).center();
 					});
 
-					$("#formWrapper .select-tools-js").select2({
-						width: selectors.getMaxChildWidth(".select-tools-js")
-					});
-					$("#formWrapper #commonBranch_select").select2({
-						placeholder: "Common branches"
-					});
 
-					selectors.comboBox('#formWrapper .select-tools-js');
+					require(['selectors'],
+			        function(selectors) {
+						selectors.comboBox('#formWrapper .select-tools-js');
 					
-					$('.select2-drop').bind('click touchstart', function(e){
-						e.stopPropagation();
-						$(this).unbind(e);
-					});	
+						$("#formWrapper .select-tools-js").select2({
+							width: selectors.getMaxChildWidth(".select-tools-js")
+						});
+						$("#formWrapper #commonBranch_select").select2({
+							placeholder: "Common branches"
+						});
+					
+						$('.select2-drop').bind('click touchstart', function(e){
+							e.stopPropagation();
+							$(this).unbind(e);
+						});	
 
-		  			selectors.clickSort('#select2-drop .select2-results');
-					$(window).resize(function() {
-						$('.more-info-box-js').center();
+			  			selectors.clickSort('#select2-drop .select2-results');
+						$(window).resize(function() {
+							$('.more-info-box-js').center();
+						});
 					});
 					
 					$('#getForm').attr('action', window.location.href);	

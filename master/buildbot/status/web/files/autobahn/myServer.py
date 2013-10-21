@@ -2,6 +2,8 @@ import sys
 
 import urllib2
 
+import re
+
 from twisted.web.client import Agent, getPage
 
 from twisted.internet import reactor
@@ -38,11 +40,12 @@ currently connected clients.
       WebSocketServerFactory.__init__(self, url, debug = debug, debugCodePaths = debugCodePaths)
       self.clients = []
       self.tickcount = 0
+      self.clients_urls = {}
       self.tick()
 
    def tick(self):
       self.tickcount += 1
-      self.broadcast(self.tickcount)
+      self.broadcast()
       reactor.callLater(1, self.tick)
 
    def register(self, client):
@@ -54,29 +57,65 @@ currently connected clients.
       if client in self.clients:
          print "unregistered client " + client.peerstr
          self.clients.remove(client)
+         if client.peerstr in self.clients_urls:
+            del self.clients_urls[client.peerstr]
 
-   def broadcast(self, msg):
-      response = urllib2.urlopen('http://localhost:8001/json?as_text=1')
-      if msg:
-         print msg
-         responsestate = urllib2.urlopen('http://localhost:8001/json?as_text=1')
+   def clientbroadcast(self, msg):
+      print "message from client %s" % msg
+      if isinstance(msg, str) and "http://" in msg:
+         _re_client = re.compile(r"'(http://.*)' from (.*)")
+         m = _re_client.search(msg)
+         if m:
+            url = m.group(1).strip()
+            client = m.group(2).strip()
+            print "url %s client %s" % (url,client)
+            self.clients_urls[client] = url
+            response = urllib2.urlopen(url)
+            data = response.read();
+
+   def serverbroadcast(self, msg):
+      for c in self.clients:
+         if c.peerstr in self.clients_urls:
+            print "url %s peerstr %s" %(self.clients_urls[c.peerstr], c.peerstr)
+            response = urllib2.urlopen(self.clients_urls[c.peerstr])
+            data = response.read();        
+            c.sendMessage(data)
+
+   def broadcast(self, msg=None):
+      print "msg %s" % msg
+      print "clients_urls %s" % self.clients_urls
+      if isinstance(msg, str) and "http://" in msg:
+         self.clientbroadcast(msg)
       else:
-         responsestate = urllib2.urlopen(msg) 
-         
-         
-         
+         self.serverbroadcast(msg)
 
-      data = response.read();
-      datares = responsestate.read();
+   '''
+   def broadcast(self, msg=None):
+
+      data = ""
+      if isinstance(msg, str) and "http://" in msg:
+         _re_url = re.compile(r"'(http://.*)'")
+         url = ""
+         m = _re_url.search(msg)
+         if m:
+            url = m.group(1)
+            #if url not in urls:
+            #   urls.append(url)
+            response = urllib2.urlopen(url)
+            data = response.read();
+
+      else:
+         for url in urls:
+            response = urllib2.urlopen(url)
+            data = response.read();
+      
       #datastate = responsestate.read();
       print "broadcasting message '%s' .." % msg
       for c in self.clients:
          c.sendMessage(data)
-      for c in self.clients:
-         c.sendMessage(datares)
 
          #print "message sent to " + c.peerstr
-
+      '''
 
 class BroadcastPreparedServerFactory(BroadcastServerFactory):
    """
