@@ -9,7 +9,7 @@ periodically according to the ``log_interval`` configuration
 setting of the @ref{Metrics Options} configuration.
 
 If :bb:status:`WebStatus` is enabled, the metrics data is also available
-via ``/json/metrics``. 
+via ``/json/metrics``.
 
 The metrics subsystem is implemented in
 :mod:`buildbot.process.metrics`. It makes use of twisted's logging
@@ -60,7 +60,7 @@ Metric Handlers
 :class:`MetricsHandler` objects are responsible for collecting
 :class:`MetricEvent`\s of a specific type and keeping track of their
 values for future reporting. There are :class:`MetricsHandler` classes
-corresponding to each of the :class:`MetricEvent` types. 
+corresponding to each of the :class:`MetricEvent` types.
 
 Metric Watchers
 ---------------
@@ -68,7 +68,7 @@ Metric Watchers
 Watcher objects can be added to :class:`MetricsHandlers` to be called
 when metric events of a certain type are received. Watchers are
 generally used to record alarm events in response to count or time
-events. 
+events.
 
 Metric Helpers
 --------------
@@ -111,7 +111,7 @@ Metric Helpers
         @t.startTimer
         def foo():
             return "foo!"
-    
+
         @t.stopTimer
         def bar():
             return "bar!"

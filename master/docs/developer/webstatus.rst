@@ -49,7 +49,7 @@ yields
     <li>pigs</li><li>cows</li>
 
 .. _Web-Authorization-Framework:
-    
+
 Web Authorization Framework
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

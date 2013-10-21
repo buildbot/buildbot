@@ -432,7 +432,7 @@ Writing a new latent buildslave should only require subclassing
         # include in the "substantiate success" status message, such as
         # identifying the instance that started.
         raise NotImplementedError
-    
+
     def stop_instance(self, fast=False):
         # responsible for shutting down instance. Return a deferred. If `fast`,
         # we're trying to shut the master down, so callback as soon as is safe.
@@ -449,7 +449,7 @@ The standard :class:`BuildFactory` object creates :class:`Build` objects
 by default. These Builds will each execute a collection of :class:`BuildStep`\s
 in a fixed sequence. Each step can affect the results of the build,
 but in general there is little intelligence to tie the different steps
-together. 
+together.
 
 By setting the factory's ``buildClass`` attribute to a different class, you can
 instantiate a different build class.  This might be useful, for example, to
@@ -551,22 +551,22 @@ The whole thing looks like this::
                 frob_how_many=None,
                 frob_how=None,
                 **kwargs):
-    
+
             # check
             if frob_how_many is None:
                 raise TypeError("Frobnify argument how_many is required")
 
             # override a parent option
             kwargs['parentOpt'] = 'xyz'
-    
+
             # call parent
             LoggingBuildStep.__init__(self, **kwargs)
-    
+
             # set Frobnify attributes
             self.frob_what = frob_what
             self.frob_how_many = how_many
             self.frob_how = frob_how
-    
+
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
@@ -769,19 +769,19 @@ well-defined than the `[OK]` lines.
 The parser class looks like this::
 
     from buildbot.process.buildstep import LogLineObserver
-    
+
     class TrialTestCaseCounter(LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
         numTests = 0
         finished = False
-    
+
         def outLineReceived(self, line):
             if self.finished:
                 return
             if line.startswith("=" * 40):
                 self.finished = True
                 return
-    
+
             m = self._line_re.search(line.strip())
             if m:
                 testname, result = m.groups()
@@ -872,7 +872,7 @@ build number. ::
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
                    Interpolate("buildnum=%(prop:buildnumber)s")]
-    
+
         def createSummary(self, log):
             buildnumber = self.getProperty("buildnumber")
             url = "http://coverage.example.org/builds/%s.html" % buildnumber
@@ -884,7 +884,7 @@ output by the build process itself::
     class TestWithCodeCoverage(BuildStep):
         command = ["make", "test",
                    Interpolate("buildnum=%(prop:buildnumber)s")]
-    
+
         def createSummary(self, log):
             output = StringIO(log.getText())
             for line in output.readlines():
@@ -941,17 +941,17 @@ definition itself will look something like this::
 
     from buildbot.steps.shell import ShellCommand
     from buildbot.process.buildstep import LogLineObserver
-    
+
     class FNURRRGHCounter(LogLineObserver):
         numTests = 0
         def outLineReceived(self, line):
             if "FNURRRGH!" in line:
                 self.numTests += 1
                 self.step.setProgress('tests', self.numTests)
-    
+
     class Framboozle(ShellCommand):
         command = ["framboozler"]
-    
+
         def __init__(self, **kwargs):
             ShellCommand.__init__(self, **kwargs)   # always upcall!
             counter = FNURRRGHCounter()
