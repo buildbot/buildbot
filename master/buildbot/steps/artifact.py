@@ -58,7 +58,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             clean_build = (clean_build.lower() == "true")
 
         if clean_build:
-            self.step_status.setText(["Skipping previous build check, making a clean build"])
+            self.step_status.setText(["Skipping previous build check (making a clean build)."])
             self.finished(SKIPPED)
             return
 
@@ -78,7 +78,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
                 self.build.allStepsDone()
                 return
 
-        self.step_status.setText(["Running build, previous sucessful build not found"])
+        self.step_status.setText(["Running build (previous sucessful build not found)."])
         self.finished(SUCCESS)
         return
 
@@ -139,7 +139,7 @@ class CheckArtifactExists(ShellCommand):
                 self.build.allStepsDone()
         else:
             self.build.setProperty("artifactsfound", False, "CheckArtifactExists %s" % self.artifact)
-            self.descriptionDone = ["Artifact not found on server %s" % self.artifactServerURL]
+            self.descriptionDone = ["Artifact not found on server %s." % self.artifactServerURL]
 
     @defer.inlineCallbacks
     def start(self):
@@ -153,14 +153,14 @@ class CheckArtifactExists(ShellCommand):
             clean_build = (clean_build.lower() == "true")
 
         if clean_build:
-            self.step_status.setText(["Skipping artifact check, making a clean build"])
+            self.step_status.setText(["Skipping artifact check (making a clean build)."])
             self.finished(SKIPPED)
             return
 
         self.artifactBuildrequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
 
         if self.artifactBuildrequest:
-            self.step_status.setText(["Artifact has been already generated"])
+            self.step_status.setText(["Artifact has been already generated."])
             self.artifactPath = "%s_%s_%s" % (self.build.builder.config.builddir,
                                               self.artifactBuildrequest['brid'], FormatDatetime(self.artifactBuildrequest['submitted_at']))
 
@@ -180,7 +180,7 @@ class CheckArtifactExists(ShellCommand):
             return
 
 
-        self.step_status.setText(["Artifact not found"])
+        self.step_status.setText(["Artifact not found."])
         self.finished(SUCCESS)
         return
 
@@ -297,7 +297,7 @@ class AcquireBuildLocks(LoggingBuildStep):
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, **kwargs)
 
     def start(self):
-        self.step_status.setText(["Acquiring lock to complete build"])
+        self.step_status.setText(["Acquiring lock to complete build."])
         self.build.locks = self.locks
         # Acquire lock
         if self.build.slavebuilder.state == IDLE:
@@ -321,7 +321,7 @@ class ReleaseBuildLocks(LoggingBuildStep):
         LoggingBuildStep.__init__(self, hideStepIf=hideStepIf, **kwargs)
 
     def start(self):
-        self.step_status.setText(["Releasing build locks"])
+        self.step_status.setText(["Releasing build locks."])
         self.locks = self.build.locks
         self.releaseLockInstanse = self.build.releaseLockInstanse
         # release slave lock
