@@ -318,7 +318,11 @@ SourceStamps
       {% endfor %}
     
       {% for u in s.urls %}
+       {% if 'result' in u.keys() %}
         <li><a class="log-list-{{ u.result }}" title="{{ u.result }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        {% else %}
+        <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        {% endif %}
       {% endfor %}
     </ul>  
     
