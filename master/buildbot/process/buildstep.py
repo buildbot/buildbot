@@ -452,6 +452,17 @@ class BuildStep(object, properties.PropertiesMixin):
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
+    renderables = [
+            'haltOnFailure',
+            'flunkOnWarnings',
+            'flunkOnFailure',
+            'warnOnWarnings',
+            'warnOnFailure',
+            'alwaysRun',
+            'doStepIf',
+            'hideStepIf',
+    ]
+
     # 'parms' holds a list of all the parameters we care about, to allow
     # users to instantiate a subclass of BuildStep with a mixture of
     # arguments, some of which are for us, some of which are for the subclass
