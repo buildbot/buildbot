@@ -837,7 +837,7 @@ class TestBuildProperties(unittest.TestCase):
 
     def test_has_key(self):
         self.build_status.has_key.return_value = True
-        self.assertTrue("p" in self.build)
+        self.assertTrue(self.build.has_key('p'))
         # has_key calls through to hasProperty
         self.build_status.hasProperty.assert_called_with('p')
 
