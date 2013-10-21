@@ -608,6 +608,45 @@ Corresponding Apache configuration.
         RewriteRule ^.*$ https://%1/%2 [R,L]
     </Location>
 
+LDAP-based authentication
+#########################
+
+When you want to rely on external LDAP server as authentication source, you
+should use :class:`LDAPAuth` class. ::
+
+    from buildbot.status.web.auth import LDAPAuth
+    from buildbot.status.web.authz import Auth
+
+    authz = Authz(auth = LDAPAuth("192.168.33.37", "dc=example.com,dc=com"),
+        forceBuild='auth')
+
+You can set following arguments for LDAP authenticator.
+
+``host``
+    Mandatory argument that defines host of your LDAP server. This argument
+    should contain only host address, without URI or port. If you add port
+    number here, your authentication may fail.
+
+``basedn``
+    Mandatory argument that defines the root of the LDAP directory search.
+
+``binddn``
+    Optional argument. It defines user on the LDAP server permitted to search
+    the LDAP directory. Empty by default.
+
+``passwd``
+    Optional argument that represents password which may be required to query
+    the LDAP server. It's not needed if you can query the server without
+    additional password.  Empty by default.
+
+``search``
+    Template string that is used to search user in LDAP directory. Default
+    value is ``(uid=%s)``
+
+Please note that LDAP is used in buildbot for authentication purposes only. You
+cannot set restrictions or permissions for different user actions through LDAP.
+All permissions are only set through buildbot config, as shown earlier.
+
 Logging configuration
 #####################
 
