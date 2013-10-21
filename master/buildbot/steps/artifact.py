@@ -262,7 +262,7 @@ class DownloadArtifact(ShellCommand):
         self.artifactServerDir = artifactServerDir
         self.artifactDestination = artifactDestination or artifact
         self.master = None
-        name = "Download Artifact %s" % artifactBuilderName
+        name = "Download Artifact '%s'" % artifactBuilderName
         description = "Downloading artifact '%s'..." % artifactBuilderName
         descriptionDone="Downloaded '%s'." % artifactBuilderName
         ShellCommand.__init__(self, name=name, description=description, descriptionDone=descriptionDone,  **kwargs)
