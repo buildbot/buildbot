@@ -163,7 +163,7 @@ class RunSteps(unittest.TestCase):
     def test_OldStyleCustomBuildStep(self):
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
         bs = yield self.do_test_step()
-        logs = dict((l.name, l.getText()) for l in bs.getLogs())
+        logs = dict((l.name, l.old_getText()) for l in bs.getLogs())
         self.assertEqual(logs, {
             'compl.html': '<blink>A very short logfile</blink>\n',
             'foo': 'stdout\nstderr\n',

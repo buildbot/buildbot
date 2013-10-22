@@ -21,7 +21,9 @@ from buildbot.process import remotecommand as real_remotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand
+from buildbot.test.fake import logfile
 from buildbot.test.fake import slave
+from twisted.internet import defer
 
 
 class BuildStepMixin(object):
@@ -118,37 +120,37 @@ class BuildStepMixin(object):
 
         def ss_setText(strings):
             ss.status_text = strings
-        ss.setText = ss_setText
+        ss.old_setText = ss_setText
+        def ss_setText2(strings):
+            ss.status_text2 = strings
+        ss.old_setText2 = ss_setText2
 
         ss.getLogs = lambda: ss.logs.values()
-
-        self.step_statistics = {}
-        ss.setStatistic = self.step_statistics.__setitem__
-        ss.getStatistic = self.step_statistics.get
-        ss.hasStatistic = self.step_statistics.__contains__
 
         self.step.setStepStatus(ss)
 
         # step overrides
 
-        def addLog(name):
-            l = remotecommand.FakeLogFile(name, step)
+        def addLog(name, type='s'):
+            assert type == 's', "type must be 's' until Data API backend is in place"
+            l = logfile.FakeLogFile(name, step)
             ss.logs[name] = l
             return l
+
         step.addLog = addLog
 
         def addHTMLLog(name, html):
-            l = remotecommand.FakeLogFile(name, step)
+            l = logfile.FakeLogFile(name, step)
             l.addStdout(html)
             ss.logs[name] = l
-            return l
+            return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
-            l = remotecommand.FakeLogFile(name, step)
+            l = logfile.FakeLogFile(name, step)
             l.addStdout(text)
             ss.logs[name] = l
-            return l
+            return defer.succeed(None)
         step.addCompleteLog = addCompleteLog
 
         step.logobservers = self.logobservers = {}

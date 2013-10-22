@@ -304,7 +304,7 @@ class Sphinx(ShellCommand):
         if self.warnings > 0:
             self.addCompleteLog('warnings', "\n".join(warnings))
 
-        self.step_status.setStatistic('warnings', self.warnings)
+        self.setProperty('warnings', self.warnings, "sphinx")
 
     def evaluateCommand(self, cmd):
         if self.success:

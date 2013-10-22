@@ -592,9 +592,6 @@ class WarningCountingShellCommand(ShellCommand):
             self.addCompleteLog("warnings (%d)" % self.warnCount,
                                 "\n".join(warnings) + "\n")
 
-        warnings_stat = self.step_status.getStatistic('warnings', 0)
-        self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
-
         old_count = self.getProperty("warnings-count", 0)
         self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
@@ -627,27 +624,27 @@ class Test(WarningCountingShellCommand):
 
     def setTestResults(self, total=0, failed=0, passed=0, warnings=0):
         """
-        Called by subclasses to set the relevant statistics; this actually
-        adds to any statistics already present
+        Called by subclasses to set the relevant properties; this actually
+        adds to any properties already present
         """
-        total += self.step_status.getStatistic('tests-total', 0)
-        self.step_status.setStatistic('tests-total', total)
-        failed += self.step_status.getStatistic('tests-failed', 0)
-        self.step_status.setStatistic('tests-failed', failed)
-        warnings += self.step_status.getStatistic('tests-warnings', 0)
-        self.step_status.setStatistic('tests-warnings', warnings)
-        passed += self.step_status.getStatistic('tests-passed', 0)
-        self.step_status.setStatistic('tests-passed', passed)
+        for prop, addend in [
+            ('tests-total', total),
+            ('tests-failed', failed),
+            ('tests-warnings', warnings),
+            ('tests-passed', passed),
+            ]:
+            addend += self.getProperty(prop, 0)
+            self.setProperty(prop, addend, 'test')
 
     def describe(self, done=False):
         description = WarningCountingShellCommand.describe(self, done)
         if done:
             description = description[:]  # make a private copy
-            if self.step_status.hasStatistic('tests-total'):
-                total = self.step_status.getStatistic("tests-total", 0)
-                failed = self.step_status.getStatistic("tests-failed", 0)
-                passed = self.step_status.getStatistic("tests-passed", 0)
-                warnings = self.step_status.getStatistic("tests-warnings", 0)
+            if self.hasProperty('tests-total'):
+                total = self.getProperty("tests-total", 0)
+                failed = self.getProperty("tests-failed", 0)
+                passed = self.getProperty("tests-passed", 0)
+                warnings = self.getProperty("tests-warnings", 0)
                 if not total:
                     total = failed + passed + warnings
 

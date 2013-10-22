@@ -435,7 +435,7 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
             b0 = builder_status.loadBuildFromFile(0)
             logs = b0.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
         return d
 
@@ -585,7 +585,7 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
             b1 = builder_status.loadBuildFromFile(1)
             logs = b1.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
             b2 = builder_status.loadBuildFromFile(1)
             self.assertEqual(b2.getReason(),
@@ -632,7 +632,7 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
             b0 = builder_status.loadBuildFromFile(0)
             logs = b0.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
         return d
 

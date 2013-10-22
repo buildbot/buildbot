@@ -308,22 +308,16 @@ BuildStep
     .. py:method:: addLog(name)
 
         :param name: log name
-        :returns: :class:`~buildbot.status.logfile.LogFile` instance
+        :param type: log type; see :bb:rtype:`logchunk`
+        :returns: :class:`~buildbot.process.log.Log` instance via Deferred
 
         Add a new logfile with the given name to the step, and return the log file instance.
-
-    .. py:method:: getLog(name)
-
-        :param name: log name
-        :returns: :class:`~buildbot.status.logfile.LogFile` instance
-        :raises: :exc:`KeyError` if the log is not found
-
-        Get an existing logfile by name.
 
     .. py:method:: addCompleteLog(name, text)
 
         :param name: log name
         :param text: content of the logfile
+        :returns: Deferred
 
         This method adds a new log and sets ``text`` as its content.
         This is often useful to add a short logfile describing activities performed on the master.
@@ -333,6 +327,7 @@ BuildStep
 
         :param name: log name
         :param html: content of the logfile
+        :returns: Deferred
 
         Similar to :meth:`addCompleteLog`, this adds a logfile containing pre-formatted HTML, allowing more expressiveness than the text format supported by :meth:`addCompleteLog`.
 

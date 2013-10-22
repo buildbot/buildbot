@@ -28,10 +28,12 @@ class Log(object):
         self.type = type
         self.logid = logid
         self.master = master
+        self.name = name
 
         self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
-        self.haveSubscriptions = False
+        self.subscriptions = {}
         self.finished = False
+        self.finishWaiters = []
 
     @classmethod
     def new(cls, master, name, type, logid):
@@ -42,11 +44,18 @@ class Log(object):
             raise RuntimeError("Invalid log type %r" % (type,))
         return subcls(master, name, type, logid)
 
+    def getName(self):
+        return self.name
+
     # subscriptions
 
-    def subscribe(self, receiver):
-        self.haveSubscriptions = True
-        return self.subPoint.subscribe(receiver)
+    def subscribe(self, receiver, catchup):
+        assert not catchup, "subscribe(catchup=True) is no longer supported"
+        sub = self.subscriptions[receiver] = self.subPoint.subscribe(receiver)
+        return sub
+
+    def unsubscribe(self, receiver):
+        self.subscriptions[receiver].unsubscribe()
 
     # adding lines
 
@@ -60,6 +69,17 @@ class Log(object):
 
     # completion
 
+    def isFinished(self):
+        return self.finished
+
+    def waitUntilFinished(self):
+        d = defer.Deferred()
+        if self.finished:
+            d.succeed(None)
+        else:
+            self.finishWaiters.append(d)
+        return d
+
     @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
@@ -68,6 +88,10 @@ class Log(object):
 
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
+
+        # notify those waiting for finish
+        for d in self.finishWaiters:
+            d.callback(None)
 
         # start a compressLog call but don't make our caller wait for
         # it to complete

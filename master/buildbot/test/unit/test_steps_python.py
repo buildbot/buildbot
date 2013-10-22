@@ -420,12 +420,8 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=WARNINGS,
                            status_text=["sphinx", "2 warnings", "warnings"])
         self.expectLogfile("warnings", warnings)
-        d = self.runStep()
-
-        def check(_):
-            self.assertEqual(self.step_statistics, {'warnings': 2})
-        d.addCallback(check)
-        return d
+        self.expectProperty('warnings', 2)
+        return self.runStep()
 
     def test_constr_args(self):
         self.setupStep(python.Sphinx(sphinx_sourcedir='src',

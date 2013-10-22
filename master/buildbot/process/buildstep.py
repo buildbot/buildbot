@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
 from twisted.python import log
+from twisted.python import failure
 from twisted.python import util as twutil
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
@@ -95,6 +96,75 @@ def _maybeUnhandled(fn):
     wrap.func_original = fn
     twutil.mergeFunctionMetadata(fn, wrap)
     return wrap
+
+
+class SyncWriteOnlyLogFileWrapper(object):
+
+    # A temporary wrapper around process.log.Log to emulate *synchronous*
+    # writes to the logfile by handling the Deferred from each add* operation
+    # as part of the step's _start_unhandled_deferreds.  This has to handle
+    # the tricky case of adding data to a log *before* addLog has returned!
+
+    def __init__(self, step, name, addLogDeferred):
+        self.step = step
+        self.name = name
+        self.delayedOperations = []
+        self.asyncLogfile = None
+
+        @addLogDeferred.addCallback
+        def gotAsync(log):
+            self.asyncLogfile = log
+            self._catchup()
+            return log
+
+        # run _catchup even if there's an error; it will helpfully generate
+        # a whole bunch more!
+        @addLogDeferred.addErrback
+        def problem(f):
+            self._catchup()
+            return f
+
+    def _catchup(self):
+        if not self.delayedOperations:
+            return
+        op = self.delayedOperations.pop(0)
+
+        try:
+            d = defer.maybeDeferred(op)
+        except Exception:
+            d = defer.fail(failure.Failure())
+
+        @d.addBoth
+        def next(x):
+            self._catchup()
+            return x
+        self.step._start_unhandled_deferreds.append(d)
+
+    def _delay(self, op):
+        self.delayedOperations.append(op)
+        if len(self.delayedOperations) == 1:
+            self._catchup()
+
+    def getName(self):
+        # useLog uses this
+        return self.name
+
+    def addStdout(self, data):
+        self._delay(lambda : self.asyncLogfile.addStdout(data))
+
+    def addStderr(self, data):
+        self._delay(lambda : self.asyncLogfile.addStderr(data))
+
+    def addHeader(self, data):
+        self._delay(lambda : self.asyncLogfile.addHeader(data))
+
+    def finish(self):
+        self._delay(lambda : self.asyncLogfile.finish())
+
+    def unwrap(self):
+        d = defer.Deferred()
+        self._delay(lambda : d.callback(self.asyncLogfile))
+        return d
 
 
 class BuildStep(object, properties.PropertiesMixin):
@@ -226,6 +296,11 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    def setStateStrings(self, strings):
+        # call to the status API for now
+        self.step_status.old_setText(strings)
+        self.step_status.old_setText2(strings)
+
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
@@ -245,7 +320,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
-        self.step_status.setText(self.describe(False))
+        yield self.setStateStrings(self.describe(False))
         self.step_status.stepStarted()
 
         try:
@@ -283,7 +358,7 @@ class BuildStep(object, properties.PropertiesMixin):
             if doStep:
                 results = yield self.run()
             else:
-                self.step_status.setText(self.describe(True) + ['skipped'])
+                yield self.setStateStrings(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
                 results = SKIPPED
 
@@ -304,9 +379,7 @@ class BuildStep(object, properties.PropertiesMixin):
             except Exception:
                 log.err(Failure(), "error while formatting exceptions")
 
-            self.step_status.setText([self.name, "exception"])
-            self.step_status.setText2([self.name])
-
+            yield self.setStateStrings([self.name, "exception"])
             results = EXCEPTION
 
         if self.stopped and results != RETRY:
@@ -317,16 +390,13 @@ class BuildStep(object, properties.PropertiesMixin):
             # to retry interrupted build due to some other issues for example
             # due to slave lost
             if results == CANCELLED:
-                self.step_status.setText(self.describe(True) +
-                                         ["cancelled"])
-                self.step_status.setText2(["cancelled"])
+                yield self.setStateStrings(self.describe(True) + ["cancelled"])
             else:
                 # leave RETRY as-is, but change anything else to EXCEPTION
                 if results != RETRY:
                     results = EXCEPTION
-                self.step_status.setText(self.describe(True) +
-                                         ["interrupted"])
-                self.step_status.setText2(["interrupted"])
+                yield self.setStateStrings(self.describe(True) +
+                                           ["interrupted"])
 
         if self.progress:
             self.progress.finish()
@@ -371,26 +441,15 @@ class BuildStep(object, properties.PropertiesMixin):
         self._start_deferred = defer.Deferred()
         unhandled = self._start_unhandled_deferreds = []
         try:
-            # monkey-patch self.step_status.{setText,setText2} to add their
-            # deferreds to _start_unhandled_deferreds
-            # start() can return a Deferred, but the step isn't finished
-            # at that point.  But if it returns SKIPPED, then finish will
-            # never be called.
-            def setText(txt, old=self.step_status.setText):
-                d = defer.maybeDeferred(old, txt)
-                unhandled.append(d)
-                return d
-            self.step_status.setText = setText
-
-            def setText2(txt, old=self.step_status.setText2):
-                d = defer.maybeDeferred(old, txt)
-                unhandled.append(d)
-                return d
-            self.step_status.setText2 = setText2
+            # monkey-patch self.step_status.{setText,setText2} back into
+            # existence for old steps; when these write to the data API,
+            # the monkey patches will stash their deferreds on the unhandled list
+            self.step_status.setText = self.step_status.old_setText
+            self.step_status.setText2 = self.step_status.old_setText2
 
             results = yield self.start()
             if results == SKIPPED:
-                self.step_status.setText(self.describe(True) + ['skipped'])
+                yield self.setStateStrings(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
             else:
                 results = yield self._start_deferred
@@ -406,7 +465,8 @@ class BuildStep(object, properties.PropertiesMixin):
                                                          consumeErrors=True)
             for success, res in unhandled_results:
                 if not success:
-                    log.err(res, "from an asynchronous method executed in an old-style step")
+                    log.err(
+                        res, "from an asynchronous method executed in an old-style step")
                     results = EXCEPTION
 
         defer.returnValue(results)
@@ -456,10 +516,18 @@ class BuildStep(object, properties.PropertiesMixin):
     def getSlaveName(self):
         return self.build.getSlaveName()
 
-    def addLog(self, name):
-        loog = self.step_status.addLog(name)
+    def addLog(self, name, type='s'):
+        # This method implements a smooth transition for nine
+        # it returns a synchronous version of logfile, so that steps can safely
+        # start writting into logfile, without waiting for log creation in db
+        loog_d = defer.maybeDeferred(self.step_status.addLog, name)
         self._connectPendingLogObservers()
-        return loog
+        if self._start_unhandled_deferreds is None:
+            # This is a new-style step, so we can return the deferred
+            return loog_d
+
+        self._start_unhandled_deferreds.append(loog_d)
+        return SyncWriteOnlyLogFileWrapper(self, name, loog_d)
 
     def getLog(self, name):
         for l in self.step_status.getLogs():
@@ -584,7 +652,14 @@ class LoggingBuildStep(BuildStep):
 
         d = self.runCommand(cmd)  # might raise ConnectionLost
         d.addCallback(lambda res: self.commandComplete(cmd))
+
+        # TODO: when the status.LogFile object no longer exists, then this
+        # method will a synthetic logfile for old-style steps, and to be called
+        # without the `logs` parameter for new-style steps.  Unfortunately,
+        # lots of createSummary methods exist, but don't look at the log, so
+        # it's difficult to optimize when the synthetic logfile is needed.
         d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
+
         d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
 
         def _gotResults(results):
@@ -680,6 +755,7 @@ class LoggingBuildStep(BuildStep):
         # get more control over the displayed text
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
+        return defer.succeed(None)
 
 
 # Parses the logs for a list of regexs. Meant to be invoked like:

@@ -466,7 +466,7 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_addLog(self):
         @self.assertArgSpecMatches(self.step.addLog)
-        def addLog(self, name):
+        def addLog(self, name, type='s'):
             pass
 
     def test_signature_getLog(self):

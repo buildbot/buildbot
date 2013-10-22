@@ -85,7 +85,7 @@ class RemoteCommand(pb.Referenceable):
         return self.deferred
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(log)
+        # note that, for the moment, log is a SyncWriteOnlyLogFileWrapper
         if not logfileName:
             logfileName = log.getName()
         assert logfileName not in self.logs

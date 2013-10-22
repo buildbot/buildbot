@@ -142,22 +142,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     _sentinel = []  # used as a sentinel to indicate unspecified initial_value
 
-    def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
-        """Summarize the named statistic over all steps in which it
-        exists, using combination_fn and initial_value to combine multiple
-        results into a single result.  This translates to a call to Python's
-        X{reduce}::
-            return reduce(summary_fn, step_stats_list, initial_value)
-        """
-        step_stats_list = [
-            st.getStatistic(name)
-            for st in self.steps
-            if st.hasStatistic(name)]
-        if initial_value is self._sentinel:
-            return reduce(summary_fn, step_stats_list)
-        else:
-            return reduce(summary_fn, step_stats_list, initial_value)
-
     def isFinished(self):
         return (self.finished is not None)
 
