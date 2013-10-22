@@ -257,6 +257,7 @@ class BuildProgress(pb.Referenceable):
             self.sendUpdate(remote, 1)
             self.removeWatcher(remote)
 
+
 class Expectations:
     debug = False
     # decay=1.0 ignores all but the last build

@@ -403,6 +403,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         'logs': all those plus stepETAUpdate, logStarted, logFinished
         'full': all those plus logChunk (with the log contents)
 
+
         Messages are defined by buildbot.interfaces.IStatusReceiver .
         'interval' is used to specify how frequently ETAUpdate messages
         should be sent.
