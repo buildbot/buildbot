@@ -20,8 +20,51 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    	$('.windowsize').html(ws);
 			    });
 			*/
+
+			if ($('#tb-root').length != 0) {
+				$.ajax({
+					url: "/json?filter=0",
+					dataType: "json",
+					type: "GET",
+					cache: false,
+					success: function (data) {
+					var arrayBuilders = [];
+					var arrayPending = [];
+					var arrayCurrent = [];
+					$.each(data.builders, function (key, value) {
+					arrayBuilders.push(key);
+					arrayPending.push(value.pendingBuilds);
+					if (value.state == 'building') {
+					arrayCurrent.push(value.currentBuilds);
+					}
+					});
+
+					function sumVal(arr) {
+					var sum = 0;
+					$.each(arr,function(){sum+=parseFloat(this) || 0;});
+					return sum;
+					};
+					var arraySlaves = [];
+					$.each(data.slaves, function (key) {
+					arraySlaves.push(key);
+					});
+
+					var arrayProjects = [];
+					$.each(data.project, function (key) {
+					arrayProjects.push(key);
+					});
+					
+					$('#slavesNr').text(arraySlaves.length);
+					$('#pendingBuilds').text(sumVal(arrayPending));
+					
+					}
+				});
+			}
+			
         // submenu overflow on small screens
         
+
+
 	        var isMediumScreen = screenSize.isMediumScreen();
 	                
 	        function menuItemWidth() {
