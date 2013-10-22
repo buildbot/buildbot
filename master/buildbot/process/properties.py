@@ -123,7 +123,7 @@ class Properties(util.ComparableMixin):
         return self.properties.get(name, (default,))[0]
 
     def hasProperty(self, name):
-        return self.properties.has_key(name)
+        return name in self.properties
 
     has_key = hasProperty
 
@@ -215,7 +215,7 @@ class _PropertyMap(object):
             prop, repl = mo.group(1,2)
             if prop in self.temp_vals:
                 return self.temp_vals[prop]
-            elif properties.has_key(prop):
+            elif prop in properties:
                 return properties[prop]
             else:
                 return repl
@@ -226,7 +226,7 @@ class _PropertyMap(object):
             prop, repl = mo.group(1,2)
             if prop in self.temp_vals and self.temp_vals[prop]:
                 return self.temp_vals[prop]
-            elif properties.has_key(prop) and properties[prop]:
+            elif prop in properties and properties[prop]:
                 return properties[prop]
             else:
                 return repl
@@ -235,7 +235,7 @@ class _PropertyMap(object):
             # %(prop:+repl)s
             # if prop exists, use repl; otherwise, an empty string
             prop, repl = mo.group(1,2)
-            if properties.has_key(prop) or prop in self.temp_vals:
+            if prop in properties or prop in self.temp_vals:
                 return repl
             else:
                 return ''
@@ -335,7 +335,7 @@ class _Lookup(util.ComparableMixin, object):
         value = build.render(self.value)
         index = build.render(self.index)
         value, index = yield defer.gatherResults([value, index])
-        if not value.has_key(index):
+        if not index in value:
             rv = yield build.render(self.default)
         else:
             if self.defaultWhenFalse:
@@ -535,7 +535,7 @@ class Interpolate(util.ComparableMixin, object):
     def _parse(self, fmtstring):
         keys = _getInterpolationList(fmtstring)
         for key in keys:
-            if not self.interpolations.has_key(key):
+            if not key in self.interpolations:
                 d, kw, repl = self._parseSubstitution(key)
                 if repl is None:
                     repl = '-'
@@ -550,7 +550,7 @@ class Interpolate(util.ComparableMixin, object):
                     if not junk and matches:
                         self.interpolations[key] = fn(d, kw, tail)
                         break
-                if not self.interpolations.has_key(key):
+                if not key in self.interpolations:
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 
     def getRenderingFor(self, props):

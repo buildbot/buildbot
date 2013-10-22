@@ -168,7 +168,7 @@ class BuildStepStatus(styles.Versioned):
     def hasStatistic(self, name):
         """Return true if this step has a value for the given statistic.
         """
-        return self.statistics.has_key(name)
+        return name in self.statistics
 
     def getStatistic(self, name, default=None):
         """Return the given statistic, if present
@@ -317,7 +317,7 @@ class BuildStepStatus(styles.Versioned):
     def __getstate__(self):
         d = styles.Versioned.__getstate__(self)
         del d['build'] # filled in when loading
-        if d.has_key('progress'):
+        if "progress" in d:
             del d['progress']
         del d['watchers']
         del d['finishedWatchers']
