@@ -16,6 +16,7 @@
 from twisted.internet import reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+import sqlalchemy as sa
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -31,6 +32,20 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 rv = self._bdictFromRow(row)
             res.close()
             return rv
+        return self.db.pool.do(thd)
+
+    def getBuildsAndResultForRequest(self, brid):
+        def thd(conn):
+            builds_tbl = self.db.model.builds
+            buildrequest_tbl = self.db.model.buildrequests
+            q = sa.select([builds_tbl.c.id, builds_tbl.c.number, builds_tbl.c.brid, builds_tbl.c.start_time,
+                                   builds_tbl.c.finish_time, buildrequest_tbl.c.results],
+                                  from_obj= buildrequest_tbl.join(builds_tbl,
+                                                        (buildrequest_tbl.c.id == builds_tbl.c.brid)),
+                                  whereclause=(buildrequest_tbl.c.id == brid))
+            res = conn.execute(q)
+            return [ self._bdictFromRow(row)
+                     for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
     def getBuildsForRequest(self, brid):
@@ -72,9 +87,12 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             if epoch:
                 return epoch2datetime(epoch)
 
-        return dict(
+        _bdict = dict(
             bid=row.id,
             brid=row.brid,
             number=row.number,
             start_time=mkdt(row.start_time),
             finish_time=mkdt(row.finish_time))
+        if 'results' in row.keys():
+            _bdict['results'] = row.results
+        return _bdict

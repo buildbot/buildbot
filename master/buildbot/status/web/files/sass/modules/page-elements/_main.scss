@@ -438,7 +438,44 @@ div.last {
 	li {
 		list-style:none;
 		padding:0;
-		margin:0 0 1px ;
+		margin:0 0 1px;
+	}
+	.urls-mod {margin:5px 0;}
+	.log-list-success a:before {
+	    background-color: #DDE6D6;
+	    color: #444;
+	    content: "";
+        margin-right:4px;
+    	padding: 0 7px;
+	}
+	.log-list-failure a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#EFCFCF;
+	}
+	.log-list-skipped a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#CBDCE6;
+	}
+	.log-list-warnings a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#FFAA33;
+	}
+	.log-list-exception a:before,
+	.log-list-retry a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#DDD7DD;
 	}
 }
 

@@ -289,7 +289,7 @@ SourceStamps
     <div class="index-count">
          {{  loop.index }}
     </div>
-
+      
     <span class="{{ s.css_class }} result">
     </span>
     
@@ -318,7 +318,11 @@ SourceStamps
       {% endfor %}
     
       {% for u in s.urls %}
+       {% if 'results' in u.keys() %}
+        <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        {% else %}
         <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        {% endif %}
       {% endfor %}
     </ul>  
     

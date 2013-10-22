@@ -211,7 +211,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def test_simple(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps = {}))
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({}, {}))
         return self.runStep()
 
@@ -220,7 +220,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.scheduler_a.result = FAILURE
         # not waitForFinish, so trigger step succeeds even though the build
         # didn't fail
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({}, {}))
         return self.runStep()
 
@@ -228,7 +228,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_simple_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=( {}, {}))
         d = self.runStep()
         def flush(_):
@@ -251,7 +251,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                               ],
                        gotRevisionsInBuild = {'': 23456},
                        )
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({'':{'codebase':'',
                                          'repository': 'x',
                                          'revision': 23456}
@@ -265,7 +265,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                               repository='x',
                                                               revision=11111)
                                               ])
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({'':{'codebase':'',
                                          'repository': 'x',
                                          'revision': 11111} # uses old revision
@@ -281,7 +281,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                               ],
                        gotRevisionsInBuild = {'': 23456},
                        )
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({'':{'codebase':'',
                                           'repository': 'x',
                                           'revision': 11111}
@@ -299,7 +299,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                               ],
                        gotRevisionsInBuild = {'cb1': 23456, 'cb2': 34567},
                        )
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({'cb1': {'codebase':'cb1',
                                              'revision':23456},
                                      'cb2': {'codebase':'cb2',
@@ -317,7 +317,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        gotRevisionsInBuild = {'': 23456},
                        )
         self.properties.setProperty('usess', False, 'me')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         # didn't use got_revision
         self.expectTriggeredWith(a=({'': { 'codebase':'',
                                            'repository': 'x',
@@ -335,7 +335,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        gotRevisionsInBuild = {'': 23456},
                        )
         self.properties.setProperty('usess', True, 'me')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         # didn't use got_revision
         self.expectTriggeredWith(a=({'': { 'codebase':'',
                                            'repository': 'x',
@@ -350,7 +350,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                               repository='x',
                                                               revision=11111)
                                              ])
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         # Do not pass setid
         self.expectTriggeredWith(b=({}, {}))
         return self.runStep()
@@ -363,7 +363,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                               revision=11111)
                                               ])
         self.properties.setProperty('aul', False, 'me')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         # didn't use latest
         self.expectTriggeredWith(b=({'': { 'codebase':'',
                                            'repository': 'x',
@@ -379,7 +379,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                               revision=11111)
                                               ])
         self.properties.setProperty('aul', True, 'me')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         # didn't use latest
         self.expectTriggeredWith(b=({}, {}))
         return self.runStep()
@@ -388,7 +388,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         ss = dict(revision=9876, branch='dev')
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
             sourceStamp=ss))
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         self.expectTriggeredWith(b=({'': ss}, {}))
         return self.runStep()
 
@@ -397,7 +397,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         ss2 = dict(codebase='cb2',repository='r2', revision=5432, branch='dev')
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
             sourceStamps=[ss1,ss2]))
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         self.expectTriggeredWith(b=({'cb1':ss1, 'cb2':ss2}, {}))
         return self.runStep()
 
@@ -408,7 +408,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         ss4 = FakeSourceStamp(codebase='cb4',repository='r4', revision=2345, branch='dev')
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
             sourceStamps=[ss1,ss2]), sourcestampsInBuild=[ss3, ss4])
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         self.expectTriggeredWith(b=({'cb1':ss1, 'cb2':ss2}, {}))
         return self.runStep()
 
@@ -419,14 +419,14 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                 branch='dev')))
         self.properties.setProperty('rev', 602, 'me')
         expected_ss = dict(revision=602, branch='dev')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'b'"])
         self.expectTriggeredWith(b=({'': expected_ss}, {}))
         return self.runStep()
 
     def test_waitForFinish(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
             waitForFinish=True))
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a', 'b'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'", "'b'"])
         self.expectTriggeredWith(
             a=({}, {}),
             b=({}, {}))
@@ -437,7 +437,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
         self.scheduler_a.result = FAILURE
-        self.expectOutcome(result=FAILURE, status_text=['triggered', 'a'])
+        self.expectOutcome(result=FAILURE, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({}, {}))
         self.expectTriggeredLinks('a')
         return self.runStep(expect_waitForFinish=True)
@@ -448,7 +448,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             waitForFinish=True))
         self.scheduler_b.exception = True
         self.expectOutcome(result=EXCEPTION,
-                        status_text=['triggered', 'a', 'b'])
+                        status_text=['Triggered:', "'a'", "'b'"])
         self.expectTriggeredWith(
             a=({}, {}),
             b=({}, {}))
@@ -462,7 +462,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_set_properties(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                 set_properties=dict(x=1, y=2)))
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({},
                                 dict(x=(1, 'Trigger'), y=(2, 'Trigger'))))
         return self.runStep()
@@ -471,7 +471,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                 set_properties=dict(x=properties.Property('X'), y=2)))
         self.properties.setProperty('X', 'xxx', 'here')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({},
                                 dict(x=('xxx', 'Trigger'), y=(2, 'Trigger'))))
         return self.runStep()
@@ -482,7 +482,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('a', 'A', 'AA')
         self.properties.setProperty('b', 'B', 'BB')
         self.properties.setProperty('c', 'C', 'CC')
-        self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
+        self.expectOutcome(result=SUCCESS, status_text=['Triggered:', "'a'"])
         self.expectTriggeredWith(a=({},
                             dict(a=('A', 'Trigger'),
                                  b=('B', 'Trigger'))))

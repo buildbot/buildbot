@@ -209,7 +209,19 @@ class StatusResourceBuild(HtmlResource):
 
             step['link'] = path_to_step(req, s)
             step['text'] = " ".join(s.getText())
-            step['urls'] = map(lambda x:dict(url=x[1]+codebases_arg,logname=x[0]), s.getURLs().items())
+            urls = []
+            getUrls = s.getURLs().items()
+            for k,v in s.getURLs().items():
+                if isinstance(v, dict):
+                    if 'results' in v.keys():
+                        url_dict = dict(logname=k, url=v['url'] + codebases_arg, results=css_classes[v['results']])
+                    else:
+                        url_dict = dict(logname=k, url=v['url'] + codebases_arg)
+                else:
+                    url_dict = dict(logname=k, url=v + codebases_arg)
+                urls.append(url_dict)
+
+            step['urls'] = urls
 
             step['logs']= []
             for l in s.getLogs():

@@ -253,8 +253,11 @@ class BuildStepStatus(styles.Versioned):
         for w in self.watchers:
             w.logFinished(self.build, self, log)
 
-    def addURL(self, name, url):
+    def addURL(self, name, url, results=None):
         self.urls[name] = url
+        if results is not None:
+            self.urls[name] = {'url': url, 'results': results}
+
 
     def setText(self, text):
         self.text = text
