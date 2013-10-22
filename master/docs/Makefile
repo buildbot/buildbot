@@ -4,8 +4,8 @@ all: docs.tgz
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
-TAR_VERSION:=$(shell tar --version)
-TAR_TRANSFORM:=$(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--transform s/^html/$(VERSION)/)
+TAR_VERSION := $(shell tar --version)
+TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--transform s/^html/$(VERSION)/)
 
 docs.tgz: clean html singlehtml images-png
 	sed -e 's!href="index.html#!href="#!g' < _build/singlehtml/index.html > _build/html/full.html
