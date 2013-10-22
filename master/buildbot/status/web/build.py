@@ -213,9 +213,12 @@ class StatusResourceBuild(HtmlResource):
             getUrls = s.getURLs().items()
             for k,v in s.getURLs().items():
                 if isinstance(v, dict):
-                    url_dict = dict(logname =k, url=v['url'] + codebases_arg, result = css_classes[v['result']])
+                    if 'results' in v.keys():
+                        url_dict = dict(logname=k, url=v['url'] + codebases_arg, results=css_classes[v['results']])
+                    else:
+                        url_dict = dict(logname=k, url=v['url'] + codebases_arg)
                 else:
-                    url_dict = dict(logname= k, url=v + codebases_arg)
+                    url_dict = dict(logname=k, url=v + codebases_arg)
                 urls.append(url_dict)
 
             step['urls'] = urls

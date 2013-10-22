@@ -171,13 +171,10 @@ class Trigger(LoggingBuildStep):
 
         was_exception = was_failure = False
         brids = {}
-        brids_result = {}
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, some_brids = results
                 brids.update(some_brids)
-                for val in some_brids.values():
-                    brids_result[val] = results
 
             if not was_cb:
                 was_exception = True
@@ -201,7 +198,6 @@ class Trigger(LoggingBuildStep):
             def add_links_multimaster(res):
                 # reverse the dictionary lookup for brid to builder name
                 brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
-                masterurl = []
                 for was_cb, builddicts in res:
                     if was_cb:
                         for build in builddicts:
@@ -209,7 +205,7 @@ class Trigger(LoggingBuildStep):
                             num = build['number']
 
                             url = yield master.status.getURLForBuildRequest(build['brid'], bn, num)
-                            self.step_status.addURL(url['text'], url['path'], brids_result[build['brid']])
+                            self.step_status.addURL(url['text'], url['path'], results=build['results'])
             
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
@@ -221,9 +217,9 @@ class Trigger(LoggingBuildStep):
                             num = build['number']
 
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn,num), url, result= brids_result[build['brid']])
+                            self.step_status.addURL("%s #%d" % (bn,num), url, results=build['results'])
 
-            builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
+            builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
             if master.config.multiMaster:
                 yield add_links_multimaster(res_builds)
