@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from twisted.trial import unittest
 
 from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand
@@ -84,6 +85,7 @@ class TestShellCommandProperties(unittest.TestCase):
         req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 
         b = f.newBuild([req])
+        b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
 
@@ -101,6 +103,7 @@ class TestSetProperty(unittest.TestCase):
         req = FakeBuildRequest("Testing", {ss.repository:ss}, None)
 
         b = f.newBuild([req])
+        b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
 

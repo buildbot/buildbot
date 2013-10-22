@@ -16,7 +16,7 @@
 import mock
 from buildbot import interfaces
 from buildbot.process import buildstep
-from buildbot.test.fake import remotecommand, fakebuild, slave
+from buildbot.test.fake import remotecommand, fakebuild, slave, fakemaster
 
 
 class BuildStepMixin(object):
@@ -73,10 +73,12 @@ class BuildStepMixin(object):
         """
         factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
+        self.master = fakemaster.make_master(testcase=self)
 
         # step.build
 
         b = self.build = fakebuild.FakeBuild()
+        b.master = self.master
         def getSlaveVersion(cmd, oldversion):
             if cmd in slave_version:
                 return slave_version[cmd]

@@ -111,6 +111,7 @@ class TestBuild(unittest.TestCase):
 
         self.builder = self.createBuilder()
         self.build = Build([r])
+        self.build.master = self.master
         self.build.setBuilder(self.builder)
 
     def createBuilder(self):
