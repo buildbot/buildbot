@@ -313,12 +313,14 @@
 	      <xsl:attribute name="id">
 	         <xsl:value-of select="$newid"/>
 	      </xsl:attribute>
-	      <td class="FailureDetail txt-align-left">
+	      <td class="txt-align-left colspan-js" colspan="3">
+	      	<div class="FailureDetail">
 	         <xsl:apply-templates select="./failure"/> 
 	         <xsl:apply-templates select="./error"/>
 			 <xsl:apply-templates select="./reason"/>
+			</div>
          </td>
-         <td class="results-con"><xsl:value-of select="$result"/></td>
+         <td>&#160;</td>
          <td>
          	&#160;
          </td>

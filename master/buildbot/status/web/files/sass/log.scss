@@ -158,16 +158,18 @@ span.ignored {
 	background: #ffff00;
 	
 }
-	
+	 
 .Failure {
 	  background-color: #EFCFCF;
 		border-top: 1px solid #FFFFFF;
 }
 
-.table-1 tr td.FailureDetail:first-child {
+.table-1 tr td:first-child .FailureDetail {
 	color:#666;
 	padding-left: 15px;
-	white-space: pre-line;
+	white-space: pre;
+	max-height:300px;
+	font-family:"Courier New";
 }
 .Pass {
 	 border-top: 1px solid #FFFFFF;

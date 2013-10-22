@@ -2,8 +2,9 @@ define(['jquery'], function ($) {
 
     "use strict";
 
-$(document).ready(function(){
-    $("#filterinput").val("");
+	$(document).ready(function(){
+
+    		$("#filterinput").val("");
 			$('.check-boxes-list input').attr('checked', false);
 			
 			var th = $('.table-holder');
@@ -61,15 +62,13 @@ $(document).ready(function(){
 
 			//console.log(colList)
 			var oTable = $('.tablesorter-log-js').dataTable({
-				"asSorting": true,
+				"asSorting": false,
 				"bSearchable": true,			
 				"bPaginate": false,
 				"bFilter": true,
-				"bSort": true,
+				"bSort": false,
 				"bInfo": false,
-				"bSortable": true,
-				"aaSorting": [[ 1, "asc" ]],
-				"aoColumns": [{'bSortable': false },null,{'bSortable': false }],
+				"bSortable": false,
 				"bAutoWidth": false
 			});
 
@@ -117,5 +116,8 @@ $(document).ready(function(){
 				location.reload();
 			});
 
-});
+			// remove empty tds for rows with colspan
+			$('.colspan-js').next().remove();
+			$('.colspan-js').next().remove();
+	});
 });
