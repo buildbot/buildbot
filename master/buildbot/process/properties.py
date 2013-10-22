@@ -125,7 +125,7 @@ class Properties(util.ComparableMixin):
     def hasProperty(self, name):
         return name in self.properties
 
-    has_key = hasProperty
+    has_propkey = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
         try:
@@ -173,7 +173,7 @@ class PropertiesMixin:
         props = IProperties(self)
         return props.hasProperty(propname)
 
-    has_key = hasProperty
+    has_propkey = hasProperty
 
     def setProperty(self, propname, value, source='Unknown', runtime=None):
         # source is not optional in IProperties, but is optional here to avoid
