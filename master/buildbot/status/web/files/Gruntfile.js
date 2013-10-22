@@ -41,7 +41,7 @@ module.exports = function(grunt) {
       compile: {
         options: {
           baseUrl: 'script/',
-          dir: "prod/",
+          dir: "prod/script",
           optimize: 'uglify',
           mainConfigFile:'script/main.js'
         }
