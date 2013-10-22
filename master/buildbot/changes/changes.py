@@ -152,7 +152,7 @@ class Change:
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
         data += "Comments: %s" % self.comments
-        data += "Properties:\n%s\n\n" % self.getProperties()
+        data += "Properties: \n%s\n\n" % self.getProperties()
         return data
 
     def asDict(self):
