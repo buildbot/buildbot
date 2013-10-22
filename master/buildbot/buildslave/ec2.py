@@ -40,6 +40,8 @@ PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
+SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
+FULFILLED = 'fulfilled'
 
 
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
@@ -53,8 +55,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
-                 max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties={}, locks=None):
+                 max_builds=None, notify_on_missing=[], missing_timeout=60*20,
+                 build_wait_timeout=60*10, properties={}, locks=None,
+                 spot_instance=False, max_spot_price=1.6):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -88,6 +91,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.keypair_name = keypair_name
         self.security_name = security_name
         self.user_data = user_data
+        self.spot_instance = spot_instance
+        self.max_spot_price = max_spot_price
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier')
@@ -244,7 +249,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._start_instance)
+        if self.spot_instance:
+            return threads.deferToThread(self._request_spot_instance)
+        else:
+            return threads.deferToThread(self._start_instance)
 
     def _start_instance(self):
         image = self.get_image()
@@ -252,32 +260,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             key_name=self.keypair_name, security_groups=[self.security_name],
             instance_type=self.instance_type, user_data=self.user_data)
         self.instance = reservation.instances[0]
-        log.msg('%s %s starting instance %s' %
-                (self.__class__.__name__, self.slavename, self.instance.id))
-        duration = 0
-        interval = self._poll_resolution
-        while self.instance.state == PENDING:
-            time.sleep(interval)
-            duration += interval
-            if duration % 60 == 0:
-                log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration // 60,
-                         self.instance.id))
-            self.instance.update()
-        if self.instance.state == RUNNING:
-            self.output = self.instance.get_console_output()
-            minutes = duration // 60
-            seconds = duration % 60
-            log.msg('%s %s instance %s started on %s '
-                    'in about %d minutes %d seconds (%s)' %
-                    (self.__class__.__name__, self.slavename,
-                     self.instance.id, self.dns, minutes, seconds,
-                     self.output.output))
-            if self.elastic_ip is not None:
-                self.instance.use_ip(self.elastic_ip)
-            return [self.instance.id,
-                    image.id,
-                    '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
+        instance_id, image_id, start_time = self._wait_for_instance(reservation, image)
+        if None not in [instance_id, image_id, start_time]:
+            return [instance_id, image_id, start_time]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
@@ -324,3 +309,93 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'after about %d minutes %d seconds' %
                 (self.__class__.__name__, self.slavename,
                  instance.id, goal, duration // 60, duration % 60))
+        
+    def _request_spot_instance(self):
+        timestamp_yesterday = time.gmtime(int(time.time() - 86400))
+        spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
+        spot_prices = self.conn.get_spot_price_history(start_time=spot_history_starttime, 
+                                                       product_description='Linux/UNIX (Amazon VPC)')
+        price_sum = 0.0
+        price_count = 0
+        for price in spot_prices:
+            if price.instance_type == self.instance_type:
+                price_sum += price.price
+                price_count += 1
+        target_price = ( price_sum / price_count ) * 1.1
+        if target_price > self.max_spot_price:
+            log.msg('%s %s calculated spot price %0.2f exceeds '
+                    'configured maximum of %0.2f' %
+                    (self.__class__.__name__, self.slavename,
+                     target_price, self.max_spot_price))
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+        reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name, 
+                                                        security_groups=[self.security_name],
+                                                        instance_type=self.instance_type, 
+                                                        user_data=self.user_data)
+        request = self._wait_for_request(reservations[0])
+        instance_id = request.instance_id
+        reservations = self.conn.get_all_instances(instance_ids=[instance_id])
+        self.instance = reservations[0].instances[0]
+        return self._wait_for_instance(self.get_image())
+        
+    def _wait_for_instance(self, image):
+        log.msg('%s %s waiting for instance %s to start' %
+                (self.__class__.__name__, self.slavename, self.instance.id))
+        duration = 0
+        interval = self._poll_resolution
+        while self.instance.state == PENDING:
+            time.sleep(interval)
+            duration += interval
+            if duration % 60 == 0:
+                log.msg('%s %s has waited %d minutes for instance %s' %
+                        (self.__class__.__name__, self.slavename, duration//60,
+                         self.instance.id))
+            self.instance.update()
+        if self.instance.state == RUNNING:
+            self.output = self.instance.get_console_output()
+            minutes = duration//60
+            seconds = duration%60
+            log.msg('%s %s instance %s started on %s '
+                    'in about %d minutes %d seconds (%s)' %
+                    (self.__class__.__name__, self.slavename,
+                     self.instance.id, self.dns, minutes, seconds,
+                     self.output.output))
+            if self.elastic_ip is not None:
+                self.instance.use_ip(self.elastic_ip)
+            start_time = '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)
+            return self.instance.id, image.id, start_time
+        else:
+            return None, None, None
+            
+    def _wait_for_request(self, reservation):
+        log.msg('%s %s requesting spot instance' %
+                (self.__class__.__name__, self.slavename))
+        duration = 0
+        interval = self._poll_resolution
+        requests = self.conn.get_all_spot_instance_requests(request_ids=[reservation.id])
+        request = requests[0]
+        request_status = request.status.code
+        while request_status in SPOT_REQUEST_PENDING_STATES:
+            time.sleep(interval)
+            duration += interval
+            if duration % 60 == 0:
+                log.msg('%s %s has waited %d minutes for spot request %s' %
+                        (self.__class__.__name__, self.slavename, duration//60,
+                         request.id))
+            requests = self.conn.get_all_spot_instance_requests(request_ids=[request.id])
+            request = requests[0]
+            request_status = request.status.code
+        if request_status == FULFILLED:
+            minutes = duration//60
+            seconds = duration%60
+            log.msg('%s %s spot request %s fulfilled '
+                    'in about %d minutes %d seconds' %
+                    (self.__class__.__name__, self.slavename,
+                     request.id, minutes, seconds))
+            return request
+        else:
+            log.msg('%s %s failed to fulfill spot request %s' %
+                    (self.__class__.__name__, self.slavename,
+                     request.id))
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                request.id, request.status)
