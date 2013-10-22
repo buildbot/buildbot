@@ -1030,7 +1030,20 @@ class FakeBuildsComponent(FakeDBComponent):
                                 start_time=epoch2datetime(row.start_time),
                                 finish_time=epoch2datetime(row.finish_time)))
                
-        return defer.succeed(ret)            
+        return defer.succeed(ret)
+
+    def getBuildsAndResultForRequest(self, brid):
+        ret = []
+
+        for (id, row) in self.builds.items():
+            if row.brid == brid:
+                ret.append(dict(bid = row.id,
+                                brid=row.brid,
+                                number=row.number,
+                                start_time=epoch2datetime(row.start_time),
+                                finish_time=epoch2datetime(row.finish_time)))
+
+        return defer.succeed(ret)
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()

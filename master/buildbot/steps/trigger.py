@@ -194,6 +194,11 @@ class Trigger(LoggingBuildStep):
         if brids:
             master = self.build.builder.botmaster.parent
 
+            def  getBuildResults(build):
+                if 'results' in build:
+                    return (build['results'],)
+                return ()
+
             @defer.inlineCallbacks
             def add_links_multimaster(res):
                 # reverse the dictionary lookup for brid to builder name
@@ -203,9 +208,8 @@ class Trigger(LoggingBuildStep):
                         for build in builddicts:
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
-
                             url = yield master.status.getURLForBuildRequest(build['brid'], bn, num)
-                            self.step_status.addURL(url['text'], url['path'], results=build['results'])
+                            self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
             
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
@@ -215,9 +219,8 @@ class Trigger(LoggingBuildStep):
                         for build in builddicts:
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
-
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn,num), url, results=build['results'])
+                            self.step_status.addURL("%s #%d" % (bn,num), url, *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
