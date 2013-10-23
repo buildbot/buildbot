@@ -653,7 +653,8 @@ class BuildStep(object, properties.PropertiesMixin):
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            results = EXCEPTION
+            if results != RETRY:
+                results = EXCEPTION
             self.step_status.setText(self.describe(True) +
                                  ["interrupted"])
             self.step_status.setText2(["interrupted"])
