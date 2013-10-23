@@ -166,14 +166,14 @@ class BuildProgress(pb.Referenceable):
         self.finishedSteps.append(stepname)
         if len(self.finishedSteps) == len(self.steps.keys()):
             self.sendLastUpdates()
-            
+
     def newProgress(self):
         r = self.remaining()
         if self.debug:
             print " remaining:", r
         if r != None:
             self.sendAllUpdates()
-        
+
     def remaining(self):
         # sum eta of all steps
         sum = 0
@@ -257,7 +257,7 @@ class BuildProgress(pb.Referenceable):
             self.sendUpdate(remote, 1)
             self.removeWatcher(remote)
 
-        
+
 class Expectations:
     debug = False
     # decay=1.0 ignores all but the last build
@@ -304,7 +304,7 @@ class Expectations:
             if self.debug:
                 print "new expected time[%s] = %s, old %s, cur %s" % \
                       (name, new, old, current)
-            
+
             for metric, current in stepprogress.progress.items():
                 old = self.steps[name].get(metric)
                 new = self.wavg(old, current)

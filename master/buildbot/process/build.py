@@ -175,7 +175,7 @@ class Build(properties.PropertiesMixin):
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildnumber", self.build_status.number, "Build")
-        
+
         if self.sources and len(self.sources) == 1:
             # old interface for backwards compatibility
             source = self.sources[0]
@@ -247,8 +247,8 @@ class Build(properties.PropertiesMixin):
             self.setupBuild(expectations) # create .steps
         except:
             # the build hasn't started yet, so log the exception as a point
-            # event instead of flunking the build. 
-            # TODO: associate this failure with the build instead. 
+            # event instead of flunking the build.
+            # TODO: associate this failure with the build instead.
             # this involves doing
             # self.build_status.buildStarted() from within the exception
             # handler

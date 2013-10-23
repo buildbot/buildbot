@@ -26,13 +26,13 @@ def isTrueOrIsExactlyZero(v):
     # nonzero values are true...
     if v:
         return True
-    
+
     # ... and True for the number zero, but we have to
     # explicitly guard against v==False, since
     # isinstance(False, int) is surprisingly True
     if isinstance(v, int) and v is not False:
         return True
-    
+
     # all other false-ish values are false
     return False
 
@@ -96,7 +96,7 @@ class Git(Source):
 
         @type  retryFetch: boolean
         @param retryFetch: Retry fetching before failing source checkout.
-        
+
         @type  getDescription: boolean or dict
         @param getDescription: Use 'git describe' to describe the fetched revision
 
@@ -284,7 +284,7 @@ class Git(Source):
             raise buildstep.BuildStepFailed()
         log.msg("Got Git revision %s" % (revision, ))
         self.updateSourceProperty('got_revision', revision)
-    
+
         defer.returnValue(0)
 
     @defer.inlineCallbacks
@@ -292,23 +292,23 @@ class Git(Source):
         if self.getDescription==False: # dict() should not return here
             defer.returnValue(0)
             return
-        
+
         cmd = ['describe']
         if isinstance(self.getDescription, dict):
             for opt, arg in git_describe_flags:
                 opt = self.getDescription.get(opt, None)
                 arg = arg(opt)
                 if arg:
-                    cmd.extend(arg)            
+                    cmd.extend(arg)
         cmd.append('HEAD')
-        
+
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
             desc = stdout.strip()
             self.updateSourceProperty('commit-description', desc)
         except:
             pass
-            
+
         defer.returnValue(0)
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -412,7 +412,7 @@ class Git(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

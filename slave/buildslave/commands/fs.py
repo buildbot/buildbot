@@ -137,7 +137,7 @@ class CopyDirectory(base.Command):
 
     def setup(self,args):
         self.logEnviron = args.get('logEnviron',True)
-        
+
     def start(self):
         args = self.args
         # args['todir'] is relative to Builder directory, and is required.

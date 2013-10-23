@@ -208,7 +208,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/hg', 'pull', '--verbose', 'http://bitbucket.org/nicolas17/pyboinc'],
                 self.basedir_workdir,
                 sendRC=False, timeout=120, keepStdout=True, usePTY=False)
-                + 1, 
+                + 1,
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
                 + 0,

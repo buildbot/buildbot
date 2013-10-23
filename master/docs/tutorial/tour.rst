@@ -49,7 +49,7 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   c['title'] = "Pyflakes"
   c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
-If you want, you can change either of these links to anything you want to see what happens when you change them. 
+If you want, you can change either of these links to anything you want to see what happens when you change them.
 
 After making a change go into the terminal and type:
 
@@ -86,7 +86,7 @@ is complete.
 
 Now, if you go back to
 `the waterfall page <http://localhost:8010/waterfall>`_,
-you will see that the project's name is whatever you may have changed it to and when you click on the 
+you will see that the project's name is whatever you may have changed it to and when you click on the
 URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
 
 Configuration Errors
@@ -303,7 +303,7 @@ Debugging with Manhole
 You can do some debugging by using manhole, an interactive Python shell.  It
 exposes full access to the buildmaster's account (including the ability to
 modify and delete files), so it should not be enabled with a weak or easily
-guessable password. 
+guessable password.
 
 To use this you will need to install an additional package or two to your virtualenv:
 

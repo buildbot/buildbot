@@ -18,7 +18,7 @@
 
 
 {% macro stamp_td(sourcestamps) -%}
-  <td valign="bottom" class="sourcestamp">    
+  <td valign="bottom" class="sourcestamp">
     {% for ss in sourcestamps %}
       {%- if ss.codebase %}{{ ss.codebase|e }}: {% endif %}
       {%- if ss.revision -%}
@@ -38,7 +38,7 @@
       <br/>({{ b.state }}
       {%- if b.n_pending > 0 -%}
         , plus {{ b.n_pending }}
-      {%- endif -%}      
+      {%- endif -%}
       )
     {%- endif -%}
   </td>

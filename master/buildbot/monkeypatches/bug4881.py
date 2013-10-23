@@ -67,7 +67,7 @@ def patch():
 # Thijs Triemstra
 # Thomas Herve
 # Timothy Allen
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -75,10 +75,10 @@ def patch():
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-# 
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -126,7 +126,7 @@ class _FDDetector(object):
         """
         Check if /dev/fd works, if so, use that.  Otherwise, check if
         /proc/%d/fd exists, if so use that.
-        
+
         Otherwise, ask resource.getrlimit, if that throws an exception, then
         fallback to _fallbackFDImplementation.
         """

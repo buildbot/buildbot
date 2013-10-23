@@ -26,13 +26,13 @@ from buildbot import config
 class GitPoller(base.PollingChangeSource, StateMixin):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
-    
+
     compare_attrs = ["repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
 
     def __init__(self, repourl, branches=None, branch=None,
-                 workdir=None, pollInterval=10*60, 
+                 workdir=None, pollInterval=10*60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
@@ -68,7 +68,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
                     "Instead, only the given branches are downloaded.")
-        
+
         if self.workdir == None:
             self.workdir = 'gitpoller-work'
 
@@ -157,7 +157,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return fileList
         d.addCallback(process)
         return d
-            
+
     def _get_commit_author(self, rev):
         args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
@@ -194,7 +194,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList = results.split()
         revList.reverse()
         self.changeCount = len(revList)
-            
+
         log.msg('gitpoller: processing %d changes: %s from "%s"'
                 % (self.changeCount, revList, self.repourl) )
 

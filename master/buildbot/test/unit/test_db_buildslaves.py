@@ -55,7 +55,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BOGUS_NAME)
-        
+
         @d.addCallback
         def check(res):
             self.assertEqual(res, None)
@@ -68,7 +68,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-        
+
         @d.addCallback
         def check(res):
             self.assertEqual(res['slaveid'],   self.BS1_ID)
@@ -79,7 +79,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
 
     def test_getBuildslaves_empty(self):
         d = self.db.buildslaves.getBuildslaves()
-        
+
         @d.addCallback
         def check(res):
             self.assertEqual(res, [])
@@ -92,11 +92,11 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaves()
-        
+
         @d.addCallback
         def check(res):
             self.assertEqual(len(res), 2)
-            
+
             self.assertEqual(res[0]['slaveid'],   self.BS1_ID)
             self.assertEqual(res[0]['name'], self.BS1_NAME)
 
@@ -116,11 +116,11 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
                     name= self.BS1_NAME,
                     slaveinfo= NEW_INFO
                 )
-        
+
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-        
+
         @d.addCallback
         def check(res):
             self.assertEqual(res['slaveid'],   self.BS1_ID)
@@ -139,11 +139,11 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
                     name= self.BS2_NAME,
                     slaveinfo= self.BS2_INFO
                 )
-        
+
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BS2_NAME)
-        
+
         @d.addCallback
         def check(res):
             self.failIfIdentical(res['slaveid'], None)
@@ -160,18 +160,18 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
             # rolled back as a result of the conflicting insert
             newConn = conn.engine.connect()
             newConn.execute(self.db.model.buildslaves.insert(),
-                name=self.BS1_NAME, 
+                name=self.BS1_NAME,
                 info=RACE_INFO)
 
         d = self.db.buildslaves.updateBuildslave(
             name=self.BS1_NAME,
             slaveinfo=self.BS1_INFO,
             _race_hook=race_thd)
-        
+
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-        
+
         @d.addCallback
         def check(res):
             self.failIfIdentical(res['slaveid'], None)
@@ -199,7 +199,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
         @d.addCallback
         def get(_):
             return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-        
+
         @d.addCallback
         def checkUnchanged(res):
             # should be unchanged from the original value

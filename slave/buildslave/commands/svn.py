@@ -119,7 +119,7 @@ class SVN(SourceBaseCommand):
         svn_info_d = self._dovccmd('info', (self.svnurl,), rootdir=self.builder.basedir, keepStdout=True)
 
         svn_info_d.addCallbacks(parseInfo, self._abandonOnFailure)
-        svn_info_d.addCallbacks(exportCmd) 
+        svn_info_d.addCallbacks(exportCmd)
 
         return svn_info_d
 

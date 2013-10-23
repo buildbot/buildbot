@@ -393,8 +393,8 @@ bzr
 
 Mercurial
     ``hg parents --template '{node}\n'`` emits the full revision id (as opposed to
-    the common 12-char truncated) which is a SHA1 hash of the current 
-    revision's contents. This is used as the base revision. 
+    the common 12-char truncated) which is a SHA1 hash of the current
+    revision's contents. This is used as the base revision.
     ``hg diff`` then provides the patch relative to that
     revision. For :command:`try` to work, your working directory must only
     have patches that are available from the same remotely-available
@@ -429,7 +429,7 @@ Git
 
 .. The spaces in the previous 2 literals are non-breakable spaces
    &#160;
-    
+
 .. todo::
 
     I'm not sure if this actually works the way it's intended
@@ -599,7 +599,7 @@ arguments which can influence the ``Change`` that gets submitted:
 
 --encoding
     Specifies the character encoding for all other parameters,
-    defaulting to ``'utf8'``. 
+    defaulting to ``'utf8'``.
 
 --vc
     Specifies which VC system the Change is coming from, one of: ``cvs``,

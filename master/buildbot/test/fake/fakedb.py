@@ -1144,10 +1144,10 @@ class FakeBuildsComponent(FakeDBComponent):
             number=row.number,
             start_time=_mkdt(row.start_time),
             finish_time=_mkdt(row.finish_time)))
-    
+
     def getBuildsForRequest(self, brid):
         ret = []
- 
+
         for (id, row) in self.builds.items():
             if row.brid == brid:
                 ret.append(dict(bid = row.id,
@@ -1155,8 +1155,8 @@ class FakeBuildsComponent(FakeDBComponent):
                                 number=row.number,
                                 start_time=_mkdt(row.start_time),
                                 finish_time=_mkdt(row.finish_time)))
-               
-        return defer.succeed(ret)            
+
+        return defer.succeed(ret)
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()

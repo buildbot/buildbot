@@ -50,4 +50,4 @@ class RemoteError(Exception):
         self.remoteTraceback = remoteTraceback
 
 def CopiedFailure_throwExceptionIntoGenerator(self, g):
-    return g.throw(RemoteError(self.type, self.value, self.traceback)) 
+    return g.throw(RemoteError(self.type, self.value, self.traceback))

@@ -108,7 +108,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict:
             buildrequest.BuildRequest.fromBrdict(master, brdict))
         return self.assertFailure(d, AssertionError)
-        
+
     def test_fromBrdict_multiple_sourcestamps(self):
         master = fakemaster.make_master()
         master.db = fakedb.FakeDBConnector(self)
@@ -153,7 +153,7 @@ class TestBuildRequest(unittest.TestCase):
             # Test the multiple sourcestamp interface
             self.assertEqual(br.sources['A'].ssid, 234)
             self.assertEqual(br.sources['B'].ssid, 235)
-            
+
             self.assertEqual([ ch.number for ch in br.sources['A'].changes], [13])
             self.assertEqual([ ch.number for ch in br.sources['B'].changes], [14])
 
@@ -177,7 +177,7 @@ class TestBuildRequest(unittest.TestCase):
             289     15     A        9284
             288     14     B        9200
             289     16     B        9201
-            -------------------------------- 
+            --------------------------------
             After merged in Build:
             Source1 has rev 9284 and contains changes 13 and 15 from repository svn://a
             Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
@@ -221,7 +221,7 @@ class TestBuildRequest(unittest.TestCase):
                         revision='9201', repository='svn://b..', codebase='B',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=237, changeid=16),
-      
+
             fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
 
@@ -234,14 +234,14 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
-        d.addCallback(lambda _ : 
+        d.addCallback(lambda _ :
                     master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
         def check(_):
             sources = brs[0].mergeSourceStampsWith(brs[1:])
-            
+
             source1 = source2 = None
             for source in sources:
                 if source.codebase == 'A':
@@ -251,13 +251,13 @@ class TestBuildRequest(unittest.TestCase):
 
             self.assertFalse(source1 == None)
             self.assertEqual(source1.revision,'9284')
-            
+
             self.assertFalse(source2 == None)
             self.assertEqual(source2.revision,'9201')
-                      
+
             self.assertEqual([c.number for c in source1.changes], [13,15])
             self.assertEqual([c.number for c in source2.changes], [14,16])
-            
+
         d.addCallback(check)
         return d
 
@@ -267,7 +267,7 @@ class TestBuildRequest(unittest.TestCase):
             ----------------------------------------------------------------------
             288     17     C          1800     request 1 has repo not in request 2
             289     18     D          2100     request 2 has repo not in request 1
-            -------------------------------- 
+            --------------------------------
             Merge cannot be performd and raises error:
               Merging requests requires both requests to have the same codebases
         """
@@ -294,7 +294,7 @@ class TestBuildRequest(unittest.TestCase):
                         revision='2100', repository='svn://d..',
                          codebase='D', project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=239, changeid=18),
-            
+
             fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
 
@@ -307,7 +307,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
-        d.addCallback(lambda _ : 
+        d.addCallback(lambda _ :
                     master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
@@ -325,7 +325,7 @@ class TestBuildRequest(unittest.TestCase):
         r2.sources = {"A": FakeSource()}
         mergeable = r1.canBeMergedWith(r2)
         self.assertTrue(mergeable, "Both request should be able to merge")
-    
+
     def test_build_can_be_merged_with_non_mergable_same_codebases(self):
         r1 = buildrequest.BuildRequest()
         r1.sources = {"A": FakeSource(mergeable = False)}

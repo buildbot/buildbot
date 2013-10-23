@@ -1093,7 +1093,7 @@ Monotone step takes the following arguments:
 
    ``clean``
       This remove all other files except those tracked and ignored by Monotone. It will remove
-      all the files that appear in :command:`mtn ls unknown`. Then it will pull from 
+      all the files that appear in :command:`mtn ls unknown`. Then it will pull from
       remote and update the working directory.
 
    ``fresh``

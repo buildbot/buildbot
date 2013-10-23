@@ -616,7 +616,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                 status_text=["compile", "0 projects", "0 files"])
         return self.runStep()
-    
+
     def test_rendering(self):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                     arch=Property('a')))

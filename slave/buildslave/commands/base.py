@@ -594,7 +594,7 @@ class SourceBaseCommand(Command):
                          usePTY=False)
         self.command = c
         d = c.start()
-        
+
         # clean up the temp file
         def cleanup(x):
             try:

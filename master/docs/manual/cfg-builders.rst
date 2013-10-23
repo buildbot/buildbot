@@ -36,7 +36,7 @@ configuration file, its use looks like::
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which
     controls how the build is performed by defining the steps in the build.
-    Full details appear in their own section, :ref:`Build-Factories`. 
+    Full details appear in their own section, :ref:`Build-Factories`.
 
 Other optional keys may be set on each ``BuilderConfig``:
 
@@ -111,7 +111,7 @@ Other optional keys may be set on each ``BuilderConfig``:
         f.addStep(ShellCommand(
                       command=['bash', './configure']))
         f.addStep(Compile())
-        
+
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
                 slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
@@ -192,6 +192,6 @@ Such a function can be provided to the BuilderConfig as follows::
     c['builders'] = [
         BuilderConfig(name='test', factory=f,
             nextBuild=pickNextBuild,
-            slavenames=['slave1', 'slave2', 'slave3', 'slave4']), 
+            slavenames=['slave1', 'slave2', 'slave3', 'slave4']),
     ]
 

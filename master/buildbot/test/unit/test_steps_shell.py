@@ -210,7 +210,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                          usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
+        self.expectOutcome(result=SUCCESS,
            status_text=['test', 'done'])
         return self.runStep()
 
@@ -224,7 +224,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                          usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
+        self.expectOutcome(result=SUCCESS,
            status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
@@ -238,7 +238,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                          usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
+        self.expectOutcome(result=SUCCESS,
            status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
@@ -252,7 +252,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                          usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
+        self.expectOutcome(result=SUCCESS,
            status_text=["'trial", "-b", "...'"])
         return self.runStep()
 

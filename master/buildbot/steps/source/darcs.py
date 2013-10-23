@@ -49,7 +49,7 @@ class Darcs(Source):
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
-        
+
         if self.mode == 'full':
             if self.method == None:
                 self.method = 'copy'
@@ -169,7 +169,7 @@ class Darcs(Source):
                                               wkdir='.'))
 
         return d
-        
+
     def _checkout(self):
 
         if self.retry:
@@ -183,7 +183,7 @@ class Darcs(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()
@@ -260,6 +260,6 @@ class Darcs(Source):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-                
+
         d.addCallback(evaluateCommand)
         return d

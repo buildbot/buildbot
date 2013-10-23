@@ -89,7 +89,7 @@ class SessionManager(object):
 
     def __init__(self):
         self.__dict__ = self.__shared_state
-        
+
     def new(self, user, infos):
         cookie = generate_cookie()
         user = infos["userName"]

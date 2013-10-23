@@ -38,7 +38,7 @@ class DebLintian(ShellCommand):
     def __init__(self, fileloc=None, suppressTags=None, **kwargs):
         """
         Create the DebLintian object.
-        
+
         @type fileloc: str
         @param fileloc: Location of the .deb or .changes to test.
         @type suppressTags: list
@@ -64,7 +64,7 @@ class DebLintian(ShellCommand):
     def createSummary(self, log):
         """
         Create nice summary logs.
-        
+
         @param log: log to create summary off of.
         """
         warnings = []

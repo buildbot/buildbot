@@ -3,20 +3,20 @@
 {% block content %}
 
 <h1>
-  Builder <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
-  build <a href="{{ build_link }}">#{{ b.getNumber() }}</a> 
-  step <a href="">{{ s.getName() }}</a> 
+  Builder <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a>
+  build <a href="{{ build_link }}">#{{ b.getNumber() }}</a>
+  step <a href="">{{ s.getName() }}</a>
 </h1>
 
 <div class="column">
 
 {% if s.isFinished() %}
   <h2>Finished</h2>
-  <p class="{{ result_css }} result">  
+  <p class="{{ result_css }} result">
     {%- set text = s.getText() -%}
     {%- if text is string %}{{ text|e }}
     {%- else %}{{ text|join(" ")|e }}{% endif -%}
-  </p>  
+  </p>
 {% else %}
   <h2>Not Finished</h2>
   <p>ETA {{ s.getETA()|e }} seconds</p>
@@ -42,7 +42,7 @@
 {% else %}
   <b>Not started</b>
 {% endif %}
-  
+
 <h2>Logs</h2>
 <ul>
 {% for l in logs %}
@@ -54,7 +54,7 @@
   {% endif %}
   </li>
 {% else %}
-  <li class="alt">- No logs -</li> 
+  <li class="alt">- No logs -</li>
 {% endfor %}
 </ul>
 

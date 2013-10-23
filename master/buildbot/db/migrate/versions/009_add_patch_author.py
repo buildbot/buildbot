@@ -30,7 +30,7 @@ def upgrade(migrate_engine):
     patch_author= sa.Column('patch_author', sa.Text, nullable=False,
                             **defaults)
     patch_author.create(patches, populate_default=True)
-    
+
     patch_author= sa.Column('patch_comment', sa.Text, nullable=False,
                             **defaults)
     patch_author.create(patches, populate_default=True)

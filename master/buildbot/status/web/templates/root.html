@@ -21,7 +21,7 @@
 {% if authz.advertiseAction('view', request) %}
 <ul>
   {% set item_class=cycler('alt', '') %}
-  
+
   <li class="{{ item_class.next() }}">The <a href="waterfall">Waterfall Display</a> will give you a
   time-oriented summary of recent buildbot activity. <a href="waterfall/help">Waterfall Help.</a></li>
 
@@ -31,7 +31,7 @@
   <li class="{{ item_class.next() }}">The <a href="tgrid">Transposed Grid Display</a> presents
   the same information as the grid, but lists the revisions down the side.</li>
 
-  <li class="{{ item_class.next() }}">The <a href="console">Console</a> presents 
+  <li class="{{ item_class.next() }}">The <a href="console">Console</a> presents
   a user-oriented status page.</li>
 
   <li class="{{ item_class.next() }}">The <a href="builders">Builders</a> and their most recent builds are

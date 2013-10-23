@@ -32,7 +32,7 @@ users in hopes they may be useful, and might require some additional work to
 make them functional.
 
 CVS
- * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script) 
+ * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from ``buildbot
    sendchange`` run in a loginfo script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
@@ -324,8 +324,8 @@ CVSMaildirSource
 
 .. py:class:: buildbot.changes.mail.CVSMaildirSource
 
-This parser works with the :file:`buildbot_cvs_maildir.py` script in the 
-contrib directory. 
+This parser works with the :file:`buildbot_cvs_maildir.py` script in the
+contrib directory.
 
 The script sends an email containing all the files submitted in
 one directory. It is invoked by using the :file:`CVSROOT/loginfo` facility.
@@ -358,9 +358,9 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like:
 .. note:: For cvs version 1.12.x, the ``--path %p`` option is required.
    Version 1.11.x and 1.12.x report the directory path differently.
 
-The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT. 
+The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT.
 It can be anywhere. Run the script with --help to see all the options.
-At the very least, the 
+At the very least, the
 options ``-e`` (email) and ``-P`` (project) should be specified. The line must end with ``%{sVv}``
 This is expanded to the files that were modified.
 
@@ -390,7 +390,7 @@ it creates will be associated with the default (i.e. trunk) branch. ::
 .. bb:chsrc:: BzrLaunchpadEmailMaildirSource
 
 .. _BzrLaunchpadEmailMaildirSource:
-    
+
 BzrLaunchpadEmailMaildirSource
 +++++++++++++++++++++++++++++++
 
@@ -516,7 +516,7 @@ hostname/portnumber as appropriate for your buildbot:
 
     [hooks]
     changegroup.buildbot = python:buildbot.changes.hgbuildbot.hook
-    
+
     [hgbuildbot]
     master = buildmaster.example.org:9987
     # .. other hgbuildbot parameters ..
@@ -527,7 +527,7 @@ or comma (see also 'hg help config'):
 
 .. code-block:: ini
 
-    master = 
+    master =
         buildmaster.example.org:9987
         buildmaster2.example.org:9989
 
@@ -537,7 +537,7 @@ or comma (see also 'hg help config'):
    in this example. There is nothing magical about the `buildbot`
    suffix in the hook name. The ``[hgbuildbot]`` section *is* special,
    however, as it is the only section that the buildbot hook pays
-   attention to.) 
+   attention to.)
 
 Also note that this runs as a ``changegroup`` hook, rather than as
 an ``incoming`` hook. The ``changegroup`` hook is run with
@@ -558,7 +558,7 @@ sendchange credentials then you can set these with the ``auth``
 parameter. When this parameter is not set it defaults to
 ``change:changepw``, which are the defaults for the ``user`` and
 ``password`` values of a ``PBChangeSource`` which doesn't require
-authentication. 
+authentication.
 
 .. code-block:: ini
 
@@ -625,7 +625,7 @@ able to use the same :file:`.hgrc` for all your repositories, stored in
 Compatibility
 #############
 
-As twisted needs to hook some signals, and some web servers 
+As twisted needs to hook some signals, and some web servers
 strictly forbid that, the parameter ``fork`` in the
 ``[hgbuildbot]`` section will instruct Mercurial to fork before
 sending the change request. Then as the created process will be of short
@@ -735,7 +735,7 @@ Here's a simple example that you might have in your
 .. bb:chsrc:: P4Source
 
 .. _P4Source:
-    
+
 P4Source
 ~~~~~~~~
 
@@ -801,7 +801,7 @@ components after. ::
 .. bb:chsrc:: BonsaiPoller
 
 .. _BonsaiPoller:
-    
+
 BonsaiPoller
 ~~~~~~~~~~~~
 
@@ -864,7 +864,7 @@ multiple branches.
     hostname for remote ones, and any additional directory names necessary
     to get to the repository), and the sub-path within the repository's
     virtual filesystem for the project and branch of interest.
-    
+
     The :bb:chsrc:`SVNPoller` will only pay attention to files inside the
     subdirectory specified by the complete svnurl.
 
@@ -943,7 +943,7 @@ multiple branches.
 
 ``extra_args``
     If specified, the extra arguments will be added to the svn command args.
-    
+
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function
 is available explicitly as ``split_file_alwaystrunk``::
@@ -987,7 +987,7 @@ See :ref:`Customizing-SVNPoller` for details and some common scenarios.
 .. bb:chsrc:: BzrPoller
 
 .. _Bzr-Poller:
-        
+
 Bzr Poller
 ~~~~~~~~~~
 
@@ -1030,7 +1030,7 @@ The ``BzrPoller`` parameters are:
 .. bb:chsrc:: GitPoller
 
 .. _GitPoller:
-    
+
 GitPoller
 ~~~~~~~~~
 
@@ -1079,7 +1079,7 @@ arguments:
 ``usetimestamps``
     parse each revision's commit timestamp (default is ``True``),
     or ignore it in favor of the current time (so recently processed
-    commits appear together in the waterfall page) 
+    commits appear together in the waterfall page)
 
 ``encoding``
     Set encoding will be used to parse author's name and commit
@@ -1204,7 +1204,7 @@ This class adds a change to the buildbot system for each of the following events
     :file:`checkpatch.pl` can be automatically triggered. Beware of
     what kind of automatic task you trigger. At this point, no trusted
     human has reviewed the code, and a patch could be specially
-    crafted by an attacker to compromise your buildslaves. 
+    crafted by an attacker to compromise your buildslaves.
 
 ``ref-updated``
     A change has been merged into the repository. Typically, this kind
@@ -1305,7 +1305,7 @@ are not understood (yet). It accepts the following arguments:
 ``feedurl``
     The commit Atom feed URL of the GoogleCode repository (MANDATORY)
 
-``pollinterval`` 
+``pollinterval``
     Polling frequency for the feed (in seconds). Default is 1 hour (OPTIONAL)
 
 As an example, to poll the Ostinato project's commit feed every 3 hours, the
@@ -1314,7 +1314,7 @@ configuration would look like this::
     from googlecode_atom import GoogleCodeAtomPoller
     c['change_source'] = GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
-        pollinterval=10800) 
+        pollinterval=10800)
 
 (note that you will need to download ``googlecode_atom.py`` from the Buildbot
 source and install it somewhere on your PYTHONPATH first)

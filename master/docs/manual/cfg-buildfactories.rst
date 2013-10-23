@@ -166,11 +166,11 @@ Optional Arguments:
     None, the test step is skipped.
 
 .. _BasicBuildFactory:
-    
+
 .. index::
    BasicBuildFactory
    Build Factory; BasicBuildFactory
-    
+
 BasicBuildFactory
 ~~~~~~~~~~~~~~~~~
 
@@ -262,7 +262,7 @@ Arguments:
 .. index::
    Distutils,
    Build Factory; Distutils
-    
+
 Distutils
 ~~~~~~~~~
 

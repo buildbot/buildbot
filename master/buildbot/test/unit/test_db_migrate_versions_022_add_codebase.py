@@ -63,7 +63,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
         self.sourcestamps = sa.Table('sourcestamps', metadata, autoload=True)
         self.changes = sa.Table('changes', metadata, autoload=True)
-        
+
     def fill_tables_with_testdata(self, conn, testdata):
         for ssid, repo, codebase, cid in testdata:
             self.insert_sourcestamps_changes(conn, ssid, repo, codebase, cid)
@@ -106,8 +106,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
-            
-            res = conn.execute(sa.select([tbl.c.changeid, tbl.c.repository, 
+
+            res = conn.execute(sa.select([tbl.c.changeid, tbl.c.repository,
                                           tbl.c.codebase, ]))
             got_changes = res.fetchall()
             self.assertEqual(got_changes, [(1, 'https://svn.com/repo_a', 'repo_a')])
@@ -126,8 +126,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
-            
-            res = conn.execute(sa.select([tbl.c.id, tbl.c.repository, 
+
+            res = conn.execute(sa.select([tbl.c.id, tbl.c.repository,
                                           tbl.c.codebase,]))
             got_sourcestamps = res.fetchall()
             self.assertEqual(got_sourcestamps, [(1000, 'https://svn.com/repo_a', 'repo_a')])

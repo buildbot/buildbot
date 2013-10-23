@@ -397,7 +397,7 @@ buildslaves
 
 .. py:class:: BuildslavesConnectorComponent
 
-    This class handles Buildbot's notion of buildslaves. The buildslave 
+    This class handles Buildbot's notion of buildslaves. The buildslave
     information is returned as a dictionary:
 
     * ``slaveid``

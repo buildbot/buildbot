@@ -85,7 +85,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='', 
+                 revlink='', properties={}, repository='', codebase='',
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:

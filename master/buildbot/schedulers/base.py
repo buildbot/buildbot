@@ -107,7 +107,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             config.error("Codebases cannot be None")
 
         self.codebases = codebases
-        
+
         # internal variables
         self._change_subscription = None
         self._change_consumption_lock = defer.DeferredLock()

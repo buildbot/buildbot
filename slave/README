@@ -25,7 +25,7 @@ developers are inconvenienced by the failure.  Features
 * Slaves can be run behind a NAT firewall and communicate with the master
 
 * Buildbot has a variety of status-reporting tools to get information about
-  builds in front of developers in a timely manner. 
+  builds in front of developers in a timely manner.
 
 
 Buildslave:

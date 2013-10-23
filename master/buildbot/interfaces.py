@@ -217,7 +217,7 @@ class IBuildSetStatus(Interface):
     def getBuilderNames():
         """Return a list of the names of all Builders on which this set will
         do builds.
-        
+
         @returns: list of names via Deferred"""
     def isFinished():
         pass

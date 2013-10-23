@@ -41,7 +41,7 @@ Just about anything might block - even getters and setters!
 Helpful Twisted Classes
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Twisted has some useful, but little-known classes.  
+Twisted has some useful, but little-known classes.
 Brief descriptions follow, but you should consult the API documentation or source code
 for the full details.
 
@@ -115,7 +115,7 @@ merely assigned ``rev = res.strip()``, then that variable would be local to
 
 .. note:: do not try to build a loop in this style by chaining multiple
     Deferreds!  Unbounded chaining can result in stack overflows, at least on older
-    versions of Twisted. Use ``deferredGenerator`` instead. 
+    versions of Twisted. Use ``deferredGenerator`` instead.
 
 inlineCallbacks
 ...............

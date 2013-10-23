@@ -209,13 +209,13 @@ class ForceBuildActionResource(ForceAction):
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
-    
+
     default = field.default
 
     if "list" in field.type:
         choices = field.getChoices(master, sch, buildername)
         default_props[pname+".choices"] = choices
-            
+
     default = req.args.get(pname, [default])[0]
     if "bool" in field.type:
         default = "checked" if default else ""
@@ -224,7 +224,7 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
         default = html.escape(default.encode('utf-8','ignore'))
 
     default_props[pname] = default
-        
+
     if "nested" in field.type:
         for subfield in field.fields:
             buildForceContextForField(req, default_props, sch, subfield, master, buildername)
@@ -237,7 +237,7 @@ def buildForceContext(cxt, req, master, buildername=None):
             force_schedulers[sch.name] = sch
             for field in sch.all_fields:
                 buildForceContextForField(req, default_props, sch, field, master, buildername)
-                
+
     cxt['force_schedulers'] = force_schedulers
     cxt['default_props'] = default_props
 

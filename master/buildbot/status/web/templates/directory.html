@@ -15,7 +15,7 @@
 <th style="min-width:10em">Encoding</th>
 </tr>
 
-{% for d in directories %}  
+{% for d in directories %}
   <tr class="directory {{ row_class.next() }}">
     <td><a href="{{ d.href }}"><b>{{ d.text }}</b></a></td>
     <td><b>{{ d.size }}</b></td>

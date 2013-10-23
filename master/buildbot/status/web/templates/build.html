@@ -19,7 +19,7 @@ Build #{{ b.getNumber() }}
   {% endif %}
 
   {{ current_step }}
-  
+
   {% if authz.advertiseAction('stopBuild', request) %}
     <h2>Stop Build</h2>
     {{ forms.stop_build(build_url+"/stop", authz, on_all=False, short=False, label='This Build') }}
@@ -27,10 +27,10 @@ Build #{{ b.getNumber() }}
 {% else %}
   <h2>Results:</h2>
 
-  <p class="{{ result_css }} result">   
+  <p class="{{ result_css }} result">
     {{ b.getText()|join(' ')|capitalize }}
   </p>
-   
+
   {% if b.getTestResults() %}
     <h3><a href="{{ tests_link }}"/></h3>
   {% endif %}
@@ -87,13 +87,13 @@ SourceStamps:
  # TODO: turn this into a table, or some other sort of definition-list
  # that doesn't take up quite so much vertical space
  #}
-   
+
 <h2>BuildSlave:</h2>
-  
-{% if slave_url %}  
+
+{% if slave_url %}
   <a href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
 {% else %}
-  {{ b.getSlavename()|e }} 
+  {{ b.getSlavename()|e }}
 {% endif %}
 
 <h2>Reason:</h2>
@@ -116,7 +116,7 @@ SourceStamps:
 {% for s in steps %}
   <li>
     <div class="{{ s.css_class }} result">
-      <a href="{{ s.link }}">{{ s.name }}</a> 
+      <a href="{{ s.link }}">{{ s.name }}</a>
       {{ s.text }}&nbsp;<span style="float:right">{{ '( ' + s.time_to_run + ' )' if s.time_to_run else '' }}</span>
     </div>
 
@@ -127,11 +127,11 @@ SourceStamps:
       {% else %}
         <li class="{{ item_class.next() }}">- no logs -</li>
       {% endfor %}
-    
+
       {% for u in s.urls %}
         <li class="{{ item_class.next() }}"><a href="{{ u.url }}">{{ u.logname }}</a></li>
       {% endfor %}
-    </ol>  
+    </ol>
   </li>
 {% endfor %}
 </ol>
@@ -179,7 +179,7 @@ SourceStamps:
     <td class="left">
     {% if p.label %}
     {{ p.label }}
-    {% endif %}    
+    {% endif %}
     </td>
     {% if p.text %}
     <td><textarea readonly cols="{{p.cols}}" rows="{{p.rows}}">{{ p.text|e }}</textarea></td>
@@ -187,7 +187,7 @@ SourceStamps:
     <td>{{ p.value|e }}</td>
     {% endif %}
   </tr>
-  {% endif %}    
+  {% endif %}
 {% endfor %}
 </table>
 
@@ -221,7 +221,7 @@ SourceStamps:
 </div>
 
 <br style="clear:both"/>
-  
+
 {% if has_changes %}
     <div class="column">
       <h2>All Changes:</h2>

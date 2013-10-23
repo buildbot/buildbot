@@ -508,17 +508,17 @@ class TestInterpolateSrc(unittest.TestCase):
         sa = FakeSource()
         sb = FakeSource()
         sc = FakeSource()
-        
+
         sa.repository = 'cvs://A..'
         sa.codebase = 'cbA'
         sa.project = "Project"
         self.build.sources['cbA'] = sa
-        
+
         sb.repository = 'cvs://B..'
         sb.codebase = 'cbB'
         sb.project = "Project"
         self.build.sources['cbB'] = sb
-        
+
         sc.repository = 'cvs://C..'
         sc.codebase = 'cbC'
         sc.project = None
@@ -832,7 +832,7 @@ class TestWithProperties(unittest.TestCase):
     def testRecursiveDict(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
-        command = { WithProperties("%(x)s %(y)s") : 
+        command = { WithProperties("%(x)s %(y)s") :
                     WithProperties("%(y)s %(x)s") }
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,

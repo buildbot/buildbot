@@ -352,13 +352,13 @@ syntaxes in the parentheses.
 ``propname:~replacement``
     Like ``propname:-replacement``, but only substitutes the value
     of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be 
+    Python considers ``None``, 0, empty lists, and the empty string to be
     false, so such values will be replaced by ``replacement``.
 
 ``propname:+replacement``
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
-    
+
 Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
 above cannot contain more substitutions.

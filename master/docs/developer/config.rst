@@ -95,11 +95,11 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`prioritizeBuilders`.
 
     .. py:attribute:: codebaseGenerator
-    
-        A callable, or None, used to determine the codebase from an incoming 
+
+        A callable, or None, used to determine the codebase from an incoming
         :py:class:`~buildbot.changes.changes.Change`,
         from :bb:cfg:`codebaseGenerator`
-        
+
     .. py:attribute:: protocols
 
         The per-protocol port specification for slave connections.

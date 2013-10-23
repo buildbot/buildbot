@@ -51,7 +51,7 @@ class OneRow(Pane):
         self.widget.add(self.statusBox)
         self.widget.show_all()
         self.builders = []
-        
+
     def getWidget(self):
         return self.widget
     def addBuilder(self, builder):
@@ -71,7 +71,7 @@ class OneRow(Pane):
         self.nameBox.add(name)
         self.statusBox.add(box)
         builder.haveSomeWidgets([name, status, box])
-    
+
 class R2Builder(Builder):
     def start(self):
         self.nameSquare.set_text(self.name)
@@ -117,10 +117,10 @@ class CompactRow(Pane):
         self.widget.add(self.statusBox)
         self.widget.show_all()
         self.builders = []
-        
+
     def getWidget(self):
         return self.widget
-        
+
     def addBuilder(self, builder):
         self.builders.append(builder)
 
@@ -149,7 +149,7 @@ class CompactRow(Pane):
         self.lastBuildBox.remove(builder.lastBuildBox)
         self.statusBox.remove(builder.statusBox)
         self.builders.remove(builder)
-    
+
 class CompactBuilder(Builder):
     def setup(self):
         self.timer = None
@@ -163,7 +163,7 @@ class CompactBuilder(Builder):
         (self.nameSquare,
          self.lastBuildSquare, self.lastBuildBox,
          self.statusSquare, self.statusBox) = widgets
-        
+
     def remote_currentlyOffline(self):
         self.eta = None
         self.stopTimer()
@@ -258,7 +258,7 @@ class CompactBuilder(Builder):
     def updateTextTimer(self):
         self.updateText()
         return gtk.TRUE # restart timer
-    
+
     def remote_progress(self, seconds):
         if seconds == None:
             self.eta = None
@@ -526,7 +526,7 @@ class GtkClient(TextClient):
     def removeBuilder(self, name):
         self.pane.removeBuilder(name, self.builders[name])
         Client.removeBuilder(self, name)
-        
+
     def startConnecting(self, master):
         self.master = master
         Client.startConnecting(self, master)
@@ -548,4 +548,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
+

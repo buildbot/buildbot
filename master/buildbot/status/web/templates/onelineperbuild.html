@@ -8,7 +8,7 @@
 {% if builders %}
   <p>of builders: {{ builders|join(", ")|e }}</p>
 {% endif %}
- 
+
 <div class="column">
 
 {{ build_table(builds, True) }}
@@ -22,7 +22,7 @@
     {{ forms.stop_build("builders/_all/stopall", authz, on_all=True, label='All Builds') }}
   {% endif %}
 {% endif %}
-  
+
 {% if num_online > 0 %}
   {% if authz.advertiseAction('forceAllBuilds', request) %}
     <h2>Force All Builds</h2>

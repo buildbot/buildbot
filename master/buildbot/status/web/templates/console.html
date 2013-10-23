@@ -17,7 +17,7 @@ function showBuildBox(url, event) {
     var cursorPosLeft = (window.event ? window.event.clientX : event.pageX)
 
     // Offset the position by 5, to make the window appears under the cursor.
-    cursorPosTop  = cursorPosTop  + document.body.scrollTop -5 ;    
+    cursorPosTop  = cursorPosTop  + document.body.scrollTop -5 ;
     cursorPosLeft = cursorPosLeft  + document.body.scrollLeft - 5;
 
     // Move the div (hidden) under the cursor.
@@ -28,23 +28,23 @@ function showBuildBox(url, event) {
     // Reload the hidden frame with the build page we want to show.
     // The onload even on this frame will update the div and make it visible.
     document.getElementById("frameBox").src = url
-    
+
     // We don't want to reload the page.
     return false;
 }
 
 // OnLoad handler for the iframe containing the build to show.
-function updateDiv(event) { 
+function updateDiv(event) {
     // Get the frame innerHTML.
     var iframeContent = document.getElementById("frameBox").contentWindow.document.body.innerHTML;
 
     // If there is any content, update the div, and make it visible.
     if (iframeContent) {
-        var divBox = document.getElementById('divBox'); 
+        var divBox = document.getElementById('divBox');
         divBox.innerHTML = iframeContent ;
         divBox.style.display = "block";
     }
-} 
+}
 
 // Util functions to know if an element is contained inside another element.
 // We use this to know when we mouse out our build status div.
@@ -71,13 +71,13 @@ function checkMouseLeave(element, event) {
   }
 }
 
-// ]]> 
+// ]]>
 </script>
 {% endblock %}
 
 {% block content %}
 
-<h1>Console View</h1> 
+<h1>Console View</h1>
 
 <div align="center">
   <table width="95%" class="Grid" border="0" cellspacing="0">
@@ -117,7 +117,7 @@ function checkMouseLeave(element, event) {
         </div>
       </td>
       <td width="33%" align="right" class="right_align">
-      <script type="text/javascript"> 
+      <script type="text/javascript">
 // <![CDATA[
           function reload_page() {
             name_value = document.getElementById('namebox').value
@@ -126,7 +126,7 @@ function checkMouseLeave(element, event) {
             else
               document.location.href = document.location.href+ '&name=' + name_value;
           }
-// ]]> 
+// ]]>
         </script>
         <form onsubmit='reload_page()'>
           <input id='namebox' name='name' type='text' style='color:#999;'
@@ -146,7 +146,7 @@ function checkMouseLeave(element, event) {
 
 <div align="center">
 <table width="96%">
-  
+
 {% if categories|length > 1 %}
   <tr>
     <td width="1%">
@@ -172,20 +172,20 @@ function checkMouseLeave(element, event) {
   {% for c in categories %}
     <td class='DevSlave {{ alt_class.next() }}'>
       <table width="100%">
-        <tr>          
-    {% for s in slaves[c.name] %}          
+        <tr>
+    {% for s in slaves[c.name] %}
           <td class='DevSlaveBox'>
             <a href='{{ s.url }}' title='{{ s.pageTitle }}' class='DevSlaveBox {{ s.color }}' target="_blank">
             </a>
           </td>
-    {% endfor %}            
+    {% endfor %}
         </tr>
       </table>
     </td>
   {% endfor %}
   </tr>
 {% endif %}
-  
+
 {% for r in revisions %}
   {% set alt = alt_class.next() %}
   {% set firstrev = "first" if loop.first else '' %}
@@ -202,26 +202,26 @@ function checkMouseLeave(element, event) {
     {% set last = "last" if loop.last else "" %}
     <td class='DevStatus {{ alt }} {{ last if not firstrev else '' }}'>
       <table width="100%">
-        <tr>    
+        <tr>
     {% for b in r.builds[c.name] %}
           <td class='DevStatusBox'>
             <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;'
                title='{{ b.pageTitle|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
                target="_blank"></a>
           </td>
-    {% endfor %}    
+    {% endfor %}
         </tr>
       </table>
     </td>
   {% endfor %}
   </tr>
-   
+
   <tr>
-    <td colspan="{{ r.span }}" class='DevComment {{ alt }} {% if not r.details %}DevBottom{% endif %}'> 
+    <td colspan="{{ r.span }}" class='DevComment {{ alt }} {% if not r.details %}DevBottom{% endif %}'>
       {{ r.comments|changecomment(r.project or None)|replace('\n', '<br/>')|replace('  ','&nbsp; ') }}
     </td>
   </tr>
- 
+
   {% if r.details %}
   <tr>
     <td colspan="{{ r.span }}" class='DevDetails {{ alt }} DevBottom'>
@@ -235,35 +235,35 @@ function checkMouseLeave(element, event) {
     {% endfor %}
       </ul>
     </td>
-  </tr>    
-  {% endif %} 
-  
+  </tr>
+  {% endif %}
+
   <tr class='DevStatusSpacing'>
     <td>
     </td>
-  </tr>  
+  </tr>
 
 {% else %}
  <tr><td>No revisions available</td></tr>
 {% endfor %}
-  
+
 </table>
 </div>
 
 
-<div id="divBox" onmouseout="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall"> 
+<div id="divBox" onmouseout="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall">
 </div>
 
 
 <iframe id="frameBox" style="display: none;" onload="updateDiv(undefined);"></iframe>
-  
+
 <script type="text/javascript">
 // replace 'onload="updateDiv(event);" with this, as iframe doesn't have onload event in xhtml
 window.onload = function() {
   document.getElementById('frameBox').onload = function(event) {
     updateDiv(event);
   };
-}; 
+};
 </script>
 
 {% endblock %}

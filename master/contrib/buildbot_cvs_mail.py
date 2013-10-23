@@ -2,7 +2,7 @@
 #
 #                        Buildbot CVS Mail
 #
-# This script was derrived from syncmail, 
+# This script was derrived from syncmail,
 # Copyright (c) 2002-2006 Barry Warsaw, Fred Drake, and contributors
 #
 # http://cvs-syncmail.cvs.sourceforge.net
@@ -63,7 +63,6 @@ class SmtplibMock:
             pass
         def sendmail(self, address, email, msg):
             sys.stdout.write( msg )
-        
 
 rfc822_specials_re = re.compile(r'[\(\)\<\>\@\,\;\:\\\"\.\[\]]')
 
@@ -125,7 +124,7 @@ X-Mailer: Python buildbot-cvs-mail %(version)s
         print >> s
         resp = conn.sendmail(address, options.email, s.getvalue())
         conn.close()
-    
+
 def fork_and_send_mail(options):
     # cannot wait for child process or that will cause parent to retain cvs
     # lock for too long.  Urg!
@@ -180,7 +179,7 @@ parser.add_option("--mailport", dest='mailport', metavar="PORT",
             The port number of SMTP server.  The default is '25'.
             """))
 parser.add_option("-q", "--quiet", dest='verbose', action="store_false",
-            default=True, 
+            default=True,
             help=textwrap.dedent("""\
             Don't print as much status to stdout.
             """))
@@ -222,11 +221,11 @@ def get_options():
         options.smtplib = SmtplibMock
 
     return options
-        
+
 # scan args for options
 def main():
     options = get_options()
-    
+
     if options.verbose:
         print 'Mailing %s...' % options.email
         print 'Generating notification message...'

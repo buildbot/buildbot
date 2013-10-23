@@ -41,7 +41,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownDirs()
-        
+
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -156,7 +156,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_addChange_args(
                 args=('me', ['a'], 'com'),
                 exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-                
+
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
         def fake_createUserObject(*args, **kwargs):
@@ -179,7 +179,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         return self.do_test_createUserObjects_args(
                 kwargs=dict(who='me', src='git'),
                 exp_args=(self.master, 'me', 'git'))
-               
+
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \

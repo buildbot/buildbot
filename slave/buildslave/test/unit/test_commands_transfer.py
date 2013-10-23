@@ -29,7 +29,7 @@ from buildslave.commands import transfer
 
 class FakeMasterMethods(object):
     # a fake to represent any of:
-    # - FileWriter 
+    # - FileWriter
     # - FileDirectoryWriter
     # - FileReader
     def __init__(self, add_update):
@@ -94,7 +94,7 @@ class FakeMasterMethods(object):
 
     def remote_utime(self,accessed_modified):
         self.add_update('utime - %s' % accessed_modified[0])
-        
+
     def remote_close(self):
         self.add_update('close')
 
@@ -295,7 +295,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
 
     def test_simple(self, compress=None):
-        self.fakemaster.keep_data = True 
+        self.fakemaster.keep_data = True
 
         self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
             workdir='workdir',
@@ -340,8 +340,8 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
     def test_out_of_space_unpack(self):
-        self.fakemaster.keep_data = True 
-        self.fakemaster.unpack_fail = True 
+        self.fakemaster.keep_data = True
+        self.fakemaster.unpack_fail = True
 
         self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
             workdir='workdir',

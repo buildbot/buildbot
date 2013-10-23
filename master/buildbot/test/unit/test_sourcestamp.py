@@ -26,19 +26,19 @@ class TestBuilderBuildCreation(unittest.TestCase):
         master.db = fakedb.FakeDBConnector(self)
         master.db.insertTestData([
             fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                        repository='svn://...', codebase='cb', 
+                        repository='svn://...', codebase='cb',
                         project='world-domination'),
             fakedb.Change(changeid=14, branch='trunk', revision='9284',
-                        repository='svn://...', codebase='cb', 
+                        repository='svn://...', codebase='cb',
                         project='world-domination'),
             fakedb.Change(changeid=15, branch='trunk', revision='9284',
-                        repository='svn://...', codebase='cb', 
+                        repository='svn://...', codebase='cb',
                         project='world-domination'),
             fakedb.Change(changeid=16, branch='trunk', revision='9284',
-                        repository='svn://...', codebase='cb', 
+                        repository='svn://...', codebase='cb',
                         project='world-domination'),
             fakedb.SourceStamp(id=234, branch='trunk', revision='9284',
-                        repository='svn://...', codebase='cb', 
+                        repository='svn://...', codebase='cb',
                         project='world-domination'),
             fakedb.SourceStampChange(sourcestampid=234, changeid=14),
             fakedb.SourceStampChange(sourcestampid=234, changeid=13),
@@ -166,19 +166,19 @@ class TestBuilderBuildCreation(unittest.TestCase):
         ss2 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
                 project='p', repository='r', codebase='cb', changes=[])
         self.assertFalse(ss1.canBeMergedWith(ss2))
-        
+
     def test_canBeMergedWith_where_sourcestamp_have_different_codebases(self):
         ss1 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
                 project='p', repository='r', codebase='cbA', changes=[])
         ss2 = sourcestamp.SourceStamp(branch='dev', revision='xyz',
                 project='p', repository='r', codebase='cbB', changes=[])
         self.assertFalse(ss1.canBeMergedWith(ss2))
-        
+
     def test_canBeMergedWith_with_self_patched_sourcestamps(self):
         ss = sourcestamp.SourceStamp(branch='dev', revision='xyz',
                 project='p', repository='r', codebase='cbA', changes=[],
                 patch=(1, ''))
-        self.assertTrue(ss.canBeMergedWith(ss))        
+        self.assertTrue(ss.canBeMergedWith(ss))
 
     def test_constructor_most_recent_change(self):
         chgs = [

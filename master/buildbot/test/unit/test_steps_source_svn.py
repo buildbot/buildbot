@@ -387,7 +387,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
-    
+
     def test_mode_incremental_repourl_not_updatable(self):
         self.setupStep(
                 svn.SVN(repourl=ConstantRenderable('http://svn.local/trunk/app'),
@@ -1300,12 +1300,12 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))

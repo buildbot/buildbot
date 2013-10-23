@@ -461,11 +461,11 @@ class BuildLineMixin:
 
         if not ss_list:
             return [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'unknown'
             }]
-        
+
         if len(ss_list)==1:
             return [{
                 'repo': ss_list[0].repository,
@@ -500,7 +500,7 @@ class BuildLineMixin:
         # if all sourcestamps were empty, then this is a "most recent" kind of build
         if not rev_list:
             rev_list = [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'most recent'
             }]
@@ -514,7 +514,7 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         css_class = css_classes.get(results, "")
-        
+
         rev_list = self.get_rev_list(build)
 
         values = {'class': css_class,

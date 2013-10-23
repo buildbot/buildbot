@@ -467,7 +467,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.slave_status.setConnected(True)
 
             self._applySlaveInfo(state)
-            
+
             self.slave_commands = state.get("slave_commands")
             self.slave_environ = state.get("slave_environ")
             self.slave_basedir = state.get("slave_basedir")
@@ -485,7 +485,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.botmaster.master.status.slaveConnected(self.slavename)
 
         d.addCallback(lambda _: self._saveSlaveInfoDict())
-        
+
         d.addCallback(lambda _: self.updateSlave())
 
         d.addCallback(lambda _:

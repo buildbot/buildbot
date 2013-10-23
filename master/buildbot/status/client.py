@@ -74,7 +74,7 @@ class RemoteBuildSet(pb.Referenceable):
         return self.b.getResults()
 
 components.registerAdapter(RemoteBuildSet,
-                           interfaces.IBuildSetStatus, IRemote)    
+                           interfaces.IBuildSetStatus, IRemote)
 
 
 class RemoteBuilder(pb.Referenceable):
@@ -109,7 +109,7 @@ class RemoteBuilder(pb.Referenceable):
         return IRemote(self.b.getEvent(number))
 
 components.registerAdapter(RemoteBuilder,
-                           interfaces.IBuilderStatus, IRemote)    
+                           interfaces.IBuilderStatus, IRemote)
 
 
 class RemoteBuildRequest(pb.Referenceable):
@@ -146,7 +146,7 @@ class RemoteBuildRequest(pb.Referenceable):
                 break
 
 components.registerAdapter(RemoteBuildRequest,
-                           interfaces.IBuildRequestStatus, IRemote)    
+                           interfaces.IBuildRequestStatus, IRemote)
 
 class RemoteBuild(pb.Referenceable):
     def __init__(self, build):
@@ -227,7 +227,7 @@ class RemoteBuild(pb.Referenceable):
 
 
 components.registerAdapter(RemoteBuild,
-                           interfaces.IBuildStatus, IRemote)    
+                           interfaces.IBuildStatus, IRemote)
 
 class BuildSubscriber:
     def __init__(self, observer):
@@ -292,7 +292,7 @@ class RemoteBuildStep(pb.Referenceable):
         return self.s.getResults()
 
 components.registerAdapter(RemoteBuildStep,
-                           interfaces.IBuildStepStatus, IRemote)    
+                           interfaces.IBuildStepStatus, IRemote)
 
 class RemoteSlave:
     def __init__(self, slave):
@@ -402,7 +402,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         'steps': all those plus buildETAUpdate, stepStarted, stepFinished
         'logs': all those plus stepETAUpdate, logStarted, logFinished
         'full': all those plus logChunk (with the log contents)
-        
+
 
         Messages are defined by buildbot.interfaces.IStatusReceiver .
         'interval' is used to specify how frequently ETAUpdate messages

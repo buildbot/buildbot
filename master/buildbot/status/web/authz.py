@@ -69,7 +69,7 @@ class Authz(object):
             cookie = request.received_cookies[COOKIE_KEY]
             return self.sessions.get(cookie)
         return None
-            
+
     def authenticated(self, request):
         if self.useHttpHeader:
             return request.getUser() != ''
