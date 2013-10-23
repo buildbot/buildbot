@@ -62,21 +62,26 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             self.finished(SKIPPED)
             return
 
-        prevBuildRequest = yield self.master.db.buildrequests.getBuildRequestBySourcestamps(buildername=self.build.builder.config.name, sourcestamps=self.build_sourcestamps)
+        prevBuildRequest = yield self.master.db.buildrequests\
+            .getBuildRequestBySourcestamps(buildername=self.build.builder.config.name,
+                                           sourcestamps=self.build_sourcestamps)
 
         if prevBuildRequest:
-            build = yield self.master.db.builds.getBuildsForRequest(prevBuildRequest['brid'])
-            if build > 0:
-                build_num = build[0]['number']
-                url = yield self.master.status.getURLForBuildRequest(prevBuildRequest['brid'], self.build.builder.config.name, build_num)
+            build_list = yield self.master.db.builds.getBuildsForRequest(prevBuildRequest['brid'])
+            # there can be many builds per buildrequest for example (retry) when slave lost connection
+            # in this case we will display all the builds related to this build request
+            for build in build_list:
+                build_num = build['number']
+                url = yield self.master.status.getURLForBuildRequest(prevBuildRequest['brid'],
+                                                                     self.build.builder.config.name, build_num)
                 self.addURL(url['text'], url['path'])
-                brid = self.build.requests[0].id
-                # we are not building but reusing a previous build
-                reuse = yield self.master.db.buildrequests.reusePreviousBuild(brid, prevBuildRequest['brid'])
-                self.step_status.stepFinished(SUCCESS)
-                self.build.result = SUCCESS
-                self.build.allStepsDone()
-                return
+            brid = self.build.requests[0].id
+            # we are not building but reusing a previous build
+            reuse = yield self.master.db.buildrequests.reusePreviousBuild(brid, prevBuildRequest['brid'])
+            self.step_status.stepFinished(SUCCESS)
+            self.build.result = SUCCESS
+            self.build.allStepsDone()
+            return
 
         self.step_status.setText(["Running build (previous sucessful build not found)."])
         self.finished(SUCCESS)
