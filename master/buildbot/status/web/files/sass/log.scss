@@ -164,16 +164,21 @@ span.ignored {
 		border-top: 1px solid #FFFFFF;
 }
 
-.table-1 tr td:first-child .FailureDetail {
+.table-1 tr td:first-child .failure-detail-txt {
 	color:#666;
 	padding-left: 15px;
-	white-space: pre;
-	max-height:300px;
 	font-family:"Courier New";
+    overflow: auto;
+    white-space: pre-line;
 }
+
+.failure-detail-cont a {
+	margin-right:5px;
+}
+
 .Pass {
 	 border-top: 1px solid #FFFFFF;
-	  background-color: #DDE6D6;
+	 background-color: #DDE6D6;
 }
 
 .Ignored {

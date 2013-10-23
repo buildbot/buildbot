@@ -313,12 +313,13 @@
 	      <xsl:attribute name="id">
 	         <xsl:value-of select="$newid"/>
 	      </xsl:attribute>
-	      <td class="txt-align-left colspan-js" colspan="3">
-	      	<div class="FailureDetail">
-	         <xsl:apply-templates select="./failure"/> 
-	         <xsl:apply-templates select="./error"/>
-			 <xsl:apply-templates select="./reason"/>
-			</div>
+	      <td class="txt-align-left failure-detail-cont colspan-js" colspan="3">
+	      	<a href="#" class="new-window var-2 grey-btn">Opem new window</a>
+	      	<div class="failure-detail-txt">
+	      		<xsl:apply-templates select="./failure"/>
+	      		<xsl:apply-templates select="./error"/>
+	      		<xsl:apply-templates select="./reason"/>
+	      	</div>
          </td>
          <td>&#160;</td>
          <td>

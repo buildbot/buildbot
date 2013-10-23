@@ -5,6 +5,7 @@ define(['jquery'], function ($) {
 	$(document).ready(function(){
 
     		$("#filterinput").val("");
+
 			$('.check-boxes-list input').attr('checked', false);
 			
 			var th = $('.table-holder');
@@ -12,6 +13,8 @@ define(['jquery'], function ($) {
 			//  sort failues and ignored first
 			var failIgnoreArray = [];
 			$(th).each(function(){	
+
+				// count fail/ignored on each table
 				var igCount = $('.ignored-count',this).text() > 0;
 				var failCount = $('.failures-count',this).text() > 0;
 				if (igCount && !failCount) {
@@ -112,6 +115,7 @@ define(['jquery'], function ($) {
 				inputVal($("#filterinput").val());	
 			});
 
+			// clear the input field
 			$('#clearFilter').click(function(){
 				location.reload();
 			});
@@ -119,5 +123,50 @@ define(['jquery'], function ($) {
 			// remove empty tds for rows with colspan
 			$('.colspan-js').next().remove();
 			$('.colspan-js').next().remove();
+
+			$('.failure-detail-cont', th).each(function(){	
+				var fdTxt = $('.failure-detail-txt', this);
+				
+				if ($(fdTxt).height() >= 300) {
+					$('<a class="height-toggle var-2 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));
+				}
+				
+			});
+
+			var html = ""
+			function nWin(newWinHtml) {
+			  	var w = window.open();
+			  
+				html += "<style>body {padding:0 0 0 15px;margin:0;font-family:'Courier New';font-size:12px;white-space: pre-line;overflow:auto;}</style>";
+				html += newWinHtml;
+			  
+				$(w.document.body).html(html);
+			}
+
+			// show content of exceptions in new window
+			$('.new-window').click(function(e){
+				e.preventDefault();
+				var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
+				nWin(newWinHtml);
+			});
+
+			// show more / hide
+			$('.height-toggle').click(function(e){
+				e.preventDefault();
+				if (!$(this).hasClass('expanded-js')) {
+					$(this).addClass('expanded-js');
+					$(this).text('Show less');
+					$(this).parent().find($('.failure-detail-txt')).animate({
+						'height':700
+					}, 'slow');
+				} else {
+					$(this).removeClass('expanded-js');
+					$(this).text('Show more');
+					$(this).parent().find($('.failure-detail-txt')).animate({
+						'height':300
+					}, 'slow');
+				}
+			});
+
 	});
 });
