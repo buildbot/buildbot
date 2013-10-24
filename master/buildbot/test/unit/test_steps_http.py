@@ -47,6 +47,10 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         if txrequests is None:
             raise unittest.SkipTest("Need to install txrequests to test http steps")
 
+        # ignore 'http_proxy' environment variable when running tests
+        session = http.getSession()
+        session.trust_env = False
+
         # port 0 means random unused port
         self.listener = reactor.listenTCP(0, Site(TestPage()))
         self.port = self.listener.getHost().port
