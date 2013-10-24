@@ -482,7 +482,6 @@ div.last {
 .force-list,
 .force-bool {
 		display:block;
-		margin-bottom: 11px;
 		overflow: auto;
 	.label {
 		display:block;
@@ -622,6 +621,60 @@ div.force-text {
     	}
     }
 
+}
+.tabs-list {
+	li {
+		float:left;
+		@include border-radius(7px);
+		background-color: #FFFFFF;
+	    border: 1px solid #CCCCCC;
+	    @include border-radius(7px);
+	    cursor: pointer;
+	    display: block;
+	    font-size: 11px;
+	    font-weight: bold;
+	    margin-bottom: 16px;
+	    margin-right: 7px;
+	    padding: 5px 10px 6px;
+	    &.selected {
+	    	background-color: #eee;
+	    }
+	}
+}
+.content-blocks {
+	margin-bottom:15px;	
+}
+
+.dependencies {
+	display:none;
+	select {
+		width: 100%;
+	}
+}
+.slaves-block {
+	display:none;
+    background: none repeat scroll 0 0 #FFF;
+    border: 1px solid #CCCCCC;
+    @include border-radius (5px);
+    @include box-shadow (1px 1px 1px #FFF);
+    padding: 12px 12px 8px;
+    select {
+   		margin-top: 4px;
+    }
+}
+.selected-forcebuild-btn {
+	margin-bottom:10px;
+	@include border-radius(7px);
+	background-color: #fff;
+	border: 1px solid #CCCCCC;
+	color: inherit;
+	cursor: pointer;
+	padding: 5px 12px 7px;
+	font-weight: bold;
+	display:block;
+	&:hover {
+		color:#999;
+	}
 }
 
 // lists
@@ -1626,6 +1679,8 @@ form.command_forcebuild .force-nested > .label {
     margin-top:15px;
     font-size: 14px;
 }
+
+
 
 @include breakpoint($bkpt-small) {
 	form.command_forcebuild {

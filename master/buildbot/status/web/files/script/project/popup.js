@@ -68,9 +68,12 @@ define(['jquery'], function ($) {
 				$(this).attr('data-in', i)
 			});
 
+			//For builders pending box
 			$('.popup-btn-js').click(function(){
 				var thisi = $(this).attr('data-in');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+				var rtUpdate = $(this).attr('data-rt_update');
+
 				$('body').append(preloader).show();
 				$.ajax({
 						url:'',
@@ -174,17 +177,58 @@ define(['jquery'], function ($) {
 				});
 			});
 
+			// html for 
+			function htmlModule (htmlChunk) {
+
+				if (htmlChunk == 'isForm') {
+					var mib3 = ""
+					mib3 += '<div class="more-info-box remove-js">';
+					mib3 += '<span class="close-btn"></span>';
+					mib3 +=	'<h3>Run custom build</h3>';
+					// Insert when the backend is ready mib3 +=	'<ul class="tabs-list"><li class="selected">General</li><li>Dependencies</li><li>Slaves</li></ul>';
+					mib3 += '<div id="content1"></div></div>';
+					var mib4 = $(mib3);
+				} else {
+					var mib3 = ""
+					mib3 += '<div class="more-info-box remove-js">';
+					mib3 += '<span class="close-btn"></span>';
+					mib3 +=	'<h3>Buildslaves</h3>';
+					mib3 += '<div id="content1"></div></div>';
+					var mib4 = $(mib3);
+				}
+				return mib4;
+			}
+
+			// tab list for custom build
+			function customTabs (){
+				$('.tabs-list li').click(function(i){
+					var indexLi = $(this).index();
+					$(this).parent().find('li').removeClass('selected');
+					$(this).addClass('selected');
+					$('.content-blocks > div').each(function(i){
+						if ($(this).index() != indexLi) {
+							$(this).hide();
+						} else {
+							$(this).show();
+						}
+					});
+
+				});
+			}
+			
+			// custom build on builder and builders
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
 				var datab = $(this).attr('data-b');
 				var dataindexb = $(this).attr('data-indexb');
-				
+				var rtUpdate = $(this).attr('data-rt_update');
+				var htmlChunk = $(this).attr('data-htmlchunk'); 
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
-				var mib3 = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
+				var mib3 = htmlModule (htmlChunk);
 				$(mib3).appendTo('body');
 
-				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
+				$.get('', {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb}).done(function(data) {
 
 					$('#bowlG').remove();
 					$(data).appendTo($('#content1'));
@@ -193,7 +237,7 @@ define(['jquery'], function ($) {
 					$(window).resize(function() {
 						$(mib3).center();
 					});
-
+					customTabs();
 					$(document, '.close-btn').bind('click touchstart', function(e){
 				
 					    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
@@ -207,6 +251,8 @@ define(['jquery'], function ($) {
 				});
 
 			});
+			
+			
 
 		}
 	}
