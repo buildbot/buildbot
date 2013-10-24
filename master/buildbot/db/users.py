@@ -41,6 +41,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             if rows:
                 return rows[0].uid
+            if not identifier:
+                return None
 
             _race_hook and _race_hook(conn)
 
