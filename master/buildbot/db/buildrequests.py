@@ -183,13 +183,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return buildrequest
         return self.db.pool.do(thd)
 
-    def reusePreviousBuild(self, brid, artifactbrid):
+    def reusePreviousBuild(self, requests, artifactbrid):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
 
+            brids = [br.id for br in requests]
             stmt = buildrequests_tbl.update()\
-                .where(buildrequests_tbl.c.id == brid)\
+                .where(buildrequests_tbl.c.id.in_(brids))\
                 .values(artifactbrid=artifactbrid)
 
             res = conn.execute(stmt)
@@ -201,15 +202,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
-            clauses = []
-            mergedrequests = requests[1:]
-            for br in mergedrequests:
-                clauses.append(buildrequests_tbl.c.id == br.id)
-
-            stmt = sa.select([buildrequests_tbl.c.id]).where(sa.or_(*clauses))
+            mergedrequests = [br.id for br in requests[1:]]
 
             stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(stmt))\
+                .where(buildrequests_tbl.c.id.in_(mergedrequests))\
                 .values(artifactbrid=requests[0].id)
 
             res = conn.execute(stmt2)

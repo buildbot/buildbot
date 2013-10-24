@@ -518,11 +518,27 @@ class Builder(config.ReconfigurableServiceMixin,
             # merge the chosen request with any compatible requests in the
             # queue
             brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
-                                    mergeRequests_fn)
+                                                Builder._defaultMergeRequestFn)
+                                    #mergeRequests_fn)
+
+            # update artifactbrid
 
             # try to claim the build requests
             brids = [ brdict['brid'] for brdict in brdicts ]
+            unclaimed_brids = [ br['brid'] for br in unclaimed_requests]
+
             try:
+                print "\n\n #--# chosen build %s #--# \n\n" % brdict['brid']
+                print "\n\n #--# builder %s about to claim brids %s #--# \n\n" % (self.name, brids)
+                print "\n\n #--# unclaimed_brids %s #--# \n\n" % unclaimed_brids
+                building_list = []
+                for b in self.building:
+                    building_list = [br.id for br in b.requests]
+                print "\n\n #--# building_list %s #--#\n\n" % building_list
+                old_building_list = []
+                for b in self.old_building:
+                    old_building_list = [br.id for br in b.requests]
+                print "\n\n #--# old_building_list %s #--#\n\n" % old_building_list
                 yield self.master.db.buildrequests.claimBuildRequests(brids)
             except buildrequests.AlreadyClaimedError:
                 # one or more of the build requests was already claimed;
