@@ -138,7 +138,7 @@ class SlaveSource(Source):
         Source.start(self)
 
     def commandComplete(self, cmd):
-        if not cmd.updates.has_key("got_revision"):
+        if not "got_revision" in cmd.updates:
             return
         got_revision = cmd.updates["got_revision"][-1]
         if got_revision is None:
@@ -805,7 +805,7 @@ class Repo(SlaveSource):
 
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
-            if (change.properties.has_key("event.type") and
+            if ("event.type" in change.properties and
                 change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s"% (change.properties["event.change.project"],
                                                  change.properties["event.change.number"],
@@ -849,7 +849,7 @@ class Repo(SlaveSource):
 
     def commandComplete(self, cmd):
         repo_downloaded = []
-        if cmd.updates.has_key("repo_downloaded"):
+        if "repo_downloaded" in cmd.updates:
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
                 self.updateSourceProperty("repo_downloaded",

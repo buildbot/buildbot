@@ -169,7 +169,7 @@ class Box:
         self.class_ = class_
         self.urlbase = urlbase
         self.show_idle = 0
-        if parms.has_key('show_idle'):
+        if "show_idle" in parms:
             del parms['show_idle']
             self.show_idle = 1
 

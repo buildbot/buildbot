@@ -92,7 +92,7 @@ class Trigger(LoggingBuildStep):
         # don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
             scheduler = scheduler
-            if all_schedulers.has_key(scheduler):
+            if scheduler in all_schedulers:
                 sch = all_schedulers[scheduler]
                 if ITriggerableScheduler.providedBy(sch):
                     triggered_schedulers.append(sch)

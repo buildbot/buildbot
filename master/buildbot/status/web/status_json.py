@@ -147,7 +147,7 @@ class JsonResource(resource.Resource):
                                 pageTitle=pageTitle,
                                 parent_node=self)
         # Equivalent to resource.Resource.getChildWithDefault()
-        if self.children.has_key(path):
+        if path in self.children:
             return self.children[path]
         return self.getChild(path, request)
 

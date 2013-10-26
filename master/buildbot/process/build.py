@@ -313,7 +313,7 @@ class Build(properties.PropertiesMixin):
             else:
                 step.setDefaultWorkdir (self.workdir)
             name = step.name
-            if stepnames.has_key(name):
+            if name in stepnames:
                 count = stepnames[name]
                 count += 1
                 stepnames[name] = count
@@ -358,7 +358,7 @@ class Build(properties.PropertiesMixin):
 
         # gather owners from build requests
         owners = [r.properties['owner'] for r in self.requests
-                  if r.properties.has_key('owner')]
+                  if "owner" in r.properties]
         if owners: self.setProperty('owners', owners, self.reason)
 
         self.results = [] # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
