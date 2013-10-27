@@ -120,6 +120,7 @@ class Git(Source):
         self.getDescription = getDescription
         self.config = config
         self.supportsBranch = True
+        self.srcdir = 'source'
         Source.__init__(self, **kwargs)
 
         if self.mode not in ['incremental', 'full']:
@@ -244,12 +245,13 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        self.workdir = 'source'
+        old_workdir = self.workdir
+        self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir':'build',
+                                          {'fromdir': self.srcdir,
+                                           'todir': old_workdir,
                                            'logEnviron': self.logEnviron,
                                            'timeout': self.timeout,})
             cmd.useLog(self.stdio_log, False)
@@ -257,7 +259,7 @@ class Git(Source):
             return d
         d.addCallback(copy)
         def resetWorkdir(_):
-            self.workdir = 'build'
+            self.workdir = old_workdir
             return 0
 
         d.addCallback(resetWorkdir)
@@ -483,7 +485,8 @@ class Git(Source):
 
     def _updateSubmodule(self, _):
         if self.submodules:
-            return self._dovccmd(['submodule', 'update', '--recursive'])
+            return self._dovccmd(['submodule', 'update',
+                                  '--init', '--recursive'])
         else:
             return defer.succeed(0)
 

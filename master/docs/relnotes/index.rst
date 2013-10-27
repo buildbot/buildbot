@@ -178,6 +178,16 @@ Features
 
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
+  
+* :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
+
+Fixes
+~~~~~
+
+* Fixed an issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
+
+* The Git step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
+  so that it will receive any newly added submodules.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

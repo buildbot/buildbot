@@ -18,7 +18,7 @@ import mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.process import buildstep, remotecommand
+from buildbot.process import buildstep, remotecommand, properties
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
 from buildbot.test.fake import fakebuild, remotecommand as fakeremotecommand, slave
@@ -246,6 +246,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(step2.describe(done=True),
                          [step2.name] + descriptionSuffix)
 
+    @defer.inlineCallbacks
+    def test_step_renders_flunkOnFailure(self):
+        self.setupStep(TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
+        self.properties.setProperty('fOF', 'yes', 'test')
+        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        yield self.runStep()
+        self.assertEqual(self.step.flunkOnFailure, 'yes')
+
 class TestLoggingBuildStep(unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
@@ -295,7 +303,7 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def test_step_raining_buildstepfailed_in_start(self):
+    def test_step_raising_buildstepfailed_in_start(self):
         self.setupStep(FailingCustomStep())
         self.expectOutcome(result=FAILURE, status_text=["generic"])
         return self.runStep()

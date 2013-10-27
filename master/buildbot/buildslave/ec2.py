@@ -194,24 +194,29 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             options = []
             get_match = re.compile(self.valid_ami_location_regex).match
             for image in self.conn.get_all_images(
-                owners=self.valid_ami_owners):
-                # gather sorting data
+                    owners=self.valid_ami_owners):
+                # Image must be available
+                if image.state != 'available':
+                    continue
+                # Image must match regex
                 match = get_match(image.location)
-                if match:
-                    alpha_sort = int_sort = None
-                    if level < 2:
-                        try:
-                            alpha_sort = match.group(1)
-                        except IndexError:
-                            level = 2
-                        else:
-                            if level == 0:
-                                try:
-                                    int_sort = int(alpha_sort)
-                                except ValueError:
-                                    level = 1
-                    options.append([int_sort, alpha_sort,
-                                    image.location, image.id, image])
+                if not match:
+                    continue
+                # Gather sorting information
+                alpha_sort = int_sort = None
+                if level < 2:
+                    try:
+                        alpha_sort = match.group(1)
+                    except IndexError:
+                        level = 2
+                    else:
+                        if level == 0:
+                            try:
+                                int_sort = int(alpha_sort)
+                            except ValueError:
+                                level = 1
+                options.append([int_sort, alpha_sort,
+                                image.location, image.id, image])
             if level:
                 log.msg('sorting images at level %d' % level)
                 options = [candidate[level:] for candidate in options]
