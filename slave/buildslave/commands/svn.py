@@ -51,14 +51,14 @@ class SVN(SourceBaseCommand):
         self.exported_rev = 'HEAD'
 
         self.svn_args = []
-        if args.has_key('username'):
+        if "username" in args:
             self.svn_args.extend(["--username", args['username']])
-        if args.has_key('password'):
+        if "password" in args:
             self.svn_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
         if args.get('extra_args', None) is not None:
             self.svn_args.extend(args['extra_args'])
 
-        if args.has_key('depth'):
+        if "depth" in args:
             self.svn_args.extend(["--depth",args['depth']])
 
     def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):

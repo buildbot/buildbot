@@ -276,7 +276,7 @@ class IRCContact(base.StatusReceiver):
 
     def notify_for(self, *events):
         for event in events:
-            if self.notify_events.has_key(event):
+            if event in self.notify_events:
                 return 1
         return 0
 
@@ -796,7 +796,7 @@ class IRCContact(base.StatusReceiver):
         # command'), a single Contact will only ever see messages from a
         # single user.
         message = message.lstrip()
-        if self.silly.has_key(message):
+        if message in self.silly:
             self.doSilly(message)
             return defer.succeed(None)
 

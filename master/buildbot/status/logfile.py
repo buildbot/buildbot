@@ -622,9 +622,9 @@ class LogFile:
         del d['finishedWatchers']
         del d['master']
         d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
-        if d.has_key('finished'):
+        if "finished" in d:
             del d['finished']
-        if d.has_key('openfile'):
+        if "openfile" in d:
             del d['openfile']
         return d
 
@@ -676,7 +676,7 @@ class HTMLLogFile:
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['step']
-        if d.has_key('master'):
+        if "master" in d:
             del d['master']
         return d
 

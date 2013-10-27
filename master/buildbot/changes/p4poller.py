@@ -192,7 +192,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base):])
                     if (branch == None and file == None): continue
-                    if branch_files.has_key(branch):
+                    if branch in branch_files:
                         branch_files[branch].append(file)
                     else:
                         branch_files[branch] = [file]

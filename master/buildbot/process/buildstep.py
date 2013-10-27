@@ -126,7 +126,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
-            if kwargs.has_key(p):
+            if p in kwargs:
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
         if kwargs:

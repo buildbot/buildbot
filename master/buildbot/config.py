@@ -620,7 +620,7 @@ class MasterConfig(object):
         def check_lock(l):
             if isinstance(l, locks.LockAccess):
                 l = l.lockid
-            if lock_dict.has_key(l.name):
+            if l.name in lock_dict:
                 if lock_dict[l.name] is not l:
                     msg = "Two locks share the same name, '%s'" % l.name
                     error(msg)

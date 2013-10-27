@@ -225,24 +225,24 @@ class RemoteCommand(pb.Referenceable):
         if self.debug:
             for k,v in update.items():
                 log.msg("Update[%s]: %s" % (k,v))
-        if update.has_key('stdout'):
+        if "stdout" in update:
             # 'stdout': data
             self.addStdout(update['stdout'])
-        if update.has_key('stderr'):
+        if "stderr" in update:
             # 'stderr': data
             self.addStderr(update['stderr'])
-        if update.has_key('header'):
+        if "header" in update:
             # 'header': data
             self.addHeader(update['header'])
-        if update.has_key('log'):
+        if "log" in update:
             # 'log': (logname, data)
             logname, data = update['log']
             self.addToLog(logname, data)
-        if update.has_key('rc'):
+        if "rc" in update:
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
             self.addHeader("program finished with exit code %d\n" % rc)
-        if update.has_key('elapsed'):
+        if "elapsed" in update:
             self._remoteElapsed = update['elapsed']
 
         # TODO: these should be handled at the RemoteCommand level
