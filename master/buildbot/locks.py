@@ -197,7 +197,7 @@ class RealSlaveLock:
 
     def getLock(self, slave):
         slavename = slave.slavename
-        if not self.locks.has_key(slavename):
+        if not slavename in self.locks:
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)
             lock = self.locks[slavename] = BaseLock(self.name, maxCount)

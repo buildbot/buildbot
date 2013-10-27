@@ -899,7 +899,7 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty("do-tests", 1, "scheduler")
         self.props.setProperty("do-install", 2, "scheduler")
 
-        self.assert_(self.props.has_key('do-tests'))
+        self.assert_('do-tests' in self.props)
         self.failUnlessEqual(self.props['do-tests'], 1)
         self.failUnlessEqual(self.props['do-install'], 2)
         self.assertRaises(KeyError, lambda : self.props['do-nothing'])
@@ -1002,7 +1002,7 @@ class TestProperties(unittest.TestCase):
         self.assertTrue(self.props.hasProperty('x'))
 
     def test_has_key_false(self):
-        self.assertFalse(self.props.has_key('x'))
+        self.assertFalse('x' in self.props)
 
     def test_setProperty(self):
         self.props.setProperty('x', 'y', 'test')
@@ -1064,9 +1064,9 @@ class TestPropertiesMixin(unittest.TestCase):
         self.assertTrue(self.mp.hasProperty('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
-    def test_has_key(self):
+    def test_has_propkey(self):
         self.mp.properties.hasProperty.return_value = True
-        self.assertTrue(self.mp.has_key('abc'))
+        self.assertTrue(self.mp.has_propkey('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
     def test_setProperty(self):

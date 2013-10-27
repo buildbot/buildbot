@@ -480,9 +480,9 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         # Determine the name of the branch.
         branch = None
         if self.branchMap and repository:
-            if self.branchMap.has_key(repository):
+            if repository in self.branchMap:
                 branch = self.branchMap[repository]
-            elif self.branchMap.has_key('lp:' + repository):
+            elif ("lp:" + repository) in self.branchMap:
                 branch = self.branchMap['lp:' + repository]
         if not branch:
             if self.defaultBranch:

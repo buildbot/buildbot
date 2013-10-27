@@ -88,7 +88,7 @@ class ChangePerspective(NewCredPerspective):
         if not files:
             log.msg("No files listed in change... bit strange, but not fatal.")
 
-        if changedict.has_key('links'):
+        if "links" in changedict:
             log.msg("Found links: "+repr(changedict['links']))
             del changedict['links']
 

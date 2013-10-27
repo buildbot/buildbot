@@ -835,10 +835,10 @@ class TestBuildProperties(unittest.TestCase):
         self.assertTrue(self.build.hasProperty('p'))
         self.build_status.hasProperty.assert_called_with('p')
 
-    def test_has_key(self):
-        self.build_status.has_key.return_value = True
-        self.assertTrue(self.build.has_key('p'))
-        # has_key calls through to hasProperty
+    def test_has_propkey(self):
+        self.build_status.has_propkey.return_value = True
+        self.assertTrue(self.build.has_propkey('p'))
+        # has_propkey calls through to hasProperty
         self.build_status.hasProperty.assert_called_with('p')
 
     def test_render(self):
