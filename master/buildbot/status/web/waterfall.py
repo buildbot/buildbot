@@ -279,6 +279,7 @@ class WaterfallHelp(HtmlResource):
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
         cxt['committers'] = [c for c in request.args.get("committer", []) if c]
+        cxt['projects'] = [p for p in request.args.get("project", []) if p]
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
@@ -323,7 +324,7 @@ class ChangeEventSource(object):
         # we want them in newest-to-oldest order
         self.changes.reverse()
 
-    def eventGenerator(self, branches, categories, committers, minTime):
+    def eventGenerator(self, branches, categories, committers, projects, minTime):
         for change in self.changes:
             if branches and change.branch not in branches:
                 continue
@@ -551,6 +552,7 @@ class WaterfallStatusResource(HtmlResource):
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
         filterCommitters = [c for c in request.args.get("committer", []) if c]
+        filterProjects = [p for p in request.args.get("project", []) if p]
         maxTime = int(request.args.get("last_time", [util.now()])[0])
         if "show_time" in request.args:
             minTime = maxTime - int(request.args["show_time"][0])
@@ -610,6 +612,7 @@ class WaterfallStatusResource(HtmlResource):
             gen = insertGaps(s.eventGenerator(filterBranches,
                                               filterCategories,
                                               filterCommitters,
+                                              filterProjects,
                                               minTime),
                              showEvents,
                              lastEventTime)
