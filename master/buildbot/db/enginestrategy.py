@@ -38,7 +38,7 @@ class ReconnectingListener(object):
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
     # A subclass of the ThreadLocalEngineStrategy that can effectively interact
     # with Buildbot.
-    # 
+    #
     # This adjusts the passed-in parameters to ensure that we get the behaviors
     # Buildbot wants from particular drivers, and wraps the outgoing Engine
     # object so that its methods run in threads and return deferreds.

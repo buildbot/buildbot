@@ -80,7 +80,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollInterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None, 
+                 svnbin='svn', revlinktmpl='', category=None,
                  project='', cachepath=None, pollinterval=-2,
                  extra_args=None):
 

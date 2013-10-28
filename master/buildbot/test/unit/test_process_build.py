@@ -82,7 +82,7 @@ class FakeMaster:
         return self.locks[lockid]
 
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)   
+    implements(interfaces.IProperties)
         
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
@@ -702,7 +702,7 @@ class TestBuildBlameList(unittest.TestCase):
 
 class TestSetupProperties_MultipleSources(unittest.TestCase):
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
     def setUp(self):
@@ -745,7 +745,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
 
 class TestSetupProperties_SingleSource(unittest.TestCase):
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
     def setUp(self):

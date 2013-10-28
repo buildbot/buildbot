@@ -63,7 +63,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -114,18 +114,18 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master', '-b', 'master'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -182,18 +182,18 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master', '-b', 'master'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -235,7 +235,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -280,7 +280,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -322,7 +322,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -364,7 +364,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -406,7 +406,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
@@ -419,7 +419,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -475,7 +475,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -518,11 +518,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                         command=['mtn', 'db', 'init', '--db', '../db.mtn'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'checkout', '.', '--db=../db.mtn', 
+                        command=['mtn', 'checkout', '.', '--db=../db.mtn',
                                  '--revision', 'abcdef01', '--branch', 'master'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -565,11 +565,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master', 
+                        command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master',
                                  '-b', 'master'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
@@ -615,11 +615,11 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='source',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master', 
+                        command=['mtn', 'update', '--db=../db.mtn', '-r', 'h:master',
                                  '-b', 'master'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
@@ -687,7 +687,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['mtn', 'pull', 'mtn://localhost/monotone?master', 
+                        command=['mtn', 'pull', 'mtn://localhost/monotone?master',
                                  '--db=../db.mtn', '--ticker=dot'])
             + 0,
             ExpectShell(workdir='wkdir',

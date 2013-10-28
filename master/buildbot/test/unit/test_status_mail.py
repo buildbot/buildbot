@@ -45,7 +45,7 @@ class FakeLog(object):
         return self.text
 
 class FakeSource:
-    def __init__(self, branch = None, revision = None, repository = None, 
+    def __init__(self, branch = None, revision = None, repository = None,
                  codebase = None, project = None):
         self.changes = []
         self.branch = branch
@@ -307,8 +307,8 @@ class TestMailNotifier(unittest.TestCase):
             self.passedAttrs = attrs
             return ("", "")
                                               
-        mn = MailNotifier('from@example.org', 
-                          buildSetSummary=True, 
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
                           mode=("failing", "passing", "warnings"),
                           builders=["Builder"])
         
@@ -325,7 +325,7 @@ class TestMailNotifier(unittest.TestCase):
             return build
         
         def fakeGetBuilder(buildername):
-            if buildername == builder.name: 
+            if buildername == builder.name:
                 return builder
             return None
         
@@ -375,8 +375,8 @@ class TestMailNotifier(unittest.TestCase):
             self.passedAttrs = attrs
             return ("", "")
                                               
-        mn = MailNotifier('from@example.org', 
-                          buildSetSummary=True, 
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
                           mode=("failing", "passing", "warnings"),
                           builders=["Builder"])
         
@@ -393,7 +393,7 @@ class TestMailNotifier(unittest.TestCase):
             return build
         
         def fakeGetBuilder(buildername):
-            if buildername == builder.name: 
+            if buildername == builder.name:
                 return builder
             return None
         

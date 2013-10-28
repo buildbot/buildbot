@@ -201,7 +201,7 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_add_format(self):
-        d = self.call_perspective_commandline('add', None, None, None, 
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'x', 'svn':'x'}])
         def check(result):
             exp_format = "user(s) added:\nidentifier: x\nuid: 1\n\n"

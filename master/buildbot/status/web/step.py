@@ -35,7 +35,7 @@ class StatusResourceBuildStep(HtmlResource):
         s = self.step_status
         b = s.getBuild()
 
-        logs = cxt['logs'] = []        
+        logs = cxt['logs'] = []
         for l in s.getLogs():
             # FIXME: If the step name has a / in it, this is broken
             # either way.  If we quote it but say '/'s are safe,
@@ -68,7 +68,7 @@ class StatusResourceBuildStep(HtmlResource):
                         s = s,
                         result_css = css_classes[s.getResults()[0]]))
         
-        template = req.site.buildbot_service.templates.get_template("buildstep.html");        
+        template = req.site.buildbot_service.templates.get_template("buildstep.html");
         return template.render(**cxt)
 
     def getChild(self, path, req):

@@ -307,7 +307,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                              values may be WithProperties instances.
 
         @type useTls: boolean
-        @param useTls: Send emails using TLS and authenticate with the 
+        @param useTls: Send emails using TLS and authenticate with the
                        smtp host. Defaults to False.
 
         @type smtpUser: string

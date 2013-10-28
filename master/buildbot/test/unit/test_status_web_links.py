@@ -29,14 +29,14 @@ class RevisionLinks(unittest.TestCase):
     def _test(self, env, should_have_links=True):
         for name in ['shortrev', 'revlink']:
             f = env.filters[name]
-            for r in [None, 'repo', 'repo2', 'sub/repo']:    
+            for r in [None, 'repo', 'repo2', 'sub/repo']:
                 self.assertNotSubstring('<a', f(None, r), 'repo: %s' % r)
-                if should_have_links: 
-                    self.assertSubstring('<a', f(1234, r), 'repo: %s' % r) 
-                    self.assertSubstring('<a', f('deadbeef1234', r), 'repo: %s' % r) 
+                if should_have_links:
+                    self.assertSubstring('<a', f(1234, r), 'repo: %s' % r)
+                    self.assertSubstring('<a', f('deadbeef1234', r), 'repo: %s' % r)
                 else:
-                    self.assertNotSubstring('<a', f(1234, r), 'repo: %s' % r) 
-                    self.assertNotSubstring('<a', f('deadbeef1234', r), 'repo: %s' % r) 
+                    self.assertNotSubstring('<a', f(1234, r), 'repo: %s' % r)
+                    self.assertNotSubstring('<a', f('deadbeef1234', r), 'repo: %s' % r)
         
     def test_default(self):
         env = wb.createJinjaEnv()
@@ -91,58 +91,58 @@ class ChangeCommentLinks(unittest.TestCase):
     def _test(self, env):
         f = env.filters['changecomment']
         for p in [None, 'project1', 'project2']:
-            self.assertNotSubstring('<a', f('', p)) 
-            self.assertNotSubstring('<a', f('There is no ticket...', p)) 
-            self.assertSubstring('<a', f('There is a ticket #123', p)) 
-            self.assertEquals(f('There are two tickets #123 and #456', p).count("<a"), 2) 
+            self.assertNotSubstring('<a', f('', p))
+            self.assertNotSubstring('<a', f('There is no ticket...', p))
+            self.assertSubstring('<a', f('There is a ticket #123', p))
+            self.assertEquals(f('There are two tickets #123 and #456', p).count("<a"), 2)
                 
         
     def test_default(self):
         env = wb.createJinjaEnv()
         f = env.filters['changecomment']
-        self.assertNotSubstring('<a', f(None, '')) 
-        self.assertNotSubstring('<a', f(None, 'There is no ticket #123')) 
-        self.assertNotSubstring('<a', f('project', '')) 
-        self.assertNotSubstring('<a', f('project', 'There is no ticket #123')) 
+        self.assertNotSubstring('<a', f(None, ''))
+        self.assertNotSubstring('<a', f(None, 'There is no ticket #123'))
+        self.assertNotSubstring('<a', f('project', ''))
+        self.assertNotSubstring('<a', f('project', 'There is no ticket #123'))
 
     def test_tuple2(self):
         env = wb.createJinjaEnv(
-            changecommentlink=(r'#(\d+)', r'http://buildbot.net/trac/ticket/\1')) 
+            changecommentlink=(r'#(\d+)', r'http://buildbot.net/trac/ticket/\1'))
         self._test(env)
 
     def test_tuple3(self):
         env = wb.createJinjaEnv(
             changecommentlink=(r'#(\d+)', r'http://buildbot.net/trac/ticket/\1',
-                               r'Ticket #\1')) 
+                               r'Ticket #\1'))
         self._test(env)
 
     def test_dict_2tuple(self):
         env = wb.createJinjaEnv(
             changecommentlink={
-               None: (r'#(\d+)', r'http://server/trac/ticket/\1'), 
-               'project1': (r'#(\d+)', r'http://server/trac/p1/ticket/\1'), 
-               'project2': (r'#(\d+)', r'http://server/trac/p2/ticket/\1') 
+               None: (r'#(\d+)', r'http://server/trac/ticket/\1'),
+               'project1': (r'#(\d+)', r'http://server/trac/p1/ticket/\1'),
+               'project2': (r'#(\d+)', r'http://server/trac/p2/ticket/\1')
             })
-        self._test(env)        
+        self._test(env)
         
         f = env.filters['changecomment']
-        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject')) 
+        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject'))
 
 
     def test_dict_3tuple(self):
         env = wb.createJinjaEnv(
             changecommentlink={
-               None: (r'#(\d+)', r'http://server/trac/ticket/\1', r'Ticket #\1'), 
-               'project1': (r'#(\d+)', r'http://server/trac/p1/ticket/\1', r'Ticket #\1'), 
-               'project2': (r'#(\d+)', r'http://server/bugzilla/p2/ticket/\1', r'Bug #\1') 
+               None: (r'#(\d+)', r'http://server/trac/ticket/\1', r'Ticket #\1'),
+               'project1': (r'#(\d+)', r'http://server/trac/p1/ticket/\1', r'Ticket #\1'),
+               'project2': (r'#(\d+)', r'http://server/bugzilla/p2/ticket/\1', r'Bug #\1')
             })
-        self._test(env)        
+        self._test(env)
 
         f = env.filters['changecomment']
-        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject')) 
+        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject'))
 
     def test_callable(self):
-        r1 = re.compile(r'#(\d+)') 
+        r1 = re.compile(r'#(\d+)')
         r2 = re.compile(r'bug ([a-eA-E0-9]+)')
 
         r1_sub = jinja2.Markup(r'<a href="\1" title="Ticket #\1">\g<0></a>')
@@ -153,22 +153,22 @@ class ChangeCommentLinks(unittest.TestCase):
                 return changehtml
             
             html1 = r1.sub(r1_sub, changehtml)
-            html2 = r2.sub(r2_sub, html1)    
+            html2 = r2.sub(r2_sub, html1)
             return html2
 
         env = wb.createJinjaEnv(changecommentlink=my_changelink)
         self._test(env)
         
-        f = env.filters['changecomment']        
-        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject')) 
+        f = env.filters['changecomment']
+        self.assertNotSubstring('<a', f('fixed #123', 'nonexistingproject'))
 
     
 class DictLinkfilter(unittest.TestCase):
-    '''test the dictlink filter used for top-level links to 
+    '''test the dictlink filter used for top-level links to
        projects and repostiories'''
     
     def test_default(self):
-        f = wb.dictlinkfilter(None) 
+        f = wb.dictlinkfilter(None)
         
         self.assertNotSubstring('<a', f(None))
         self.assertNotSubstring('<a', f('repo'))

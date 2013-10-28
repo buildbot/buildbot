@@ -80,8 +80,8 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                tup = yield bc.rebuildBuild(b, 
-                    reason=reason, 
+                tup = yield bc.rebuildBuild(b,
+                    reason=reason,
                     extraProperties=extraProperties,
                     absolute=absolute)
                 # rebuildBuild returns None on error (?!)
@@ -213,7 +213,7 @@ class StatusResourceBuild(HtmlResource):
 
             cxt['steps'].append(step)
 
-            step['link'] = req.childLink("steps/%s" % 
+            step['link'] = req.childLink("steps/%s" %
                                     urllib.quote(s.getName(), safe=''))
             step['text'] = " ".join(s.getText())
             step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
@@ -223,7 +223,7 @@ class StatusResourceBuild(HtmlResource):
                 logname = l.getName()
                 step['logs'].append({ 'link': req.childLink("steps/%s/logs/%s" %
                                            (urllib.quote(s.getName(), safe=''),
-                                            urllib.quote(logname, safe=''))), 
+                                            urllib.quote(logname, safe=''))),
                                       'name': logname })
 
         scheduler = b.getProperty("scheduler", None)

@@ -461,7 +461,7 @@ class BuildLineMixin:
 
         if not ss_list:
             return [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'unknown'
             }]
@@ -500,7 +500,7 @@ class BuildLineMixin:
         # if all sourcestamps were empty, then this is a "most recent" kind of build
         if not rev_list:
             rev_list = [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'most recent'
             }]

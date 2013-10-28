@@ -231,12 +231,12 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -294,12 +294,12 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'update',
                                  '--clean', '--rev', 'default'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -535,7 +535,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'parents',
                                     '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', 
+            + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             )
@@ -578,7 +578,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'parents',
                                     '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', 
+            + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             )
@@ -620,7 +620,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', 'parents',
                                     '--template', '{node}\\n'])
             + ExpectShell.log('stdio', stdout='\n')
-            + ExpectShell.log('stdio', 
+            + ExpectShell.log('stdio',
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             )

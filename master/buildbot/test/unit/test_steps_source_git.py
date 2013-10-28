@@ -179,12 +179,12 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -234,12 +234,12 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -321,7 +321,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + ExpectShell.log('stdio',
-                stderr="fatal: Could not parse object " 
+                stderr="fatal: Could not parse object "
                     "'b08076bc71c7813038f2cefedff9c5b678d225a8'.\n")
             + 128,
         )
@@ -1325,7 +1325,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                  timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'clone', 
+                        command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.'])
             + 0,
@@ -1495,7 +1495,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             
-            ## plus this to test describe:            
+            ## plus this to test describe:
             ExpectShell(workdir='wkdir',
                         command=['git', 'describe', 'HEAD'])
             + ExpectShell.log('stdio',
@@ -1545,7 +1545,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             
-            ## plus this to test describe:            
+            ## plus this to test describe:
             ExpectShell(workdir='wkdir',
                         command=['git', 'describe', 'HEAD'])
             + ExpectShell.log('stdio',
@@ -1596,7 +1596,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                 stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
             
-            ## plus this to test describe:            
+            ## plus this to test describe:
             ExpectShell(workdir='wkdir',
                         command=['git', 'describe'] +
                                 output_args +

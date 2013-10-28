@@ -108,7 +108,7 @@ class LogWatcher(LineOnlyReceiver):
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
-        PROGRESS_TEXT = ['Starting BuildMaster', 'Loading configuration from', 
+        PROGRESS_TEXT = ['Starting BuildMaster', 'Loading configuration from',
                 'added builder', 'adding scheduler', 'Loading builder', 'Starting factory']
         for progressText in PROGRESS_TEXT:
             if progressText in line:

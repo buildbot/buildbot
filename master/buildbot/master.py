@@ -48,7 +48,7 @@ from buildbot import config
 
 class LogRotation(object):
     def __init__(self):
-        self.rotateLength = 1 * 1000 * 1000 
+        self.rotateLength = 1 * 1000 * 1000
         self.maxRotatedFiles = 10
 
 class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
@@ -704,7 +704,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.start()
 
         # cleanup unclaimed builds
-        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup 
+        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup
         if since_last_cleanup < self.RECLAIM_BUILD_INTERVAL:
             unclaimed_age = (self.RECLAIM_BUILD_INTERVAL
                            * self.UNCLAIMED_BUILD_FACTOR)

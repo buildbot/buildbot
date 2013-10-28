@@ -160,7 +160,7 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
             # rolled back as a result of the conflicting insert
             newConn = conn.engine.connect()
             newConn.execute(self.db.model.buildslaves.insert(),
-                name=self.BS1_NAME, 
+                name=self.BS1_NAME,
                 info=RACE_INFO)
 
         d = self.db.buildslaves.updateBuildslave(

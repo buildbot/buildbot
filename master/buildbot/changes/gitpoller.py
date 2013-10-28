@@ -32,7 +32,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                      "category", "project"]
 
     def __init__(self, repourl, branches=None, branch=None,
-                 workdir=None, pollInterval=10*60, 
+                 workdir=None, pollInterval=10*60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,

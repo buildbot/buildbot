@@ -51,7 +51,7 @@ def patch_bug5079():
         bug5079.patch()
 
 def patch_sqlalchemy2364():
-    # fix for SQLAlchemy bug 2364 
+    # fix for SQLAlchemy bug 2364
     if sautils.sa_version() < (0,7,5):
         from buildbot.monkeypatches import sqlalchemy2364
         sqlalchemy2364.patch()

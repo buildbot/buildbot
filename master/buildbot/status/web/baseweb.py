@@ -250,16 +250,16 @@ class WebStatus(service.MultiService):
 
         @type logRotateLength: None or int
         @param logRotateLength: file size at which the http.log is rotated/reset.
-            If not set, the value set in the buildbot.tac will be used, 
+            If not set, the value set in the buildbot.tac will be used,
              falling back to the BuildMaster's default value (1 Mb).
         
         @type maxRotatedFiles: None or int
         @param maxRotatedFiles: number of old http.log files to keep during log rotation.
-            If not set, the value set in the buildbot.tac will be used, 
-             falling back to the BuildMaster's default value (10 files).       
+            If not set, the value set in the buildbot.tac will be used,
+             falling back to the BuildMaster's default value (10 files).
         
         @type  change_hook_dialects: None or dict
-        @param change_hook_dialects: If empty, disables change_hook support, otherwise      
+        @param change_hook_dialects: If empty, disables change_hook support, otherwise
                                      whitelists valid dialects. In the format of
                                      {"dialect1": "Option1", "dialect2", None}
                                      Where the values are options that will be passed
@@ -355,7 +355,7 @@ class WebStatus(service.MultiService):
 
         # store the log settings until we create the site object
         self.logRotateLength = logRotateLength
-        self.maxRotatedFiles = maxRotatedFiles        
+        self.maxRotatedFiles = maxRotatedFiles
 
         # create the web site page structure
         self.childrenToBeAdded = {}
@@ -474,7 +474,7 @@ class WebStatus(service.MultiService):
                     try:
                         from twisted.python.logfile import LogFile
                         log.msg("Setting up http.log rotating %s files of %s bytes each" %
-                                (maxRotatedFiles, rotateLength))            
+                                (maxRotatedFiles, rotateLength))
                         if hasattr(LogFile, "fromFullPath"): # not present in Twisted-2.5.0
                             return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                         else:

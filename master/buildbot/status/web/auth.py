@@ -183,7 +183,7 @@ class AuthFailResource(HtmlResource):
 
     def content(self, request, cxt):
         templates =request.site.buildbot_service.templates
-        template = templates.get_template("authfail.html") 
+        template = templates.get_template("authfail.html")
         return template.render(**cxt)
 
 class AuthzFailResource(HtmlResource):
@@ -191,7 +191,7 @@ class AuthzFailResource(HtmlResource):
 
     def content(self, request, cxt):
         templates =request.site.buildbot_service.templates
-        template = templates.get_template("authzfail.html") 
+        template = templates.get_template("authzfail.html")
         return template.render(**cxt)
 
 class LoginResource(ActionResource):

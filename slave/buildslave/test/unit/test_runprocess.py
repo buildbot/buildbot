@@ -232,7 +232,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             self.failUnless({'stdout': nl('escaped|pipe\n')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
-        return d        
+        return d
 
     @compat.skipUnlessPlatformIs("win32")
     def testPipeAlone(self):

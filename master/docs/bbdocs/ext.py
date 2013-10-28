@@ -69,7 +69,7 @@ class BBRefTargetDirective(Directive):
             inode = addnodes.index(entries=entries)
             ret.insert(0, inode)
 
-        return ret 
+        return ret
 
     @classmethod
     def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,

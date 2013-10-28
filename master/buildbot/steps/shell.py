@@ -379,7 +379,7 @@ class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory " 
+    directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None

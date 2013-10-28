@@ -28,7 +28,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             if rows:
                 for row in rows:
                     dicts.append({
-                        'slaveid': row.id, 
+                        'slaveid': row.id,
                         'name': row.name
                     })
             return dicts
@@ -78,7 +78,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
 
     def _bdictFromRow(self, row):
         return {
-            'slaveid': row.id, 
+            'slaveid': row.id,
             'name': row.name,
             'slaveinfo': row.info
         }

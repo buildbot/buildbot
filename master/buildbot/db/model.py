@@ -405,7 +405,7 @@ class Model(base.DBConnectorComponent):
     # expected on this platform
 
     implied_indexes = [
-        ('change_users', 
+        ('change_users',
             dict(unique=False, column_names=['uid'], name='uid')),
         ('sourcestamps',
             dict(unique=False, column_names=['patchid'], name='patchid')),

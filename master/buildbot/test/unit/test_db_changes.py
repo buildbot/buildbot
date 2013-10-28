@@ -63,7 +63,7 @@ class TestChangesConnectorComponent(
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
             is_dir=0, branch="warnerdb", revision="0e92a098b",
             when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', codebase='mainapp', 
+            category='devel', repository='git://warner', codebase='mainapp',
             project='Buildbot'),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
