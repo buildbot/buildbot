@@ -141,23 +141,9 @@ define(['jquery'], function ($) {
 					});
 
 
-					require(['selectors'],
-			        function(selectors) {
-						selectors.comboBox('#formWrapper .select-tools-js');
-					
-						$("#formWrapper .select-tools-js").select2({
-							width: selectors.getMaxChildWidth(".select-tools-js")
-						});
-						$("#formWrapper #commonBranch_select").select2({
-							placeholder: "Common branches"
-						});
-					
-						$('.select2-drop').bind('click touchstart', function(e){
-							e.stopPropagation();
-							$(this).unbind(e);
-						});	
-
-			  			selectors.clickSort('#select2-drop .select2-results');
+					require(['selectors'],function(selectors) {
+			        	selectors.comboBox('#formWrapper .select-tools-js');
+			        	selectors.init();
 						$(window).resize(function() {
 							$('.more-info-box-js').center();
 						});

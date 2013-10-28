@@ -239,32 +239,35 @@
 
 .katana-main .dataTables_filter {display:none;}
 .filter-table-input {
-	margin-bottom: 23px;
+	height:58px;
+	position:relative;
 	label {
-		position: relative;
+		position: absolute;
 		font-weight: bold;
+		top: 7px;
 		@include text-shadow (0 1px 0 white);
+		input {
+		    border: 1px solid #CCCCCC;
+		    @include border-radius (4px);
+		    @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+		    color: #666666;
+		    font-size: 12px;
+		    line-height: 13px;
+		    padding: 9px 11px 8px 30px;
+		   	@include text-shadow (0 1px 0 white);
+		    width: 100px;
+		}
 		&:after {
 			color: #ADADAD;
 			font-family: katana_icons;
 		    content: "";
 		    left: 12px;
 		    position: absolute;
-		    top: 1px;
+    		top: 10px;
 		    line-height: 12px;
 		}
 	}
-	input {
-	    border: 1px solid #CCCCCC;
-	    @include border-radius (4px);
-	    @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-	    color: #666666;
-	    font-size: 12px;
-	    line-height: 13px;
-	    padding: 9px 11px 8px 30px;
-	   	@include text-shadow (0 1px 0 white);
-	    width: 100px;
-	}
+
 }
  
 .select-input {
@@ -1151,10 +1154,37 @@ Version: 3.4.2 Timestamp: Mon Aug 12 15:04:12 PDT 2013
     font-weight: bold;
 }
 
-.select-tools-common {
-	float:right; 
-	margin-left:10px;
-	margin-bottom:10px;
+.show-common {
+	clear: both;
+    display: block;
+    float: right;
+    font-size: 11px;
+    margin-top: 1px;
+    outline: none;
+}
+
+div.common-branch-select {
+	display:none;
+	right: 0;
+    top: 15px;
+    position: absolute;
+}
+
+.pos-relative {
+	position: relative;	
+}
+
+#branchTxt {
+	float:right;
+}
+
+.help-txt {
+    color: #919191;
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    @include text-shadow(1px 1px 0 #fff);
 }
 
 .select2-container {
@@ -1647,7 +1677,7 @@ disabled look for disabled choices in the results dropdown
 		}
 	}
 	
-	.filter-table-input input {
+	.filter-table-input label input {
 		width: 67px;
 	}
 }

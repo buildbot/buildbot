@@ -73,14 +73,17 @@ a.grey-btn,
     }
 }
 
-.grey-btn.var-2 {
+.grey-btn.var-2,
+.blue-btn.var-2 {
     font-size: 9px;
     padding: 7px 8px;
     position: relative;
 }
 
-.codebases .grey-btn {
-    float:right;
+.codebases .blue-btn {
+    position: absolute;
+    right: 0;
+    top: -6px;
 }
 
 @include breakpoint($bkpt-small) {

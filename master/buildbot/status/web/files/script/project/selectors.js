@@ -14,7 +14,6 @@ define(['jquery', 'select2'], function ($) {
 			            max = c_width + 30;
 			        }
 			    });
-			    $('#selectorWidth').width(max);
 
 			    return max;
 		},
@@ -78,13 +77,24 @@ define(['jquery', 'select2'], function ($) {
 		},
 								
 		init: function () {
-			
+				
 			$("select.select-tools-js").select2({
 				width: selectors.getMaxChildWidth(".select-tools-js")
 			});
+			
+			$('.show-common').click(function(){
+				//$('#branchTxt').fadeOut('fast');
+				var commonContainer = $(this).next('.select2-container');
+				console.log(commonContainer)
+				$(commonContainer).show(0,function(){
+					$(this).select2('open');	
+				});
+			});
+			$('#commonBranch_select').on("select2-close", function() {
+				$('.common-branch-select').hide();
+			});	
 			$("#commonBranch_select").select2({
-				placeholder: "Common branches",
-				width: $("#commonBranch_select").width() + 140
+				placeholder: "Common branches"
 			});
 
 			selectors.clickSort('#select2-drop .select2-results');
