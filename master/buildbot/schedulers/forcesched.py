@@ -206,7 +206,7 @@ class ChoiceStringParameter(BaseParameter):
 
     def parse_from_arg(self, s):
         if self.strict and not s in self.choices:
-            raise ValidationError("'%s' does not belongs to list of available choices '%s'"%(s, self.choices))
+            raise ValidationError("'%s' does not belongs to list of available choices '%s'" % (s, self.choices))
         return s
 
     def getChoices(self, master, scheduler, buildername):
@@ -228,14 +228,14 @@ class InheritBuildParameter(ChoiceStringParameter):
         arg = kwargs.get(self.fullName, [""])[0]
         splitted_arg = arg.split(" ")[0].split("/")
         if len(splitted_arg) != 2:
-            raise ValidationError("bad build: %s"%(arg))
+            raise ValidationError("bad build: %s" % (arg))
         builder, num = splitted_arg
         builder_status = master.status.getBuilder(builder)
         if not builder_status:
-            raise ValidationError("unknown builder: %s in %s"%(builder, arg))
+            raise ValidationError("unknown builder: %s in %s" % (builder, arg))
         b = builder_status.getBuild(int(num))
         if not b:
-            raise ValidationError("unknown build: %d in %s"%(num, arg))
+            raise ValidationError("unknown build: %d in %s" % (num, arg))
         props = {self.name:(arg.split(" ")[0])}
         for name, value, source in b.getProperties().asList():
             if source == "Force Build Form":

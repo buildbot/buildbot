@@ -790,7 +790,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_nextSlave(self, nextSlave, exp_choice=None):
         for i in range(4):
-            self.addSlaves({'sb%d'%i: 1})
+            self.addSlaves({'sb%d' % i: 1})
 
         self.bldr.config.nextSlave = nextSlave
         rows = self.base_rows + [
@@ -802,7 +802,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
             exp_builds = []
         else:
             exp_claims = [11]
-            exp_builds = [('sb%d'%exp_choice, [11])]
+            exp_builds = [('sb%d' % exp_choice, [11])]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=exp_claims, exp_builds=exp_builds)
@@ -845,7 +845,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         for i in range(4):
             rows.append(fakedb.Buildset(id=100+i, reason='because', sourcestampsetid=21))
             rows.append(fakedb.BuildRequest(id=10+i, buildsetid=100+i, buildername="A"))
-            self.addSlaves({'test-slave%d'%i:1})
+            self.addSlaves({'test-slave%d' % i:1})
 
         exp_claims = []
         exp_builds = []
@@ -853,7 +853,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
             slave = 3
             for choice in exp_choice:
                 exp_claims.append(choice)
-                exp_builds.append(('test-slave%d'%slave, [choice]))
+                exp_builds.append(('test-slave%d' % slave, [choice]))
                 slave = slave - 1
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
