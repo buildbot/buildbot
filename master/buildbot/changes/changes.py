@@ -28,6 +28,7 @@ from buildbot import interfaces, util
 from buildbot.process.properties import Properties
 
 class Change:
+
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
@@ -85,7 +86,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='', 
+                 revlink='', properties={}, repository='', codebase='',
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:

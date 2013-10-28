@@ -10,6 +10,7 @@ MAX_ATTEMPTS     = 10
 RETRY_MULTIPLIER = 5
 
 class WebHookTransmitter(status.base.StatusReceiverMultiService):
+
     """
     A webhook status listener for buildbot.
 

@@ -55,6 +55,7 @@ class DBConnectorComponent(object):
 
 
 class CachedMethod(object):
+
     def __init__(self, cache_name, method):
         self.cache_name = cache_name
         self.method = method

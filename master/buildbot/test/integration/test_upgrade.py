@@ -57,6 +57,7 @@ def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
                       excludeTables=excludeTables)
 
 class UpgradeTestMixin(db.RealDatabaseMixin):
+
     """Supporting code to test upgrading from older versions by untarring a
     basedir tarball and then checking that the results are as expected."""
 
@@ -632,6 +633,7 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
 
 
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
+
     def setUp(self):
         d = self.setUpChangeImport()
         def make_dbc(_):

@@ -20,6 +20,7 @@ from sqlalchemy.sql.expression import Executable, ClauseElement
 # from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
 
 class InsertFromSelect(Executable, ClauseElement):
+
     def __init__(self, table, select):
         self.table = table
         self.select = select

@@ -34,6 +34,7 @@ except ImportError:
     pass
 
 class Timed(base.BaseScheduler):
+
     """
     Parent class for timed schedulers.  This takes care of the (surprisingly
     subtle) mechanics of ensuring that each timed actuation runs to completion
@@ -44,7 +45,7 @@ class Timed(base.BaseScheduler):
     reason = ''
 
     def __init__(self, name, builderNames, properties={}, reason='', **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, properties, 
+        base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
         # tracking for when to start the next build
@@ -273,6 +274,7 @@ class Nightly(NightlyBase):
                'change_filter', 'onlyImportant',)
 
     class NoBranch: pass
+
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
@@ -312,7 +314,7 @@ class Nightly(NightlyBase):
         # both important and unimportant changes on our branch are recorded, as
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
-        # change filter. 
+        # change filter.
         if change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
         return self.master.db.schedulers.classifyChanges(
@@ -355,7 +357,7 @@ class NightlyTriggerable(NightlyBase):
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
                  properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason, 
+                dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason,
                 codebases=codebases)
 
         self._lastTrigger = None

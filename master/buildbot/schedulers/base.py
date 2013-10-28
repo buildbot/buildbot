@@ -23,6 +23,7 @@ from buildbot import config, interfaces
 from buildbot.util.state import StateMixin
 
 class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
+
     """
     Base class for all schedulers; this provides the equipment to manage
     reconfigurations and to handle basic scheduler state.  It also provides

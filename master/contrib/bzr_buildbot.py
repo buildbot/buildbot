@@ -358,6 +358,7 @@ def deferToThreadInReactor(reactor, f, *args, **kwargs):
 
 # uses its own reactor for the threaded calls, unlike Twisted's
 class ThreadedResolver(twisted.internet.base.ThreadedResolver):
+
     def getHostByName(self, name, timeout = (1, 3, 11, 45)):
         if timeout:
             timeoutDelay = reduce(operator.add, timeout)

@@ -33,6 +33,7 @@ from mock import Mock
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
 
 class MasterPerspective(pb.Avatar):
+
     def __init__(self, on_keepalive=None):
         self.on_keepalive = on_keepalive
 
@@ -42,6 +43,7 @@ class MasterPerspective(pb.Avatar):
             on_keepalive()
 
 class MasterRealm:
+
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment

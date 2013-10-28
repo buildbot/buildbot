@@ -148,6 +148,7 @@ class SlaveSource(Source):
 
 
 class BK(SlaveSource):
+
     """I perform BitKeeper checkout/update operations."""
 
     name = 'bk'
@@ -215,6 +216,7 @@ class BK(SlaveSource):
 
 
 class CVS(SlaveSource):
+
     """I do CVS checkout/update operations.
 
     Note: if you are doing anonymous/pserver CVS operations, you will need
@@ -397,6 +399,7 @@ class CVS(SlaveSource):
 
 
 class SVN(SlaveSource):
+
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
@@ -557,6 +560,7 @@ class SVN(SlaveSource):
 
 
 class Darcs(SlaveSource):
+
     """Check out a source tree from a Darcs repository at 'repourl'.
 
     Darcs has no concept of file modes. This means the eXecute-bit will be
@@ -647,6 +651,7 @@ class Darcs(SlaveSource):
 
 
 class Git(SlaveSource):
+
     """Check out a source tree from a git repository 'repourl'."""
 
     name = "git"
@@ -734,6 +739,7 @@ class Git(SlaveSource):
 
 
 class Repo(SlaveSource):
+
     """Check out a source tree from a repo repository described by manifest."""
 
     name = "repo"
@@ -862,6 +868,7 @@ class Repo(SlaveSource):
 
 
 class Bzr(SlaveSource):
+
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
 
     """
@@ -943,6 +950,7 @@ class Bzr(SlaveSource):
 
 
 class Mercurial(SlaveSource):
+
     """Check out a source tree from a mercurial repository 'repourl'."""
 
     name = "hg"
@@ -1037,6 +1045,7 @@ class Mercurial(SlaveSource):
 
 
 class P4(SlaveSource):
+
     """ P4 is a class for accessing perforce revision control"""
     name = "p4"
 
@@ -1113,6 +1122,7 @@ class P4(SlaveSource):
         self.startCommand(cmd)
 
 class Monotone(SlaveSource):
+
     """Check out a source tree from a monotone repository 'repourl'."""
 
     name = "mtn"

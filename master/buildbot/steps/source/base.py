@@ -25,6 +25,7 @@ from buildbot.steps.transfer import _FileReader
 from buildbot.process import buildstep
 
 class Source(LoggingBuildStep, CompositeStepMixin):
+
     """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and

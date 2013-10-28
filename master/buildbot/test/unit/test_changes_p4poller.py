@@ -77,6 +77,7 @@ p4change = {
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
                    unittest.TestCase):
+
     def setUp(self):
         self.setUpGetProcessOutput()
         return self.setUpChangeSource()
@@ -230,6 +231,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         return d
 
 class TestSplit(unittest.TestCase):
+
     def test_get_simple_split(self):
         self.assertEqual(get_simple_split('foo/bar'), ('foo', 'bar'))
         self.assertEqual(get_simple_split('foo-bar'), (None, None))

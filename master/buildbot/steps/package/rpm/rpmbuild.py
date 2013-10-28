@@ -23,6 +23,7 @@ from buildbot.process import buildstep
 from buildbot import config
 
 class RpmBuild(ShellCommand):
+
     """
     RpmBuild build step.
     """

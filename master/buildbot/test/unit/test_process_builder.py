@@ -23,6 +23,7 @@ from buildbot.process import builder, factory
 from buildbot.util import epoch2datetime
 
 class BuilderMixin(object):
+
     def makeBuilder(self, name="bldr", patch_random=False, **config_kwargs):
         """Set up C{self.bldr}"""
         self.factory = factory.BuildFactory()
@@ -409,6 +410,7 @@ class TestRebuild(BuilderMixin, unittest.TestCase):
 
 
 class TestReconfig(BuilderMixin, unittest.TestCase):
+
     """Tests that a reconfig properly updates all attributes"""
 
     @defer.inlineCallbacks

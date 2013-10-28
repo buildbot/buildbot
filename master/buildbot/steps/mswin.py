@@ -20,6 +20,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 
 class Robocopy(ShellCommand):
+
     """ Robocopy build step.
 
     This is just a wrapper around the standard shell command that

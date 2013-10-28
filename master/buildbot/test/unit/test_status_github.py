@@ -39,12 +39,14 @@ from buildbot.test.util import logging
 
 
 class MarkerError(Exception):
+
     """
     An exceptions used as a marker in tests.
     """
 
 
 class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
+
     """
     Unit tests for `GitHubStatus`.
     """

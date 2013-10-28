@@ -130,6 +130,7 @@ class LogFileWatcher:
 
 if runtime.platformType == 'posix':
     class ProcGroupProcess(Process):
+
         """Simple subclass of Process to also make the spawned process a process
         group leader, so we can kill all members of the process group."""
 
@@ -204,6 +205,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 
 
 class RunProcess:
+
     """
     This is a helper class, used by slave commands to run programs in a child
     shell.
@@ -255,7 +257,7 @@ class RunProcess:
 
         self.builder = builder
         if isinstance(command, list):
-            command = [util.Obfuscated(w[1], w[2]) 
+            command = [util.Obfuscated(w[1], w[2])
                        if (isinstance(w, tuple) and len(w) == 3 and w[0] == 'obfuscated')
                        else w for w in command]
         # We need to take unicode commands and arguments and encode them using

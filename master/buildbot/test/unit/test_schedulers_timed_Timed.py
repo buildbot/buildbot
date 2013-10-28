@@ -29,6 +29,7 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
         self.tearDownScheduler()
 
     class Subclass(timed.Timed):
+
         def getNextBuildTime(self, lastActuation):
             self.got_lastActuation = lastActuation
             return defer.succeed((lastActuation or 1000) + 60)

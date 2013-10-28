@@ -17,6 +17,7 @@
 from slides import Lecture, NumSlide, Slide, Bullet, SubBullet, PRE, URL
 
 class Raw:
+
     def __init__(self, title, html):
         self.title = title
         self.html = html
@@ -24,6 +25,7 @@ class Raw:
         return self.html
 
 class HTML(Raw):
+
     def __init__(self, html):
         self.html = html
 

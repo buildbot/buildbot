@@ -71,6 +71,7 @@ Changes for changes sake
 """
 
 class TestCVSMaildirSource(unittest.TestCase):
+
     def test_CVSMaildirSource_create_change_from_cvs1_11msg(self):
         m = message_from_string(cvs1_11_msg)
         src = CVSMaildirSource('/dev/null')

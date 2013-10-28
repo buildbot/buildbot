@@ -25,6 +25,7 @@ UNKNOWN = 'UNKNOWN'
 
 # Parts used from novaclient.v1_1.
 class Client():
+
     def __init__(self, username, password, tenant_name, auth_url):
         self.images = Images()
         self.servers = Servers()
@@ -69,6 +70,7 @@ class Servers():
 
 # This is returned by Servers.create().
 class Instance():
+
     def __init__(self, id, servers, boot_args, boot_kwargs):
         self.id = id
         self.servers = servers

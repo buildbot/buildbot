@@ -151,26 +151,32 @@ class HTTPStep(BuildStep):
         return self.description.split()
 
 class POST(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='POST', **kwargs)
 
 class GET(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='GET', **kwargs)
 
 class PUT(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='PUT', **kwargs)
 
 class DELETE(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='DELETE', **kwargs)
 
 class HEAD(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='HEAD', **kwargs)
 
 class OPTIONS(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='OPTIONS', **kwargs)
 

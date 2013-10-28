@@ -58,6 +58,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     class Thunk: pass
+
     def getChangeClassifications(self, objectid, branch=Thunk,
                                  repository=Thunk, project=Thunk,
                                  codebase=Thunk):

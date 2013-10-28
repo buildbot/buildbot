@@ -31,6 +31,7 @@ HEADER = interfaces.LOG_CHANNEL_HEADER
 ChunkTypes = ["stdout", "stderr", "header"]
 
 class LogFileScanner(netstrings.NetstringParser):
+
     def __init__(self, chunk_cb, channels=[]):
         self.chunk_cb = chunk_cb
         self.channels = channels
@@ -42,6 +43,7 @@ class LogFileScanner(netstrings.NetstringParser):
             self.chunk_cb((channel, line[1:]))
 
 class LogFileProducer:
+
     """What's the plan?
 
     the LogFile has just one FD, used for both reading and writing.
@@ -174,6 +176,7 @@ class LogFileProducer:
             self.consumer = None
 
 class LogFile:
+
     """
     A LogFile keeps all of its contents on disk, in a non-pickle format to
     which new entries can easily be appended. The file on disk has a name like
@@ -691,7 +694,7 @@ def _tryremove(filename, timeout, retries):
         os.unlink(filename)
     except OSError:
         if retries > 0:
-            reactor.callLater(timeout, _tryremove, filename, timeout * 4, 
+            reactor.callLater(timeout, _tryremove, filename, timeout * 4,
                               retries - 1)
         else:
             log.msg("giving up on removing %s after over %d seconds" %

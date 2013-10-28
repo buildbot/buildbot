@@ -31,6 +31,7 @@ def _regexp_path(name, *names):
 
 
 class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeBaseDir()
     """
@@ -121,6 +122,7 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
                           misc.FileIOMixin,
                           unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeBuildbotTac()
     """
@@ -282,6 +284,7 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
                         misc.FileIOMixin,
                         unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeInfoFiles()
     """
@@ -464,6 +467,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
 
 class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave.createSlave()
     """

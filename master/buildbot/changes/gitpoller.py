@@ -24,6 +24,7 @@ from buildbot.util.state import StateMixin
 from buildbot import config
 
 class GitPoller(base.PollingChangeSource, StateMixin):
+
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
     
@@ -32,7 +33,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                      "category", "project"]
 
     def __init__(self, repourl, branches=None, branch=None,
-                 workdir=None, pollInterval=10*60, 
+                 workdir=None, pollInterval=10*60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,

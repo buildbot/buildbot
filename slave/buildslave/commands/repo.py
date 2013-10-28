@@ -25,6 +25,7 @@ from buildslave.commands.base import AbandonChain
 
 
 class Repo(SourceBaseCommand):
+
     """Repo specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 

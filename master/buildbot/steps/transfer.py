@@ -34,6 +34,7 @@ from buildbot import config
 
 
 class _FileWriter(pb.Referenceable):
+
     """
     Helper class that acts as a file-object with write access
     """
@@ -131,6 +132,7 @@ def _extractall(self, path=".", members=None):
                 self._dbg(1, "tarfile: %s" % e)
 
 class _DirectoryWriter(_FileWriter):
+
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
     step to unpack the archive, once the transfer has completed.
@@ -178,6 +180,7 @@ def makeStatusRemoteCommand(step, remote_command, args):
     return self
 
 class _TransferBuildStep(BuildStep):
+
     """
     Base class for FileUpload and FileDownload to factor out common
     functionality.
@@ -368,6 +371,7 @@ class DirectoryUpload(_TransferBuildStep):
 
 
 class _FileReader(pb.Referenceable):
+
     """
     Helper class that acts as a file-object with read access
     """

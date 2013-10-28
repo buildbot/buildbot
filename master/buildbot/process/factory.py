@@ -32,6 +32,7 @@ def s(steptype, **kwargs):
 
 
 class BuildFactory(util.ComparableMixin):
+
     """
     @cvar  buildClass: class to use when creating builds
     @type  buildClass: L{buildbot.process.build.Build}
@@ -74,6 +75,7 @@ class BuildFactory(util.ComparableMixin):
 # BuildFactory subclasses for common build tools
 
 class GNUAutoconf(BuildFactory):
+
     def __init__(self, source, configure="./configure",
                  configureEnv={},
                  configureFlags=[],
@@ -100,6 +102,7 @@ class GNUAutoconf(BuildFactory):
             self.addStep(Test(command=test))
 
 class CPAN(BuildFactory):
+
     def __init__(self, source, perl="perl"):
         BuildFactory.__init__(self, [source])
         self.addStep(Configure(command=[perl, "Makefile.PL"]))
@@ -107,6 +110,7 @@ class CPAN(BuildFactory):
         self.addStep(PerlModuleTest(command=["make", "test"]))
 
 class Distutils(BuildFactory):
+
     def __init__(self, source, python="python", test=None):
         BuildFactory.__init__(self, [source])
         self.addStep(Compile(command=[python, "./setup.py", "build"]))
@@ -114,6 +118,7 @@ class Distutils(BuildFactory):
             self.addStep(Test(command=test))
 
 class Trial(BuildFactory):
+
     """Build a python module that uses distutils and trial. Set 'tests' to
     the module in which the tests can be found, or set useTestCaseNames=True
     to always have trial figure out which tests to run (based upon which

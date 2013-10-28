@@ -21,6 +21,7 @@ from buildbot.sourcestamp import SourceStamp
 class ANYBRANCH: pass # a flag value, used below
 
 class GridStatusMixin(object):
+
     def getPageTitle(self, request):
         status = self.getStatus(request)
         p = status.getTitle()

@@ -19,6 +19,7 @@ from buildbot.status.web.session import SessionManager
 
 COOKIE_KEY="BuildBotSession"
 class Authz(object):
+
     """Decide who can do what."""
 
     knownActions = [

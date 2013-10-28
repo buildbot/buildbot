@@ -65,6 +65,7 @@ class TestSourceforgeGitRevlink_AlluraPlatform(unittest.TestCase):
                 self.url)
 
 class TestRevlinkMatch(unittest.TestCase):
+
     def testNotmuch(self):
         revision = 'f717d2ece1836c863f9cc02abd1ff2539307cd1d'
         matcher = RevlinkMatch(['git://notmuchmail.org/git/(.*)'],
@@ -88,6 +89,7 @@ class TestRevlinkMatch(unittest.TestCase):
         self.assertEquals(matcher(revision, 'ABCZ43'), '43-ABC-rev')
 
 class TestGitwebMatch(unittest.TestCase):
+
     def testOrgmode(self):
         revision = '490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8'
         matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')

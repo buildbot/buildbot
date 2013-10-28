@@ -24,6 +24,7 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
     # version between 0.8.3 and 0.8.4 get reasonable behavior even though some
     # rows in the change_properties database do not contain a proper [value,
     # source] tuple.
+
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'change_properties', 'change_files'])

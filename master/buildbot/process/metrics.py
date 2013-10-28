@@ -51,17 +51,20 @@ except ImportError:
     resource = None
 
 class MetricEvent(object):
+
     @classmethod
     def log(cls, *args, **kwargs):
         log.msg(metric=cls(*args, **kwargs))
 
 class MetricCountEvent(MetricEvent):
+
     def __init__(self, counter, count=1, absolute=False):
         self.counter = counter
         self.count = count
         self.absolute = absolute
 
 class MetricTimeEvent(MetricEvent):
+
     def __init__(self, timer, elapsed):
         self.timer = timer
         self.elapsed = elapsed
@@ -70,6 +73,7 @@ ALARM_OK, ALARM_WARN, ALARM_CRIT = range(3)
 ALARM_TEXT = ["OK", "WARN", "CRIT"]
 
 class MetricAlarmEvent(MetricEvent):
+
     def __init__(self, alarm, msg=None, level=ALARM_OK):
         self.alarm = alarm
         self.level = level
@@ -128,6 +132,7 @@ def timeMethod(name, _reactor=None):
     return decorator
 
 class FiniteList(deque):
+
     def __init__(self, maxlen=10):
         self._maxlen = maxlen
         deque.__init__(self)
@@ -138,6 +143,7 @@ class FiniteList(deque):
             self.popleft()
 
 class AveragingFiniteList(FiniteList):
+
     def __init__(self, maxlen=10):
         FiniteList.__init__(self, maxlen)
         self.average = 0
@@ -155,6 +161,7 @@ class AveragingFiniteList(FiniteList):
         return self.average
 
 class MetricHandler(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
         self.watchers = []
@@ -265,6 +272,7 @@ class MetricAlarmHandler(MetricHandler):
         return dict(alarms=retval)
 
 class PollerWatcher(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
 
@@ -295,6 +303,7 @@ class PollerWatcher(object):
                 MetricAlarmEvent.log(method, level=level)
 
 class AttachedSlavesWatcher(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
 

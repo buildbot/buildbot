@@ -46,6 +46,7 @@ class TransferCommand(Command):
 
 
 class SlaveFileUploadCommand(TransferCommand):
+
     """
     Upload a file from slave to build master
     Arguments:
@@ -232,6 +233,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
 
 
 class SlaveFileDownloadCommand(TransferCommand):
+
     """
     Download a file from master to slave
     Arguments:

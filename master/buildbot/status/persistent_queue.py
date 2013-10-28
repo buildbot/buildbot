@@ -34,6 +34,7 @@ def WriteFile(path, buf):
 
 
 class IQueue(Interface):
+
     """Abstraction of a queue."""
 
     # disable pylint warnings triggered by this interface definition
@@ -72,6 +73,7 @@ class IQueue(Interface):
 
 
 class MemoryQueue(object):
+
     """Simple length bounded queue using deque.
 
     list.pop(0) operation is O(n) so for a 10000 items list, it can start to
@@ -129,6 +131,7 @@ class MemoryQueue(object):
 
 
 class DiskQueue(object):
+
     """Keeps a list of abstract items and serializes it to the disk.
 
     Use pickle for serialization."""
@@ -253,6 +256,7 @@ class DiskQueue(object):
 
 
 class PersistentQueue(object):
+
     """Keeps a list of abstract items and serializes it to the disk.
 
     It has 2 layers of queue, normally an in-memory queue and an on-disk queue.
@@ -340,6 +344,7 @@ class PersistentQueue(object):
 
 
 class IndexedQueue(object):
+
     """Adds functionality to a IQueue object to track its usage.
 
     Adds a new member function getIndex() and modify popChunk() and

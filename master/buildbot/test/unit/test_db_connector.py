@@ -23,6 +23,7 @@ from buildbot.test.util import db
 from buildbot.test.fake import fakemaster
 
 class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
+
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """

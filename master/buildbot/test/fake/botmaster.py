@@ -16,6 +16,7 @@
 from twisted.application import service
 
 class FakeBotMaster(service.MultiService):
+
     def __init__(self, master):
         service.MultiService.__init__(self)
         self.setName("fake-botmaster")

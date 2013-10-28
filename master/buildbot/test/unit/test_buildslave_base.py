@@ -38,7 +38,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.ConcreteBuildSlave(name, password, **kwargs)
         slave.master = self.master
         slave.botmaster = self.botmaster
-        return slave   
+        return slave
 
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass')
@@ -251,7 +251,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_startService_getSlaveInfo_fromDb(self):
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={ 
+            fakedb.Buildslave(name='bot', info={
                 'admin': 'TheAdmin',
                 'host': 'TheHost',
                 'access_uri': 'TheURI',
@@ -269,6 +269,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def createRemoteBot(self):
         class Bot():
+
             def __init__(self):
                 self.commands = []
                 self.response = {
@@ -391,7 +392,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_attached_slaveInfoUpdates(self):
         # put in stale info:
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={ 
+            fakedb.Buildslave(name='bot', info={
                 'admin': 'WrongAdmin',
                 'host': 'WrongHost',
                 'access_uri': 'WrongURI',

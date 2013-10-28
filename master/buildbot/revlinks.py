@@ -16,6 +16,7 @@
 import re
 
 class RevlinkMatch(object):
+
     def __init__(self, repo_urls, revlink):
         if isinstance(repo_urls, str) or isinstance(repo_urls, unicode):
             repo_urls = [ repo_urls ]
@@ -36,6 +37,7 @@ GithubRevlink = RevlinkMatch(
         revlink = r'https://github.com/\1/\2/commit/%s')
 
 class GitwebMatch(RevlinkMatch):
+
     def __init__(self, repo_urls, revlink):
         RevlinkMatch.__init__(self, repo_urls = repo_urls, revlink = revlink + r'?p=\g<repo>;a=commit;h=%s')
 
@@ -57,6 +59,7 @@ SourceforgeGitRevlink_AlluraPlatform = RevlinkMatch(
         revlink = r'https://sourceforge.net/p/\1/ci/%s/')
 
 class RevlinkMultiplexer(object):
+
     def __init__(self, *revlinks):
         self.revlinks = revlinks
     def __call__(self, rev, repo):

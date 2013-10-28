@@ -22,6 +22,7 @@ from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, IBox, Box
 
 class ChangeResource(HtmlResource):
+
     def __init__(self, changeid):
         self.changeid = changeid
         self.pageTitle = "Change #%d" % changeid

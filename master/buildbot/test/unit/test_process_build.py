@@ -34,6 +34,7 @@ class FakeChange:
         self.who = "me"
         
 class FakeSource:
+
     def __init__(self):
         self.sourcestampsetid = None
         self.changes = []
@@ -49,6 +50,7 @@ class FakeSource:
         return self.repository
 
 class FakeRequest:
+
     def __init__(self):
         self.sources = []
         self.reason = "Because"
@@ -61,6 +63,7 @@ class FakeRequest:
         return self.reason
 
 class FakeBuildStep:
+
     def __init__(self):
         self.haltOnFailure = False
         self.flunkOnWarnings = False
@@ -71,6 +74,7 @@ class FakeBuildStep:
         self.name = 'fake'
 
 class FakeMaster:
+
     def __init__(self):
         self.locks = {}
         self.parent = Mock()
@@ -82,12 +86,13 @@ class FakeMaster:
         return self.locks[lockid]
 
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)   
+    implements(interfaces.IProperties)
         
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
 class FakeStepFactory(object):
+
     """Fake step factory that just returns a fixed step object."""
     implements(interfaces.IBuildStepFactory)
     def __init__(self, step):
@@ -701,8 +706,9 @@ class TestBuildBlameList(unittest.TestCase):
         self.assertEqual(blamelist, ['jeff'])
 
 class TestSetupProperties_MultipleSources(unittest.TestCase):
+
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
     def setUp(self):
@@ -744,8 +750,9 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         self.assertTrue("repository" not in self.props["Build"])
 
 class TestSetupProperties_SingleSource(unittest.TestCase):
+
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
     def setUp(self):
@@ -799,6 +806,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.assertEqual(project, '')
         
 class TestBuildProperties(unittest.TestCase):
+
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
     properly delegate to the C{build_status} attribute - so really just a test

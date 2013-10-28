@@ -556,6 +556,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.failUnlessEqual(s.extra_args, extra_args)
         
 class TestSplitFile(unittest.TestCase):
+
     def test_split_file_alwaystrunk(self):
         self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), dict(path='foo'))
 

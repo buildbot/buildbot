@@ -27,6 +27,7 @@ from buildslave.test.util import compat
 class TestStopSlave(misc.FileIOMixin,
                     misc.StdoutAssertionsMixin,
                     unittest.TestCase):
+
     """
     Test buildslave.scripts.stop.stopSlave()
     """
@@ -83,6 +84,7 @@ class TestStopSlave(misc.FileIOMixin,
 class TestStop(misc.IsBuildslaveDirMixin,
                misc.StdoutAssertionsMixin,
                unittest.TestCase):
+
     """
     Test buildslave.scripts.stop.stop()
     """

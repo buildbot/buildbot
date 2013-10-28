@@ -63,6 +63,7 @@ def getResultsClass(results, prevResults, inProgress, inBuilder):
 class ANYBRANCH: pass # a flag value, used below
 
 class DevRevision:
+
     """Helper class that contains all the information we need for a revision."""
 
     def __init__(self, change):
@@ -78,6 +79,7 @@ class DevRevision:
 
 
 class DevBuild:
+
     """Helper class that contains all the information we need for a build."""
 
     def __init__(self, build, details):
@@ -92,6 +94,7 @@ class DevBuild:
 
 
 class ConsoleStatusResource(HtmlResource):
+
     """Main console class. It displays a user-oriented status page.
     Every change is a line in the page, and it shows the result of the first
     build with this change for each slave."""
@@ -136,7 +139,7 @@ class ConsoleStatusResource(HtmlResource):
     def fetchChangesFromHistory(self, status, max_depth, max_builds, debugInfo):
         """Look at the history of the builders and try to fetch as many changes
         as possible. We need this when the main source does not contain enough
-        sourcestamps. 
+        sourcestamps.
 
         max_depth defines how many builds we will parse for a given builder.
         max_builds defines how many builds total we want to parse. This is to
@@ -163,7 +166,7 @@ class ConsoleStatusResource(HtmlResource):
                 build = build.getPreviousBuild()
 
         debugInfo["source_fetch_len"] = len(allChanges)
-        return allChanges                
+        return allChanges
 
     @defer.inlineCallbacks
     def getAllChanges(self, request, status, numChanges, debugInfo):
@@ -214,7 +217,7 @@ class ConsoleStatusResource(HtmlResource):
                     for log in step.getLogs():
                         logname = log.getName()
                         logurl = request.childLink(
-                          "../builders/%s/builds/%s/steps/%s/logs/%s" % 
+                          "../builders/%s/builds/%s/steps/%s/logs/%s" %
                             (urllib.quote(builderName),
                              build.getNumber(),
                              urllib.quote(name),
@@ -321,7 +324,7 @@ class ConsoleStatusResource(HtmlResource):
         
         cs = []
         
-        for category in categories:            
+        for category in categories:
             c = {}
 
             c["name"] = category
@@ -329,7 +332,7 @@ class ConsoleStatusResource(HtmlResource):
             # To be able to align the table correctly, we need to know
             # what percentage of space this category will be taking. This is
             # (#Builders in Category) / (#Builders Total) * 100.
-            c["size"] = (len(builderList[category]) * 100) / count            
+            c["size"] = (len(builderList[category]) * 100) / count
             cs.append(c)
             
         return cs
@@ -465,7 +468,7 @@ class ConsoleStatusResource(HtmlResource):
                     
                 resultsClass = getResultsClass(results, previousResults, isRunning, inBuilder)
 
-                b = {}                
+                b = {}
                 b["url"] = url
                 b["pageTitle"] = pageTitle
                 b["color"] = resultsClass
@@ -542,7 +545,7 @@ class ConsoleStatusResource(HtmlResource):
             
             # Fill the dictionary with this new information
             r['id'] = revision.revision
-            r['link'] = revision.revlink 
+            r['link'] = revision.revlink
             r['who'] = revision.who
             r['date'] = revision.date
             r['comments'] = revision.comments
@@ -558,7 +561,7 @@ class ConsoleStatusResource(HtmlResource):
             r['details'] = details
 
             # Calculate the td span for the comment and the details.
-            r["span"] = len(builderList) + 2            
+            r["span"] = len(builderList) + 2
 
             subs['revisions'].append(r)
 
@@ -589,7 +592,7 @@ class ConsoleStatusResource(HtmlResource):
         if not reload_time:
             reload_time = 60
 
-        # Append the tag to refresh the page. 
+        # Append the tag to refresh the page.
         if reload_time is not None and reload_time != 0:
             cxt['refresh'] = reload_time
 
@@ -673,6 +676,7 @@ class ConsoleStatusResource(HtmlResource):
         return d
 
 class RevisionComparator(object):
+
     """Used for comparing between revisions, as some
     VCS use a plain counter for revisions (like SVN)
     while others use different concepts (see Git).
@@ -692,6 +696,7 @@ class RevisionComparator(object):
         raise NotImplementedError
     
 class TimeRevisionComparator(RevisionComparator):
+
     def isRevisionEarlier(self, first, second):
         return first.when < second.when
 
@@ -702,6 +707,7 @@ class TimeRevisionComparator(RevisionComparator):
         return operator.attrgetter('when')
 
 class IntegerRevisionComparator(RevisionComparator):
+
     def isRevisionEarlier(self, first, second):
         try:
             return int(first.revision) < int(second.revision)

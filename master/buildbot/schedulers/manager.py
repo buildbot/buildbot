@@ -21,6 +21,7 @@ from buildbot import config, util
 
 class SchedulerManager(config.ReconfigurableServiceMixin,
                        service.MultiService):
+
     def __init__(self, master):
         service.MultiService.__init__(self)
         self.setName('scheduler_manager')

@@ -24,6 +24,7 @@ from buildbot.test.fake import fakedb
 from buildbot.process.users import manual
 
 class ManualUsersMixin(object):
+
     """
     This class fakes out the master/db components to test the manual
     user managers located in process.users.manual.
@@ -46,6 +47,7 @@ class ManualUsersMixin(object):
         self.master = self.FakeMaster()
 
 class TestUsersBase(unittest.TestCase):
+
     """
     Not really sure what there is to test, aside from _setUpManualUsers getting
     self.master set.
@@ -201,7 +203,7 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
         return d
 
     def test_perspective_commandline_add_format(self):
-        d = self.call_perspective_commandline('add', None, None, None, 
+        d = self.call_perspective_commandline('add', None, None, None,
                                               [{'identifier':'x', 'svn':'x'}])
         def check(result):
             exp_format = "user(s) added:\nidentifier: x\nuid: 1\n\n"

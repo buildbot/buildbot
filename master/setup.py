@@ -38,6 +38,7 @@ def include(d, e):
     return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
 
 class install_data_twisted(install_data):
+
     """make sure data files are installed in package.
     this is evil.
     copied from Twisted/setup.py.
@@ -184,7 +185,7 @@ py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_inf
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools #@UnusedImport
+    import setuptools  # @UnusedImport
 except ImportError:
     pass
 else:

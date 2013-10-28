@@ -159,6 +159,7 @@ class FakeLogFile(object):
             self.chunks.append((STDERR, stderr))
 
 class ExpectRemoteRef(object):
+
     """
     Define an expected RemoteReference in the args to an L{Expect} class
     """
@@ -170,6 +171,7 @@ class ExpectRemoteRef(object):
         return isinstance(other, self.rrclass)
 
 class Expect(object):
+
     """
     Define an expected L{RemoteCommand}, with the same arguments
 
@@ -276,6 +278,7 @@ class Expect(object):
         return "Expect("+repr(self.remote_command)+")"
 
 class ExpectShell(Expect):
+
     """
     Define an expected L{RemoteShellCommand}, with the same arguments Any
     non-default arguments must be specified explicitly (e.g., usePTY).

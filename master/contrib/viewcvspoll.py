@@ -4,7 +4,7 @@
 
 import os.path
 import time
-import MySQLdb #@UnresolvedImport
+import MySQLdb  # @UnresolvedImport
 
 from twisted.spread import pb
 from twisted.cred import credentials

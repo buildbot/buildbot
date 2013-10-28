@@ -4,7 +4,7 @@
 # new revisions. It then uses the 'buildbot sendchange' command to deliver
 # information about the Change to a (remote) buildmaster. It can be run from
 # a cron job on a periodic basis, or can be told (with the 'watch' option) to
-# automatically repeat its check every 10 minutes.  
+# automatically repeat its check every 10 minutes.
 
 # This script does not store any state information, so to avoid spurious
 # changes you must use the 'watch' option and let it run forever.
@@ -40,7 +40,7 @@ def getoutput(cmd):
 
 def sendchange_cmd(master, revisionData):
     cmd = [
-        "buildbot", 
+        "buildbot",
         "sendchange",
         "--master=%s" % master,
         "--revision=%s" % revisionData['revision'],
@@ -57,7 +57,7 @@ def sendchange_cmd(master, revisionData):
     if opts.verbose == True:
         print cmd
         
-    return cmd 
+    return cmd
 
 def parseChangeXML(raw_xml):
     """Parse the raw xml and return a dict with key pairs set.
@@ -137,15 +137,15 @@ def checkChanges(repo, master, oldRevision=-1):
 
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
-            pretty_time = time.strftime("%H.%M.%S ") 
-            print "%s Revision %s: %s" % (pretty_time, revisionData['revision'], 
+            pretty_time = time.strftime("%H.%M.%S ")
+            print "%s Revision %s: %s" % (pretty_time, revisionData['revision'],
                                           ''.join(f.readlines()))
             f.close()
         else:
             xml1 = getoutput(cmd)
     else:
         pretty_time = time.strftime("%H.%M.%S ")
-        print "%s nothing has changed since revision %s" % (pretty_time, 
+        print "%s nothing has changed since revision %s" % (pretty_time,
                                                             revisionData['revision'])
 
     return revisionData['revision']
@@ -227,5 +227,5 @@ if __name__ == '__main__':
                 print "\nReceived interrupt via keyboard.  Shutting Down."
                 sys.exit(0)
 
-    # default action if watch isn't specified 
+    # default action if watch isn't specified
     checkChanges(repo_url, bbmaster)

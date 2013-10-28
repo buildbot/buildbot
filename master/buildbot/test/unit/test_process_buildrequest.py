@@ -18,6 +18,7 @@ from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
 
 class FakeSource:
+
     def __init__(self, mergeable = True):
         self.codebase = ''
         self.mergeable = mergeable
@@ -177,7 +178,7 @@ class TestBuildRequest(unittest.TestCase):
             289     15     A        9284
             288     14     B        9200
             289     16     B        9201
-            -------------------------------- 
+            --------------------------------
             After merged in Build:
             Source1 has rev 9284 and contains changes 13 and 15 from repository svn://a
             Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
@@ -234,7 +235,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
-        d.addCallback(lambda _ : 
+        d.addCallback(lambda _ :
                     master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
@@ -267,7 +268,7 @@ class TestBuildRequest(unittest.TestCase):
             ----------------------------------------------------------------------
             288     17     C          1800     request 1 has repo not in request 2
             289     18     D          2100     request 2 has repo not in request 1
-            -------------------------------- 
+            --------------------------------
             Merge cannot be performd and raises error:
               Merging requests requires both requests to have the same codebases
         """
@@ -307,7 +308,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br : brs.append(br))
-        d.addCallback(lambda _ : 
+        d.addCallback(lambda _ :
                     master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict :
                     buildrequest.BuildRequest.fromBrdict(master, brdict))

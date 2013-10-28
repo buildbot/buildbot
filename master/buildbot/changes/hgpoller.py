@@ -24,6 +24,7 @@ from buildbot.changes import base
 from buildbot.util import epoch2datetime
 
 class HgPoller(base.PollingChangeSource):
+
     """This source will poll a remote hg repo for changes and submit
     them to the change master."""
 

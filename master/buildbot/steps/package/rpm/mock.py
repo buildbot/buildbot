@@ -37,6 +37,7 @@ class MockStateObserver(buildstep.LogLineObserver):
             self.step.step_status.setText(self.step.describe(False))
 
 class Mock(ShellCommand):
+
     """Add the mock logfiles and clean them if they already exist. Add support
     for the root and resultdir parameter of mock."""
 
@@ -91,7 +92,7 @@ class Mock(ShellCommand):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 
+        cmd = buildstep.RemoteCommand('rmdir', {'dir':
                 map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
                 self.mock_logfiles)})
         d = self.runCommand(cmd)
@@ -101,6 +102,7 @@ class Mock(ShellCommand):
         d.addErrback(self.failed)
 
 class MockBuildSRPM(Mock):
+
     """Build a srpm within a mock. Requires a spec file and a sources dir."""
     
     name = "mockbuildsrpm"
@@ -146,6 +148,7 @@ class MockBuildSRPM(Mock):
             self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
 
 class MockRebuild(Mock):
+
     """Rebuild a srpm within a mock. Requires a srpm file."""
     
     name = "mock"

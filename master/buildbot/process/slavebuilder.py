@@ -26,6 +26,7 @@ from twisted.python import log
  ) = range(6)
 
 class AbstractSlaveBuilder(pb.Referenceable):
+
     """I am the master-side representative for one of the
     L{buildbot.slave.bot.SlaveBuilder} objects that lives in a remote
     buildbot. When a remote builder connects, I query it for command versions
@@ -220,6 +221,7 @@ class SlaveBuilder(AbstractSlaveBuilder):
         self.state = ATTACHING
 
 class LatentSlaveBuilder(AbstractSlaveBuilder):
+
     def __init__(self, slave, builder):
         AbstractSlaveBuilder.__init__(self)
         self.slave = slave

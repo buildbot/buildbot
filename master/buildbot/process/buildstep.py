@@ -316,6 +316,7 @@ class LogObserver:
 
 
 class LogLineObserver(LogObserver):
+
     def __init__(self):
         self.stdoutParser = basic.LineOnlyReceiver()
         self.stdoutParser.delimiter = "\n"
@@ -355,6 +356,7 @@ class LogLineObserver(LogObserver):
 
 
 class RemoteShellCommand(RemoteCommand):
+
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, sigtermTime=None,
@@ -417,6 +419,7 @@ class RemoteShellCommand(RemoteCommand):
         return "<RemoteShellCommand '%s'>" % repr(self.fake_command)
 
 class _BuildStepFactory(util.ComparableMixin):
+
     """
     This is a wrapper to record the arguments passed to as BuildStep subclass.
     We use an instance of this class, rather than a closure mostly to make it

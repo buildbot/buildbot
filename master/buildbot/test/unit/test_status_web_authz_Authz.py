@@ -22,6 +22,7 @@ from buildbot.status.web.auth import IAuth, AuthBase
 
 class StubRequest(object):
     # all we need from a request is username/password
+
     def __init__(self, username=None, passwd=None):
         self.args = {
             'username' : [ username ],
@@ -39,6 +40,7 @@ class StubRequest(object):
 
 class StubHttpAuthRequest(object):
     # all we need from a request is username/password
+
     def __init__(self, username, passwd):
         self.args = {}
         self.username = username

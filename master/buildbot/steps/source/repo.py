@@ -88,6 +88,7 @@ class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
 
 
 class Repo(Source):
+
     """ Class for Repo with all the smarts """
     name = 'repo'
     renderables = ["manifestURL", "manifestFile", "tarball", "jobs",

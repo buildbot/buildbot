@@ -43,6 +43,7 @@ from twisted.web import client
 
 
 class StatusPush(StatusReceiverMultiService):
+
     """Event streamer to a abstract channel.
 
     It uses IQueue to batch push requests and queue the data when
@@ -356,6 +357,7 @@ class StatusPush(StatusReceiverMultiService):
 
 
 class HttpStatusPush(StatusPush):
+
     """Event streamer to a HTTP server."""
 
     def __init__(self, serverUrl, debug=None, maxMemoryItems=None,

@@ -23,6 +23,7 @@ from buildbot.steps.shell import ShellCommand
 
 
 class RpmSpec(ShellCommand):
+
     """
     read parameters out of an rpm spec file
     """

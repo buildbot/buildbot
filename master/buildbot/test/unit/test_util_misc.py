@@ -22,6 +22,7 @@ from buildbot.test.util import compat
 from buildbot.util.eventual import eventually
 
 class deferredLocked(unittest.TestCase):
+
     def test_name(self):
         self.assertEqual(util.deferredLocked, misc.deferredLocked)
 
@@ -65,6 +66,7 @@ class deferredLocked(unittest.TestCase):
     def test_method(self):
         testcase = self
         class C:
+
             @util.deferredLocked('aLock')
             def check_locked(self, arg1, arg2):
                 testcase.assertEqual([self.aLock.locked, arg1, arg2], [True, 1, 2])

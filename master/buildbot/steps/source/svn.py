@@ -28,6 +28,7 @@ from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
 
 class SVN(Source):
+
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
@@ -440,7 +441,7 @@ class SVN(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

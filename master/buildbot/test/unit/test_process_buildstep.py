@@ -26,6 +26,7 @@ from buildbot.test.util import config, steps, compat
 from buildbot.util.eventual import eventually
 
 class FakeLogFile:
+
     def __init__(self, text):
         self.text = text
 
@@ -85,6 +86,7 @@ class TestRegexLogEvaluator(unittest.TestCase):
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
+
         def start(self):
             eventually(self.finished, 0)
 

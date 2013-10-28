@@ -201,6 +201,7 @@ class Command:
         return None
 
 class SourceBaseCommand(Command):
+
     """Abstract base class for Version Control System operations (checkout
     and update). This class extracts the following arguments from the
     dictionary received from the master:

@@ -29,6 +29,7 @@ py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 class FakeLog(object):
+
     def __init__(self, text):
         self.text = text
 
@@ -37,6 +38,7 @@ class FakeLog(object):
 
     def getStep(self):
         class FakeStep(object):
+
             def getName(self):
                 return 'step-name'
         return FakeStep()
@@ -45,7 +47,8 @@ class FakeLog(object):
         return self.text
 
 class FakeSource:
-    def __init__(self, branch = None, revision = None, repository = None, 
+
+    def __init__(self, branch = None, revision = None, repository = None,
                  codebase = None, project = None):
         self.changes = []
         self.branch = branch
@@ -307,8 +310,8 @@ class TestMailNotifier(unittest.TestCase):
             self.passedAttrs = attrs
             return ("", "")
                                               
-        mn = MailNotifier('from@example.org', 
-                          buildSetSummary=True, 
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
                           mode=("failing", "passing", "warnings"),
                           builders=["Builder"])
         
@@ -325,7 +328,7 @@ class TestMailNotifier(unittest.TestCase):
             return build
         
         def fakeGetBuilder(buildername):
-            if buildername == builder.name: 
+            if buildername == builder.name:
                 return builder
             return None
         
@@ -375,8 +378,8 @@ class TestMailNotifier(unittest.TestCase):
             self.passedAttrs = attrs
             return ("", "")
                                               
-        mn = MailNotifier('from@example.org', 
-                          buildSetSummary=True, 
+        mn = MailNotifier('from@example.org',
+                          buildSetSummary=True,
                           mode=("failing", "passing", "warnings"),
                           builders=["Builder"])
         
@@ -393,7 +396,7 @@ class TestMailNotifier(unittest.TestCase):
             return build
         
         def fakeGetBuilder(buildername):
-            if buildername == builder.name: 
+            if buildername == builder.name:
                 return builder
             return None
         

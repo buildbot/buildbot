@@ -35,6 +35,7 @@ _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
                    EXCEPTION, RETRY, Results, worst_status ]
 
 class BuilderStatus(styles.Versioned):
+
     """I handle status information for a single process.build.Builder object.
     That object sends status changes to me (frequently as Events), and I
     provide them on demand to the various status recipients, like the HTML
@@ -266,7 +267,7 @@ class BuilderStatus(styles.Versioned):
 
     # IBuilderStatus methods
     def getName(self):
-        # if builderstatus page does show not up without any reason then 
+        # if builderstatus page does show not up without any reason then
         # str(self.name) may be a workaround
         return self.name
 

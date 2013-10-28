@@ -23,6 +23,7 @@ from buildslave.test.util import misc
 
 
 class OptionsMixin(object):
+
     def assertOptions(self, opts, exp):
         got = dict([(k, opts[k]) for k in exp])
         if got != exp:
@@ -34,6 +35,7 @@ class OptionsMixin(object):
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 class BaseDirTestsMixin:
+
     """
     Common tests for Options classes with 'basedir' parameter
     """
@@ -75,6 +77,7 @@ class BaseDirTestsMixin:
 
 
 class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.MakerBase class.
     """
@@ -82,6 +85,7 @@ class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.StopOptions class.
     """
@@ -93,6 +97,7 @@ class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.StartOptions class.
     """
@@ -110,6 +115,7 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.RestartOptions class.
     """
@@ -127,6 +133,7 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.UpgradeSlaveOptions class.
     """
@@ -138,6 +145,7 @@ class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.CreateSlaveOptions class.
     """
@@ -287,6 +295,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
 
 class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.Options class.
     """
@@ -318,6 +327,7 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 functionPlaceholder = None
 
 class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.run()
     """
@@ -330,6 +340,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
         optFlags = [["test-opt", None, None]]
 
     class TestOptions(usage.Options):
+
         """
         Option class that emulates usage error. The 'suboptions' flag
         enables emulation of usage error in a sub-option.

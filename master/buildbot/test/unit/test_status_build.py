@@ -47,6 +47,7 @@ class FakeSource(util.ComparableMixin):
         return "FakeSource(%s)" % (', '.join(text),)
 
 class TestBuildProperties(unittest.TestCase):
+
     """
     Test that a BuildStatus has the necessary L{IProperties} methods and that
     they delegate to its C{properties} attribute properly - so really just a
@@ -85,6 +86,7 @@ class TestBuildProperties(unittest.TestCase):
         self.build_status.properties.render.assert_called_with("xyz")
 
 class TestBuildGetSourcestamps(unittest.TestCase):
+
     """
     Test that a BuildStatus has the necessary L{IProperties} methods and that
     they delegate to its C{properties} attribute properly - so really just a

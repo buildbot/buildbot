@@ -22,6 +22,7 @@ from buildbot.test.util import misc
 class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     class FakeSender:
+
         def __init__(self, testcase, master, auth, encoding=None):
             self.master = master
             self.auth = auth

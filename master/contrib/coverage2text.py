@@ -21,6 +21,7 @@ class Options(usage.Options):
         ]
 
 class MyReporter(SummaryReporter):
+
     def report(self, outfile=None, sortby="uncovered"):
         self.find_code_units(None, ["/System", "/Library", "/usr/lib",
                                     "buildbot/test", "simplejson"])

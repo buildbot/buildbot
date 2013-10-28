@@ -32,6 +32,7 @@ def nth_slave(n):
     return pick_nth_by_name
 
 class SkipSlavesThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
+
     """This class disables the 'rejectedSlaves' feature"""
     def __init__(self, *args, **kwargs):
         buildrequestdistributor.BasicBuildChooser.__init__(self, *args, **kwargs)
@@ -316,6 +317,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.db = fakedb.FakeDBConnector(self)
         class getCache(object):
+
             def get_cache(self):
                 return self
             def get(self, name):

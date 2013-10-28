@@ -31,6 +31,7 @@ import re
 # BuildSteps that are specific to the Twisted source tree
 
 class HLint(ShellCommand):
+
     """I run a 'lint' checker over a set of .xhtml files. Any deviations
     from recommended style is flagged and put in the output log.
 
@@ -177,6 +178,7 @@ class TrialTestCaseCounter(LogLineObserver):
 UNSPECIFIED=() # since None is a valid choice
 
 class Trial(ShellCommand):
+
     """
     There are some class attributes which may be usefully overridden
     by subclasses. 'trialMode' and 'trialArgs' can influence the trial
@@ -186,7 +188,7 @@ class Trial(ShellCommand):
     name = "trial"
     progressMetrics = ('output', 'tests', 'test.log')
     # note: the slash only works on unix buildslaves, of course, but we have
-    # no way to know what the buildslave uses as a separator. 
+    # no way to know what the buildslave uses as a separator.
     # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()

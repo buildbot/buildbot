@@ -24,6 +24,7 @@ from twisted.internet import protocol
 from twisted.python import log
 
 class NewCredPerspective(pb.Avatar):
+
     def attached(self, mind):
         return self
     def detached(self, mind):
@@ -31,6 +32,7 @@ class NewCredPerspective(pb.Avatar):
 
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
+
     """Reconnecting client factory for PB brokers.
 
     Like PBClientFactory, but if the connection fails or is lost, the factory

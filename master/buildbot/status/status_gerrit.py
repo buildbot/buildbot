@@ -35,6 +35,7 @@ def defaultReviewCB(builderName, build, result, status, arg):
     return message, (result == SUCCESS or -1), 0
 
 class GerritStatusPush(StatusReceiverMultiService):
+
     """Event streamer to a gerrit ssh server."""
 
     def __init__(self, server, username, reviewCB=defaultReviewCB,
@@ -62,6 +63,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.startArg = startArg
 
     class LocalPP(ProcessProtocol):
+
         def __init__(self, status):
             self.status = status
 

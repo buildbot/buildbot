@@ -25,6 +25,7 @@ from buildbot.util import epoch2datetime
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
 
 class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
+
     """Test GitPoller methods for parsing git output"""
     def setUp(self):
         self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
@@ -548,6 +549,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
 
 class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
+
     def test_deprecatedFetchRefspec(self):
         self.assertRaisesConfigError("fetch_refspec is no longer supported",
                 lambda: gitpoller.GitPoller("/tmp/git.git",

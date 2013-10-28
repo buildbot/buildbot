@@ -183,6 +183,7 @@ class VCx(vstudio.VisualStudio):
         return vstudio.VisualStudio.start(self)
 
 class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
+
     """
     Test L{VisualStudio} with a simple subclass, L{VCx}.
     """
@@ -526,6 +527,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
 
 class VC8ExpectedEnvMixin(object):
     # used for VC8 and VC9Express
+
     def getExpectedEnv(self, installdir, x64=False, l=None, i=None, p=None):
         include = [
             installdir + r'\VC\INCLUDE;',

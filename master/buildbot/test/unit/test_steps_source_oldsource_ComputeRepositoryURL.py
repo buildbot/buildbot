@@ -41,6 +41,7 @@ class FakeStep(object):
     codebase = ''
 
 class RepoURL(unittest.TestCase):
+
     def setUp(self):
         self.build = Build()
 

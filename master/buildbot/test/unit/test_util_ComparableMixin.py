@@ -20,6 +20,7 @@ from buildbot import util
 
 
 class ComparableMixin(unittest.TestCase):
+
     class Foo(util.ComparableMixin):
         compare_attrs = ["a", "b"]
         def __init__(self, a, b, c):

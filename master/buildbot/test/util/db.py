@@ -33,6 +33,7 @@ def skip_for_dialect(dialect):
     return dec
 
 class RealDatabaseMixin(object):
+
     """
     A class that sets up a real database for testing.  This sets self.db_url to
     the URL for the database.  By default, it specifies an in-memory SQLite

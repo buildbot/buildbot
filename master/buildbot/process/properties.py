@@ -25,6 +25,7 @@ from twisted.python.components import registerAdapter
 from zope.interface import implements
 
 class Properties(util.ComparableMixin):
+
     """
     I represent a set of properties that can be interpolated into various
     strings in buildsteps.
@@ -152,6 +153,7 @@ class Properties(util.ComparableMixin):
 
 
 class PropertiesMixin:
+
     """
     A mixin to add L{IProperties} methods to a class which does not implement
     the interface, but which can be coerced to the interface via an adapter.
@@ -193,6 +195,7 @@ class PropertiesMixin:
 
 
 class _PropertyMap(object):
+
     """
     Privately-used mapping object to implement WithProperties' substitutions,
     including the rendering of None as ''.
@@ -266,6 +269,7 @@ class _PropertyMap(object):
         self.temp_vals[key] = val
 
 class WithProperties(util.ComparableMixin):
+
     """
     This is a marker class, used fairly widely to indicate that we
     want to interpolate build properties.
@@ -300,7 +304,7 @@ class WithProperties(util.ComparableMixin):
 
 
 
-_notHasKey = object() ## Marker object for _Lookup(..., hasKey=...) default
+_notHasKey = object()  # Marker object for _Lookup(..., hasKey=...) default
 class _Lookup(util.ComparableMixin, object):
     implements(IRenderable)
 
@@ -394,6 +398,7 @@ class _Lazy(util.ComparableMixin, object):
 
 
 class Interpolate(util.ComparableMixin, object):
+
     """
     This is a marker class, used fairly widely to indicate that we
     want to interpolate build properties.
@@ -567,6 +572,7 @@ class Interpolate(util.ComparableMixin, object):
             return d
 
 class Property(util.ComparableMixin):
+
     """
     An instance of this class renders a property of a build.
     """
@@ -604,6 +610,7 @@ class Property(util.ComparableMixin):
                 return props.render(self.default)
 
 class FlattenList(util.ComparableMixin):
+
     """
     An instance of this class flattens all nested lists in a list
     """
@@ -641,6 +648,7 @@ def renderer(fn):
     return _Renderer(fn)
 
 class _DefaultRenderer(object):
+
     """
     Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
     returns argument unchanged.
@@ -661,6 +669,7 @@ registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
 class _ListRenderer(object):
+
     """
     List IRenderable adaptor. Maps Build.render over the list.
     """
@@ -677,6 +686,7 @@ registerAdapter(_ListRenderer, list, IRenderable)
 
 
 class _TupleRenderer(object):
+
     """
     Tuple IRenderable adaptor. Maps Build.render over the tuple.
     """
@@ -695,6 +705,7 @@ registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
 class _DictRenderer(object):
+
     """
     Dict IRenderable adaptor. Maps Build.render over the keya and values in the dict.
     """

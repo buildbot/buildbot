@@ -124,7 +124,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev1', sourcestampsetid=100)})
-        d.addCallback(lambda (res, brids) : self.assertEqual(res, 11) 
+        d.addCallback(lambda (res, brids) : self.assertEqual(res, 11)
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid1)))
 
         # define sourcestamp
@@ -142,7 +142,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev2', sourcestampsetid=101)})
-        d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
+        d.addCallback(lambda (res, brids) : self.assertEqual(res, 22)
                                         and self.assertEqual(brids, self.db.buildsets.allBuildRequests(bsid2)))
 
         # check that the scheduler has subscribed to buildset changes
@@ -163,7 +163,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_trigger_with_unknown_sourcestamp(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler with a sourcestamp that is unknown to the scheduler
-        # Expected Result: 
+        # Expected Result:
         #    sourcestamp 1 for repository 1 based on configured sourcestamp
         #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler(
@@ -189,7 +189,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_trigger_without_sourcestamps(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler without a sourcestamp
-        # Expected Result: 
+        # Expected Result:
         #    sourcestamp 1 for repository 1 based on configured sourcestamp
         #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler(

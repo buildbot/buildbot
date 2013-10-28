@@ -207,7 +207,7 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
         def got_persp(bs):
             self.fail("shouldn't get here")
         def failed(f):
-            pass #f.trap(RuntimeError) # expected error
+            pass  # f.trap(RuntimeError) # expected error
         d.addCallbacks(got_persp, failed)
         return d
 

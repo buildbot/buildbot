@@ -31,6 +31,7 @@ except ImportError:
 
 
 class WorkQueue(object):
+
     """
     I am a class that turns parallel access into serial access.
 
@@ -60,7 +61,7 @@ class WorkQueue(object):
         except:
             d2 = defer.fail()
 
-        # Whenever a piece of work is done, whether it worked or not 
+        # Whenever a piece of work is done, whether it worked or not
         # call this to schedule the next piece of work
         def _work_done(res):
             log.msg("Completed a piece of work")

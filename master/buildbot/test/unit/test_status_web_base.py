@@ -25,6 +25,7 @@ class ActionResource(unittest.TestCase):
     def test_ActionResource_success(self):
 
         class MyActionResource(base.ActionResource):
+
             def performAction(self, request):
                 self.got_request = request
                 return defer.succeed('http://buildbot.net')
@@ -45,6 +46,7 @@ class ActionResource(unittest.TestCase):
     def test_ActionResource_exception(self):
 
         class MyActionResource(base.ActionResource):
+
             def performAction(self, request):
                 return defer.fail(RuntimeError('sacrebleu'))
 

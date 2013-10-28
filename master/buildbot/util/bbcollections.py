@@ -18,6 +18,7 @@ from collections import defaultdict
 assert defaultdict
 
 class KeyedSets:
+
     def __init__(self):
         self.d = dict()
     def add(self, key, value):

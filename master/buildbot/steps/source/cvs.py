@@ -142,7 +142,7 @@ class CVS(Source):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)        
+        d = self.runCommand(cmd)
         old_workdir = self.workdir
         self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
@@ -196,7 +196,7 @@ class CVS(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

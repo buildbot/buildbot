@@ -31,6 +31,7 @@ import gzip, bz2, base64, re, cStringIO
 # and can format email without raising an exception.
 
 class TinderboxMailNotifier(mail.MailNotifier):
+
     """This is a Tinderbox status notifier. It can send e-mail to a number of
     different tinderboxes or people. E-mails are sent at the beginning and
     upon completion of each build. It can be configured to send out e-mails

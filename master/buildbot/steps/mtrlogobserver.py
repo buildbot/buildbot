@@ -22,6 +22,7 @@ from buildbot.process.buildstep import LogLineObserver
 from buildbot.steps.shell import Test
 
 class EqConnectionPool(adbapi.ConnectionPool):
+
     """This class works the same way as
 twisted.enterprise.adbapi.ConnectionPool. But it adds the ability to
 compare connection pools for equality (by comparing the arguments
@@ -52,6 +53,7 @@ are more suitable for use in MTR.
 
 
 class MtrTestFailData:
+
     def __init__(self, testname, variant, result, info, text, callback):
         self.testname = testname
         self.variant = variant
@@ -68,6 +70,7 @@ class MtrTestFailData:
 
 
 class MtrLogObserver(LogLineObserver):
+
     """
     Class implementing a log observer (can be passed to
     BuildStep.addLogObserver().
@@ -208,6 +211,7 @@ class MtrLogObserver(LogLineObserver):
         pass
 
 class MTR(Test):
+
     """
     Build step that runs mysql-test-run.pl, as used in MySQL, Drizzle,
     MariaDB, etc.
@@ -438,6 +442,7 @@ VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
         log.msg("Error in async insert into database: %s" % err)
 
     class MyMtrLogObserver(MtrLogObserver):
+
         def collectTestFail(self, testname, variant, result, info, text):
             # Insert asynchronously into database.
             dbpool = self.step.dbpool

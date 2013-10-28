@@ -19,6 +19,7 @@ from buildbot.test.util import changesource, compat
 from buildbot.changes import base
 
 class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+
     class Subclass(base.PollingChangeSource):
         pass
 
