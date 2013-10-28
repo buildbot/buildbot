@@ -23,6 +23,7 @@ from twisted.internet.protocol import ProcessProtocol
 import pprint
 
 class MasterShellCommand(BuildStep):
+
     """
     Run a shell command locally - on the buildmaster.  The shell command
     COMMAND is specified just as for a RemoteShellCommand.  Note that extra
@@ -61,6 +62,7 @@ class MasterShellCommand(BuildStep):
         self.interruptSignal = interruptSignal
 
     class LocalPP(ProcessProtocol):
+
         def __init__(self, step):
             self.step = step
 

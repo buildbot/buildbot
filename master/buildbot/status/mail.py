@@ -169,6 +169,7 @@ def defaultGetPreviousBuild(current_build):
         return current_build.getPreviousBuild()
 
 class MailNotifier(base.StatusReceiverMultiService):
+
     """This is a status notifier which sends email to a list of recipients
     upon the completion of each build. It can be configured to only send out
     mail for certain builds, and only send messages when the build fails, or
@@ -307,7 +308,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                              values may be WithProperties instances.
 
         @type useTls: boolean
-        @param useTls: Send emails using TLS and authenticate with the 
+        @param useTls: Send emails using TLS and authenticate with the
                        smtp host. Defaults to False.
 
         @type smtpUser: string

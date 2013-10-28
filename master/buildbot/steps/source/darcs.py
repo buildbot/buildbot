@@ -28,6 +28,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.steps.transfer import _FileReader
 
 class Darcs(Source):
+
     """ Class for Darcs with all smarts """
 
     name = 'darcs'
@@ -183,7 +184,7 @@ class Darcs(Source):
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

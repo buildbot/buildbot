@@ -25,6 +25,7 @@ from buildslave.commands import utils
 from buildslave.util import Obfuscated
 
 class SVN(SourceBaseCommand):
+
     """Subversion-specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -119,7 +120,7 @@ class SVN(SourceBaseCommand):
         svn_info_d = self._dovccmd('info', (self.svnurl,), rootdir=self.builder.basedir, keepStdout=True)
 
         svn_info_d.addCallbacks(parseInfo, self._abandonOnFailure)
-        svn_info_d.addCallbacks(exportCmd) 
+        svn_info_d.addCallbacks(exportCmd)
 
         return svn_info_d
 

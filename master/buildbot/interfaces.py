@@ -35,6 +35,7 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
 class IChangeSource(Interface):
+
     """
     Service which feeds Change objects to the changemaster. When files or
     directories are changed in version control, this object should represent
@@ -51,6 +52,7 @@ class IChangeSource(Interface):
         """Return a string which briefly describes this source."""
 
 class ISourceStamp(Interface):
+
     """
     @cvar branch: branch from which source was drawn
     @type branch: string or None
@@ -94,17 +96,20 @@ class ISourceStamp(Interface):
         presenting them to the user."""
 
 class IEmailSender(Interface):
+
     """I know how to send email, and can be used by other parts of the
     Buildbot to contact developers."""
     pass
 
 class IEmailLookup(Interface):
+
     def getAddress(user):
         """Turn a User-name string into a valid email address. Either return
         a string (with an @ in it), None (to indicate that the user cannot
         be reached by email), or a Deferred which will fire with the same."""
 
 class IStatus(Interface):
+
     """I am an object, obtainable from the buildmaster, which can provide
     status information."""
 
@@ -201,6 +206,7 @@ class IStatus(Interface):
         delivered."""
 
 class IBuildSetStatus(Interface):
+
     """I represent a set of Builds, each run on a separate Builder but all
     using the same source tree."""
 
@@ -230,6 +236,7 @@ class IBuildSetStatus(Interface):
 
 
 class IBuildRequestStatus(Interface):
+
     """I represent a request to build a particular set of source code on a
     particular Builder. These requests may be merged by the time they are
     finally turned into a Build."""
@@ -268,6 +275,7 @@ class IBuildRequestStatus(Interface):
 
 
 class ISlaveStatus(Interface):
+
     def getName():
         """Return the name of the build slave."""
 
@@ -285,6 +293,7 @@ class ISlaveStatus(Interface):
         recent message was received from the buildslave."""
 
 class ISchedulerStatus(Interface):
+
     def getName():
         """Return the name of this Scheduler (a string)."""
 
@@ -295,6 +304,7 @@ class ISchedulerStatus(Interface):
 
 
 class IBuilderStatus(Interface):
+
     def getName():
         """Return the name of this Builder (a string)."""
 
@@ -405,6 +415,7 @@ class IBuilderStatus(Interface):
         delivered."""
 
 class IEventSource(Interface):
+
     def eventGenerator(branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will yield all of this
         object's status events, starting with the most recent and progressing
@@ -431,6 +442,7 @@ class IEventSource(Interface):
         """
 
 class IBuildStatus(Interface):
+
     """I represent the status of a single Build/BuildRequest. It could be
     in-progress or finished."""
 
@@ -558,6 +570,7 @@ class IBuildStatus(Interface):
         delivered."""
 
 class ITestResult(Interface):
+
     """I describe the results of a single unit test."""
 
     def getName():
@@ -582,6 +595,7 @@ class ITestResult(Interface):
 
 
 class IBuildStepStatus(Interface):
+
     """I hold status for a single BuildStep."""
 
     def getName():
@@ -671,6 +685,7 @@ class IBuildStepStatus(Interface):
         delivered."""
 
 class IStatusEvent(Interface):
+
     """I represent a Builder Event, something non-Build related that can
     happen to a Builder."""
 
@@ -693,6 +708,7 @@ LOG_CHANNEL_STDERR = 1
 LOG_CHANNEL_HEADER = 2
 
 class IStatusLog(Interface):
+
     """I represent a single Log, which is a growing list of text items that
     contains some kind of output for a single BuildStep. I might be finished,
     in which case this list has stopped growing.
@@ -812,6 +828,7 @@ class IStatusLog(Interface):
         into stdout if PTYs are in use)."""
 
 class IStatusLogConsumer(Interface):
+
     """I am an object which can be passed to IStatusLog.subscribeConsumer().
     I represent a target for writing the contents of an IStatusLog. This
     differs from a regular IStatusReceiver in that it can pause the producer.
@@ -842,6 +859,7 @@ class IStatusLogConsumer(Interface):
         """The log has finished sending chunks to the consumer."""
 
 class IStatusReceiver(Interface):
+
     """I am an object which can receive build status updates. I may be
     subscribed to an IStatus, an IBuilderStatus, or an IBuildStatus."""
 
@@ -987,6 +1005,7 @@ class IStatusReceiver(Interface):
 
 
 class IControl(Interface):
+
     def addChange(change):
         """Add a change to the change queue, for analysis by schedulers."""
 
@@ -994,6 +1013,7 @@ class IControl(Interface):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
+
     def submitBuildRequest(ss, reason, props=None):
         """Create a BuildRequest, which will eventually cause a build of the
         given SourceStamp to be run on this builder. This returns a
@@ -1032,6 +1052,7 @@ class IBuilderControl(Interface):
         # the Builder column, so it kinda fits here too.
 
 class IBuildRequestControl(Interface):
+
     def subscribe(observer):
         """Register a callable that will be invoked (with a single
         IBuildControl object) for each Build that is created to satisfy this
@@ -1047,6 +1068,7 @@ class IBuildRequestControl(Interface):
         build has already been started."""
 
 class IBuildControl(Interface):
+
     def getStatus():
         """Return an IBuildStatus object for the Build that I control."""
     def stopBuild(reason="<no reason given>"):
@@ -1054,6 +1076,7 @@ class IBuildControl(Interface):
         finished."""
 
 class ILogFile(Interface):
+
     """This is the internal interface to a LogFile, used by the BuildStep to
     write data into the log.
     """
@@ -1068,6 +1091,7 @@ class ILogFile(Interface):
         further data will be added. This closes the logfile."""
 
 class ILogObserver(Interface):
+
     """Objects which provide this interface can be used in a BuildStep to
     watch the output of a LogFile and parse it incrementally.
     """
@@ -1087,6 +1111,7 @@ class IBuildSlave(Interface):
     pass
 
 class ILatentBuildSlave(IBuildSlave):
+
     """A build slave that is not always running, but can run when requested.
     """
     substantiated = Attribute('Substantiated',
@@ -1116,6 +1141,7 @@ class ILatentBuildSlave(IBuildSlave):
         """
 
 class IRenderable(Interface):
+
     """An object that can be interpolated with properties from a build.
     """
 
@@ -1125,6 +1151,7 @@ class IRenderable(Interface):
         @param iprops: the L{IProperties} provider supplying the properties.
         """
 class IProperties(Interface):
+
     """
     An object providing access to build properties
     """
@@ -1203,6 +1230,7 @@ class IScheduler(Interface):
     pass
 
 class ITriggerableScheduler(Interface):
+
     """
     A scheduler that can be triggered by buildsteps.
     """
@@ -1212,5 +1240,6 @@ class ITriggerableScheduler(Interface):
         """
 
 class IBuildStepFactory(Interface):
+
     def buildStep():
         pass

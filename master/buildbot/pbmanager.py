@@ -23,6 +23,7 @@ from twisted.application import service, strports
 debug = False
 
 class PBManager(service.MultiService):
+
     """
     A centralized manager for PB ports and authentication on them.
 
@@ -67,6 +68,7 @@ class PBManager(service.MultiService):
         return defer.succeed(None)
 
 class Registration(object):
+
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr
         "portstr this registration is active on"

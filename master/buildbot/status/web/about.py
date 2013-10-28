@@ -24,9 +24,9 @@ class AboutBuildbot(HtmlResource):
     pageTitle = "About this Buildbot"
 
     def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
+        cxt.update(dict(buildbot=buildbot.version,
                                twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
+                               jinja=jinja2.__version__,
                                python=sys.version,
                                platform=sys.platform))
 

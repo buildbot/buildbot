@@ -19,6 +19,7 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 
 class Sender:
+
     def __init__(self, master, auth=('change','changepw'), encoding='utf8'):
         self.username, self.password = auth
         self.host, self.port = master.split(":")

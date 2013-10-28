@@ -22,10 +22,12 @@ from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 
 class MonotoneError(Exception):
+
     """Error class for this module."""
 
 
 class Monotone(SourceBaseCommand):
+
     """Monotone specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -156,7 +158,7 @@ class Monotone(SourceBaseCommand):
                 c = runprocess.RunProcess(self.builder, [self.mtn, 'db', 'init',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c
@@ -168,7 +170,7 @@ class Monotone(SourceBaseCommand):
                                                          'db', 'migrate',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c

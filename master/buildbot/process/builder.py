@@ -588,8 +588,8 @@ class BuilderControl:
 
             bsid, brids = yield self.control.master.addBuildset(
                     builderNames=[self.original.name],
-                    sourcestampsetid=sourcestampsetid, 
-                    reason=reason, 
+                    sourcestampsetid=sourcestampsetid,
+                    reason=reason,
                     properties=properties_dict)
             defer.returnValue((bsid, brids))
         else:

@@ -231,6 +231,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 
 class Bot(pb.Referenceable, service.MultiService):
+
     """I represent the slave-side bot."""
     usePTY = None
     name = "bot"
@@ -433,6 +434,7 @@ class BotFactory(ReconnectingPBClientFactory):
 
 
 class BuildSlave(service.MultiService):
+
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=None, umask=None,
                  maxdelay=300, unicode_encoding=None, allow_shutdown=None):

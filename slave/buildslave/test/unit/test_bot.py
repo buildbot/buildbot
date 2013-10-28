@@ -167,6 +167,7 @@ class TestBot(unittest.TestCase):
         return defer.gatherResults([d1, d2])
 
 class FakeStep(object):
+
     "A fake master-side BuildStep that records its activities."
     def __init__(self):
         self.finished_d = defer.Deferred()

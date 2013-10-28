@@ -30,6 +30,7 @@ from buildbot import util
 from buildbot.changes import base
 
 class P4PollerError(Exception):
+
     """Something went wrong with the poll. This is used as a distinctive
     exception type so that unit tests can detect and ignore it."""
 
@@ -44,6 +45,7 @@ def get_simple_split(branchfile):
     return branch, file
 
 class P4Source(base.PollingChangeSource, util.ComparableMixin):
+
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 

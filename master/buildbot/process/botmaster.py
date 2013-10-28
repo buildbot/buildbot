@@ -329,6 +329,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
 
 class DuplicateSlaveArbitrator(object):
+
     """Utility class to arbitrate the situation when a new slave connects with
     the name of an existing, connected slave
 

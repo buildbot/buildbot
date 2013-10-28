@@ -18,7 +18,7 @@ import time, re, string
 import datetime
 import calendar
 import types
-from twisted.python import reflect 
+from twisted.python import reflect
 
 from buildbot.util.misc import deferredLocked, SerializedInvocation
 
@@ -75,7 +75,7 @@ class ComparableMixin:
  
     def __hash__(self):
         compare_attrs = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs) 
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
 
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in compare_attrs]
@@ -149,6 +149,7 @@ except AttributeError:
 # which makes default function keyword arguments hard to handle.  This value
 # is always false.
 class NotABranch:
+
     def __nonzero__(self):
         return False
 NotABranch = NotABranch()
@@ -156,6 +157,7 @@ NotABranch = NotABranch()
 # time-handling methods
 
 class UTC(datetime.tzinfo):
+
     """Simple definition of UTC timezone"""
     def utcoffset(self, dt):
         return datetime.timedelta(0)

@@ -26,6 +26,7 @@ else:
     debuglog = lambda m: None
 
 class BaseLock:
+
     """
     Class handling claiming and releasing of L{self}, and keeping track of
     current and waiting owners.
@@ -175,6 +176,7 @@ class BaseLock:
 
 
 class RealMasterLock(BaseLock):
+
     def __init__(self, lockid):
         BaseLock.__init__(self, lockid.name, lockid.maxCount)
         self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
@@ -183,6 +185,7 @@ class RealMasterLock(BaseLock):
         return self
 
 class RealSlaveLock:
+
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount
@@ -209,6 +212,7 @@ class RealSlaveLock:
 
 
 class LockAccess(util.ComparableMixin):
+
     """ I am an object representing a way to access a lock.
 
     @param lockid: LockId instance that should be accessed.
@@ -231,6 +235,7 @@ class LockAccess(util.ComparableMixin):
 
 
 class BaseLockId(util.ComparableMixin):
+
     """ Abstract base class for LockId classes.
 
     Sets up the 'access()' function for the LockId's available to the user
@@ -259,6 +264,7 @@ class BaseLockId(util.ComparableMixin):
 # via the BotMaster.getLockByID method.
 
 class MasterLock(BaseLockId):
+
     """I am a semaphore that limits the number of simultaneous actions.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
@@ -278,6 +284,7 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 class SlaveLock(BaseLockId):
+
     """I am a semaphore that limits simultaneous actions on each buildslave.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.

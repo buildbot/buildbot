@@ -21,6 +21,7 @@ from buildbot import util
 from collections import defaultdict
 
 class StepProgress:
+
     """I keep track of how much progress a single BuildStep has made.
 
     Progress is measured along various axes. Time consumed is one that is
@@ -128,12 +129,14 @@ class StepProgress:
 
 
 class WatcherState:
+
     def __init__(self, interval):
         self.interval = interval
         self.timer = None
         self.needUpdate = 0
 
 class BuildProgress(pb.Referenceable):
+
     """I keep track of overall build progress. I hold a list of StepProgress
     objects.
     """

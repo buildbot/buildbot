@@ -31,6 +31,7 @@ from buildbot import util
 import collections
 
 class ForceAction(ActionResource):
+
     @defer.inlineCallbacks
     def force(self, req, builderNames):
         master = self.getBuildmaster(req)

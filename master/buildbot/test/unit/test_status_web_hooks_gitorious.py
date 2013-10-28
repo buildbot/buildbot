@@ -62,6 +62,7 @@ gitJsonPayload = r"""
 
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+
     def setUp(self):
         dialects = {'gitorious': True}
         self.changeHook = change_hook.ChangeHookResource(dialects=dialects)

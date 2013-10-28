@@ -26,6 +26,7 @@ class FakeSlaveBuilder:
 
 
 class FakeBuildStatus:
+
     def __init__(self):
         self.names = []
 
@@ -59,6 +60,7 @@ class FakeStepStatus:
 
 
 class FakeBuildRequest:
+
     def __init__(self, reason, sources, buildername):
         self.reason = reason
         self.sources = sources
@@ -74,6 +76,7 @@ class FakeBuildRequest:
 
 
 class TestShellCommandProperties(unittest.TestCase):
+
     def testCommand(self):
         f = BuildFactory()
         f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))
@@ -92,6 +95,7 @@ class TestShellCommandProperties(unittest.TestCase):
 
 
 class TestSetProperty(unittest.TestCase):
+
     def testGoodStep(self):
         f = BuildFactory()
         f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))

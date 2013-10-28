@@ -64,6 +64,7 @@ def maybeColorize(text, color, useColors):
         return text
 
 class UsageError(ValueError):
+
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
 
@@ -842,6 +843,7 @@ class IRCContact(base.StatusReceiver):
 
 
 class IrcStatusBot(irc.IRCClient):
+
     """I represent the buildbot to an IRC server.
     """
     contactClass = IRCContact

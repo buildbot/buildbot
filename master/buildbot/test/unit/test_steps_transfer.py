@@ -106,6 +106,7 @@ class TestTransferBuildStep(unittest.TestCase):
 
 
 class TestFileUpload(unittest.TestCase):
+
     def setUp(self):
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
@@ -219,6 +220,7 @@ class TestFileUpload(unittest.TestCase):
             os.path.basename(self.destfile), "http://server/file")
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
+
     def setUp(self):
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
@@ -294,6 +296,7 @@ class TestStringDownload(unittest.TestCase):
             self.assert_(False, "No downloadFile command found")
 
 class TestJSONStringDownload(unittest.TestCase):
+
     def testBasic(self):
         msg = dict(message="Hello World")
         s = transfer.JSONStringDownload(msg, "hello.json")
@@ -321,6 +324,7 @@ class TestJSONStringDownload(unittest.TestCase):
             self.assert_(False, "No downloadFile command found")
 
 class TestJSONPropertiesDownload(unittest.TestCase):
+
     def testBasic(self):
         s = transfer.JSONPropertiesDownload("props.json")
         s.build = Mock()

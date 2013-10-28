@@ -24,6 +24,7 @@ from buildbot.changes import base
 from buildbot.util import epoch2datetime
 
 class InvalidResultError(Exception):
+
     def __init__(self, value="InvalidResultError"):
         self.value = value
     def __str__(self):
@@ -39,6 +40,7 @@ class NoMoreFileNodes(Exception):
     pass
 
 class BonsaiResult:
+
     """I hold a list of CiNodes"""
     def __init__(self, nodes=[]):
         self.nodes = nodes
@@ -63,6 +65,7 @@ class BonsaiResult:
         return 0
 
 class CiNode:
+
     """I hold information baout one <ci> node, including a list of files"""
     def __init__(self, log="", who="", date=0, files=[]):
         self.log = log
@@ -71,12 +74,14 @@ class CiNode:
         self.files = files
 
 class FileNode:
+
     """I hold information about one <f> node"""
     def __init__(self, revision="", filename=""):
         self.revision = revision
         self.filename = filename
 
 class BonsaiParser:
+
     """I parse the XML result from a bonsai cvsquery."""
 
     def __init__(self, data):

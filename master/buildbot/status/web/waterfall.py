@@ -310,13 +310,14 @@ class WaterfallHelp(HtmlResource):
             times.insert(0, (current_reload_time, current_reload_time) )
 
         cxt['times'] = times
-        cxt['current_reload_time'] = current_reload_time   
+        cxt['current_reload_time'] = current_reload_time
 
         template = request.site.buildbot_service.templates.get_template("waterfallhelp.html")
         return template.render(**cxt)
 
 
 class ChangeEventSource(object):
+
     "A wrapper around a list of changes to supply the IEventSource interface"
     def __init__(self, changes):
         self.changes = changes
@@ -336,6 +337,7 @@ class ChangeEventSource(object):
             yield change
 
 class WaterfallStatusResource(HtmlResource):
+
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
@@ -488,11 +490,11 @@ class WaterfallStatusResource(HtmlResource):
             top_box = ITopBox(builder).getBox(request)
             current_box = ICurrentBox(builder).getBox(status, brcounts)
             bn.append({'name': name,
-                       'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')), 
-                       'top': top_box.text, 
+                       'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')),
+                       'top': top_box.text,
                        'top_class': top_box.class_,
                        'status': current_box.text,
-                       'status_class': current_box.class_,                       
+                       'status_class': current_box.class_,
                         })
 
         ctx.update(self.phase2(request, changeNames + builderNames, timestamps, eventGrid,

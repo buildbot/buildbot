@@ -21,6 +21,7 @@ from buildbot.changes.changes import Change
 from buildbot import util, interfaces
 # TODO: kill this class, or at least make it less significant
 class SourceStamp(util.ComparableMixin, styles.Versioned):
+
     """This is a tuple of (branch, revision, patchspec, changes, project, repository).
 
     C{branch} is always valid, although it may be None to let the Source

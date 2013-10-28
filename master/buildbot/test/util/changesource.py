@@ -19,6 +19,7 @@ from twisted.trial import unittest
 from buildbot.test.fake.fakemaster import make_master
 
 class ChangeSourceMixin(object):
+
     """
     This class is used for testing change sources, and handles a few things:
 

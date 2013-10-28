@@ -22,6 +22,7 @@ from twisted.internet import defer
 
 
 class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
+
     """
     Test L{Robocopy} command building.
     """

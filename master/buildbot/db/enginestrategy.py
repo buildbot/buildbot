@@ -32,13 +32,14 @@ from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 class ReconnectingListener(object):
+
     def __init__(self):
         self.retried = False
 
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
     # A subclass of the ThreadLocalEngineStrategy that can effectively interact
     # with Buildbot.
-    # 
+    #
     # This adjusts the passed-in parameters to ensure that we get the behaviors
     # Buildbot wants from particular drivers, and wraps the outgoing Engine
     # object so that its methods run in threads and return deferreds.

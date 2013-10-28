@@ -69,6 +69,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
 
 class TestGetUnversionedFiles(unittest.TestCase):
+
     def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
         <status>

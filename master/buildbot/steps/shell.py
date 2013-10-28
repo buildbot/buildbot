@@ -33,6 +33,7 @@ _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
 class ShellCommand(buildstep.LoggingBuildStep):
+
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method, or customize
@@ -358,6 +359,7 @@ class Configure(ShellCommand):
     command = ["./configure"]
 
 class StringFileWriter(pb.Referenceable):
+
     """
     FileWriter class that just puts received data into a buffer.
 
@@ -379,7 +381,7 @@ class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory " 
+    directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None

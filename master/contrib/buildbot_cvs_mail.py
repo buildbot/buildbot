@@ -2,7 +2,7 @@
 #
 #                        Buildbot CVS Mail
 #
-# This script was derrived from syncmail, 
+# This script was derrived from syncmail,
 # Copyright (c) 2002-2006 Barry Warsaw, Fred Drake, and contributors
 #
 # http://cvs-syncmail.cvs.sourceforge.net
@@ -51,9 +51,11 @@ COMMASPACE = ', '
 PROGRAM = sys.argv[0]
 
 class SmtplibMock:
+
     """I stand in for smtplib for testing purposes.
     """
     class SMTP:
+
         """I stand in for smtplib.SMTP connection for testing purposes.
         I copy the message to stdout.
         """
@@ -180,7 +182,7 @@ parser.add_option("--mailport", dest='mailport', metavar="PORT",
             The port number of SMTP server.  The default is '25'.
             """))
 parser.add_option("-q", "--quiet", dest='verbose', action="store_false",
-            default=True, 
+            default=True,
             help=textwrap.dedent("""\
             Don't print as much status to stdout.
             """))

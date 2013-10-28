@@ -29,6 +29,7 @@ except ImportError:
 
 
 class BitBucketBuildBot(resource.Resource):
+
     """
     BitBucketBuildBot creates the webserver that responds to the
     BitBucket POST Service Hook.

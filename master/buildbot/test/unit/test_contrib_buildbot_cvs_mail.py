@@ -81,6 +81,7 @@ golden_1_12_regex=[
     '^$' ]
 
 class _SubprocessProtocol(protocol.ProcessProtocol):
+
     def __init__(self, input, deferred):
         self.input = input
         self.deferred = deferred
@@ -130,7 +131,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
             raise
 
     def test_buildbot_cvs_mail_from_cvs1_11(self):
-        # Simulate CVS 1.11 
+        # Simulate CVS 1.11
         d = getProcessOutputAndValueWithInput(sys.executable,
                 [ self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
                   '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
@@ -144,7 +145,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = getProcessOutputAndValueWithInput(sys.executable,
                 [ self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
                   '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
-                  '-R', 'noreply@example.com', '-t', 
+                  '-R', 'noreply@example.com', '-t',
                   'README', '1.1', '1.2', 'hello.c', '2.2', '2.3' ],
                 input=test)
         d.addCallback(self.assertOutputOk, golden_1_12_regex)
@@ -161,7 +162,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path,
                                 '--cvsroot=\"ext:example.com:/cvsroot\"',
                                 '-P', 'test', '--path', 'test',
-                                '-R', 'noreply@example.com', '-t', 
+                                '-R', 'noreply@example.com', '-t',
                                 'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
         def check((stdout, stderr, code)):
             self.assertEqual(code, 2)
@@ -173,7 +174,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
                                 '--complete-garbage-opt=gomi',
                                 '--cvsroot=\"ext:example.com:/cvsroot\"',
                                 '--email=buildbot@example.com','-P', 'test', '--path',
-                                'test', '-R', 'noreply@example.com', '-t', 
+                                'test', '-R', 'noreply@example.com', '-t',
                                 'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
         def check((stdout, stderr, code)):
             self.assertEqual(code, 2)
@@ -183,7 +184,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
     def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path,
                                 '--email=buildbot@example.com','-P', 'test', '--path',
-                                'test', '-R', 'noreply@example.com', '-t', 
+                                'test', '-R', 'noreply@example.com', '-t',
                                 'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
         def check((stdout, stderr, code)):
             self.assertEqual(code, 2)

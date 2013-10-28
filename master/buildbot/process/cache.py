@@ -18,6 +18,7 @@ from buildbot import config
 from twisted.application import service
 
 class CacheManager(config.ReconfigurableServiceMixin, service.Service):
+
     """
     A manager for a collection of caches, each for different types of objects
     and with potentially-overlapping key spaces.

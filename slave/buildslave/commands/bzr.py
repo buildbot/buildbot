@@ -23,6 +23,7 @@ from buildslave import runprocess
 
 
 class Bzr(SourceBaseCommand):
+
     """bzr-specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 

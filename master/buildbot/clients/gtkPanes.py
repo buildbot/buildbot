@@ -15,13 +15,13 @@
 
 
 from twisted.internet import gtk2reactor
-gtk2reactor.install() #@UndefinedVariable
+gtk2reactor.install()  # @UndefinedVariable
 
 import sys, time
 
-import pygtk #@UnresolvedImport
+import pygtk  # @UnresolvedImport
 pygtk.require("2.0")
-import gobject, gtk #@UnresolvedImport
+import gobject, gtk  # @UnresolvedImport
 assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
 
 from twisted.spread import pb
@@ -274,6 +274,7 @@ class CompactBuilder(Builder):
 '''
 
 class Box:
+
     def __init__(self, text="?"):
         self.text = text
         self.box = gtk.EventBox()
@@ -327,6 +328,7 @@ class Box:
 
 
 class ThreeRowBuilder:
+
     def __init__(self, name, ref):
         self.name = name
 
@@ -408,6 +410,7 @@ class ThreeRowBuilder:
 
 
 class ThreeRowClient(pb.Referenceable):
+
     def __init__(self, window):
         self.window = window
         self.buildernames = []

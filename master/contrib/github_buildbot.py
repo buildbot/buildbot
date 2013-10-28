@@ -2,7 +2,7 @@
 """
 github_buildbot.py is based on git_buildbot.py
 
-github_buildbot.py will determine the repository information from the JSON 
+github_buildbot.py will determine the repository information from the JSON
 HTTP POST it receives from github.com and build the appropriate repository.
 If your github repository is private, you must add a ssh key to the github
 repository for the user who initiated the build on the buildslave.
@@ -28,6 +28,7 @@ except ImportError:
 
 
 class GitHubBuildBot(resource.Resource):
+
     """
     GitHubBuildBot creates the webserver that responds to the GitHub Service
     Hook.
@@ -83,7 +84,7 @@ class GitHubBuildBot(resource.Resource):
         # being deleted aren't really interesting.
         if re.match(r"^0*$", newrev):
             logging.info("Branch `%s' deleted, ignoring" % branch)
-        else: 
+        else:
             for commit in payload['commits']:
                 files = []
                 files.extend(commit['added'])
@@ -93,7 +94,7 @@ class GitHubBuildBot(resource.Resource):
                      'revlink': commit['url'],
                      'comments': commit['message'],
                      'branch': branch,
-                     'who': commit['author']['name'] 
+                     'who': commit['author']['name']
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
                      'repository': repo_url,
@@ -158,27 +159,27 @@ def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
         
-    parser.add_option("-p", "--port", 
+    parser.add_option("-p", "--port",
         help="Port the HTTP server listens to for the GitHub Service Hook"
             + " [default: %default]", default=4000, type=int, dest="port")
         
     parser.add_option("-m", "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 [default:" 
+        help="Buildbot Master host and port. ie: localhost:9989 [default:"
             + " %default]", default="localhost:9989", dest="buildmaster")
         
-    parser.add_option("-l", "--log", 
+    parser.add_option("-l", "--log",
         help="The absolute path, including filename, to save the log to"
-            + " [default: %default]", 
+            + " [default: %default]",
             default = tempfile.gettempdir() + "/github_buildbot.log",
             dest="log")
         
-    parser.add_option("-L", "--level", 
-        help="The logging level: debug, info, warn, error, fatal [default:" 
+    parser.add_option("-L", "--level",
+        help="The logging level: debug, info, warn, error, fatal [default:"
             + " %default]", default='warn', dest="level")
         
-    parser.add_option("-g", "--github", 
-        help="The github server.  Changing this is useful if you've specified"      
-            + "  a specific HOST handle in ~/.ssh/config for github "   
+    parser.add_option("-g", "--github",
+        help="The github server.  Changing this is useful if you've specified"
+            + "  a specific HOST handle in ~/.ssh/config for github "
             + "[default: %default]", default='github.com',
         dest="github")
 
@@ -203,8 +204,8 @@ def main():
     }
     
     filename = options.log
-    log_format = "%(asctime)s - %(levelname)s - %(message)s" 
-    logging.basicConfig(filename=filename, format=log_format, 
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(filename=filename, format=log_format,
                         level=levels[options.level])
     
     github_bot = GitHubBuildBot()

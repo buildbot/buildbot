@@ -26,6 +26,7 @@ from twisted.cred import error
 
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
+
     """Reconnecting client factory for PB brokers.
 
     Like PBClientFactory, but if the connection fails or is lost, the factory

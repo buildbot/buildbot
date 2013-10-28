@@ -22,6 +22,7 @@ from buildbot import config
 import mock
 
 class FakeCache(object):
+
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
     def __init__(self, name, miss_fn):
@@ -78,6 +79,7 @@ class FakeBuilderStatus(object):
 
 
 class FakeMaster(object):
+
     """
     Create a fake Master instance: a Mock with some convenience
     implementations:

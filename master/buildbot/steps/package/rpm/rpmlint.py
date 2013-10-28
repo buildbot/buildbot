@@ -21,6 +21,7 @@ from buildbot.steps.shell import Test
 
 
 class RpmLint(Test):
+
     """
     Rpmlint build step.
     """

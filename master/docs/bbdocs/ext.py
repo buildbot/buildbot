@@ -23,6 +23,7 @@ from sphinx import addnodes
 
 
 class BBRefTargetDirective(Directive):
+
     """
     A directive that can be a target for references.  Attributes:
 
@@ -69,7 +70,7 @@ class BBRefTargetDirective(Directive):
             inode = addnodes.index(entries=entries)
             ret.insert(0, inode)
 
-        return ret 
+        return ret
 
     @classmethod
     def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,
@@ -99,6 +100,7 @@ def make_ref_target_directive(ref_type, indextemplates=None):
 
 
 class BBIndex(Index):
+
     """
     A Buildbot-specific index.
 
@@ -143,6 +145,7 @@ def make_index(name, localname):
                 dict(name=name, localname=localname))
 
 class BugRole(object):
+
     """
     A role to create a link to a Trac bug, by number
     """
@@ -158,6 +161,7 @@ class BugRole(object):
 
 
 class SrcRole(object):
+
     """
     A role to link to buildbot source on master
     """
@@ -173,6 +177,7 @@ class SrcRole(object):
 
 
 class PullRole(object):
+
     """
     A role to link to a buildbot pull request
     """

@@ -121,6 +121,7 @@ def FilterOut(data):
 
 
 class JsonResource(resource.Resource):
+
     """Base class for json data."""
 
     contentType = "application/json"
@@ -330,6 +331,7 @@ def ToHtml(text):
 
 
 class HelpResource(HtmlResource):
+
     def __init__(self, text, pageTitle, parent_node):
         HtmlResource.__init__(self)
         self.text = text
@@ -694,6 +696,7 @@ class MetricsJsonResource(JsonResource):
 
 
 class JsonStatusResource(JsonResource):
+
     """Retrieves all json data."""
     help = """JSON status
 

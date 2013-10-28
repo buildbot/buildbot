@@ -329,6 +329,7 @@ class VC8(VC7):
 VS2005 = VC8
 
 class VCExpress9(VC8):
+
     def start(self):
         command = ["vcexpress"]
         command.append(self.projectfile)

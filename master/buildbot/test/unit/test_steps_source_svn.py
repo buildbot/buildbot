@@ -1300,12 +1300,12 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='',
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -1747,6 +1747,7 @@ def _makeSUCTest(input, exp):
 
 
 class TestGetUnversionedFiles(unittest.TestCase):
+
     def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
         <status>

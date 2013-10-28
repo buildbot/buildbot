@@ -107,6 +107,7 @@ import re
 import socket
 
 class SimpleConfig(dict):
+
     """A buildbot master with a web status page and a 'force build' button,
     which reads public configuration from 'master.json'
     and secrets from a different json file (default ~/myconfig.json).

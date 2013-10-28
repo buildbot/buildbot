@@ -148,6 +148,7 @@ class PyFlakes(ShellCommand):
         return SUCCESS
 
 class PyLint(ShellCommand):
+
     '''A command that knows about pylint output.
     It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
@@ -233,6 +234,7 @@ class PyLint(ShellCommand):
         return SUCCESS
 
 class Sphinx(ShellCommand):
+
     ''' A Step to build sphinx documentation '''
 
     name = "sphinx"
@@ -286,7 +288,7 @@ class Sphinx(ShellCommand):
 
         warnings = []
         for line in log.getText().split('\n'):
-            if (line.startswith('build succeeded') 
+            if (line.startswith('build succeeded')
                 or line.startswith('no targets are out of date.')):
                 self.success = True
             else:

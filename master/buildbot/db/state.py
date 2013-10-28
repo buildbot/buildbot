@@ -79,6 +79,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     class Thunk: pass
+
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             object_state_tbl = self.db.model.object_state

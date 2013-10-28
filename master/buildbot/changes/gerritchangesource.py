@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.internet.protocol import ProcessProtocol
 
 class GerritChangeSource(base.ChangeSource):
+
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
@@ -66,6 +67,7 @@ class GerritChangeSource(base.ChangeSource):
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     class LocalPP(ProcessProtocol):
+
         def __init__(self, change_source):
             self.change_source = change_source
             self.data = ""

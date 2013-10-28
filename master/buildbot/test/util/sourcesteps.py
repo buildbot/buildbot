@@ -19,6 +19,7 @@ from buildbot.test.util import steps
 import os
 
 class SourceStepMixin(steps.BuildStepMixin):
+
     """
     Support for testing source steps.  Aside from the capabilities of
     L{BuildStepMixin}, this adds:

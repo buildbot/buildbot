@@ -33,6 +33,7 @@ def nl(s):
 
 
 class BasedirMixin(object):
+
     """Mix this in and call setUpBasedir and tearDownBasedir to set up
     a clean basedir with a name given in self.basedir."""
 
@@ -47,6 +48,7 @@ class BasedirMixin(object):
 
 
 class IsBuildslaveDirMixin:
+
     """
     Mixin for setting up mocked base.isBuildslaveDir() function
     """
@@ -56,6 +58,7 @@ class IsBuildslaveDirMixin:
 
 
 class PatcherMixin(object):
+
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -73,6 +76,7 @@ class PatcherMixin(object):
 
 
 class FileIOMixin:
+
     """
     Mixin for patching open(), read() and write() to simulate successful
     I/O operations and various I/O errors.
@@ -139,6 +143,7 @@ class FileIOMixin:
 
 
 class StdoutAssertionsMixin(object):
+
     """
     Mix this in to be able to assert on stdout during the test
     """

@@ -22,6 +22,7 @@ from buildbot import interfaces, util
 from buildbot.status.logfile import LogFile, HTMLLogFile
 
 class BuildStepStatus(styles.Versioned):
+
     """
     I represent a collection of output status for a
     L{buildbot.process.step.BuildStep}.

@@ -27,6 +27,7 @@ from buildbot.db import buildrequests
 # Fake DB Rows
 
 class Row(object):
+
     """
     Parent class for row classes, which are used to specify test data for
     database-related tests.
@@ -557,6 +558,7 @@ class FakeSchedulersComponent(FakeDBComponent):
 
 
 class FakeSourceStampSetsComponent(FakeDBComponent):
+
     def setUp(self):
         self.sourcestampsets = {}
 
@@ -1156,7 +1158,7 @@ class FakeBuildsComponent(FakeDBComponent):
                                 start_time=_mkdt(row.start_time),
                                 finish_time=_mkdt(row.finish_time)))
                
-        return defer.succeed(ret)            
+        return defer.succeed(ret)
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()
@@ -1286,6 +1288,7 @@ class FakeUsersComponent(FakeDBComponent):
         return defer.succeed(None)
 
 class FakeDBConnector(object):
+
     """
     A stand-in for C{master.db} that operates without an actual database
     backend.  This also implements a test-data interface similar to the

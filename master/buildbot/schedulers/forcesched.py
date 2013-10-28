@@ -28,6 +28,7 @@ class ValidationError(ValueError):
 DefaultField = object()  # sentinel object to signal default behavior
 
 class BaseParameter(object):
+
     """
     BaseParameter provides a base implementation for property customization
     """
@@ -132,6 +133,7 @@ class BaseParameter(object):
 
 
 class FixedParameter(BaseParameter):
+
     """A fixed parameter that cannot be modified by the user."""
     type = ["fixed"]
     hide = True
@@ -142,6 +144,7 @@ class FixedParameter(BaseParameter):
 
 
 class StringParameter(BaseParameter):
+
     """A simple string parameter"""
     type = ["text"]
     size = 10
@@ -151,6 +154,7 @@ class StringParameter(BaseParameter):
 
 
 class TextParameter(StringParameter):
+
     """A generic string parameter that may span multiple lines"""
     type = ["textarea"]
     cols = 80
@@ -161,6 +165,7 @@ class TextParameter(StringParameter):
 
 
 class IntParameter(StringParameter):
+
     """An integer parameter"""
     type = ["int"]
 
@@ -168,6 +173,7 @@ class IntParameter(StringParameter):
 
 
 class BooleanParameter(BaseParameter):
+
     """A boolean parameter"""
     type = ["bool"]
 
@@ -176,6 +182,7 @@ class BooleanParameter(BaseParameter):
 
 
 class UserNameParameter(StringParameter):
+
     """A username parameter to supply the 'owner' of a build"""
     type = ["text"]
     default = ""
@@ -197,6 +204,7 @@ class UserNameParameter(StringParameter):
 
 
 class ChoiceStringParameter(BaseParameter):
+
     """A list of strings, allowing the selection of one of the predefined values.
        The 'strict' parameter controls whether values outside the predefined list
        of choices are allowed"""
@@ -213,6 +221,7 @@ class ChoiceStringParameter(BaseParameter):
         return self.choices
 
 class InheritBuildParameter(ChoiceStringParameter):
+
     """A parameter that takes its values from another build"""
     type = ChoiceStringParameter.type + ["inherit"]
     name = "inherit"
@@ -247,6 +256,7 @@ class InheritBuildParameter(ChoiceStringParameter):
 
 
 class BuildslaveChoiceParameter(ChoiceStringParameter):
+
     """A parameter that lets the buildslave name be explicitly chosen.
 
     This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave',
@@ -283,6 +293,7 @@ class BuildslaveChoiceParameter(ChoiceStringParameter):
 
 
 class NestedParameter(BaseParameter):
+
     """A 'parent' parameter for a set of related parameters. This provides a
        logical grouping for the child parameters.
        
@@ -310,7 +321,7 @@ class NestedParameter(BaseParameter):
     def setParent(self, parent):
         BaseParameter.setParent(self, parent)
         for field in self.fields:
-            field.setParent(self)        
+            field.setParent(self)
     
     def collectChildProperties(self, kwargs, properties, **kw):
         """Collapse the child values into a dictionary. This is intended to be
@@ -340,6 +351,7 @@ class NestedParameter(BaseParameter):
         d.update(kwargs[self.fullName])
         
 class AnyPropertyParameter(NestedParameter):
+
     """A generic property parameter, where both the name and value of the property
        must be given."""
     type = NestedParameter.type + ["any"]
@@ -376,6 +388,7 @@ class AnyPropertyParameter(NestedParameter):
 
 
 class CodebaseParameter(NestedParameter):
+
     """A parameter whose result is a codebase specification instead of a property"""
     type = NestedParameter.type + ["codebase"]
     codebase = ''
@@ -444,6 +457,7 @@ class CodebaseParameter(NestedParameter):
 
 
 class ForceScheduler(base.BaseScheduler):
+
     """
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
@@ -467,7 +481,7 @@ class ForceScheduler(base.BaseScheduler):
                 ])
             ],
     
-            # deprecated; use 'codebase' instead     
+            # deprecated; use 'codebase' instead
             branch=None,
             revision=None,
             repository=None,

@@ -22,6 +22,7 @@ from buildbot.status.web.base import path_to_authfail
 from buildbot.process.users import users
 
 class IAuth(Interface):
+
     """
     Represent an authentication method.
 
@@ -118,7 +119,7 @@ class HTPasswdAuth(AuthBase):
     def validatePassword(self, passwd, hash):
         # This is the DES-hash of the password. The first two characters are
         # the salt used to introduce disorder in the DES algorithm.
-        from crypt import crypt #@UnresolvedImport
+        from crypt import crypt  # @UnresolvedImport
         return hash == crypt(passwd, hash[0:2])
 
 
@@ -152,6 +153,7 @@ class HTPasswdAprAuth(HTPasswdAuth):
             return HTPasswdAuth.validatePassword(self, passwd, hash)
 
 class UsersAuth(AuthBase):
+
     """Implement authentication against users in database"""
     implements(IAuth)
 
@@ -183,7 +185,7 @@ class AuthFailResource(HtmlResource):
 
     def content(self, request, cxt):
         templates =request.site.buildbot_service.templates
-        template = templates.get_template("authfail.html") 
+        template = templates.get_template("authfail.html")
         return template.render(**cxt)
 
 class AuthzFailResource(HtmlResource):
@@ -191,7 +193,7 @@ class AuthzFailResource(HtmlResource):
 
     def content(self, request, cxt):
         templates =request.site.buildbot_service.templates
-        template = templates.get_template("authzfail.html") 
+        template = templates.get_template("authzfail.html")
         return template.render(**cxt)
 
 class LoginResource(ActionResource):

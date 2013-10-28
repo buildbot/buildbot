@@ -52,10 +52,12 @@ class Dispatcher:
         return d
 
 class DontCareChecker(checkers.InMemoryUsernamePasswordDatabaseDontUse):
+
     def requestAvatarId(self, credentials):
         return credentials.username
 
 class FakeLog:
+
     def addStdout(self, data):
         sys.stdout.write(data)
 
@@ -114,6 +116,7 @@ class CmdInterface(basic.LineReceiver):
         d.addBoth(_done)
 
 class FakeMaster(service.MultiService):
+
     def __init__(self, port):
         service.MultiService.__init__(self)
         self.setName("fakemaster")

@@ -17,6 +17,7 @@ from buildbot.util import json
 from sqlalchemy.types import TypeDecorator, Text
 
 class JsonObject(TypeDecorator):
+
     """Represents an immutable json-encoded string."""
 
     impl = Text

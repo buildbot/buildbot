@@ -20,10 +20,12 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
 class SlaveBuildStep(buildstep.BuildStep):
+
     def describe(self, done=False):
         return self.descriptionDone if done else self.description
 
 class SetPropertiesFromEnv(SlaveBuildStep):
+
     """
     Sets properties from envirionment variables on the slave.
 
@@ -66,6 +68,7 @@ class SetPropertiesFromEnv(SlaveBuildStep):
         self.finished(SUCCESS)
 
 class FileExists(SlaveBuildStep):
+
     """
     Check for the existence of a file on the slave.
     """
@@ -107,6 +110,7 @@ class FileExists(SlaveBuildStep):
             self.finished(FAILURE)
 
 class CopyDirectory(SlaveBuildStep):
+
     """
     Copy a directory tree on the slave.
     """
@@ -158,6 +162,7 @@ class CopyDirectory(SlaveBuildStep):
         return desc
 
 class RemoveDirectory(SlaveBuildStep):
+
     """
     Remove a directory tree on the slave.
     """
@@ -193,6 +198,7 @@ class RemoveDirectory(SlaveBuildStep):
         self.finished(SUCCESS)
 
 class MakeDirectory(SlaveBuildStep):
+
     """
     Create a directory on the slave.
     """
@@ -228,6 +234,7 @@ class MakeDirectory(SlaveBuildStep):
         self.finished(SUCCESS)
 
 class CompositeStepMixin():
+
     """I define utils for composite steps, factorizing basic remote commands"""
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes

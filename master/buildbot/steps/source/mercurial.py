@@ -25,6 +25,7 @@ from buildbot.config import ConfigErrors
 from buildbot.status.results import SUCCESS
 
 class Mercurial(Source):
+
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
@@ -334,14 +335,14 @@ class Mercurial(Source):
             abandonOnFailure = (self.retry[1] <= 0)
         else:
             abandonOnFailure = True
-        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'], 
+        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],
                           abandonOnFailure=abandonOnFailure)
         def _retry(res):
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
+                log.msg("Checkout failed, trying %d more times after %d seconds"
                     % (repeats, delay))
                 self.retry = (delay, repeats-1)
                 df = defer.Deferred()

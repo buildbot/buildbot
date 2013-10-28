@@ -40,6 +40,7 @@ def googleCodePollerForProject(project, vcs, pollinterval=3600):
 
 
 class GoogleCodeAtomPoller(base.PollingChangeSource):
+
     """This source will poll a GoogleCode Atom feed for changes and
     submit them to the change master. Works for both Svn, Git, and Hg
     repos.

@@ -53,6 +53,7 @@ if runtime.platformType  == 'win32':
 runprocess.RunProcessPP.debug = True
 
 class TestRunProcess(BasedirMixin, unittest.TestCase):
+
     def setUp(self):
         self.setUpBasedir()
 
@@ -232,7 +233,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             self.failUnless({'stdout': nl('escaped|pipe\n')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
-        return d        
+        return d
 
     @compat.skipUnlessPlatformIs("win32")
     def testPipeAlone(self):
@@ -673,6 +674,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         return d
 
 class TestLogging(BasedirMixin, unittest.TestCase):
+
     def setUp(self):
         self.setUpBasedir()
 
@@ -722,6 +724,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         self.failUnlessEqual(len(b.updates), 1)
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
+
     def setUp(self):
         self.setUpBasedir()
 

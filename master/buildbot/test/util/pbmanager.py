@@ -17,6 +17,7 @@ import mock
 from twisted.internet import defer
 
 class PBManagerMixin:
+
     def setUpPBChangeSource(self):
         "Set up a fake self.pbmanager."
         self.registrations = []

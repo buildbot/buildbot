@@ -73,14 +73,14 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
     else:
         pragma = "PRAGMA "
     qtable = quote(table_name)
-    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable))) 
+    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable)))
     #### found_table = False (pyflake)
     columns = []
     while True:
         row = c.fetchone()
         if row is None:
             break
-        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5]) 
+        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
         name = re.sub(r'^\"|\"$', '', name)
         #### if default:
         ####    default = re.sub(r"^\'|\'$", '', default)
@@ -108,7 +108,7 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
             'default' : default,
             'autoincrement':default is None,
             'primary_key': primary_key
-        })  
+        })
     return columns
 
 def patch():

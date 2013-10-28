@@ -55,6 +55,7 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertWasQuiet()
 
 class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
+
     """
     Tests for L{base.getConfigFileFromTac}.
     """

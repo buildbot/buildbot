@@ -51,6 +51,7 @@ class remove_userpassword(unittest.TestCase):
         self.assertUrl('c:\\repos\\my-repo', 'c:\\repos\\my-repo')
 
 class TestObfuscated(unittest.TestCase):
+
     def testSimple(self):
         c = util.Obfuscated('real', '****')
         self.failUnlessEqual(str(c), '****')

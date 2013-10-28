@@ -22,6 +22,7 @@ from buildbot.changes.manager import ChangeManager
 
 
 class TestPollingChangeHook(unittest.TestCase):
+
     class Subclass(base.PollingChangeSource):
         pollInterval = None
         called = False

@@ -21,6 +21,7 @@ from buildbot.db import model, enginestrategy
 from buildbot.test.util import db
 
 class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
+
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """

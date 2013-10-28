@@ -23,6 +23,7 @@ class GoogleCodeAuthFailed(Exception):
     pass
 
 class Payload(object):
+
     def __init__(self, headers, body, branch):
         self._auth_code = headers['Google-Code-Project-Hosting-Hook-Hmac']
         self._body = body # we need to save it if we want to authenticate it

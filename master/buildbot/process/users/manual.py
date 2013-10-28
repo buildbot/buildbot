@@ -22,6 +22,7 @@ from twisted.application import service
 from buildbot import pbutil
 
 class UsersBase(service.MultiService):
+
     """
     Base class for services that manage users manually. This takes care
     of the service.MultiService work needed by all the services that
@@ -39,6 +40,7 @@ class UsersBase(service.MultiService):
         return service.MultiService.stopService(self)
 
 class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
+
     """
     Perspective registered in buildbot.pbmanager and contains the real
     workings of `buildbot user` by working with the database when
@@ -199,6 +201,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         defer.returnValue(results)
 
 class CommandlineUserManager(UsersBase):
+
     """
     Service that runs to set up and register CommandlineUserManagerPerspective
     so `buildbot user` calls get to perspective_commandline.

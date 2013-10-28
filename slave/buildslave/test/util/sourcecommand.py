@@ -17,6 +17,7 @@ from buildslave import runprocess
 from buildslave.test.util import command
 
 class SourceCommandTestMixin(command.CommandTestMixin):
+
     """
     Support for testing Source Commands; an extension of CommandTestMixin
     """

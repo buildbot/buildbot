@@ -18,6 +18,7 @@ import sys
 import cStringIO
 
 class PatcherMixin(object):
+
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -34,6 +35,7 @@ class PatcherMixin(object):
             os.uname = replacement
 
 class StdoutAssertionsMixin(object):
+
     """
     Mix this in to be able to assert on stdout during the test
     """

@@ -21,6 +21,7 @@ from buildslave.commands import utils
 import buildslave.runprocess
 
 class CommandTestMixin:
+
     """
     Support for testing Command subclasses.
     """

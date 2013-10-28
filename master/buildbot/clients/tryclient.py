@@ -466,6 +466,7 @@ def getTopdir(topfile, start=None):
 
 
 class RemoteTryPP(protocol.ProcessProtocol):
+
     def __init__(self, job):
         self.job = job
         self.d = defer.Deferred()

@@ -22,6 +22,7 @@ from buildbot.process.users import users
 class TestUsersClient(unittest.TestCase):
 
     class FakeUsersClient(object):
+
         def __init__(self, master, username="user", passwd="userpw", port=0):
             self.master = master
             self.port = port

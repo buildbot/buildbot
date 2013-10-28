@@ -23,6 +23,7 @@ from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import ReconfigError
 
 class Follower:
+
     def follow(self, basedir):
         self.rc = 0
         print "Following twistd.log until startup finished.."

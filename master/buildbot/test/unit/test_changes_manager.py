@@ -22,6 +22,7 @@ class FakeChangeSource(service.Service):
     pass
 
 class TestChangeManager(unittest.TestCase):
+
     def setUp(self):
         self.master = mock.Mock()
         self.cm = manager.ChangeManager(self.master)

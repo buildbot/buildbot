@@ -109,6 +109,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
     def test_subclass_fileIsImportant(self):
         class Subclass(self.Subclass):
+
             def fileIsImportant(self, change):
                 return False
         sched = self.makeScheduler(Subclass, onlyImportant=True)

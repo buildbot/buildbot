@@ -70,7 +70,7 @@ View:
             Expect([ 'clobber', 'source' ],
                 self.basedir)
                 + 0,
-            Expect(['p4', '-p', 'p4dserv:1666', '-u', 'jimmy', '-P', 
+            Expect(['p4', '-p', 'p4dserv:1666', '-u', 'jimmy', '-P',
                     Obfuscated('hushnow', 'XXXXXXXX'), 'client', '-i'],
                 self.basedir,
                                                 # TODO: empty env?
@@ -145,7 +145,7 @@ View:
             Expect([ 'clobber', 'source' ],
                 self.basedir)
                 + 0,
-            Expect(['p4', '-p', u'p4dserv:1666\N{SNOWMAN}', '-u', 'jimmy', '-P', 
+            Expect(['p4', '-p', u'p4dserv:1666\N{SNOWMAN}', '-u', 'jimmy', '-P',
                     Obfuscated('hushnow', 'XXXXXXXX'), 'client', '-i'],
                 self.basedir,
                                                 # TODO: empty env?
