@@ -11,11 +11,25 @@
   {% endblock %}
 
   {% block content %}
-  <div class="filter-table-input">
-      <label>
-          <input type="text" id="filterTableInput" placeholder="Filter results">
-      </label>
-  </div>
+
+<div class="filter-table-input">
+
+    <label>
+        <input type="text" id="filterTableInput" placeholder="Filter results">
+    </label>
+    <div class="table-holder">
+      <table class="codebase-branch-table">
+        <tr class="codebase">
+          <th>Codebases
+          </th>
+        </tr>
+        <tr class="branch">
+          <th>Branches
+          </th>
+        </tr>
+      </table>
+    </div>
+</div>
 
 <table class="table-1 first-child tablesorter tablesorter-js">
   <thead>
@@ -174,8 +188,4 @@
 
     {{ forms.force_build(fbuildsch.datab[0]+"/force"+builder_arg, authz, request, False, force_schedulers=builders[fbuildsch.dataindexb[0]|int].force_schedulers,default_props=default_props) }}
 
-
-
-  
 {% endif %}
-

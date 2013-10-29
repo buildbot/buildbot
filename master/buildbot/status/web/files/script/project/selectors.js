@@ -85,7 +85,7 @@ define(['jquery', 'select2'], function ($) {
 			$('.show-common').click(function(){
 				//$('#branchTxt').fadeOut('fast');
 				var commonContainer = $(this).next('.select2-container');
-				console.log(commonContainer)
+				
 				$(commonContainer).show(0,function(){
 					$(this).select2('open');	
 				});

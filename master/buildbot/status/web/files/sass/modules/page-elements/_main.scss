@@ -267,9 +267,41 @@
 		    line-height: 12px;
 		}
 	}
-
 }
- 
+
+.table-holder  {
+	border-left: 1px solid #C4C4C4;
+    font-size: 7px;
+    left: 210px;
+    padding: 0 0 0 14px;
+    position: absolute;
+    top: 7px;
+    @include box-shadow (1px 0px 1px #fff inset);
+}
+
+table.codebase-branch-table {
+    text-align: left;
+    color: #666666;
+    @include text-shadow(1px 1px 0 #FFF);
+    font-size: 11px;
+    line-height: 15px;
+    td {
+    	padding:0 6px;
+    	text-align: left;
+    	vertical-align: top;
+    }
+    th {
+    	vertical-align: top;
+    	font-weight:bold;
+    	padding:0;
+    }
+    tr:first-child th{
+    	padding-bottom: 2px;
+    }
+}
+
+.codebase-branch {padding:0 10px;}
+
 .select-input {
 	text-align:right;
 	label {

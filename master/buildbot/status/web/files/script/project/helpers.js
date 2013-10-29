@@ -6,7 +6,28 @@ define(['jquery', 'screensize'], function ($, screenSize) {
     helpers = {
         init: function () {
 
-				
+        	if ($('.codebase-branch-table').length) {
+        		// Parse the url and insert current codebases and branches
+
+	        	(function( $ ) {
+	        		
+					var parsedUrl = window.location.search.split('&')
+					
+					$(parsedUrl).each(function(i){
+						
+						var codeBases = this.split('_branch')[0];
+						if (i == 0) {
+							codeBases = this.replace('?', '').split('_branch')[0];
+						}
+
+						var branches = this.split('=')[1]
+
+						$('tr.codebase').append('<td>' + codeBases + '</td>');
+						$('tr.branch').append('<td>' + branches + '</td>');
+						
+					});
+				})( jQuery );
+			}
 			/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');

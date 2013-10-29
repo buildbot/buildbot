@@ -69,7 +69,8 @@ define(['jquery'], function ($) {
 			});
 
 			//For builders pending box
-			$('.popup-btn-js').click(function(){
+			$('.popup-btn-js').click(function(e){
+				e.preventDefault();
 				var thisi = $(this).attr('data-in');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				var rtUpdate = $(this).attr('data-rt_update');
