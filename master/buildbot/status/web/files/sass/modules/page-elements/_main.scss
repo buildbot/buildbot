@@ -267,13 +267,16 @@
 		    line-height: 12px;
 		}
 	}
+	.more-info-box & {
+		height: 32px;	
+	}
+
 }
 
 .table-holder  {
-	border-left: 1px solid #C4C4C4;
-    font-size: 7px;
+	border-left: 2px solid #2B6194;
     left: 210px;
-    padding: 0 0 0 14px;
+    padding: 0 0 0 4px;
     position: absolute;
     top: 7px;
     @include box-shadow (1px 0px 1px #fff inset);
@@ -286,14 +289,15 @@ table.codebase-branch-table {
     font-size: 11px;
     line-height: 15px;
     td {
-    	padding:0 6px;
+    	padding:0 11px;
     	text-align: left;
     	vertical-align: top;
+    	border-left: 1px solid #CCCCCC;
     }
     th {
     	vertical-align: top;
     	font-weight:bold;
-    	padding:0;
+    	padding:0 9px 0;
     }
     tr:first-child th{
     	padding-bottom: 2px;
@@ -1209,11 +1213,12 @@ div.common-branch-select {
 }
 
 .help-txt {
-    color: #919191;
+    color: #787878;
     display: block;
     position: absolute;
     right: 0;
     top: 20px;
+    font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
 }
 

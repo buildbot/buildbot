@@ -6,13 +6,20 @@ define(['jquery', 'screensize'], function ($, screenSize) {
     helpers = {
         init: function () {
 
-        	if ($('.codebase-branch-table').length) {
+        	if ($('.builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
-
+        		
 	        	(function( $ ) {
 	        		
 					var parsedUrl = window.location.search.split('&')
-					
+
+
+					var cbTable = $('<div class="table-holder">'+
+									'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
+									'</th></tr><tr class="branch"><th>Branch</th></tr></table></div>');
+				
+          			$(cbTable).appendTo($('.filter-table-input'));
+
 					$(parsedUrl).each(function(i){
 						
 						var codeBases = this.split('_branch')[0];

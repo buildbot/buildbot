@@ -152,7 +152,7 @@ define(['jquery'], function ($) {
 					
 					$(fw).appendTo($('#content'));
 					
-					$('#content .filter-table-input').remove();
+					$('#content .filter-table-input label, #content .filter-table-input .help-txt').remove();
 
 					$(mib).center().fadeIn('fast');
 					
@@ -170,7 +170,7 @@ define(['jquery'], function ($) {
 					});
 					
 					$('#getForm').attr('action', window.location.href);	
-					$('#getForm .grey-btn[type="submit"]').click(function(){
+					$('#getForm .blue-btn[type="submit"]').click(function(){
 						$('.more-info-box-js').hide();				
 					});
 
