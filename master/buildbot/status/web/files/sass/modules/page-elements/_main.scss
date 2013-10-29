@@ -279,7 +279,7 @@
     padding: 0 0 0 4px;
     position: absolute;
     top: 7px;
-    @include box-shadow (1px 0px 1px #fff inset);
+    @include box-shadow (1px 0 0px #FFFFFF inset);
 }
 
 table.codebase-branch-table {
@@ -289,6 +289,7 @@ table.codebase-branch-table {
     font-size: 11px;
     line-height: 15px;
     td {
+    	@include box-shadow (1px 0 0px #FFFFFF inset);
     	padding:0 11px;
     	text-align: left;
     	vertical-align: top;
