@@ -83,11 +83,11 @@ define(['jquery'], function ($) {
 			});
 
 
+			//For builders pending box
 			$('.popup-btn-js').each(function(i){
 				$(this).attr('data-in', i)
 			});
-
-			//For builders pending box
+			
 			$('.popup-btn-js').click(function(e){
 				e.preventDefault();
 				var thisi = $(this).attr('data-in');
