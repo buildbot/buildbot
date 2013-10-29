@@ -610,7 +610,8 @@ class LogFile:
                 # general (non-windows) case
                 if os.path.exists(filename):
                     os.unlink(filename)
-            os.rename(compressed, filename)
+            if not os.path.exists(filename):
+                os.rename(compressed, filename)
             _tryremove(self.getFilename(), 1, 5)
         d.addCallback(_renameCompressedLog)
 

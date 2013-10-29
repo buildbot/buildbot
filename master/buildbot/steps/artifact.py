@@ -120,7 +120,10 @@ class CheckArtifactExists(ShellCommand):
             if len(artifactlist) == 0:
                 break
             for a in artifactlist:
-                foundregex = re.compile(r'(%s)' % a)
+                artifact = a
+                if artifact.endswith("/"):
+                    artifact = artifact[:-1]
+                foundregex = re.compile(r'(%s)' % artifact)
                 m = foundregex.search(l)
                 if (m):
                     artifactURL = self.artifactServerURL + "/" + self.artifactPath + "/" + a
@@ -174,6 +177,11 @@ class CheckArtifactExists(ShellCommand):
 
             search_artifact = ""
             for a in self.artifact:
+                if a.endswith("/"):
+                    a = a[:-1]
+                    if "/" in a:
+                        index = a.rfind("/")
+                        a = a[:index] + "/*"
                 search_artifact += "; ls %s" % a
 
             command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir,
