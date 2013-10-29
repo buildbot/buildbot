@@ -77,12 +77,21 @@ a.grey-btn,
     }
 }
 
-.grey-btn.var-2,
-.blue-btn.var-2 {
+.grey-btn.var-2 {
+    font-size: 9px;
+    padding: 7px 8px;
+    position: absolute;
+    right: 0;
+    top: 10px;
+    z-index: 1;
+}
+
+.grey-btn.var-3 {
     font-size: 9px;
     padding: 7px 8px;
     position: relative;
 }
+
 
 .codebases .blue-btn {
     position: absolute;

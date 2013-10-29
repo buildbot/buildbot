@@ -128,7 +128,7 @@ define(['jquery'], function ($) {
 				var fdTxt = $('.failure-detail-txt', this);
 				
 				if ($(fdTxt).height() >= 300) {
-					$('<a class="height-toggle var-2 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));
+					$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));
 				}
 				
 			});

@@ -14,7 +14,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					var parsedUrl = window.location.search.split('&')
 
 
-					var cbTable = $('<div class="table-holder">'+
+					var cbTable = $('<div class="border-table-holder">'+
 									'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 									'</th></tr><tr class="branch"><th>Branch</th></tr></table></div>');
 				
