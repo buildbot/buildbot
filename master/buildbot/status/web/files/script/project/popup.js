@@ -64,6 +64,25 @@ define(['jquery'], function ($) {
 				
 			}
 
+			//For non ajax boxes
+			$('.popup-btn-js-2').click(function(e){
+				e.preventDefault();
+
+				var clonedInfoBox = $(this).next('.more-info-box-js').clone();
+				
+				$(clonedInfoBox).appendTo('body').center().fadeIn('fast', function() {
+					$(document, '.close-btn').bind('click touchstart', function(e){
+						if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+							$(clonedInfoBox).remove();
+						}
+					});	
+				});
+				$(window).resize(function() {
+					$(clonedInfoBox).center();
+				});
+			});
+
+
 			$('.popup-btn-js').each(function(i){
 				$(this).attr('data-in', i)
 			});
@@ -103,10 +122,10 @@ define(['jquery'], function ($) {
 							});
 
 							$(document, '.close-btn').bind('click touchstart', function(e){
-							if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
-								$(mib).remove();
-							}
-				});
+								if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+									$(mib).remove();
+								}
+							});
 						}
 				});
 				
