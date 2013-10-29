@@ -465,6 +465,7 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brdicts):
         merged_building_list = []
+        merged_brids = []
         for b in self.building:
             print "\n\n #--# building %s #--# \n\n" % b
             print "\n\n #--# building requests %s #--# \n\n" % b.requests
@@ -476,12 +477,19 @@ class Builder(config.ReconfigurableServiceMixin,
                 print "\n\n #--# brobj  %s #--# \n\n" % brobj
                 print "\n\n #--# brobj  %s #--# \n\n" % brobj.sources
 
+                # should match property clean build
                 if self._defaultMergeRequestFn(b.requests[0], brobj):
-                    b.requests.append(brobj)
                     merged_building_list.append(brobj)
+                    merged_brids.append(br['brid'])
+            if len(merged_building_list) > 0:
+                yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
+                b.requests = b.requests + merged_building_list
+                print "\n\n #--# merged requests %s #--# \n\n" % b.requests
+                break
+            #yield self.master.db.buildrequests.mergeBuildingRequests()
             # update merged buildrequest
             # claim buildrequest
-            print "\n\n #--# addBuild %s, %s #--# \n\n" % (brdicts,b.build_status.number)
+            print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (merged_brids,b.requests[0].id,b.build_status.number)
             #bid = yield self.master.db.builds.addBuild(req.id, bs.number)
         defer.returnValue(merged_building_list)
 
@@ -543,13 +551,28 @@ class Builder(config.ReconfigurableServiceMixin,
                                                 Builder._defaultMergeRequestFn)
             #mergeRequests_fn)
 
+            # try to claim the build requests
+            brids = [ brdict['brid'] for brdict in brdicts ]
+            unclaimed_brids = [ br['brid'] for br in unclaimed_requests]
+
             # merge current brdicts with currently running builds
-            merged_building_list = yield self.mergeBuildingRequests(brdicts)
-            if len(merged_building_list) > 0:
-                self._breakBrdictRefloops(brdicts)
-                for br in brdicts:
-                    unclaimed_requests.remove(br)
+
+            try:
+                merged_building_list = yield self.mergeBuildingRequests(brdicts)
+                if len(merged_building_list) > 0:
+
+                    self._breakBrdictRefloops(brdicts)
+                    for br in brdicts:
+                        unclaimed_requests.remove(br)
+                    continue
+
+            except buildrequests.AlreadyClaimedError:
+                self._breakBrdictRefloops(unclaimed_requests)
+                unclaimed_requests = \
+                    yield self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.name, claimed=False)
                 continue
+
 
             # if couldnt been merge try, choose a slave (using nextSlave)
             slavebuilder = yield self._chooseSlave(available_slavebuilders)
@@ -561,12 +584,6 @@ class Builder(config.ReconfigurableServiceMixin,
                 log.msg(("nextSlave chose a nonexistent slave for builder "
                          "'%s'; cannot start build") % self.name)
                 break
-
-            # update artifactbrid
-
-            # try to claim the build requests
-            brids = [ brdict['brid'] for brdict in brdicts ]
-            unclaimed_brids = [ br['brid'] for br in unclaimed_requests]
 
             print "\n\n #--# chosen build %s #--# \n\n" % brdict
             print "\n\n #--# builder %s about to claim brids %s #--# \n\n" % (self.name, brids)
