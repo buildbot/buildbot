@@ -60,6 +60,10 @@ a.grey-btn,
     padding: 8px 10px;
     @include text-shadow( 0 -1px 0 rgba(0, 0, 0, 0.44));
     text-transform: uppercase;
+        &:hover {
+        color: rgba(247, 247, 247, 0.72);
+
+    }
 }
 
 .grey-btn.var-1 {

@@ -152,6 +152,9 @@ define(['jquery'], function ($) {
 					
 					$(fw).appendTo($('#content'));
 					
+					$('#content .blue-btn').val('update');
+
+					// remove unwanted html for the poopup box
 					$('#content .filter-table-input label, #content .filter-table-input .help-txt').remove();
 
 					$(mib).center().fadeIn('fast');
