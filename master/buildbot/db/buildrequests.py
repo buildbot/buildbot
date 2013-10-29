@@ -213,6 +213,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def mergeBuildRequests(self, brid, merged_brids):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+        return self.db.pool.do(thd)
+
     def getBuildRequestTriggered(self, triggeredbybrid, buildername):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests

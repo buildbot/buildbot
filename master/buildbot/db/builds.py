@@ -65,6 +65,14 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
 
+    def addBuilds(self, id, brids):
+        def thd(conn):
+            transaction = conn.begin()
+            builds_tbl = self.db.model.builds
+            stmt = sa.select([builds_tbl.c.number, builds_tbl.c.start_time, builds_tbl.c.finish_time]).where(builds_tbl.c.id == id)
+
+        return self.db.pool.do(thd)
+
     def finishBuilds(self, bids, _reactor=reactor):
         def thd(conn):
             transaction = conn.begin()
