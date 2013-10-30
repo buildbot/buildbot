@@ -648,7 +648,7 @@
                       </test-suite>
                       <test-suite name="AnimatorPrefab" success="True" time="0.000" asserts="0">
                         <results>
-                          <test-case name="Unity.IntegrationTests.Mecanim.AnimatorPrefab.LoadAndPlayAnimatorPrefab" executed="False">
+                          <test-case name="Unity/IntegrationTests/Mecanim/AnimatorPrefab/LoadAndPlayAnimatorPrefab" executed="False">
                             <reason>
                               <message><![CDATA[Fixture class is not public]]></message>
                             </reason>
@@ -686,7 +686,7 @@
                           <test-case name="Unity.IntegrationTests.Misc.FileTests.MovingFileIntoNotYetCreatedDirectoryFails" executed="True" success="True" time="0.760" asserts="0" />
                           <test-case name="Unity.IntegrationTests.Misc.FileTests.ReplacingDirectoryTargetAlreadyExistsFails" executed="True" success="True" time="0.769" asserts="0" />
                         </results>
-                      </test-suite>
+                      </test-suite> test.test.test
                       <test-suite name="GameObjectActiveState" success="True" time="11.380" asserts="0">
                         <results>
                           <test-case name="Unity.IntegrationTests.Misc.GameObjectActiveState.ActiveStateIsInherited" executed="True" success="True" time="8.670" asserts="0" />

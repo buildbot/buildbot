@@ -125,7 +125,7 @@
 
 .tablesorter .first-child,
 .case-names {
-	width:550px;
+	width:700px;
 	font-weight:bold;
 }
 .table-1 {
@@ -169,8 +169,9 @@ span.ignored {
 	font-family:"Courier New";
     overflow: auto;
     white-space: pre-line;
+    max-height: 100px;
 }
-
+ 
 .failure-detail-cont a {
 	margin-right:5px;
 }

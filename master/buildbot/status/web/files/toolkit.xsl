@@ -271,7 +271,7 @@
 						
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:attribute name="class">method txt-align-left case-names</xsl:attribute>
+						<xsl:attribute name="class">method txt-align-left case-names first-child</xsl:attribute>
 						<xsl:call-template name="GetLastSegment">
 							<xsl:with-param name="value" select="./@name" />
 						</xsl:call-template>
@@ -314,7 +314,7 @@
 	         <xsl:value-of select="$newid"/>
 	      </xsl:attribute>
 	      <td class="txt-align-left failure-detail-cont colspan-js" colspan="3">
-	      	<a href="#" class="new-window var-3 grey-btn">Open new window</a>
+	      	
 	      	<div class="failure-detail-txt">
 	      		<xsl:apply-templates select="./failure"/>
 	      		<xsl:apply-templates select="./error"/>

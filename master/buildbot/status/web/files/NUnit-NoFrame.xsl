@@ -157,8 +157,13 @@
  <xsl:template name="GetLastSegment">
     <xsl:param name="value" />
     <xsl:param name="separator" select="'.'" />
-
+    
+    <xsl:variable name="not-allowed-characters">/\</xsl:variable>
     <xsl:choose>
+    	<xsl:when test="string-length(translate($value, $not-allowed-characters, '')) != string-length($value)">
+    		<xsl:value-of select="$value" />
+    	</xsl:when>
+    	
       <xsl:when test="contains($value, $separator)">
         <xsl:call-template name="GetLastSegment">
           <xsl:with-param name="value" select="substring-after($value, $separator)" />

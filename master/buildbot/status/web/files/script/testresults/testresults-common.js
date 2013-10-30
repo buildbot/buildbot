@@ -66,12 +66,10 @@ define(['jquery'], function ($) {
 			//console.log(colList)
 			var oTable = $('.tablesorter-log-js').dataTable({
 				"asSorting": false,
-				"bSearchable": true,			
 				"bPaginate": false,
 				"bFilter": true,
 				"bSort": false,
 				"bInfo": false,
-				"bSortable": false,
 				"bAutoWidth": false
 			});
 
@@ -121,27 +119,32 @@ define(['jquery'], function ($) {
 			});
 
 			// remove empty tds for rows with colspan
-			$('.colspan-js').next().remove();
-			$('.colspan-js').next().remove();
+			$('.colspan-js').nextAll('td').remove();
 
 			$('.failure-detail-cont', th).each(function(){	
 				var fdTxt = $('.failure-detail-txt', this);
 				
-				if ($(fdTxt).height() >= 300) {
-					$(fdTxt).height(300)
-					$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));
-				}
+				if (!$(fdTxt).is(':empty')) {
+					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($(fdTxt));
+					if ($(fdTxt).height() >= 100) {
+						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));	
+					}
+				}				
 				
 			});
+ 
+			
 
-			var html = ""
 			function nWin(newWinHtml) {
+
 			  	var w = window.open();
-			  
-				html += "<style>body {padding:0 0 0 15px;margin:0;font-family:'Courier New';font-size:12px;white-space: pre-line;overflow:auto;}</style>";
-				html += newWinHtml;
-			  
+			  	
+				var html = "<style>body {padding:0 0 0 15px;margin:0;"+
+				"font-family:'Courier New';font-size:12px;white-space:"+
+				" pre-line;overflow:auto;}</style>"+newWinHtml;
+				
 				$(w.document.body).html(html);
+
 			}
 
 			// show content of exceptions in new window
@@ -153,21 +156,24 @@ define(['jquery'], function ($) {
 
 			// show more / hide
 			$('.height-toggle').click(function(e){
+				
 				e.preventDefault();
+				var fdtf = $(this).parent().find($('.failure-detail-txt'));
+				
+				$(fdtf).css({'max-height':'none', 'height': ''});
+
+				
 				if (!$(this).hasClass('expanded-js')) {
 					$(this).addClass('expanded-js');
 					$(this).text('Show less');
-					$(this).parent().find($('.failure-detail-txt')).animate({
-						'height':700
-					}, 'slow');
+					
+					$(fdtf).css('height',$(fdtf).height());
 				} else {
+
 					$(this).removeClass('expanded-js');
 					$(this).text('Show more');
-					$(this).parent().find($('.failure-detail-txt')).animate({
-						'height':300
-					}, 'slow');
+					$(fdtf).css('height',100);
 				}
 			});
-
 	});
 });
