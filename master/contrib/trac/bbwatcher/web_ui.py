@@ -60,10 +60,10 @@ class TracBuildBotWatcher(Component):
 		if field == 'url':
 			return None
 		elif field == 'title':
-			return tag('Build ', tag.a('#%s'%num, href=context.href.buildbot('builder/%s/%s'%(builder_name, num))),
+			return tag('Build ', tag.a('#%s' % num, href=context.href.buildbot('builder/%s/%s' % (builder_name, num))),
 				' of ', builder_name, ' ', results == 'success' and tag.span('passed', style="color: #080") or tag.span('failed', style="color: #f00"))
 		elif field == 'description':
-			return format_to_oneliner(self.env, context, 'Built from %s'%(rev and 'r%s sources'%rev or 'local changes (see TryBuildUsage)'))
+			return format_to_oneliner(self.env, context, 'Built from %s' % (rev and 'r%s sources' % rev or 'local changes (see TryBuildUsage)'))
 
 	# RequestHandler
 	def _handle_builder(self, req):
