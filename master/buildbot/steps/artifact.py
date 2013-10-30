@@ -58,7 +58,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             force_rebuild = (force_rebuild.lower() == "true")
 
         if force_rebuild:
-            self.step_status.setText(["Skipping previous build check (making a clean build)."])
+            self.step_status.setText(["Skipping previous build check (forcing a rebuild)."])
             self.finished(SKIPPED)
             return
 
@@ -161,7 +161,7 @@ class CheckArtifactExists(ShellCommand):
             force_rebuild = (force_rebuild.lower() == "true")
 
         if force_rebuild:
-            self.step_status.setText(["Skipping artifact check (making a clean build)."])
+            self.step_status.setText(["Skipping artifact check (forcing a rebuild)."])
             self.finished(SKIPPED)
             return
 
