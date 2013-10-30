@@ -125,6 +125,13 @@ class FeedResource(XmlResource):
         failures_only = request.args.get("failures_only", ["false"])
         failures_only = failures_only[0] not in ('false', '0', 'no', 'off')
 
+        filterProjects = [p for p in request.args.get("project", []) if p]
+
+        if not filterProjects:
+            filter_project = None
+        else:
+            filter_project = lambda b: b.getProperty('project') in filterProjects
+
         maxFeeds = 25
 
         # Copy all failed builds in a new list.
@@ -135,7 +142,9 @@ class FeedResource(XmlResource):
                 res = (results.FAILURE,)
             else:
                 res = None
-            builds.extend(b.generateFinishedBuilds(results=res, max_search=maxFeeds))
+            builds.extend(b.generateFinishedBuilds(results=res,
+                                                   max_search=maxFeeds,
+                                                   filter_fn=filter_project))
 
         # Sort build list by date, youngest first.
         # To keep compatibility with python < 2.4, use this for sorting instead:
