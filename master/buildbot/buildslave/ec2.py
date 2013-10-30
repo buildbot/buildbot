@@ -265,7 +265,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
             minutes = duration//60
-            seconds = duration%60
+            seconds = duration % 60
             log.msg('%s %s instance %s started on %s '
                     'in about %d minutes %d seconds (%s)' %
                     (self.__class__.__name__, self.slavename,
@@ -275,7 +275,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.instance.use_ip(self.elastic_ip)
             return [self.instance.id,
                     image.id,
-                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+                    '%02d:%02d:%02d' % (minutes//60, minutes % 60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
@@ -321,4 +321,4 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         log.msg('%s %s instance %s %s '
                 'after about %d minutes %d seconds' %
                 (self.__class__.__name__, self.slavename,
-                 instance.id, goal, duration//60, duration%60))
+                 instance.id, goal, duration//60, duration % 60))

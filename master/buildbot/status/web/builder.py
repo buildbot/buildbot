@@ -208,7 +208,7 @@ class ForceBuildActionResource(ForceAction):
         defer.returnValue((path_to_builder(req, self.builder_status), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
-    pname = "%s.%s"%(sch.name, field.fullName)
+    pname = "%s.%s" % (sch.name, field.fullName)
     
     default = field.default
 

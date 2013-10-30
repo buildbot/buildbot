@@ -116,13 +116,13 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                     instance.id, instance.status)
         if inst.status == ACTIVE:
             minutes = duration//60
-            seconds = duration%60
+            seconds = duration % 60
             log.msg('%s %s instance %s (%s) started '
                     'in about %d minutes %d seconds' %
                     (self.__class__.__name__, self.slavename,
                      instance.id, instance.name, minutes, seconds))
             return [instance.id, image_uuid,
-                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+                    '%02d:%02d:%02d' % (minutes//60, minutes % 60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,

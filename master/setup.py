@@ -35,7 +35,7 @@ def include(d, e):
     'd' -- A directory
     'e' -- A glob pattern"""
     
-    return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
+    return (d, [f for f in glob.glob('%s/%s' % (d, e)) if os.path.isfile(f)])
 
 class install_data_twisted(install_data):
     """make sure data files are installed in package.

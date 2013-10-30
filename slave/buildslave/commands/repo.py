@@ -158,7 +158,7 @@ class Repo(SourceBaseCommand):
         if self.manifest_override_url:
             self.sendStatus({"header": "overriding manifest with %s\n" %(self.manifest_override_url)})
             if os.path.exists(os.path.join(self._fullSrcdir(), self.manifest_override_url)):
-                os.system("cd %s; cp -f %s manifest_override.xml"%(self._fullSrcdir(),self.manifest_override_url))
+                os.system("cd %s; cp -f %s manifest_override.xml" % (self._fullSrcdir(),self.manifest_override_url))
             else:
                 command = ["wget", self.manifest_override_url, '-O', 'manifest_override.xml']
                 return self._Cmd(command, self._doSync)
@@ -166,7 +166,7 @@ class Repo(SourceBaseCommand):
 
     def _doSync(self, dummy):
         if self.manifest_override_url:
-            os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml"%(self._fullSrcdir()))
+            os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml" % (self._fullSrcdir()))
         command = ['sync']
         if self.jobs:
             command.append('-j' + str(self.jobs))

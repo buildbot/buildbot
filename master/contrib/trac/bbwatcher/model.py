@@ -19,4 +19,4 @@ class Build(object):
 		except Exception, e:
 			pass
 	def __str__(self):
-		return 'Slave <%s>'%(self.slave)
+		return 'Slave <%s>' % (self.slave)
