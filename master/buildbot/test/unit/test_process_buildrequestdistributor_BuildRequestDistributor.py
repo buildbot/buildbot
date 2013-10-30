@@ -81,7 +81,7 @@ class TestBRDBase(unittest.TestCase):
     def make_slaves(self, slave_count):
         rows = self.base_rows[:]
         for i in range(slave_count):
-            self.addSlaves({'test-slave%d'%i:1})
+            self.addSlaves({'test-slave%d' % i:1})
             rows.append(fakedb.Buildset(id=100+i, reason='because'))
             rows.append(fakedb.BuildsetSourceStamp(buildsetid=100+i, sourcestampid=21))
             rows.append(fakedb.BuildRequest(id=10+i, buildsetid=100+i, buildername="A"))
@@ -778,7 +778,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             exp_builds = []
         else:
             exp_claims = [11]
-            exp_builds = [('test-slave%d'%exp_choice, [11])]
+            exp_builds = [('test-slave%d' % exp_choice, [11])]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=exp_claims, exp_builds=exp_builds)
@@ -826,7 +826,7 @@ class TestMaybeStartBuilds(TestBRDBase):
             slave = 3
             for choice in exp_choice:
                 exp_claims.append(choice)
-                exp_builds.append(('test-slave%d'%slave, [choice]))
+                exp_builds.append(('test-slave%d' % slave, [choice]))
                 slave = slave - 1
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,

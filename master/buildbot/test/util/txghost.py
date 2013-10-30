@@ -337,7 +337,7 @@ class Ghost(object):
         e.charset = "utf-8";
         document.getElementsByTagName("head")[0].appendChild(e);
         })()
-        """%(json.dumps(script).replace('"','\\"'))
+        """ % (json.dumps(script).replace('"','\\"'))
         )
     def evaluate_js_file(self, path, encoding='utf-8'):
         """Evaluates javascript file at given path in current frame.

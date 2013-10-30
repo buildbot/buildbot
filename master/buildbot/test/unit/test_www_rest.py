@@ -178,7 +178,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def _expLinks(self, links):
         sub = {'self': 'h:/api/v2' + self.request.path}
-        return sorted([{u'rel': unicode(k), u'href': unicode(v%sub)}
+        return sorted([{u'rel': unicode(k), u'href': unicode(v % sub)}
                        for k, v in links.iteritems()],
                       key=lambda l: (l['rel'], l['href']))
 

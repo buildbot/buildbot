@@ -31,7 +31,7 @@ class MockStateObserver(logobserver.LogLineObserver):
         if m:
             state = m.group(1)
             if not state == 'end':
-                self.step.descriptionSuffix = ["[%s]"%m.group(1)]
+                self.step.descriptionSuffix = ["[%s]" % m.group(1)]
             else:
                 self.step.descriptionSuffix = None
             self.step.step_status.setText(self.step.describe(False))

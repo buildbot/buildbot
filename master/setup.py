@@ -35,7 +35,7 @@ def include(d, e):
     'd' -- A directory
     'e' -- A glob pattern"""
     
-    return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
+    return (d, [f for f in glob.glob('%s/%s' % (d, e)) if os.path.isfile(f)])
 
 def include_statics(d):
     r = []
