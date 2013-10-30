@@ -58,10 +58,6 @@ Git VC
     M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     U: http://trac.buildbot.net/wiki/git
 
-BitKeeper VC
-    S: Last-Rites
-    U: http://trac.buildbot.net/wiki/bk
-
 Darcs VC
     S: Orphaned
     U: http://trac.buildbot.net/wiki/darcs
@@ -103,8 +99,7 @@ Debug Client
     S: Orphaned
 
 Web Status
-    S: Supported
-    M: Marcus Lindblom <macke@yar.nu>
+    S: Last-Rites
     U: http://trac.buildbot.net/wiki/web
 
 IRC Status
@@ -203,11 +198,9 @@ Security
 
 Metabuildbot Slave Donors
     D: Maintainers of buildslaves for the Metabuildbot
-    M: Steve Milner <smilner@redhat.com>
     M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
     M: Mozilla <dustin@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
-    M: Dustin Sallings <dustin@spy.net>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
     M: Kubilay Kocak <koobs.freebsd@gmail.com> (irc: koobs)
     M: STE||AR Group, Center for Computation and Science, LSU / Bryce Lelbach <blelbach@cct.lsu.edu> (irc:wash)
