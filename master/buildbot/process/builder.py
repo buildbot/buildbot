@@ -483,6 +483,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     merged_brids.append(br['brid'])
             if len(merged_building_list) > 0:
                 yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
+                yield self.master.db.builds.addBuilds(merged_brids, b.build_status.number)
                 b.requests = b.requests + merged_building_list
                 print "\n\n #--# merged requests %s #--# \n\n" % b.requests
                 break

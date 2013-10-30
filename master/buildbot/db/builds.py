@@ -65,10 +65,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
 
-    def addBuilds(self, number, brids,_reactor=reactor):
-        def thd(conn):
-            transaction = conn.begin()
-            builds_tbl = self.db.model.builds
+    def addBuilds(self, brids, number, _reactor=reactor):
         def thd(conn):
             transaction = conn.begin()
             builds_tbl = self.db.model.builds
@@ -79,9 +76,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, [ dict(number=number, brid=id,
                                        start_time=start_time,finish_time=None)
                                   for id in brids ])
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
-                raise AlreadyClaimedError
+                raise e
 
             transaction.commit()
 
