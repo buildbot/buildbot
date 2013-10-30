@@ -72,6 +72,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             try:
                 start_time = _reactor.seconds()
+                # todo: check finished time with merged brid
                 q = builds_tbl.insert()
                 conn.execute(q, [ dict(number=number, brid=id,
                                        start_time=start_time,finish_time=None)

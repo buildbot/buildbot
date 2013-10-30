@@ -213,6 +213,29 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def mergeRunningBuildRequest(self, requests):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            mergedrequests = [br.id for br in requests[1:]]
+
+            q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                .where(id == requests[0].id)
+            res = conn.execute(q)
+            row = res.fetchone()
+            # by default it will mark using artifact generated from merged brid
+            stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                .values(artifactbrid=requests[0].id)
+
+            if row and (row.artifactbrid is not None):
+                stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                .values(artifactbrid=row.artifactbrid)
+            res = conn.execute(stmt2)
+            return res.rowcount
+
+        return self.db.pool.do(thd)
+
     def mergeBuildRequests(self, brid, merged_brids):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
