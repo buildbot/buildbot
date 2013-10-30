@@ -405,7 +405,7 @@ class IBuilderStatus(Interface):
         delivered."""
 
 class IEventSource(Interface):
-    def eventGenerator(branches=[], categories=[], committers=[], minTime=0):
+    def eventGenerator(branches=[], categories=[], committers=[], projects=[], minTime=0):
         """This function creates a generator which will yield all of this
         object's status events, starting with the most recent and progressing
         backwards in time. These events provide the IStatusEvent interface.
