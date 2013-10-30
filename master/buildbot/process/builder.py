@@ -486,7 +486,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 b.requests = b.requests + merged_building_list
                 print "\n\n #--# merged requests %s #--# \n\n" % b.requests
                 break
-            yield self.master.db.buildrequests.mergeBuildRequests(b.requests[0].id, merged_brids)
+            #yield self.master.db.buildrequests.mergeBuildRequests(b.requests[0].id, merged_brids)
             # update merged buildrequest
             # claim buildrequest
             print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (merged_brids,b.requests[0].id,b.build_status.number)
