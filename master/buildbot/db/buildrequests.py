@@ -278,9 +278,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
+            q = sa.select([buildrequests_tbl.c.triggeredbybrid, buildrequests_tbl.c.startbrid])\
+                .where(buildrequests_tbl.c.id == triggeredbybrid)
+
+            res = conn.execute(q)
+            row = res.fetchone()
+
             stmt = buildrequests_tbl.update() \
                 .where(buildrequests_tbl.c.buildsetid == bsid) \
-                .values(triggeredbybrid=triggeredbybrid)
+                .values(triggeredbybrid=triggeredbybrid)\
+                .values(startbrid=triggeredbybrid)
+
+            if row and (row.triggeredbybrid is not None):
+                stmt = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.buildsetid == bsid) \
+                    .values(triggeredbybrid=triggeredbybrid) \
+                    .values(startbrid=row.startbrid)
 
             res = conn.execute(stmt)
             return
