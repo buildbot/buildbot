@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
 from buildbot.test.util import config
+from multiprocessing import Process
 
 class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
     """detailed getNextBuildTime tests"""
@@ -190,17 +191,19 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
 
 class NightlyCroniterImport(config.ConfigErrorsMixin, unittest.TestCase):
 
-    def setUp(self):
-        self.savedModules = sys.modules.copy()
-
-    def tearDown(self):
-        sys.modules.clear()
-        sys.modules.update(self.savedModules)
-
     def test_error_without_dateutil(self):
-        del sys.modules['buildbot.schedulers.timed']
-        del sys.modules['buildbot.util']
-        sys.modules["dateutil.relativedelta"] = None
-        from buildbot.schedulers.timed import NightlyBase
-        self.assertRaisesConfigError("python-dateutil",
-                lambda: NightlyBase(name='name', builderNames=[]))
+        """
+        Because it removes a module from sys.modules, this test needs to be run in a new
+        interpreter instance so that it doesn't impact other tests running in the same
+        interpreter (e.g. when using "trial -j 8")
+        """
+        def runInNewInterpreter():
+            del sys.modules['buildbot.schedulers.timed']
+            del sys.modules['buildbot.util']
+            sys.modules["dateutil.relativedelta"] = None
+            from buildbot.schedulers.timed import NightlyBase
+            self.assertRaisesConfigError("python-dateutil",
+                    lambda: NightlyBase(name='name', builderNames=[]))
+        p = Process(target=runInNewInterpreter)
+        p.start()
+        p.join()
