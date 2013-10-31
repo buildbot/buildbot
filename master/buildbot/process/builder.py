@@ -591,6 +591,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             try:
                 yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield self.master.db.buildrequests.mergeBuildRequests(brids[0], brids[1:])
 
             except buildrequests.AlreadyClaimedError:
                 # one or more of the build requests was already claimed;
