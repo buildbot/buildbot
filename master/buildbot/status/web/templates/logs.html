@@ -1,20 +1,54 @@
 {% import 'submenu.html' as submenu %}
 {%- macro page_header(pageTitle, path_to_root, texturl) -%}
 <!DOCTYPE html>
-  <html class="no-background">
+  <html class="no-background logs-page">
   <head><title>{{ pageTitle }}</title>
-  	<link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/script/jQuery.2.0.3.js"></script>
+    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
   
-	<link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <script type="text/javascript"> 
+		$(document).ready(function(){
+			(function( $ ) {
+				var sourceUrl = window.location.pathname.split('/');
+				var decodedUriSearch = window.location.search;
+
+				var decodedBuildDetailName = decodeURIComponent(sourceUrl.slice(4)[0]);
+				var decodedBuildDetailNumber = decodeURIComponent(sourceUrl.slice(6)[0])
+
+				var url = [];
+				
+				$.each(sourceUrl, function(i,value){
+					if (i < 7) {
+						url.push(value)
+					}
+				});
+				
+				var urlJoined = url.join('/');
+				var urljoinedSearch = urlJoined + decodedUriSearch
+				
+				$('#btd').text(decodedBuildDetailName + ' #' + decodedBuildDetailNumber);
+				$('#btd').attr('href', urljoinedSearch);
+
+			})( jQuery );
+		});
+    </script>
+
+	<link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
   </head>
   <body class='log interface'>
 
 <div class="clear"></div>
-	
+	<h4 class="small-head">
+		Showing buildlog of
+	</h4>
+	<br/>
+		<a id="btd" href="#" class="back-to-detail">
+			Back to builddetail
+		</a>
+		<br/>
+		
+		<br/>
 		<a href="{{ texturl }}">(view as text)</a><br/><br/>
 		
 	    <pre class="content-holder">  
