@@ -28,7 +28,6 @@
 			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
 			<link rel="stylesheet" href="/prod/css/default.css?cachebust=1" type="text/css" />
 			<link rel="stylesheet" href="/prod/css/log.css?cachebust=1" type="text/css" />
-			
 		</HEAD>
 		<body class="interface log-main">
 			

@@ -34,7 +34,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 								codeBases = this.replace('?', '').split('_branch')[0];
 							}
 
-							var branches = this.split('=')[1]
+							var branches = this.split('=')[1];
 
 							$('tr.codebase').append('<td>' + codeBases + '</td>');
 							$('tr.branch').append('<td>' + branches + '</td>');
@@ -43,6 +43,10 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					});
 				})( jQuery );
 			}
+
+		
+			
+
 			/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');

@@ -131,9 +131,7 @@ define(['jquery'], function ($) {
 					}
 				}				
 				
-			});
- 
-			
+			});		
 
 			function nWin(newWinHtml) {
 
@@ -175,5 +173,31 @@ define(['jquery'], function ($) {
 					$(fdtf).css('height',100);
 				}
 			});
+
+			// url for back to builddetailpage
+			if (window.location.pathname.indexOf('steps') > 0) {
+				(function( $ ) {
+					var sourceUrl = window.location.pathname.split('/');
+					var decodedUriSearch = window.location.search;
+
+					var decodedBuildDetailName = decodeURIComponent(sourceUrl.slice(4)[0]);
+					var decodedBuildDetailNumber = decodeURIComponent(sourceUrl.slice(6)[0])
+
+					var url = [];
+					
+					$.each(sourceUrl, function(i,value){
+						if (i < 7) {
+							url.push(value)
+						}
+					});
+					
+					var urlJoined = url.join('/');
+					var urljoinedSearch = urlJoined + decodedUriSearch
+					
+					$('#btd').text(decodedBuildDetailName + ' #' + decodedBuildDetailNumber);
+					$('#btd').attr('href', urljoinedSearch);
+
+				})( jQuery );
+			}
 	});
 });
