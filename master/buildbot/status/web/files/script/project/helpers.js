@@ -22,16 +22,23 @@ define(['jquery', 'screensize'], function ($, screenSize) {
           			$(cbTable).appendTo($('.filter-table-input'));
 
 					$(parsedUrl).each(function(i){
-						
-						var codeBases = this.split('_branch')[0];
-						if (i == 0) {
-							codeBases = this.replace('?', '').split('_branch')[0];
+
+						// split key an value
+						var eqSplit = this.split( "=");
+
+						if (eqSplit[0].indexOf('_branch') > 0) {
+								
+							// seperate branch and 
+							var codeBases = this.split('_branch')[0];
+							if (i == 0) {
+								codeBases = this.replace('?', '').split('_branch')[0];
+							}
+
+							var branches = this.split('=')[1]
+
+							$('tr.codebase').append('<td>' + codeBases + '</td>');
+							$('tr.branch').append('<td>' + branches + '</td>');
 						}
-
-						var branches = this.split('=')[1]
-
-						$('tr.codebase').append('<td>' + codeBases + '</td>');
-						$('tr.branch').append('<td>' + branches + '</td>');
 						
 					});
 				})( jQuery );

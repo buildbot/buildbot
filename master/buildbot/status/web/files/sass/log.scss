@@ -133,36 +133,26 @@
 	width: 100%;
 }
 
-.table-1 td {
-	word-wrap: break-word;
+.table-1 td {word-wrap: break-word;}
 
+.back-to-detail {
+	display:block;
+	float:right;
 }
 
-
-//.case-names,
 .results-con {color:#fff;}
 
-//.case-names {width:100px;}
 
-span.covered {
-	background: #00df00; 
-	
-}
+span.covered {background: #00df00;}
 span.uncovered {
 	background: #df0000; 
 	border-top:#9c9c9c 1px solid;
 	border-bottom:#9c9c9c 1px solid;
 	border-right:#9c9c9c 1px solid;
 	}
-span.ignored {
-	background: #ffff00;
-	
-}
+span.ignored {background: #ffff00;}
 	 
-.Failure {
-	  background-color: #EFCFCF;
-		border-top: 1px solid #FFFFFF;
-}
+.Failure {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
 
 .table-1 tr td:first-child .failure-detail-txt {
 	padding-left: 15px;
