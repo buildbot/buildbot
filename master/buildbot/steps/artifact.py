@@ -85,6 +85,8 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             self.build.allStepsDone()
             return
 
+        if len(self.build.requests) > 1:
+            yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
         self.step_status.setText(["Running build (previous sucessful build not found)."])
         self.finished(SUCCESS)
         return
@@ -199,7 +201,8 @@ class CheckArtifactExists(ShellCommand):
             ShellCommand.start(self)
             return
 
-
+        if len(self.build.requests) > 1:
+            yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
         self.step_status.setText(["Artifact not found."])
         self.finished(SUCCESS)
         return
