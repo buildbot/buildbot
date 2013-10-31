@@ -1221,6 +1221,8 @@ div.common-branch-select {
     top: 20px;
     font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
+    width: 340px;
+    text-align:right;
 }
 
 .select2-container {
