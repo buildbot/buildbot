@@ -398,11 +398,24 @@ class IRCContact(base.StatusReceiver):
             r = "build containing revision(s) [%s] on %s started" % \
                 (build.getRevisions(), builder.getName())
         else:
-            r = "build #%d of %s started, including [%s]" % \
-                (build.getNumber(),
-                 builder.getName(),
-                 ", ".join([str(c.revision) for c in build.getChanges()])
-                 )
+            # Abbreviate long lists of changes to simply two
+            # revisions, and the number of additional changes.
+            changes = [str(c.revision) for c in build.getChanges()][:2]
+            changes_str = ""
+
+            if len(build.getChanges()) > 0:
+                changes_str = "including [%s]" % ', '.join(changes)
+
+                if len(build.getChanges()) > 2:
+                    # Append number of truncated changes
+                    changes_str += " and %d more" % (len(build.getChanges())-2)
+
+            r = "build #%d of %s started" % (
+                build.getNumber(),
+                builder.getName())
+
+            if changes_str:
+                r += " (%s)" % changes_str
 
         self.send(r)
 
