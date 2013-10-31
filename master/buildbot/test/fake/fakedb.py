@@ -121,6 +121,8 @@ class Change(Row):
         repository = 'repo',
         codebase =  '',
         project = 'proj',
+        properties = dict(),
+        files = []
     )
 
     lists = ('files',)
@@ -464,7 +466,7 @@ class FakeChangesComponent(FakeDBComponent):
             changeid = change.number
 
         # make a row from the change
-        row = dict(
+        row = Change(
             changeid=changeid,
             author=change.who,
             files=change.files,
@@ -520,25 +522,25 @@ class FakeSchedulersComponent(FakeDBComponent):
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
+                    if self.db.changes.changes.get(k, sentinel).branch == branch )
 
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
+                    if self.db.changes.changes.get(k, sentinel).repository == repository )
 
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel)['project'] == project )
+                    if self.db.changes.changes.get(k, sentinel).project == project )
 
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
+                    if self.db.changes.changes.get(k, sentinel).codebase == codebase )
 
         return defer.succeed(classifications)
 

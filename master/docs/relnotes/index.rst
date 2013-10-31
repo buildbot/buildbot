@@ -117,6 +117,8 @@ Features
   
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
+* A new argument ``createAbsoluteSourceStamps`` has been added to ``Nightly`` for use with multiple codebases.
+
 Fixes
 ~~~~~
 
