@@ -227,7 +227,7 @@ class FeedResource(XmlResource):
             bc['date'] = rfc822_time(finishedTime)
             bc['summary_link'] = ('%sbuilders/%s' %
                                   (self.link,
-                                   build.getBuilder().getName()))            
+                                   build.getBuilder().getName()))
             bc['name'] = build.getBuilder().getName()
             bc['number'] = build.getNumber()
             bc['responsible_users'] = build.getResponsibleUsers()

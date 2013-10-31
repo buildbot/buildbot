@@ -136,17 +136,17 @@ parser.add_option("-c", "--comments", dest='comments', metavar="COMMENTS",
             """))
 parser.add_option("-R", "--revision", dest='revision', metavar="REVISION",
             help=textwrap.dedent("""\
-            This is the revision of the change. 
+            This is the revision of the change.
             This becomes the Change.revision attribute.
             """))
 parser.add_option("-W", "--when", dest='when', metavar="WHEN",
             help=textwrap.dedent("""\
-            This this the date of the change. 
+            This this the date of the change.
             This becomes the Change.when attribute.
             """))
 parser.add_option("-b", "--branch", dest='branch', metavar="BRANCH",
             help=textwrap.dedent("""\
-            This this the branch of the change. 
+            This this the branch of the change.
             This becomes the Change.branch attribute.
             """))
 parser.add_option("-C", "--category", dest='category', metavar="CAT",
@@ -156,10 +156,10 @@ parser.add_option("-C", "--category", dest='category', metavar="CAT",
             """))
 parser.add_option("--revlink", dest='revlink', metavar="REVLINK",
             help=textwrap.dedent("""\
-            This this the revlink of the change. 
+            This this the revlink of the change.
             This becomes the Change.revlink.
             """))
-parser.add_option("-p", "--property", dest='properties', action="callback", callback=propertyCB, 
+parser.add_option("-p", "--property", dest='properties', action="callback", callback=propertyCB,
             type="string", metavar="PROP",
             help=textwrap.dedent("""\
             This adds a single property. This can be specified multiple times.

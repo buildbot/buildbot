@@ -66,7 +66,7 @@ username = "change"
 # Password portion of PB login credentials to send the changes to the master
 auth = "changepw"
 
-# When converting strings to unicode, assume this encoding. 
+# When converting strings to unicode, assume this encoding.
 # (set with --encoding)
 
 encoding = 'utf8'
@@ -324,7 +324,7 @@ def parse_options():
             help="Log to the specified file")
     parser.add_option("-v", "--verbose", action="count",
             help="Be more verbose. Ignored if -l is not specified.")
-    master_help = ("Build master to push to. Default is %(master)s" % 
+    master_help = ("Build master to push to. Default is %(master)s" %
                    { 'master' : master })
     parser.add_option("-m", "--master", action="store", type="string",
             help=master_help)
@@ -337,9 +337,9 @@ def parse_options():
     parser.add_option("--codebase", action="store",
                       type="string", help="Codebase to send.")
     encoding_help = ("Encoding to use when converting strings to "
-                     "unicode. Default is %(encoding)s." % 
+                     "unicode. Default is %(encoding)s." %
                      { "encoding" : encoding })
-    parser.add_option("-e", "--encoding", action="store", type="string", 
+    parser.add_option("-e", "--encoding", action="store", type="string",
                       help=encoding_help)
     username_help = ("Username used in PB connection auth, defaults to "
                      "%(username)s." % { "username" : username })

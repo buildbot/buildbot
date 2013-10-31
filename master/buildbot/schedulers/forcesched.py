@@ -310,7 +310,7 @@ class NestedParameter(BaseParameter):
     def setParent(self, parent):
         BaseParameter.setParent(self, parent)
         for field in self.fields:
-            field.setParent(self)        
+            field.setParent(self)
     
     def collectChildProperties(self, kwargs, properties, **kw):
         """Collapse the child values into a dictionary. This is intended to be
@@ -467,7 +467,7 @@ class ForceScheduler(base.BaseScheduler):
                 ])
             ],
     
-            # deprecated; use 'codebase' instead     
+            # deprecated; use 'codebase' instead
             branch=None,
             revision=None,
             repository=None,

@@ -24,7 +24,7 @@ class TestStatusClientPerspective(unittest.TestCase):
         m = mock.Mock(name='master')
         self.db = m.db = fakedb.FakeDBConnector(self)
         m.basedir = r'C:\BASEDIR'
-        s = master.Status(m) 
+        s = master.Status(m)
         persp = client.StatusClientPerspective(s)
         return persp
 

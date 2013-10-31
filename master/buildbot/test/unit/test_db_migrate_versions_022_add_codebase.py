@@ -107,7 +107,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
             
-            res = conn.execute(sa.select([tbl.c.changeid, tbl.c.repository, 
+            res = conn.execute(sa.select([tbl.c.changeid, tbl.c.repository,
                                           tbl.c.codebase, ]))
             got_changes = res.fetchall()
             self.assertEqual(got_changes, [(1, 'https://svn.com/repo_a', 'repo_a')])
@@ -127,7 +127,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
             
-            res = conn.execute(sa.select([tbl.c.id, tbl.c.repository, 
+            res = conn.execute(sa.select([tbl.c.id, tbl.c.repository,
                                           tbl.c.codebase,]))
             got_sourcestamps = res.fetchall()
             self.assertEqual(got_sourcestamps, [(1000, 'https://svn.com/repo_a', 'repo_a')])

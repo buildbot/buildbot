@@ -229,12 +229,12 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'pull', '--all', '--verbose'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -314,7 +314,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.darcs-context', workdir='wkdir',
                                         mode=None))

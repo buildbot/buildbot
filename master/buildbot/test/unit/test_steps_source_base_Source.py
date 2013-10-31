@@ -92,7 +92,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step.name, Source.name + " codebase")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))        
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
 
         self.assertEqual(step.describe(True), ['update', 'codebase'])
         
@@ -108,7 +108,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step.name, Source.name + " my-code")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))        
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
         
         self.assertEqual(step.describe(True), ['update', 'suffix'])
 

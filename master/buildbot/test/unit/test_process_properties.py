@@ -832,7 +832,7 @@ class TestWithProperties(unittest.TestCase):
     def testRecursiveDict(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
-        command = { WithProperties("%(x)s %(y)s") : 
+        command = { WithProperties("%(x)s %(y)s") :
                     WithProperties("%(y)s %(x)s") }
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,

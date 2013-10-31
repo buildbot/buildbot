@@ -28,10 +28,10 @@ class TextClient:
         @param master: a host:port string to masters L{buildbot.status.client.PBListener}
 
         @type  username: string
-        @param username: 
+        @param username:
 
         @type  passwd: string
-        @param passwd: 
+        @param passwd:
 
         @type  events: string, one of builders, builds, steps, logs, full
         @param events: specify what level of detail should be reported.
@@ -41,7 +41,7 @@ class TextClient:
          - 'steps': also announce buildETAUpdate, stepStarted, stepFinished
          - 'logs': also announce stepETAUpdate, logStarted, logFinished
          - 'full': also announce log contents
-        """        
+        """
         self.master = master
         self.username = username
         self.passwd = passwd

@@ -118,13 +118,13 @@ class TextLog(Resource):
             req.setHeader("Cache-Control", "no-cache")
 
         if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")                
+            self.template = req.site.buildbot_service.templates.get_template("logs.html")
             
             data = self.template.module.page_header(
                     pageTitle = "Log File contents",
                     texturl = req.childLink("text"),
                     path_to_root = path_to_root(req))
-            data = data.encode('utf-8')                   
+            data = data.encode('utf-8')
             req.write(data)
 
         self.original.subscribeConsumer(ChunkConsumer(req, self))

@@ -1156,7 +1156,7 @@ class FakeBuildsComponent(FakeDBComponent):
                                 start_time=_mkdt(row.start_time),
                                 finish_time=_mkdt(row.finish_time)))
                
-        return defer.succeed(ret)            
+        return defer.succeed(ret)
 
     def addBuild(self, brid, number, _reactor=reactor):
         bid = self._newId()

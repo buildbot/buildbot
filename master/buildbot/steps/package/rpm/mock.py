@@ -91,7 +91,7 @@ class Mock(ShellCommand):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 
+        cmd = buildstep.RemoteCommand('rmdir', {'dir':
                 map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
                 self.mock_logfiles)})
         d = self.runCommand(cmd)

@@ -42,7 +42,7 @@ class croniter(object):
         { }
     )
 
-    LOWMAP = ( 
+    LOWMAP = (
         {},
         {},
         {0: 1},
@@ -235,7 +235,7 @@ class croniter(object):
                 if expanded[5][0] != '*':
                     diff_sec = nearest_diff_method(d.second, expanded[5], 60)
                     if diff_sec != None and diff_sec != 0:
-                        d += relativedelta(seconds = diff_sec)                        
+                        d += relativedelta(seconds = diff_sec)
                         return True, d
             else:
                 d += relativedelta(second = 0)
@@ -246,7 +246,7 @@ class croniter(object):
                      proc_minute,
                      proc_hour,
                      proc_day_of_week,
-                     proc_day_of_month,                     
+                     proc_day_of_month,
                      proc_month]
         else:
             procs = [proc_month,
