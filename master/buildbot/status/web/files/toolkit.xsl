@@ -33,9 +33,9 @@
 <xsl:template name="display-time">
 	<xsl:param name="value"/>
 	<xsl:value-of select="format-number($value,'0.000')"/>	 
-		(<xsl:call-template name="format-duration">
+		<xsl:call-template name="format-duration">
 			<xsl:with-param name="value" select="format-number($value,'0.000')"/>
-		</xsl:call-template>)
+		</xsl:call-template>
 </xsl:template>
 
 	<!--
@@ -45,18 +45,21 @@
 <xsl:template name="format-duration">
 
     <xsl:param name="value" select="." />
-    <xsl:param name="alwaysIncludeHours" select="false()" />
-    <xsl:param name="includeSeconds" select="true()" />
+     
+	    <xsl:param name="alwaysIncludeHours" select="false()" />
+	    <xsl:param name="includeSeconds" select="true()" />
+	 <xsl:if test="$value != 'NaN'">   
+	    	
+	    (<xsl:if test="$value > 3600 or $alwaysIncludeHours">
+	      <xsl:value-of select="concat(format-number($value div 3600, '00'), ':')"/>
+	    </xsl:if>
 
-    <xsl:if test="$value > 3600 or $alwaysIncludeHours">
-      <xsl:value-of select="concat(format-number($value div 3600, '00'), ':')"/>
-    </xsl:if>
+	    <xsl:value-of select="format-number($value div 60 mod 60, '00')" />
 
-    <xsl:value-of select="format-number($value div 60 mod 60, '00')" />
-
-
-    <xsl:if test="$includeSeconds">
-      <xsl:value-of select="concat( ':', format-number($value mod 60, '00'))" />
+	    <xsl:if test="$includeSeconds">
+	      <xsl:value-of select="concat( ':', format-number($value mod 60, '00'))" />
+	    </xsl:if>)
+	    
     </xsl:if>
   </xsl:template>
 
@@ -254,9 +257,9 @@
 			<td class="txt-align-left">
 				<xsl:value-of select="$timeCount"/>
 				
-				(<xsl:call-template name="format-duration">
+				<xsl:call-template name="format-duration">
 					<xsl:with-param name="value" select="$timeCount"/>
-				</xsl:call-template>)
+				</xsl:call-template>
 			</td>
 		</tr>
 		</tbody>

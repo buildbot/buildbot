@@ -127,9 +127,9 @@
 				<li>
 
 					<b id="Time">Time(s) </b> <xsl:value-of select="$timeCount"/>
-					(<xsl:call-template name="format-duration">
+					<xsl:call-template name="format-duration">
 					        <xsl:with-param name="value" select="$timeCount"/>
-					    </xsl:call-template>)
+					    </xsl:call-template>
 		    		
 
 				</li>
