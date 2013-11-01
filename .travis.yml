@@ -49,6 +49,8 @@ matrix:
 install:
   # zope.interface dropped Python 2.5 support in 4.0.0
   - "[ $TRAVIS_PYTHON_VERSION != '2.5' ] || pip install 'zope.interface<4.0.0'"
+  # Python 2.5 doesn't have multiprocessing natively
+  - "[ $TRAVIS_PYTHON_VERSION != '2.5' ] || pip install multiprocessing"
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
   - "[ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE"
