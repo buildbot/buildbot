@@ -65,7 +65,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                          ('pr', ('op', 'test')),
                          ('scheduler', ('n', 'Scheduler')),
                      ],
-                     reason='Triggerable(n)',
+                     reason=sched.reason,
                      sourcestampsetid=100),
                 {'cb':
                  dict(branch='br', project='p', repository='r',
@@ -119,7 +119,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)',
+                     reason=sched.reason,
                      sourcestampsetid=100),
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
@@ -138,7 +138,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)', sourcestampsetid=101),
+                     reason=sched.reason, sourcestampsetid=101),
                 {'cb':
                 dict(branch='br', project='p', repository='r', codebase='cb',
                      revision='myrev2', sourcestampsetid=101)})
@@ -177,7 +177,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)',
+                     reason=sched.reason,
                      sourcestampsetid=100),
                 {'cb':
                 dict(branch='branchX', project='', repository='r', codebase='cb',
@@ -201,7 +201,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
-                     reason='Triggerable(n)',
+                     reason=sched.reason,
                      sourcestampsetid=100),
                 {'cb':
                 dict(branch='branchX', project='', repository='r', codebase='cb',
