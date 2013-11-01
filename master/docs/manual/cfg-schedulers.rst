@@ -240,6 +240,8 @@ The arguments to this scheduler are:
 ``onlyImportant``
 
 ``reason``
+
+``createAbsoluteSourceStamps``
     See :ref:`Configuring-Schedulers`.
 
 ``treeStableTimer``
