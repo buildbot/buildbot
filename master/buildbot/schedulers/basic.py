@@ -35,13 +35,14 @@ class BaseBasicScheduler(base.BaseScheduler):
     _reactor = reactor # for tests
 
     fileIsImportant = None
-    reason = 'scheduler'
+    reason = ''
 
     class NotSet: pass
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,
-                reason=None, change_filter=None, onlyImportant=False, **kwargs):
+                reason="The %(classname)s scheduler named '%(name)s' triggered this build",
+                change_filter=None, onlyImportant=False, **kwargs):
         if shouldntBeSet is not self.NotSet:
             config.error(
                 "pass arguments to schedulers using keyword arguments")
@@ -65,8 +66,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         self._stable_timers = defaultdict(lambda : None)
         self._stable_timers_lock = defer.DeferredLock()
 
-        if reason is not None:
-            self.reason = reason
+        self.reason = reason % { 'name': name, 'classname': self.__class__.__name__ }
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
