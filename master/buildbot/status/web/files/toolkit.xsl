@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+
 <xsl:stylesheet version="1.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                >
+
+
+
+
 <xsl:param name="nant.filename" />
 <xsl:param name="nant.version" />
 <xsl:param name="nant.project.name" />
@@ -25,8 +32,34 @@
 -->
 <xsl:template name="display-time">
 	<xsl:param name="value"/>
-	<xsl:value-of select="format-number($value,'0.000')"/>
+	<xsl:value-of select="format-number($value,'0.000')"/>	 
+		(<xsl:call-template name="format-duration">
+			<xsl:with-param name="value" select="format-number($value,'0.000')"/>
+		</xsl:call-template>)
 </xsl:template>
+
+	<!--
+    	Format a number to hours minutes and seconds
+	-->
+
+<xsl:template name="format-duration">
+
+    <xsl:param name="value" select="." />
+    <xsl:param name="alwaysIncludeHours" select="false()" />
+    <xsl:param name="includeSeconds" select="true()" />
+
+    <xsl:if test="$value > 3600 or $alwaysIncludeHours">
+      <xsl:value-of select="concat(format-number($value div 3600, '00'), ':')"/>
+    </xsl:if>
+
+    <xsl:value-of select="format-number($value div 60 mod 60, '00')" />
+
+
+    <xsl:if test="$includeSeconds">
+      <xsl:value-of select="concat( ':', format-number($value mod 60, '00'))" />
+    </xsl:if>
+  </xsl:template>
+
 
 <!--
     format a number in to display its value in percent
@@ -220,7 +253,10 @@
 			</td>
 			<td class="txt-align-left">
 				<xsl:value-of select="$timeCount"/>
-			
+				
+				(<xsl:call-template name="format-duration">
+					<xsl:with-param name="value" select="$timeCount"/>
+				</xsl:call-template>)
 			</td>
 		</tr>
 		</tbody>
@@ -305,7 +341,8 @@
 		<td>
 		    <xsl:call-template name="display-time">
 		        <xsl:with-param name="value" select="@time"/>
-		    </xsl:call-template>				
+		    </xsl:call-template>	
+		   
 		</td>
 	</tr>
 

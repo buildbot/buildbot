@@ -10,16 +10,27 @@
 -->
 
 <xsl:stylesheet version="1.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" >
+                  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                >
+ 
+
+
+
+
    <xsl:output method="html" indent="yes"/>
    <xsl:include href="/toolkit.xsl"/>
    <xsl:preserve-space elements='a root'/>
+
+
+
 
 <!--
 	====================================================
 		Create the page structure
     ====================================================
 -->
+
+
 <xsl:template match="test-results">
 
 	<HTML>
@@ -114,12 +125,13 @@
 					</span>
 				</li>
 				<li>
+
 					<b id="Time">Time(s) </b> <xsl:value-of select="$timeCount"/>
-					<!--
-					<xsl:call-template name="display-time">
-                        	<xsl:with-param name="value" select="$timeCount"/>
-                    </xsl:call-template>				
-                    -->
+					(<xsl:call-template name="format-duration">
+					        <xsl:with-param name="value" select="$timeCount"/>
+					    </xsl:call-template>)
+		    		
+
 				</li>
 			</ul>
 
