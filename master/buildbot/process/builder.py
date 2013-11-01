@@ -405,7 +405,10 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
+        brids = [br.id for br in build.requests]
         d = self.master.db.builds.finishBuilds(bids)
+        # todo: get build number
+        d.addCallback(lambda _ : self.master.db.builds.finishedMergedBuilds(brids, build.build_status.number))
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         results = build.build_status.getResults()
@@ -413,7 +416,6 @@ class Builder(config.ReconfigurableServiceMixin,
         if results == RETRY:
             self._resubmit_buildreqs(build).addErrback(log.err)
         else:
-            brids = [br.id for br in build.requests]
             db = self.master.db
             d = db.buildrequests.completeBuildRequests(brids, results)
             d.addCallback(
@@ -485,9 +487,6 @@ class Builder(config.ReconfigurableServiceMixin,
                 defer.returnValue(True)
                 return
 
-            #yield self.master.db.buildrequests.mergeBuildRequests(b.requests[0].id, merged_brids)
-            # update merged buildrequest
-            # claim buildrequest
             print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (brids,b.requests[0].id,b.build_status.number)
         defer.returnValue(False)
 
