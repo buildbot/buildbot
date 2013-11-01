@@ -36,7 +36,7 @@ class CommonStuffMixin(object):
         self.events = []
         def addBuildsetForChanges(reason='', external_idstring=None, changeids=[]):
             self.assertEqual(external_idstring, None)
-            self.assertEqual(reason, 'scheduler') # basic schedulers all use this
+            self.assertEqual(reason, sched.reason)
             self.events.append('B%s@%d' % (`changeids`.replace(' ',''),
                                            self.clock.seconds()))
             return defer.succeed(None)
@@ -275,7 +275,7 @@ class SingleBranchScheduler(CommonStuffMixin,
 
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
-        bs = dict(reason='scheduler', external_idstring=None, sourcestampsetid=100,
+        bs = dict(reason=self.sched.reason, external_idstring=None, sourcestampsetid=100,
                   properties=[('scheduler', ('test', 'Scheduler'))])
         bs.update(kwargs)
         return bs
