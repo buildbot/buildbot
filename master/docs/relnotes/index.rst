@@ -121,6 +121,8 @@ Features
   long lists of revisions printed when a build starts; it will only show two,
   and the number of additional revisions included in the build.
 
+* A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`Nightly` for use with multiple codebases.
+
 Fixes
 ~~~~~
 
