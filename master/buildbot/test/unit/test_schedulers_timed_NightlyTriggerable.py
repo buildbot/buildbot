@@ -40,6 +40,15 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.tearDownScheduler()
 
 
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'])
+        self.assertEqual(sched.reason, "The NightlyTriggerable scheduler named 'test' triggered this build")
+
+    def test_constructor_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], reason="hourlytriggerable")
+        self.assertEqual(sched.reason, "hourlytriggerable")
+
+
     def test_timer_noBuilds(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                 minute=[5])

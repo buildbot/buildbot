@@ -111,6 +111,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     ## Tests
 
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
+        self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
+
+    def test_constructor_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', reason="hourly")
+        self.assertEqual(sched.reason, "hourly")
+
     def test_constructor_change_filter(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                 branch=None, change_filter=filter.ChangeFilter(category_re="fo+o"))
