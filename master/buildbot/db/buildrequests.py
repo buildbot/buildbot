@@ -251,13 +251,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             q2 = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.artifactbrid])\
                 .where(buildrequests_tbl.c.mergebrid == None)\
                 .where(buildrequests_tbl.c.startbrid.in_(q))\
-                .where(buildrequests_tbl.c.buildername == br.buildername)
+                .where(buildrequests_tbl.c.buildername == br.buildername)\
+                .where(buildrequests_tbl.c.complete == 1)
 
-            print "\n br %s \n q %s \n" % (br,q)
+            print "\n br.id %s br.buildername %s \n q %s \n" % (br.id,br.buildername,q)
 
             res = conn.execute(q2)
             row = res.fetchone()
             if row:
+                print "\n row.id %s row.artifactbrid %s \n" %(row.id, row.artifactbrid)
                 # update artifactbrid
                 stmt2 = buildrequests_tbl.update() \
                     .where(buildrequests_tbl.c.id.in_(requests)) \
