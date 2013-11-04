@@ -303,6 +303,14 @@ class SingleBranchScheduler(CommonStuffMixin,
     def tearDown(self):
         self.tearDownScheduler()
 
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler(basic.SingleBranchScheduler, branch="master")
+        self.assertEqual(sched.reason, "The SingleBranchScheduler scheduler named 'tsched' triggered this build")
+
+    def test_constructor_reason(self):
+        sched = self.makeScheduler(basic.SingleBranchScheduler, branch="master", reason="Changeset")
+        self.assertEqual(sched.reason, "Changeset")
+
     def test_constructor_branch_mandatory(self):
         self.assertRaises(config.ConfigErrors,
                 lambda : basic.SingleBranchScheduler(name="tsched", treeStableTimer=60))
