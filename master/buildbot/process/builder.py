@@ -490,6 +490,13 @@ class Builder(config.ReconfigurableServiceMixin,
             print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (brids,b.requests[0].id,b.build_status.number)
         defer.returnValue(False)
 
+    @defer.inlineCallbacks
+    def mergeFinishedRequests(self, brdicts, brids, breqs):
+        if (yield self.master.db.buildrequests.mergeFinishedBuildRequest(breqs)):
+            yield self.master.db.buildrequests.claimBuildRequests(brids)
+            defer.returnValue(True)
+        defer.returnValue(False)
+
     # Build Creation
     @defer.inlineCallbacks
     def maybeStartBuild(self):
@@ -571,9 +578,21 @@ class Builder(config.ReconfigurableServiceMixin,
                 continue
 
             # merge with compatible finished build
+            try:
+                if (yield self.mergeFinishedRequests(brdicts, brids, breqs)):
+                    self._breakBrdictRefloops(brdicts)
+                    for br in brdicts:
+                        unclaimed_requests.remove(br)
+                    continue
 
+            except buildrequests.AlreadyClaimedError:
+                self._breakBrdictRefloops(unclaimed_requests)
+                unclaimed_requests = \
+                    yield self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.name, claimed=False)
+                continue
 
-            # if couldnt been merge try starting a new build, choose a slave (using nextSlave)
+            # if couldn't been merge try starting a new build, choose a slave (using nextSlave)
             slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:

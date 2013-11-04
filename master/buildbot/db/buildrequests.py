@@ -238,6 +238,55 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def mergeFinishedBuildRequest(self, requests):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            br = requests[0]
+            q = sa.select([buildrequests_tbl.c.startbrid])\
+                .where(buildrequests_tbl.c.id == br.id)\
+                .where(buildrequests_tbl.c.buildername == br.buildername)
+
+            q2 = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.artifactbrid])\
+                .where(buildrequests_tbl.c.mergebrid == None)\
+                .where(buildrequests_tbl.c.startbrid.in_(q))\
+                .where(buildrequests_tbl.c.buildername == br.buildername)
+
+            print "\n br %s \n q %s \n" % (br,q)
+
+            res = conn.execute(q2)
+            row = res.fetchone()
+            if row:
+                # update artifactbrid
+                stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(requests)) \
+                    .values(artifactbrid=row.id) \
+                    .values(mergebrid=row.id)
+
+                if row.artifactbrid is not None:
+                    stmt2 = buildrequests_tbl.update() \
+                        .where(buildrequests_tbl.c.id.in_(requests)) \
+                        .values(artifactbrid=row.artifactbrid) \
+                        .values(mergebrid=row.id)
+                res = conn.execute(stmt2)
+                # insert builds
+                stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
+                                  order_by = [sa.desc(builds_tbl.c.number)])\
+                    .where(builds_tbl.c.brid == row.id)
+
+                res = conn.execute(stmt3)
+                row = res.fetchone()
+                if row:
+                    stmt4 = builds_tbl.insert()
+                    conn.execute(stmt4, [ dict(number=row.number, brid=id,
+                                           start_time=row.start_time,finish_time=row.finish_time)
+                                      for requests.id in requests ])
+
+                return True
+            return False
+        return self.db.pool.do(thd)
+
     def mergeBuildRequests(self, brid, merged_brids):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
