@@ -43,6 +43,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     # The Deferred from trigger() is completely processed before this test
     # method returns.
 
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler()
+        self.assertEqual(sched.reason, "The Triggerable scheduler named 'n' triggered this build")
+
+
     def test_trigger(self):
         sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})
         # no subscription should be in place yet

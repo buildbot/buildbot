@@ -62,6 +62,15 @@ class Periodic(unittest.TestCase):
                 lambda : timed.Periodic(name='test', builderNames=[ 'test' ],
                                         periodicBuildTimer=-2))
 
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=10)
+        self.assertEqual(sched.reason, "The Periodic scheduler named 'test' triggered this build")
+
+    def test_constructor_reason(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=10, reason="periodic")
+        self.assertEqual(sched.reason, "periodic")
+
+
     def test_iterations_simple(self):
         sched = self.makeScheduler(name='test', builderNames=[ 'test' ],
                         periodicBuildTimer=13)
