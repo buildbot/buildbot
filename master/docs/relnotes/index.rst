@@ -123,6 +123,8 @@ Features
 
 * A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`Nightly` for use with multiple codebases.
 
+* The ``branch`` and ``codebase`` arguments to the :bb:step:`Git` step are now renderable.
+
 Fixes
 ~~~~~
 
