@@ -125,11 +125,11 @@ define(['jquery'], function ($) {
 			$('.failure-detail-cont', th).each(function(){	
 
 				var fdTxt = $('.failure-detail-txt', this);
-				$(this).height($(fdTxt).height() + 15);
+				$(this).height($(fdTxt).height() + 40);
 				
 				if (!$(fdTxt).is(':empty')) {
 					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($(fdTxt));
-					if ($(fdTxt).height() >= 100) {
+					if ($(fdTxt).height() >= 130) {
 						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));	
 					}
 				}
@@ -173,7 +173,7 @@ define(['jquery'], function ($) {
 					$(this).removeClass('expanded-js');
 					$(this).text('Show more');
 					$(fdtf).css('max-height',130);
-					$(parentTd).css('height',140);
+					$(parentTd).css('height',170);
 				}
 			});
 
