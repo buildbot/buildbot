@@ -219,8 +219,6 @@ class Mercurial(Source):
 
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]
-        if self.revision:
-            command.extend(['--rev', self.revision])
         d = self._dovccmd(command)
         d.addCallback(self._checkBranchChange)
         return d

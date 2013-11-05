@@ -181,6 +181,14 @@ Features
   
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
+* The IRC bot of :bb:status:`words` will, unless useRevisions is set, shorten
+  long lists of revisions printed when a build starts; it will only show two,
+  and the number of additional revisions included in the build.
+
+* A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`Nightly` for use with multiple codebases.
+
+* The ``branch`` and ``codebase`` arguments to the :bb:step:`Git` step are now renderable.
+
 Fixes
 ~~~~~
 

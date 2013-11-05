@@ -75,7 +75,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'complete': False,
                 'complete_at': None,
                 'external_idstring': None,
-                'reason': u'Triggerable(n)',
+                'reason': u"The Triggerable scheduler named 'n' triggered this build",
                 'results': -1,
                 #'sourcestamps': [100],
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
@@ -140,6 +140,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     # scheduler operations are synchronous, and thus do not return a Deferred.
     # The Deferred from trigger() is completely processed before this test
     # method returns.
+
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler()
+        self.assertEqual(sched.reason, "The Triggerable scheduler named 'n' triggered this build")
+
 
     def test_trigger(self):
         sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})

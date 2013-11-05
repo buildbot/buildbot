@@ -57,7 +57,7 @@ class Timed(base.BaseScheduler):
         self.actuateAt = None
         self.actuateAtTimer = None
 
-        self.reason = reason % { 'name': name }
+        self.reason = util.ascii2unicode(reason % { 'name': name })
 
         self._reactor = reactor # patched by tests
 
@@ -267,12 +267,13 @@ class NightlyBase(Timed):
 
 class Nightly(NightlyBase):
     compare_attrs = ('branch', 'onlyIfChanged', 'fileIsImportant',
-               'change_filter', 'onlyImportant',)
+               'change_filter', 'onlyImportant', 'createAbsoluteSourceStamps',)
 
     class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
+                 createAbsoluteSourceStamps=False,
                  properties={}, change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  codebases = base.BaseScheduler.DEFAULT_CODEBASES):
@@ -291,19 +292,40 @@ class Nightly(NightlyBase):
             config.error(
                 "Nightly parameter 'branch' is required")
 
+        if createAbsoluteSourceStamps and not onlyIfChanged:
+            config.error(
+                "createAbsoluteSourceStamps can only be used with onlyIfChanged")
+
+        self._lastCodebases = {}
         self.branch = branch
         self.onlyIfChanged = onlyIfChanged
+        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.fileIsImportant = fileIsImportant
         self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
                 change_filter=change_filter)
 
     def startTimedSchedulerService(self):
         if self.onlyIfChanged:
-            return self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+            d = self.preStartConsumingChanges()
+
+            d.addCallback(lambda _ :
+                    self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                               change_filter=self.change_filter,
-                                              onlyImportant=self.onlyImportant)
+                                              onlyImportant=self.onlyImportant))
+            return d
         else:
             return self.master.db.schedulers.flushChangeClassifications(self.objectid)
+
+    def preStartConsumingChanges(self):
+        if self.createAbsoluteSourceStamps:
+            # load saved codebases
+            d = self.getState("lastCodebases", {})
+            def setLast(lastCodebases):
+                self._lastCodebases = lastCodebases
+            d.addCallback(setLast)
+            return d
+        else:
+            return defer.succeed(None)
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
@@ -312,8 +334,31 @@ class Nightly(NightlyBase):
         # change filter. 
         if change.branch != self.branch:
             return defer.succeed(None) # don't care about this change
-        return self.master.db.schedulers.classifyChanges(
+
+        d = self.master.db.schedulers.classifyChanges(
                 self.objectid, { change.number : important })
+
+        if self.createAbsoluteSourceStamps:
+            self._lastCodebases.setdefault(change.codebase, {})
+            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+
+            codebaseDict = dict(repository=change.repository,
+                                branch=change.branch,
+                                revision=change.revision,
+                                lastChange=change.number)
+
+            if change.number > lastChange:
+                self._lastCodebases[change.codebase] = codebaseDict
+                d.addCallback(lambda _ :
+                        self.setState('lastCodebases', self._lastCodebases))
+
+        return d
+    
+    def getCodebaseDict(self, codebase):
+        if self.createAbsoluteSourceStamps:
+            return self._lastCodebases.get(codebase, self.codebases[codebase])
+        else:
+            return self.codebases[codebase]
 
     @defer.inlineCallbacks
     def startBuild(self):

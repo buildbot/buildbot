@@ -58,7 +58,7 @@ git_describe_flags = [
 class Git(Source):
     """ Class for Git with all the smarts """
     name='git'
-    renderables = [ "repourl", "reference"]
+    renderables = [ "repourl", "reference", "branch", "codebase"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,

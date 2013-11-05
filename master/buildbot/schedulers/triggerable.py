@@ -31,7 +31,7 @@ class Triggerable(base.BaseScheduler):
                                     **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
-        self.reason = u"Triggerable(%s)" % name
+        self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
 
     def trigger(self, waited_for, sourcestamps = None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps

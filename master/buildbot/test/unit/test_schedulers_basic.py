@@ -39,7 +39,7 @@ class CommonStuffMixin(object):
                 waited_for=False, reason='', external_idstring=None, changeids=[],
                 builderNames=None, properties=None):
             self.assertEqual(external_idstring, None)
-            self.assertEqual(reason, 'scheduler') # basic schedulers all use this
+            self.assertEqual(reason, sched.reason)
             self.events.append('B%s@%d' % (`changeids`.replace(' ',''),
                                            self.clock.seconds()))
             return defer.succeed(None)
@@ -290,7 +290,7 @@ class SingleBranchScheduler(CommonStuffMixin,
 
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
-        bs = dict(reason='scheduler', external_idstring=None, sourcestampsetid=100,
+        bs = dict(reason=self.sched.reason, external_idstring=None, sourcestampsetid=100,
                   properties=[('scheduler', ('test', 'Scheduler'))])
         bs.update(kwargs)
         return bs
@@ -317,6 +317,14 @@ class SingleBranchScheduler(CommonStuffMixin,
 
     def tearDown(self):
         self.tearDownScheduler()
+
+    def test_constructor_no_reason(self):
+        sched = self.makeScheduler(basic.SingleBranchScheduler, branch="master")
+        self.assertEqual(sched.reason, "The SingleBranchScheduler scheduler named 'tsched' triggered this build")
+
+    def test_constructor_reason(self):
+        sched = self.makeScheduler(basic.SingleBranchScheduler, branch="master", reason="Changeset")
+        self.assertEqual(sched.reason, "Changeset")
 
     def test_constructor_branch_mandatory(self):
         self.assertRaises(config.ConfigErrors,

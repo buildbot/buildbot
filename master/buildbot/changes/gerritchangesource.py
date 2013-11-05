@@ -124,8 +124,9 @@ class GerritChangeSource(base.ChangeSource):
         return d
     def eventReceived_patchset_created(self, properties, event):
         change = event["change"]
+        username = change["owner"].get("username","unknown")
         return self.addChange(dict(
-                author="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
+                author="%s <%s>" % (change["owner"].get("name",username), change["owner"].get("email","unknown@example.com")),
                 project=change["project"],
                 repository="ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver, self.gerritport, change["project"]),
@@ -141,7 +142,8 @@ class GerritChangeSource(base.ChangeSource):
         author = "gerrit"
 
         if "submitter" in event:
-            author="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"])
+            username = event["submitter"].get("username","unknown")
+            author="%s <%s>" % (event["submitter"].get("name",username), event["submitter"].get("email","unnkown@example.com"))
 
         return self.addChange(dict(
                 author=author,
