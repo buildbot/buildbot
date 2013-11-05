@@ -117,7 +117,7 @@ Features
   
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
-* The IRC bot of :bb:status:`words` will, unless useRevisions is set, shorten
+* The IRC bot of :bb:status:`IRC` will, unless useRevisions is set, shorten
   long lists of revisions printed when a build starts; it will only show two,
   and the number of additional revisions included in the build.
 
