@@ -33,8 +33,8 @@ class Validator(object):
         raise NotImplementedError
 
     class __metaclass__(type):
-        def __new__(mcls, name, bases, attrs):
-            cls = type.__new__(mcls, name, bases, attrs)
+        def __new__(mcs, name, bases, attrs):
+            cls = type.__new__(mcs, name, bases, attrs)
             if 'name' in attrs and attrs['name']:
                 assert attrs['name'] not in validatorsByName
                 validatorsByName[attrs['name']] = cls
