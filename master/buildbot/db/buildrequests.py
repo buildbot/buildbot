@@ -238,7 +238,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def mergeFinishedBuildRequest(self, requests):
+    def mergeFinishedBuildRequest(self, requests, brids):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             builds_tbl = self.db.model.builds
@@ -248,7 +248,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(buildrequests_tbl.c.id == br.id)\
                 .where(buildrequests_tbl.c.buildername == br.buildername)
 
-            q2 = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.artifactbrid])\
+            q2 = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.artifactbrid, buildrequests_tbl.c.results, buildrequests_tbl.c.complete_at])\
                 .where(buildrequests_tbl.c.mergebrid == None)\
                 .where(buildrequests_tbl.c.startbrid.in_(q))\
                 .where(buildrequests_tbl.c.buildername == br.buildername)\
@@ -259,18 +259,27 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q2)
             row = res.fetchone()
             if row:
-                print "\n row.id %s row.artifactbrid %s \n" %(row.id, row.artifactbrid)
+                print "\n row.id %s row.artifactbrid %s complete_at %s results %s \n" %(row.id, row.artifactbrid, row.complete_at, row.results)
+                print "\n requests %s \n" % requests
                 # update artifactbrid
                 stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(requests)) \
+                    .where(buildrequests_tbl.c.id.in_(brids)) \
                     .values(artifactbrid=row.id) \
-                    .values(mergebrid=row.id)
+                    .values(mergebrid=row.id)\
+                    .values(complete = 1)\
+                    .values(complete_at = row.complete_at)\
+                    .values(results=row.results)
 
                 if row.artifactbrid is not None:
                     stmt2 = buildrequests_tbl.update() \
-                        .where(buildrequests_tbl.c.id.in_(requests)) \
+                        .where(buildrequests_tbl.c.id.in_(brids)) \
                         .values(artifactbrid=row.artifactbrid) \
-                        .values(mergebrid=row.id)
+                        .values(mergebrid=row.id)\
+                        .values(complete = 1) \
+                        .values(complete_at = row.complete_at) \
+                        .values(results=row.results)
+
+                print "\n stmt2 %s\n" % stmt2
                 res = conn.execute(stmt2)
                 # insert builds
                 stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
@@ -281,9 +290,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 row = res.fetchone()
                 if row:
                     stmt4 = builds_tbl.insert()
-                    conn.execute(stmt4, [ dict(number=row.number, brid=id,
+                    conn.execute(stmt4, [ dict(number=row.number, brid=req.id,
                                            start_time=row.start_time,finish_time=row.finish_time)
-                                      for requests.id in requests ])
+                                      for req in requests ])
 
                 return True
             return False

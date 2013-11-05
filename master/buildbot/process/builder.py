@@ -492,7 +492,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def mergeFinishedRequests(self, brdicts, brids, breqs):
-        if (yield self.master.db.buildrequests.mergeFinishedBuildRequest(breqs)):
+        if (yield self.master.db.buildrequests.mergeFinishedBuildRequest(breqs,brids)):
             yield self.master.db.buildrequests.claimBuildRequests(brids)
             defer.returnValue(True)
         defer.returnValue(False)
