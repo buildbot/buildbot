@@ -28,6 +28,7 @@ define(['jquery'], function ($) {
 			});
 			
 			failIgnoreArray.reverse();
+			
 			$(failIgnoreArray).each(function(){
 				$(this).insertAfter('#summaryTable')	
 			});
@@ -119,17 +120,19 @@ define(['jquery'], function ($) {
 			});
 
 			// remove empty tds for rows with colspan
-			$('.colspan-js').nextAll('td').remove();
+			//$('.colspan-js').nextAll('td').remove();
 
 			$('.failure-detail-cont', th).each(function(){	
+
 				var fdTxt = $('.failure-detail-txt', this);
+				$(this).height($(fdTxt).height() + 15);
 				
 				if (!$(fdTxt).is(':empty')) {
 					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($(fdTxt));
 					if ($(fdTxt).height() >= 100) {
 						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));	
 					}
-				}				
+				}
 				
 			});		
 
@@ -139,7 +142,7 @@ define(['jquery'], function ($) {
 			  	
 				var html = "<style>body {padding:0 0 0 15px;margin:0;"+
 				"font-family:'Courier New';font-size:12px;white-space:"+
-				" pre-line;overflow:auto;}</style>"+newWinHtml;
+				" pre;overflow:auto;}</style>"+newWinHtml;
 				
 				$(w.document.body).html(html);
 
@@ -157,20 +160,20 @@ define(['jquery'], function ($) {
 				
 				e.preventDefault();
 				var fdtf = $(this).parent().find($('.failure-detail-txt'));
-				
-				$(fdtf).css({'max-height':'none', 'height': ''});
+				var parentTd = $(this).parent().parent();
 
+				$(fdtf).css({'max-height':'none', 'height': ''});
 				
 				if (!$(this).hasClass('expanded-js')) {
 					$(this).addClass('expanded-js');
 					$(this).text('Show less');
-					
 					$(fdtf).css('height',$(fdtf).height());
+					$(parentTd).css('height',$(fdtf).height());
 				} else {
-
 					$(this).removeClass('expanded-js');
 					$(this).text('Show more');
-					$(fdtf).css('height',100);
+					$(fdtf).css('max-height',130);
+					$(parentTd).css('height',140);
 				}
 			});
 

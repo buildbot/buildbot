@@ -5,9 +5,6 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 >
 
-
-
-
 <xsl:param name="nant.filename" />
 <xsl:param name="nant.version" />
 <xsl:param name="nant.project.name" />
@@ -46,7 +43,7 @@
 
     <xsl:param name="value" select="." />
      
-	    <xsl:param name="alwaysIncludeHours" select="false()" />
+	    <xsl:param name="alwaysIncludeHours" select="true()" />
 	    <xsl:param name="includeSeconds" select="true()" />
 	 <xsl:if test="$value != 'NaN'">   
 	    	
@@ -136,7 +133,7 @@
 			<label for="ignoreinput">ignored</label>
 			<input type="checkbox" value="Ignored" id="ignoreinput"/>
 			<label for="failedinput">Failed</label>
-			<input type="checkbox" value="Failed" id="failedinput"/>
+			<input type="checkbox" value="Failure" id="failedinput"/>
 		</div>
 
 	</div>
@@ -153,12 +150,12 @@
 
 <xsl:template name="summaryHeader">
 	<tr>
-		<th class="txt-align-left first-child" id=":i18n:Tests">All tests</th>
-		<th class="txt-align-left first-child" id=":i18n:Passed">Passed</th>
-		<th class="txt-align-left" id=":i18n:Failures">Failures</th>
-		<th class="txt-align-left" id=":i18n:Errors">Ignored</th>
-		<th class="txt-align-left" id=":i18n:SuccessRate" colspan="2">Success Rate</th>
-		<th class="txt-align-left" id=":i18n:Time" nowrap="nowrap">Time(s)</th>
+		<th class="txt-align-left first-child">All tests</th>
+		<th class="txt-align-left first-child">Passed</th>
+		<th class="txt-align-left">Failures</th>
+		<th class="txt-align-left">Ignored</th>
+		<th class="txt-align-left">Success Rate</th>
+		<th class="txt-align-left">Time(s)</th>
 	</tr>
 </xsl:template>
 
@@ -195,9 +192,9 @@
 		<xsl:variable name="runCount" select="count(//test-case)"/>
 
 		<!-- new test counting -->
-		<xsl:variable name="passCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='true'])"/>
+		<xsl:variable name="passCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='true' and translate(@executed,$ucletters,$lcletters)='true'])"/>
 
-		<xsl:variable name="failureCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='false'])"/>
+		<xsl:variable name="failureCount" select="count(//test-case[translate(@success,$ucletters,$lcletters)='false' and translate(@executed,$ucletters,$lcletters)='true'])"/>
 
 		<xsl:variable name="ignoreCount" select="count(//test-case[translate(@executed,$ucletters,$lcletters)='false'])"/>
 
@@ -237,23 +234,7 @@
 			        <xsl:with-param name="value" select="$successRate"/>
 			    </xsl:call-template>
 			</td>
-			<td class="txt-align-left">
-				<xsl:if test="round($runCount * 200 div $total )!=0">
-					<span class="covered">
-						<xsl:attribute name="style">width:<xsl:value-of select="round($runCount * 200 div $total )"/>px</xsl:attribute>
-					</span>
-				</xsl:if>
-				<xsl:if test="round($ignoreCount * 200 div $total )!=0">
-				<span class="ignored">
-					<xsl:attribute name="style">width:<xsl:value-of select="round($ignoreCount * 200 div $total )"/>px</xsl:attribute>
-				</span>
-				</xsl:if>
-				<xsl:if test="round($failureCount * 200 div $total )!=0">
-					<span class="uncovered">
-						<xsl:attribute name="style">width:<xsl:value-of select="round($failureCount * 200 div $total )"/>px</xsl:attribute>
-					</span>
-				</xsl:if>
-			</td>
+			
 			<td class="txt-align-left">
 				<xsl:value-of select="$timeCount"/>
 				
@@ -274,71 +255,44 @@
 		testcase report
 		=====================================================================
 -->
+
 <xsl:template match="test-case">
-	
-	<xsl:param name="open.description"/>
 
 	<xsl:variable name="Mname" select="concat('M:',./@name)" />
 
+	<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
+	<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+
    <xsl:variable name="result">
-			<xsl:choose>
-				<xsl:when test="./failure"><span id=":i18n:Failure">Failure</span></xsl:when>
-				<xsl:when test="./error"><span id=":i18n:Error">Error</span></xsl:when>
-				<xsl:when test="@executed='False'"><span id=":i18n:Ignored">Ignored</span></xsl:when>
-				<xsl:otherwise><span id=":i18n:Pass">Pass</span></xsl:otherwise>
-			</xsl:choose>
+	<xsl:choose>
+		<xsl:when test="translate(@executed, $ucletters, $lcletters)='true' and translate(@success, $ucletters, $lcletters)='false'">
+			<span>Failure</span>
+		</xsl:when>
+		<xsl:when test="./error"><span>Error</span></xsl:when>
+		<xsl:when test="translate(@executed, $ucletters, $lcletters)='false'">
+			<span>Ignored</span>
+		</xsl:when>
+		<xsl:otherwise><span>Pass</span></xsl:otherwise>
+	</xsl:choose>
    </xsl:variable>
 
    <xsl:variable name="newid" select="generate-id(@name)" />
+
 	<tr>
 		<td class="txt-align-left first-child">
-			
-				<!-- If failure, add click on the test method name and color red -->
-				<xsl:choose>
-					<xsl:when test="$result = 'Failure' or $result = 'Error'">
-						<span>
-						
-						<xsl:attribute name="class">error case-names</xsl:attribute>
-						<xsl:call-template name="GetLastSegment">
-							<xsl:with-param name="value" select="./@name" />
-						</xsl:call-template>
-						</span>
-					</xsl:when>
-					<xsl:when test="$result = 'Ignored'">
-						<xsl:call-template name="GetLastSegment">
-							<xsl:with-param name="value" select="./@name" />
-						</xsl:call-template>
-						
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:attribute name="class">method txt-align-left case-names first-child</xsl:attribute>
-						<xsl:call-template name="GetLastSegment">
-							<xsl:with-param name="value" select="./@name" />
-						</xsl:call-template>
-					</xsl:otherwise>
-				</xsl:choose>
-			
-		</td>
-		<!--
-		<td>
-			<xsl:choose>
-				<xsl:when test="$result = 'Pass'">
-					<span class="covered" ></span>
-				</xsl:when>
-				<xsl:when test="$result = 'Ignored'">
-					<span class="ignored" ></span>
-				</xsl:when>			
-				<xsl:when test="$result = 'Failure' or $result = 'Error'">
-					<span class="uncovered" ></span>
-				</xsl:when>			
-			</xsl:choose>
-			 The test method description
+				
+			<span>
+				<xsl:attribute name="class">case-names</xsl:attribute>
+				<xsl:call-template name="GetLastSegment">
+					<xsl:with-param name="value" select="./@name" />
+				</xsl:call-template>
+			</span>
 				
 		</td>
-		-->
+		
 		<td>
 			<xsl:attribute name="class"><xsl:value-of select="$result"/></xsl:attribute>
-			<xsl:attribute name="id">:i18n:<xsl:value-of select="$result"/></xsl:attribute><xsl:value-of select="$result"/>
+			<xsl:value-of select="$result"/>
 		</td>
 		
 		<td>
@@ -349,56 +303,27 @@
 		</td>
 	</tr>
 
-	<xsl:if test="$result != &quot;Pass&quot;">
+	<xsl:if test="$result = &quot;Failure&quot; and (./failure != '' or ./error != '' or ./reason != '')">
 	   <tr>
 	      <xsl:attribute name="id">
 	         <xsl:value-of select="$newid"/>
 	      </xsl:attribute>
-	      <td class="txt-align-left failure-detail-cont colspan-js" colspan="3">
-	      	
+	      <td class="txt-align-left failure-detail-cont colspan-js">
+	      	<div class="pos-relative">
 	      	<div class="failure-detail-txt">
 	      		<xsl:apply-templates select="./failure"/>
 	      		<xsl:apply-templates select="./error"/>
 	      		<xsl:apply-templates select="./reason"/>
 	      	</div>
+	      </div>
          </td>
-         <td>&#160;</td>
+         <td class="hidden-result"><xsl:value-of select="$result"/></td>
          <td>
          	&#160;
          </td>
       </tr>
 	</xsl:if>
 </xsl:template>
-
-<!-- Note : the below template error and failure are the same style
-            so just call the same style store in the toolkit template -->
-<!-- <xsl:template match="failure">
-	<xsl:call-template name="display-failures"/>
-</xsl:template>
-
-<xsl:template match="error">
-	<xsl:call-template name="display-failures"/>
-</xsl:template> -->
-
-<!-- Style for the error and failure in the tescase template -->
-<!-- <xsl:template name="display-failures">
-	<xsl:choose>
-		<xsl:when test="not(@message)">N/A</xsl:when>
-		<xsl:otherwise>
-			<xsl:value-of select="@message"/>
-		</xsl:otherwise>
-	</xsl:choose> -->
-	<!-- display the stacktrace -->
-<!-- 	<code>
-		<p/>
-		<xsl:call-template name="br-replace">
-			<xsl:with-param name="word" select="."/>
-		</xsl:call-template>
-	</code> -->
-	<!-- the later is better but might be problematic for non-21" monitors... -->
-	<!--pre><xsl:value-of select="."/></pre-->
-<!-- </xsl:template>
- -->
 
 
 <!-- I am sure that all nodes are called -->

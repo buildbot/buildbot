@@ -17,8 +17,6 @@ define(['jquery', 'datatables-plugin'], function ($) {
 					}
 				});
 				
-
-
 				// sort and filter tabless		
 				 var oTable = $('.tablesorter-js').dataTable({
 					"bPaginate": false,

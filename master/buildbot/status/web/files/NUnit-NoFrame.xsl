@@ -12,24 +12,15 @@
 <xsl:stylesheet version="1.0"
                   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 >
- 
-
-
-
-
    <xsl:output method="html" indent="yes"/>
    <xsl:include href="/toolkit.xsl"/>
    <xsl:preserve-space elements='a root'/>
-
-
-
 
 <!--
 	====================================================
 		Create the page structure
     ====================================================
 -->
-
 
 <xsl:template match="test-results">
 
@@ -84,20 +75,22 @@
 	</HTML>
 </xsl:template>
 	
-	<xsl:template name="testsuites">   
+	<xsl:template name="testsuites">  
+		
 		<xsl:for-each select="//test-suite[(child::results/test-case)]">
+
 			<xsl:sort select="@name"/>
 			<!-- create an anchor to this class name 
 			<a name="#{generate-id(@name)}"></a>
 			-->
 				<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
 				<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
-				
 			
 				<xsl:variable name="testCount" select="count(child::results/test-case)"/>
-				<xsl:variable name="passCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters)='true'])"/>
+
+				<xsl:variable name="passCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters)='true' and translate(@executed,$ucletters,$lcletters)='true'])"/>
+				<xsl:variable name="failureCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters) ='false' and translate(@executed,$ucletters,$lcletters)='true'])"/>
 				<xsl:variable name="ignoredCount" select="count(child::results/test-case[translate(@executed,$ucletters,$lcletters)='false'])"/>
-				<xsl:variable name="failureCount" select="count(child::results/test-case[translate(@success,$ucletters,$lcletters) ='false'])"/>
 				<!--
 				<xsl:variable name="timeCount" select="translate(test-case[@time])"/>
 			-->
@@ -125,13 +118,10 @@
 					</span>
 				</li>
 				<li>
-
 					<b id="Time">Time(s) </b> <xsl:value-of select="$timeCount"/>
 					<xsl:call-template name="format-duration">
-					        <xsl:with-param name="value" select="$timeCount"/>
-					    </xsl:call-template>
-		    		
-
+						<xsl:with-param name="value" select="$timeCount"/>
+					</xsl:call-template>
 				</li>
 			</ul>
 
@@ -139,6 +129,7 @@
 				<xsl:value-of select="@name"/>
 			</h1>
 			
+
 			<table class="table-1 tablesorter tablesorter-log-js">
 				<!-- Header -->
 				<thead>
@@ -147,11 +138,11 @@
 				<!-- match the testcases of this package -->
 				<tbody>
 					<xsl:apply-templates select="results/test-case">
-					   <xsl:sort select="@name" /> 
+						<xsl:sort select="@success" /> 
 					</xsl:apply-templates>
 				</tbody>
 			</table>
-			<a class="back-top-top" href="#top" id=":i18n:Backtotop">
+			<a class="back-top-top" href="#top">
 				Back to top
 			</a>
 		</div>
