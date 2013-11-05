@@ -254,32 +254,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(buildrequests_tbl.c.buildername == br.buildername)\
                 .where(buildrequests_tbl.c.complete == 1)
 
-            print "\n br.id %s br.buildername %s \n q %s \n" % (br.id,br.buildername,q)
-
             res = conn.execute(q2)
             row = res.fetchone()
             if row:
-                print "\n row.id %s row.artifactbrid %s complete_at %s results %s \n" %(row.id, row.artifactbrid, row.complete_at, row.results)
-                print "\n requests %s \n" % requests
-                # update artifactbrid
+                # update merged brids
                 stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(brids)) \
-                    .values(artifactbrid=row.id) \
-                    .values(mergebrid=row.id)\
+                    .where(buildrequests_tbl.c.id.in_(brids))\
                     .values(complete = 1)\
                     .values(complete_at = row.complete_at)\
-                    .values(results=row.results)
+                    .values(results=row.results)\
+                    .values(mergebrid=row.id)
 
-                if row.artifactbrid is not None:
-                    stmt2 = buildrequests_tbl.update() \
-                        .where(buildrequests_tbl.c.id.in_(brids)) \
-                        .values(artifactbrid=row.artifactbrid) \
-                        .values(mergebrid=row.id)\
-                        .values(complete = 1) \
-                        .values(complete_at = row.complete_at) \
-                        .values(results=row.results)
+                if row.artifactbrid is None:
+                    stmt2 = stmt2.values(artifactbrid=row.id)
+                else:
+                    stmt2 = stmt2.values(artifactbrid=row.artifactbrid)
 
-                print "\n stmt2 %s\n" % stmt2
                 res = conn.execute(stmt2)
                 # insert builds
                 stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
