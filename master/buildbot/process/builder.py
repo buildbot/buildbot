@@ -490,13 +490,6 @@ class Builder(config.ReconfigurableServiceMixin,
             print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (brids,b.requests[0].id,b.build_status.number)
         defer.returnValue(False)
 
-    @defer.inlineCallbacks
-    def mergeFinishedRequests(self, brdicts, brids, breqs):
-        if (yield self.master.db.buildrequests.mergeFinishedBuildRequest(breqs,brids)):
-            yield self.master.db.buildrequests.claimBuildRequests(brids)
-            defer.returnValue(True)
-        defer.returnValue(False)
-
     # Build Creation
     @defer.inlineCallbacks
     def maybeStartBuild(self):
@@ -578,19 +571,37 @@ class Builder(config.ReconfigurableServiceMixin,
                 continue
 
             # merge with compatible finished build
-            try:
-                if (yield self.mergeFinishedRequests(brdicts, brids, breqs)):
-                    self._breakBrdictRefloops(brdicts)
-                    for br in brdicts:
-                        unclaimed_requests.remove(br)
-                    continue
+            #try:
+            if brdict['startbrid'] is not None:
+                # check if can be merged with finished build
+                finished_br = yield self.master.db.buildrequests.findCompatibleBuildRequest(self.name, brdict['startbrid'])
+                print "\n # finished_br %s #\n" % finished_br
+                if finished_br:
+                    merged_brids = yield self.master.db.buildrequests.mergeRequest(self.name, brdict['startbrid'], brids)
+                    print "\n # merged_brids %s #\n" % merged_brids
+            #if startbrid is not None and len(merged_brids) > 0:
+            #    merged_brids = yield self.master.db.buildrequests.mergeFinishedBuildRequest(self.name, startbrid, merged_brids)
+            '''
+                merged_brids = yield self.master.db.buildrequests.mergeFinishedBuildRequest(self.name, merged_brids)
+                merged_brdicts = []
+                if len(merged_brids) > 0:
+                    yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
+                    for brdict in brdicts:
+                        if (brdict['brid'] in merged_brids):
+                            merged_brdicts.append(brdict)
 
+                    self._breakBrdictRefloops(merged_brdicts)
+                    for br in merged_brids:
+                        unclaimed_requests.remove(br)
+                    if len(merged_brdicts) == len(brdicts):
+                        continue
             except buildrequests.AlreadyClaimedError:
                 self._breakBrdictRefloops(unclaimed_requests)
                 unclaimed_requests = \
                     yield self.master.db.buildrequests.getBuildRequests(
                         buildername=self.name, claimed=False)
                 continue
+            '''
 
             # if couldn't been merge try starting a new build, choose a slave (using nextSlave)
             slavebuilder = yield self._chooseSlave(available_slavebuilders)
