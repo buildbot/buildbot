@@ -22,7 +22,6 @@ if [ $# -eq 0 ]; then
 fi
 
 status() {
-    echo ""
     echo "${LTCYAN}-- ${*} --${NORM}"
 }
 
@@ -41,20 +40,6 @@ warning() {
 
 check_tabs() {
     git diff "$REVRANGE" | grep -q $'+.*\t'
-}
-
-check_long_lines() {
-    # only check python files
-    local long_lines=false
-    for f in $(git diff --name-only --stat "$REVRANGE" | grep '.py$'); do
-        # don't try to check removed files
-        [ ! -f "$f" ] && continue
-        if [ $(git diff "$REVRANGE" $f | grep -E -c '^\+.{80}') != 0 ]; then
-            echo " $f"
-            long_lines=true
-        fi
-    done
-    $long_lines
 }
 
 check_relnotes() {
@@ -86,7 +71,6 @@ run_tests || not_ok "tests failed"
 
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
-check_long_lines && warning "$REVRANGE adds long lines"
 
 status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"
@@ -99,7 +83,7 @@ git diff --name-only $REVRANGE | common/style_check_and_fix.sh || not_ok "style 
 
 [[ `git diff --name-only HEAD | wc -l` -gt 0 ]] && not_ok "style fixes to be committed"
 
-if git diff --name-only $REVRANGE | grep docs ; then
+if git diff --name-only $REVRANGE | grep ^master/docs/ ; then
     status "building docs"
     make -C master/docs VERSION=latest clean html || not_ok "docs failed"
 else
@@ -108,9 +92,13 @@ fi
 
 echo ""
 if $ok; then
-    echo "${GREEN}GOOD!${NORM}"
+    if [ -z "${problem_summary}" ]; then
+        echo "${GREEN}GOOD!${NORM}"
+    else
+        echo "${YELLOW}WARNINGS${NORM}${problem_summary}"
+    fi
     exit 0
 else
-    echo "${RED}NO GOOD!${NORM}$problem_summary"
+    echo "${RED}NO GOOD!${NORM}${problem_summary}"
     exit 1
 fi
