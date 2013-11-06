@@ -14,15 +14,20 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from sqlalchemy.ext import compiler
-from sqlalchemy.sql.expression import Executable, ClauseElement
+from sqlalchemy.sql.expression import ClauseElement
+from sqlalchemy.sql.expression import Executable
 
 # from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
 
+
 class InsertFromSelect(Executable, ClauseElement):
+
     def __init__(self, table, select):
         self.table = table
         self.select = select
+
 
 @compiler.compiles(InsertFromSelect)
 def _visit_insert_from_select(element, compiler, **kw):
@@ -30,6 +35,7 @@ def _visit_insert_from_select(element, compiler, **kw):
         compiler.process(element.table, asfrom=True),
         compiler.process(element.select)
     )
+
 
 def sa_version():
     if hasattr(sa, '__version__'):
@@ -39,4 +45,4 @@ def sa_version():
             except:
                 return -1
         return tuple(map(tryint, sa.__version__.split('.')))
-    return (0,0,0) # "it's old"
+    return (0, 0, 0)  # "it's old"

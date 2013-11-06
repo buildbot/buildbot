@@ -14,11 +14,16 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.status.web.base import HtmlResource, BuildLineMixin, map_branches
+from buildbot.status.web.base import BuildLineMixin
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import map_branches
 
 # /one_line_per_build
 #  accepts builder=, branch=, numbuilds=, reload=
+
+
 class OneLinePerBuild(HtmlResource, BuildLineMixin):
+
     """This shows one line per build, combining all builders together. Useful
     query arguments:
 
@@ -59,7 +64,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
 
         cxt['refresh'] = self.get_reload_time(req)
         cxt['num_builds'] = numbuilds
-        cxt['branches'] =  branches
+        cxt['branches'] = branches
         cxt['builders'] = builders
 
         builds = cxt['builds'] = []
@@ -87,11 +92,10 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
         return template.render(**cxt)
 
 
-
 # /one_line_per_build/$BUILDERNAME
 #  accepts branch=, numbuilds=
-
 class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
+
     def __init__(self, builder, numbuilds=20):
         HtmlResource.__init__(self)
         self.builder = builder
@@ -110,9 +114,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         cxt['builds'] = map(lambda b: self.get_line_values(req, b), g)
         cxt.update(dict(num_builds=numbuilds,
                         builder_name=self.builder_name,
-                        branches=branches))    
+                        branches=branches))
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuildonebuilder.html')
         return template.render(**cxt)
-
-

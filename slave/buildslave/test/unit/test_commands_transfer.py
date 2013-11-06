@@ -13,25 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import sys
-import shutil
-import tarfile
 import StringIO
+import os
+import shutil
+import sys
+import tarfile
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import runtime
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
-from twisted.python import runtime, failure
 
+from buildslave.commands import transfer
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands import transfer
+
 
 class FakeMasterMethods(object):
     # a fake to represent any of:
-    # - FileWriter 
+    # - FileWriter
     # - FileDirectoryWriter
     # - FileReader
+
     def __init__(self, add_update):
         self.add_update = add_update
 
@@ -92,11 +96,12 @@ class FakeMasterMethods(object):
         if self.unpack_fail:
             return defer.fail(failure.Failure(RuntimeError("out of space")))
 
-    def remote_utime(self,accessed_modified):
+    def remote_utime(self, accessed_modified):
         self.add_update('utime - %s' % accessed_modified[0])
-        
+
     def remote_close(self):
         self.add_update('close')
+
 
 class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
@@ -137,10 +142,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datafile},
-                    'write 64', 'write 64', 'write 52', 'close',
-                    {'rc': 0}
-                ])
+                {'header': 'sending %s' % self.datafile},
+                'write 64', 'write 64', 'write 52', 'close',
+                {'rc': 0}
+            ])
         d.addCallback(check)
         return d
 
@@ -160,11 +165,11 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datafile},
-                    'write 64', 'write 36', 'close',
-                    {'rc': 1,
-                     'stderr': "Maximum filesize reached, truncating file '%s'" % self.datafile}
-                ])
+                {'header': 'sending %s' % self.datafile},
+                'write 64', 'write 36', 'close',
+                {'rc': 1,
+                 'stderr': "Maximum filesize reached, truncating file '%s'" % self.datafile}
+            ])
         d.addCallback(check)
         return d
 
@@ -183,11 +188,11 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         def check(_):
             df = self.datafile + "-nosuch"
             self.assertUpdates([
-                    {'header': 'sending %s' % df},
-                    'close',
-                    {'rc': 1,
-                     'stderr': "Cannot open file '%s' for upload" % df}
-                ])
+                {'header': 'sending %s' % df},
+                'close',
+                {'rc': 1,
+                 'stderr': "Cannot open file '%s' for upload" % df}
+            ])
         d.addCallback(check)
         return d
 
@@ -206,17 +211,18 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         d = self.run_command()
         self.assertFailure(d, RuntimeError)
+
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datafile},
-                    'write 64', 'close',
-                    {'rc': 1}
-                ])
+                {'header': 'sending %s' % self.datafile},
+                'write 64', 'close',
+                {'rc': 1}
+            ])
         d.addCallback(check)
         return d
 
     def test_interrupted(self):
-        self.fakemaster.delay_write = True # write veery slowly
+        self.fakemaster.delay_write = True  # write veery slowly
 
         self.make_command(transfer.SlaveFileUploadCommand, dict(
             workdir='workdir',
@@ -239,18 +245,19 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         interrupt_d.addCallback(do_interrupt)
 
         dl = defer.DeferredList([d, interrupt_d])
+
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datafile},
-                    'write(s)', 'close', {'rc': 1}
-                ])
+                {'header': 'sending %s' % self.datafile},
+                'write(s)', 'close', {'rc': 1}
+            ])
         dl.addCallback(check)
         return dl
 
     def test_timestamp(self):
         self.fakemaster.count_writes = True    # get actual byte counts
-        timestamp = ( os.path.getatime(self.datafile),
-                      os.path.getmtime(self.datafile) )
+        timestamp = (os.path.getatime(self.datafile),
+                     os.path.getmtime(self.datafile))
 
         self.make_command(transfer.SlaveFileUploadCommand, dict(
             workdir='workdir',
@@ -265,13 +272,14 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datafile},
-                    'write 64', 'write 64', 'write 52',
-                    'close','utime - %s' % timestamp[0],
-                    {'rc': 0}
-                ])
+                {'header': 'sending %s' % self.datafile},
+                'write 64', 'write 64', 'write 52',
+                'close', 'utime - %s' % timestamp[0],
+                {'rc': 0}
+            ])
         d.addCallback(check)
         return d
+
 
 class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
@@ -295,7 +303,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
 
     def test_simple(self, compress=None):
-        self.fakemaster.keep_data = True 
+        self.fakemaster.keep_data = True
 
         self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
             workdir='workdir',
@@ -310,18 +318,18 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datadir},
-                    'write(s)', 'unpack', # note no 'close"
-                    {'rc': 0}
-                ])
+                {'header': 'sending %s' % self.datadir},
+                'write(s)', 'unpack',  # note no 'close"
+                {'rc': 0}
+            ])
         d.addCallback(check)
 
         def check_tarfile(_):
             f = StringIO.StringIO(self.fakemaster.data)
             a = tarfile.open(fileobj=f, name='check.tar')
-            exp_names = [ '.', 'aa', 'bb' ]
-            got_names = [ n.rstrip('/') for n in a.getnames() ]
-            got_names = sorted([ n or '.' for n in got_names ]) # py27 uses '' instead of '.'
+            exp_names = ['.', 'aa', 'bb']
+            got_names = [n.rstrip('/') for n in a.getnames()]
+            got_names = sorted([n or '.' for n in got_names])  # py27 uses '' instead of '.'
             self.assertEqual(got_names, exp_names, "expected archive contents")
             a.close()
             f.close()
@@ -332,16 +340,17 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
     # try it again with bz2 and gzip
     def test_simple_bz2(self):
         return self.test_simple('bz2')
+
     def test_simple_gz(self):
         return self.test_simple('gz')
 
     # except bz2 can't operate in stream mode on py24
-    if sys.version_info[:2] <= (2,4):
+    if sys.version_info[:2] <= (2, 4):
         test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
     def test_out_of_space_unpack(self):
-        self.fakemaster.keep_data = True 
-        self.fakemaster.unpack_fail = True 
+        self.fakemaster.keep_data = True
+        self.fakemaster.unpack_fail = True
 
         self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
             workdir='workdir',
@@ -357,16 +366,17 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    {'header': 'sending %s' % self.datadir},
-                    'write(s)', 'unpack',
-                    {'rc': 1}
-                ])
+                {'header': 'sending %s' % self.datadir},
+                'write(s)', 'unpack',
+                {'rc': 1}
+            ])
         d.addCallback(check)
 
         return d
 
     # this is just a subclass of SlaveUpload, so the remaining permutations
     # are already tested
+
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
@@ -404,9 +414,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    'read 32', 'read 32', 'read 32', 'close',
-                    {'rc': 0}
-                ])
+                'read 32', 'read 32', 'read 32', 'close',
+                {'rc': 0}
+            ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data)
@@ -431,9 +441,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    'read(s)', 'close',
-                    {'rc': 0}
-                ])
+                'read(s)', 'close',
+                {'rc': 0}
+            ])
             datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data)
@@ -446,7 +456,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         os.makedirs(os.path.join(self.basedir, 'dir'))
         self.make_command(transfer.SlaveFileDownloadCommand, dict(
             workdir='.',
-            slavedest='dir', ## but that's a directory!
+            slavedest='dir',  # but that's a directory!
             reader=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=32,
@@ -457,14 +467,13 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    'close',
-                    {'rc': 1,
-                     'stderr': "Cannot open file '%s' for download"
-                                % os.path.join(self.basedir, '.', 'dir')}
-                ])
+                'close',
+                {'rc': 1,
+                 'stderr': "Cannot open file '%s' for download"
+                 % os.path.join(self.basedir, '.', 'dir')}
+            ])
         d.addCallback(check)
         return d
-
 
     def test_truncated(self):
         self.fakemaster.data = test_data = 'tenchars--' * 10
@@ -482,11 +491,11 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                    'read(s)', 'close',
-                    {'rc': 1,
-                     'stderr': "Maximum filesize reached, truncating file '%s'"
-                                % os.path.join(self.basedir, '.', 'data')}
-                ])
+                'read(s)', 'close',
+                {'rc': 1,
+                 'stderr': "Maximum filesize reached, truncating file '%s'"
+                 % os.path.join(self.basedir, '.', 'data')}
+            ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data[:50])
@@ -494,8 +503,8 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.data = 'tenchars--' * 100 # 1k
-        self.fakemaster.delay_read = True # read veery slowly
+        self.fakemaster.data = 'tenchars--' * 100  # 1k
+        self.fakemaster.delay_read = True  # read veery slowly
 
         self.make_command(transfer.SlaveFileDownloadCommand, dict(
             workdir='.',
@@ -518,10 +527,10 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         interrupt_d.addCallback(do_interrupt)
 
         dl = defer.DeferredList([d, interrupt_d])
+
         def check(_):
             self.assertUpdates([
-                    'read(s)', 'close', {'rc': 1}
-                ])
+                'read(s)', 'close', {'rc': 1}
+            ])
         dl.addCallback(check)
         return dl
-

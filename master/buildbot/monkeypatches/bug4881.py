@@ -15,18 +15,20 @@
 # Copyright Buildbot Team Members
 
 import os
+
 from twisted.internet import process
 from twisted.python import log
+
 
 def patch():
     log.msg("Applying patch for http://twistedmatrix.com/trac/ticket/4881")
     process._listOpenFDs = _listOpenFDs
 
-#############################################################################
+#
 # Everything below this line was taken verbatim from Twisted, except as
 # annotated.
 
-########
+#
 # r31474:trunk/LICENSE
 
 # Copyright (c) 2001-2010
@@ -67,7 +69,7 @@ def patch():
 # Thijs Triemstra
 # Thomas Herve
 # Timothy Allen
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -75,10 +77,10 @@ def patch():
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 #     The above copyright notice and this permission notice shall be
 #     included in all copies or substantial portions of the Software.
-# 
+#
 #     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 #     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 #     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -87,13 +89,15 @@ def patch():
 #     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 #     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-########
+#
 # r31474:trunk/twisted/internet/process.py
 
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
+
 class _FDDetector(object):
+
     """
     This class contains the logic necessary to decide which of the available
     system techniques should be used to detect the open file descriptors for
@@ -113,7 +117,6 @@ class _FDDetector(object):
     getpid = os.getpid
     openfile = open
 
-
     def _listOpenFDs(self):
         """
         Figure out which implementation to use, then run it.
@@ -121,18 +124,17 @@ class _FDDetector(object):
         self._listOpenFDs = self._getImplementation()
         return self._listOpenFDs()
 
-
     def _getImplementation(self):
         """
         Check if /dev/fd works, if so, use that.  Otherwise, check if
         /proc/%d/fd exists, if so use that.
-        
+
         Otherwise, ask resource.getrlimit, if that throws an exception, then
         fallback to _fallbackFDImplementation.
         """
         try:
             self.listdir("/dev/fd")
-            if self._checkDevFDSanity(): # FreeBSD support :-)
+            if self._checkDevFDSanity():  # FreeBSD support :-)
                 return self._devFDImplementation
             else:
                 return self._fallbackFDImplementation
@@ -142,11 +144,10 @@ class _FDDetector(object):
                 return self._procFDImplementation
             except:
                 try:
-                    self._resourceFDImplementation() # Imports resource
+                    self._resourceFDImplementation()  # Imports resource
                     return self._resourceFDImplementation
                 except:
                     return self._fallbackFDImplementation
-
 
     def _checkDevFDSanity(self):
         """
@@ -154,10 +155,9 @@ class _FDDetector(object):
         in /dev/fd, as it should on a sane platform.
         """
         start = self.listdir("/dev/fd")
-        self.openfile("/dev/null", "r") # changed in Buildbot to hush pyflakes
+        self.openfile("/dev/null", "r")  # changed in Buildbot to hush pyflakes
         end = self.listdir("/dev/fd")
         return start != end
-
 
     def _devFDImplementation(self):
         """
@@ -168,7 +168,6 @@ class _FDDetector(object):
         result = [int(fd) for fd in os.listdir(dname)]
         return result
 
-
     def _procFDImplementation(self):
         """
         Simple implementation for systems where /proc/pid/fd exists (we assume
@@ -176,7 +175,6 @@ class _FDDetector(object):
         """
         dname = "/proc/%d/fd" % (os.getpid(),)
         return [int(fd) for fd in os.listdir(dname)]
-
 
     def _resourceFDImplementation(self):
         """
@@ -193,7 +191,6 @@ class _FDDetector(object):
             maxfds = 1024
         return xrange(maxfds)
 
-
     def _fallbackFDImplementation(self):
         """
         Fallback-fallback implementation where we just assume that we need to
@@ -204,6 +201,7 @@ class _FDDetector(object):
 
 
 detector = _FDDetector()
+
 
 def _listOpenFDs():
     """

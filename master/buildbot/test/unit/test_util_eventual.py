@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot.util import eventual
+
 
 class Eventually(unittest.TestCase):
 
@@ -34,18 +35,20 @@ class Eventually(unittest.TestCase):
     # utility callback
     def cb(self, *args, **kwargs):
         r = args
-        if kwargs: r = r + (kwargs,)
+        if kwargs:
+            r = r + (kwargs,)
         self.results.append(r)
 
     # flush the queue and assert results
     def assertResults(self, exp):
         d = eventual.flushEventualQueue()
+
         def cb(_):
             self.assertEqual(self.results, exp)
         d.addCallback(cb)
         return d
 
-    ## tests
+    # tests
 
     def test_eventually_calls(self):
         eventual.eventually(self.cb)
@@ -57,7 +60,8 @@ class Eventually(unittest.TestCase):
 
     def test_eventually_err(self):
         # monkey-patch log.err; this is restored by tearDown
-        log.err = lambda : self.results.append("err")
+        log.err = lambda: self.results.append("err")
+
         def cb_fails():
             raise RuntimeError("should not cause test failure")
         eventual.eventually(cb_fails)
@@ -77,8 +81,9 @@ class Eventually(unittest.TestCase):
     def test_flush_waitForChainedEventuallies(self):
         def chain(n):
             self.results.append(n)
-            if n <= 0: return
-            eventual.eventually(chain, n-1)
+            if n <= 0:
+                return
+            eventual.eventually(chain, n - 1)
         chain(3)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([3, 2, 1, 0])
@@ -87,15 +92,17 @@ class Eventually(unittest.TestCase):
         # a more complex set of eventualities
         def tree(n):
             self.results.append(n)
-            if n <= 0: return
-            eventual.eventually(tree, n-1)
-            eventual.eventually(tree, n-1)
+            if n <= 0:
+                return
+            eventual.eventually(tree, n - 1)
+            eventual.eventually(tree, n - 1)
         tree(2)
         # (the flush this tests is implicit in assertResults)
         return self.assertResults([2, 1, 1, 0, 0, 0, 0])
 
     def test_flush_duringTurn(self):
         testd = defer.Deferred()
+
         def cb():
             d = eventual.flushEventualQueue()
             d.addCallback(testd.callback)

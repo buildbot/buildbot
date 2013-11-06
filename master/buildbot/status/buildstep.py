@@ -14,14 +14,20 @@
 # Copyright Buildbot Team Members
 
 import os
-from zope.interface import implements
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.status.logfile import HTMLLogFile
+from buildbot.status.logfile import LogFile
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.persisted import styles
 from twisted.python import log
-from twisted.internet import reactor, defer
-from buildbot import interfaces, util
-from buildbot.status.logfile import LogFile, HTMLLogFile
+from zope.interface import implements
+
 
 class BuildStepStatus(styles.Versioned):
+
     """
     I represent a collection of output status for a
     L{buildbot.process.step.BuildStep}.
@@ -47,7 +53,7 @@ class BuildStepStatus(styles.Versioned):
     implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
 
     persistenceVersion = 4
-    persistenceForgets = ( 'wasUpgraded', )
+    persistenceForgets = ('wasUpgraded', )
 
     started = None
     finished = None
@@ -95,8 +101,7 @@ class BuildStepStatus(styles.Versioned):
         if not self.progress:
             return []
         ret = []
-        metrics = self.progress.progress.keys()
-        metrics.sort()
+        metrics = sorted(self.progress.progress.keys())
         for m in metrics:
             t = (m, self.progress.progress[m], self.progress.expectations[m])
             ret.append(t)
@@ -133,11 +138,11 @@ class BuildStepStatus(styles.Versioned):
 
     def getETA(self):
         if self.started is None:
-            return None # not started yet
+            return None  # not started yet
         if self.finished is not None:
-            return None # already finished
+            return None  # already finished
         if not self.progress:
-            return None # no way to predict
+            return None  # no way to predict
         return self.progress.remaining()
 
     # Once you know the step has finished, the following methods are legal.
@@ -190,7 +195,7 @@ class BuildStepStatus(styles.Versioned):
         self.updates[receiver] = None
         # they might unsubscribe during stepETAUpdate
         receiver.stepETAUpdate(self.build, self,
-                           self.getETA(), self.getExpectations())
+                               self.getETA(), self.getExpectations())
         if receiver in self.watchers:
             self.updates[receiver] = reactor.callLater(updateInterval,
                                                        self.sendETAUpdate,
@@ -205,9 +210,7 @@ class BuildStepStatus(styles.Versioned):
                 self.updates[receiver].cancel()
             del self.updates[receiver]
 
-
     # methods to be invoked by the BuildStep
-
     def setName(self, stepname):
         self.name = stepname
 
@@ -226,7 +229,7 @@ class BuildStepStatus(styles.Versioned):
             self.build.stepStarted(self)
 
     def addLog(self, name):
-        assert self.started # addLog before stepStarted won't notify watchers
+        assert self.started  # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = LogFile(self, name, logfilename)
         self.logs.append(log)
@@ -241,7 +244,7 @@ class BuildStepStatus(styles.Versioned):
         return log
 
     def addHTMLLog(self, name, html):
-        assert self.started # addLog before stepStarted won't notify watchers
+        assert self.started  # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = HTMLLogFile(self, name, logfilename, html)
         self.logs.append(log)
@@ -260,6 +263,7 @@ class BuildStepStatus(styles.Versioned):
         self.text = text
         for w in self.watchers:
             w.stepTextChanged(self.build, self, text)
+
     def setText2(self, text):
         self.text2 = text
         for w in self.watchers:
@@ -276,7 +280,7 @@ class BuildStepStatus(styles.Versioned):
     def stepFinished(self, results):
         self.finished = util.now()
         self.results = results
-        cld = [] # deferreds for log compression
+        cld = []  # deferreds for log compression
         logCompressionLimit = self.master.config.logCompressionLimit
         for loog in self.logs:
             if not loog.isFinished():
@@ -304,7 +308,7 @@ class BuildStepStatus(styles.Versioned):
 
     def checkLogfiles(self):
         # filter out logs that have been deleted
-        self.logs = [ l for l in self.logs if l.hasContents() ]
+        self.logs = [l for l in self.logs if l.hasContents()]
 
     def isWaitingForLocks(self):
         return self.waitingForLocks
@@ -316,7 +320,7 @@ class BuildStepStatus(styles.Versioned):
 
     def __getstate__(self):
         d = styles.Versioned.__getstate__(self)
-        del d['build'] # filled in when loading
+        del d['build']  # filled in when loading
         if "progress" in d:
             del d['progress']
         del d['watchers']
@@ -379,8 +383,6 @@ class BuildStepStatus(styles.Versioned):
         result['step_number'] = self.step_number
         result['hidden'] = self.hidden
         result['logs'] = [[l.getName(),
-            self.build.builder.status.getURLForThing(l)]
-                for l in self.getLogs()]
+                           self.build.builder.status.getURLForThing(l)]
+                          for l in self.getLogs()]
         return result
-
-

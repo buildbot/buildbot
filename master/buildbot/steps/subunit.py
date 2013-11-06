@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.results import SUCCESS, FAILURE
+
 
 class SubunitShellCommand(ShellCommand):
+
     """A ShellCommand that sniffs subunit output.
     """
 
@@ -27,7 +30,7 @@ class SubunitShellCommand(ShellCommand):
 
         # importing here gets around an import loop
         from buildbot.process import subunitlogobserver
-        
+
         self.ioObverser = subunitlogobserver.SubunitLogObserver()
         self.addLogObserver('stdio', self.ioObverser)
         self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
@@ -48,10 +51,10 @@ class SubunitShellCommand(ShellCommand):
         if not count:
             results = SUCCESS
             if total:
-                text += ["%d %s" % \
-                          (total,
+                text += ["%d %s" %
+                         (total,
                           total == 1 and "test" or "tests"),
-                          "passed"]
+                         "passed"]
             else:
                 if self.failureOnNoTests:
                     results = FAILURE
@@ -60,26 +63,25 @@ class SubunitShellCommand(ShellCommand):
             results = FAILURE
             text.append("Total %d test(s)" % total)
             if failures:
-                text.append("%d %s" % \
+                text.append("%d %s" %
                             (failures,
                              failures == 1 and "failure" or "failures"))
             if errors:
-                text.append("%d %s" % \
+                text.append("%d %s" %
                             (errors,
                              errors == 1 and "error" or "errors"))
             text2 = "%d %s" % (count, (count == 1 and 'test' or 'tests'))
 
-
         if skips:
-            text.append("%d %s" %  (skips,
-                         skips == 1 and "skip" or "skips"))
+            text.append("%d %s" % (skips,
+                                   skips == 1 and "skip" or "skips"))
 
-        #TODO: expectedFailures/unexpectedSuccesses
+        # TODO: expectedFailures/unexpectedSuccesses
 
         self.results = results
         self.text = text
         self.text2 = [text2]
-        
+
     def evaluateCommand(self, cmd):
         if cmd.didFail():
             return FAILURE
@@ -98,5 +100,6 @@ class SubunitShellCommand(ShellCommand):
 
     def getText(self, cmd, results):
         return self.text
+
     def getText2(self, cmd, results):
         return self.text2

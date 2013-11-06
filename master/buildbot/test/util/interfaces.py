@@ -15,6 +15,7 @@
 
 import inspect
 
+
 class InterfaceTests(object):
 
     # assertions
@@ -28,7 +29,7 @@ class InterfaceTests(object):
             args = spec[0]
             defaults = list(spec[3] or [])
             di = -1
-            for ai in xrange(len(args)-1, -1, -1):
+            for ai in xrange(len(args) - 1, -1, -1):
                 arg = args[ai]
                 if arg.startswith('_') or (arg == 'self' and ai == 0):
                     del args[ai]
@@ -46,9 +47,9 @@ class InterfaceTests(object):
 
         def wrap(template):
             actual_argspec = filter(
-                    inspect.getargspec(remove_decorators(actual)))
+                inspect.getargspec(remove_decorators(actual)))
             template_argspec = filter(
-                    inspect.getargspec(remove_decorators(template)))
+                inspect.getargspec(remove_decorators(template)))
             if actual_argspec != template_argspec:
                 msg = "Expected: %s; got: %s" % (
                     inspect.formatargspec(*template_argspec),

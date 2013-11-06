@@ -25,31 +25,31 @@ from twisted.trial import unittest
 from buildbot.status.web.auth import HTPasswdAuth
 from buildbot.test.util import compat
 
+
 class TestHTPasswdAuth(unittest.TestCase):
 
     htpasswd = HTPasswdAuth(__file__)
 
-    @compat.skipUnlessPlatformIs('posix') # crypt module
+    @compat.skipUnlessPlatformIs('posix')  # crypt module
     def test_authenticate_des(self):
-        for key in ('buildmaster','buildslave','buildbot'):                
-            if self.htpasswd.authenticate('des'+key, key) == False:
-                self.fail("authenticate failed for '%s'" % ('des'+key))
+        for key in ('buildmaster', 'buildslave', 'buildbot'):
+            if self.htpasswd.authenticate('des' + key, key) == False:
+                self.fail("authenticate failed for '%s'" % ('des' + key))
 
     def test_authenticate_unknown(self):
-        if self.htpasswd.authenticate('foo', 'bar') == True:
+        if self.htpasswd.authenticate('foo', 'bar'):
             self.fail("authenticate succeed for 'foo:bar'")
 
-    @compat.skipUnlessPlatformIs('posix') # crypt module
+    @compat.skipUnlessPlatformIs('posix')  # crypt module
     def test_authenticate_wopassword(self):
-        for algo in ('des','md5','sha'):
-            if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
+        for algo in ('des', 'md5', 'sha'):
+            if self.htpasswd.authenticate(algo + 'buildmaster', ''):
                 self.fail("authenticate succeed for %s w/o password"
-                                        % (algo+'buildmaster'))
+                          % (algo + 'buildmaster'))
 
-    @compat.skipUnlessPlatformIs('posix') # crypt module
+    @compat.skipUnlessPlatformIs('posix')  # crypt module
     def test_authenticate_wrongpassword(self):
-        for algo in ('des','md5','sha'):
-            if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
+        for algo in ('des', 'md5', 'sha'):
+            if self.htpasswd.authenticate(algo + 'buildmaster', algo):
                 self.fail("authenticate succeed for %s w/ wrong password"
-                                        % (algo+'buildmaster'))
-
+                          % (algo + 'buildmaster'))

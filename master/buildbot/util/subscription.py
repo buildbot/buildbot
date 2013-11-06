@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import failure, log
+from twisted.python import failure
+from twisted.python import log
+
 
 class SubscriptionPoint(object):
+
     def __init__(self, name):
         self.name = name
         self.subscriptions = set()
@@ -39,7 +42,9 @@ class SubscriptionPoint(object):
     def _unsubscribe(self, subscription):
         self.subscriptions.remove(subscription)
 
+
 class Subscription(object):
+
     def __init__(self, subpt, callback):
         self.subpt = subpt
         self.callback = callback

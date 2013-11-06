@@ -13,32 +13,34 @@
 #
 # Copyright Buildbot Team Members
 
-import textwrap
 import re
-from twisted.trial import unittest
-from buildbot.test.fake import fakedb
+import textwrap
+
 from buildbot.changes import changes
+from buildbot.test.fake import fakedb
+from twisted.trial import unittest
+
 
 class Change(unittest.TestCase):
 
     change23_rows = [
         fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
-            is_dir=0, branch="warnerdb", revision="deadbeef",
-            when_timestamp=266738404, revlink='http://warner/0e92a098b',
-            category='devel', repository='git://warner', codebase='mainapp',
-            project='Buildbot'),
+                      is_dir=0, branch="warnerdb", revision="deadbeef",
+                      when_timestamp=266738404, revlink='http://warner/0e92a098b',
+                      category='devel', repository='git://warner', codebase='mainapp',
+                      project='Buildbot'),
 
         fakedb.ChangeFile(changeid=23, filename='master/README.txt'),
         fakedb.ChangeFile(changeid=23, filename='slave/README.txt'),
 
         fakedb.ChangeProperty(changeid=23, property_name='notest',
-            property_value='["no","Change"]'),
+                              property_value='["no","Change"]'),
 
         fakedb.ChangeUser(changeid=23, uid=27),
     ]
 
     def setUp(self):
-        self.change23 = changes.Change(**dict( # using **dict(..) forces kwargs
+        self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
             isdir=0,
             repository=u'git://warner',
@@ -49,7 +51,7 @@ class Change(unittest.TestCase):
             project=u'Buildbot',
             branch=u'warnerdb',
             revlink=u'http://warner/0e92a098b',
-            properties={'notest':"no"},
+            properties={'notest': "no"},
             files=[u'master/README.txt', u'slave/README.txt'],
             revision=u'deadbeef'))
         self.change23.number = 23
@@ -68,14 +70,14 @@ class Change(unittest.TestCase):
             For: Buildbot
             At: .*
             Changed By: dustin
-            Comments: fix whitespaceProperties: 
+            Comments: fix whitespaceProperties:.
               notest: no
 
             '''), text), text)
 
     def test_asDict(self):
         dict = self.change23.asDict()
-        self.assertIn('1978', dict['at']) # timezone-sensitive
+        self.assertIn('1978', dict['at'])  # timezone-sensitive
         del dict['at']
         self.assertEqual(dict, {
             'branch': u'warnerdb',
@@ -105,9 +107,8 @@ class Change(unittest.TestCase):
         self.assertEqual(self.change23.getTimes(), (266738404, None))
 
     def test_getText(self):
-        self.change23.who = 'nasty < nasty' # test the html escaping (ugh!)
+        self.change23.who = 'nasty < nasty'  # test the html escaping (ugh!)
         self.assertEqual(self.change23.getText(), ['nasty &lt; nasty'])
 
     def test_getLogs(self):
         self.assertEqual(self.change23.getLogs(), {})
-

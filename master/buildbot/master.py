@@ -18,44 +18,55 @@ import os
 import signal
 import socket
 
-from zope.interface import implements
-from twisted.python import log, components, failure
-from twisted.internet import defer, reactor, task
 from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import components
+from twisted.python import failure
+from twisted.python import log
+from zope.interface import implements
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import subscription, epoch2datetime
-from buildbot.status.master import Status
+
+from buildbot import config
+from buildbot import interfaces
+from buildbot import monkeypatches
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
-from buildbot import interfaces
-from buildbot.process.builder import BuilderControl
 from buildbot.db import connector
-from buildbot.schedulers.manager import SchedulerManager
-from buildbot.process.botmaster import BotMaster
+from buildbot.process import cache
 from buildbot.process import debug
 from buildbot.process import metrics
-from buildbot.process import cache
+from buildbot.process.botmaster import BotMaster
+from buildbot.process.builder import BuilderControl
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.schedulers.manager import SchedulerManager
+from buildbot.status.master import Status
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.util import epoch2datetime
+from buildbot.util import subscription
 from buildbot.util.eventual import eventually
-from buildbot import monkeypatches
-from buildbot import config
 
-########################################
+#
+
 
 class LogRotation(object):
+
     def __init__(self):
-        self.rotateLength = 1 * 1000 * 1000 
+        self.rotateLength = 1 * 1000 * 1000
         self.maxRotatedFiles = 10
+
 
 class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
-    RECLAIM_BUILD_INTERVAL = 10*60
+    RECLAIM_BUILD_INTERVAL = 10 * 60
 
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
@@ -97,17 +108,16 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # subscription points
         self._change_subs = \
-                subscription.SubscriptionPoint("changes")
+            subscription.SubscriptionPoint("changes")
         self._new_buildrequest_subs = \
-                subscription.SubscriptionPoint("buildrequest_additions")
+            subscription.SubscriptionPoint("buildrequest_additions")
         self._new_buildset_subs = \
-                subscription.SubscriptionPoint("buildset_additions")
+            subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
-                subscription.SubscriptionPoint("buildset_completion")
+            subscription.SubscriptionPoint("buildset_completion")
 
         # local cache for this master's object ID
         self._object_id = None
-
 
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
@@ -146,6 +156,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     # setup and reconfig handling
 
     _already_started = False
+
     @defer.inlineCallbacks
     def startService(self, _reactor=reactor):
         assert not self._already_started, "can only start the master once"
@@ -153,7 +164,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         log.msg("Starting BuildMaster -- buildbot.version: %s" %
                 buildbot.version)
-        
+
         # Set umask
         if self.umask is not None:
             os.umask(self.umask)
@@ -171,7 +182,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # load the configuration file, treating errors as fatal
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
-                                                        self.configFileName)
+                                                             self.configFileName)
 
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
@@ -205,8 +216,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 signal.signal(signal.SIGUSR1, sigusr1)
 
             # call the parent method
-            yield defer.maybeDeferred(lambda :
-                    service.MultiService.startService(self))
+            yield defer.maybeDeferred(lambda:
+                                      service.MultiService.startService(self))
 
             # give all services a chance to load the new configuration, rather than
             # the base configuration
@@ -226,7 +237,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             self.db_loop.stop()
             self.db_loop = None
 
-
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at
         # a time, and alerting the user if the reconfig takes too long
@@ -240,9 +250,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # notify every 10 seconds that the reconfig is still going on, although
         # reconfigs should not take that long!
-        self.reconfig_notifier = task.LoopingCall(lambda :
-            log.msg("reconfig is ongoing for %d s" %
-                    (reactor.seconds() - self.reconfig_active)))
+        self.reconfig_notifier = task.LoopingCall(lambda:
+                                                  log.msg("reconfig is ongoing for %d s" %
+                                                          (reactor.seconds() - self.reconfig_active)))
         self.reconfig_notifier.start(10, now=False)
 
         timer = metrics.Timer("BuildMaster.reconfig")
@@ -263,8 +273,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         d.addErrback(log.err, 'while reconfiguring')
 
-        return d # for tests
-
+        return d  # for tests
 
     @defer.inlineCallbacks
     def doReconfig(self):
@@ -273,7 +282,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         failed = False
         try:
             new_config = config.MasterConfig.loadConfig(self.basedir,
-                                                    self.configFileName)
+                                                        self.configFileName)
             changes_made = True
             self.config = new_config
             yield self.reconfigService(new_config)
@@ -296,7 +305,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         else:
             log.msg("configuration update complete")
 
-
     def reconfigService(self, new_config):
         if self.configured_db_url is None:
             self.configured_db_url = new_config.db['db_url']
@@ -317,11 +325,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 self.db_loop.start(self.configured_poll_interval, now=False)
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                            new_config)
+                                                                 new_config)
 
-
-    ## informational methods
-
+    # informational methods
     def allSchedulers(self):
         return list(self.scheduler_manager)
 
@@ -345,26 +351,25 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # failing that, get it from the DB; multiple calls to this function
         # at the same time will not hurt
         try:
-            hostname = os.uname()[1] # only on unix
+            hostname = os.uname()[1]  # only on unix
         except AttributeError:
             hostname = socket.getfqdn()
         master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
 
         d = self.db.state.getObjectId(master_name,
-                "buildbot.master.BuildMaster")
+                                      "buildbot.master.BuildMaster")
+
         def keep(id):
             self._object_id = id
             return id
         d.addCallback(keep)
         return d
 
-
-    ## triggering methods and subscriptions
-
+    # triggering methods and subscriptions
     def addChange(self, who=None, files=None, comments=None, author=None,
-            isdir=None, is_dir=None, revision=None, when=None,
-            when_timestamp=None, branch=None, category=None, revlink='',
-            properties={}, repository='', codebase=None, project='', src=None):
+                  isdir=None, is_dir=None, revision=None, when=None,
+                  when_timestamp=None, branch=None, category=None, revlink='',
+                  properties={}, repository='', codebase=None, project='', src=None):
         """
         Add a change to the buildmaster and act on it.
 
@@ -430,7 +435,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # handle translating deprecated names into new names for db.changes
         def handle_deprec(oldname, old, newname, new, default=None,
-                          converter = lambda x:x):
+                          converter=lambda x: x):
             if old is not None:
                 if new is None:
                     log.msg("WARNING: change source is using deprecated "
@@ -444,10 +449,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         author = handle_deprec("who", who, "author", author)
         is_dir = handle_deprec("isdir", isdir, "is_dir", is_dir,
-                                default=0)
+                               default=0)
         when_timestamp = handle_deprec("when", when,
-                                "when_timestamp", when_timestamp,
-                                converter=epoch2datetime)
+                                       "when_timestamp", when_timestamp,
+                                       converter=epoch2datetime)
 
         # add a source to each property
         for n in properties:
@@ -473,28 +478,28 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 codebase = self.config.codebaseGenerator(chdict)
             else:
                 codebase = ''
-            
+
         d = defer.succeed(None)
         if src:
             # create user object, returning a corresponding uid
-            d.addCallback(lambda _ : users.createUserObject(self, author, src))
-         
+            d.addCallback(lambda _: users.createUserObject(self, author, src))
+
         # add the Change to the database
-        d.addCallback(lambda uid :
-                          self.db.changes.addChange(author=author, files=files,
-                                          comments=comments, is_dir=is_dir,
-                                          revision=revision,
-                                          when_timestamp=when_timestamp,
-                                          branch=branch, category=category,
-                                          revlink=revlink, properties=properties,
-                                          repository=repository, codebase=codebase,
-                                          project=project, uid=uid))
+        d.addCallback(lambda uid:
+                      self.db.changes.addChange(author=author, files=files,
+                                                comments=comments, is_dir=is_dir,
+                                                revision=revision,
+                                                when_timestamp=when_timestamp,
+                                                branch=branch, category=category,
+                                                revlink=revlink, properties=properties,
+                                                repository=repository, codebase=codebase,
+                                                project=project, uid=uid))
 
         # convert the changeid to a Change instance
-        d.addCallback(lambda changeid :
-            self.db.changes.getChange(changeid))
-        d.addCallback(lambda chdict :
-            changes.Change.fromChdict(self, chdict))
+        d.addCallback(lambda changeid:
+                      self.db.changes.getChange(changeid))
+        d.addCallback(lambda chdict:
+                      changes.Change.fromChdict(self, chdict))
 
         def notify(change):
             msg = u"added change %s to database" % change
@@ -524,7 +529,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         resulting builds.
         """
         d = self.db.buildsets.addBuildset(**kwargs)
-        def notify((bsid,brids)):
+
+        def notify(xxx_todo_changeme):
+            (bsid, brids) = xxx_todo_changeme
             log.msg("added buildset %d to database" % bsid)
             # note that buildset additions are only reported on this master
             self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
@@ -533,7 +540,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 for bn, brid in brids.iteritems():
                     self.buildRequestAdded(bsid=bsid, brid=brid,
                                            buildername=bn)
-            return (bsid,brids)
+            return (bsid, brids)
         d.addCallback(notify)
         return d
 
@@ -604,7 +611,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param buildername: builder named by the build request
         """
         self._new_buildrequest_subs.deliver(
-                dict(bsid=bsid, brid=brid, buildername=buildername))
+            dict(bsid=bsid, brid=brid, buildername=buildername))
 
     def subscribeToBuildRequests(self, callback):
         """
@@ -618,9 +625,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self._new_buildrequest_subs.subscribe(callback)
 
-
-    ## database polling
-
+    # database polling
     def pollDatabase(self):
         # poll each of the tables that can indicate new, actionable stuff for
         # this buildmaster to do.  This is used in a TimerService, so returning
@@ -636,6 +641,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return d
 
     _last_processed_change = None
+
     @defer.inlineCallbacks
     def pollDatabaseChanges(self):
         # Older versions of Buildbot had each scheduler polling the database
@@ -655,7 +661,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # get the last processed change id
         if self._last_processed_change is None:
             self._last_processed_change = \
-                    yield self._getState('last_processed_change')
+                yield self._getState('last_processed_change')
 
         # if it's still None, assume we've processed up to the latest changeid
         if self._last_processed_change is None:
@@ -691,11 +697,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # write back the updated state, if it's changed
         if need_setState:
             yield self._setState('last_processed_change',
-                            self._last_processed_change)
+                                 self._last_processed_change)
         timer.stop()
 
     _last_unclaimed_brids_set = None
     _last_claim_cleanup = 0
+
     @defer.inlineCallbacks
     def pollDatabaseBuildRequests(self):
         # deal with cleaning up unclaimed requests, and (if necessary)
@@ -704,10 +711,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.start()
 
         # cleanup unclaimed builds
-        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup 
+        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup
         if since_last_cleanup < self.RECLAIM_BUILD_INTERVAL:
             unclaimed_age = (self.RECLAIM_BUILD_INTERVAL
-                           * self.UNCLAIMED_BUILD_FACTOR)
+                             * self.UNCLAIMED_BUILD_FACTOR)
             yield self.db.buildrequests.unclaimExpiredRequests(unclaimed_age)
 
             self._last_claim_cleanup = reactor.seconds()
@@ -727,7 +734,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # get the current set of unclaimed buildrequests
         now_unclaimed_brdicts = \
             yield self.db.buildrequests.getBuildRequests(claimed=False)
-        now_unclaimed = set([ brd['brid'] for brd in now_unclaimed_brdicts ])
+        now_unclaimed = set([brd['brid'] for brd in now_unclaimed_brdicts])
 
         # and store that for next time
         self._last_unclaimed_brids_set = now_unclaimed
@@ -742,11 +749,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                                        brd['buildername'])
         timer.stop()
 
-    ## state maintenance (private)
+    # state maintenance (private)
 
     def _getState(self, name, default=None):
         "private wrapper around C{self.db.state.getState}"
         d = self.getObjectId()
+
         def get(objectid):
             return self.db.state.getState(objectid, name, default)
         d.addCallback(get)
@@ -755,10 +763,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def _setState(self, name, value):
         "private wrapper around C{self.db.state.setState}"
         d = self.getObjectId()
+
         def set(objectid):
             return self.db.state.setState(objectid, name, value)
         d.addCallback(set)
         return d
+
 
 class Control:
     implements(interfaces.IControl)

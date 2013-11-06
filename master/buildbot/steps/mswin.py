@@ -15,11 +15,15 @@
 
 from twisted.python import log
 
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 
 class Robocopy(ShellCommand):
+
     """ Robocopy build step.
 
     This is just a wrapper around the standard shell command that
@@ -30,19 +34,19 @@ class Robocopy(ShellCommand):
     # Robocopy exit flags (they are combined to make up the exit code)
     # See: http://ss64.com/nt/robocopy-exit.html
     return_flags = {
-                FAILURE: [8, 16],
-                WARNINGS: [2, 4],
-                SUCCESS: [0, 1]
-            }
+        FAILURE: [8, 16],
+        WARNINGS: [2, 4],
+        SUCCESS: [0, 1]
+    }
 
     def __init__(self, source, destination,
-        files=None,
-        recursive=False,
-        mirror=False,
-        move=False,
-        exclude=None,
-        verbose=False,
-        **kwargs):
+                 files=None,
+                 recursive=False,
+                 mirror=False,
+                 move=False,
+                 exclude=None,
+                 verbose=False,
+                 **kwargs):
         self.source = source
         self.destination = destination
         self.files = files

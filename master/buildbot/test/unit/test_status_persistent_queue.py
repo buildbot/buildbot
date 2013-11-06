@@ -21,6 +21,7 @@ from buildbot.test.util import dirs
 from buildbot.status.persistent_queue import MemoryQueue, DiskQueue, \
     IQueue, PersistentQueue, WriteFile
 
+
 class test_Queues(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
@@ -36,7 +37,7 @@ class test_Queues(dirs.DirsMixin, unittest.TestCase):
         WriteFile(os.path.join('fake_dir', '5'), 'foo5')
         WriteFile(os.path.join('fake_dir', '8'), 'foo8')
         queue = PersistentQueue(MemoryQueue(3),
-            DiskQueue('fake_dir', 5, pickleFn=str, unpickleFn=str))
+                                DiskQueue('fake_dir', 5, pickleFn=str, unpickleFn=str))
         self.assertEqual(['foo3', 'foo5', 'foo8'], queue.items())
         self.assertEqual(3, queue.nbItems())
         self.assertEqual(['foo3', 'foo5', 'foo8'], queue.popChunk())

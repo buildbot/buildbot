@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -43,10 +45,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             dialect = conn.dialect.name
             exc = (sa.exc.ProgrammingError if dialect == 'postgresql'
                    else sa.exc.IntegrityError)
-            self.assertRaises(exc, lambda :
-                    conn.execute(buildslaves.insert(),
-                        dict(name='bs1', info='{}'),
-                        dict(name='bs1', info='{}'),
-            ))
+            self.assertRaises(exc, lambda:
+                              conn.execute(buildslaves.insert(),
+                                           dict(name='bs1', info='{}'),
+                                           dict(name='bs1', info='{}'),
+                                           ))
 
         return self.do_test_migration(23, 24, setup_thd, verify_thd)

@@ -13,20 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import mock
-import time
 import errno
+import mock
+import os
 import signal
-from twisted.trial import unittest
+import time
+
 from buildslave.scripts import stop
-from buildslave.test.util import misc
 from buildslave.test.util import compat
+from buildslave.test.util import misc
+from twisted.trial import unittest
 
 
 class TestStopSlave(misc.FileIOMixin,
                     misc.StdoutAssertionsMixin,
                     unittest.TestCase):
+
     """
     Test buildslave.scripts.stop.stopSlave()
     """
@@ -83,6 +85,7 @@ class TestStopSlave(misc.FileIOMixin,
 class TestStop(misc.IsBuildslaveDirMixin,
                misc.StdoutAssertionsMixin,
                unittest.TestCase):
+
     """
     Test buildslave.scripts.stop.stop()
     """

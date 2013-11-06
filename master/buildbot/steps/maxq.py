@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.steps.shell import ShellCommand
-from buildbot.status.results import SUCCESS, FAILURE
 from buildbot import config
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.steps.shell import ShellCommand
+
 
 class MaxQ(ShellCommand):
     flunkOnFailure = True
@@ -42,5 +44,5 @@ class MaxQ(ShellCommand):
 
     def getText(self, cmd, results):
         if self.failures:
-            return [ str(self.failures), 'maxq', 'failures' ]
+            return [str(self.failures), 'maxq', 'failures']
         return ['maxq', 'tests']

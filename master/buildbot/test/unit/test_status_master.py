@@ -14,13 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.status import master, base
+
+from buildbot.status import base
+from buildbot.status import master
 from buildbot.test.fake import fakedb
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class FakeStatusReceiver(base.StatusReceiver):
     pass
+
 
 class TestStatus(unittest.TestCase):
 
@@ -35,16 +39,17 @@ class TestStatus(unittest.TestCase):
         s = self.makeStatus()
         self.db.insertTestData([
             fakedb.Buildset(id=91, sourcestampsetid=234, complete=0,
-                    complete_at=298297875, results=-1, submitted_at=266761875,
-                    external_idstring='extid', reason='rsn1'),
+                            complete_at=298297875, results=-1, submitted_at=266761875,
+                            external_idstring='extid', reason='rsn1'),
             fakedb.Buildset(id=92, sourcestampsetid=234, complete=1,
-                    complete_at=298297876, results=7, submitted_at=266761876,
-                    external_idstring='extid', reason='rsn2'),
+                            complete_at=298297876, results=7, submitted_at=266761876,
+                            external_idstring='extid', reason='rsn2'),
         ])
 
         d = s.getBuildSets()
+
         def check(bslist):
-            self.assertEqual([ bs.id for bs in bslist ], [ 91 ])
+            self.assertEqual([bs.id for bs in bslist], [91])
         d.addCallback(check)
         return d
 
@@ -58,7 +63,7 @@ class TestStatus(unittest.TestCase):
 
         # add a status reciever
         sr0 = FakeStatusReceiver()
-        config.status = [ sr0 ]
+        config.status = [sr0]
 
         yield status.reconfigService(config)
 
@@ -68,7 +73,7 @@ class TestStatus(unittest.TestCase):
         # add a status reciever
         sr1 = FakeStatusReceiver()
         sr2 = FakeStatusReceiver()
-        config.status = [ sr1, sr2 ]
+        config.status = [sr1, sr2]
 
         yield status.reconfigService(config)
 
@@ -82,12 +87,12 @@ class TestStatus(unittest.TestCase):
         # reconfig with those two (a regression check)
         sr1 = FakeStatusReceiver()
         sr2 = FakeStatusReceiver()
-        config.status = [ sr1, sr2 ]
+        config.status = [sr1, sr2]
 
         yield status.reconfigService(config)
 
         # and back to nothing
-        config.status = [ ]
+        config.status = []
         yield status.reconfigService(config)
 
         self.assertIdentical(sr0.master, None)

@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 import re
-from twisted.python import log
+
 from dateutil.parser import parse as dateparse
+from twisted.python import log
 
 try:
     import json

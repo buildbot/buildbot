@@ -409,7 +409,7 @@ def ns(s):
 
 def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
                   project, who, comment, builderNames, properties):
-    #Determine job file version from provided arguments
+    # Determine job file version from provided arguments
     if properties:
         version = 5
     elif comment:
@@ -461,11 +461,12 @@ def getTopdir(topfile, start=None):
         here = next
         toomany -= 1
     print ("Unable to find topfile '%s' anywhere from %s upwards"
-                     % (topfile, start))
+           % (topfile, start))
     sys.exit(1)
 
 
 class RemoteTryPP(protocol.ProcessProtocol):
+
     def __init__(self, job):
         self.job = job
         self.d = defer.Deferred()
@@ -483,7 +484,7 @@ class RemoteTryPP(protocol.ProcessProtocol):
     def processEnded(self, status_object):
         sig = status_object.value.signal
         rc = status_object.value.exitCode
-        if sig != None or rc != 0:
+        if sig is not None or rc != 0:
             self.d.errback(RuntimeError("remote 'buildbot tryserver' failed"
                                         ": sig=%s, rc=%s" % (sig, rc)))
             return
@@ -802,8 +803,7 @@ class Try(pb.Referenceable):
 
     def printStatus(self):
         try:
-            names = self.buildRequests.keys()
-            names.sort()
+            names = sorted(self.buildRequests.keys())
             for n in names:
                 if n not in self.outstanding:
                     # the build is finished, and we have results
@@ -827,8 +827,7 @@ class Try(pb.Referenceable):
             self.printloop.stop()
         print "All Builds Complete"
         # TODO: include a URL for all failing builds
-        names = self.buildRequests.keys()
-        names.sort()
+        names = sorted(self.buildRequests.keys())
         happy = True
         for n in names:
             code, text = self.results[n]

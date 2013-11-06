@@ -15,11 +15,13 @@
 
 from __future__ import with_statement
 
-import time
-import os
 import errno
+import os
 import signal
+import time
+
 from buildbot.scripts import base
+
 
 def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
@@ -40,7 +42,7 @@ def stop(config, signame="TERM", wait=False):
             print "buildmaster not running"
         return 0
 
-    signum = getattr(signal, "SIG"+signame)
+    signum = getattr(signal, "SIG" + signame)
     try:
         os.kill(pid, signum)
     except OSError, e:

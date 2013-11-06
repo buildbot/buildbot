@@ -15,19 +15,25 @@
 
 from __future__ import with_statement
 
-import os, time
+import os
+import time
+
 from cPickle import dump
 
-from zope.interface import implements
-from twisted.python import log, runtime
-from twisted.internet import defer
-from twisted.web import html
 from buildbot.util import datetime2epoch
+from twisted.internet import defer
+from twisted.python import log
+from twisted.python import runtime
+from twisted.web import html
+from zope.interface import implements
 
-from buildbot import interfaces, util
+from buildbot import interfaces
+from buildbot import util
 from buildbot.process.properties import Properties
 
+
 class Change:
+
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
@@ -37,8 +43,8 @@ class Change:
     number = None
     branch = None
     category = None
-    revision = None # used to create a source-stamp
-    links = [] # links are gone, but upgrade code expects this attribute
+    revision = None  # used to create a source-stamp
+    links = []  # links are gone, but upgrade code expects this attribute
 
     @classmethod
     def fromChdict(cls, master, chdict):
@@ -78,14 +84,14 @@ class Change:
         change.files.sort()
 
         change.properties = Properties()
-        for n, (v,s) in chdict['properties'].iteritems():
+        for n, (v, s) in chdict['properties'].iteritems():
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='', 
+                 revlink='', properties={}, repository='', codebase='',
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
@@ -96,7 +102,8 @@ class Change:
         self.isdir = isdir
 
         def none_or_unicode(x):
-            if x is None: return x
+            if x is None:
+                return x
             return unicode(x)
 
         self.revision = none_or_unicode(revision)
@@ -135,9 +142,9 @@ class Change:
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
                 u"when=%r, category=%r, project=%r, repository=%r, " +
                 u"codebase=%r)") % (
-                self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository,
-                self.codebase)
+            self.revision, self.who, self.branch, self.comments,
+            self.when, self.category, self.project, self.repository,
+            self.codebase)
 
     def __cmp__(self, other):
         return self.number - other.number
@@ -159,7 +166,7 @@ class Change:
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
 
-        files = [ dict(name=f) for f in self.files ]
+        files = [dict(name=f) for f in self.files]
         files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
         # Constant
@@ -194,6 +201,7 @@ class Change:
 
     def getText(self):
         return [html.escape(self.who)]
+
     def getLogs(self):
         return {}
 
@@ -217,7 +225,7 @@ class Change:
         return data
 
 
-class ChangeMaster: # pragma: no cover
+class ChangeMaster:  # pragma: no cover
     # this is a stub, retained to allow the "buildbot upgrade-master" tool to
     # read old changes.pck pickle files and convert their contents into the
     # new database format. This is only instantiated by that tool, or by
@@ -235,7 +243,7 @@ class ChangeMaster: # pragma: no cover
         try:
             with open(tmpfilename, "wb") as f:
                 dump(self, f)
-            if runtime.platformType  == 'win32':
+            if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)
@@ -263,7 +271,7 @@ class ChangeMaster: # pragma: no cover
                         nconvert += 1
                     except UnicodeDecodeError:
                         raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
-                                        (attr, c.number, old_encoding, a))
+                                           (attr, c.number, old_encoding, a))
 
             # filenames are a special case, but in general they'll have the same encoding
             # as everything else on a system.  If not, well, hack this script to do your
@@ -276,14 +284,15 @@ class ChangeMaster: # pragma: no cover
                         nconvert += 1
                     except UnicodeDecodeError:
                         raise UnicodeError("Error decoding filename '%s' of change #%s as %s:\n%r" %
-                                        (filename.decode('ascii', 'replace'),
-                                         c.number, old_encoding, a))
+                                           (filename.decode('ascii', 'replace'),
+                                            c.number, old_encoding, a))
                 newfiles.append(filename)
             c.files = newfiles
         if not quiet:
             print "converted %d strings" % nconvert
 
-class OldChangeMaster(ChangeMaster): # pragma: no cover
+
+class OldChangeMaster(ChangeMaster):  # pragma: no cover
     # this is a reminder that the ChangeMaster class is old
     pass
 # vim: set ts=4 sts=4 sw=4 et:

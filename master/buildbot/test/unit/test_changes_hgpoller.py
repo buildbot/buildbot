@@ -14,14 +14,17 @@
 # Copyright Buildbot Team Members
 
 import os
-from twisted.trial import unittest
-from twisted.internet import defer
+
 from buildbot.changes import hgpoller
-from buildbot.test.util import changesource, gpo
 from buildbot.test.fake.fakedb import FakeDBConnector
+from buildbot.test.util import changesource
+from buildbot.test.util import gpo
 from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.trial import unittest
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
+
 
 class TestHgPoller(gpo.GetProcessOutputMixin,
                    changesource.ChangeSourceMixin,
@@ -35,13 +38,16 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
         self.repo_ready = True
+
         def _isRepositoryReady():
             return self.repo_ready
+
         def create_poller(_):
             self.poller = hgpoller.HgPoller(self.remote_repo,
                                             workdir='/some/dir')
             self.poller.master = self.master
             self.poller._isRepositoryReady = _isRepositoryReady
+
         def create_db(_):
             db = self.master.db = FakeDBConnector(self)
             return db.setup()
@@ -79,22 +85,22 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect('hg', 'init', '/some/dir'),
             gpo.Expect('hg', 'pull', '-b', 'default',
-                                'ssh://example.com/foo/baz')
-                .path('/some/dir'),
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
-                .path('/some/dir').stdout("73591"),
-            gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591', # only fetches that head
-                                '--template={rev}:{node}\\n')
-                .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
+            .path('/some/dir').stdout("73591"),
+            gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591',  # only fetches that head
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
-                .path('/some/dir').stdout(os.linesep.join([
-                    '1273258100.0 -7200',
-                    'Bob Test <bobtest@example.org>',
-                    'file1 dir/file2',
-                    'This is rev 73591',
-                    ''])),
-            )
+                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
+            .path('/some/dir').stdout(os.linesep.join([
+                '1273258100.0 -7200',
+                'Bob Test <bobtest@example.org>',
+                'file1 dir/file2',
+                'This is rev 73591',
+                ''])),
+        )
 
         # do the poll
         d = self.poller.poll()
@@ -131,10 +137,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # ancestor)
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                            'ssh://example.com/foo/baz')
-                .path('/some/dir'),
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
-                .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
+            .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
         )
 
         yield self.poller._setCurrentRev(3)
@@ -148,22 +154,22 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # normal operation. There's a previous revision, we get a new one.
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                            'ssh://example.com/foo/baz')
-                .path('/some/dir'),
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
             gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
-                .path('/some/dir').stdout('5' + os.linesep),
+            .path('/some/dir').stdout('5' + os.linesep),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
-                            '--template={rev}:{node}\\n')
-                .path('/some/dir').stdout('5:784bd' + os.linesep),
+                       '--template={rev}:{node}\\n')
+            .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
-                .path('/some/dir').stdout(os.linesep.join([
-                        '1273258009.0 -7200',
-                        'Joe Test <joetest@example.org>',
-                        'file1 file2',
-                        'Comment for rev 5',
-                        ''])),
-           )
+                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
+            .path('/some/dir').stdout(os.linesep.join([
+                '1273258009.0 -7200',
+                'Joe Test <joetest@example.org>',
+                'file1 file2',
+                'Comment for rev 5',
+                ''])),
+        )
 
         yield self.poller._setCurrentRev(4)
 

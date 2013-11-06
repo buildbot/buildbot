@@ -15,23 +15,27 @@
 
 import base64
 import sqlalchemy as sa
+
+from buildbot.db import base
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.db import base
+
 
 class SsDict(dict):
     pass
 
+
 class SsList(list):
     pass
+
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def addSourceStamp(self, branch, revision, repository,
-                          project, sourcestampsetid, codebase='',
-                          patch_body=None, patch_level=0, patch_author="",
-                          patch_comment="", patch_subdir=None, changeids=[]):
+                       project, sourcestampsetid, codebase='',
+                       patch_body=None, patch_level=0, patch_author="",
+                       patch_comment="", patch_subdir=None, changeids=[]):
         def thd(conn):
             transaction = conn.begin()
 
@@ -69,7 +73,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 ins = self.db.model.sourcestamp_changes.insert()
                 conn.execute(ins, [
                     dict(sourcestampid=ssid, changeid=changeid)
-                    for changeid in changeids ])
+                    for changeid in changeids])
 
             transaction.commit()
 
@@ -79,18 +83,18 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
     @base.cached("sssetdicts")
     @defer.inlineCallbacks
-    def getSourceStamps(self,sourcestampsetid):
+    def getSourceStamps(self, sourcestampsetid):
         def getSourceStampIds(sourcestampsetid):
             def thd(conn):
                 tbl = self.db.model.sourcestamps
                 q = sa.select([tbl.c.id],
-                       whereclause=(tbl.c.sourcestampsetid == sourcestampsetid))
+                              whereclause=(tbl.c.sourcestampsetid == sourcestampsetid))
                 res = conn.execute(q)
-                return [ row.id for row in res.fetchall() ]
+                return [row.id for row in res.fetchall()]
             return self.db.pool.do(thd)
         ssids = yield getSourceStampIds(sourcestampsetid)
 
-        sslist=SsList()
+        sslist = SsList()
         for ssid in ssids:
             sourcestamp = yield self.getSourceStamp(ssid)
             sslist.append(sourcestamp)
@@ -106,11 +110,11 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return None
             ssdict = SsDict(ssid=ssid, branch=row.branch, sourcestampsetid=row.sourcestampsetid,
-                    revision=row.revision, patch_body=None, patch_level=None,
-                    patch_author=None, patch_comment=None, patch_subdir=None,
-                    repository=row.repository, codebase=row.codebase,
-                    project=row.project,
-                    changeids=set([]))
+                            revision=row.revision, patch_body=None, patch_level=None,
+                            patch_author=None, patch_comment=None, patch_subdir=None,
+                            repository=row.repository, codebase=row.codebase,
+                            project=row.project,
+                            changeids=set([]))
             patchid = row.patchid
             res.close()
 

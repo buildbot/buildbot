@@ -14,21 +14,23 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.status.web.base import HtmlResource
 import buildbot
-import twisted
-import sys
 import jinja2
+import sys
+import twisted
+
+from buildbot.status.web.base import HtmlResource
+
 
 class AboutBuildbot(HtmlResource):
     pageTitle = "About this Buildbot"
 
     def content(self, request, cxt):
-        cxt.update(dict(buildbot=buildbot.version, 
-                               twisted=twisted.__version__,
-                               jinja=jinja2.__version__, 
-                               python=sys.version,
-                               platform=sys.platform))
+        cxt.update(dict(buildbot=buildbot.version,
+                        twisted=twisted.__version__,
+                        jinja=jinja2.__version__,
+                        python=sys.version,
+                        platform=sys.platform))
 
         template = request.site.buildbot_service.templates.get_template("about.html")
         template.autoescape = True

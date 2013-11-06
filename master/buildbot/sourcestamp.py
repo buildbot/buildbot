@@ -14,13 +14,17 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
-from twisted.persisted import styles
-from twisted.internet import defer
+from buildbot import interfaces
+from buildbot import util
 from buildbot.changes.changes import Change
-from buildbot import util, interfaces
+from twisted.internet import defer
+from twisted.persisted import styles
+from zope.interface import implements
 # TODO: kill this class, or at least make it less significant
+
+
 class SourceStamp(util.ComparableMixin, styles.Versioned):
+
     """This is a tuple of (branch, revision, patchspec, changes, project, repository).
 
     C{branch} is always valid, although it may be None to let the Source
@@ -59,7 +63,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     """
 
     persistenceVersion = 3
-    persistenceForgets = ( 'wasUpgraded', )
+    persistenceForgets = ('wasUpgraded', )
 
     # all seven of these are publicly visible attributes
     branch = None
@@ -107,13 +111,14 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         sourcestamp.patch = None
         if ssdict['patch_body']:
             sourcestamp.patch = (ssdict['patch_level'], ssdict['patch_body'],
-                ssdict.get('patch_subdir'))
+                                 ssdict.get('patch_subdir'))
             sourcestamp.patch_info = (ssdict['patch_author'],
                                       ssdict['patch_comment'])
 
         if ssdict['changeids']:
             # sort the changeids in order, oldest to newest
             sorted_changeids = sorted(ssdict['changeids'])
+
             @defer.inlineCallbacks
             def gci(id):
                 chdict = yield master.db.changes.getChange(id)
@@ -123,10 +128,11 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 else:
                     # change isn't in the DB, so ignore it
                     return
-            d = defer.gatherResults([ gci(id)
-                                for id in sorted_changeids ])
+            d = defer.gatherResults([gci(id)
+                                     for id in sorted_changeids])
         else:
             d = defer.succeed([])
+
         def got_changes(changes):
             sourcestamp.changes = tuple(filter(None, changes))
             return sourcestamp
@@ -135,8 +141,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __init__(self, branch=None, revision=None, patch=None, sourcestampsetid=None,
                  patch_info=None, changes=None, project='', repository='',
-                 codebase = '', _fromSsdict=False, _ignoreChanges=False):
-        self._addSourceStampToDatabase_lock = defer.DeferredLock();
+                 codebase='', _fromSsdict=False, _ignoreChanges=False):
+        self._addSourceStampToDatabase_lock = defer.DeferredLock()
 
         # skip all this madness if we're being built from the database
         if _fromSsdict:
@@ -179,7 +185,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if other.repository != self.repository:
             return False
         if other.branch != self.branch:
-            return False # the builds are completely unrelated
+            return False  # the builds are completely unrelated
         if other.project != self.project:
             return False
         if self.patch or other.patch:
@@ -189,9 +195,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if self.changes and other.changes:
             return True
         elif self.changes and not other.changes:
-            return False # we're using changes, they aren't
+            return False  # we're using changes, they aren't
         elif not self.changes and other.changes:
-            return False # they're using changes, we aren't
+            return False  # they're using changes, we aren't
 
         if self.revision == other.revision:
             # both builds are using the same specific revision, so they can
@@ -246,7 +252,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             if self.codebase:
                 text.append("(%s)" % self.codebase)
         if self.revision is None:
-            return text + [ "latest" ]
+            return text + ["latest"]
         text.append(str(self.revision))
         if self.branch:
             text.append("in '%s'" % self.branch)
@@ -279,7 +285,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        self._addSourceStampToDatabase_lock = defer.DeferredLock();
+        self._addSourceStampToDatabase_lock = defer.DeferredLock()
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
@@ -288,7 +294,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         if self.revision is not None and not isinstance(self.revision, str):
             self.revision = str(self.revision)
         if self.patch is not None:
-            self.patch = ( int(self.patch[0]), str(self.patch[1]) )
+            self.patch = (int(self.patch[0]), str(self.patch[1]))
         self.wasUpgraded = True
 
     def upgradeToVersion2(self):
@@ -298,10 +304,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.wasUpgraded = True
 
     def upgradeToVersion3(self):
-        #The database has been upgraded where all existing sourcestamps got an
-        #setid equal to its ssid
+        # The database has been upgraded where all existing sourcestamps got an
+        # setid equal to its ssid
         self.sourcestampsetid = self.ssid
-        #version 2 did not have codebase; set to ''
+        # version 2 did not have codebase; set to ''
         self.codebase = ''
         self.wasUpgraded = True
 
@@ -312,9 +318,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         else:
             return self.addSourceStampToDatabase(master)
 
-
     @util.deferredLocked('_addSourceStampToDatabase_lock')
-    def addSourceStampToDatabase(self, master, sourcestampsetid = None):
+    def addSourceStampToDatabase(self, master, sourcestampsetid=None):
         # add it to the DB
         patch_body = None
         patch_level = None
@@ -332,7 +337,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
         def get_setid():
             if sourcestampsetid is not None:
-                return defer.succeed( sourcestampsetid )
+                return defer.succeed(sourcestampsetid)
             else:
                 return master.db.sourcestampsets.addSourceStampSet()
 
@@ -359,5 +364,5 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         d.addCallback(set_setid)
         d.addCallback(add_sourcestamp)
         d.addCallback(set_ssid)
-        d.addCallback(lambda _ : self.sourcestampsetid)
+        d.addCallback(lambda _: self.sourcestampsetid)
         return d

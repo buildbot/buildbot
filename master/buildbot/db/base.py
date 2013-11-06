@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+
 class DBConnectorComponent(object):
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
@@ -32,6 +33,7 @@ class DBConnectorComponent(object):
                 setattr(self, method, o.get_cached_method(self))
 
     _is_check_length_necessary = None
+
     def check_length(self, col, value):
         # for use by subclasses to check that 'value' will fit in 'col', where
         # 'col' is a table column from the model.
@@ -44,17 +46,18 @@ class DBConnectorComponent(object):
                 self._is_check_length_necessary = True
             else:
                 # not necessary, so just stub out the method
-                self.check_length = lambda col, value : None
+                self.check_length = lambda col, value: None
                 return
 
         assert col.type.length, "column %s does not have a length" % (col,)
         if value and len(value) > col.type.length:
             raise RuntimeError(
                 "value for column %s is greater than max of %d characters: %s"
-                    % (col, col.type.length, value))
+                % (col, col.type.length, value))
 
 
 class CachedMethod(object):
+
     def __init__(self, cache_name, method):
         self.cache_name = cache_name
         self.method = method
@@ -64,7 +67,8 @@ class CachedMethod(object):
 
         meth_name = meth.__name__
         cache = component.db.master.caches.get_cache(self.cache_name,
-                lambda key : meth(component, key))
+                                                     lambda key: meth(component, key))
+
         def wrap(key, no_cache=0):
             if no_cache:
                 return meth(component, key)
@@ -75,5 +79,6 @@ class CachedMethod(object):
         wrap.cache = cache
         return wrap
 
+
 def cached(cache_name):
-    return lambda method : CachedMethod(cache_name, method)
+    return lambda method: CachedMethod(cache_name, method)

@@ -16,9 +16,12 @@
 from __future__ import with_statement
 
 import os
-from twisted.trial import unittest
-from buildbot.test.util import changesource, dirs
+
 from buildbot.changes import mail
+from buildbot.test.util import changesource
+from buildbot.test.util import dirs
+from twisted.trial import unittest
+
 
 class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
                         unittest.TestCase):
@@ -27,7 +30,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         self.maildir = os.path.abspath("maildir")
 
         d = self.setUpChangeSource()
-        d.addCallback(lambda _ : self.setUpDirs(self.maildir))
+        d.addCallback(lambda _: self.setUpDirs(self.maildir))
         return d
 
     def populateMaildir(self):
@@ -49,7 +52,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
     def tearDown(self):
         d = self.tearDownDirs()
-        d.addCallback(lambda _ : self.tearDownChangeSource())
+        d.addCallback(lambda _: self.tearDownChangeSource())
         return d
 
     # tests
@@ -70,6 +73,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
+
         def check(_):
             self.assertMailProcessed()
             self.assertEqual(len(self.changes_added), 1)
@@ -90,6 +94,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
+
         def check(_):
             self.assertMailProcessed()
             self.assertEqual(len(self.changes_added), 1)
