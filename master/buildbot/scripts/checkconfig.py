@@ -13,15 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import os
+import sys
+
 from buildbot import config
 from buildbot.scripts.base import getConfigFileFromTac
+
 
 def _loadConfig(basedir, configFile, quiet):
     try:
         config.MasterConfig.loadConfig(
-                basedir, configFile)
+            basedir, configFile)
     except config.ConfigErrors, e:
         if not quiet:
             print >> sys.stderr, "Configuration Errors:"

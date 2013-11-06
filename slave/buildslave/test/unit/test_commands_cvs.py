@@ -15,9 +15,10 @@
 
 from twisted.trial import unittest
 
+from buildslave.commands import cvs
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import cvs
+
 
 class TestCVS(SourceCommandTestMixin, unittest.TestCase):
 
@@ -39,25 +40,24 @@ class TestCVS(SourceCommandTestMixin, unittest.TestCase):
         ))
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'clobber', 'source' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/cvs', '-d', ':pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot',
-                     '-z3', 'checkout', '-d', 'source', 'htdocs' ],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['clobber', 'source'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/cvs', '-d', ':pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot',
+                    '-z3', 'checkout', '-d', 'source', 'htdocs'],
+                   self.basedir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
         d.addCallback(self.check_sourcedata,
-                ":pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot\nhtdocs\nNone\n")
+                      ":pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot\nhtdocs\nNone\n")
         return d
-

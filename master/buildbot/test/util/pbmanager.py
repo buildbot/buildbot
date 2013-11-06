@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from twisted.internet import defer
 
+
 class PBManagerMixin:
+
     def setUpPBChangeSource(self):
         "Set up a fake self.pbmanager."
         self.registrations = []
@@ -26,6 +29,7 @@ class PBManagerMixin:
 
     def _fake_register(self, portstr, username, password, factory):
         reg = mock.Mock()
+
         def unregister():
             self.unregistrations.append((portstr, username, password))
             return defer.succeed(None)
@@ -41,7 +45,7 @@ class PBManagerMixin:
             if ps == portstr and username == un and pw == password:
                 return
         self.fail("not registered: %r not in %s" %
-                ((portstr, username, password), self.registrations))
+                  ((portstr, username, password), self.registrations))
 
     def assertUnregistered(self, portstr, username, password):
         for ps, un, pw in self.unregistrations:

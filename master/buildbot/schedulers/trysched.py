@@ -16,16 +16,16 @@
 import os
 
 from twisted.internet import defer
-from twisted.python import log
 from twisted.protocols import basic
+from twisted.python import log
 
 from buildbot import pbutil
-from buildbot.util.maildir import MaildirService
-from buildbot.util import json
-from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.status.buildset import BuildSetStatus
+from buildbot.util import json
+from buildbot.util import netstrings
+from buildbot.util.maildir import MaildirService
 
 
 class TryBase(base.BaseScheduler):
@@ -110,10 +110,10 @@ class Try_Jobdir(TryBase):
         #  builderNames: list of builder names
         #  properties: dict of build properties
         p = netstrings.NetstringParser()
-        f.seek(0,2)
+        f.seek(0, 2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
             raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
-        f.seek(0,0)
+        f.seek(0, 0)
         try:
             p.feed(f.read())
         except basic.NetstringParseError:
@@ -217,6 +217,7 @@ class Try_Jobdir(TryBase):
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
+
     def __init__(self, scheduler, username):
         self.scheduler = scheduler
         self.username = username
@@ -254,8 +255,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         requested_props = Properties()
         requested_props.update(properties, "try build")
         (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamp(
-                setid=sourcestampsetid, reason=reason,
-                properties=requested_props, builderNames=builderNames)
+            setid=sourcestampsetid, reason=reason,
+            properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object
         bsdict = yield db.buildsets.getBuildset(bsid)

@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from buildbot.db import base
+
 
 class BuildslavesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -28,7 +30,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             if rows:
                 for row in rows:
                     dicts.append({
-                        'slaveid': row.id, 
+                        'slaveid': row.id,
                         'name': row.name
                     })
             return dicts
@@ -65,8 +67,8 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                 try:
                     q = tbl.insert()
                     res = conn.execute(q,
-                            name=name,
-                            info=slaveinfo)
+                                       name=name,
+                                       info=slaveinfo)
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     # someone else beat us to the punch inserting this row;
                     # let them win.
@@ -78,7 +80,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
 
     def _bdictFromRow(self, row):
         return {
-            'slaveid': row.id, 
+            'slaveid': row.id,
             'name': row.name,
             'slaveinfo': row.info
         }

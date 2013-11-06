@@ -14,12 +14,15 @@
 # Copyright Buildbot Team Members
 
 import os
-import time
 import sqlalchemy as sa
-from twisted.trial import unittest
-from twisted.internet import defer, reactor
+import time
+
 from buildbot.db import pool
 from buildbot.test.util import db
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
 
 class Basic(unittest.TestCase):
 
@@ -38,6 +41,7 @@ class Basic(unittest.TestCase):
             rp = conn.execute("SELECT %d + %d" % (addend1, addend2))
             return rp.scalar()
         d = self.pool.do(add, 10, 11)
+
         def check(res):
             self.assertEqual(res, 21)
         d.addCallback(check)
@@ -61,6 +65,7 @@ class Basic(unittest.TestCase):
             rp = engine.execute("SELECT %d + %d" % (addend1, addend2))
             return rp.scalar()
         d = self.pool.do_with_engine(add, 10, 11)
+
         def check(res):
             self.assertEqual(res, 21)
         d.addCallback(check)
@@ -81,12 +86,14 @@ class Basic(unittest.TestCase):
         # transaction runs.  This is why we set optimal_thread_pool_size in
         # setUp.
         d = defer.succeed(None)
+
         def create_table(engine):
             engine.execute("CREATE TABLE tmp ( a integer )")
-        d.addCallback( lambda r : self.pool.do_with_engine(create_table))
+        d.addCallback(lambda r: self.pool.do_with_engine(create_table))
+
         def insert_into_table(engine):
             engine.execute("INSERT INTO tmp values ( 1 )")
-        d.addCallback( lambda r : self.pool.do_with_engine(insert_into_table))
+        d.addCallback(lambda r: self.pool.do_with_engine(insert_into_table))
         return d
 
 
@@ -119,11 +126,11 @@ class Stress(unittest.TestCase):
             conn.execute("INSERT INTO test VALUES (1, 1)")
             trans.commit()
         d2 = defer.Deferred()
-        d2.addCallback(lambda _ :
-            self.pool.do(write2))
+        d2.addCallback(lambda _:
+                       self.pool.do(write2))
         reactor.callLater(0.1, d2.callback, None)
 
-        yield defer.DeferredList([ d1, d2 ])
+        yield defer.DeferredList([d1, d2])
 
     # don't run this test, since it takes 30s
     del test_inserts
@@ -148,6 +155,7 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
 
     def setUp(self):
         d = self.setUpRealDatabase(want_pool=False)
+
         def make_pool(_):
             self.pool = pool.DBThreadPool(self.db_engine)
         d.addCallback(make_pool)
@@ -157,17 +165,18 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         # try to delete the 'native_tests' table
         meta = sa.MetaData()
         native_tests = sa.Table("native_tests", meta)
+
         def thd(conn):
             native_tests.drop(bind=self.db_engine, checkfirst=True)
         d = self.pool.do(thd)
-        d.addCallback(lambda _ : self.pool.shutdown())
-        d.addCallback(lambda _ : self.tearDownRealDatabase())
+        d.addCallback(lambda _: self.pool.shutdown())
+        d.addCallback(lambda _: self.tearDownRealDatabase())
         return d
 
     def test_ddl_and_queries(self):
         meta = sa.MetaData()
         native_tests = sa.Table("native_tests", meta,
-                sa.Column('name', sa.String(length=200)))
+                                sa.Column('name', sa.String(length=200)))
 
         # perform a DDL operation and immediately try to access that table;
         # this has caused problems in the past, so this is basically a
@@ -177,9 +186,9 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
             native_tests.create(bind=conn)
             t.commit()
         d = self.pool.do(ddl)
-        def access(conn):
-            native_tests.insert(bind=conn).execute([ {'name':'foo'} ])
-        d.addCallback(lambda _ :
-            self.pool.do(access))
-        return d
 
+        def access(conn):
+            native_tests.insert(bind=conn).execute([{'name': 'foo'}])
+        d.addCallback(lambda _:
+                      self.pool.do(access))
+        return d

@@ -13,12 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer, reactor, task
-from buildbot.test.util import changesource, compat
 from buildbot.changes import base
+from buildbot.test.util import changesource
+from buildbot.test.util import compat
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
+
 
 class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+
     class Subclass(base.PollingChangeSource):
         pass
 
@@ -29,6 +34,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
         d = self.setUpChangeSource()
+
         def create_changesource(_):
             self.attachChangeSource(self.Subclass())
         d.addCallback(create_changesource)
@@ -44,13 +50,14 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         # track when poll() gets called
         loops = []
         self.changesource.poll = \
-                lambda : loops.append(self.clock.seconds())
+            lambda: loops.append(self.clock.seconds())
 
         self.changesource.pollInterval = 5
         self.startChangeSource()
 
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
+
         def check(_):
             # note that it does *not* poll at time 0
             self.assertEqual(loops, [5.0, 10.0])
@@ -62,6 +69,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
     def test_loop_exception(self):
         # track when poll() gets called
         loops = []
+
         def poll():
             loops.append(self.clock.seconds())
             raise RuntimeError("oh noes")
@@ -72,6 +80,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
+
         def check(_):
             # note that it keeps looping after error
             self.assertEqual(loops, [5.0, 10.0])

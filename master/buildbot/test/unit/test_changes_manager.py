@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.application import service
+
 from buildbot.changes import manager
+from twisted.application import service
+from twisted.trial import unittest
+
 
 class FakeChangeSource(service.Service):
     pass
 
+
 class TestChangeManager(unittest.TestCase):
+
     def setUp(self):
         self.master = mock.Mock()
         self.cm = manager.ChangeManager(self.master)
@@ -36,9 +40,10 @@ class TestChangeManager(unittest.TestCase):
     def test_reconfigService_add(self):
         src1, src2 = self.make_sources(2)
         src1.setServiceParent(self.cm)
-        self.new_config.change_sources = [ src1, src2 ]
+        self.new_config.change_sources = [src1, src2]
 
         d = self.cm.reconfigService(self.new_config)
+
         @d.addCallback
         def check(_):
             self.assertIdentical(src2.parent, self.cm)
@@ -48,9 +53,10 @@ class TestChangeManager(unittest.TestCase):
     def test_reconfigService_remove(self):
         src1, = self.make_sources(1)
         src1.setServiceParent(self.cm)
-        self.new_config.change_sources = [ ]
+        self.new_config.change_sources = []
 
         d = self.cm.reconfigService(self.new_config)
+
         @d.addCallback
         def check(_):
             self.assertIdentical(src1.parent, None)

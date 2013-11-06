@@ -13,19 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
 import mock
-from twisted.trial import unittest
-from buildbot.status import build
+
 from buildbot import interfaces
-from buildbot.test.fake import fakemaster
 from buildbot import util
+from buildbot.status import build
+from buildbot.test.fake import fakemaster
+from twisted.trial import unittest
+from zope.interface import implements
+
 
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
+
 class FakeSource(util.ComparableMixin):
     compare_attrs = ('codebase', 'revision')
+
     def __init__(self, codebase, revision):
         self.codebase = codebase
         self.revision = revision
@@ -42,11 +46,13 @@ class FakeSource(util.ComparableMixin):
         if self.codebase:
             text.append("(%s)" % self.codebase)
         if self.revision is None:
-            return text + [ "latest" ]
+            return text + ["latest"]
         text.append(str(self.revision))
         return "FakeSource(%s)" % (', '.join(text),)
 
+
 class TestBuildProperties(unittest.TestCase):
+
     """
     Test that a BuildStatus has the necessary L{IProperties} methods and that
     they delegate to its C{properties} attribute properly - so really just a
@@ -73,7 +79,7 @@ class TestBuildProperties(unittest.TestCase):
     def test_setProperty(self):
         self.build_status.setProperty('n', 'v', 's')
         self.build_status.properties.setProperty.assert_called_with('n', 'v',
-                                                            's', runtime=True)
+                                                                    's', runtime=True)
 
     def test_hasProperty(self):
         self.build_status.properties.hasProperty.return_value = True
@@ -84,7 +90,9 @@ class TestBuildProperties(unittest.TestCase):
         self.build_status.render("xyz")
         self.build_status.properties.render.assert_called_with("xyz")
 
+
 class TestBuildGetSourcestamps(unittest.TestCase):
+
     """
     Test that a BuildStatus has the necessary L{IProperties} methods and that
     they delegate to its C{properties} attribute properly - so really just a

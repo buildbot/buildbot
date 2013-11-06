@@ -16,7 +16,9 @@
 
 from twisted.spread import pb
 
+
 class StatusClient(pb.Referenceable):
+
     """To use this, call my .connected method with a RemoteReference to the
     buildmaster's StatusClientPerspective object.
     """
@@ -70,4 +72,3 @@ class StatusClient(pb.Referenceable):
                         channel, text):
         ChunkTypes = ["STDOUT", "STDERR", "HEADER"]
         print "logChunk[%s]: %s" % (ChunkTypes[channel], text)
-

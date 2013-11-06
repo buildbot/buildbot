@@ -16,11 +16,13 @@
 from __future__ import with_statement
 
 import os
+
+from buildbot import config
+from buildbot.scripts import runner
+from buildbot.test.util import dirs
 from twisted.python import util
 from twisted.trial import unittest
-from buildbot.test.util import dirs
-from buildbot.scripts import runner
-from buildbot import config
+
 
 class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
@@ -65,9 +67,9 @@ c['schedulers'].append(Scheduler(name="all", branch=None,
 cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
 cvsmodule = "buildbot"
 from buildbot.process import factory
-from buildbot.steps.source.cvs import CVS
-from buildbot.steps.shell import Compile
 from buildbot.steps.python_twisted import Trial
+from buildbot.steps.shell import Compile
+from buildbot.steps.source.cvs import CVS
 f1 = factory.BuildFactory()
 f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
 f1.addStep(Compile(command=["python", "./setup.py", "build"]))
@@ -103,9 +105,9 @@ cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
 cvsmodule = "buildbot"
 from buildbot.process import factory
 # old source is deprecated, so we use the new source
-from buildbot.steps.source.cvs import CVS
-from buildbot.steps.shell import Compile
 from buildbot.steps.python_twisted import Trial
+from buildbot.steps.shell import Compile
+from buildbot.steps.source.cvs import CVS
 f1 = factory.BuildFactory()
 f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
 f1.addStep(Compile(command=["python", "./setup.py", "build"]))

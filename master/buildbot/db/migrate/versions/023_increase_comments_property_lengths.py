@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from migrate import changeset
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -32,15 +34,15 @@ def upgrade(migrate_engine):
         ]
         for table, column in table_columns:
             migrate_engine.execute("alter table %s alter column %s type text"
-                                    % (table, column))
+                                   % (table, column))
     else:
         changeset.alter_column(
-                sa.Column('property_value', sa.Text, nullable=False),
-                table='buildset_properties',
-                metadata=metadata,
-                engine=migrate_engine)
+            sa.Column('property_value', sa.Text, nullable=False),
+            table='buildset_properties',
+            metadata=metadata,
+            engine=migrate_engine)
         changeset.alter_column(
-                sa.Column('comments', sa.Text, nullable=False),
-                table='changes',
-                metadata=metadata,
-                engine=migrate_engine)
+            sa.Column('comments', sa.Text, nullable=False),
+            table='changes',
+            metadata=metadata,
+            engine=migrate_engine)

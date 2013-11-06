@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     # see bug #2119
 
@@ -42,11 +43,11 @@ def upgrade(migrate_engine):
         tbl = sa.Table(tbl_name, metadata, autoload=True)
         col = tbl.c[col_name]
 
-        res = migrate_engine.execute(sa.select([ sa.func.max(col) ]))
+        res = migrate_engine.execute(sa.select([sa.func.max(col)]))
         max = res.fetchall()[0][0]
 
         if max:
             seq_name = "%s_%s_seq" % (tbl_name, col_name)
             r = migrate_engine.execute("SELECT setval('%s', %d)"
-                            % (seq_name, max))
+                                       % (seq_name, max))
             r.close()

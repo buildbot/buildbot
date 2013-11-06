@@ -15,15 +15,19 @@
 
 from __future__ import with_statement
 
+import cStringIO
 import mock
+import os
 import re
 import sys
-import os
 import textwrap
-import cStringIO
+
+from buildbot.scripts import base
+from buildbot.scripts import checkconfig
+from buildbot.test.util import compat
+from buildbot.test.util import dirs
 from twisted.trial import unittest
-from buildbot.test.util import dirs, compat
-from buildbot.scripts import base, checkconfig
+
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
@@ -36,12 +40,12 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
     # tests
 
     def do_test_load(self, config='', other_files={},
-                           stdout_re=None, stderr_re=None):
+                     stdout_re=None, stderr_re=None):
         configFile = os.path.join('configdir', 'master.cfg')
         with open(configFile, "w") as f:
             f.write(config)
         for filename, contents in other_files.iteritems():
-            if type(filename) == type(()):
+            if isinstance(filename, type(())):
                 fn = os.path.join('configdir', *filename)
                 dn = os.path.dirname(fn)
                 if not os.path.isdir(dn):
@@ -56,7 +60,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         stderr = sys.stderr = cStringIO.StringIO()
         try:
             checkconfig._loadConfig(
-                    basedir='configdir', configFile="master.cfg", quiet=False)
+                basedir='configdir', configFile="master.cfg", quiet=False)
         finally:
             sys.stdout, sys.stderr = old_stdout, old_stderr
         if stdout_re:
@@ -85,7 +89,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['slavePortnum'] = 9989
                 """)
         self.do_test_load(config=config,
-                stdout_re=re.compile('Config file is good!'))
+                          stdout_re=re.compile('Config file is good!'))
 
         # (regression) check that sys.path hasn't changed
         self.assertEqual(len(sys.path), len_sys_path)
@@ -96,8 +100,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 import test_scripts_checkconfig_does_not_exist
                 """)
         self.do_test_load(config=config,
-                stderr_re=re.compile(
-                    'No module named test_scripts_checkconfig_does_not_exist'))
+                          stderr_re=re.compile(
+                              'No module named test_scripts_checkconfig_does_not_exist'))
         self.flushLoggedErrors()
 
     @compat.usesFlushLoggedErrors
@@ -106,7 +110,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig={}
                 """)
         self.do_test_load(config=config,
-                stderr_re=re.compile('no slaves'))
+                          stderr_re=re.compile('no slaves'))
         self.flushLoggedErrors()
 
     def test_success_imports(self):
@@ -118,7 +122,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['slaves'] = []
                 c['slavePortnum'] = port
                 """)
-        other_files = { 'othermodule.py' : 'port = 9989' }
+        other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
 
     def test_success_import_package(self):
@@ -131,8 +135,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['slavePortnum'] = port
                 """)
         other_files = {
-            ('otherpackage', '__init__.py') : '',
-            ('otherpackage', 'othermodule.py') : 'port = 9989',
+            ('otherpackage', '__init__.py'): '',
+            ('otherpackage', 'othermodule.py'): 'port = 9989',
         }
         self.do_test_load(config=config, other_files=other_files)
 
@@ -163,7 +167,7 @@ class TestCheckconfig(unittest.TestCase):
         C{checkconfig.checkconfig} return an error.
         """
         mockGetConfig = mock.Mock(spec=base.getConfigFileFromTac,
-                side_effect=SyntaxError)
+                                  side_effect=SyntaxError)
         self.patch(checkconfig, 'getConfigFileFromTac', mockGetConfig)
         config = dict(configFile='.', quiet=True)
         self.assertEqual(checkconfig.checkconfig(config), 1)

@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from twisted.internet import reactor
+
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -38,15 +39,15 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             q = tbl.select(whereclause=(tbl.c.brid == brid))
             res = conn.execute(q)
-            return [ self._bdictFromRow(row) for row in res.fetchall() ]
+            return [self._bdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     def addBuild(self, brid, number, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()
             r = conn.execute(self.db.model.builds.insert(),
-                    dict(number=number, brid=brid, start_time=start_time,
-                        finish_time=None))
+                             dict(number=number, brid=brid, start_time=start_time,
+                                  finish_time=None))
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
 

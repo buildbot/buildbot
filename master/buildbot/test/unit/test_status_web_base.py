@@ -14,17 +14,20 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from buildbot.status.web import base
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 
+
 class ActionResource(unittest.TestCase):
 
     def test_ActionResource_success(self):
 
         class MyActionResource(base.ActionResource):
+
             def performAction(self, request):
                 self.got_request = request
                 return defer.succeed('http://buildbot.net')
@@ -45,6 +48,7 @@ class ActionResource(unittest.TestCase):
     def test_ActionResource_exception(self):
 
         class MyActionResource(base.ActionResource):
+
             def performAction(self, request):
                 return defer.fail(RuntimeError('sacrebleu'))
 
@@ -58,6 +62,7 @@ class ActionResource(unittest.TestCase):
             # pass - all good!
         d.addErrback(check)
         return d
+
 
 class Functions(unittest.TestCase):
 

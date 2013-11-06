@@ -14,16 +14,21 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.python import failure, log
-from twisted.trial import unittest
-from twisted.internet import defer, reactor, task
-from twisted.spread import pb
-from buildbot.test.util import compat
+
 from buildbot.process import botmaster
+from buildbot.test.util import compat
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import failure
+from twisted.python import log
+from twisted.spread import pb
+from twisted.trial import unittest
 
 # TODO: should do this with more of the Twisted machinery intact - maybe in a
 # separate integration test?
+
 
 class FakeAbstractBuildSlave(object):
 
@@ -32,7 +37,7 @@ class FakeAbstractBuildSlave(object):
         self.slave = slave
         self.isConnectedResult = isConnected
         self.reactor = reactor
-        self.call_on_detach = lambda : None
+        self.call_on_detach = lambda: None
 
         # set up for loseConnection to cause the slave to detach, but not
         # immediately
@@ -40,8 +45,8 @@ class FakeAbstractBuildSlave(object):
             self.isConnectedResult = False
             self.call_on_detach()
             self.call_on_detach = None
-        self.slave.broker.transport.loseConnection = (lambda :
-                eventually(tport_loseConnection))
+        self.slave.broker.transport.loseConnection = (lambda:
+                                                      eventually(tport_loseConnection))
 
     def subscribeToDetach(self, callback):
         self.call_on_detach = callback
@@ -53,9 +58,9 @@ class FakeAbstractBuildSlave(object):
 class FakeRemoteBuildSlave(object):
 
     def __init__(self, name, callRemoteFailure=False,
-                             callRemoteException=False,
-                             callRemoteHang=0,
-                             reactor=reactor):
+                 callRemoteException=False,
+                 callRemoteHang=0,
+                 reactor=reactor):
         self.name = name
         self.callRemoteFailure = callRemoteFailure
         self.callRemoteException = callRemoteException
@@ -63,7 +68,7 @@ class FakeRemoteBuildSlave(object):
         self.reactor = reactor
 
         self.broker = mock.Mock()
-        self.broker.transport.getPeer = lambda : "<peer %s>" % name
+        self.broker.transport.getPeer = lambda: "<peer %s>" % name
 
     def _makePingResult(self):
         if self.callRemoteException:
@@ -84,6 +89,7 @@ class FakeRemoteBuildSlave(object):
             log.msg(" -> hang for %d s" % (self.callRemoteHang,))
             d = defer.Deferred()
             self.reactor.callLater(self.callRemoteHang, d.callback, None)
+
             def hangdone(_):
                 log.msg("%r.callRemote hang finished" % (self,))
                 return self._makePingResult()
@@ -115,20 +121,23 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave")
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             self.fail("shouldn't get here")
+
         def failed(f):
-            f.trap(RuntimeError) # expected error
+            f.trap(RuntimeError)  # expected error
         d.addCallbacks(got_persp, failed)
         return d
 
     def test_old_slave_absent_deadref_exc(self):
         old_remote = FakeRemoteBuildSlave("old",
-                callRemoteException=self.makeDeadReferenceError)
+                                          callRemoteException=self.makeDeadReferenceError)
         new_remote = FakeRemoteBuildSlave("new")
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave")
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             self.assertIdentical(bs, buildslave)
         d.addCallback(got_persp)
@@ -136,11 +145,12 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
 
     def test_old_slave_absent_connlost_failure(self):
         old_remote = FakeRemoteBuildSlave("old",
-                callRemoteFailure=self.makePBConnectionLostFailure)
+                                          callRemoteFailure=self.makePBConnectionLostFailure)
         new_remote = FakeRemoteBuildSlave("new")
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave")
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             self.assertIdentical(bs, buildslave)
         d.addCallback(got_persp)
@@ -149,11 +159,12 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
     @compat.usesFlushLoggedErrors
     def test_old_slave_absent_unexpected_exc(self):
         old_remote = FakeRemoteBuildSlave("old",
-                callRemoteException=self.makeRuntimeError)
+                                          callRemoteException=self.makeRuntimeError)
         new_remote = FakeRemoteBuildSlave("new")
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave")
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             # getPerspective has returned successfully:
             self.assertIdentical(bs, buildslave)
@@ -167,21 +178,22 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
         PING_TIMEOUT = botmaster.DuplicateSlaveArbitrator.PING_TIMEOUT
 
         old_remote = FakeRemoteBuildSlave("old", reactor=clock,
-                callRemoteHang=PING_TIMEOUT+1,
-                callRemoteException=callRemoteException)
+                                          callRemoteHang=PING_TIMEOUT + 1,
+                                          callRemoteException=callRemoteException)
         new_remote = FakeRemoteBuildSlave("new")
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave",
-                reactor=clock)
+                                            reactor=clock)
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         arb._reactor = clock
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             self.assertIdentical(bs, buildslave)
         d.addCallback(got_persp)
 
         # show the passage of time for 2s more than the PING_TIMEOUT, to allow
         # the old callRemote to return eventually
-        clock.pump([.1] * 10 * (PING_TIMEOUT+4))
+        clock.pump([.1] * 10 * (PING_TIMEOUT + 4))
 
         # check that the timed-out call eventually returned (and was ignored,
         # even if there was an exception)
@@ -194,20 +206,21 @@ class DuplicateSlaveArbitrator(unittest.TestCase):
 
     def test_old_slave_absent_timeout_exc(self):
         return self.do_test_old_slave_absent_timeout(
-                callRemoteException=self.makeRuntimeError)
+            callRemoteException=self.makeRuntimeError)
 
     @compat.usesFlushLoggedErrors
     def test_new_slave_ping_error(self):
         old_remote = FakeRemoteBuildSlave("old")
         new_remote = FakeRemoteBuildSlave("new",
-                callRemoteException=self.makeRuntimeError)
+                                          callRemoteException=self.makeRuntimeError)
         buildslave = FakeAbstractBuildSlave(old_remote, name="testslave")
         arb = botmaster.DuplicateSlaveArbitrator(buildslave)
         d = arb.getPerspective(new_remote, "testslave")
+
         def got_persp(bs):
             self.fail("shouldn't get here")
+
         def failed(f):
-            pass #f.trap(RuntimeError) # expected error
+            pass  # f.trap(RuntimeError) # expected error
         d.addCallbacks(got_persp, failed)
         return d
-

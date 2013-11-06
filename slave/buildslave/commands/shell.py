@@ -15,10 +15,12 @@
 
 import os
 
-from buildslave.commands import base
 from buildslave import runprocess
+from buildslave.commands import base
+
 
 class SlaveShellCommand(base.Command):
+
     def start(self):
         args = self.args
         # args['workdir'] is relative to Builder directory, and is required.
@@ -26,21 +28,21 @@ class SlaveShellCommand(base.Command):
         workdir = os.path.join(self.builder.basedir, args['workdir'])
 
         c = runprocess.RunProcess(
-                         self.builder,
-                         args['command'],
-                         workdir,
-                         environ=args.get('env'),
-                         timeout=args.get('timeout', None),
-                         maxTime=args.get('maxTime', None),
-                         sigtermTime=args.get('sigtermTime', None),
-                         sendStdout=args.get('want_stdout', True),
-                         sendStderr=args.get('want_stderr', True),
-                         sendRC=True,
-                         initialStdin=args.get('initial_stdin'),
-                         logfiles=args.get('logfiles', {}),
-                         usePTY=args.get('usePTY', "slave-config"),
-                         logEnviron=args.get('logEnviron', True),
-                         )
+            self.builder,
+            args['command'],
+            workdir,
+            environ=args.get('env'),
+            timeout=args.get('timeout', None),
+            maxTime=args.get('maxTime', None),
+            sigtermTime=args.get('sigtermTime', None),
+            sendStdout=args.get('want_stdout', True),
+            sendStderr=args.get('want_stderr', True),
+            sendRC=True,
+            initialStdin=args.get('initial_stdin'),
+            logfiles=args.get('logfiles', {}),
+            usePTY=args.get('usePTY', "slave-config"),
+            logEnviron=args.get('logEnviron', True),
+        )
         if args.get('interruptSignal'):
             c.interruptSignal = args['interruptSignal']
         c._reactor = self._reactor

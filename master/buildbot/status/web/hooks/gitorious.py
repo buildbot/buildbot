@@ -16,8 +16,9 @@
 # note: this file is based on github.py
 
 import re
-from twisted.python import log
+
 from dateutil.parser import parse as dateparse
+from twisted.python import log
 
 try:
     import json

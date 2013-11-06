@@ -21,9 +21,12 @@ import os
 import re
 
 from twisted.internet import defer
-from twisted.web import html, resource, server
+from twisted.web import html
+from twisted.web import resource
+from twisted.web import server
 
-from buildbot.status.web.base import HtmlResource, path_to_root
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import path_to_root
 from buildbot.util import json
 
 
@@ -121,6 +124,7 @@ def FilterOut(data):
 
 
 class JsonResource(resource.Resource):
+
     """Base class for json data."""
 
     contentType = "application/json"
@@ -164,7 +168,8 @@ class JsonResource(resource.Resource):
 
     def render_GET(self, request):
         """Renders a HTTP GET at the http request level."""
-        d = defer.maybeDeferred(lambda : self.content(request))
+        d = defer.maybeDeferred(lambda: self.content(request))
+
         def handle(data):
             if isinstance(data, unicode):
                 data = data.encode("utf-8")
@@ -174,22 +179,24 @@ class JsonResource(resource.Resource):
             else:
                 request.setHeader("content-type", self.contentType)
                 request.setHeader("content-disposition",
-                                "attachment; filename=\"%s.json\"" % request.path)
+                                  "attachment; filename=\"%s.json\"" % request.path)
             # Make sure we get fresh pages.
             if self.cache_seconds:
                 now = datetime.datetime.utcnow()
                 expires = now + datetime.timedelta(seconds=self.cache_seconds)
                 request.setHeader("Expires",
-                                expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
+                                  expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
                 request.setHeader("Pragma", "no-cache")
             return data
         d.addCallback(handle)
+
         def ok(data):
             request.write(data)
             request.finish()
+
         def fail(f):
             request.processingFailed(f)
-            return None # processingFailed will log this for us
+            return None  # processingFailed will log this for us
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
 
@@ -210,7 +217,7 @@ class JsonResource(resource.Resource):
             data = {}
             # Remove superfluous /
             select = [s.strip('/') for s in select]
-            select.sort(cmp=lambda x,y: cmp(x.count('/'), y.count('/')),
+            select.sort(cmp=lambda x, y: cmp(x.count('/'), y.count('/')),
                         reverse=True)
             for item in select:
                 # Start back at root.
@@ -231,23 +238,23 @@ class JsonResource(resource.Resource):
                 # some asDict methods return a Deferred, so handle that
                 # properly
                 if hasattr(child, 'asDict'):
-                    child_dict = yield defer.maybeDeferred(lambda :
-                                                child.asDict(request))
+                    child_dict = yield defer.maybeDeferred(lambda:
+                                                           child.asDict(request))
                 else:
                     child_dict = {
-                        'error' : 'Not available',
+                        'error': 'Not available',
                     }
                 node.update(child_dict)
 
                 request.prepath = prepath
                 request.postpath = postpath
         else:
-            data = yield defer.maybeDeferred(lambda : self.asDict(request))
+            data = yield defer.maybeDeferred(lambda: self.asDict(request))
 
         if filter_out:
             data = FilterOut(data)
         if compact:
-            data = json.dumps(data, sort_keys=True, separators=(',',':'))
+            data = json.dumps(data, sort_keys=True, separators=(',', ':'))
         else:
             data = json.dumps(data, sort_keys=True, indent=2)
         if callback:
@@ -267,8 +274,8 @@ class JsonResource(resource.Resource):
             for name in self.children:
                 child = self.getChildWithDefault(name, request)
                 if isinstance(child, JsonResource):
-                    data[name] = yield defer.maybeDeferred(lambda :
-                                            child.asDict(request))
+                    data[name] = yield defer.maybeDeferred(lambda:
+                                                           child.asDict(request))
                 # else silently pass over non-json resources.
             defer.returnValue(data)
         else:
@@ -315,7 +322,7 @@ def ToHtml(text):
             else:
                 line_full = line + '&as_text=1'
             output.append('<a href="' + html.escape(line_full) + '">' +
-                html.escape(line) + '</a>')
+                          html.escape(line) + '</a>')
         else:
             output.append(html.escape(line).replace('  ', '&nbsp;&nbsp;'))
         if not in_item:
@@ -330,6 +337,7 @@ def ToHtml(text):
 
 
 class HelpResource(HtmlResource):
+
     def __init__(self, text, pageTitle, parent_node):
         HtmlResource.__init__(self)
         self.text = text
@@ -340,14 +348,15 @@ class HelpResource(HtmlResource):
     def content(self, request, cxt):
         cxt['level'] = self.parent_level
         cxt['text'] = ToHtml(self.text)
-        cxt['children'] = [ n for n in self.parent_children if n != 'help' ]
+        cxt['children'] = [n for n in self.parent_children if n != 'help']
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
-                'href="/json',
-                'href="%s' % path_to_root(request) + 'json')
+            'href="/json',
+            'href="%s' % path_to_root(request) + 'json')
 
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
+
 
 class BuilderPendingBuildsJsonResource(JsonResource):
     help = """Describe pending builds for a builder.
@@ -361,9 +370,10 @@ class BuilderPendingBuildsJsonResource(JsonResource):
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
         d = self.builder_status.getPendingBuildRequestStatuses()
+
         def to_dict(statuses):
             return defer.gatherResults(
-                [ b.asDict_async() for b in statuses ])
+                [b.asDict_async() for b in statuses])
         d.addCallback(to_dict)
         return d
 
@@ -380,8 +390,8 @@ class BuilderJsonResource(JsonResource):
         self.putChild('slaves', BuilderSlavesJsonResources(status,
                                                            builder_status))
         self.putChild(
-                'pendingBuilds',
-                BuilderPendingBuildsJsonResource(status, builder_status))
+            'pendingBuilds',
+            BuilderPendingBuildsJsonResource(status, builder_status))
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
@@ -672,11 +682,12 @@ class SourceStampJsonResource(JsonResource):
         self.putChild('changes',
                       ChangesJsonResource(status, source_stamp.changes))
         # TODO(maruel): Should redirect to the patch's url instead.
-        #if source_stamp.patch:
+        # if source_stamp.patch:
         #  self.putChild('patch', StaticHTML(source_stamp.path))
 
     def asDict(self, request):
         return self.source_stamp.asDict()
+
 
 class MetricsJsonResource(JsonResource):
     help = """Master metrics.
@@ -692,8 +703,8 @@ class MetricsJsonResource(JsonResource):
             return None
 
 
-
 class JsonStatusResource(JsonResource):
+
     """Retrieves all json data."""
     help = """JSON status
 

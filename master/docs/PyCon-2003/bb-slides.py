@@ -14,16 +14,27 @@
 # Copyright Buildbot Team Members
 
 #! /usr/bin/python
-from slides import Lecture, NumSlide, Slide, Bullet, SubBullet, PRE, URL
+from slides import Bullet
+from slides import Lecture
+from slides import NumSlide
+from slides import PRE
+from slides import Slide
+from slides import SubBullet
+from slides import URL
+
 
 class Raw:
+
     def __init__(self, title, html):
         self.title = title
         self.html = html
+
     def toHTML(self):
         return self.html
 
+
 class HTML(Raw):
+
     def __init__(self, html):
         self.html = html
 
@@ -72,13 +83,13 @@ lecture = Lecture(
     # motivation
     Slide("Distributed cross-platform projects are tricky",
           Bullet("Distance means poor communication"),
-          Bullet("Size leads to specialization: " + \
+          Bullet("Size leads to specialization: " +
                  "Not everyone knows the whole tree"),
           Bullet("Multiple platforms: hard to do sufficient testing"),
           Bullet("Somebody has to keep it all working"),
           ),
     # personal experience as chief harassment officer
-    
+
     Slide("Automating away the job of 'Build Sheriff'",
           Bullet("Give quick feedback about build problems"),
           Bullet("minimize inconvenience to other developers"),
@@ -98,7 +109,7 @@ lecture = Lecture(
           Bullet("Minimal host requirements: Python and Twisted"),
           Bullet("Released under the GPL"),
           ),
-                 
+
     # master and slaves
     # slaves can be behind a firewall if they can still do checkout
     Raw("Architecture",
@@ -132,7 +143,7 @@ lecture = Lecture(
                  ),
           Bullet("Each Builder attaches to a BuildSlave (by name)"),
           ),
-    
+
     Slide("Describing the Build",
           Bullet("Overall Status: success, fail, in-between"),
           Bullet("Each step has status text, color, log files"),
@@ -152,7 +163,7 @@ lecture = Lecture(
         </ul>
         """
         ),
-          
+
     Slide("Status Delivery",
           Bullet("Build progress and status is given to a delivery object ..",
                  SubBullet(".. which can distribute it through arbitrary protocols"),
@@ -173,12 +184,12 @@ lecture = Lecture(
                  ),
           Bullet("Other BuildProcesses created by making subclasses"),
           ),
-    
+
     Slide("Demo",
           Bullet("glib-1.2.10: simple C module with several self-tests"),
           Bullet("python: Twisted BuildBot instance"),
           ),
-    
+
     Slide("Future Projects",
           Bullet("Status Delivery through other protocols",
                  SubBullet("Email with build results and logfiles"),
@@ -203,8 +214,8 @@ lecture = Lecture(
                  ),
           Bullet("Please join the mailing list to find out about releases"),
           ),
-    
-    
-    )
+
+
+)
 
 lecture.renderHTML("slides", "slide-%02d.html", css="main.css")

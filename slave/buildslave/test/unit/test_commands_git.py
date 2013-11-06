@@ -13,15 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
+import os
 
-from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.trial import unittest
 
+from buildslave.commands import git
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import git
+
 
 class TestGit(SourceCommandTestMixin, unittest.TestCase):
 
@@ -32,7 +33,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     def patch_sourcedirIsUpdateable(self, result):
-        self.cmd.sourcedirIsUpdateable = lambda : result
+        self.cmd.sourcedirIsUpdateable = lambda: result
 
     # tests
 
@@ -47,50 +48,49 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             repourl='git://github.com/djmitche/buildbot.git',
         ),
             # no sourcedata -> will do fresh checkout
-            initial_sourcedata = None,
+            initial_sourcedata=None,
         )
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'clobber', 'source' ],
-                self.basedir)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['clobber', 'source'],
+                   self.basedir)
+            + 0,
             # TODO: capture makedirs invocation here
-            Expect([ 'path/to/git', 'init'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['path/to/git', 'init'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
         d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
         return d
-
 
     def test_run_mode_copy_update_sourcedir(self):
         """test a copy where the sourcedata indicates that the source directory
@@ -102,39 +102,39 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             mode='copy',
             revision=None,
             repourl='git://github.com/djmitche/buildbot.git',
-            progress=True, # added here for better coverage
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+            progress=True,  # added here for better coverage
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master',
-                     '--progress' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master',
+                    '--progress'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -155,20 +155,20 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'clean', '-f', '-d', '-x'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+bogusref' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : "fatal: Couldn't find remote ref bogusref\n" }
-                + { 'rc': 128 }
-                + 128,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'clean', '-f', '-d', '-x'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+bogusref'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': "fatal: Couldn't find remote ref bogusref\n"}
+            + {'rc': 128}
+            + 128,
         ]
         self.patch_runprocess(*expects)
 
@@ -189,35 +189,35 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'clean', '-f', '-d', '-x'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+real-branch' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'clean', '-f', '-d', '-x'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+real-branch'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect(['path/to/git', 'branch', '-M', 'local-branch'], # note, not the same branch
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'branch', '-M', 'local-branch'],  # note, not the same branch
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -232,38 +232,38 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             mode='update',
             revision=None,
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'init'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'init'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -279,31 +279,31 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             mode='update',
             revision=None,
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -319,21 +319,21 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             mode='update',
             revision='abcdef01',
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
             Expect(['path/to/git', 'reset', '--hard', 'abcdef01'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -349,35 +349,35 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             mode='update',
             revision='abcdef01',
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(True)
 
         expects = [
             Expect(['path/to/git', 'reset', '--hard', 'abcdef01'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 1,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 1,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'abcdef01'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -394,44 +394,44 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             reference='/other/repo',
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'init'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'setFileContents',
-                     os.path.join(self.basedir_workdir,
-                                  *'.git/objects/info/alternates'.split('/')),
-                     os.path.join('/other/repo', 'objects'), ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'init'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['setFileContents',
+                    os.path.join(self.basedir_workdir,
+                                 *'.git/objects/info/alternates'.split('/')),
+                    os.path.join('/other/repo', 'objects'), ],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -448,28 +448,28 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision='deadbeef',
             shallow=True,
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'init'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'init'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'deadbeef'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -486,40 +486,40 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             shallow=True,
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
             Expect(['path/to/git', 'clone', '--depth', '1',
                     'git://github.com/djmitche/buildbot.git',
                     self.basedir_workdir],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+                   self.basedir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -537,47 +537,47 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             shallow=True,
             reference="/some/repo",
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
             Expect(['path/to/git', 'clone', '--depth', '1',
-                    '--reference', '/some/repo', # note: no ../objects
+                    '--reference', '/some/repo',  # note: no ../objects
                     'git://github.com/djmitche/buildbot.git',
                     self.basedir_workdir],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'setFileContents',
-                     os.path.join(self.basedir_workdir,
-                                  *'.git/objects/info/alternates'.split('/')),
-                     os.path.join('/some/repo', 'objects'), ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+                   self.basedir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['setFileContents',
+                    os.path.join(self.basedir_workdir,
+                                 *'.git/objects/info/alternates'.split('/')),
+                    os.path.join('/some/repo', 'objects'), ],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -594,51 +594,51 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             submodules=True,
             repourl='git://github.com/djmitche/buildbot.git',
-          ),
-            initial_sourcedata = "git://github.com/djmitche/buildbot.git master\n",
+        ),
+            initial_sourcedata="git://github.com/djmitche/buildbot.git master\n",
         )
         self.patch_sourcedirIsUpdateable(False)
 
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/git', 'init'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'fetch', '-t',
-                     'git://github.com/djmitche/buildbot.git', '+master' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStderr=True)
-                + { 'stderr' : '' }
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/git', 'init'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'fetch', '-t',
+                    'git://github.com/djmitche/buildbot.git', '+master'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStderr=True)
+            + {'stderr': ''}
+            + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'submodule', 'init' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'submodule', 'update' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'submodule', 'foreach',
-                                'git', 'clean', '-f', '-d', '-x'],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
-            Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                self.basedir_workdir,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True)
-                + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
-                + 0,
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'submodule', 'init'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'submodule', 'update'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'submodule', 'foreach',
+                    'git', 'clean', '-f', '-d', '-x'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
+            Expect(['path/to/git', 'rev-parse', 'HEAD'],
+                   self.basedir_workdir,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True)
+            + {'stdout': '4026d33b0532b11f36b0875f63699adfa8ee8662\n'}
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -670,6 +670,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             workdir='workdir',
             repourl='git://github.com/djmitche/buildbot.git',
         ))
+
         def _dovccmd(cmd, callback, keepStdout=False):
             self.assertTrue(keepStdout)
             self.cmd.command = mock.Mock()
@@ -680,6 +681,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         self.cmd._dovccmd = _dovccmd
 
         d = self.cmd.parseGotRevision()
+
         def check(res):
             self.assertEqual(res, exp)
         d.addCallback(check)
@@ -693,8 +695,8 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
 
     def test_parseGotRevision_ok(self):
         return self.do_test_parseGotRevision(
-                "\n4026d33b0532b11f36b0875f63699adfa8ee8662\n",
-                  "4026d33b0532b11f36b0875f63699adfa8ee8662")
+            "\n4026d33b0532b11f36b0875f63699adfa8ee8662\n",
+            "4026d33b0532b11f36b0875f63699adfa8ee8662")
 
     # TODO: gerrit_branch
     # TODO: consolidate Expect objects

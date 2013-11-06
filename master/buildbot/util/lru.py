@@ -13,15 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from weakref import WeakValueDictionary
-from itertools import ifilterfalse
-from twisted.python import log
-from twisted.internet import defer
-from collections import deque
 from collections import defaultdict
+from collections import deque
+from itertools import ifilterfalse
+from twisted.internet import defer
+from twisted.python import log
+from weakref import WeakValueDictionary
 
 
 class LRUCache(object):
+
     """
     A least-recently-used cache, with a fixed maximum size.
 
@@ -40,7 +41,7 @@ class LRUCache(object):
         self.cache = {}
         self.weakrefs = WeakValueDictionary()
         self.hits = self.misses = self.refhits = 0
-        self.refcount = defaultdict(lambda : 0)
+        self.refcount = defaultdict(lambda: 0)
         self.miss_fn = miss_fn
 
     def put(self, key, value):
@@ -119,7 +120,7 @@ class LRUCache(object):
             queue_appendleft = queue.appendleft
             queue_appendleft(self.sentinel)
             for k in ifilterfalse(refcount.__contains__,
-                                    iter(queue.pop, self.sentinel)):
+                                  iter(queue.pop, self.sentinel)):
                 queue_appendleft(k)
                 refcount[k] = 1
 
@@ -164,6 +165,7 @@ class LRUCache(object):
 
 
 class AsyncLRUCache(LRUCache):
+
     """
     An LRU cache with asynchronous locking to ensure that in the common case of
     multiple concurrent requests for the same key, only one fetch is performed.
@@ -196,7 +198,7 @@ class AsyncLRUCache(LRUCache):
         # create a list of waiting deferreds for this key
         d = defer.Deferred()
         assert key not in concurrent
-        concurrent[key] = [ d ]
+        concurrent[key] = [d]
 
         miss_d = self.miss_fn(key, **miss_fn_kwargs)
 

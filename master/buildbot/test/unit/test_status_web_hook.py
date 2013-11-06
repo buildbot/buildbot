@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 
 from buildbot.status.web import change_hook
-from buildbot.util import json
-from buildbot.test.util import compat
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.util import compat
+from buildbot.util import json
 
 from twisted.trial import unittest
 
+
 class TestChangeHookUnconfigured(unittest.TestCase):
+
     def setUp(self):
         self.request = FakeRequest()
         self.changeHook = change_hook.ChangeHookResource()
@@ -32,6 +34,7 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         self.request.uri = "/garbage/garbage"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check(ret):
             expected = "URI doesn't match change_hook regex: /garbage/garbage"
             self.assertEqual(self.request.written, expected)
@@ -43,6 +46,7 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         self.request.uri = "/change_hook/garbage"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check(ret):
             expected = "The dialect specified, 'garbage', wasn't whitelisted in change_hook"
             self.assertEqual(self.request.written, expected)
@@ -54,6 +58,7 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         self.request.uri = "/change_hook/"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check(ret):
             expected = "The dialect specified, 'base', wasn't whitelisted in change_hook"
             self.assertEqual(self.request.written, expected)
@@ -61,15 +66,18 @@ class TestChangeHookUnconfigured(unittest.TestCase):
         d.addCallback(check)
         return d
 
+
 class TestChangeHookConfigured(unittest.TestCase):
+
     def setUp(self):
         self.request = FakeRequest()
-        self.changeHook = change_hook.ChangeHookResource(dialects={'base' : True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'base': True})
 
     def testDefaultDialectGetNullChange(self):
         self.request.uri = "/change_hook/"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check_changes(r):
             self.assertEquals(len(self.request.addedChanges), 1)
             change = self.request.addedChanges[0]
@@ -93,20 +101,21 @@ class TestChangeHookConfigured(unittest.TestCase):
     def testDefaultDialectWithChange(self):
         self.request.uri = "/change_hook/"
         self.request.method = "GET"
-        self.request.args = { "category" : ["mycat"],
-                       "files" : [json.dumps(['file1', 'file2'])],
-                       "repository" : ["myrepo"],
-                       "when" : ["1234"],
-                       "author" : ["Santa Claus"],
-                       "number" : ["2"],
-                       "comments" : ["a comment"],
-                       "project" : ["a project"],
-                       "at" : ["sometime"],
-                       "branch" : ["a branch"],
-                       "revlink" : ["a revlink"],
-                       "properties" : [json.dumps( { "prop1" : "val1", "prop2" : "val2" })],
-                       "revision" : ["99"] }
+        self.request.args = {"category": ["mycat"],
+                             "files": [json.dumps(['file1', 'file2'])],
+                             "repository": ["myrepo"],
+                             "when": ["1234"],
+                             "author": ["Santa Claus"],
+                             "number": ["2"],
+                             "comments": ["a comment"],
+                             "project": ["a project"],
+                             "at": ["sometime"],
+                             "branch": ["a branch"],
+                             "revlink": ["a revlink"],
+                             "properties": [json.dumps({"prop1": "val1", "prop2": "val2"})],
+                             "revision": ["99"]}
         d = self.request.test_render(self.changeHook)
+
         def check_changes(r):
             self.assertEquals(len(self.request.addedChanges), 1)
             change = self.request.addedChanges[0]
@@ -130,15 +139,18 @@ class TestChangeHookConfigured(unittest.TestCase):
         self.request = FakeRequest()
         self.request.uri = "/change_hook/"
         self.request.method = "GET"
+
         def namedModuleMock(name):
             if name == 'buildbot.status.web.hooks.base':
                 class mock_hook_module(object):
+
                     def getChanges(self, request, options):
                         raise AssertionError
                 return mock_hook_module()
         self.patch(change_hook, "namedModule", namedModuleMock)
 
         d = self.request.test_render(self.changeHook)
+
         def check_changes(r):
             expected = "Error processing changes."
             self.assertEquals(len(self.request.addedChanges), 0)
@@ -149,16 +161,19 @@ class TestChangeHookConfigured(unittest.TestCase):
         d.addCallback(check_changes)
         return d
 
+
 class TestChangeHookConfiguredBogus(unittest.TestCase):
+
     def setUp(self):
         self.request = FakeRequest()
-        self.changeHook = change_hook.ChangeHookResource(dialects={'garbage' : True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'garbage': True})
 
     @compat.usesFlushLoggedErrors
     def testBogusDialect(self):
         self.request.uri = "/change_hook/garbage"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check(ret):
             expected = "Error processing changes."
             self.assertEqual(self.request.written, expected)

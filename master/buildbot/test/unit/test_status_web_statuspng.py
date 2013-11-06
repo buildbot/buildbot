@@ -16,8 +16,8 @@
 
 import os
 
-from twisted.trial import unittest
 from twisted.internet.defer import inlineCallbacks
+from twisted.trial import unittest
 
 from buildbot.status import results
 from buildbot.status.web import pngstatus
@@ -33,7 +33,9 @@ png_files = dict(
 )
 png_files_by_contents = dict((y, x) for (x, y) in png_files.iteritems())
 
+
 class TestPngStatusResource(unittest.TestCase):
+
     """Simple unit tests to check Png Status resource
     """
 
@@ -84,10 +86,12 @@ for size in None, 'small', 'normal', 'large':
         func_name = 'test_%s_%s' % (status, size or 'unspec')
         exp = '%s_%s' % (status, size or 'normal')
         setattr(TestPngStatusResource, func_name,
-                lambda self, size=size, status_code=status_code, exp=exp :
-                    self.do_test(size, status_code, exp))
+                lambda self, size=size, status_code=status_code, exp=exp:
+                self.do_test(size, status_code, exp))
+
 
 class FakeStatus(object):
+
     def __init__(self, status_code=results.SUCCESS):
         self._status_code = status_code
 
@@ -99,13 +103,16 @@ class FakeStatus(object):
 
 
 class FakeBuilder(object):
+
     def __init__(self, status_code):
         self._status_code = status_code
 
     def getBuild(self, number=0):
         return FakeBuild(self._status_code)
 
+
 class FakeBuild(object):
+
     def __init__(self, status_code):
         self._status_code = status_code
 
