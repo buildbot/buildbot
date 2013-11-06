@@ -17,7 +17,7 @@ done
 echo "======== Checking Import module convention in modified files ========"
 
 RES=true
-for filename in ${FILES[@]}; do
+for filename in ${py_files[@]}; do
   python common/fiximports.py "$filename"
   if [[ $? != 0 ]]; then
     echo "cannot fix imports of $filename"
@@ -36,7 +36,7 @@ if [[ -z `which autopep8` ]]; then
 else
     echo "============================== Auto pep8 =============================="
 
-    for filename in ${FILES[@]}; do
+    for filename in ${py_files[@]}; do
       if [[ -f common/pep8rc ]]; then
         LINEWIDTH=$(grep -E "max-line-length" common/pep8rc | sed 's/ //g' | cut -d'=' -f 2)
         # even if we dont enforce errors, if they can be fixed automatically, thats better..
@@ -58,7 +58,7 @@ else
     echo "=============================== Pep8 =================================="
 
     if [[ -f common/pep8rc ]]; then
-      for filename in ${FILES[@]}; do
+      for filename in ${py_files[@]}; do
         pep8 --config=common/pep8rc "$filename"
         if [[ $? != 0 ]]; then
           echo "pep8 issues"
@@ -76,7 +76,7 @@ else
     echo "==========================  Pylint =========================="
 
     if [[ -f common/pylintrc ]]; then
-      for filename in ${FILES[@]}; do
+      for filename in ${py_files[@]}; do
             pylint --rcfile=common/pylintrc --disable=R,line-too-long --enable=W0611 --output-format=text --report=no "$filename"
             if [[ $? != 0 ]]; then
               echo "pylint issues"
