@@ -12,6 +12,12 @@ Contributions to Buildbot should come as a complete package.  For code changes, 
 
 Your contribution must be licensed under the GPLv2, and copyright assignment is not expected (or possible: Buildbot is not a legal entity).  See http://trac.buildbot.net/wiki/LicensingYourContribution for details.
 
+You should run common/validate.sh before sending your patches.
+
+Also you can install our git hook for validating and fixing most common coding style issues
+
+   cp common/hooks/post-commit .git/hooks
+
 Development Tips
 ----------------
 
