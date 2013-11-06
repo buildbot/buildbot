@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS
+from buildbot import config
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from twisted.trial import unittest
-from buildbot import config
 
 log_output_success = '''\
 Making output directory...
@@ -105,7 +107,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
                         'E: 12: Undefined variable \'foo\'\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_ERROR))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_ERROR))
         self.expectOutcome(result=FAILURE,
                            status_text=['pylint', 'error=1', 'warning=1',
                                         'failed'])
@@ -122,7 +124,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
                         'F: 13: something really strange happened\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_FATAL))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_FATAL))
         self.expectOutcome(result=FAILURE,
                            status_text=['pylint', 'fatal=1', 'warning=1',
                                         'failed'])
@@ -158,7 +160,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
                         'C:  1:foo123: Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -177,7 +179,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W: 11,0: Bad indentation. Found 6 spaces, expected 4\n'
                         'C:  3,10:foo123: Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -195,7 +197,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W0311: 11: Bad indentation.\n'
                         'C0111:  1:funcName: Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -214,7 +216,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('W0311: 11,0: Bad indentation.\n'
                         'C0111:  3,10:foo123: Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -232,7 +234,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('test.py:9: [W0311] Bad indentation.\n'
                         'test.py:3: [C0111, foo123] Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -250,7 +252,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('test.py:9: [W] Bad indentation.\n'
                         'test.py:3: [C, foo123] Missing docstring\n'))
-            + (python.PyLint.RC_WARNING|python.PyLint.RC_CONVENTION))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            status_text=['pylint', 'convention=1', 'warning=1',
                                         'warnings'])
@@ -258,6 +260,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
         return self.runStep()
+
 
 class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
 
@@ -361,12 +364,12 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_builddir_required(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                python.Sphinx())
+        self.assertRaises(config.ConfigErrors, lambda:
+                          python.Sphinx())
 
     def test_bad_mode(self):
         self.assertRaises(config.ConfigErrors, lambda: python.Sphinx(
-                sphinx_builddir="_build", mode="don't care"))
+            sphinx_builddir="_build", mode="don't care"))
 
     def test_success(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
@@ -374,7 +377,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
-                stdout=log_output_success)
+                              stdout=log_output_success)
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])
@@ -386,7 +389,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
-                stdout='oh noes!')
+                              stdout='oh noes!')
             + 1
         )
         self.expectOutcome(result=FAILURE, status_text=["sphinx", "0 warnings", "failed"])
@@ -398,11 +401,11 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
-                stdout=log_output_nochange)
+                              stdout=log_output_nochange)
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["sphinx", "0 warnings"])
+                           status_text=["sphinx", "0 warnings"])
         return self.runStep()
 
     def test_warnings(self):
@@ -411,26 +414,27 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
-                stdout=log_output_warnings)
+                              stdout=log_output_warnings)
             + 0
         )
         self.expectOutcome(result=WARNINGS,
-                status_text=["sphinx", "2 warnings", "warnings"])
+                           status_text=["sphinx", "2 warnings", "warnings"])
         self.expectLogfile("warnings", warnings)
         d = self.runStep()
+
         def check(_):
-            self.assertEqual(self.step_statistics, { 'warnings' : 2 })
+            self.assertEqual(self.step_statistics, {'warnings': 2})
         d.addCallback(check)
         return d
 
     def test_constr_args(self):
         self.setupStep(python.Sphinx(sphinx_sourcedir='src',
-                    sphinx_builddir="bld",
-                    sphinx_builder='css',
-                    sphinx="/path/to/sphinx-build",
-                    tags=['a', 'b'],
-                    defines=dict(empty=None, t=True, f=False, s="str"),
-                    mode='full'))
+                                     sphinx_builddir="bld",
+                                     sphinx_builder='css',
+                                     sphinx="/path/to/sphinx-build",
+                                     tags=['a', 'b'],
+                                     defines=dict(empty=None, t=True, f=False, s="str"),
+                                     mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['/path/to/sphinx-build', '-b', 'css',
@@ -438,7 +442,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                                  '-D', 'f=0', '-D', 's=str', '-D', 't=1',
                                  '-E', 'src', 'bld'])
             + ExpectShell.log('stdio',
-                stdout=log_output_success)
+                              stdout=log_output_success)
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])

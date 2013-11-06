@@ -14,24 +14,30 @@
 # Copyright Buildbot Team Members
 
 import stat
-from twisted.internet import defer
-from buildbot.process import buildstep
-from buildbot.status.results import SUCCESS, FAILURE
+
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from twisted.internet import defer
+
 
 class SlaveBuildStep(buildstep.BuildStep):
+
     def describe(self, done=False):
         return self.descriptionDone if done else self.description
 
+
 class SetPropertiesFromEnv(SlaveBuildStep):
+
     """
     Sets properties from envirionment variables on the slave.
 
     Note this is transfered when the slave first connects
     """
-    name='SetPropertiesFromEnv'
-    description=['Setting']
-    descriptionDone=['Set']
+    name = 'SetPropertiesFromEnv'
+    description = ['Setting']
+    descriptionDone = ['Set']
 
     def __init__(self, variables, source="SlaveEnvironment", **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
@@ -65,19 +71,20 @@ class SetPropertiesFromEnv(SlaveBuildStep):
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
+
 class FileExists(SlaveBuildStep):
+
     """
     Check for the existence of a file on the slave.
     """
-    name='FileExists'
-    description='Checking'
-    descriptionDone='Checked'
+    name = 'FileExists'
+    description = 'Checking'
+    descriptionDone = 'Checked'
 
-    renderables = [ 'file' ]
+    renderables = ['file']
 
     haltOnFailure = True
     flunkOnFailure = True
-
 
     def __init__(self, file, **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
@@ -88,7 +95,7 @@ class FileExists(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = buildstep.RemoteCommand('stat', {'file': self.file })
+        cmd = buildstep.RemoteCommand('stat', {'file': self.file})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -106,15 +113,17 @@ class FileExists(SlaveBuildStep):
             self.step_status.setText(["Not a file."])
             self.finished(FAILURE)
 
+
 class CopyDirectory(SlaveBuildStep):
+
     """
     Copy a directory tree on the slave.
     """
-    name='CopyDirectory'
-    description=['Copying']
-    descriptionDone=['Copied']
+    name = 'CopyDirectory'
+    description = ['Copying']
+    descriptionDone = ['Copied']
 
-    renderables = [ 'src', 'dest' ]
+    renderables = ['src', 'dest']
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -132,7 +141,7 @@ class CopyDirectory(SlaveBuildStep):
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about cpdir")
 
-        args = {'fromdir': self.src, 'todir': self.dest }
+        args = {'fromdir': self.src, 'todir': self.dest}
         if self.timeout:
             args['timeout'] = self.timeout
         if self.maxTime:
@@ -157,15 +166,17 @@ class CopyDirectory(SlaveBuildStep):
         desc.extend([self.src, "to", self.dest])
         return desc
 
+
 class RemoveDirectory(SlaveBuildStep):
+
     """
     Remove a directory tree on the slave.
     """
-    name='RemoveDirectory'
-    description=['Deleting']
-    descriptionDone=['Deleted']
+    name = 'RemoveDirectory'
+    description = ['Deleting']
+    descriptionDone = ['Deleted']
 
-    renderables = [ 'dir' ]
+    renderables = ['dir']
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -179,7 +190,7 @@ class RemoveDirectory(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -192,15 +203,17 @@ class RemoveDirectory(SlaveBuildStep):
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
+
 class MakeDirectory(SlaveBuildStep):
+
     """
     Create a directory on the slave.
     """
-    name='MakeDirectory'
-    description=['Creating']
-    descriptionDone=['Created']
+    name = 'MakeDirectory'
+    description = ['Creating']
+    descriptionDone = ['Created']
 
-    renderables = [ 'dir' ]
+    renderables = ['dir']
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -214,7 +227,7 @@ class MakeDirectory(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mkdir")
-        cmd = buildstep.RemoteCommand('mkdir', {'dir': self.dir })
+        cmd = buildstep.RemoteCommand('mkdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -227,8 +240,11 @@ class MakeDirectory(SlaveBuildStep):
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
+
 class CompositeStepMixin():
+
     """I define utils for composite steps, factorizing basic remote commands"""
+
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write
@@ -242,6 +258,7 @@ class CompositeStepMixin():
         cmd = buildstep.RemoteCommand(cmd, args)
         cmd.useLog(self.rc_log, False)
         d = self.runCommand(cmd)
+
         def commandComplete(cmd):
             if abandonOnFailure and cmd.didFail():
                 raise buildstep.BuildStepFailed()
@@ -252,19 +269,19 @@ class CompositeStepMixin():
     def runRmdir(self, dir, **kwargs):
         """ remove a directory from the slave """
         return self.runRemoteCommand('rmdir',
-                                     {'dir': dir, 'logEnviron': self.logEnviron },
+                                     {'dir': dir, 'logEnviron': self.logEnviron},
                                      **kwargs)
 
     @defer.inlineCallbacks
     def pathExists(self, path):
         """ test whether path exists"""
         res = yield self.runRemoteCommand('stat', {'file': path,
-                                                   'logEnviron': self.logEnviron,},
+                                                   'logEnviron': self.logEnviron, },
                                           abandonOnFailure=False)
         defer.returnValue(not res)
 
     def runMkdir(self, _dir, **kwargs):
         """ create a directory and its parents"""
         return self.runRemoteCommand('mkdir', {'dir': _dir,
-                                               'logEnviron': self.logEnviron,},
+                                               'logEnviron': self.logEnviron, },
                                      **kwargs)

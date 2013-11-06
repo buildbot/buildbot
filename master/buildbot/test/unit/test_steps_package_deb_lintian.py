@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import config
 from buildbot.status.results import SUCCESS
 from buildbot.steps.package.deb import lintian
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from twisted.trial import unittest
-from buildbot import config
+
 
 class TestDebLintian(steps.BuildStepMixin, unittest.TestCase):
 
@@ -29,27 +30,25 @@ class TestDebLintian(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_fileloc(self):
-        self.assertRaises(config.ConfigErrors, lambda :
+        self.assertRaises(config.ConfigErrors, lambda:
                           lintian.DebLintian())
 
     def test_success(self):
         self.setupStep(lintian.DebLintian('foo_0.23_i386.changes'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['lintian', '-v', 'foo_0.23_i386.changes'])
-            +0)
+                        command=['lintian', '-v', 'foo_0.23_i386.changes'])
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['Lintian'])
         return self.runStep()
 
     def test_success_suppressTags(self):
         self.setupStep(lintian.DebLintian('foo_0.23_i386.changes',
-            suppressTags=['bad-distribution-in-changes-file']))
+                                          suppressTags=['bad-distribution-in-changes-file']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['lintian', '-v', 'foo_0.23_i386.changes',
-                        '--suppress-tags', 'bad-distribution-in-changes-file'])
-            +0)
+                        command=['lintian', '-v', 'foo_0.23_i386.changes',
+                                 '--suppress-tags', 'bad-distribution-in-changes-file'])
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['Lintian'])
         return self.runStep()
-
-

@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.schedulers.basic import Scheduler, AnyBranchScheduler
+from buildbot.schedulers.basic import AnyBranchScheduler
+from buildbot.schedulers.basic import Scheduler
 from buildbot.schedulers.dependent import Dependent
-from buildbot.schedulers.timed import Periodic, Nightly
+from buildbot.schedulers.timed import Nightly
+from buildbot.schedulers.timed import Periodic
 from buildbot.schedulers.triggerable import Triggerable
-from buildbot.schedulers.trysched import Try_Jobdir, Try_Userpass
+from buildbot.schedulers.trysched import Try_Jobdir
+from buildbot.schedulers.trysched import Try_Userpass
 
 _hush_pyflakes = [Scheduler, AnyBranchScheduler, Dependent,
                   Periodic, Nightly, Triggerable, Try_Jobdir, Try_Userpass]

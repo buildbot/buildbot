@@ -15,11 +15,13 @@
 
 import base64
 import cPickle
-from twisted.trial import unittest
-from twisted.persisted import styles
-from buildbot.status.buildstep import BuildStepStatus
+
 from buildbot.status.build import BuildStatus
 from buildbot.status.builder import BuilderStatus
+from buildbot.status.buildstep import BuildStepStatus
+from twisted.persisted import styles
+from twisted.trial import unittest
+
 
 class StatusPickles(unittest.TestCase):
     # This pickle was created with Buildbot tag v0.8.1:
@@ -50,12 +52,12 @@ class StatusPickles(unittest.TestCase):
     # this error can be "silent" since the upgrade will not fail.
 
     def test_upgrade(self):
-        self.patch(BuildStepStatus, 'upgradeToVersion1', lambda _ :
-                self.fail("BuildStepStatus.upgradeToVersion1 called"))
-        self.patch(BuildStatus, 'upgradeToVersion1', lambda _ :
-                self.fail("BuildStatus.upgradeToVersion1 called"))
-        self.patch(BuilderStatus, 'upgradeToVersion1', lambda _ :
-                self.fail("BuilderStatus.upgradeToVersion1 called"))
+        self.patch(BuildStepStatus, 'upgradeToVersion1', lambda _:
+                   self.fail("BuildStepStatus.upgradeToVersion1 called"))
+        self.patch(BuildStatus, 'upgradeToVersion1', lambda _:
+                   self.fail("BuildStatus.upgradeToVersion1 called"))
+        self.patch(BuilderStatus, 'upgradeToVersion1', lambda _:
+                   self.fail("BuilderStatus.upgradeToVersion1 called"))
         pkl_result = cPickle.loads(self.pickle_data)
         styles.doUpgrade()
         del pkl_result

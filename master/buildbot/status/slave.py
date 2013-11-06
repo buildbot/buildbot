@@ -14,10 +14,12 @@
 # Copyright Buildbot Team Members
 
 import time
-from zope.interface import implements
+
 from buildbot import interfaces
-from buildbot.util.eventual import eventually
 from buildbot.util import ascii2unicode
+from buildbot.util.eventual import eventually
+from zope.interface import implements
+
 
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
@@ -39,64 +41,83 @@ class SlaveStatus:
 
     def getName(self):
         return self.name
+
     def getAdmin(self):
         return self.admin
+
     def getHost(self):
         return self.host
+
     def getAccessURI(self):
         return self.access_uri
+
     def getVersion(self):
         return self.version
+
     def isConnected(self):
         return self.connected
+
     def isPaused(self):
         return self.paused
+
     def lastMessageReceived(self):
         return self._lastMessageReceived
+
     def getRunningBuilds(self):
         return self.runningBuilds
+
     def getConnectCount(self):
         then = time.time() - 3600
-        return len([ t for t in self.connect_times if t > then ])
+        return len([t for t in self.connect_times if t > then])
 
     def setAdmin(self, admin):
         self.admin = ascii2unicode(admin)
+
     def setHost(self, host):
         self.host = ascii2unicode(host)
+
     def setAccessURI(self, access_uri):
         self.access_uri = access_uri
+
     def setVersion(self, version):
         self.version = version
+
     def setConnected(self, isConnected):
         self.connected = isConnected
+
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
+
     def setPaused(self, isPaused):
         self.paused = isPaused
 
     def recordConnectTime(self):
         # record this connnect, and keep data for the last hour
         now = time.time()
-        self.connect_times = [ t for t in self.connect_times if t > now - 3600 ] + [ now ]
+        self.connect_times = [t for t in self.connect_times if t > now - 3600] + [now]
 
     def buildStarted(self, build):
         self.runningBuilds.append(build)
+
     def buildFinished(self, build):
         self.runningBuilds.remove(build)
 
     def getGraceful(self):
         """Return the graceful shutdown flag"""
         return self.graceful_shutdown
+
     def setGraceful(self, graceful):
         """Set the graceful shutdown flag, and notify all the watchers"""
         self.graceful_shutdown = graceful
         for cb in self.graceful_callbacks:
             eventually(cb, graceful)
+
     def addGracefulWatcher(self, watcher):
         """Add watcher to the list of watchers to be notified when the
         graceful shutdown flag is changed."""
         if not watcher in self.graceful_callbacks:
             self.graceful_callbacks.append(watcher)
+
     def removeGracefulWatcher(self, watcher):
         """Remove watcher from the list of watchers to be notified when the
         graceful shutdown flag is changed."""
@@ -116,4 +137,3 @@ class SlaveStatus:
         result['connected'] = self.isConnected()
         result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
         return result
-

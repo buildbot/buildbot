@@ -15,6 +15,7 @@
 
 from buildbot.db import base
 
+
 class SourceStampSetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 

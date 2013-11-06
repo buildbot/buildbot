@@ -13,15 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-from twisted.python import log
-from twisted.internet import defer
-import sqlalchemy as sa
 import migrate
 import migrate.versioning.api
+import os
+import sqlalchemy as sa
+
 from buildbot.db import connector
-from buildbot.test.util import db, dirs, querylog
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import db
+from buildbot.test.util import dirs
+from buildbot.test.util import querylog
+from twisted.internet import defer
+from twisted.python import log
 
 
 # test_upgrade vs. migration tests
@@ -37,6 +40,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         self.setUpDirs('basedir')
 
         d = self.setUpRealDatabase()
+
         def make_dbc(_):
             master = fakemaster.make_master()
             self.db = connector.DBConnector(master, self.basedir)
@@ -49,32 +53,33 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         return self.tearDownRealDatabase()
 
     def do_test_migration(self, base_version, target_version,
-                            setup_thd_cb, verify_thd_cb):
+                          setup_thd_cb, verify_thd_cb):
         d = defer.succeed(None)
+
         def setup_thd(conn):
             metadata = sa.MetaData()
             table = sa.Table('migrate_version', metadata,
-                    sa.Column('repository_id', sa.String(250),
-                                        primary_key=True),
-                    sa.Column('repository_path', sa.Text),
-                    sa.Column('version', sa.Integer))
+                             sa.Column('repository_id', sa.String(250),
+                                       primary_key=True),
+                             sa.Column('repository_path', sa.Text),
+                             sa.Column('version', sa.Integer))
             table.create(bind=conn)
             conn.execute(table.insert(),
-                    repository_id='Buildbot',
-                    repository_path=self.db.model.repo_path,
-                    version=base_version)
+                         repository_id='Buildbot',
+                         repository_path=self.db.model.repo_path,
+                         version=base_version)
             setup_thd_cb(conn)
-        d.addCallback(lambda _ : self.db.pool.do(setup_thd))
+        d.addCallback(lambda _: self.db.pool.do(setup_thd))
 
         def upgrade_thd(engine):
             querylog.log_from_engine(engine)
             schema = migrate.versioning.schema.ControlledSchema(engine,
-                                                    self.db.model.repo_path)
+                                                                self.db.model.repo_path)
             changeset = schema.changeset(target_version)
             for version, change in changeset:
-                log.msg('upgrading to schema version %d' % (version+1))
+                log.msg('upgrading to schema version %d' % (version + 1))
                 schema.runchange(version, change, 1)
-        d.addCallback(lambda _ : self.db.pool.do_with_engine(upgrade_thd))
+        d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
 
-        d.addCallback(lambda _ : self.db.pool.do(verify_thd_cb))
+        d.addCallback(lambda _: self.db.pool.do(verify_thd_cb))
         return d

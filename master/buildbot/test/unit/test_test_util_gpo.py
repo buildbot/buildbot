@@ -15,26 +15,32 @@
 
 import sys
 import twisted
-from twisted.trial import reporter, unittest
+
+from buildbot.test.util.gpo import Expect
+from buildbot.test.util.gpo import GetProcessOutputMixin
 from twisted.internet import utils
-from buildbot.test.util.gpo import GetProcessOutputMixin, Expect
+from twisted.trial import reporter
+from twisted.trial import unittest
+
 
 class TestGPOMixin(unittest.TestCase):
 
     # these tests use self.patch, but the SkipTest exception gets eaten, so
     # explicitly skip things here.
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
+    if twisted.version.major <= 9 and sys.version_info[:2] == (2, 7):
         skip = "unittest.TestCase.patch is not available"
 
     def runTestMethod(self, method):
         class TestCase(GetProcessOutputMixin, unittest.TestCase):
+
             def setUp(self):
                 self.setUpGetProcessOutput()
+
             def runTest(self):
                 return method(self)
         self.testcase = TestCase()
         result = reporter.TestResult()
-        self.testcase.run(result) # This blocks
+        self.testcase.run(result)  # This blocks
         return result
 
     def assertTestFailure(self, result, expectedFailure):
@@ -49,10 +55,10 @@ class TestGPOMixin(unittest.TestCase):
             output = 'expected success'
             if result.failures:
                 output += ('\ntest failed: %s' %
-                        result.failures[0][1].getErrorMessage())
+                           result.failures[0][1].getErrorMessage())
             if result.errors:
                 output += ('\nerrors: %s' %
-                        map(lambda x: x[1].value, result.errors))
+                           map(lambda x: x[1].value, result.errors))
             raise self.failureException(output)
 
         self.failUnless(result.wasSuccessful())
@@ -60,18 +66,19 @@ class TestGPOMixin(unittest.TestCase):
     def test_patch(self):
         original_getProcessOutput = utils.getProcessOutput
         original_getProcessOutputAndValue = utils.getProcessOutputAndValue
+
         def method(testcase):
             testcase.expectCommands()
             self.assertEqual(utils.getProcessOutput,
-                    testcase.patched_getProcessOutput)
+                             testcase.patched_getProcessOutput)
             self.assertEqual(utils.getProcessOutputAndValue,
-                    testcase.patched_getProcessOutputAndValue)
+                             testcase.patched_getProcessOutputAndValue)
         result = self.runTestMethod(method)
         self.assertSuccessful(result)
         self.assertEqual(utils.getProcessOutput,
-                original_getProcessOutput)
+                         original_getProcessOutput)
         self.assertEqual(utils.getProcessOutputAndValue,
-                original_getProcessOutputAndValue)
+                         original_getProcessOutputAndValue)
 
     def test_methodChaining(self):
         expect = Expect('command')
@@ -183,6 +190,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command").stdout("stdout").stderr("stderr"))
             d = utils.getProcessOutput("command", (), errortoo=True)
+
             @d.addCallback
             def cb(res):
                 testcase.assertSubstring("stdout", res)
@@ -224,7 +232,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command"))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(self.assertEqual, ('','',0))
+            d.addCallback(self.assertEqual, ('', '', 0))
             d.addCallback(lambda _: testcase.assertAllCommandsRan())
             return d
         result = self.runTestMethod(method)
@@ -235,7 +243,7 @@ class TestGPOMixin(unittest.TestCase):
             testcase.expectCommands(Expect("command"))
             testcase.expectCommands(Expect("command2"))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(self.assertEqual, ('','',0))
+            d.addCallback(self.assertEqual, ('', '', 0))
             d.addCallback(lambda _: testcase.assertAllCommandsRan())
             return d
         result = self.runTestMethod(method)
@@ -290,7 +298,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command").stderr("some test"))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(self.assertEqual, ('','some test',0))
+            d.addCallback(self.assertEqual, ('', 'some test', 0))
             return d
         result = self.runTestMethod(method)
         self.assertSuccessful(result)
@@ -299,7 +307,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command").exit(1))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(self.assertEqual, ('','',1))
+            d.addCallback(self.assertEqual, ('', '', 1))
             return d
         result = self.runTestMethod(method)
         self.assertSuccessful(result)
@@ -308,7 +316,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command").stdout("stdout"))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(testcase.assertEqual, ("stdout",'',0))
+            d.addCallback(testcase.assertEqual, ("stdout", '', 0))
             return d
         result = self.runTestMethod(method)
         self.assertSuccessful(result)
@@ -317,7 +325,7 @@ class TestGPOMixin(unittest.TestCase):
         def method(testcase):
             testcase.expectCommands(Expect("command").stdout("stdout").stderr("stderr"))
             d = utils.getProcessOutputAndValue("command", ())
-            d.addCallback(testcase.assertEqual, ("stdout",'stderr',0))
+            d.addCallback(testcase.assertEqual, ("stdout", 'stderr', 0))
             return d
         result = self.runTestMethod(method)
         self.assertSuccessful(result)

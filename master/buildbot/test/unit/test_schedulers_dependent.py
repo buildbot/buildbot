@@ -13,13 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot import config
-from buildbot.schedulers import dependent, base
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.test.util import scheduler
+from buildbot.schedulers import base
+from buildbot.schedulers import dependent
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakedb
+from buildbot.test.util import scheduler
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -35,6 +39,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
         class Upstream(base.BaseScheduler):
+
             def __init__(self, name):
                 self.name = name
         if not upstream:
@@ -47,7 +52,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def assertBuildsetSubscriptions(self, bsids=None):
         self.db.state.assertState(self.OBJECTID,
-                upstream_bsids=bsids)
+                                  upstream_bsids=bsids)
 
     # tests
 
@@ -58,7 +63,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_string_arg(self):
         self.assertRaises(config.ConfigErrors,
-                lambda : self.makeScheduler(upstream='foo'))
+                          lambda: self.makeScheduler(upstream='foo'))
 
     def test_startService(self):
         sched = self.makeScheduler()
@@ -69,6 +74,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertNotEqual(callbacks['buildset_completion'], None)
 
         d = sched.stopService()
+
         def check(_):
             callbacks = self.master.getSubscriptionCallbacks()
             self.assertEqual(callbacks['buildsets'], None)
@@ -77,7 +83,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         return d
 
     def do_test(self, scheduler_name, expect_subscription,
-            result, expect_buildset):
+                result, expect_buildset):
         sched = self.makeScheduler()
         sched.startService()
         callbacks = self.master.getSubscriptionCallbacks()
@@ -85,12 +91,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         # pretend we saw a buildset with a matching name
         self.db.insertTestData([
             fakedb.SourceStamp(id=93, sourcestampsetid=1093, revision='555',
-                            branch='master', project='proj', repository='repo',
-                            codebase = 'cb'),
+                               branch='master', project='proj', repository='repo',
+                               codebase='cb'),
             fakedb.Buildset(id=44, sourcestampsetid=1093),
-            ])
+        ])
         callbacks['buildsets'](bsid=44,
-                properties=dict(scheduler=(scheduler_name, 'Scheduler')))
+                               properties=dict(scheduler=(scheduler_name, 'Scheduler')))
 
         # check whether scheduler is subscribed to that buildset
         if expect_subscription:
@@ -108,16 +114,16 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             bsids = self.db.buildsets.allBuildsetIds()
             bsids.remove(44)
             self.db.buildsets.assertBuildset(bsids[0],
-                    dict(external_idstring=None,
-                         properties=[('scheduler', ('n', 'Scheduler'))],
-                         reason='downstream', sourcestampsetid = 1093),
-                    {'cb':
-                     dict(revision='555', branch='master', project='proj',
-                         repository='repo', codebase='cb',
-                         sourcestampsetid = 1093)
-                    })
+                                             dict(external_idstring=None,
+                                                  properties=[('scheduler', ('n', 'Scheduler'))],
+                                                  reason='downstream', sourcestampsetid=1093),
+                                             {'cb':
+                                              dict(revision='555', branch='master', project='proj',
+                                                   repository='repo', codebase='cb',
+                                                   sourcestampsetid=1093)
+                                              })
         else:
-            self.db.buildsets.assertBuildsets(1) # only the one we added above
+            self.db.buildsets.assertBuildsets(1)  # only the one we added above
 
     def test_related_buildset_SUCCESS(self):
         return self.do_test(self.UPSTREAM_NAME, True, SUCCESS, True)
@@ -142,12 +148,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Buildset(id=13, sourcestampsetid=99),
             fakedb.Object(id=self.OBJECTID),
             fakedb.ObjectState(objectid=self.OBJECTID,
-                name='upstream_bsids', value_json='[11,12,13]'),
+                               name='upstream_bsids', value_json='[11,12,13]'),
         ])
 
         # check return value (missing 12)
         self.assertEqual((yield sched._getUpstreamBuildsets()),
-                [(11, 99, False, -1), (13, 99, False, -1)])
+                         [(11, 99, False, -1), (13, 99, False, -1)])
 
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(self.OBJECTID, upstream_bsids=[11, 13])

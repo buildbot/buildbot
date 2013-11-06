@@ -14,11 +14,14 @@
 # Copyright Buildbot Team Members
 
 import mock
+
+from buildbot.test.fake.fakemaster import make_master
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.test.fake.fakemaster import make_master
+
 
 class ChangeSourceMixin(object):
+
     """
     This class is used for testing change sources, and handles a few things:
 
@@ -33,15 +36,16 @@ class ChangeSourceMixin(object):
     def setUpChangeSource(self):
         "Set up the mixin - returns a deferred."
         self.changes_added = []
+
         def addChange(**kwargs):
             # check for 8-bit strings
-            for k,v in kwargs.items():
-                if type(v) == type(""):
+            for k, v in kwargs.items():
+                if isinstance(v, type("")):
                     try:
                         v.decode('ascii')
                     except UnicodeDecodeError:
                         raise unittest.FailTest(
-                                "non-ascii string for key '%s': %r" % (k,v))
+                            "non-ascii string for key '%s': %r" % (k, v))
             self.changes_added.append(kwargs)
             return defer.succeed(mock.Mock())
         self.master = make_master(testcase=self, wantDb=True)
@@ -69,6 +73,7 @@ class ChangeSourceMixin(object):
     def stopChangeSource(self):
         "stop the change source again; returns a deferred"
         d = self.changesource.stopService()
+
         def mark_stopped(_):
             self.started = False
         d.addCallback(mark_stopped)

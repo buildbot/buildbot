@@ -13,26 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-from twisted.spread import pb
-from twisted.internet import defer, reactor
-from twisted.cred import credentials
-from twisted.trial import unittest
-from twisted.python import log
 import buildbot
-from buildbot.test.util import compat
-from buildbot.process import botmaster, builder, factory
-from buildbot import pbmanager, buildslave, config
+import mock
+
+from buildbot import buildslave
+from buildbot import config
+from buildbot import pbmanager
+from buildbot.process import botmaster
+from buildbot.process import builder
+from buildbot.process import factory
 from buildbot.status import master
-from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import compat
+from buildbot.util.eventual import eventually
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+from twisted.trial import unittest
+
 
 class FakeSlaveBuilder(pb.Referenceable):
+
     """
     Fake slave-side SlaveBuilder object
     """
 
+
 class FakeSlaveBuildSlave(pb.Referenceable):
+
     """
     Fake slave-side BuildSlave object
 
@@ -46,6 +56,7 @@ class FakeSlaveBuildSlave(pb.Referenceable):
     def setMasterPerspective(self, persp):
         self.master_persp = persp
         # clear out master_persp on disconnect
+
         def clear_persp():
             self.master_persp = None
         persp.broker.notifyOnDisconnect(clear_persp)
@@ -54,17 +65,17 @@ class FakeSlaveBuildSlave(pb.Referenceable):
         log.msg("SLAVE-SIDE: remote_print(%r)" % (what,))
 
     def remote_getSlaveInfo(self):
-        return { 'info' : 'here' }
+        return {'info': 'here'}
 
     def remote_getVersion(self):
         return buildbot.version
 
     def remote_getCommands(self):
-        return { 'x' : 1 }
+        return {'x': 1}
 
     def remote_setBuilderList(self, builder_info):
-        builder_names = [ n for n, dir in builder_info ]
-        slbuilders = [ FakeSlaveBuilder() for n in builder_names ]
+        builder_names = [n for n, dir in builder_info]
+        slbuilders = [FakeSlaveBuilder() for n in builder_names]
         eventually(self.callWhenBuilderListSet)
         return dict(zip(builder_names, slbuilders))
 
@@ -76,7 +87,7 @@ class FakeBuilder(builder.Builder):
         self.builder_status = mock.Mock()
 
     def attached(self, slave, remote, commands):
-        assert commands == { 'x' : 1 }
+        assert commands == {'x': 1}
         return defer.succeed(None)
 
     def detached(self, slave):
@@ -90,6 +101,7 @@ class FakeBuilder(builder.Builder):
 
 
 class TestSlaveComm(unittest.TestCase):
+
     """
     Test handling of connections from slaves as integrated with
      - Twisted Spread
@@ -148,9 +160,9 @@ class TestSlaveComm(unittest.TestCase):
         # reconfig the master to get it set up
         new_config = self.master.config
         new_config.protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-        new_config.slaves = [ self.buildslave ]
-        new_config.builders = [ config.BuilderConfig(name='bldr',
-                slavename='testslave', factory=factory.BuildFactory()) ]
+        new_config.slaves = [self.buildslave]
+        new_config.builders = [config.BuilderConfig(name='bldr',
+                                                    slavename='testslave', factory=factory.BuildFactory())]
 
         yield self.botmaster.reconfigService(new_config)
 
@@ -171,15 +183,16 @@ class TestSlaveComm(unittest.TestCase):
         creds = credentials.UsernamePassword("testslave", "pw")
         setBuilderList_d = defer.Deferred()
         slavebuildslave = FakeSlaveBuildSlave(
-                lambda : setBuilderList_d.callback(None))
+            lambda: setBuilderList_d.callback(None))
 
         login_d = factory.login(creds, slavebuildslave)
+
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
             self.detach_d = defer.Deferred()
-            self.buildslave.subscribeToDetach(lambda :
-                        self.detach_d.callback(None))
+            self.buildslave.subscribeToDetach(lambda:
+                                              self.detach_d.callback(None))
 
             return slavebuildslave
         login_d.addCallback(logged_in)
@@ -191,7 +204,7 @@ class TestSlaveComm(unittest.TestCase):
         else:
             d = defer.DeferredList([login_d, setBuilderList_d],
                                    consumeErrors=True, fireOnOneErrback=True)
-            d.addCallback(lambda _ : slavebuildslave)
+            d.addCallback(lambda _: slavebuildslave)
             return d
 
     def slaveSideDisconnect(self, slave):

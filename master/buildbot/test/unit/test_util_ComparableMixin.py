@@ -20,10 +20,12 @@ from buildbot import util
 
 
 class ComparableMixin(unittest.TestCase):
+
     class Foo(util.ComparableMixin):
         compare_attrs = ["a", "b"]
+
         def __init__(self, a, b, c):
-            self.a, self.b, self.c = a,b,c
+            self.a, self.b, self.c = a, b, c
 
     class Bar(Foo, util.ComparableMixin):
         compare_attrs = ["b", "c"]

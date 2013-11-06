@@ -15,7 +15,9 @@
 
 import sqlalchemy as sa
 import sqlalchemy.exc
+
 from buildbot.db import base
+
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -26,23 +28,23 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
-                    ((tbl.c.objectid == objectid)
-                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
+                ((tbl.c.objectid == objectid)
+                 & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in classifications.items():
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = important and 1 or 0
                 try:
                     conn.execute(ins_q,
-                            objectid=objectid,
-                            changeid=changeid,
-                            important=imp_int)
+                                 objectid=objectid,
+                                 changeid=changeid,
+                                 important=imp_int)
                 except (sqlalchemy.exc.ProgrammingError,
                         sqlalchemy.exc.IntegrityError):
                     # insert failed, so try an update
                     conn.execute(upd_q,
-                            wc_changeid=changeid,
-                            important=imp_int)
+                                 wc_changeid=changeid,
+                                 important=imp_int)
 
             transaction.commit()
         return self.db.pool.do(thd)
@@ -57,7 +59,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q)
         return self.db.pool.do(thd)
 
-    class Thunk: pass
+    class Thunk:
+        pass
+
     def getChangeClassifications(self, objectid, branch=Thunk,
                                  repository=Thunk, project=Thunk,
                                  codebase=Thunk):
@@ -86,8 +90,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     wc &= w
 
             q = sa.select(
-                [ sch_ch_tbl.c.changeid, sch_ch_tbl.c.important ],
+                [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return dict([ (r.changeid, [False,True][r.important])
-                          for r in conn.execute(q) ])
+            return dict([(r.changeid, [False, True][r.important])
+                         for r in conn.execute(q)])
         return self.db.pool.do(thd)

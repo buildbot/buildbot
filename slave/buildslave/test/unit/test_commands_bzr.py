@@ -17,9 +17,10 @@ import textwrap
 
 from twisted.trial import unittest
 
+from buildslave.commands import bzr
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import bzr
+
 
 class TestBzr(SourceCommandTestMixin, unittest.TestCase):
 
@@ -48,30 +49,29 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
             branch-nick: bzr.dev
         """)
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'clobber', 'source' ],
-                self.basedir)
-                + 0,
-                Expect([ 'path/to/bzr', 'checkout', '--revision', '12',
-                         'http://bazaar.launchpad.net/~bzr/bzr-gtk/trunk', 'source' ],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['clobber', 'source'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/bzr', 'checkout', '--revision', '12',
+                    'http://bazaar.launchpad.net/~bzr/bzr-gtk/trunk', 'source'],
+                   self.basedir,
+                   sendRC=False, timeout=120, usePTY=False)
+            + 0,
             Expect(['path/to/bzr', 'version-info'],
-                self.basedir_source,
-                sendRC=False, usePTY=False, keepStdout=True,
-                environ=exp_environ, sendStderr=False, sendStdout=False)
-                + { 'stdout' : verinfo }
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+                   self.basedir_source,
+                   sendRC=False, usePTY=False, keepStdout=True,
+                   environ=exp_environ, sendStderr=False, sendStdout=False)
+            + {'stdout': verinfo}
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
         d.addCallback(self.check_sourcedata, "http://bazaar.launchpad.net/~bzr/bzr-gtk/trunk\n")
         return d
-

@@ -15,11 +15,12 @@
 
 from __future__ import with_statement
 
-import os
 import mock
-from twisted.trial import unittest
+import os
+
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
+from twisted.trial import unittest
 
 
 def _regexp_path(name, *names):
@@ -31,9 +32,11 @@ def _regexp_path(name, *names):
 
 
 class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeBaseDir()
     """
+
     def setUp(self):
         # capture stdout
         self.setUpStdoutAssertions()
@@ -121,9 +124,11 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
                           misc.FileIOMixin,
                           unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeBuildbotTac()
     """
+
     def setUp(self):
         # capture stdout
         self.setUpStdoutAssertions()
@@ -282,9 +287,11 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
                         misc.FileIOMixin,
                         unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave._makeInfoFiles()
     """
+
     def setUp(self):
         # capture stdout
         self.setUpStdoutAssertions()
@@ -305,7 +312,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
                                 "error creating directory %s: err-msg" %
-                                        _regexp_path("bdir", "info"),
+                                _regexp_path("bdir", "info"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -354,7 +361,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         # call _makeInfoFiles() and check that correct exception is raised
         self.assertRaisesRegexp(create_slave.CreateSlaveError,
                                 "could not write %s: info-err-msg" %
-                                        _regexp_path("bdir", "info", "admin"),
+                                _regexp_path("bdir", "info", "admin"),
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
@@ -364,7 +371,7 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         else:
             self.assertStdoutEqual(
                 "Creating %s, you need to edit it appropriately.\n" %
-                    os.path.join("info", "admin"))
+                os.path.join("info", "admin"))
 
     def testOpenError(self):
         """
@@ -414,8 +421,8 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
         # check open() calls
         self.open.assert_has_calls(
-                [mock.call(os.path.join(info_path, "admin"), "wt"),
-                 mock.call(os.path.join(info_path, "host"), "wt")])
+            [mock.call(os.path.join(info_path, "admin"), "wt"),
+             mock.call(os.path.join(info_path, "host"), "wt")])
 
         # check write() calls
         self.fileobj.write.assert_has_calls(
@@ -432,10 +439,10 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
                 "Creating %s, you need to edit it appropriately.\n"
                 "Not creating %s - add it if you wish\n"
                 "Please edit the files in %s appropriately.\n" %
-                    (info_path, os.path.join("info", "admin"),
-                     os.path.join("info", "host"),
-                     os.path.join("info", "access_uri"),
-                     info_path))
+                (info_path, os.path.join("info", "admin"),
+                 os.path.join("info", "host"),
+                 os.path.join("info", "access_uri"),
+                 info_path))
 
     def testCreatedSuccessfully(self):
         """
@@ -464,31 +471,32 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
 
 
 class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.create_slave.createSlave()
     """
     # default options and required arguments
     options = {
-               # flags
-               "no-logrotate": False,
-               "relocatable": False,
-               "quiet": False,
-               # options
-               "basedir": "bdir",
-               "allow-shutdown": None,
-               "umask": None,
-               "usepty": 0,
-               "log-size": 16,
-               "log-count": 8,
-               "keepalive": 4,
-               "maxdelay": 2,
+        # flags
+        "no-logrotate": False,
+        "relocatable": False,
+        "quiet": False,
+        # options
+        "basedir": "bdir",
+        "allow-shutdown": None,
+        "umask": None,
+        "usepty": 0,
+        "log-size": 16,
+        "log-count": 8,
+        "keepalive": 4,
+        "maxdelay": 2,
 
-               # arguments
-               "host": "masterhost",
-               "port": 1234,
-               "name": "slavename",
-               "passwd": "orange"
-               }
+        # arguments
+        "host": "masterhost",
+        "port": 1234,
+        "name": "slavename",
+        "passwd": "orange"
+    }
 
     def setUp(self):
         # capture stdout
@@ -620,10 +628,10 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         # .tac file must define global variable "application", instance of
         # Application
         self.assertTrue('application' in glb,
-            ".tac file doesn't define \"application\" variable")
+                        ".tac file doesn't define \"application\" variable")
         self.assertTrue(glb['application'] is application_mock,
-            "defined \"application\" variable in .tac file is not "
-            "Application instance")
+                        "defined \"application\" variable in .tac file is not "
+                        "Application instance")
 
     def testDefaultTACContents(self):
         """
@@ -665,13 +673,13 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         """
 
         test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
-            " \x07 \" \\\" ' \\' ''")
+                       " \x07 \" \\\" ' \\' ''")
         with mock.patch.dict(self.options, {
                 "basedir": test_string,
                 "host": test_string,
                 "passwd": test_string,
                 "name": test_string,
-                }):
+        }):
             self.assertTACFileContents(self.options)
 
     def testNoLogRotate(self):

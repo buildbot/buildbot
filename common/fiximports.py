@@ -58,15 +58,14 @@ class FixImports(object):
                 res = False
         return res
 
-
     def importOrder(self, line):
         '''
         I define how import lines should be sorted
         return a tuple of order criterias sorted be importance
         '''
-        ret= ( "__future__" not in line, # always put __future__ import first
-                self._regexFromImport.match(line) is not None, # import before from import
-                line, # then lexicographic order
+        ret = ("__future__" not in line,  # always put __future__ import first
+               self._regexFromImport.match(line) is not None,  # import before from import
+               line,  # then lexicographic order
                )
         return ret
 
@@ -88,6 +87,7 @@ class FixImports(object):
         newlines = []
         self.groups = []
         self.group_start = None
+
         def maybeEndGroup():
             if self.group_start is not None:
                 self.groups.append((self.group_start, len(newlines)))

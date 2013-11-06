@@ -17,13 +17,14 @@
 # machine. You will also need the Python/XML distribution installed (the
 # "python2.3-xml" package under debian).
 
+import commands
 import os
 import sys
-import commands
 import xml
 
 from buildbot.clients import sendchange
-from twisted.internet import defer, reactor
+from twisted.internet import defer
+from twisted.internet import reactor
 from xml.dom import minidom
 
 
@@ -75,7 +76,7 @@ def makeChange(p):
         'revision': revision,
         'comments': comments,
         'files': files,
-        }
+    }
     return change
 
 
@@ -128,11 +129,11 @@ def findNewChanges():
                 newchanges = changes[:i]
                 newchanges.reverse()
                 return newchanges
-        if 2*lookback > 100:
+        if 2 * lookback > 100:
             raise RuntimeError("unable to find our most recent change "
                                "(%s) in the last %d changes" % (lastchange,
                                                                 lookback))
-        lookback = 2*lookback
+        lookback = 2 * lookback
 
 
 def sendChanges(master):
@@ -180,7 +181,7 @@ def sendChanges(master):
         print "change(s) NOT sent, something went wrong: " + str(why)
 
     d.addCallbacks(printSuccess, printFailure)
-    d.addBoth(lambda _ : reactor.stop)
+    d.addBoth(lambda _: reactor.stop)
     reactor.run()
 
     if changes:

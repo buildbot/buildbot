@@ -16,16 +16,20 @@
 # Quite inspired from the github hook.
 
 import hmac
-from twisted.python import log
+
 from buildbot.util import json
+from twisted.python import log
+
 
 class GoogleCodeAuthFailed(Exception):
     pass
 
+
 class Payload(object):
+
     def __init__(self, headers, body, branch):
         self._auth_code = headers['Google-Code-Project-Hosting-Hook-Hmac']
-        self._body = body # we need to save it if we want to authenticate it
+        self._body = body  # we need to save it if we want to authenticate it
         self._branch = branch
 
         payload = json.loads(body)
@@ -62,6 +66,7 @@ class Payload(object):
             ))
 
         return changes
+
 
 def getChanges(request, options=None):
     headers = request.received_headers

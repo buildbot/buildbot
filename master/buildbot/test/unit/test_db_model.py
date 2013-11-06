@@ -13,27 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.db import model, enginestrategy
+import os
+
+from buildbot.db import enginestrategy
+from buildbot.db import model
 from buildbot.test.util import db
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
+
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
     def setUp(self):
         d = self.setUpRealDatabase()
+
         def make_fake_pool(_):
             engine = enginestrategy.create_engine(self.db_url,
-                        basedir=os.path.abspath('basedir'))
+                                                  basedir=os.path.abspath('basedir'))
 
             # mock out the pool, and set up the model
             self.db = mock.Mock()
-            self.db.pool.do_with_engine = lambda thd : defer.maybeDeferred(thd,engine)
+            self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(thd, engine)
             self.db.model = model.Model(self.db)
             self.db.start()
         d.addCallback(make_fake_pool)
@@ -45,13 +50,13 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_is_current_empty(self):
         d = self.db.model.is_current()
-        d.addCallback(lambda r : self.assertFalse(r))
+        d.addCallback(lambda r: self.assertFalse(r))
         return d
 
     def test_is_current_full(self):
         d = self.db.model.upgrade()
-        d.addCallback(lambda _ : self.db.model.is_current())
-        d.addCallback(lambda r : self.assertTrue(r))
+        d.addCallback(lambda _: self.db.model.is_current())
+        d.addCallback(lambda r: self.assertTrue(r))
         return d
 
     # the upgrade method is very well-tested by the integration tests; the

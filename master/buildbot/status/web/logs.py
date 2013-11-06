@@ -14,16 +14,20 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
 from twisted.python import components
 from twisted.spread import pb
 from twisted.web import server
-from twisted.web.resource import Resource, NoResource
+from twisted.web.resource import NoResource
+from twisted.web.resource import Resource
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.status import logfile
-from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import IHTMLLog
+from buildbot.status.web.base import path_to_root
 from buildbot.util.ansicodes import parse_ansi_sgr
+
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -31,11 +35,14 @@ class ChunkConsumer:
     def __init__(self, original, textlog):
         self.original = original
         self.textlog = textlog
+
     def registerProducer(self, producer, streaming):
         self.producer = producer
         self.original.registerProducer(producer, streaming)
+
     def unregisterProducer(self):
         self.original.unregisterProducer()
+
     def writeChunk(self, chunk):
         formatted = self.textlog.content([chunk])
         try:
@@ -44,10 +51,13 @@ class ChunkConsumer:
             self.original.write(formatted)
         except pb.DeadReferenceError:
             self.producing.stopProducing()
+
     def finish(self):
         self.textlog.finished()
 
 # /builders/$builder/builds/$buildnum/steps/$stepname/logs/$logname
+
+
 class TextLog(Resource):
     # a new instance of this Resource is created for each client who views
     # it, so we can afford to track the request in the Resource.
@@ -118,13 +128,13 @@ class TextLog(Resource):
             req.setHeader("Cache-Control", "no-cache")
 
         if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")                
-            
+            self.template = req.site.buildbot_service.templates.get_template("logs.html")
+
             data = self.template.module.page_header(
-                    pageTitle = "Log File contents",
-                    texturl = req.childLink("text"),
-                    path_to_root = path_to_root(req))
-            data = data.encode('utf-8')                   
+                pageTitle="Log File contents",
+                texturl=req.childLink("text"),
+                path_to_root=path_to_root(req))
+            data = data.encode('utf-8')
             req.write(data)
 
         self.original.subscribeConsumer(ChunkConsumer(req, self))
@@ -135,7 +145,7 @@ class TextLog(Resource):
             req.setHeader("content-type", "text/plain; charset=utf-8")
         else:
             req.setHeader("content-type", "text/html; charset=utf-8")
-        
+
     def finished(self):
         if not self.req:
             return
@@ -150,7 +160,7 @@ class TextLog(Resource):
         # break the cycle, the Request's .notifications list includes the
         # Deferred (from req.notifyFinish) that's pointing at us.
         self.req = None
-        
+
         # release template
         self.template = None
 

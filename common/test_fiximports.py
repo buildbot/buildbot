@@ -2,10 +2,12 @@ from fiximports import FixImports
 from textwrap import dedent
 from twisted.trial import unittest
 
+
 class TestFixImports(unittest.TestCase):
+
     def setUp(self):
         self.fiximports = FixImports()
-        self.fiximports.printErrorMsg = lambda *_:None
+        self.fiximports.printErrorMsg = lambda *_: None
 
     def oneTest(self, src, expected):
         src = dedent(src)
@@ -19,7 +21,7 @@ class TestFixImports(unittest.TestCase):
             from twisted.internet import defer
             from twisted.trial import unittest
             from fiximports import FixImports
-            ""","""
+            """, """
             from fiximports import FixImports
             from twisted.internet import defer
             from twisted.trial import unittest
@@ -31,7 +33,7 @@ class TestFixImports(unittest.TestCase):
             from twisted.trial import unittest
 
             from fiximports import FixImports
-            ""","""
+            """, """
             from twisted.internet import defer
             from twisted.trial import unittest
 
@@ -43,7 +45,7 @@ class TestFixImports(unittest.TestCase):
             from twisted.internet import defer
             from twisted.trial import unittest
             import fiximports
-            ""","""
+            """, """
             import fiximports
 
             from twisted.internet import defer
@@ -56,7 +58,7 @@ class TestFixImports(unittest.TestCase):
                  reactor
             from twisted.trial import unittest
             import fiximports
-            ""","""
+            """, """
             from twisted.internet import defer,\\
                  reactor
             from twisted.trial import unittest
@@ -69,7 +71,7 @@ class TestFixImports(unittest.TestCase):
             from twisted.internet import defer
             from twisted.trial import unittest
             import fiximports
-            ""","""
+            """, """
             from __future__ import with_statement
 
             import fiximports

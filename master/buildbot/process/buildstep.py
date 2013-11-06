@@ -27,12 +27,14 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import interfaces, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY, worst_status
+    EXCEPTION, RETRY, worst_status
 from buildbot.process import metrics, properties
 from buildbot.util.eventual import eventually
 
+
 class BuildStepFailed(Exception):
     pass
+
 
 class RemoteCommand(pb.Referenceable):
 
@@ -44,7 +46,7 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-            collectStdout=False, collectStderr=False, decodeRC={0:SUCCESS}):
+                 collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS}):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
@@ -233,8 +235,8 @@ class RemoteCommand(pb.Referenceable):
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
         if self.debug:
-            for k,v in update.items():
-                log.msg("Update[%s]: %s" % (k,v))
+            for k, v in update.items():
+                log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
             self.addStdout(update['stdout'])
@@ -267,7 +269,7 @@ class RemoteCommand(pb.Referenceable):
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
-        for name,loog in self.logs.items():
+        for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
                     loog.addHeader("\nremoteFailed: %s" % maybeFailure)
@@ -316,11 +318,12 @@ class LogObserver:
 
 
 class LogLineObserver(LogObserver):
+
     def __init__(self):
         self.stdoutParser = basic.LineOnlyReceiver()
         self.stdoutParser.delimiter = "\n"
         self.stdoutParser.lineReceived = self.outLineReceived
-        self.stdoutParser.transport = self # for the .disconnecting attribute
+        self.stdoutParser.transport = self  # for the .disconnecting attribute
         self.disconnecting = False
 
         self.stderrParser = basic.LineOnlyReceiver()
@@ -355,22 +358,23 @@ class LogLineObserver(LogObserver):
 
 
 class RemoteShellCommand(RemoteCommand):
+
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, maxTime=None, sigtermTime=None,
+                 timeout=20 * 60, maxTime=None, sigtermTime=None,
                  logfiles={}, usePTY="slave-config", logEnviron=True,
-                 collectStdout=False,collectStderr=False,
+                 collectStdout=False, collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0:SUCCESS}):
+                 initialStdin=None, decodeRC={0: SUCCESS}):
 
-        self.command = command # stash .command, set it later
+        self.command = command  # stash .command, set it later
         if isinstance(self.command, basestring):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:
             # Try to obfuscate command.
             def obfuscate(arg):
-                if isinstance(arg, tuple) and len(arg) == 3 and arg[0] =='obfuscated':
+                if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
                 else:
                     return arg
@@ -416,13 +420,15 @@ class RemoteShellCommand(RemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.fake_command)
 
+
 class _BuildStepFactory(util.ComparableMixin):
+
     """
     This is a wrapper to record the arguments passed to as BuildStep subclass.
     We use an instance of this class, rather than a closure mostly to make it
     easier to test that the right factories are getting created.
     """
-    compare_attrs = ['factory', 'args', 'kwargs' ]
+    compare_attrs = ['factory', 'args', 'kwargs']
     implements(interfaces.IBuildStepFactory)
 
     def __init__(self, factory, *args, **kwargs):
@@ -437,6 +443,7 @@ class _BuildStepFactory(util.ComparableMixin):
             log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
                     % (self.factory, self.args, self.kwargs))
             raise
+
 
 class BuildStep(object, properties.PropertiesMixin):
 
@@ -453,14 +460,14 @@ class BuildStep(object, properties.PropertiesMixin):
     set_runtime_properties = True
 
     renderables = [
-            'haltOnFailure',
-            'flunkOnWarnings',
-            'flunkOnFailure',
-            'warnOnWarnings',
-            'warnOnFailure',
-            'alwaysRun',
-            'doStepIf',
-            'hideStepIf',
+        'haltOnFailure',
+        'flunkOnWarnings',
+        'flunkOnFailure',
+        'warnOnWarnings',
+        'warnOnFailure',
+        'alwaysRun',
+        'doStepIf',
+        'hideStepIf',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
@@ -487,12 +494,12 @@ class BuildStep(object, properties.PropertiesMixin):
              ]
 
     name = "generic"
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
-    descriptionSuffix = None # extra information to append to suffix
+    description = None  # set this to a list of short strings to override
+    descriptionDone = None  # alternate description when the step is complete
+    descriptionSuffix = None  # extra information to append to suffix
     locks = []
-    progressMetrics = () # 'time' is implicit
-    useProgress = True # set to False if step is really unpredictable
+    progressMetrics = ()  # 'time' is implicit
+    useProgress = True  # set to False if step is really unpredictable
     build = None
     step_status = None
     progress = None
@@ -503,8 +510,8 @@ class BuildStep(object, properties.PropertiesMixin):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
         if kwargs:
-            config.error("%s.__init__ got unexpected keyword argument(s) %s" \
-                  % (self.__class__, kwargs.keys()))
+            config.error("%s.__init__ got unexpected keyword argument(s) %s"
+                         % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
 
         if not isinstance(self.name, str):
@@ -567,11 +574,11 @@ class BuildStep(object, properties.PropertiesMixin):
         self.deferred = defer.Deferred()
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
-                        for access in self.locks ]
+                      for access in self.locks]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
         self.locks = [(l.getLock(self.build.slavebuilder.slave), la)
-                        for l, la in self.locks ]
+                      for l, la in self.locks]
 
         for l, la in self.locks:
             if l in self.build.locks:
@@ -629,7 +636,7 @@ class BuildStep(object, properties.PropertiesMixin):
         def setRenderable(res, attr):
             setattr(self, attr, res)
 
-        dl = [ doStep ]
+        dl = [doStep]
         for renderable in renderables:
             d = self.build.render(getattr(self, renderable))
             d.addCallback(setRenderable, renderable)
@@ -690,7 +697,7 @@ class BuildStep(object, properties.PropertiesMixin):
             if results != RETRY:
                 results = EXCEPTION
             self.step_status.setText(self.describe(True) +
-                                 ["interrupted"])
+                                     ["interrupted"])
             self.step_status.setText2(["interrupted"])
         self._finishFinished(results)
 
@@ -786,7 +793,7 @@ class BuildStep(object, properties.PropertiesMixin):
         loog = self.step_status.addLog(name)
         size = loog.chunkSize
         for start in range(0, len(text), size):
-            loog.addStdout(text[start:start+size])
+            loog.addStdout(text[start:start + size])
         loog.finish()
         self._connectPendingLogObservers()
 
@@ -830,11 +837,11 @@ class BuildStep(object, properties.PropertiesMixin):
         return value
 
 components.registerAdapter(
-        BuildStep._getStepFactory,
-        BuildStep, interfaces.IBuildStepFactory)
+    BuildStep._getStepFactory,
+    BuildStep, interfaces.IBuildStepFactory)
 components.registerAdapter(
-        lambda step : interfaces.IProperties(step.build),
-        BuildStep, interfaces.IProperties)
+    lambda step: interfaces.IProperties(step.build),
+    BuildStep, interfaces.IProperties)
 
 
 class OutputProgressObserver(LogObserver):
@@ -847,6 +854,7 @@ class OutputProgressObserver(LogObserver):
         self.length += len(text)
         self.step.setProgress(self.name, self.length)
 
+
 class LoggingBuildStep(BuildStep):
 
     progressMetrics = ('output',)
@@ -855,7 +863,7 @@ class LoggingBuildStep(BuildStep):
     parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
     cmd = None
 
-    renderables = [ 'logfiles', 'lazylogfiles' ]
+    renderables = ['logfiles', 'lazylogfiles']
 
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
@@ -891,7 +899,7 @@ class LoggingBuildStep(BuildStep):
         """
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
-        self.cmd = cmd # so we can interrupt it
+        self.cmd = cmd  # so we can interrupt it
         self.step_status.setText(self.describe(False))
 
         # stdio is the first log
@@ -906,19 +914,20 @@ class LoggingBuildStep(BuildStep):
         # there might be other logs
         self.setupLogfiles(cmd, self.logfiles)
 
-        d = self.runCommand(cmd) # might raise ConnectionLost
+        d = self.runCommand(cmd)  # might raise ConnectionLost
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
-        d.addCallback(lambda res: self.evaluateCommand(cmd)) # returns results
+        d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
+
         def _gotResults(results):
             self.setStatus(cmd, results)
             return results
-        d.addCallback(_gotResults) # returns results
+        d.addCallback(_gotResults)  # returns results
         d.addCallbacks(self.finished, self.checkDisconnect)
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
-        for logname,remotefilename in logfiles.items():
+        for logname, remotefilename in logfiles.items():
             if self.lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
@@ -989,7 +998,7 @@ class LoggingBuildStep(BuildStep):
                 return self.getText2(cmd, results)
         else:
             if (self.haltOnFailure or self.flunkOnFailure
-                or self.warnOnFailure):
+                    or self.warnOnFailure):
                 # we're affecting the overall build, so tell them why
                 return self.getText2(cmd, results)
         return []
@@ -1026,4 +1035,3 @@ def regex_log_evaluator(cmd, step_status, regexes):
 from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
-

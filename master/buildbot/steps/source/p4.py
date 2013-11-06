@@ -14,22 +14,23 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
-import re
 import os
+import re
 
-from twisted.python import log
-from twisted.internet import defer
-from buildbot import interfaces, config
-from buildbot.process import buildstep
-from buildbot.steps.source import Source
+from buildbot import config
+from buildbot import interfaces
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
+from buildbot.steps.source import Source
+from twisted.internet import defer
+from twisted.python import log
 from types import StringType
 
 
 # Notes:
 #  see
-#  http://perforce.com/perforce/doc.current/manuals/cmdref/o.gopts.html#1040647
+# http://perforce.com/perforce/doc.current/manuals/cmdref/o.gopts.html#1040647
 #   for getting p4 command to output marshalled python dictionaries as output
 #   for commands.
 #   Perhaps switch to using 'p4 -G' :  From URL above:
@@ -41,6 +42,7 @@ debug_logging = False
 
 
 class P4(Source):
+
     """Perform Perforce checkout/update operations."""
 
     name = 'p4'
@@ -85,7 +87,7 @@ class P4(Source):
         if p4viewspec and (p4base or p4branch or p4extra_views):
             config.error("Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
 
-        if p4viewspec and type(p4viewspec) is StringType:
+        if p4viewspec and isinstance(p4viewspec, StringType):
             config.error("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 
         if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
