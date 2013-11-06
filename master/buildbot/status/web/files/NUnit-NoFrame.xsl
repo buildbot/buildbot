@@ -75,16 +75,24 @@
 	</HTML>
 </xsl:template>
 	
-	<xsl:template name="testsuites">  
-		
+<xsl:template name="testsuites">  
+	<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
+		<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+
 		<xsl:for-each select="//test-suite[(child::results/test-case)]">
 
-			<xsl:sort select="@name"/>
+		<xsl:sort select="translate(child::results/test-case/@executed,$ucletters,$lcletters) = 'true' and translate(child::results/test-case/@success,$ucletters,$lcletters) = 'false'" order="descending" />
+		<xsl:sort select="translate(child::results/test-case/@executed,$ucletters,$lcletters) = 'false'" order="descending" />
+		<xsl:sort select="@name" />
+
+		<!--
+			<xsl:sort select="translate(child::results/test-case/@executed,$ucletters,$lcletters) = 'false'" />
+		-->	
+			
 			<!-- create an anchor to this class name 
 			<a name="#{generate-id(@name)}"></a>
 			-->
-				<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
-				<xsl:variable name="ucletters">ABCDEFGHIJKLMNOPQRSTUVWXYZ</xsl:variable>
+				
 			
 				<xsl:variable name="testCount" select="count(child::results/test-case)"/>
 
@@ -96,6 +104,8 @@
 			-->
 				<xsl:variable name="timeCount" select="format-number(sum(child::results/test-case/@time),'#.000')"/>
 		<div class="table-holder">
+
+			
 			<ul class="summary-list">
 				<li>
 					<b id="Tests">Tests </b>

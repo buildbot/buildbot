@@ -11,27 +11,6 @@ define(['jquery'], function ($) {
 			var th = $('.table-holder');
 
 			//  sort failues and ignored first
-			var failIgnoreArray = [];
-			$(th).each(function(){	
-
-				// count fail/ignored on each table
-				var igCount = $('.ignored-count',this).text() > 0;
-				var failCount = $('.failures-count',this).text() > 0;
-				if (igCount && !failCount) {
-					failIgnoreArray.push($(this))
-				} else if (failCount && !igCount ) {
-					failIgnoreArray.splice(0,0,$(this))
-				}
-				else if (igCount) {
-					failIgnoreArray.splice(0,0,$(this))
-				}
-			});
-			
-			failIgnoreArray.reverse();
-			
-			$(failIgnoreArray).each(function(){
-				$(this).insertAfter('#summaryTable')	
-			});
 			
 			// insert one input field for all tables
 			$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
