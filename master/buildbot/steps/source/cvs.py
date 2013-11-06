@@ -118,7 +118,8 @@ class CVS(Source):
 
     def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron})
+                                                'logEnviron': self.logEnviron,
+                                                'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -146,7 +147,8 @@ class CVS(Source):
 
     def copy(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron})
+                                                'logEnviron': self.logEnviron,
+                                                'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         old_workdir = self.workdir
