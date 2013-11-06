@@ -17,7 +17,7 @@
 # included in the coverage because none of the tests import
 # them; this results in a more accurate total coverage percent.
 
-modules = [] # for the benefit of pyflakes
+modules = []  # for the benefit of pyflakes
 
 from buildslave.scripts import logwatcher
 modules.extend([logwatcher])

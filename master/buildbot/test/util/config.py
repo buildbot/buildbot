@@ -15,6 +15,7 @@
 
 from buildbot import config
 
+
 class ConfigErrorsMixin(object):
 
     def assertConfigError(self, errors, substr_or_re):

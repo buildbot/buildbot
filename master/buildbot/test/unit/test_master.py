@@ -13,26 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
+import os
 import signal
-from twisted.internet import defer, reactor, task
-from twisted.trial import unittest
-from twisted.python import log
-from buildbot import master, monkeypatches, config
-from buildbot.util import subscription
-from buildbot.db import connector
-from buildbot.test.util import dirs, compat, misc, logging
-from buildbot.test.fake import fakedb
-from buildbot.util import epoch2datetime
+
+from buildbot import config
+from buildbot import master
+from buildbot import monkeypatches
 from buildbot.changes import changes
+from buildbot.db import connector
 from buildbot.process.users import users
+from buildbot.test.fake import fakedb
+from buildbot.test.util import compat
+from buildbot.test.util import dirs
+from buildbot.test.util import logging
+from buildbot.test.util import misc
+from buildbot.util import epoch2datetime
+from buildbot.util import subscription
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
+
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
         basedir = os.path.abspath('basedir')
         d = self.setUpDirs(basedir)
+
         def set_master(_):
             self.master = master.BuildMaster(basedir)
             self.master.config.db['db_poll_interval'] = None
@@ -41,7 +51,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
     def tearDown(self):
         return self.tearDownDirs()
-        
+
     def test_change_subscription(self):
         changeid = 918
         chdict = {
@@ -68,25 +78,26 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         self.master.db.changes.getChange.return_value = \
             defer.succeed(chdict)
         self.patch(changes.Change, 'fromChdict',
-                classmethod(lambda cls, master, chdict :
-                                defer.succeed(newchange)))
+                   classmethod(lambda cls, master, chdict:
+                               defer.succeed(newchange)))
 
         cb = mock.Mock()
         sub = self.master.subscribeToChanges(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
         d = self.master.addChange()
+
         def check(change):
             # master called the right thing in the db component, including with
             # appropriate default values
             self.master.db.changes.addChange.assert_called_with(author=None,
-                    files=None, comments=None, is_dir=0,
-                    revision=None, when_timestamp=None, branch=None, codebase='',
-                    category=None, revlink='', properties={}, repository='', project='', uid=None)
+                                                                files=None, comments=None, is_dir=0,
+                                                                revision=None, when_timestamp=None, branch=None, codebase='',
+                                                                category=None, revlink='', properties={}, repository='', project='', uid=None)
 
             self.master.db.changes.getChange.assert_called_with(changeid)
             # addChange returned the right value
-            self.failUnless(change is newchange) # fromChdict's return value
+            self.failUnless(change is newchange)  # fromChdict's return value
             # and the notification sub was called correctly
             cb.assert_called_with(newchange)
         d.addCallback(check)
@@ -95,15 +106,16 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def do_test_addChange_args(self, args=(), kwargs={}, exp_db_kwargs={}):
         # add default arguments
         default_db_kwargs = dict(files=None, comments=None, author=None,
-                is_dir=0, revision=None, when_timestamp=None,
-                branch=None, category=None, revlink='', properties={},
-                repository='', codebase='', project='', uid=None)
+                                 is_dir=0, revision=None, when_timestamp=None,
+                                 branch=None, category=None, revlink='', properties={},
+                                 repository='', codebase='', project='', uid=None)
         k = default_db_kwargs
         k.update(exp_db_kwargs)
         exp_db_kwargs = k
 
         self.master.db = mock.Mock()
         got = []
+
         def db_addChange(*args, **kwargs):
             got[:] = args, kwargs
             # use an exception as a quick way to bail out of the remainder
@@ -112,7 +124,8 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         self.master.db.changes.addChange = db_addChange
 
         d = self.master.addChange(*args, **kwargs)
-        d.addCallback(lambda _ : self.fail("should not succeed"))
+        d.addCallback(lambda _: self.fail("should not succeed"))
+
         def check(f):
             self.assertEqual(got, [(), exp_db_kwargs])
         d.addErrback(check)
@@ -121,44 +134,45 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def test_addChange_args_author(self):
         # who should come through as author
         return self.do_test_addChange_args(
-                kwargs=dict(who='me'),
-                exp_db_kwargs=dict(author='me'))
+            kwargs=dict(who='me'),
+            exp_db_kwargs=dict(author='me'))
 
     def test_addChange_args_isdir(self):
         # isdir should come through as is_dir
         return self.do_test_addChange_args(
-                kwargs=dict(isdir=1),
-                exp_db_kwargs=dict(is_dir=1))
+            kwargs=dict(isdir=1),
+            exp_db_kwargs=dict(is_dir=1))
 
     def test_addChange_args_when(self):
         # when should come through as when_timestamp, as a datetime
         return self.do_test_addChange_args(
-                kwargs=dict(when=892293875),
-                exp_db_kwargs=dict(when_timestamp=epoch2datetime(892293875)))
+            kwargs=dict(when=892293875),
+            exp_db_kwargs=dict(when_timestamp=epoch2datetime(892293875)))
 
     def test_addChange_args_properties(self):
         # properties should be qualified with a source
         return self.do_test_addChange_args(
-                kwargs=dict(properties={ 'a' : 'b' }),
-                exp_db_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
+            kwargs=dict(properties={'a': 'b'}),
+            exp_db_kwargs=dict(properties={'a': ('b', 'Change')}))
 
     def test_addChange_args_properties_tuple(self):
         # properties should be qualified with a source, even if they
         # already look like they have a source
         return self.do_test_addChange_args(
-                kwargs=dict(properties={ 'a' : ('b', 'Change') }),
-                exp_db_kwargs=dict(properties={
-                    'a' : (('b', 'Change'), 'Change') }))
+            kwargs=dict(properties={'a': ('b', 'Change')}),
+            exp_db_kwargs=dict(properties={
+                'a': (('b', 'Change'), 'Change')}))
 
     def test_addChange_args_positional(self):
         # master.addChange can take author, files, comments as positional
         # arguments
         return self.do_test_addChange_args(
-                args=('me', ['a'], 'com'),
-                exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
-                
+            args=('me', ['a'], 'com'),
+            exp_db_kwargs=dict(author='me', files=['a'], comments='com'))
+
     def do_test_createUserObjects_args(self, args=(), kwargs={}, exp_args=()):
         got = []
+
         def fake_createUserObject(*args, **kwargs):
             got[:] = args, kwargs
             # use an exception as a quick way to bail out of the remainder
@@ -168,7 +182,8 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         self.patch(users, 'createUserObject', fake_createUserObject)
 
         d = self.master.addChange(*args, **kwargs)
-        d.addCallback(lambda _ : self.fail("should not succeed"))
+        d.addCallback(lambda _: self.fail("should not succeed"))
+
         def check(f):
             self.assertEqual(got, [exp_args, {}])
         d.addErrback(check)
@@ -177,24 +192,26 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
     def test_addChange_createUserObject_args(self):
         # who should come through as author
         return self.do_test_createUserObjects_args(
-                kwargs=dict(who='me', src='git'),
-                exp_args=(self.master, 'me', 'git'))
-               
+            kwargs=dict(who='me', src='git'),
+            exp_args=(self.master, 'me', 'git'))
+
     def test_buildset_subscription(self):
         self.master.db = mock.Mock()
         self.master.db.buildsets.addBuildset.return_value = \
-            defer.succeed((938593, dict(a=19,b=20)))
+            defer.succeed((938593, dict(a=19, b=20)))
 
         cb = mock.Mock()
         sub = self.master.subscribeToBuildsets(cb)
         self.assertIsInstance(sub, subscription.Subscription)
 
         d = self.master.addBuildset(ssid=999)
-        def check((bsid,brids)):
+
+        def check(xxx_todo_changeme):
             # master called the right thing in the db component
+            (bsid, brids) = xxx_todo_changeme
             self.master.db.buildsets.addBuildset.assert_called_with(ssid=999)
             # addBuildset returned the right value
-            self.assertEqual((bsid,brids), (938593, dict(a=19,b=20)))
+            self.assertEqual((bsid, brids), (938593, dict(a=19, b=20)))
             # and the notification sub was called correctly
             cb.assert_called_with(bsid=938593, ssid=999)
         d.addCallback(check)
@@ -211,24 +228,26 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
         # assert the notification sub was called correctly
         cb.assert_called_with(938593, 999)
 
+
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         d = self.setUpDirs(self.basedir)
+
         @d.addCallback
         def make_master(_):
             # don't create child services
             self.patch(master.BuildMaster, 'create_child_services',
-                    lambda self : None)
+                       lambda self: None)
 
             # patch out a few other annoying things the master likes to do
-            self.patch(monkeypatches, 'patch_all', lambda : None)
-            self.patch(signal, 'signal', lambda sig, hdlr : None)
-            self.patch(master, 'Status', lambda master : mock.Mock()) # XXX temporary
+            self.patch(monkeypatches, 'patch_all', lambda: None)
+            self.patch(signal, 'signal', lambda sig, hdlr: None)
+            self.patch(master, 'Status', lambda master: mock.Mock())  # XXX temporary
             self.patch(config.MasterConfig, 'loadConfig',
-                    classmethod(lambda cls, b, f : cls()))
+                       classmethod(lambda cls, b, f: cls()))
 
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
@@ -249,9 +268,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             config.error('oh noes')
         self.patch(config.MasterConfig, 'loadConfig', loadConfig)
 
-
     # tests
-
     def test_startup_bad_config(self):
         reactor = self.make_reactor()
         self.patch_loadConfig_fail()
@@ -266,6 +283,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
     def test_startup_db_not_ready(self):
         reactor = self.make_reactor()
+
         def db_setup():
             log.msg("GOT HERE")
             raise connector.DatabaseNotReadyError()
@@ -282,6 +300,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     @compat.usesFlushLoggedErrors
     def test_startup_error(self):
         reactor = self.make_reactor()
+
         def db_setup():
             raise RuntimeError("oh noes")
         self.db.setup = db_setup
@@ -298,7 +317,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         reactor = self.make_reactor()
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.stopService())
+        d.addCallback(lambda _: self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -309,11 +328,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def test_reconfig(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
-                side_effect=lambda n : defer.succeed(None))
+            side_effect=lambda n: defer.succeed(None))
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.reconfig())
-        d.addCallback(lambda _ : self.master.stopService())
+        d.addCallback(lambda _: self.master.reconfig())
+        d.addCallback(lambda _: self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -324,7 +343,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def test_reconfig_bad_config(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
-                side_effect=lambda n : defer.succeed(None))
+            side_effect=lambda n: defer.succeed(None))
 
         yield self.master.startService(_reactor=reactor)
 
@@ -349,18 +368,19 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
-        self.assertRaises(config.ConfigErrors, lambda :
-                self.master.reconfigService(new))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          self.master.reconfigService(new))
 
     def test_reconfigService_start_polling(self):
         loopingcall = mock.Mock()
-        self.patch(task, 'LoopingCall', lambda fn : loopingcall)
+        self.patch(task, 'LoopingCall', lambda fn: loopingcall)
 
         self.master.config = config.MasterConfig()
         new = config.MasterConfig()
         new.db['db_poll_interval'] = 120
 
         d = self.master.reconfigService(new)
+
         @d.addCallback
         def check(_):
             loopingcall.start.assert_called_with(120, now=False)
@@ -390,14 +410,14 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
         self.gotten_buildset_completions = []
         self.gotten_buildrequest_additions = []
 
-
         basedir = os.path.abspath('basedir')
 
         # patch out os.uname so that we get a consistent hostname
-        self.patch_os_uname(lambda : [ 0, 'testhost.localdomain' ])
+        self.patch_os_uname(lambda: [0, 'testhost.localdomain'])
         self.master_name = "testhost.localdomain:%s" % (basedir,)
 
         d = self.setUpDirs(basedir)
+
         def set_master(_):
             self.master = master.BuildMaster(basedir)
 
@@ -441,6 +461,7 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
                           class_name='buildbot.master.BuildMaster'),
         ])
         d = self.master.pollDatabaseChanges()
+
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -459,6 +480,7 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             fakedb.Change(changeid=11),
         ])
         d = self.master.pollDatabaseChanges()
+
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -478,9 +500,10 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             fakedb.Change(changeid=12),
         ])
         d = self.master.pollDatabaseChanges()
+
         def check(_):
-            self.assertEqual([ ch.number for ch in self.gotten_changes],
-                             [ 11, 12 ]) # note 10 was already seen
+            self.assertEqual([ch.number for ch in self.gotten_changes],
+                             [11, 12])  # note 10 was already seen
             self.assertEqual(self.gotten_buildset_additions, [])
             self.assertEqual(self.gotten_buildset_completions, [])
             self.db.state.assertState(53, last_processed_change=12)
@@ -496,6 +519,7 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             fakedb.Change(changeid=10),
         ])
         d = self.master.pollDatabaseChanges()
+
         def check(_):
             self.assertEqual(self.gotten_changes, [])
             self.assertEqual(self.gotten_buildset_additions, [])
@@ -506,6 +530,7 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
 
     def test_pollDatabaseBuildRequests_empty(self):
         d = self.master.pollDatabaseBuildRequests()
+
         def check(_):
             self.assertEqual(self.gotten_buildrequest_additions, [])
         d.addCallback(check)
@@ -520,40 +545,45 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             fakedb.BuildRequest(id=20, buildsetid=99, buildername='twenty')
         ])
         d = self.master.pollDatabaseBuildRequests()
+
         def check(_):
             self.assertEqual(sorted(self.gotten_buildrequest_additions),
-                    sorted([dict(bsid=99, brid=19, buildername='9teen'),
-                            dict(bsid=99, brid=20, buildername='twenty')]))
+                             sorted([dict(bsid=99, brid=19, buildername='9teen'),
+                                     dict(bsid=99, brid=20, buildername='twenty')]))
         d.addCallback(check)
         return d
 
     def test_pollDatabaseBuildRequests_incremental(self):
         d = defer.succeed(None)
+
         def insert1(_):
             self.db.insertTestData([
-            fakedb.SourceStampSet(id=127),
-            fakedb.SourceStamp(id=127, sourcestampsetid=127),
-            fakedb.Buildset(id=99, sourcestampsetid=127),
-            fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
+                fakedb.SourceStampSet(id=127),
+                fakedb.SourceStamp(id=127, sourcestampsetid=127),
+                fakedb.Buildset(id=99, sourcestampsetid=127),
+                fakedb.BuildRequest(id=11, buildsetid=9, buildername='eleventy'),
             ])
         d.addCallback(insert1)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _: self.master.pollDatabaseBuildRequests())
+
         def insert2_and_claim(_):
             self.gotten_buildrequest_additions.append('MARK')
             self.db.insertTestData([
                 fakedb.BuildRequest(id=20, buildsetid=9,
-                                        buildername='twenty'),
+                                    buildername='twenty'),
             ])
             self.db.buildrequests.fakeClaimBuildRequest(11)
         d.addCallback(insert2_and_claim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _: self.master.pollDatabaseBuildRequests())
+
         def unclaim(_):
             self.gotten_buildrequest_additions.append('MARK')
             self.db.buildrequests.fakeUnclaimBuildRequest(11)
             # note that at this point brid 20 is still unclaimed, but we do
             # not get a new notification about it
         d.addCallback(unclaim)
-        d.addCallback(lambda _ : self.master.pollDatabaseBuildRequests())
+        d.addCallback(lambda _: self.master.pollDatabaseBuildRequests())
+
         def check(_):
             self.assertEqual(self.gotten_buildrequest_additions, [
                 dict(bsid=9, brid=11, buildername='eleventy'),
@@ -564,4 +594,3 @@ class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
             ])
         d.addCallback(check)
         return d
-

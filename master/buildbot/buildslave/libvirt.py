@@ -15,13 +15,18 @@
 # Portions Copyright 2010 Isotoma Limited
 
 from __future__ import absolute_import
+
 import os
 
-from twisted.internet import defer, utils, threads
-from twisted.python import log, failure
-from buildbot.buildslave.base import AbstractBuildSlave, AbstractLatentBuildSlave
-from buildbot.util.eventual import eventually
 from buildbot import config
+from buildbot.buildslave.base import AbstractBuildSlave
+from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.util.eventual import eventually
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.internet import utils
+from twisted.python import failure
+from twisted.python import log
 
 try:
     import libvirt
@@ -31,6 +36,7 @@ except ImportError:
 
 
 class WorkQueue(object):
+
     """
     I am a class that turns parallel access into serial access.
 
@@ -60,7 +66,7 @@ class WorkQueue(object):
         except:
             d2 = defer.fail()
 
-        # Whenever a piece of work is done, whether it worked or not 
+        # Whenever a piece of work is done, whether it worked or not
         # call this to schedule the next piece of work
         def _work_done(res):
             log.msg("Completed a piece of work")
@@ -151,8 +157,8 @@ class Connection(object):
 
 class LibVirtSlave(AbstractLatentBuildSlave):
 
-    def __init__(self, name, password, connection, hd_image, base_image = None, xml=None, max_builds=None, notify_on_missing=[],
-                 missing_timeout=60*20, build_wait_timeout=60*10, properties={}, locks=None):
+    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None, max_builds=None, notify_on_missing=[],
+                 missing_timeout=60 * 20, build_wait_timeout=60 * 10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
 
@@ -218,9 +224,9 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             clone_args = "%(base)s %(image)s"
 
         clone_args = clone_args % {
-                "base": self.base_image,
-                "image": self.image,
-                }
+            "base": self.base_image,
+            "image": self.image,
+        }
 
         log.msg("Cloning base image: %s %s'" % (clone_cmd, clone_args))
 
@@ -299,4 +305,3 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_disconnected)
 
         return d
-

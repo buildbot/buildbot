@@ -25,20 +25,26 @@ special cases that Buildbot needs.  Those include:
 
 import os
 import sqlalchemy as sa
-from twisted.python import log
-from sqlalchemy.engine import strategies, url
-from sqlalchemy.pool import NullPool
+
 from buildbot.util import sautils
+from sqlalchemy.engine import strategies
+from sqlalchemy.engine import url
+from sqlalchemy.pool import NullPool
+from twisted.python import log
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
+
+
 class ReconnectingListener(object):
+
     def __init__(self):
         self.retried = False
+
 
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
     # A subclass of the ThreadLocalEngineStrategy that can effectively interact
     # with Buildbot.
-    # 
+    #
     # This adjusts the passed-in parameters to ensure that we get the behaviors
     # Buildbot wants from particular drivers, and wraps the outgoing Engine
     # object so that its methods run in threads and return deferreds.
@@ -61,7 +67,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             # sqlalchemy 0.7 for non-memory SQLite databases.
             kwargs.setdefault('poolclass', NullPool)
 
-            u.database = u.database % dict(basedir = kwargs['basedir'])
+            u.database = u.database % dict(basedir=kwargs['basedir'])
             if not os.path.isabs(u.database[0]):
                 u.database = os.path.join(kwargs['basedir'], u.database)
 
@@ -84,7 +90,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             def connect_listener(connection, record):
                 connection.execute("pragma checkpoint_fullfsync = off")
 
-            if sautils.sa_version() < (0,7,0):
+            if sautils.sa_version() < (0, 7, 0):
                 class CheckpointFullfsyncDisabler(object):
                     pass
                 disabler = CheckpointFullfsyncDisabler()
@@ -110,20 +116,20 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # default to the InnoDB storage engine
         storage_engine = u.query.pop('storage_engine', 'MyISAM')
         kwargs['connect_args'] = {
-            'init_command' : 'SET storage_engine=%s' % storage_engine,
+            'init_command': 'SET storage_engine=%s' % storage_engine,
         }
 
         if 'use_unicode' in u.query:
             if u.query['use_unicode'] != "True":
                 raise TypeError("Buildbot requires use_unicode=True " +
-                                 "(and adds it automatically)")
+                                "(and adds it automatically)")
         else:
             u.query['use_unicode'] = True
 
         if 'charset' in u.query:
             if u.query['charset'] != "utf8":
                 raise TypeError("Buildbot requires charset=utf8 " +
-                                 "(and adds it automatically)")
+                                "(and adds it automatically)")
         else:
             u.query['charset'] = 'utf8'
 
@@ -148,7 +154,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         # older versions of sqlalchemy require the listener to be specified
         # in the kwargs, in a class instance
-        if sautils.sa_version() < (0,7,0):
+        if sautils.sa_version() < (0, 7, 0):
             class ReconnectingListener(object):
                 pass
             rcl = ReconnectingListener()
@@ -179,7 +185,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             max_conns = kwargs.get('pool_size', 5) + kwargs.get('max_overflow', 10)
 
         engine = strategies.ThreadLocalEngineStrategy.create(self,
-                                            u, **kwargs)
+                                                             u, **kwargs)
 
         # annotate the engine with the optimal thread pool size; this is used
         # by DBConnector to configure the surrounding thread pool
@@ -200,6 +206,8 @@ BuildbotEngineStrategy()
 # this module is really imported for the side-effects, but pyflakes will like
 # us to use something from the module -- so offer a copy of create_engine,
 # which explicitly adds the strategy argument
+
+
 def create_engine(*args, **kwargs):
     kwargs['strategy'] = 'buildbot'
 

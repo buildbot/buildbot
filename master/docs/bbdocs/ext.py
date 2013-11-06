@@ -14,15 +14,18 @@
 # Copyright Buildbot Team Members
 
 from docutils import nodes
-from sphinx.domains import Domain, ObjType, Index
-from sphinx.roles import XRefRole
-from sphinx.util.compat import Directive
-from sphinx.util import ws_re
-from sphinx.util.nodes import make_refnode
 from sphinx import addnodes
+from sphinx.domains import Domain
+from sphinx.domains import Index
+from sphinx.domains import ObjType
+from sphinx.roles import XRefRole
+from sphinx.util import ws_re
+from sphinx.util.compat import Directive
+from sphinx.util.nodes import make_refnode
 
 
 class BBRefTargetDirective(Directive):
+
     """
     A directive that can be a target for references.  Attributes:
 
@@ -59,7 +62,7 @@ class BBRefTargetDirective(Directive):
             colon = tpl.find(':')
             if colon != -1:
                 indextype = tpl[:colon].strip()
-                indexentry = tpl[colon+1:].strip() % (fullname,)
+                indexentry = tpl[colon + 1:].strip() % (fullname,)
             else:
                 indextype = 'single'
                 indexentry = tpl % (fullname,)
@@ -69,11 +72,11 @@ class BBRefTargetDirective(Directive):
             inode = addnodes.index(entries=entries)
             ret.insert(0, inode)
 
-        return ret 
+        return ret
 
     @classmethod
     def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,
-                     contnode):
+                    contnode):
         """
         Resolve a reference to a directive of this class
         """
@@ -99,6 +102,7 @@ def make_ref_target_directive(ref_type, indextemplates=None):
 
 
 class BBIndex(Index):
+
     """
     A Buildbot-specific index.
 
@@ -113,13 +117,13 @@ class BBIndex(Index):
             letter = name[0].upper()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))
-        content = [ (l, sorted(content[l], key=lambda tup : tup[0].lower()))
-                    for l in sorted(content.keys()) ]
+        content = [(l, sorted(content[l], key=lambda tup: tup[0].lower()))
+                   for l in sorted(content.keys())]
         return (content, False)
 
     @classmethod
     def resolve_ref(cls, domain, env, fromdocname, builder, typ, target, node,
-                     contnode):
+                    contnode):
         """
         Resolve a reference to an index to the document containing the index,
         using the index's C{localname} as the content of the link.
@@ -142,7 +146,9 @@ def make_index(name, localname):
                 (BBIndex,),
                 dict(name=name, localname=localname))
 
+
 class BugRole(object):
+
     """
     A role to create a link to a Trac bug, by number
     """
@@ -154,10 +160,11 @@ class BugRole(object):
         node['refuri'] = 'http://trac.buildbot.net/ticket/%s' % bugnum
         node['reftitle'] = title = 'bug #%s' % bugnum
         node.append(nodes.Text(title))
-        return [ node ], []
+        return [node], []
 
 
 class SrcRole(object):
+
     """
     A role to link to buildbot source on master
     """
@@ -166,13 +173,14 @@ class SrcRole(object):
                  options={}, content=[]):
         node = nodes.reference('', '')
         node['refuri'] = (
-            'https://github.com/buildbot/buildbot/blob/master/%s' % text )
+            'https://github.com/buildbot/buildbot/blob/master/%s' % text)
         node['reftitle'] = title = '%s' % text
         node.append(nodes.literal(title, title))
-        return [ node ], []
+        return [node], []
 
 
 class PullRole(object):
+
     """
     A role to link to a buildbot pull request
     """
@@ -183,7 +191,7 @@ class PullRole(object):
         node['refuri'] = ('https://github.com/buildbot/buildbot/pull/' + text)
         node['reftitle'] = title = 'pull request %s' % text
         node.append(nodes.Text(title, title))
-        return [ node ], []
+        return [node], []
 
 
 class BBDomain(Domain):
@@ -191,64 +199,64 @@ class BBDomain(Domain):
     label = 'Buildbot'
 
     object_types = {
-        'cfg' : ObjType('cfg', 'cfg'),
-        'sched' : ObjType('sched', 'sched'),
-        'chsrc' : ObjType('chsrc', 'chsrc'),
-        'step' : ObjType('step', 'step'),
-        'status' : ObjType('status', 'status'),
-        'cmdline' : ObjType('cmdline', 'cmdline'),
+        'cfg': ObjType('cfg', 'cfg'),
+        'sched': ObjType('sched', 'sched'),
+        'chsrc': ObjType('chsrc', 'chsrc'),
+        'step': ObjType('step', 'step'),
+        'status': ObjType('status', 'status'),
+        'cmdline': ObjType('cmdline', 'cmdline'),
     }
 
     directives = {
-        'cfg' : make_ref_target_directive('cfg',
-                indextemplates=[
-                    'single: Buildmaster Config; %s',
-                    'single: %s (Buildmaster Config)',
-                ]),
-        'sched' : make_ref_target_directive('sched',
-                indextemplates=[
-                    'single: Schedulers; %s',
-                    'single: %s Scheduler',
-                ]),
-        'chsrc' : make_ref_target_directive('chsrc',
-                indextemplates=[
-                    'single: Change Sources; %s',
-                    'single: %s Change Source',
-                ]),
-        'step' : make_ref_target_directive('step',
-                indextemplates=[
-                    'single: Build Steps; %s',
-                    'single: %s Build Step',
-                ]),
-        'status' : make_ref_target_directive('status',
-                indextemplates=[
-                    'single: Status Targets; %s',
-                    'single: %s Status Target',
-                ]),
-        'cmdline' : make_ref_target_directive('cmdline',
-                indextemplates=[
-                    'single: Command Line Subcommands; %s',
-                    'single: %s Command Line Subcommand',
-                ]),
+        'cfg': make_ref_target_directive('cfg',
+                                         indextemplates=[
+                                             'single: Buildmaster Config; %s',
+                                             'single: %s (Buildmaster Config)',
+                                         ]),
+        'sched': make_ref_target_directive('sched',
+                                           indextemplates=[
+                                               'single: Schedulers; %s',
+                                               'single: %s Scheduler',
+                                           ]),
+        'chsrc': make_ref_target_directive('chsrc',
+                                           indextemplates=[
+                                               'single: Change Sources; %s',
+                                               'single: %s Change Source',
+                                           ]),
+        'step': make_ref_target_directive('step',
+                                          indextemplates=[
+                                              'single: Build Steps; %s',
+                                              'single: %s Build Step',
+                                          ]),
+        'status': make_ref_target_directive('status',
+                                            indextemplates=[
+                                                'single: Status Targets; %s',
+                                                'single: %s Status Target',
+                                            ]),
+        'cmdline': make_ref_target_directive('cmdline',
+                                             indextemplates=[
+                                                 'single: Command Line Subcommands; %s',
+                                                 'single: %s Command Line Subcommand',
+                                             ]),
     }
 
     roles = {
-        'cfg' : XRefRole(),
-        'sched' : XRefRole(),
-        'chsrc' : XRefRole(),
-        'step' : XRefRole(),
-        'status' : XRefRole(),
-        'cmdline' : XRefRole(),
+        'cfg': XRefRole(),
+        'sched': XRefRole(),
+        'chsrc': XRefRole(),
+        'step': XRefRole(),
+        'status': XRefRole(),
+        'cmdline': XRefRole(),
 
-        'index' : XRefRole(),
+        'index': XRefRole(),
 
-        'bug' : BugRole(),
-        'src' : SrcRole(),
-        'pull' : PullRole(),
+        'bug': BugRole(),
+        'src': SrcRole(),
+        'pull': PullRole(),
     }
 
     initial_data = {
-        'targets' : {}, # type -> target -> (docname, targetname)
+        'targets': {},  # type -> target -> (docname, targetname)
     }
 
     indices = [
@@ -269,11 +277,11 @@ class BBDomain(Domain):
             else:
                 raise KeyError("no index named '%s'" % target)
             return idx.resolve_ref(self, env, fromdocname, builder, typ,
-                            target, node, contnode)
+                                   target, node, contnode)
         elif typ in self.directives:
             dir = self.directives[typ]
             return dir.resolve_ref(self, env, fromdocname, builder, typ,
-                            target, node, contnode)
+                                   target, node, contnode)
 
 
 def setup(app):

@@ -13,13 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.steps.source import darcs
-from buildbot.status.results import SUCCESS
-from buildbot.test.util import sourcesteps
-from buildbot.test.fake.remotecommand import ExpectRemoteRef, ExpectShell, Expect
-from buildbot.steps.transfer import _FileReader
 from buildbot import config
+from buildbot.status.results import SUCCESS
+from buildbot.steps.source import darcs
+from buildbot.steps.transfer import _FileReader
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import sourcesteps
+from twisted.trial import unittest
+
 
 class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -34,22 +37,22 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_incorrect_method(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                              darcs.Darcs(repourl='http://localhost/darcs',
-                                          mode='full', method='fresh'))
+                          darcs.Darcs(repourl='http://localhost/darcs',
+                                      mode='full', method='fresh'))
 
     def test_incremental_invalid_method(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                              darcs.Darcs(repourl='http://localhost/darcs',
-                                          mode='incremental', method='fresh'))
+                          darcs.Darcs(repourl='http://localhost/darcs',
+                                      mode='incremental', method='fresh'))
 
     def test_no_repo_url(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                              darcs.Darcs(mode='full', method='fresh'))
+                          darcs.Darcs(mode='full', method='fresh'))
 
     def test_mode_full_clobber(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='full', method='clobber'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='clobber'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -74,11 +77,10 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
-
     def test_mode_full_copy(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='full', method='copy'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='copy'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -111,8 +113,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_no_method(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='full'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -145,8 +147,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='incremental'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -172,8 +174,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_patched(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='incremental'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -213,9 +215,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_patch(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='incremental'),
-                patch=(1, 'patch'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='incremental'),
+            patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -229,12 +231,12 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'pull', '--all', '--verbose'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
@@ -256,11 +258,10 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
-
     def test_mode_full_clobber_retry(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='full', method='clobber', retry=(0, 2)))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='clobber', retry=(0, 2)))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -301,9 +302,9 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clobber_revision(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='full', method='clobber'),
-                            dict(revision='abcdef01'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='clobber'),
+            dict(revision='abcdef01'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -314,7 +315,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None, 
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.darcs-context', workdir='wkdir',
                                         mode=None))
@@ -336,8 +337,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_no_existing_repo(self):
         self.setupStep(
-                darcs.Darcs(repourl='http://localhost/darcs',
-                                    mode='incremental'))
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
@@ -361,4 +362,3 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
-

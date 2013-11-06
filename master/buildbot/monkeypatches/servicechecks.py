@@ -24,9 +24,11 @@ def patch_servicechecks():
     from twisted.application.service import Service
     old_startService = Service.startService
     old_stopService = Service.stopService
+
     def startService(self):
         assert not self.running, "%r already running" % (self,)
         return old_startService(self)
+
     def stopService(self):
         assert self.running, "%r already stopped" % (self,)
         return old_stopService(self)

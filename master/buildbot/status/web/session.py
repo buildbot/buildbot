@@ -19,29 +19,36 @@
 
 try:
     from hashlib import sha1
-    sha1 = sha1 # make pyflakes happy
+    sha1 = sha1  # make pyflakes happy
 except ImportError:
     from sha import new as sha1
-from time import time
-from random import random
-from datetime import datetime, timedelta
 import os
+
+from datetime import datetime
+from datetime import timedelta
+from random import random
+from time import time
+
+
 def _urandom():
     if hasattr(os, 'urandom'):
         return os.urandom(30)
     return random()
+
 
 def generate_cookie():
     return sha1('%s%s' % (time(), _urandom())).hexdigest()
 
 
 class Session(object):
+
     """I'm a user's session. Contains information about a user's session
     a user can have several session
     a session is associated with a cookie
     """
     user = ""
     infos = {}
+
     def __init__(self, user, infos):
         self.user = user
         self.infos = infos
@@ -49,7 +56,7 @@ class Session(object):
 
     def renew(self):
         # one day expiration. hardcoded for now...
-        self.expiration = datetime.now()+ timedelta(1)
+        self.expiration = datetime.now() + timedelta(1)
         return self.expiration
 
     def expired(self):
@@ -68,9 +75,11 @@ class Session(object):
             ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
              'Oct', 'Nov', 'Dec')[d.tm_mon - 1],
             delim, str(d.tm_year), d.tm_hour, d.tm_min, d.tm_sec
-            )
+        )
+
 
 class SessionManager(object):
+
     """I'm the session manager. Holding the current sessions
     managing cookies, and their expiration
 
@@ -85,11 +94,11 @@ class SessionManager(object):
     """
 
     # borg pattern (similar to singleton) not too loose sessions with reconfig
-    __shared_state = dict(sessions={},users={})
+    __shared_state = dict(sessions={}, users={})
 
     def __init__(self):
         self.__dict__ = self.__shared_state
-        
+
     def new(self, user, infos):
         cookie = generate_cookie()
         user = infos["userName"]
@@ -100,7 +109,7 @@ class SessionManager(object):
         """remove old cookies"""
         expired = []
         for cookie in self.sessions:
-            s =  self.sessions[cookie]
+            s = self.sessions[cookie]
             if s.expired():
                 expired.append(cookie)
         for cookie in expired:
@@ -109,7 +118,7 @@ class SessionManager(object):
     def get(self, cookie):
         self.gc()
         if cookie in self.sessions:
-            return  self.sessions[cookie]
+            return self.sessions[cookie]
         return None
 
     def remove(self, cookie):
@@ -118,4 +127,3 @@ class SessionManager(object):
 
     def getUser(self, user):
         return self.users.get(user)
-

@@ -15,9 +15,10 @@
 
 from twisted.trial import unittest
 
+from buildslave.commands import svn
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import svn
+
 
 class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
@@ -40,26 +41,26 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'clobber', 'workdir' ],
-                self.basedir)
-                + 0,
-            Expect([ 'clobber', 'source' ],
-                self.basedir)
-                + 0,
-            Expect([ 'path/to/svn', 'checkout', '--non-interactive', '--no-auth-cache',
-                     '--revision', 'HEAD', 'http://svn.local/app/trunk@HEAD', 'source' ],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False, environ=exp_environ)
-                + 0,
-            Expect([ 'path/to/svnversion', '.' ],
-                self.basedir_source,
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True,
-                environ=exp_environ, sendStderr=False, sendStdout=False)
-                + { 'stdout' : '9753\n' }
-                + 0,
-            Expect([ 'copy', 'source', 'workdir'],
-                self.basedir)
-                + 0,
+            Expect(['clobber', 'workdir'],
+                   self.basedir)
+            + 0,
+            Expect(['clobber', 'source'],
+                   self.basedir)
+            + 0,
+            Expect(['path/to/svn', 'checkout', '--non-interactive', '--no-auth-cache',
+                    '--revision', 'HEAD', 'http://svn.local/app/trunk@HEAD', 'source'],
+                   self.basedir,
+                   sendRC=False, timeout=120, usePTY=False, environ=exp_environ)
+            + 0,
+            Expect(['path/to/svnversion', '.'],
+                   self.basedir_source,
+                   sendRC=False, timeout=120, usePTY=False, keepStdout=True,
+                   environ=exp_environ, sendStderr=False, sendStdout=False)
+            + {'stdout': '9753\n'}
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
+                   self.basedir)
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
@@ -69,6 +70,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
 
 class TestGetUnversionedFiles(unittest.TestCase):
+
     def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
         <status>
@@ -99,4 +101,3 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEquals([], unversioned_files)
-

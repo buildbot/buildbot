@@ -16,6 +16,7 @@
 from twisted.application import service
 from twisted.internet import defer
 
+
 class FakePBManager(service.MultiService):
 
     def __init__(self):
@@ -27,17 +28,19 @@ class FakePBManager(service.MultiService):
     def register(self, portstr, username, password, pfactory):
         if (portstr, username) not in self._registrations:
             reg = FakeRegistration(self, portstr, username)
-            self._registrations.append((portstr,username,password))
+            self._registrations.append((portstr, username, password))
             return reg
         else:
-            raise KeyError, ("username '%s' is already registered on port %s"
-                    % (username, portstr))
+            raise KeyError("username '%s' is already registered on port %s"
+                           % (username, portstr))
 
     def _unregister(self, portstr, username):
         self._unregistrations.append((portstr, username))
         return defer.succeed(None)
 
+
 class FakeRegistration(object):
+
     def __init__(self, pbmanager, portstr, username):
         self._portstr = portstr
         self._username = username

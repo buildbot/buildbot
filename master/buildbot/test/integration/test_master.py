@@ -15,11 +15,14 @@
 
 import mock
 import os
-from twisted.internet import defer, reactor
-from twisted.trial import unittest
+
 from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
 
 class RunMaster(dirs.DirsMixin, unittest.TestCase):
 
@@ -39,14 +42,14 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         m.config = config.MasterConfig.loadConfig(
-                                    self.basedir, self.configfile)
+            self.basedir, self.configfile)
 
         # update the DB
         yield m.db.setup(check_version=False)
         yield m.db.model.upgrade()
 
         # stub out m.db.setup since it was already called above
-        m.db.setup = lambda : None
+        m.db.setup = lambda: None
 
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
@@ -56,7 +59,7 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         # start the service
         yield m.startService(_reactor=mock_reactor)
         self.failIf(mock_reactor.stop.called,
-            "startService tried to stop the reactor; check logs")
+                    "startService tried to stop the reactor; check logs")
 
         # hang out for a fraction of a second, to let startup processes run
         d = defer.Deferred()
@@ -89,38 +92,38 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
 
 c = BuildmasterConfig = {}
 from buildbot.buildslave import BuildSlave
+from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.pb import PBChangeSource
+from buildbot.config import BuilderConfig
+from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.basic import AnyBranchScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.changes.filter import ChangeFilter
-from buildbot.process.factory import BuildFactory
-from buildbot.steps.shell import ShellCommand
-from buildbot.config import BuilderConfig
 from buildbot.status import html
-c['slaves'] = [BuildSlave ("local1", "localpw")]
+from buildbot.steps.shell import ShellCommand
+c['slaves'] = [BuildSlave("local1", "localpw")]
 c['slavePortnum'] = 0
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
 c['schedulers'].append(AnyBranchScheduler(name="all",
-                            change_filter=ChangeFilter(project_re='^testy/'),
-                            treeStableTimer=1*60,
-                            builderNames=[ 'testy', ]))
+                                          change_filter=ChangeFilter(project_re='^testy/'),
+                                          treeStableTimer=1 * 60,
+                                          builderNames=['testy', ]))
 c['schedulers'].append(ForceScheduler(
-                            name="force",
-                            builderNames=["testy"]))
+    name="force",
+    builderNames=["testy"]))
 f1 = BuildFactory()
 f1.addStep(ShellCommand(command='echo hi'))
 c['builders'] = []
 c['builders'].append(
     BuilderConfig(name="testy",
-      slavenames=["local1"],
-      factory=f1))
+                  slavenames=["local1"],
+                  factory=f1))
 c['status'] = []
 c['status'].append(html.WebStatus(http_port=0))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
 c['db'] = {
-    'db_url' : "sqlite:///state.sqlite"
+    'db_url': "sqlite:///state.sqlite"
 }

@@ -14,10 +14,14 @@
 # Copyright Buildbot Team Members
 
 import re
+
 from buildbot.util import sautils
+from sqlalchemy.dialects.sqlite.base import SQLiteDialect
+from sqlalchemy.dialects.sqlite.base import _pragma_cursor
+from sqlalchemy.dialects.sqlite.base import sqltypes
+from sqlalchemy.dialects.sqlite.base import util
 from sqlalchemy.engine import reflection
-from sqlalchemy.dialects.sqlite.base import SQLiteDialect, _pragma_cursor
-from sqlalchemy.dialects.sqlite.base import sqltypes, util
+
 
 @reflection.cache
 def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
@@ -36,7 +40,7 @@ def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
             break
         (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
         name = re.sub(r'^\"|\"$', '', name)
-        #### if default:
+        # if default:
         ####     default = re.sub(r"^\'|\'$", '', default)
         match = re.match(r'(\w+)(\(.*?\))?', type_)
         if match:
@@ -49,17 +53,17 @@ def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
             coltype = self.ischema_names[coltype]
         except KeyError:
             util.warn("Did not recognize type '%s' of column '%s'" %
-                        (coltype, name))
+                      (coltype, name))
             coltype = sqltypes.NullType
         if args is not None:
             args = re.findall(r'(\d+)', args)
             coltype = coltype(*[int(a) for a in args])
 
         columns.append({
-            'name' : name,
-            'type' : coltype,
-            'nullable' : nullable,
-            'default' : default,
+            'name': name,
+            'type': coltype,
+            'nullable': nullable,
+            'default': default,
             'primary_key': primary_key
         })
     return columns
@@ -73,16 +77,16 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
     else:
         pragma = "PRAGMA "
     qtable = quote(table_name)
-    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable))) 
+    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable)))
     #### found_table = False (pyflake)
     columns = []
     while True:
         row = c.fetchone()
         if row is None:
             break
-        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5]) 
+        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
         name = re.sub(r'^\"|\"$', '', name)
-        #### if default:
+        # if default:
         ####    default = re.sub(r"^\'|\'$", '', default)
         match = re.match(r'(\w+)(\(.*?\))?', type_)
         if match:
@@ -98,18 +102,19 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
                 coltype = coltype(*[int(a) for a in args])
         except KeyError:
             util.warn("Did not recognize type '%s' of column '%s'" %
-                        (coltype, name))
+                      (coltype, name))
             coltype = sqltypes.NullType()
 
         columns.append({
-            'name' : name,
-            'type' : coltype,
-            'nullable' : nullable,
-            'default' : default,
-            'autoincrement':default is None,
+            'name': name,
+            'type': coltype,
+            'nullable': nullable,
+            'default': default,
+            'autoincrement': default is None,
             'primary_key': primary_key
-        })  
+        })
     return columns
+
 
 def patch():
     # fix for http://www.sqlalchemy.org/trac/ticket/2189, backported to 0.6.0

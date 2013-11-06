@@ -14,23 +14,31 @@
 # Copyright Buildbot Team Members
 
 import os.path
+import signal
 import socket
 import sys
-import signal
 
-from twisted.spread import pb
-from twisted.python import log
-from twisted.internet import error, reactor, task, defer
-from twisted.application import service, internet
+from twisted.application import internet
+from twisted.application import service
 from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import log
+from twisted.spread import pb
 
 import buildslave
-from buildslave.pbutil import ReconnectingPBClientFactory
-from buildslave.commands import registry, base
+
 from buildslave import monkeypatches
+from buildslave.commands import base
+from buildslave.commands import registry
+from buildslave.pbutil import ReconnectingPBClientFactory
+
 
 class UnknownCommand(pb.Error):
     pass
+
 
 class SlaveBuilder(pb.Referenceable, service.Service):
 
@@ -55,7 +63,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     remoteStep = None
 
     def __init__(self, name):
-        #service.Service.__init__(self) # Service has no __init__ method
+        # service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
 
     def __repr__(self):
@@ -132,10 +140,10 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand, "unrecognized SlaveCommand '%s'" % command
+            raise UnknownCommand("unrecognized SlaveCommand '%s'" % command)
         self.command = factory(self, stepId, args)
 
-        log.msg(" startCommand:%s [id %s]" % (command,stepId))
+        log.msg(" startCommand:%s [id %s]" % (command, stepId))
         self.remoteStep = stepref
         self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
@@ -154,7 +162,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             return
         self.command.doInterrupt()
 
-
     def stopCommand(self):
         """Make any currently-running command die, with no further status
         output. This is used when the buildslave is shutting down or the
@@ -163,8 +170,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         if not self.command:
             return
         log.msg("stopCommand: halting current command %s" % self.command)
-        self.command.doInterrupt() # shut up! and die!
-        self.command = None # forget you!
+        self.command.doInterrupt()  # shut up! and die!
+        self.command = None  # forget you!
 
     # sendUpdate is invoked by the Commands we spawn
     def sendUpdate(self, data):
@@ -190,15 +197,14 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
-        self.activity() # update the "last activity" timer
+        self.activity()  # update the "last activity" timer
 
     def ackComplete(self, dummy):
-        self.activity() # update the "last activity" timer
+        self.activity()  # update the "last activity" timer
 
     def _ackFailed(self, why, where):
         log.msg("SlaveBuilder._ackFailed:", where)
-        log.err(why) # we don't really care
-
+        log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def commandComplete(self, failure):
@@ -223,7 +229,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             d.addErrback(self._ackFailed, "sendComplete")
             self.remoteStep = None
 
-
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
         log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
@@ -231,6 +236,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 
 class Bot(pb.Referenceable, service.MultiService):
+
     """I represent the slave-side bot."""
     usePTY = None
     name = "bot"
@@ -256,14 +262,14 @@ class Bot(pb.Referenceable, service.MultiService):
     @defer.deferredGenerator
     def remote_setBuilderList(self, wanted):
         retval = {}
-        wanted_names = set([ name for (name, builddir) in wanted ])
-        wanted_dirs = set([ builddir for (name, builddir) in wanted ])
+        wanted_names = set([name for (name, builddir) in wanted])
+        wanted_dirs = set([builddir for (name, builddir) in wanted])
         wanted_dirs.add('info')
         for (name, builddir) in wanted:
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
-                    log.msg("changing builddir for builder %s from %s to %s" \
+                    log.msg("changing builddir for builder %s from %s to %s"
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
@@ -279,7 +285,7 @@ class Bot(pb.Referenceable, service.MultiService):
         to_remove = list(set(self.builders.keys()) - wanted_names)
         dl = defer.DeferredList([
             defer.maybeDeferred(self.builders[name].disownServiceParent)
-            for name in to_remove ])
+            for name in to_remove])
         wfd = defer.waitForDeferred(dl)
         yield wfd
         wfd.getResult()
@@ -333,6 +339,7 @@ class Bot(pb.Referenceable, service.MultiService):
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 
+
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
     # connection alive: it guarantees that there will be at least some
@@ -341,7 +348,7 @@ class BotFactory(ReconnectingPBClientFactory):
     # thinks the connection has been abandoned.  This also gives the operating
     # system a chance to notice that the master has gone away, and inform us
     # of such (although this could take several minutes).
-    keepaliveInterval = None # None = do not use keepalives
+    keepaliveInterval = None  # None = do not use keepalives
 
     # 'maxDelay' determines the maximum amount of time the slave will wait
     # between connection retries
@@ -377,10 +384,10 @@ class BotFactory(ReconnectingPBClientFactory):
         except:
             log.msg("unable to set SO_KEEPALIVE")
             if not self.keepaliveInterval:
-                self.keepaliveInterval = 10*60
+                self.keepaliveInterval = 10 * 60
         self.activity()
         if self.keepaliveInterval:
-            log.msg("sending application-level keepalives every %d seconds" \
+            log.msg("sending application-level keepalives every %d seconds"
                     % self.keepaliveInterval)
             self.startTimers()
 
@@ -433,6 +440,7 @@ class BotFactory(ReconnectingPBClientFactory):
 
 
 class BuildSlave(service.MultiService):
+
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=None, umask=None,
                  maxdelay=300, unicode_encoding=None, allow_shutdown=None):
@@ -500,7 +508,7 @@ class BuildSlave(service.MultiService):
         filename = os.path.join(basedir, "twistd.hostname")
 
         try:
-            hostname = os.uname()[1] # only on unix
+            hostname = os.uname()[1]  # only on unix
         except AttributeError:
             # this tends to fail on non-connected hosts, e.g., laptops
             # on planes
@@ -536,6 +544,7 @@ class BuildSlave(service.MultiService):
 
         log.msg("Telling the master we want to shutdown after any running builds are finished")
         d = self.bf.perspective.callRemote("shutdown")
+
         def _shutdownfailed(err):
             if err.check(AttributeError):
                 log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")

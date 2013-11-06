@@ -14,32 +14,42 @@
 # Copyright Buildbot Team Members
 
 import time
+
 from xml.dom import minidom
 
-from twisted.python import log
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web import client
 
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
 
+
 class InvalidResultError(Exception):
+
     def __init__(self, value="InvalidResultError"):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 class EmptyResult(Exception):
     pass
 
+
 class NoMoreCiNodes(Exception):
     pass
+
 
 class NoMoreFileNodes(Exception):
     pass
 
+
 class BonsaiResult:
+
     """I hold a list of CiNodes"""
+
     def __init__(self, nodes=[]):
         self.nodes = nodes
 
@@ -48,35 +58,43 @@ class BonsaiResult:
             return False
         for i in range(len(self.nodes)):
             if self.nodes[i].log != other.nodes[i].log \
-              or self.nodes[i].who != other.nodes[i].who \
-              or self.nodes[i].date != other.nodes[i].date \
-              or len(self.nodes[i].files) != len(other.nodes[i].files):
+                or self.nodes[i].who != other.nodes[i].who \
+                or self.nodes[i].date != other.nodes[i].date \
+                    or len(self.nodes[i].files) != len(other.nodes[i].files):
                 return -1
 
                 for j in range(len(self.nodes[i].files)):
                     if self.nodes[i].files[j].revision \
-                      != other.nodes[i].files[j].revision \
-                      or self.nodes[i].files[j].filename \
-                      != other.nodes[i].files[j].filename:
+                        != other.nodes[i].files[j].revision \
+                        or self.nodes[i].files[j].filename \
+                            != other.nodes[i].files[j].filename:
                         return -1
 
         return 0
 
+
 class CiNode:
+
     """I hold information baout one <ci> node, including a list of files"""
+
     def __init__(self, log="", who="", date=0, files=[]):
         self.log = log
         self.who = who
         self.date = date
         self.files = files
 
+
 class FileNode:
+
     """I hold information about one <f> node"""
+
     def __init__(self, revision="", filename=""):
         self.revision = revision
         self.filename = filename
 
+
 class BonsaiParser:
+
     """I parse the XML result from a bonsai cvsquery."""
 
     def __init__(self, data):
@@ -93,9 +111,9 @@ class BonsaiParser:
             raise InvalidResultError("Malformed XML in result")
 
         self.ciNodes = self.dom.getElementsByTagName("ci")
-        self.currentCiNode = None # filled in by _nextCiNode()
-        self.fileNodes = None # filled in by _nextCiNode()
-        self.currentFileNode = None # filled in by _nextFileNode()
+        self.currentCiNode = None  # filled in by _nextCiNode()
+        self.fileNodes = None  # filled in by _nextCiNode()
+        self.currentFileNode = None  # filled in by _nextFileNode()
         self.bonsaiResult = self._parseData()
 
     def getData(self):
@@ -132,7 +150,6 @@ class BonsaiParser:
             raise
 
         return BonsaiResult(nodes)
-
 
     def _nextCiNode(self):
         """Iterates to the next <ci> node and fills self.fileNodes with
@@ -223,9 +240,9 @@ class BonsaiPoller(base.PollingChangeSource):
     def describe(self):
         str = ""
         str += "Getting changes from the Bonsai service running at %s " \
-                % self.bonsaiURL
-        str += "<br>Using tree: %s, branch: %s, and module: %s" % (self.tree, \
-                self.branch, self.module)
+            % self.bonsaiURL
+        str += "<br>Using tree: %s, branch: %s, and module: %s" % (self.tree,
+                                                                   self.branch, self.module)
         return str
 
     def poll(self):
@@ -267,11 +284,11 @@ class BonsaiPoller(base.PollingChangeSource):
             return
 
         for cinode in result.nodes:
-            files = [file.filename + ' (revision '+file.revision+')'
+            files = [file.filename + ' (revision ' + file.revision + ')'
                      for file in cinode.files]
             self.lastChange = self.lastPoll
-            yield self.master.addChange(author = cinode.who,
-                               files = files,
-                               comments = cinode.log,
-                               when_timestamp = epoch2datetime(cinode.date),
-                               branch = self.branch)
+            yield self.master.addChange(author=cinode.who,
+                                        files=files,
+                                        comments=cinode.log,
+                                        when_timestamp=epoch2datetime(cinode.date),
+                                        branch=self.branch)

@@ -16,6 +16,7 @@
 # note that this cannot be run in tests for code coverage, as it requires a
 # different reactor than the default
 
+
 def statusgui(config):
     from buildbot.clients import gtkPanes
 

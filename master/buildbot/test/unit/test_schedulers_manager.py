@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.schedulers import manager, base
+
 from buildbot import config
+from buildbot.schedulers import base
+from buildbot.schedulers import manager
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class SchedulerManager(unittest.TestCase):
 
@@ -26,6 +29,7 @@ class SchedulerManager(unittest.TestCase):
         self.objectids = {}
 
         self.master = mock.Mock()
+
         def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)
             try:
@@ -48,7 +52,7 @@ class SchedulerManager(unittest.TestCase):
     class Sched(base.BaseScheduler):
 
         # changing sch.attr should make a scheduler look "updated"
-        compare_attrs = ( 'attr', )
+        compare_attrs = ('attr', )
         already_started = False
         reconfig_count = 0
 
@@ -61,6 +65,7 @@ class SchedulerManager(unittest.TestCase):
 
         def stopService(self):
             d = base.BaseScheduler.stopService(self)
+
             def still_set(_):
                 assert self.master is not None
                 assert self.objectid is not None
@@ -74,7 +79,7 @@ class SchedulerManager(unittest.TestCase):
             new_sched = self.findNewSchedulerInstance(new_config)
             self.attr = new_sched.attr
             return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config)
+                                                                     new_config)
 
     class ReconfigSched2(ReconfigSched):
         pass

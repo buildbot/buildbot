@@ -14,15 +14,19 @@
 # Copyright Buildbot Team Members
 
 import calendar
-from zope.interface import implements
-from twisted.python import log
-from twisted.internet import defer
-from buildbot import interfaces, sourcestamp
+
+from buildbot import interfaces
+from buildbot import sourcestamp
+from buildbot.db import buildrequests
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
-from buildbot.db import buildrequests
+from twisted.internet import defer
+from twisted.python import log
+from zope.interface import implements
+
 
 class BuildRequest(object):
+
     """
 
     A rolled-up encapsulation of all of the data relevant to a build request.
@@ -104,7 +108,7 @@ class BuildRequest(object):
 
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
-        assert buildset # schema should guarantee this
+        assert buildset  # schema should guarantee this
         buildrequest.reason = buildset['reason']
 
         # fetch the buildset properties, and convert to Properties
@@ -113,11 +117,12 @@ class BuildRequest(object):
         buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # fetch the sourcestamp dictionary
-        sslist = yield  master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
+        sslist = yield master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
         assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
 
         # and turn it into a SourceStamps
         buildrequest.sources = {}
+
         def store_source(source):
             buildrequest.sources[source.codebase] = source
 
@@ -136,7 +141,7 @@ class BuildRequest(object):
 
     def requestsHaveSameCodebases(self, other):
         self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())      
+        other_codebases = set(other.sources.iterkeys())
         return self_codebases == other_codebases
 
     def requestsHaveChangesForSameCodebases(self, other):
@@ -144,26 +149,26 @@ class BuildRequest(object):
         # comparable sourcestamps, that means sourcestamps with the same codebase.
         # This means that both requests must have exact the same set of codebases
         # If not then merge cannot be performed.
-        # The second requirement is that both request have the changes in the 
+        # The second requirement is that both request have the changes in the
         # same codebases.
         #
-        # Normaly a scheduler always delivers the same set of codebases: 
+        # Normaly a scheduler always delivers the same set of codebases:
         #   sourcestamps with and without changes
         # For the case a scheduler is not configured with a set of codebases
-        # it delivers only a set with sourcestamps that have changes. 
+        # it delivers only a set with sourcestamps that have changes.
         self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())      
+        other_codebases = set(other.sources.iterkeys())
         if self_codebases != other_codebases:
             return False
-            
+
         for c in self_codebases:
             # Check either both or neither have changes
             if ((len(self.sources[c].changes) > 0)
-                != (len(other.sources[c].changes) > 0)):
+                    != (len(other.sources[c].changes) > 0)):
                 return False
         # all codebases tested, no differences found
         return True
-        
+
     def canBeMergedWith(self, other):
         """
         Returns if both requests can be merged
@@ -172,7 +177,7 @@ class BuildRequest(object):
         if not self.requestsHaveChangesForSameCodebases(other):
             return False
 
-        #get codebases from myself, they are equal to other
+        # get codebases from myself, they are equal to other
         self_codebases = set(self.sources.iterkeys())
 
         for c in self_codebases:
@@ -185,7 +190,7 @@ class BuildRequest(object):
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
-        #get all codebases from all requests
+        # get all codebases from all requests
         all_codebases = set(self.sources.iterkeys())
         for other in others:
             all_codebases |= set(other.sources.iterkeys())
@@ -199,7 +204,7 @@ class BuildRequest(object):
             for other in others:
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
-            assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
+            assert len(all_sources) > 0, "each codebase should have atleast one sourcestamp"
             all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
 
         return [source for source in all_merged_sources.itervalues()]
@@ -229,10 +234,11 @@ class BuildRequest(object):
         # cancelling a request without running into trouble with dangling
         # references.
         yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
+                                                                 FAILURE)
 
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)
+
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
