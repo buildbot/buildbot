@@ -3,7 +3,6 @@ show-source = yes
 statistics = yes
 count = yes
 max-line-length = 100
-exclude = master/contrib/buildbot_json.py
 
 # List of currently ignored PEP8 issues.  Some of them definetely should be
 # enabled in future.
