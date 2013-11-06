@@ -19,6 +19,7 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
+import copy
 import base64
 from buildbot.util import json, datetime2epoch
 from twisted.internet import defer, reactor
@@ -121,8 +122,6 @@ class Change(Row):
         repository = 'repo',
         codebase =  '',
         project = 'proj',
-        properties = dict(),
-        files = []
     )
 
     lists = ('files',)
@@ -343,21 +342,25 @@ class FakeChangesComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Change):
-                self.changes[row.changeid] = row
+                # copy this since we'll be modifying it (e.g., adding files)
+                ch = self.changes[row.changeid] = copy.deepcopy(row.values)
+                ch['files'] = []
+                ch['properties'] = {}
+                ch['uids'] = []
 
             elif isinstance(row, ChangeFile):
                 ch = self.changes[row.changeid]
-                ch.files.append(row.filename)
+                ch['files'].append(row.filename)
 
             elif isinstance(row, ChangeProperty):
                 ch = self.changes[row.changeid]
                 n, vs = row.property_name, row.property_value
                 v, s = json.loads(vs)
-                ch.properties.setProperty(n, v, s)
+                ch['properties'][n] = (v, s)
 
             elif isinstance(row, ChangeUser):
                 ch = self.changes[row.changeid]
-                ch.uid = row.uid
+                ch['uids'].append(row.uid)
 
     # component methods
 
@@ -370,7 +373,7 @@ class FakeChangesComponent(FakeDBComponent):
         else:
             changeid = 500
 
-        self.changes[changeid] = ch = Change(
+        self.changes[changeid] = dict(
             changeid=changeid,
             author=author,
             comments=comments,
@@ -382,9 +385,9 @@ class FakeChangesComponent(FakeDBComponent):
             revlink=revlink,
             repository=repository,
             project=project,
-            codebase=codebase)
-        ch.files = files
-        ch.properties = properties
+            codebase=codebase,
+            files=files,
+            properties=properties)
 
         return defer.succeed(changeid)
 
@@ -399,27 +402,11 @@ class FakeChangesComponent(FakeDBComponent):
         except KeyError:
             return defer.succeed(None)
 
-        chdict = dict(
-                changeid=row.changeid,
-                author=row.author,
-                files=row.files,
-                comments=row.comments,
-                is_dir=row.is_dir,
-                revision=row.revision,
-                when_timestamp=_mkdt(row.when_timestamp),
-                branch=row.branch,
-                category=row.category,
-                revlink=row.revlink,
-                properties=row.properties,
-                repository=row.repository,
-                codebase=row.codebase,
-                project=row.project)
-
-        return defer.succeed(chdict)
+        return defer.succeed(self._chdict(row))
 
     def getChangeUids(self, changeid):
         try:
-            ch_uids = [self.changes[changeid].uid]
+            ch_uids = self.changes[changeid]['uids']
         except KeyError:
             ch_uids = []
         return defer.succeed(ch_uids)
@@ -466,7 +453,7 @@ class FakeChangesComponent(FakeDBComponent):
             changeid = change.number
 
         # make a row from the change
-        row = Change(
+        row = dict(
             changeid=changeid,
             author=change.who,
             files=change.files,
@@ -480,7 +467,8 @@ class FakeChangesComponent(FakeDBComponent):
             properties=change.properties,
             repository=change.repository,
             codebase=change.codebase,
-            project=change.project)
+            project=change.project,
+            uids=[])
         self.changes[changeid] = row
 
 class FakeSchedulersComponent(FakeDBComponent):
@@ -522,25 +510,25 @@ class FakeSchedulersComponent(FakeDBComponent):
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel).branch == branch )
+                    if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
 
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel).repository == repository )
+                    if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
 
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel).project == project )
+                    if self.db.changes.changes.get(k, sentinel)['project'] == project )
 
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if self.db.changes.changes.get(k, sentinel).codebase == codebase )
+                    if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
 
         return defer.succeed(classifications)
 
