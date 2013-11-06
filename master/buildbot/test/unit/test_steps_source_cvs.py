@@ -346,7 +346,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -373,7 +374,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -382,7 +384,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -391,7 +394,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -418,7 +422,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Root', workdir='source/CVS',
@@ -460,7 +465,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Root', workdir='source/CVS',
@@ -468,7 +474,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString('the-end-of-the-universe'))
             + 0,
             Expect('rmdir', dict(dir='source',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -549,7 +556,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -768,7 +776,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       writer=ExpectRemoteRef(shell.StringFileWriter)))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -798,7 +807,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       writer=ExpectRemoteRef(shell.StringFileWriter)))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -807,7 +817,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -838,7 +849,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString('the-end-of-the-universe'))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -874,7 +886,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString('the-end-of-the-universe'))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -998,7 +1011,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       writer=ExpectRemoteRef(shell.StringFileWriter)))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
