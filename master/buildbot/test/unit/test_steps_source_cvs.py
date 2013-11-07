@@ -334,10 +334,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_full_clobber(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clobber',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='full', method='clobber',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -347,7 +347,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -362,10 +362,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_full_clobber_retry(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clobber',
-                    login=True, retry=(0, 2)))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='full', method='clobber',
+                       login=True, retry=(0, 2))
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -375,7 +375,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -385,7 +385,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -395,7 +395,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -410,10 +410,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_full_copy(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='copy',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='full', method='copy',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -423,7 +423,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Root', workdir='source/CVS',
@@ -444,7 +444,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['cvs', '-z3', 'update', '-dP'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': 1200})
+                             'logEnviron': True, 'timeout': step.timeout})
             + 0,
         )
 
@@ -453,10 +453,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_full_copy_wrong_repo(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='copy',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='full', method='copy',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -466,7 +466,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Root', workdir='source/CVS',
@@ -475,7 +475,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', dict(dir='source',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -484,7 +484,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'source', 'mozilla/browser/'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True, 'timeout': 1200})
+                             'logEnviron': True, 'timeout': step.timeout})
             + 0,
         )
 
@@ -529,10 +529,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_sticky_date(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -557,7 +557,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -760,10 +760,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -777,7 +777,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -791,10 +791,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_retry(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True, retry=(0, 1)))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True, retry=(0, 1))
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -808,7 +808,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -818,7 +818,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -832,10 +832,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_wrong_repo(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -850,7 +850,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -864,10 +864,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_wrong_module(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True)
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -887,7 +887,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs',
@@ -995,10 +995,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_mode_incremental_with_options(self):
-        self.setupStep(
-            cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True, global_options=['-q'], extra_options=['-l']))
+        step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
+                       cvsmodule="mozilla/browser/", mode='incremental',
+                       login=True, global_options=['-q'], extra_options=['-l'])
+        self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -1012,7 +1012,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
+                                 timeout=step.timeout))
             + 0,
             ExpectShell(workdir='',
                         command=['cvs', '-q', '-d',
