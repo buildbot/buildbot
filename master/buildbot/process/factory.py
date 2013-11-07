@@ -25,6 +25,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.shell import Compile
 from buildbot.steps.shell import Configure
 from buildbot.steps.shell import PerlModuleTest
+from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
@@ -84,13 +85,37 @@ class BuildFactory(util.ComparableMixin):
 
 
 class GNUAutoconf(BuildFactory):
+    """GNU Autoconf based buildfactory"""
 
     def __init__(self, source, configure="./configure",
                  configureEnv={},
                  configureFlags=[],
+                 reconf=None,
                  compile=["make", "all"],
-                 test=["make", "check"]):
+                 test=["make", "check"],
+                 distcheck=["make", "distcheck"]):
+        """
+        GNUAutoconf initialisation
+        @param self         Pointer to this object
+        @param source       BuildStep to fetch the source
+        @param configure    Definition of the "./configure" command
+        @param configureEnv The environment in which to run configure
+                            (to set CC or CFLAGS or similar)
+        @param reconf       use autoreconf to generate the ./configure
+                            file, set to True to use a buildbot default
+                            autoreconf command, or define the preferred
+                            command for the ShellCommand
+        @param compile      Command used to compile the program
+        @param test         Command used to run the test scripts
+        @param distcheck    Command to run to test package integrity
+        """
         BuildFactory.__init__(self, [source])
+
+        if reconf is True:
+            reconf = ["autoreconf", "-si"]
+        if reconf is not None:
+            self.addStep(ShellCommand(name="autoreconf", command=reconf))
+
         if configure is not None:
             # we either need to wind up with a string (which will be
             # space-split), or with a list of strings (which will not). The
@@ -109,6 +134,8 @@ class GNUAutoconf(BuildFactory):
             self.addStep(Compile(command=compile))
         if test is not None:
             self.addStep(Test(command=test))
+        if distcheck is not None:
+            self.addStep(Test(command=distcheck))
 
 
 class CPAN(BuildFactory):
