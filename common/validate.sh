@@ -13,18 +13,22 @@ YELLOW="$_ESC[1;33m"
 NORM="$_ESC[0;0m"
 
 if [ $# -eq 0 ]; then
-    echo "USAGE: common/validate.sh oldrev"
+    echo "USAGE: common/validate.sh oldrev [--quick]"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
     echo "      sphinx, pyflakes, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
+    echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
     exit 1
 fi
 
 status() {
     echo "${LTCYAN}-- ${*} --${NORM}"
 }
-
+slow=true
+if [[ $2 == '--quick' ]]; then
+    slow=false
+fi
 ok=true
 problem_summary=""
 not_ok() {
@@ -60,7 +64,9 @@ run_tests() {
 
 if ! git diff --no-ext-diff --quiet --exit-code; then
     not_ok "changed files in working copy"
-    exit 1
+    if $slow; then
+        exit 1
+    fi
 fi
 
 # get a list of changed files, used below; this uses a tempfile to work around
@@ -76,17 +82,16 @@ done < ${tempfile}
 echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
-status "running tests"
-run_tests || not_ok "tests failed"
+if $slow; then
+    status "running tests"
+    run_tests || not_ok "tests failed"
+fi
 
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
 
 status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"
-
-status "running pyflakes"
-pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
 
 status "checking import module convention in modified files"
 RES=true
@@ -98,7 +103,6 @@ for filename in ${py_files[@]}; do
 done
 $RES || warning "some import fixes failed -- not enforcing for now"
 
-set -x
 status "running autopep8"
 if [[ -z `which autopep8` ]]; then
     warning "autopep8 is not installed"
@@ -138,6 +142,20 @@ else
     done
     $pep8_ok || not_ok "pep8 failed"
 fi
+
+status "running pyflakes"
+if [[ -z `which pyflakes` ]]; then
+    warning "pyflakes is not installed"
+else
+    pyflakes_ok=true
+    for filename in ${py_files[@]}; do
+        if ! pyflakes "$filename"; then
+            pyflakes_ok=false
+        fi
+    done
+    $pyflakes_ok || not_ok "pyflakes failed"
+fi
+
 
 status "running pylint"
 if [[ -z `which pylint` ]]; then
