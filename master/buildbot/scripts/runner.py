@@ -552,8 +552,8 @@ class CheckConfigOptions(base.SubcommandOptions):
         compData = usage.Completions(extraActions=[usage.CompleteFiles()])
 
     def getSynopsis(self):
-        return "Usage:		buildbot checkconfig [configFile]\n" + \
-         "		If not specified, 'master.cfg' will be used as 'configFile'"
+        return "Usage:\t\tbuildbot checkconfig [configFile]\n" + \
+            "\t\tIf not specified, 'master.cfg' will be used as 'configFile'"
 
     def parseArgs(self, *args):
         if len(args) >= 1:

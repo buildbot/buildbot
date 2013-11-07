@@ -1,5 +1,4 @@
 #! /bin/bash
-
 REVRANGE="$1..HEAD"
 TEST='buildbot.test buildslave.test'
 
@@ -79,7 +78,8 @@ run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
     fi
-    sandbox/bin/trial --reporter summary ${TEMP_DIRECTORY_OPT} ${TEST}
+    find . -name \*.pyc -exec rm {} \;
+    trial --reporter text ${TEMP_DIRECTORY_OPT} ${TEST}
 }
 
 if ! git diff --no-ext-diff --quiet --exit-code; then
@@ -105,22 +105,19 @@ status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"
 
 status "running pyflakes"
-sandbox/bin/pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
+pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
 
-status "running pylint (SLOW)"
-status "..master"
-(cd master; time pylint --rcfile=../common/pylintrc buildbot); master_res=$?
-status "..slave"
-(cd slave; time pylint --rcfile=../common/pylintrc buildslave); slave_res=$?
-if [ $master_res != 0 ] || [ $slave_res != 0 ]; then
-    not_ok "failed pylint";
+status "check and fix style issues"
+git diff --name-only $REVRANGE | common/style_check_and_fix.sh || not_ok "style issues"
+
+[[ `git diff --name-only HEAD | wc -l` -gt 0 ]] && not_ok "style fixes to be committed"
+
+if git diff --name-only $REVRANGE | grep docs ; then
+    status "building docs"
+    make -C master/docs VERSION=latest clean html || not_ok "docs failed"
+else
+    status "not building docs, because it was not changed"
 fi
-
-status "running pep8"
-pep8 --config=common/pep8rc master slave || not_ok "failed pep8"
-
-status "building docs"
-make -C master/docs VERSION=latest clean html || not_ok "docs failed"
 
 echo ""
 if $ok; then

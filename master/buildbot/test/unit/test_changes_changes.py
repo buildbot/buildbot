@@ -102,7 +102,7 @@ class Change(unittest.TestCase):
             For: Buildbot
             At: .*
             Changed By: dustin
-            Comments: fix whitespaceProperties: 
+            Comments: fix whitespaceProperties:.
               notest: no
 
             '''), text), text)

@@ -41,8 +41,6 @@ class TracBuildBotWatcher(Component):
 		yield  ('bbwatcher', 'Builds', False)
 
 	def get_timeline_events(self, req, start, stop, filters):
-		#if not 'bbwatcher' in filters:
-		#	return
 		try:
 			master = BuildBotSystem(self.buildbot_url)
 		except Exception, e:
