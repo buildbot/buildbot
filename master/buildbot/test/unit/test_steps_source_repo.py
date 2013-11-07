@@ -13,15 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.steps.source import repo
-from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.test.util import sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot.process.properties import Properties
+import os
+
 from .test_changes_gerritchangesource import TestGerritChangeSource
 from buildbot.changes.changes import Change
-import os
+from buildbot.process.properties import Properties
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.steps.source import repo
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import sourcesteps
+from twisted.trial import unittest
 
 
 class RepoURL(unittest.TestCase):
@@ -126,7 +129,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                     'bash', '-c', self.step._getCleanupCommand()]),
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                                 '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf'])
         ] + override_commands + [
             self.ExpectShell(command=['repo', 'sync'] + syncoptions),
             self.ExpectShell(
@@ -179,7 +182,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                              logEnviron=False)),
             self.ExpectShell(logEnviron=False, command=['wget',
                              'http://u.rl/test.manifest',
-                             '-O', 'manifest_override.xml']),
+                                                        '-O', 'manifest_override.xml']),
             self.ExpectShell(
                 logEnviron=False, workdir=os.path.join('wkdir', '.repo'),
                 command=['ln', '-sf', '../manifest_override.xml',
@@ -338,9 +341,9 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                                              ['-cvf', '/tarball.' + suffix, '.repo'])
                             + 1,
                             self.ExpectShell(
-                            command=['rm', '-f', '/tarball.tar']) + 0,
+                                command=['rm', '-f', '/tarball.tar']) + 0,
                             self.ExpectShell(
-                            command=['repo', 'download', 'test/bla', '564/12'])
+                                command=['repo', 'download', 'test/bla', '564/12'])
                             + 0)
         return self.myRunStep(status_text=["update"])
 
@@ -394,7 +397,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                                 '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf'])
             + 0,
             self.ExpectShell(
                 workdir=os.path.join('wkdir', '.repo', 'manifests'),
@@ -476,7 +479,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                 command=['repo', 'download', 'test/bla', '564/12'])
             + 1 + Expect.log("stdio", stderr="patch \n"),
             self.ExpectShell(
-                command=['repo', 'forall', '-c',  'git', 'diff', 'HEAD'])
+                command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
             + 0
         )
         return self.myRunStep(result=FAILURE, status_text=["download failed: test/bla 564/12"])
@@ -494,7 +497,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0 +
             Expect.log("stdio", stderr="Automatic cherry-pick failed \n"),
             self.ExpectShell(
-                command=['repo', 'forall', '-c',  'git', 'diff', 'HEAD'])
+                command=['repo', 'forall', '-c', 'git', 'diff', 'HEAD'])
             + 0
         )
         return self.myRunStep(result=FAILURE, status_text=["download failed: test/bla 564/12"])

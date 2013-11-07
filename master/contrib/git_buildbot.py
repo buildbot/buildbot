@@ -29,9 +29,10 @@ import os
 import re
 import sys
 
-from twisted.spread import pb
 from twisted.cred import credentials
-from twisted.internet import reactor, defer
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.spread import pb
 
 from optparse import OptionParser
 
@@ -66,7 +67,7 @@ username = "change"
 # Password portion of PB login credentials to send the changes to the master
 auth = "changepw"
 
-# When converting strings to unicode, assume this encoding. 
+# When converting strings to unicode, assume this encoding.
 # (set with --encoding)
 
 encoding = 'utf8'
@@ -77,14 +78,16 @@ encoding = 'utf8'
 
 changes = []
 
+
 def connectFailed(error):
     logging.error("Could not connect to %s: %s"
-            % (master, error.getErrorMessage()))
+                  % (master, error.getErrorMessage()))
     return error
 
 
 def addChanges(remote, changei, src='git'):
     logging.debug("addChanges %s, %s" % (repr(remote), repr(changei)))
+
     def addChange(c):
         logging.info("New revision: %s" % c['revision'][:8])
         for key, value in c.iteritems():
@@ -95,12 +98,14 @@ def addChanges(remote, changei, src='git'):
         return d
 
     finished_d = defer.Deferred()
+
     def iter():
         try:
             c = changei.next()
             d = addChange(c)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack
+
             def cb(_):
                 reactor.callLater(0, iter)
             d.addCallback(cb)
@@ -130,7 +135,7 @@ def grab_commit_info(c, rev):
         if not line:
             break
 
-        if line.startswith(4*' '):
+        if line.startswith(4 * ' '):
             comments.append(line[4:])
 
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
@@ -165,7 +170,7 @@ def gen_changes(input, branch):
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
              'branch': unicode(branch, encoding=encoding),
-        }
+             }
 
         if category:
             c['category'] = unicode(category, encoding=encoding)
@@ -194,9 +199,9 @@ def gen_create_branch_changes(newrev, refname, branch):
     logging.info("Branch `%s' created" % branch)
 
     f = os.popen("git rev-parse --not --branches"
-            + "| grep -v $(git rev-parse %s)" % refname
-            + "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
-            'r')
+                 + "| grep -v $(git rev-parse %s)" % refname
+                 + "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
+                 'r')
 
     gen_changes(f, branch)
 
@@ -215,7 +220,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     # common ancestor and newrev.
 
     logging.info("Branch `%s' updated %s .. %s"
-            % (branch, oldrev[:8], newrev[:8]))
+                 % (branch, oldrev[:8], newrev[:8]))
 
     baserev = commands.getoutput("git merge-base %s %s" % (oldrev, newrev))
     logging.debug("oldrev=%s newrev=%s baserev=%s" % (oldrev, newrev, baserev))
@@ -224,7 +229,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
              'comments': "Rewind branch",
              'branch': unicode(branch, encoding=encoding),
              'who': "dummy",
-        }
+             }
         logging.info("Branch %s was rewound to %s" % (branch, baserev[:8]))
         files = []
         f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
@@ -260,7 +265,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     if newrev != baserev:
         # Not a pure rewind
         f = os.popen("git rev-list --reverse --pretty=oneline %s..%s"
-                % (baserev, newrev), 'r')
+                     % (baserev, newrev), 'r')
         gen_changes(f, branch)
 
         status = f.close()
@@ -321,13 +326,13 @@ def process_changes():
 def parse_options():
     parser = OptionParser()
     parser.add_option("-l", "--logfile", action="store", type="string",
-            help="Log to the specified file")
+                      help="Log to the specified file")
     parser.add_option("-v", "--verbose", action="count",
-            help="Be more verbose. Ignored if -l is not specified.")
-    master_help = ("Build master to push to. Default is %(master)s" % 
-                   { 'master' : master })
+                      help="Be more verbose. Ignored if -l is not specified.")
+    master_help = ("Build master to push to. Default is %(master)s" %
+                   {'master': master})
     parser.add_option("-m", "--master", action="store", type="string",
-            help=master_help)
+                      help=master_help)
     parser.add_option("-c", "--category", action="store",
                       type="string", help="Scheduler category to notify.")
     parser.add_option("-r", "--repository", action="store",
@@ -337,16 +342,16 @@ def parse_options():
     parser.add_option("--codebase", action="store",
                       type="string", help="Codebase to send.")
     encoding_help = ("Encoding to use when converting strings to "
-                     "unicode. Default is %(encoding)s." % 
-                     { "encoding" : encoding })
-    parser.add_option("-e", "--encoding", action="store", type="string", 
+                     "unicode. Default is %(encoding)s." %
+                     {"encoding": encoding})
+    parser.add_option("-e", "--encoding", action="store", type="string",
                       help=encoding_help)
     username_help = ("Username used in PB connection auth, defaults to "
-                     "%(username)s." % { "username" : username })
+                     "%(username)s." % {"username": username})
     parser.add_option("-u", "--username", action="store", type="string",
                       help=username_help)
     auth_help = ("Password used in PB connection auth, defaults to "
-                     "%(auth)s." % { "auth" : auth })
+                 "%(auth)s." % {"auth": auth})
     # 'a' instead of 'p' due to collisions with the project short option
     parser.add_option("-a", "--auth", action="store", type="string",
                       help=auth_help)
@@ -379,7 +384,7 @@ try:
         logging.getLogger().addHandler(logfile)
 
     if options.master:
-        master=options.master
+        master = options.master
 
     if options.category:
         category = options.category

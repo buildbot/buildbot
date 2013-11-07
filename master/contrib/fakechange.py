@@ -30,15 +30,15 @@ available on that port if 'change' is in the list of services passed to
 buildbot.master.makeApp (this service is turned ON by default).
 """
 
-import sys
 import commands
-import random
 import os.path
+import random
+import sys
 
-from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
+from twisted.spread import pb
 
 
 def done(*args):

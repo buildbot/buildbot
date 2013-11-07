@@ -33,7 +33,7 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
     except expected_exception, ex:  # let unexpected exceptions pass through
         exception = ex
 
-    if exception == None:
+    if exception is None:
         self.fail("%s not raised" % str(expected_exception.__name__))
 
     if isinstance(expected_regexp, basestring):
@@ -41,7 +41,7 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
 
     if not expected_regexp.search(str(exception)):
         self.fail('"%s" does not match "%s"' %
-                     (expected_regexp.pattern, str(exception)))
+                  (expected_regexp.pattern, str(exception)))
 
 
 def patch():

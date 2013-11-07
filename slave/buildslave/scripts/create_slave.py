@@ -19,8 +19,8 @@ import os
 slaveTACTemplate = ["""
 import os
 
-from twisted.application import service
 from buildslave.bot import BuildSlave
+from twisted.application import service
 
 basedir = %(basedir)r
 rotateLength = %(log-size)d
@@ -66,6 +66,7 @@ s.setServiceParent(application)
 
 
 class CreateSlaveError(Exception):
+
     """
     Raised on errors while setting up buildslave directory.
     """
@@ -92,7 +93,7 @@ def _makeBaseDir(basedir, quiet):
         os.mkdir(basedir)
     except OSError, exception:
         raise CreateSlaveError("error creating directory %s: %s" %
-                                        (basedir, exception.strerror))
+                               (basedir, exception.strerror))
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -113,7 +114,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
             oldcontents = open(tacfile, "rt").read()
         except IOError, exception:
             raise CreateSlaveError("error reading %s: %s" %
-                                        (tacfile, exception.strerror))
+                                   (tacfile, exception.strerror))
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -133,7 +134,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         os.chmod(tacfile, 0600)
     except IOError, exception:
         raise CreateSlaveError("could not write %s: %s" %
-                                    (tacfile, exception.strerror))
+                               (tacfile, exception.strerror))
 
 
 def _makeInfoFiles(basedir, quiet):
@@ -160,7 +161,7 @@ def _makeInfoFiles(basedir, quiet):
             open(filepath, "wt").write(contents)
         except IOError, exception:
             raise CreateSlaveError("could not write %s: %s" %
-                                        (filepath, exception.strerror))
+                                   (filepath, exception.strerror))
         return True
 
     path = os.path.join(basedir, "info")
@@ -171,7 +172,7 @@ def _makeInfoFiles(basedir, quiet):
             os.mkdir(path)
         except OSError, exception:
             raise CreateSlaveError("error creating directory %s: %s" %
-                                    (path, exception.strerror))
+                                   (path, exception.strerror))
 
     # create 'info/admin' file
     created = createFile(path, "admin",
@@ -215,7 +216,7 @@ def createSlave(config):
         _makeInfoFiles(basedir, quiet)
     except CreateSlaveError, exception:
         print "%s\nfailed to configure buildslave in %s" % \
-                  (exception, config['basedir'])
+            (exception, config['basedir'])
         return 1
 
     if not quiet:

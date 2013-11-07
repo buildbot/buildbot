@@ -33,10 +33,10 @@ if 0:
     print "starting"
 
 from twisted.internet import gtk2reactor
-gtk2reactor.install() #@UndefinedVariable
+gtk2reactor.install()  # @UndefinedVariable
 
-import gtk #@UnresolvedImport
-import gnomeapplet #@UnresolvedImport
+import gnomeapplet  # @UnresolvedImport
+import gtk  # @UnresolvedImport
 
 # preferences are not yet implemented
 MENU = """
@@ -50,8 +50,8 @@ MENU = """
 </popup>
 """
 
-from twisted.spread import pb
 from twisted.cred import credentials
+from twisted.spread import pb
 
 # sigh, these constants should cross the wire as strings, not integers
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION = range(5)
@@ -117,7 +117,7 @@ class Box:
                       "waiting": "yellow",
                       "interlocked": "yellow",
                       "building": "yellow",
-        }
+                      }
         color = currentmap[self.state]
         self.current_box.modify_bg(gtk.STATE_NORMAL,
                                    gtk.gdk.color_parse(color))
@@ -156,7 +156,7 @@ class MyApplet(pb.Referenceable):
         verbs = [("Props", self.menu_preferences),
                  ("Connect", self.menu_connect),
                  ("Disconnect", self.menu_disconnect),
-        ]
+                 ]
         container.setup_menu(MENU, verbs)
         self.boxes = {}
         self.connect()

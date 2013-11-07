@@ -15,14 +15,15 @@
 
 import os
 
-from twisted.python import log
 from twisted.internet import defer
+from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
+from buildslave.commands.base import SourceBaseCommand
 
 
 class Bzr(SourceBaseCommand):
+
     """bzr-specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -52,7 +53,7 @@ class Bzr(SourceBaseCommand):
             return SourceBaseCommand.start(self)
 
         if self.forceSharedRepo:
-            d = self.doForceSharedRepo();
+            d = self.doForceSharedRepo()
             d.addCallback(cont)
             return d
         else:
@@ -65,9 +66,9 @@ class Bzr(SourceBaseCommand):
         srcdir = os.path.join(self.builder.basedir, self.srcdir)
         command = [bzr, 'update']
         c = runprocess.RunProcess(self.builder, command, srcdir,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                  usePTY=False)
         self.command = c
         return c.start()
 
@@ -97,9 +98,9 @@ class Bzr(SourceBaseCommand):
         command.append(self.srcdir)
 
         c = runprocess.RunProcess(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                  usePTY=False)
         self.command = c
         d = c.start()
         return d
@@ -115,17 +116,18 @@ class Bzr(SourceBaseCommand):
         command.append(self.repourl)
         command.append(tmpdir)
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                  usePTY=False)
         self.command = c
         d = c.start()
+
         def _export(res):
             command = [bzr, 'export', srcdir]
             c = runprocess.RunProcess(self.builder, command, tmpdir,
-                             sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, logEnviron=self.logEnviron,
-                             usePTY=False)
+                                      sendRC=False, timeout=self.timeout,
+                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                      usePTY=False)
             self.command = c
             return c.start()
         d.addCallback(_export)
@@ -138,18 +140,19 @@ class Bzr(SourceBaseCommand):
         # users, as they will see a bzr error message. But having no shared
         # repo is not an error, just an indication that we need to make one.
         c = runprocess.RunProcess(self.builder, [bzr, 'info', '.'],
-                         self.builder.basedir,
-                         sendStderr=False, sendRC=False,
-                         logEnviron=self.logEnviron,usePTY=False)
+                                  self.builder.basedir,
+                                  sendStderr=False, sendRC=False,
+                                  logEnviron=self.logEnviron, usePTY=False)
         d = c.start()
+
         def afterCheckSharedRepo(res):
-            if type(res) is int and res != 0:
+            if isinstance(res, int) and res != 0:
                 log.msg("No shared repo found, creating it")
                 # bzr info fails, try to create shared repo.
                 c = runprocess.RunProcess(self.builder, [bzr, 'init-repo', '.'],
-                                 self.builder.basedir,
-                                 sendRC=False, logEnviron=self.logEnviron,
-                                 usePTY=False)
+                                          self.builder.basedir,
+                                          sendRC=False, logEnviron=self.logEnviron,
+                                          usePTY=False)
                 self.command = c
                 return c.start()
             else:
@@ -164,7 +167,7 @@ class Bzr(SourceBaseCommand):
         for line in out.split("\n"):
             colon = line.find(":")
             if colon != -1:
-                key, value = line[:colon], line[colon+2:]
+                key, value = line[:colon], line[colon + 2:]
                 if key == "revno":
                     return int(value)
         raise ValueError("unable to find revno: in bzr output: '%s'" % out)
@@ -173,21 +176,21 @@ class Bzr(SourceBaseCommand):
         bzr = self.getCommand('bzr')
         command = [bzr, "version-info"]
         c = runprocess.RunProcess(self.builder, command,
-                         os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
-                         sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  os.path.join(self.builder.basedir, self.srcdir),
+                                  environ=self.env,
+                                  sendStdout=False, sendStderr=False, sendRC=False,
+                                  keepStdout=True, logEnviron=self.logEnviron,
+                                  usePTY=False)
         d = c.start()
+
         def _parse(res):
             try:
                 return self.get_revision_number(c.stdout)
             except ValueError:
-                msg =("Bzr.parseGotRevision unable to parse output "
-                      "of bzr version-info: '%s'" % c.stdout.strip())
+                msg = ("Bzr.parseGotRevision unable to parse output "
+                       "of bzr version-info: '%s'" % c.stdout.strip())
                 log.msg(msg)
                 self.sendStatus({'header': msg + "\n"})
                 return None
         d.addCallback(_parse)
         return d
-

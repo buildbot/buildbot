@@ -15,15 +15,16 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-        sa.Column('schedulerid', sa.Integer),
-        sa.Column('changeid', sa.Integer),
-        sa.Column('important', sa.SmallInteger),
-    )
+                                 sa.Column('schedulerid', sa.Integer),
+                                 sa.Column('changeid', sa.Integer),
+                                 sa.Column('important', sa.SmallInteger),
+                                 )
 
     idx = sa.Index('scheduler_changes_unique',
                    scheduler_changes.c.schedulerid,

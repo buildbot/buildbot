@@ -15,8 +15,9 @@
 
 from twisted.internet import defer
 
+
 class StateMixin(object):
-    ## state management
+    # state management
 
     _objectid = None
 
@@ -25,10 +26,10 @@ class StateMixin(object):
         # get the objectid, if not known
         if self._objectid is None:
             self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                    self.__class__.__name__)
+                                                                    self.__class__.__name__)
 
         rv = yield self.master.db.state.getState(self._objectid, *args,
-                                                                    **kwargs)
+                                                 **kwargs)
         defer.returnValue(rv)
 
     @defer.inlineCallbacks
@@ -36,6 +37,6 @@ class StateMixin(object):
         # get the objectid, if not known
         if self._objectid is None:
             self._objectid = yield self.master.db.state.getObjectId(self.name,
-                                                self.__class__.__name__)
+                                                                    self.__class__.__name__)
 
         yield self.master.db.state.setState(self._objectid, key, value)

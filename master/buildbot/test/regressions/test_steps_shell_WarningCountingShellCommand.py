@@ -16,7 +16,9 @@
 from twisted.trial import unittest
 
 import re
+
 from buildbot.steps.shell import WarningCountingShellCommand
+
 
 class TestWarningCountingShellCommand(unittest.TestCase):
 

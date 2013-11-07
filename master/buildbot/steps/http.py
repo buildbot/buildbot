@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import SUCCESS, FAILURE
 from buildbot import config
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
 
 # use the 'requests' lib: http://python-requests.org
@@ -33,15 +34,19 @@ except ImportError:
 # by another step in a different build.
 
 _session = None
+
+
 def getSession():
     global _session
     if _session is None:
         _session = txrequests.Session()
     return _session
 
+
 def setSession(session):
     global _session
     _session = session
+
 
 def closeSession():
     global _session
@@ -49,15 +54,16 @@ def closeSession():
         _session.close()
         _session = None
 
+
 class HTTPStep(BuildStep):
 
     name = 'HTTPStep'
     description = 'Requesting'
     descriptionDone = 'Requested'
-    requestsParams = [ "method", "url", "params", "data", "headers",
-                       "cookies", "files", "auth",
-                       "timeout", "allow_redirects", "proxies",
-                       "hooks", "stream", "verify", "cert" ]
+    requestsParams = ["method", "url", "params", "data", "headers",
+                      "cookies", "files", "auth",
+                      "timeout", "allow_redirects", "proxies",
+                      "hooks", "stream", "verify", "cert"]
     renderables = requestsParams
 
     def __init__(self, url, method, description=None, descriptionDone=None, **kwargs):
@@ -96,7 +102,7 @@ class HTTPStep(BuildStep):
         data = self.requestkwargs.get("data", None)
         if data:
             log.addHeader('Data:\n')
-            if type(data) == dict:
+            if isinstance(data, dict):
                 for k, v in data.iteritems():
                     log.addHeader('\t%s: %s\n' % (k, v))
             else:
@@ -150,27 +156,38 @@ class HTTPStep(BuildStep):
             return self.descriptionDone.split()
         return self.description.split()
 
+
 class POST(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='POST', **kwargs)
 
+
 class GET(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='GET', **kwargs)
 
+
 class PUT(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='PUT', **kwargs)
 
+
 class DELETE(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='DELETE', **kwargs)
 
+
 class HEAD(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='HEAD', **kwargs)
 
+
 class OPTIONS(HTTPStep):
+
     def __init__(self, url, **kwargs):
         HTTPStep.__init__(self, url, method='OPTIONS', **kwargs)
-

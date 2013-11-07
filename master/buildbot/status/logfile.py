@@ -14,23 +14,29 @@
 # Copyright Buildbot Team Members
 
 import os
-from cStringIO import StringIO
+
 from bz2 import BZ2File
+from cStringIO import StringIO
 from gzip import GzipFile
 
-from zope.interface import implements
-from twisted.python import log, runtime
-from twisted.internet import defer, threads, reactor
+from buildbot import interfaces
 from buildbot.util import netstrings
 from buildbot.util.eventual import eventually
-from buildbot import interfaces
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import threads
+from twisted.python import log
+from twisted.python import runtime
+from zope.interface import implements
 
 STDOUT = interfaces.LOG_CHANNEL_STDOUT
 STDERR = interfaces.LOG_CHANNEL_STDERR
 HEADER = interfaces.LOG_CHANNEL_HEADER
 ChunkTypes = ["stdout", "stderr", "header"]
 
+
 class LogFileScanner(netstrings.NetstringParser):
+
     def __init__(self, chunk_cb, channels=[]):
         self.chunk_cb = chunk_cb
         self.channels = channels
@@ -41,7 +47,9 @@ class LogFileScanner(netstrings.NetstringParser):
         if not self.channels or (channel in self.channels):
             self.chunk_cb((channel, line[1:]))
 
+
 class LogFileProducer:
+
     """What's the plan?
 
     the LogFile has just one FD, used for both reading and writing.
@@ -127,7 +135,7 @@ class LogFileProducer:
 
     def done(self):
         if self.chunkGenerator:
-            self.chunkGenerator = None # stop making chunks
+            self.chunkGenerator = None  # stop making chunks
         if self.subscribed:
             self.logfile.watchers.remove(self)
             self.subscribed = False
@@ -173,7 +181,9 @@ class LogFileProducer:
             self.consumer.finish()
             self.consumer = None
 
+
 class LogFile:
+
     """
     A LogFile keeps all of its contents on disk, in a non-pickle format to
     which new entries can easily be appended. The file on disk has a name like
@@ -191,16 +201,16 @@ class LogFile:
     length = 0
     nonHeaderLength = 0
     tailLength = 0
-    chunkSize = 10*1000
+    chunkSize = 10 * 1000
     runLength = 0
     # No max size by default
     # Don't keep a tail buffer by default
     logMaxTailSize = None
     maxLengthExceeded = False
-    runEntries = [] # provided so old pickled builds will getChunks() ok
+    runEntries = []  # provided so old pickled builds will getChunks() ok
     entries = None
     BUFFERSIZE = 2048
-    filename = None # relative to the Builder's basedir
+    filename = None  # relative to the Builder's basedir
     openfile = None
 
     def __init__(self, parent, name, logfilename):
@@ -430,9 +440,9 @@ class LogFile:
         f.seek(0, 2)
         offset = 0
         while offset < len(text):
-            size = min(len(text)-offset, self.chunkSize)
+            size = min(len(text) - offset, self.chunkSize)
             f.write("%d:%d" % (1 + size, channel))
-            f.write(text[offset:offset+size])
+            f.write(text[offset:offset + size])
             f.write(",")
             offset += size
         self.runEntries = []
@@ -481,7 +491,7 @@ class LogFile:
                         self.runEntries.append((channel, trunc))
                         self._merge()
                         msg = ("\nOutput exceeded %i bytes, remaining output "
-                            "has been truncated\n" % logMaxSize)
+                               "has been truncated\n" % logMaxSize)
                         self.runEntries.append((HEADER, msg))
                         self.maxLengthExceeded = True
 
@@ -492,7 +502,7 @@ class LogFile:
                         self.tailLength += len(text)
                         while self.tailLength > logMaxTailSize:
                             # Drop some stuff off the beginning of the buffer
-                            c,t = self.tailBuffer.pop(0)
+                            c, t = self.tailBuffer.pop(0)
                             n = len(t)
                             self.tailLength -= n
                             assert self.tailLength >= 0
@@ -563,7 +573,6 @@ class LogFile:
             w.callback(self)
         self.watchers = []
 
-
     def compressLog(self):
         logCompressionMethod = self.master.config.logCompressionMethod
         # bail out if there's no compression support
@@ -580,7 +589,7 @@ class LogFile:
                 cf = BZ2File(compressed, 'w')
             elif logCompressionMethod == "gz":
                 cf = GzipFile(compressed, 'w')
-            bufsize = 1024*1024
+            bufsize = 1024 * 1024
             while True:
                 buf = infile.read(bufsize)
                 cf.write(buf)
@@ -594,7 +603,7 @@ class LogFile:
                 filename = self.getFilename() + '.bz2'
             else:
                 filename = self.getFilename() + '.gz'
-            if runtime.platformType  == 'win32':
+            if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and
                 # lose the builder's history, so we avoid using it in the
@@ -609,19 +618,18 @@ class LogFile:
             log.msg("failed to compress %s" % self.getFilename())
             if os.path.exists(compressed):
                 _tryremove(compressed, 1, 5)
-            failure.trap() # reraise the failure
+            failure.trap()  # reraise the failure
         d.addErrback(_cleanupFailedCompress)
         return d
-
 
     # persistence stuff
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['step'] # filled in upon unpickling
+        del d['step']  # filled in upon unpickling
         del d['watchers']
         del d['finishedWatchers']
         del d['master']
-        d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
+        d['entries'] = []  # let 0.6.4 tolerate the saved log. TODO: really?
         if "finished" in d:
             del d['finished']
         if "openfile" in d:
@@ -630,10 +638,11 @@ class LogFile:
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.watchers = [] # probably not necessary
-        self.finishedWatchers = [] # same
+        self.watchers = []  # probably not necessary
+        self.finishedWatchers = []  # same
         # self.step must be filled in by our parent
         self.finished = True
+
 
 class HTMLLogFile:
     implements(interfaces.IStatusLog)
@@ -647,26 +656,32 @@ class HTMLLogFile:
         self.html = html
 
     def getName(self):
-        return self.name # set in BuildStepStatus.addLog
+        return self.name  # set in BuildStepStatus.addLog
+
     def getStep(self):
         return self.step
 
     def isFinished(self):
         return True
+
     def waitUntilFinished(self):
         return defer.succeed(self)
 
     def hasContents(self):
         return True
+
     def getText(self):
-        return self.html # looks kinda like text
+        return self.html  # looks kinda like text
+
     def getTextWithHeaders(self):
         return self.html
+
     def getChunks(self):
         return [(STDERR, self.html)]
 
     def subscribe(self, receiver, catchup):
         pass
+
     def unsubscribe(self, receiver):
         pass
 
@@ -691,9 +706,8 @@ def _tryremove(filename, timeout, retries):
         os.unlink(filename)
     except OSError:
         if retries > 0:
-            reactor.callLater(timeout, _tryremove, filename, timeout * 4, 
+            reactor.callLater(timeout, _tryremove, filename, timeout * 4,
                               retries - 1)
         else:
             log.msg("giving up on removing %s after over %d seconds" %
                     (filename, timeout))
-

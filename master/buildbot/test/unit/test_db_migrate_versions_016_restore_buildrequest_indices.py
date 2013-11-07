@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import migration
 import sqlalchemy as sa
+
+from buildbot.test.util import migration
 from sqlalchemy.engine import reflection
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,32 +33,32 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         self.buildrequests = sa.Table('buildrequests', metadata,
-            sa.Column('id', sa.Integer,  primary_key=True),
-            sa.Column('buildsetid', sa.Integer, # foreign key removed
-                nullable=False),
-            sa.Column('buildername', sa.String(length=256), nullable=False),
-            sa.Column('priority', sa.Integer, nullable=False,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('complete', sa.Integer,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('results', sa.SmallInteger),
-            sa.Column('submitted_at', sa.Integer, nullable=False),
-            sa.Column('complete_at', sa.Integer),
-        )
+                                      sa.Column('id', sa.Integer, primary_key=True),
+                                      sa.Column('buildsetid', sa.Integer,  # foreign key removed
+                                                nullable=False),
+                                      sa.Column('buildername', sa.String(length=256), nullable=False),
+                                      sa.Column('priority', sa.Integer, nullable=False,
+                                                server_default=sa.DefaultClause("0")),
+                                      sa.Column('complete', sa.Integer,
+                                                server_default=sa.DefaultClause("0")),
+                                      sa.Column('results', sa.SmallInteger),
+                                      sa.Column('submitted_at', sa.Integer, nullable=False),
+                                      sa.Column('complete_at', sa.Integer),
+                                      )
         self.buildrequests.create(bind=conn)
 
         # these indices should already exist everywhere but on sqlite
         if conn.dialect.name != 'sqlite':
             idx = sa.Index('buildrequests_buildsetid',
-                    self.buildrequests.c.buildsetid)
+                           self.buildrequests.c.buildsetid)
             idx.create()
 
             idx = sa.Index('buildrequests_buildername',
-                    self.buildrequests.c.buildername)
+                           self.buildrequests.c.buildername)
             idx.create()
 
             idx = sa.Index('buildrequests_complete',
-                    self.buildrequests.c.complete)
+                           self.buildrequests.c.complete)
             idx.create()
 
     # tests
@@ -69,13 +71,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             insp = reflection.Inspector.from_engine(conn)
             indexes = insp.get_indexes('buildrequests')
             self.assertEqual(
-                sorted([ i['name'] for i in indexes ]),
+                sorted([i['name'] for i in indexes]),
                 sorted([
                     'buildrequests_buildername',
                     'buildrequests_buildsetid',
                     'buildrequests_complete',
                 ]))
 
-
         return self.do_test_migration(15, 16, setup_thd, verify_thd)
-

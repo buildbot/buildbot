@@ -16,6 +16,7 @@
 from twisted.internet import defer
 from twisted.python import util
 
+
 def patch_noargs_decorator(decorator):
     def new_decorator(func):
         wrapper = decorator(func)
@@ -23,6 +24,7 @@ def patch_noargs_decorator(decorator):
         return wrapper
     util.mergeFunctionMetadata(decorator, new_decorator)
     return new_decorator
+
 
 def patch():
     defer.inlineCallbacks = patch_noargs_decorator(defer.inlineCallbacks)

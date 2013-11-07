@@ -13,15 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer, reactor
-from buildbot.scripts import user
 from buildbot.clients import usersclient
 from buildbot.process.users import users
+from buildbot.scripts import user
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
 
 class TestUsersClient(unittest.TestCase):
 
     class FakeUsersClient(object):
+
         def __init__(self, master, username="user", passwd="userpw", port=0):
             self.master = master
             self.port = port
@@ -53,9 +56,10 @@ class TestUsersClient(unittest.TestCase):
 
     def test_usersclient_send_ids(self):
         d = user.user(dict(master='a:9990', username="x",
-                                     passwd="y", op='get', bb_username=None,
-                                     bb_password=None, ids=['me', 'you'],
-                                     info=None))
+                           passwd="y", op='get', bb_username=None,
+                           bb_password=None, ids=['me', 'you'],
+                           info=None))
+
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
@@ -71,29 +75,31 @@ class TestUsersClient(unittest.TestCase):
         self.patch(users, 'encrypt', _fake_encrypt)
 
         d = user.user(dict(master='a:9990', username="x",
-                                     passwd="y", op='update', bb_username='bud',
-                                     bb_password='day', ids=None,
-                                     info=[{'identifier':'x', 'svn':'x'}]))
+                           passwd="y", op='update', bb_username='bud',
+                           bb_password='day', ids=None,
+                           info=[{'identifier': 'x', 'svn': 'x'}]))
+
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
                               c.bb_username, c.bb_password, c.ids, c.info),
                              ('a', 9990, "x", "y", 'update', 'bud', 'ENCRY',
-                              None, [{'identifier':'x', 'svn':'x'}]))
+                              None, [{'identifier': 'x', 'svn': 'x'}]))
         d.addCallback(check)
         return d
 
     def test_usersclient_send_add_info(self):
         d = user.user(dict(master='a:9990', username="x",
-                                     passwd="y", op='add', bb_username=None,
-                                     bb_password=None, ids=None,
-                                     info=[{'git':'x <h@c>', 'irc':'aaa'}]))
+                           passwd="y", op='add', bb_username=None,
+                           bb_password=None, ids=None,
+                           info=[{'git': 'x <h@c>', 'irc': 'aaa'}]))
+
         def check(_):
             c = self.usersclient
             self.assertEqual((c.master, c.port, c.username, c.passwd, c.op,
                               c.bb_username, c.bb_password, c.ids, c.info),
                              ('a', 9990, "x", "y", 'add', None, None, None,
-                                 [{'identifier':'aaa',
+                                 [{'identifier': 'aaa',
                                    'git': 'x <h@c>',
                                    'irc': 'aaa'}]))
         d.addCallback(check)

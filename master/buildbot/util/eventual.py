@@ -16,8 +16,10 @@
 
 # copied from foolscap
 
-from twisted.internet import reactor, defer
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
+
 
 class _SimpleCallQueue(object):
 
@@ -64,6 +66,7 @@ class _SimpleCallQueue(object):
 
 _theSimpleQueue = _SimpleCallQueue()
 
+
 def eventually(cb, *args, **kwargs):
     _theSimpleQueue.append(cb, args, kwargs)
 
@@ -73,8 +76,10 @@ def fireEventually(value=None):
     eventually(d.callback, value)
     return d
 
+
 def flushEventualQueue(_ignored=None):
     return _theSimpleQueue.flush()
+
 
 def _setReactor(r=None):
     # This sets the reactor used to schedule future events to r.  If r is None

@@ -15,14 +15,16 @@
 
 
 from twisted.internet import gtk2reactor
-gtk2reactor.install() #@UndefinedVariable
+gtk2reactor.install()  # @UndefinedVariable
 
-import sys, time
+import sys
+import time
 
-import pygtk #@UnresolvedImport
+import pygtk  # @UnresolvedImport
 pygtk.require("2.0")
-import gobject, gtk #@UnresolvedImport
-assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
+import gobject
+import gtk  # @UnresolvedImport
+assert(gtk.Window)  # in gtk1 it's gtk.GtkWindow
 
 from twisted.spread import pb
 
@@ -31,7 +33,10 @@ from buildbot.clients.base import StatusClient
 from buildbot.clients.text import TextClient
 from buildbot.util import now
 
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 
 '''
 class Pane:
@@ -51,7 +56,7 @@ class OneRow(Pane):
         self.widget.add(self.statusBox)
         self.widget.show_all()
         self.builders = []
-        
+
     def getWidget(self):
         return self.widget
     def addBuilder(self, builder):
@@ -71,7 +76,7 @@ class OneRow(Pane):
         self.nameBox.add(name)
         self.statusBox.add(box)
         builder.haveSomeWidgets([name, status, box])
-    
+
 class R2Builder(Builder):
     def start(self):
         self.nameSquare.set_text(self.name)
@@ -117,10 +122,10 @@ class CompactRow(Pane):
         self.widget.add(self.statusBox)
         self.widget.show_all()
         self.builders = []
-        
+
     def getWidget(self):
         return self.widget
-        
+
     def addBuilder(self, builder):
         self.builders.append(builder)
 
@@ -149,7 +154,7 @@ class CompactRow(Pane):
         self.lastBuildBox.remove(builder.lastBuildBox)
         self.statusBox.remove(builder.statusBox)
         self.builders.remove(builder)
-    
+
 class CompactBuilder(Builder):
     def setup(self):
         self.timer = None
@@ -163,7 +168,7 @@ class CompactBuilder(Builder):
         (self.nameSquare,
          self.lastBuildSquare, self.lastBuildBox,
          self.statusSquare, self.statusBox) = widgets
-        
+
     def remote_currentlyOffline(self):
         self.eta = None
         self.stopTimer()
@@ -258,7 +263,7 @@ class CompactBuilder(Builder):
     def updateTextTimer(self):
         self.updateText()
         return gtk.TRUE # restart timer
-    
+
     def remote_progress(self, seconds):
         if seconds == None:
             self.eta = None
@@ -273,13 +278,15 @@ class CompactBuilder(Builder):
         eta.callRemote("unsubscribe", self)
 '''
 
+
 class Box:
+
     def __init__(self, text="?"):
         self.text = text
         self.box = gtk.EventBox()
         self.label = gtk.Label(text)
         self.box.add(self.label)
-        self.box.set_size_request(64,64)
+        self.box.set_size_request(64, 64)
         self.timer = None
 
     def getBox(self):
@@ -317,7 +324,7 @@ class Box:
             next = time.strftime("%H:%M:%S", time.localtime(self.when))
             secs = "[%d secs]" % (self.when - now())
             self.label.set_text("%s\n%s\n%s" % (self.text, next, secs))
-            return True # restart timer
+            return True  # restart timer
         else:
             # done
             self.label.set_text("%s\n[soon]\n[overdue]" % (self.text,))
@@ -325,8 +332,8 @@ class Box:
             return False
 
 
-
 class ThreeRowBuilder:
+
     def __init__(self, name, ref):
         self.name = name
 
@@ -343,6 +350,7 @@ class ThreeRowBuilder:
     def getLastBuild(self):
         d = self.ref.callRemote("getLastFinishedBuild")
         d.addCallback(self.gotLastBuild)
+
     def gotLastBuild(self, build):
         if build:
             build.callRemote("getText").addCallback(self.gotLastText)
@@ -362,6 +370,7 @@ class ThreeRowBuilder:
 
     def getState(self):
         self.ref.callRemote("getState").addCallback(self.gotState)
+
     def gotState(self, res):
         state, ETA, builds = res
         # state is one of: offline, idle, waiting, interlocked, building
@@ -371,7 +380,7 @@ class ThreeRowBuilder:
                       "idle": "white",
                       "waiting": "yellow",
                       "interlocked": "yellow",
-                      "building": "yellow",}
+                      "building": "yellow", }
         text = state
         self.current.setColor(currentmap[state])
         if ETA is not None:
@@ -392,22 +401,24 @@ class ThreeRowBuilder:
         print "[%s] buildETAUpdate: %s" % (self.name, eta)
         self.current.setETA(eta)
 
-
     def stepStarted(self, stepname, step):
         print "[%s] stepStarted: %s" % (self.name, stepname)
         self.step.setText(stepname)
         self.step.setColor("yellow")
+
     def stepFinished(self, stepname, step, results):
         print "[%s] stepFinished: %s %s" % (self.name, stepname, results)
         self.step.setText("idle")
         self.step.setColor("white")
         self.step.stopTimer()
+
     def stepETAUpdate(self, stepname, eta):
         print "[%s] stepETAUpdate: %s %s" % (self.name, stepname, eta)
         self.step.setETA(eta)
 
 
 class ThreeRowClient(pb.Referenceable):
+
     def __init__(self, window):
         self.window = window
         self.buildernames = []
@@ -417,7 +428,7 @@ class ThreeRowClient(pb.Referenceable):
         print "connected"
         self.ref = ref
         self.pane = gtk.VBox(False, 2)
-        self.table = gtk.Table(1+3, 1)
+        self.table = gtk.Table(1 + 3, 1)
         self.pane.add(self.table)
         self.window.vb.add(self.pane)
         self.pane.show_all()
@@ -435,13 +446,13 @@ class ThreeRowClient(pb.Referenceable):
         for i in range(len(self.buildernames)):
             name = self.buildernames[i]
             b = self.builders[name]
-            last,current,step = b.getBoxes()
-            self.table.attach(gtk.Label(name), i, i+1, 0, 1)
-            self.table.attach(last, i, i+1, 1, 2,
+            last, current, step = b.getBoxes()
+            self.table.attach(gtk.Label(name), i, i + 1, 0, 1)
+            self.table.attach(last, i, i + 1, 1, 2,
                               xpadding=1, ypadding=1)
-            self.table.attach(current, i, i+1, 2, 3,
+            self.table.attach(current, i, i + 1, 2, 3,
                               xpadding=1, ypadding=1)
-            self.table.attach(step, i, i+1, 3, 4,
+            self.table.attach(step, i, i + 1, 3, 4,
                               xpadding=1, ypadding=1)
         self.table.show_all()
 
@@ -467,15 +478,19 @@ class ThreeRowClient(pb.Referenceable):
 
     def remote_builderChangedState(self, name, state, eta):
         self.builders[name].gotState((state, eta, None))
+
     def remote_buildStarted(self, name, build):
         self.builders[name].buildStarted(build)
+
     def remote_buildFinished(self, name, build, results):
         self.builders[name].buildFinished(build, results)
 
     def remote_buildETAUpdate(self, name, build, eta):
         self.builders[name].buildETAUpdate(eta)
+
     def remote_stepStarted(self, name, build, stepname, step):
         self.builders[name].stepStarted(stepname, step)
+
     def remote_stepFinished(self, name, build, stepname, step, results):
         self.builders[name].stepFinished(stepname, step, results)
 
@@ -506,7 +521,7 @@ class GtkClient(TextClient):
 
         w = gtk.Window()
         self.w = w
-        #w.set_size_request(64,64)
+        # w.set_size_request(64,64)
         w.connect('destroy', lambda win: gtk.main_quit())
         self.vb = gtk.VBox(False, 2)
         self.status = gtk.Label("unconnected")
@@ -526,7 +541,7 @@ class GtkClient(TextClient):
     def removeBuilder(self, name):
         self.pane.removeBuilder(name, self.builders[name])
         Client.removeBuilder(self, name)
-        
+
     def startConnecting(self, master):
         self.master = master
         Client.startConnecting(self, master)
@@ -539,6 +554,7 @@ class GtkClient(TextClient):
         self.status.set_text("disconnected, will retry")
 """
 
+
 def main():
     master = "localhost:8007"
     if len(sys.argv) > 1:
@@ -548,4 +564,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
