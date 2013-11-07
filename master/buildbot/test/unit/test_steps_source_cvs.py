@@ -444,7 +444,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['cvs', '-z3', 'update', '-dP'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
         )
 
@@ -484,7 +484,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'source', 'mozilla/browser/'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
         )
 

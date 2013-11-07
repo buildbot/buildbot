@@ -159,7 +159,8 @@ class CVS(Source):
             cmd = buildstep.RemoteCommand('cpdir',
                                           {'fromdir': self.srcdir,
                                            'todir': old_workdir,
-                                           'logEnviron': self.logEnviron, })
+                                           'logEnviron': self.logEnviron,
+                                           'timeout': self.timeout})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
