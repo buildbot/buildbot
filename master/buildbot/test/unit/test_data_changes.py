@@ -14,12 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer, task
+
 from buildbot.data import changes
-from buildbot.test.util import endpoint, interfaces
-from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process.users import users
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import endpoint
+from buildbot.test.util import interfaces
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
+
 
 class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -31,26 +36,25 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.SourceStamp(id=234),
             fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
-                            repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination', sourcestampid=234),
+                          repository=u'svn://...', codebase=u'cbsvn',
+                          project=u'world-domination', sourcestampid=234),
         ])
-
 
     def tearDown(self):
         self.tearDownEndpoint()
 
-
     def test_get_existing(self):
         d = self.callGet(('change', '13'))
+
         @d.addCallback
         def check(change):
             self.validateData(change)
             self.assertEqual(change['project'], 'world-domination')
         return d
 
-
     def test_get_missing(self):
         d = self.callGet(('change', '99'))
+
         @d.addCallback
         def check(change):
             self.assertEqual(change, None)
@@ -67,20 +71,20 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.SourceStamp(id=133),
             fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
-                            repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination', sourcestampid=133),
+                          repository=u'svn://...', codebase=u'cbsvn',
+                          project=u'world-domination', sourcestampid=133),
             fakedb.SourceStamp(id=144),
             fakedb.Change(changeid=14, branch=u'devel', revision=u'9284',
-                            repository=u'svn://...', codebase=u'cbsvn',
-                            project=u'world-domination', sourcestampid=144),
+                          repository=u'svn://...', codebase=u'cbsvn',
+                          project=u'world-domination', sourcestampid=144),
         ])
-
 
     def tearDown(self):
         self.tearDownEndpoint()
 
     def test_get(self):
         d = self.callGet(('change',))
+
         @d.addCallback
         def check(changes):
             self.validateData(changes[0])
@@ -91,37 +95,38 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                expected_filter=('change', None, 'new'))
+                                expected_filter=('change', None, 'new'))
 
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                            wantData=True, testcase=self)
+                                             wantData=True, testcase=self)
         self.rtype = changes.Change(self.master)
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.addChange, # fake
-            self.rtype.addChange) # real
+            self.master.data.updates.addChange,  # fake
+            self.rtype.addChange)  # real
         def addChange(self, files=None, comments=None, author=None,
-            revision=None, when_timestamp=None, branch=None, category=None,
-            revlink=u'', properties={}, repository=u'', codebase=None,
-            project=u'', src=None):
+                      revision=None, when_timestamp=None, branch=None, category=None,
+                      revlink=u'', properties={}, repository=u'', codebase=None,
+                      project=u'', src=None):
             pass
 
     def do_test_addChange(self, kwargs,
-            expectedRoutingKey, expectedMessage, expectedRow,
-            expectedChangeUsers=[]):
+                          expectedRoutingKey, expectedMessage, expectedRow,
+                          expectedChangeUsers=[]):
         clock = task.Clock()
         clock.advance(10000000)
         d = self.rtype.addChange(_reactor=clock, **kwargs)
+
         def check(changeid):
             self.assertEqual(changeid, 500)
             # check the correct message was received
             self.master.mq.assertProductions([
-                ( expectedRoutingKey, expectedMessage),
+                (expectedRoutingKey, expectedMessage),
             ])
             # and that the correct data was inserted into the db
             self.master.db.changes.assertChange(500, expectedRow)
@@ -132,12 +137,12 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
     def test_addChange(self):
         # src and codebase are default here
         kwargs = dict(author=u'warner', branch=u'warnerdb',
-                category=u'devel', comments=u'fix whitespace',
-                files=[u'master/buildbot/__init__.py'],
-                project=u'Buildbot', repository=u'git://warner',
-                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=256738404,
-                properties={u'foo': 20})
+                      category=u'devel', comments=u'fix whitespace',
+                      files=[u'master/buildbot/__init__.py'],
+                      project=u'Buildbot', repository=u'git://warner',
+                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+                      when_timestamp=256738404,
+                      properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -145,7 +150,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'category': u'devel',
             'codebase': u'',
             'comments': u'fix whitespace',
-            'changeid' : 500,
+            'changeid': 500,
             'files': [u'master/buildbot/__init__.py'],
             'project': u'Buildbot',
             'properties': {u'foo': (20, u'Change')},
@@ -180,19 +185,19 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
-                expectedRoutingKey, expectedMessage, expectedRow)
+                                      expectedRoutingKey, expectedMessage, expectedRow)
 
     def test_addChange_src_codebase(self):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
         kwargs = dict(author=u'warner', branch=u'warnerdb',
-                category=u'devel', comments=u'fix whitespace',
-                files=[u'master/buildbot/__init__.py'],
-                project=u'Buildbot', repository=u'git://warner',
-                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=256738404,
-                properties={u'foo' : 20}, src=u'git', codebase=u'cb')
+                      category=u'devel', comments=u'fix whitespace',
+                      files=[u'master/buildbot/__init__.py'],
+                      project=u'Buildbot', repository=u'git://warner',
+                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+                      when_timestamp=256738404,
+                      properties={u'foo': 20}, src=u'git', codebase=u'cb')
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -200,7 +205,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'category': u'devel',
             'codebase': u'cb',
             'comments': u'fix whitespace',
-            'changeid' : 500,
+            'changeid': 500,
             'files': [u'master/buildbot/__init__.py'],
             'project': u'Buildbot',
             'properties': {u'foo': (20, u'Change')},
@@ -235,25 +240,26 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             sourcestampid=100,
         )
         d = self.do_test_addChange(kwargs,
-                expectedRoutingKey, expectedMessage, expectedRow,
-                expectedChangeUsers=[123])
+                                   expectedRoutingKey, expectedMessage, expectedRow,
+                                   expectedChangeUsers=[123])
+
         @d.addCallback
         def check(_):
             createUserObject.assert_called_once_with(
-                    self.master, 'warner', 'git')
+                self.master, 'warner', 'git')
         return d
 
     def test_addChange_src_codebaseGenerator(self):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.codebaseGenerator = \
-                lambda change : 'cb-%s' % change['category']
+            lambda change: 'cb-%s' % change['category']
         kwargs = dict(author=u'warner', branch=u'warnerdb',
-                category=u'devel', comments=u'fix whitespace',
-                files=[u'master/buildbot/__init__.py'],
-                project=u'Buildbot', repository=u'git://warner',
-                revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                when_timestamp=256738404,
-                properties={u'foo' : 20})
+                      category=u'devel', comments=u'fix whitespace',
+                      files=[u'master/buildbot/__init__.py'],
+                      project=u'Buildbot', repository=u'git://warner',
+                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+                      when_timestamp=256738404,
+                      properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -261,7 +267,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'category': u'devel',
             'codebase': u'cb-devel',
             'comments': u'fix whitespace',
-            'changeid' : 500,
+            'changeid': 500,
             'files': [u'master/buildbot/__init__.py'],
             'project': u'Buildbot',
             'properties': {u'foo': (20, u'Change')},
@@ -296,5 +302,4 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
-                expectedRoutingKey, expectedMessage, expectedRow)
-
+                                      expectedRoutingKey, expectedMessage, expectedRow)

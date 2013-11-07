@@ -19,13 +19,17 @@ import os
 import re
 import sys
 import warnings
-from buildbot.util import safeTranslate
+
 from buildbot import interfaces
-from buildbot import locks, util
+from buildbot import locks
+from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
-from twisted.python import log, failure
-from twisted.internet import defer
+from buildbot.util import safeTranslate
 from twisted.application import service
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+
 
 class ConfigErrors(Exception):
 
@@ -42,11 +46,14 @@ class ConfigErrors(Exception):
         return len(self.errors)
 
 _errors = None
+
+
 def error(error):
     if _errors is not None:
         _errors.addError(error)
     else:
         raise ConfigErrors([error])
+
 
 class MasterConfig(object):
 
@@ -63,7 +70,7 @@ class MasterConfig(object):
         self.eventHorizon = 50
         self.logHorizon = None
         self.buildHorizon = None
-        self.logCompressionLimit = 4*1024
+        self.logCompressionLimit = 4 * 1024
         self.logCompressionMethod = 'bz2'
         self.logMaxTailSize = None
         self.logMaxSize = None
@@ -163,8 +170,8 @@ class MasterConfig(object):
             except:
                 log.err(failure.Failure(), 'error while parsing config file:')
                 error("error while parsing config file: %s (traceback in logfile)" %
-                        (sys.exc_info()[1],),
-                )
+                      (sys.exc_info()[1],),
+                      )
                 raise errors
         finally:
             f.close()
@@ -173,8 +180,8 @@ class MasterConfig(object):
 
         if 'BuildmasterConfig' not in localDict:
             error("Configuration file %r does not define 'BuildmasterConfig'"
-                    % (filename,),
-            )
+                  % (filename,),
+                  )
 
         config_dict = localDict['BuildmasterConfig']
 
@@ -183,10 +190,10 @@ class MasterConfig(object):
         if unknown_keys:
             if len(unknown_keys) == 1:
                 error('Unknown BuildmasterConfig key %s' %
-                        (unknown_keys.pop()))
+                      (unknown_keys.pop()))
             else:
                 error('Unknown BuildmasterConfig keys %s' %
-                        (', '.join(sorted(unknown_keys))))
+                      (', '.join(sorted(unknown_keys))))
 
         # instantiate a new config object, which will apply defaults
         # automatically
@@ -236,17 +243,17 @@ class MasterConfig(object):
                 return
             if v is not None and check_type and not isinstance(v, check_type):
                 error("c['%s'] must be %s" %
-                                (name, check_type_name))
+                      (name, check_type_name))
             else:
                 setattr(self, name, v)
 
         def copy_int_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                    check_type=int, check_type_name='an int')
+                       check_type=int, check_type_name='an int')
 
         def copy_str_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                    check_type=basestring, check_type_name='a string')
+                       check_type=basestring, check_type_name='a string')
 
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
@@ -276,14 +283,14 @@ class MasterConfig(object):
 
         mergeRequests = config_dict.get('mergeRequests')
         if (mergeRequests not in (None, True, False)
-            and not callable(mergeRequests)):
+                and not callable(mergeRequests)):
             error("mergeRequests must be a callable, True, or False")
         else:
             self.mergeRequests = mergeRequests
 
         codebaseGenerator = config_dict.get('codebaseGenerator')
         if (codebaseGenerator is not None and
-            not callable(codebaseGenerator)):
+                not callable(codebaseGenerator)):
             error("codebaseGenerator must be a callable accepting a dict and returning a str")
         else:
             self.codebaseGenerator = codebaseGenerator
@@ -302,11 +309,11 @@ class MasterConfig(object):
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
                     return
-                if (proto == "pb" and options.get("port") and 
-                    'slavePortnum' in config_dict):
+                if (proto == "pb" and options.get("port") and
+                        'slavePortnum' in config_dict):
                     error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                        " defined, recommended to remove slavePortnum and leave"
-                        " only c['protocols']['pb']['port']")
+                          " defined, recommended to remove slavePortnum and leave"
+                          " only c['protocols']['pb']['port']")
         else:
             error("c['protocols'] must be dict")
             return
@@ -348,10 +355,9 @@ class MasterConfig(object):
                 set(validation.keys()) - set(self.validation.keys()))
             if unknown_keys:
                 error("unrecognized validation key(s): %s" %
-                                    (", ".join(unknown_keys)))
+                      (", ".join(unknown_keys)))
             else:
                 self.validation.update(validation)
-
 
     def load_db(self, filename, config_dict):
         if 'db' in config_dict:
@@ -372,9 +378,8 @@ class MasterConfig(object):
             log.msg("NOTE: db_poll_interval is deprecated and will be ignored")
             del self.db['db_poll_interval']
 
-
     def load_mq(self, filename, config_dict):
-        from buildbot.mq import connector # avoid circular imports
+        from buildbot.mq import connector  # avoid circular imports
         if 'mq' in config_dict:
             self.mq.update(config_dict['mq'])
 
@@ -388,8 +393,7 @@ class MasterConfig(object):
         unk = set(self.mq.keys()) - known_keys - set(['type'])
         if unk:
             error("unrecognized keys in c['mq']: %s"
-                    % (', '.join(unk),))
-
+                  % (', '.join(unk),))
 
     def load_metrics(self, filename, config_dict):
         # we don't try to validate metrics keys
@@ -399,7 +403,6 @@ class MasterConfig(object):
                 error("c['metrics'] must be a dictionary")
             else:
                 self.metrics = metrics
-
 
     def load_caches(self, filename, config_dict):
         explicit = False
@@ -430,7 +433,6 @@ class MasterConfig(object):
                 error(msg)
             self.caches['Changes'] = config_dict['changeCacheSize']
 
-
     def load_schedulers(self, filename, config_dict):
         if 'schedulers' not in config_dict:
             return
@@ -444,7 +446,7 @@ class MasterConfig(object):
                 if not interfaces.IScheduler.providedBy(s):
                     ok = False
         if not ok:
-            msg="c['schedulers'] must be a list of Scheduler instances"
+            msg = "c['schedulers'] must be a list of Scheduler instances"
             error(msg)
 
         # convert from list to dict, first looking for duplicates
@@ -452,11 +454,10 @@ class MasterConfig(object):
         for s in schedulers:
             if s.name in seen_names:
                 error("scheduler name '%s' used multiple times" %
-                                s.name)
+                      s.name)
             seen_names.add(s.name)
 
         self.schedulers = dict((s.name, s) for s in schedulers)
-
 
     def load_builders(self, filename, config_dict):
         if 'builders' not in config_dict:
@@ -475,16 +476,15 @@ class MasterConfig(object):
                 return BuilderConfig(**b)
             else:
                 error("%r is not a builder config (in c['builders']" % (b,))
-        builders = [ mapper(b) for b in builders ]
+        builders = [mapper(b) for b in builders]
 
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
                 warnings.warn("Absolute path '%s' for builder may cause "
-                        "mayhem.  Perhaps you meant to specify slavebuilddir "
-                        "instead.")
+                              "mayhem.  Perhaps you meant to specify slavebuilddir "
+                              "instead.")
 
         self.builders = builders
-
 
     def load_slaves(self, filename, config_dict):
         if 'slaves' not in config_dict:
@@ -506,7 +506,6 @@ class MasterConfig(object):
                 error(msg)
 
         self.slaves = config_dict['slaves']
-
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
@@ -540,7 +539,6 @@ class MasterConfig(object):
 
         self.status = status
 
-
     def load_user_managers(self, filename, config_dict):
         if 'user_managers' not in config_dict:
             return
@@ -553,7 +551,6 @@ class MasterConfig(object):
 
         self.user_managers = user_managers
 
-
     def load_www(self, filename, config_dict):
         if 'www' not in config_dict:
             return
@@ -564,7 +561,7 @@ class MasterConfig(object):
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
-                                            (', '.join(unknown),))
+                  (', '.join(unknown),))
 
         self.www.update(www_cfg)
 
@@ -574,7 +571,6 @@ class MasterConfig(object):
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
-
 
     def check_single_master(self):
         # check additional problems that are only valid in a single-master
@@ -589,34 +585,33 @@ class MasterConfig(object):
             error("no builders are configured")
 
         # check that all builders are implemented on this master
-        unscheduled_buildernames = set([ b.name for b in self.builders ])
+        unscheduled_buildernames = set([b.name for b in self.builders])
         for s in self.schedulers.itervalues():
             for n in s.listBuilderNames():
                 if n in unscheduled_buildernames:
                     unscheduled_buildernames.remove(n)
         if unscheduled_buildernames:
             error("builder(s) %s have no schedulers to drive them"
-                            % (', '.join(unscheduled_buildernames),))
-
+                  % (', '.join(unscheduled_buildernames),))
 
     def check_schedulers(self):
         # don't perform this check in multiMaster mode
         if self.multiMaster:
             return
 
-        all_buildernames = set([ b.name for b in self.builders ])
+        all_buildernames = set([b.name for b in self.builders])
 
         for s in self.schedulers.itervalues():
             for n in s.listBuilderNames():
                 if n not in all_buildernames:
                     error("Unknown builder '%s' in scheduler '%s'"
-                                    % (n, s.name))
-
+                          % (n, s.name))
 
     def check_locks(self):
         # assert that all locks used by the Builds and their Steps are
         # uniquely named.
         lock_dict = {}
+
         def check_lock(l):
             if isinstance(l, locks.LockAccess):
                 l = l.lockid
@@ -635,7 +630,7 @@ class MasterConfig(object):
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
-        slavenames = set([ s.slavename for s in self.slaves ])
+        slavenames = set([s.slavename for s in self.slaves])
         seen_names = set()
         seen_builddirs = set()
 
@@ -643,7 +638,7 @@ class MasterConfig(object):
             unknowns = set(b.slavenames) - slavenames
             if unknowns:
                 error("builder '%s' uses unknown slaves %s" %
-                            (b.name, ", ".join(`u` for u in unknowns)))
+                      (b.name, ", ".join(repr(u) for u in unknowns)))
             if b.name in seen_names:
                 error("duplicate builder name '%s'" % b.name)
             seen_names.add(b.name)
@@ -652,13 +647,11 @@ class MasterConfig(object):
                 error("duplicate builder builddir '%s'" % b.builddir)
             seen_builddirs.add(b.builddir)
 
-
     def check_status(self):
         # allow status receivers to check themselves against the rest of the
         # receivers
         for s in self.status:
             s.checkConfig(self.status)
-
 
     def check_horizons(self):
         if self.logHorizon is not None and self.buildHorizon is not None:
@@ -690,10 +683,10 @@ class MasterConfig(object):
 class BuilderConfig:
 
     def __init__(self, name=None, slavename=None, slavenames=None,
-            builddir=None, slavebuilddir=None, factory=None, category=None,
-            nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=None, description=None,
-            canStartBuild=None):
+                 builddir=None, slavebuilddir=None, factory=None, category=None,
+                 nextSlave=None, nextBuild=None, locks=None, env=None,
+                 properties=None, mergeRequests=None, description=None,
+                 canStartBuild=None):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -716,19 +709,19 @@ class BuilderConfig:
 
         # slavenames can be a single slave name or a list, and should also
         # include slavename, if given
-        if type(slavenames) is str:
-            slavenames = [ slavenames ]
+        if isinstance(slavenames, str):
+            slavenames = [slavenames]
         if slavenames:
             if not isinstance(slavenames, list):
                 error("builder '%s': slavenames must be a list or a string" %
-                        (name,))
+                      (name,))
         else:
             slavenames = []
 
         if slavename:
-            if type(slavename) != str:
+            if not isinstance(slavename, str):
                 error("builder '%s': slavename must be a string" % (name,))
-            slavenames = slavenames + [ slavename ]
+            slavenames = slavenames + [slavename]
         if not slavenames:
             error("builder '%s': at least one slavename is required" % (name,))
 
@@ -767,7 +760,6 @@ class BuilderConfig:
         self.mergeRequests = mergeRequests
 
         self.description = description
-
 
     def getConfigDict(self):
         # note: this method will disappear eventually - put your smarts in the
@@ -808,12 +800,12 @@ class ReconfigurableServiceMixin:
             return
 
         # get a list of child services to reconfigure
-        reconfigurable_services = [ svc
-                for svc in self
-                if isinstance(svc, ReconfigurableServiceMixin) ]
+        reconfigurable_services = [svc
+                                   for svc in self
+                                   if isinstance(svc, ReconfigurableServiceMixin)]
 
         # sort by priority
-        reconfigurable_services.sort(key=lambda svc : -svc.reconfig_priority)
+        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
             yield svc.reconfigService(new_config)

@@ -176,8 +176,7 @@ class MtrLogObserver(LogLineObserver):
             text.append(self.testType)
         fails = sorted(self.failList[:])
         self.addToText(fails, text)
-        warns = self.warnList[:]
-        warns.sort()
+        warns = sorted(self.warnList[:])
         self.addToText(warns, text)
         return text
 

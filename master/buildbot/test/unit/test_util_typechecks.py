@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.python import log
 from buildbot.util import typechecks
+from twisted.python import log
+from twisted.trial import unittest
+
 
 class Tests(unittest.TestCase):
 
@@ -28,11 +29,11 @@ class Tests(unittest.TestCase):
             self.assertFalse(fn(b))
 
     def test_isIdentifier(self):
-        self.doValidationTest(lambda o : typechecks.isIdentifier(50, o),
-            good = [
-                u"linux", u"Linux", u"abc123", u"a" * 50,
-            ], bad = [
-                None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
-                u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
-                u"123 no initial digits",
-            ])
+        self.doValidationTest(lambda o: typechecks.isIdentifier(50, o),
+                              good=[
+                                  u"linux", u"Linux", u"abc123", u"a" * 50,
+                              ], bad=[
+                                  None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+                                  u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
+                                  u"123 no initial digits",
+                              ])

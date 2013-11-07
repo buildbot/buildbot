@@ -15,14 +15,17 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 
-import re
 import datetime
-from buildbot.util import json, UTC
+import re
+
 from buildbot.data import base
+from buildbot.util import UTC
+from buildbot.util import json
 
 # Base class
 
 validatorsByName = {}
+
 
 class Validator(object):
 
@@ -33,6 +36,7 @@ class Validator(object):
         raise NotImplementedError
 
     class __metaclass__(type):
+
         def __new__(mcls, name, bases, attrs):
             cls = type.__new__(mcls, name, bases, attrs)
             if 'name' in attrs and attrs['name']:
@@ -49,7 +53,7 @@ class InstanceValidator(Validator):
     def validate(self, name, object):
         if not isinstance(object, self.types):
             yield "%s (%r) is not a %s" % (
-                    name, object, self.name or `self.types`)
+                name, object, self.name or repr(self.types))
 
 
 class IntValidator(InstanceValidator):
@@ -108,9 +112,10 @@ class IdentifierValidator(Validator):
             yield "%s - identifiers cannot be an empty string" % (name,)
         elif len(object) > self.len:
             yield "%s - %r - is longer than %d characters" % (name, object,
-                                                                self.len)
+                                                              self.len)
 
 # Miscellaneous
+
 
 class NoneOk(object):
 
@@ -132,6 +137,7 @@ class Any(object):
 
 # Compound Types
 
+
 class DictValidator(Validator):
 
     name = 'dict'
@@ -145,7 +151,7 @@ class DictValidator(Validator):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
             yield "%s (%r) is not a dictionary (got type %s)" \
-                    % (name, object, type(object))
+                % (name, object, type(object))
             return
 
         gotNames = set(object.keys())
@@ -153,12 +159,12 @@ class DictValidator(Validator):
         unexpected = gotNames - self.expectedNames
         if unexpected:
             yield "%s has unexpected keys %s" % (name,
-                    ", ".join([ `n` for n in unexpected ]))
+                                                 ", ".join([repr(n) for n in unexpected]))
 
         missing = self.expectedNames - self.optionalNames - gotNames
         if missing:
             yield "%s is missing keys %s" % (name,
-                    ", ".join([ `n` for n in missing ]))
+                                             ", ".join([repr(n) for n in missing]))
 
         for k in gotNames & self.expectedNames:
             for msg in self.keys[k].validate("%s[%r]" % (name, k), object[k]):
@@ -172,7 +178,7 @@ class SequenceValidator(Validator):
         self.elementValidator = elementValidator
 
     def validate(self, name, object):
-        if type(object) != self.type:
+        if not isinstance(object, self.type):
             yield "%s (%r) is not a %s" % (name, object, self.name)
             return
 
@@ -199,13 +205,12 @@ class StringListValidator(ListValidator):
         ListValidator.__init__(self, StringValidator())
 
 
-
 class SourcedPropertiesValidator(Validator):
 
     name = 'sourced-properties'
 
     def validate(self, name, object):
-        if type(object) != dict:
+        if not isinstance(object, dict):
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in object.iteritems():
@@ -283,7 +288,7 @@ class MessageValidator(Validator):
                     yield "%s: no field '%s in message" % (pfx, f)
                 elif str(message[f]) != routingKey[j]:
                     yield ("%s: routing key value for %s (%s) does not match "
-                        "message (%s)" % (pfx, f, routingKey[j], message[f]))
+                           "message (%s)" % (pfx, f, routingKey[j], message[f]))
 
         for msg in self.messageValidator.validate("%s message" % routingKey[0],
                                                   message):
@@ -321,15 +326,15 @@ dbdict = {}
 
 message['master'] = Selector()
 message['master'].add(None,
-    MessageValidator(
-        keyFields=['masterid'],
-        events=['started', 'stopped'],
-        messageValidator=DictValidator(
-            masterid=IntValidator(),
-            name=StringValidator(),
-            active=BooleanValidator(),
-            # last_active is not included
-)))
+                      MessageValidator(
+                          keyFields=['masterid'],
+                          events=['started', 'stopped'],
+                          messageValidator=DictValidator(
+                              masterid=IntValidator(),
+                              name=StringValidator(),
+                              active=BooleanValidator(),
+                              # last_active is not included
+                          )))
 
 dbdict['masterdict'] = DictValidator(
     id=IntValidator(),
@@ -358,9 +363,9 @@ _sourcestamp = dict(
 
 message['sourcestamp'] = Selector()
 message['sourcestamp'].add(None,
-    DictValidator(
-        **_sourcestamp
-    ))
+                           DictValidator(
+                               **_sourcestamp
+                           ))
 
 dbdict['ssdict'] = DictValidator(
     ssid=IntValidator(),
@@ -382,14 +387,14 @@ dbdict['ssdict'] = DictValidator(
 
 message['builder'] = Selector()
 message['builder'].add(None,
-    MessageValidator(
-        keyFields=['builderid'],
-        events=['started', 'stopped'],
-        messageValidator=DictValidator(
-            builderid=IntValidator(),
-            masterid=IntValidator(),
-            name=StringValidator(),
-        )))
+                       MessageValidator(
+                           keyFields=['builderid'],
+                           events=['started', 'stopped'],
+                           messageValidator=DictValidator(
+                               builderid=IntValidator(),
+                               masterid=IntValidator(),
+                               name=StringValidator(),
+                           )))
 
 dbdict['builderdict'] = DictValidator(
     id=IntValidator(),
@@ -427,29 +432,29 @@ _buildsetKeyFields = ['bsid']
 _buildsetEvents = ['new', 'complete']
 
 message['buildset'] = Selector()
-message['buildset'].add(lambda k : k[-1] == 'new',
-    MessageValidator(
-        keyFields=_buildsetKeyFields,
-        events=_buildsetEvents,
-        messageValidator=DictValidator(
-            scheduler=StringValidator(), # only for 'new'
-            sourcestamps=ListValidator(
-                DictValidator(
-                    **_sourcestamp
-                )),
-            **_buildset
-        )))
+message['buildset'].add(lambda k: k[-1] == 'new',
+                        MessageValidator(
+                            keyFields=_buildsetKeyFields,
+                            events=_buildsetEvents,
+                            messageValidator=DictValidator(
+                                scheduler=StringValidator(),  # only for 'new'
+                                sourcestamps=ListValidator(
+                                    DictValidator(
+                                        **_sourcestamp
+                                    )),
+                                **_buildset
+                            )))
 message['buildset'].add(None,
-    MessageValidator(
-        keyFields=_buildsetKeyFields,
-        events=_buildsetEvents,
-        messageValidator=DictValidator(
-            sourcestamps=ListValidator(
-                DictValidator(
-                    **_sourcestamp
-                )),
-            **_buildset
-        )))
+                        MessageValidator(
+                            keyFields=_buildsetKeyFields,
+                            events=_buildsetEvents,
+                            messageValidator=DictValidator(
+                                sourcestamps=ListValidator(
+                                    DictValidator(
+                                        **_sourcestamp
+                                    )),
+                                **_buildset
+                            )))
 
 dbdict['bsdict'] = DictValidator(
     bsid=IntValidator(),
@@ -466,42 +471,42 @@ dbdict['bsdict'] = DictValidator(
 
 message['buildrequest'] = Selector()
 message['buildrequest'].add(None,
-    MessageValidator(
-        keyFields=['bsid', 'builderid', 'brid'],
-        events=['new', 'claimed', 'unclaimed'],
-        messageValidator=DictValidator(
-            # TODO: probably wrong!
-            brid=IntValidator(),
-            builderid=IntValidator(),
-            bsid=IntValidator(),
-            buildername=StringValidator(),
-)))
+                            MessageValidator(
+                                keyFields=['bsid', 'builderid', 'brid'],
+                                events=['new', 'claimed', 'unclaimed'],
+                                messageValidator=DictValidator(
+                                    # TODO: probably wrong!
+                                    brid=IntValidator(),
+                                    builderid=IntValidator(),
+                                    bsid=IntValidator(),
+                                    buildername=StringValidator(),
+                                )))
 
 # change
 
 message['change'] = Selector()
 message['change'].add(None,
-    MessageValidator(
-        keyFields=['changeid'],
-        events=['new'],
-        messageValidator=DictValidator(
-            changeid=IntValidator(),
-            author=StringValidator(),
-            files=ListValidator(StringValidator()),
-            comments=StringValidator(),
-            revision=NoneOk(StringValidator()),
-            when_timestamp=IntValidator(),
-            branch=NoneOk(StringValidator()),
-            category=NoneOk(StringValidator()),
-            revlink=NoneOk(StringValidator()),
-            properties=SourcedPropertiesValidator(),
-            repository=StringValidator(),
-            project=StringValidator(),
-            codebase=StringValidator(),
-            sourcestamp=DictValidator(
-                **_sourcestamp
-            ),
-)))
+                      MessageValidator(
+                          keyFields=['changeid'],
+                          events=['new'],
+                          messageValidator=DictValidator(
+                              changeid=IntValidator(),
+                              author=StringValidator(),
+                              files=ListValidator(StringValidator()),
+                              comments=StringValidator(),
+                              revision=NoneOk(StringValidator()),
+                              when_timestamp=IntValidator(),
+                              branch=NoneOk(StringValidator()),
+                              category=NoneOk(StringValidator()),
+                              revlink=NoneOk(StringValidator()),
+                              properties=SourcedPropertiesValidator(),
+                              repository=StringValidator(),
+                              project=StringValidator(),
+                              codebase=StringValidator(),
+                              sourcestamp=DictValidator(
+                                  **_sourcestamp
+                              ),
+                          )))
 
 dbdict['chdict'] = DictValidator(
     changeid=IntValidator(),
@@ -557,12 +562,12 @@ _buildEvents = ['new', 'complete']
 
 message['build'] = Selector()
 message['build'].add(None,
-    MessageValidator(
-        keyFields=_buildKeyFields,
-        events=_buildEvents,
-        messageValidator=DictValidator(
-            **_build
-)))
+                     MessageValidator(
+                         keyFields=_buildKeyFields,
+                         events=_buildEvents,
+                         messageValidator=DictValidator(
+                             **_build
+                         )))
 
 dbdict['builddict'] = DictValidator(
     id=IntValidator(),
@@ -596,12 +601,12 @@ _stepEvents = ['new', 'complete']
 
 message['step'] = Selector()
 message['step'].add(None,
-    MessageValidator(
-        keyFields=_stepKeyFields,
-        events=_stepEvents,
-        messageValidator=DictValidator(
-            **_step
-)))
+                    MessageValidator(
+                        keyFields=_stepKeyFields,
+                        events=_stepEvents,
+                        messageValidator=DictValidator(
+                            **_step
+                        )))
 
 dbdict['stepdict'] = DictValidator(
     id=IntValidator(),
@@ -649,17 +654,21 @@ def _verify(testcase, validator, name, object):
         else:
             raise AssertionError(msg)
 
+
 def verifyMessage(testcase, routingKey, message_):
     # the validator is a Selector wrapping a MessageValidator, so we need to
     # pass (arg, (routingKey, message)), where the routing key is the arg
     _verify(testcase, message[routingKey[0]], '',
             (routingKey, (routingKey, message_)))
 
+
 def verifyDbDict(testcase, type, value):
     _verify(testcase, dbdict[type], type, value)
 
+
 def verifyData(testcase, entityType, options, value):
     _verify(testcase, entityType, entityType.name, value)
+
 
 def verifyType(testcase, name, value, validator):
     _verify(testcase, validator, name, value)

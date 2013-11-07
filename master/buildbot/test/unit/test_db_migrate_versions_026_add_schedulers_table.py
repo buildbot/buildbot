@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -30,31 +32,31 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
             scheduler_changes = sa.Table('scheduler_changes', metadata,
-                sa.Column('objectid', sa.Integer),
-                sa.Column('changeid', sa.Integer),
-                # ..
-            )
+                                         sa.Column('objectid', sa.Integer),
+                                         sa.Column('changeid', sa.Integer),
+                                         # ..
+                                         )
             scheduler_changes.create()
 
             sa.Table('masters', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                # ..
-            ).create()
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     # ..
+                     ).create()
 
             sa.Table('changes', metadata,
-                sa.Column('changeid', sa.Integer,  primary_key=True),
-                # ..
-            ).create()
+                     sa.Column('changeid', sa.Integer, primary_key=True),
+                     # ..
+                     ).create()
 
             idx = sa.Index('scheduler_changes_objectid',
-                    scheduler_changes.c.objectid)
+                           scheduler_changes.c.objectid)
             idx.create()
             idx = sa.Index('scheduler_changes_changeid',
-                    scheduler_changes.c.changeid)
+                           scheduler_changes.c.changeid)
             idx.create()
             idx = sa.Index('scheduler_changes_unique',
-                    scheduler_changes.c.objectid, scheduler_changes.c.changeid,
-                    unique=True)
+                           scheduler_changes.c.objectid, scheduler_changes.c.changeid,
+                           unique=True)
             idx.create()
 
         def verify_thd(conn):
@@ -63,21 +65,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             schedulers = sa.Table('schedulers', metadata, autoload=True)
             scheduler_masters = sa.Table('scheduler_masters', metadata,
-                    autoload=True)
+                                         autoload=True)
             scheduler_changes = sa.Table('scheduler_changes', metadata,
-                    autoload=True)
+                                         autoload=True)
 
-            q = sa.select([ schedulers.c.id, schedulers.c.name,
-                            schedulers.c.name_hash ])
+            q = sa.select([schedulers.c.id, schedulers.c.name,
+                           schedulers.c.name_hash])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-            q = sa.select([ scheduler_masters.c.schedulerid,
-                            scheduler_masters.c.masterid ])
+            q = sa.select([scheduler_masters.c.schedulerid,
+                           scheduler_masters.c.masterid])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-            q = sa.select([ scheduler_changes.c.schedulerid,
-                            scheduler_changes.c.changeid,
-                            scheduler_changes.c.important ])
+            q = sa.select([scheduler_changes.c.schedulerid,
+                           scheduler_changes.c.changeid,
+                           scheduler_changes.c.important])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
         return self.do_test_migration(25, 26, setup_thd, verify_thd)

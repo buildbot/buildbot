@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,18 +33,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             buildrequests = sa.Table('buildrequests', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                sa.Column('buildsetid', sa.Integer, nullable=False),
-                sa.Column('buildername', sa.String(length=256),
-                    nullable=False),
-                sa.Column('priority', sa.Integer, nullable=False,
-                    server_default=sa.DefaultClause("0")),
-                sa.Column('complete', sa.Integer,
-                    server_default=sa.DefaultClause("0")),
-                sa.Column('results', sa.SmallInteger),
-                sa.Column('submitted_at', sa.Integer, nullable=False),
-                sa.Column('complete_at', sa.Integer),
-            )
+                                     sa.Column('id', sa.Integer, primary_key=True),
+                                     sa.Column('buildsetid', sa.Integer, nullable=False),
+                                     sa.Column('buildername', sa.String(length=256),
+                                               nullable=False),
+                                     sa.Column('priority', sa.Integer, nullable=False,
+                                               server_default=sa.DefaultClause("0")),
+                                     sa.Column('complete', sa.Integer,
+                                               server_default=sa.DefaultClause("0")),
+                                     sa.Column('results', sa.SmallInteger),
+                                     sa.Column('submitted_at', sa.Integer, nullable=False),
+                                     sa.Column('complete_at', sa.Integer),
+                                     )
             buildrequests.create()
 
             conn.execute(buildrequests.insert(), [
@@ -55,10 +57,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             buildrequests = sa.Table('buildrequests', metadata, autoload=True)
-            q = sa.select([ buildrequests.c.waited_for ])
+            q = sa.select([buildrequests.c.waited_for])
             for row in conn.execute(q):
                 # verify that the default value was set correctly
                 self.assertEqual(row.waited_for, 0)
 
         return self.do_test_migration(32, 33, setup_thd, verify_thd)
-

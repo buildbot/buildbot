@@ -14,20 +14,23 @@
 # Copyright Buildbot Team Members
 
 import calendar
-from zope.interface import implements
-from twisted.python import log
-from twisted.internet import defer
+
 from buildbot import interfaces
+from buildbot.db import buildrequests
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
-from buildbot.db import buildrequests
+from twisted.internet import defer
+from twisted.python import log
+from zope.interface import implements
+
 
 class TempSourceStamp(object):
     # temporary fake sourcestamp; attributes are added below
+
     def asDict(self):
         # This return value should match the kwargs to SourceStampsConnectorComponent.findSourceStampId
         result = vars(self).copy()
-        
+
         del result['ssid']
         del result['changes']
 
@@ -35,12 +38,14 @@ class TempSourceStamp(object):
         result['patch_author'], result['patch_comment'] = result.pop('patch_info')
 
         assert all(
-                isinstance(val, (unicode, type(None), int))
-                for attr, val in result.items()
+            isinstance(val, (unicode, type(None), int))
+            for attr, val in result.items()
         ), result
         return result
 
+
 class BuildRequest(object):
+
     """
 
     A rolled-up encapsulation of all of the data relevant to a build request.
@@ -109,7 +114,7 @@ class BuildRequest(object):
 
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
-        assert buildset # schema should guarantee this
+        assert buildset  # schema should guarantee this
         buildrequest.reason = buildset['reason']
 
         # fetch the buildset properties, and convert to Properties
@@ -156,15 +161,15 @@ class BuildRequest(object):
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield self.master.data.get(
-                ('buildset', str(self.bsid)))
+            ('buildset', str(self.bsid)))
         otherBuildsets = yield self.master.data.get(
-                            ('buildset', str(other.bsid)))
+            ('buildset', str(other.bsid)))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)
-                        for ss in selfBuildsets['sourcestamps'])
+                           for ss in selfBuildsets['sourcestamps'])
         otherSources = dict((ss['codebase'], ss)
-                        for ss in otherBuildsets['sourcestamps'])
+                            for ss in otherBuildsets['sourcestamps'])
 
         # if the sets of codebases do not match, we can't merge
         if set(selfSources) != set(otherSources):
@@ -194,7 +199,7 @@ class BuildRequest(object):
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
-        #get all codebases from all requests
+        # get all codebases from all requests
         all_codebases = set(self.sources.iterkeys())
         for other in others:
             all_codebases |= set(other.sources.iterkeys())
@@ -208,7 +213,7 @@ class BuildRequest(object):
             for other in others:
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
-            assert len(all_sources)>0, "each codebase should have atleast one sourcestamp"
+            assert len(all_sources) > 0, "each codebase should have atleast one sourcestamp"
 
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by
@@ -239,7 +244,7 @@ class BuildRequest(object):
             return
 
         # send a cancellation message
-        builderid = -1 # TODO
+        builderid = -1  # TODO
         key = ('buildrequest', self.bsid, builderid, self.id, 'cancelled')
         msg = dict(
             brid=self.id,
@@ -252,10 +257,11 @@ class BuildRequest(object):
         # cancelling a request without running into trouble with dangling
         # references.
         yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                FAILURE)
+                                                                 FAILURE)
 
         # and see if the enclosing buildset may be complete
         yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
+
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

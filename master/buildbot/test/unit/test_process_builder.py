@@ -15,16 +15,21 @@
 
 import mock
 import random
-from twisted.trial import unittest
-from twisted.internet import defer
+
 from buildbot import config
-from buildbot.test.fake import fakedb, fakemaster
-from buildbot.process import builder, factory
+from buildbot.process import builder
+from buildbot.process import factory
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class BuilderMixin(object):
+
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
-                        **config_kwargs):
+                    **config_kwargs):
         """Set up C{self.bldr}"""
         self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master(testcase=self, wantData=True)
@@ -32,7 +37,7 @@ class BuilderMixin(object):
         self.db = self.master.db
         # only include the necessary required config, plus user-requested
         config_args = dict(name=name, slavename="slv", builddir="bdir",
-                     slavebuilddir="sbdir", factory=self.factory)
+                           slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
@@ -41,6 +46,7 @@ class BuilderMixin(object):
 
         # patch into the _startBuildsFor method
         self.builds_started = []
+
         def _startBuildFor(slavebuilder, buildrequests):
             self.builds_started.append((slavebuilder, buildrequests))
             return defer.succeed(True)
@@ -50,14 +56,15 @@ class BuilderMixin(object):
             # patch 'random.choice' to always take the slave that sorts
             # last, based on its name
             self.patch(random, "choice",
-                    lambda lst : sorted(lst, key=lambda m : m.name)[-1])
+                       lambda lst: sorted(lst, key=lambda m: m.name)[-1])
 
         self.bldr.startService()
 
         mastercfg = config.MasterConfig()
-        mastercfg.builders = [ self.builder_config ]
+        mastercfg.builders = [self.builder_config]
         if not noReconfig:
             return self.bldr.reconfigService(mastercfg)
+
 
 class TestBuilder(BuilderMixin, unittest.TestCase):
 
@@ -71,10 +78,12 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
         d = BuilderMixin.makeBuilder(self, patch_random=patch_random, **config_kwargs)
+
         @d.addCallback
         def patch_startBuildsFor(_):
             # patch into the _startBuildsFor method
             self.builds_started = []
+
             def _startBuildFor(slavebuilder, buildrequests):
                 self.builds_started.append((slavebuilder, buildrequests))
                 return defer.succeed(startBuildsForSucceeds)
@@ -84,8 +93,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (slave, [brids])
         builds_started = [
-                (sl.name, [ br.id for br in buildreqs ])
-                for (sl, buildreqs) in self.builds_started ]
+            (sl.name, [br.id for br in buildreqs])
+            for (sl, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     def setSlaveBuilders(self, slavebuilders):
@@ -111,9 +120,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         started = yield self.bldr.maybeStartBuild(None, [])
         self.assertEquals(started, False)
 
-
     # maybeStartBuild
-
     def _makeMocks(self):
         slave = mock.Mock()
         slave.name = 'slave'
@@ -144,8 +151,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_getMergeRequestsFn(self, builder_param=None,
-                    global_param=None, expected=0):
-        cble = lambda : None
+                                   global_param=None, expected=0):
+        cble = lambda: None
         builder_param = builder_param == 'callable' and cble or builder_param
         global_param = global_param == 'callable' and cble or global_param
 
@@ -200,6 +207,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         claims = []
+
         def fakeClaimBRs(*args):
             claims.append(args)
             return defer.succeed(None)
@@ -215,13 +223,13 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 bld.requests.append(br)
             return bld
 
-        old = mkbld([15]) # keep a reference to the "old" build
+        old = mkbld([15])  # keep a reference to the "old" build
         self.bldr.old_building[old] = None
-        self.bldr.building.append(mkbld([10,11,12]))
+        self.bldr.building.append(mkbld([10, 11, 12]))
 
         yield self.bldr.reclaimAllBuilds()
 
-        self.assertEqual(claims, [ (set([10,11,12,15]),) ])
+        self.assertEqual(claims, [(set([10, 11, 12, 15]),)])
 
     def test_canStartBuild(self):
         yield self.makeBuilder()
@@ -235,9 +243,10 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         # set a configurable one
         record = []
+
         def canStartBuild(bldr, slave, breq):
             record.append((bldr, slave, breq))
-            return (slave,breq)==('slave',100)
+            return (slave, breq) == ('slave', 100)
         self.bldr.config.canStartBuild = canStartBuild
 
         startable = yield self.bldr.canStartBuild('slave', 100)
@@ -250,10 +259,11 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         # set a configurable one to return Deferred
         record = []
+
         def canStartBuild_deferred(bldr, slave, breq):
             record.append((bldr, slave, breq))
-            return (slave,breq)==('slave',100)
-            return defer.succeed((slave,breq)==('slave',100))
+            return (slave, breq) == ('slave', 100)
+            return defer.succeed((slave, breq) == ('slave', 100))
         self.bldr.config.canStartBuild = canStartBuild_deferred
 
         startable = yield self.bldr.canStartBuild('slave', 100)
@@ -282,17 +292,17 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(True, result)
 
         # buildslave requested as the right one
-        breq.properties = { 'slavename': 'slave5' }
+        breq.properties = {'slavename': 'slave5'}
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(True, result)
 
         # buildslave requested as the wrong one
-        breq.properties = { 'slavename': 'slave4' }
+        breq.properties = {'slavename': 'slave4'}
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(False, result)
 
         # buildslave set to non string value gets skipped
-        breq.properties = { 'slavename': 0 }
+        breq.properties = {'slavename': 0}
         result = yield self.bldr.canStartBuild(slave, breq)
         self.assertIdentical(True, result)
 
@@ -324,7 +334,7 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         # set up the mock findBuilderId yet.
         yield self.makeBuilder(name='b1', noReconfig=True)
         fbi = self.master.data.updates.findBuilderId = mock.Mock(name='fbi')
-        fbi.side_effect = lambda name : defer.succeed(13)
+        fbi.side_effect = lambda name: defer.succeed(13)
         # call twice..
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
@@ -333,6 +343,7 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         # check that the name was uniciodified
         arg = fbi.mock_calls[0][1][0]
         self.assertIsInstance(arg, unicode)
+
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
@@ -344,23 +355,24 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
             fakedb.BuildRequest(id=111, submitted_at=1000,
-                        buildername='bldr1', buildsetid=11),
+                                buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
-                        buildername='bldr1', buildsetid=11),
+                                buildername='bldr1', buildsetid=11),
             fakedb.BuildRequestClaim(brid=222, masterid=master_id,
-                        claimed_at=2001),
+                                     claimed_at=2001),
             fakedb.BuildRequest(id=333, submitted_at=3000,
-                        buildername='bldr1', buildsetid=11),
+                                buildername='bldr1', buildsetid=11),
             fakedb.BuildRequest(id=444, submitted_at=2500,
-                        buildername='bldr2', buildsetid=11),
+                                buildername='bldr2', buildsetid=11),
             fakedb.BuildRequestClaim(brid=444, masterid=master_id,
-                        claimed_at=2501),
+                                     claimed_at=2501),
         ]
 
     def test_gort_unclaimed(self):
         d = self.makeBuilder(name='bldr1')
-        d.addCallback(lambda _ : self.db.insertTestData(self.base_rows))
-        d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
+        d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
+        d.addCallback(lambda _: self.bldr.getOldestRequestTime())
+
         def check(rqtime):
             self.assertEqual(rqtime, epoch2datetime(1000))
         d.addCallback(check)
@@ -368,14 +380,17 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
     def test_gort_all_claimed(self):
         d = self.makeBuilder(name='bldr2')
-        d.addCallback(lambda _ : self.db.insertTestData(self.base_rows))
-        d.addCallback(lambda _ : self.bldr.getOldestRequestTime())
+        d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
+        d.addCallback(lambda _: self.bldr.getOldestRequestTime())
+
         def check(rqtime):
             self.assertEqual(rqtime, None)
         d.addCallback(check)
         return d
 
+
 class TestReconfig(BuilderMixin, unittest.TestCase):
+
     """Tests that a reconfig properly updates all attributes"""
 
     @defer.inlineCallbacks
@@ -385,13 +400,13 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
         self.builder_config.category = "NewCat"
 
         mastercfg = config.MasterConfig()
-        mastercfg.builders = [ self.builder_config ]
+        mastercfg.builders = [self.builder_config]
         yield self.bldr.reconfigService(mastercfg)
         self.assertEqual(
-                dict(description=self.bldr.builder_status.getDescription(),
-                    category=self.bldr.builder_status.getCategory()),
-                dict(description="New",
-                    category="NewCat"))
+            dict(description=self.bldr.builder_status.getDescription(),
+                 category=self.bldr.builder_status.getCategory()),
+            dict(description="New",
+                 category="NewCat"))
 
         # check that the reconfig grabbed a buliderid
         self.assertNotEqual(self.bldr._builderid, None)

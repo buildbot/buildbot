@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.util import pickle
+from twisted.trial import unittest
+
 
 def deprecatedImport(fn):
     def wrapper(self):
@@ -27,7 +28,9 @@ def deprecatedImport(fn):
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
     return wrapper
 
+
 class OldImportPaths(unittest.TestCase):
+
     """
     Test that old, deprecated import paths still work.
     """
@@ -76,7 +79,7 @@ class OldImportPaths(unittest.TestCase):
     def test_changes_changes_ChangeMaster(self):
         # this class is handled by buildbot.util.pickle
         self.assertIn(('buildbot.changes.changes', 'ChangeMaster'),
-                pickle.substituteClasses)
+                      pickle.substituteClasses)
 
     def test_changes_changes_Change(self):
         # this must exist to open old changes pickles
@@ -99,7 +102,7 @@ class OldImportPaths(unittest.TestCase):
     def test_sourcestamp_SourceStamp(self):
         # this class is handled by buildbot.util.pickle
         self.assertIn(('buildbot.sourcestamp', 'SourceStamp'),
-                pickle.substituteClasses)
+                      pickle.substituteClasses)
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
         from buildbot.process.subunitlogobserver import SubunitShellCommand
@@ -112,8 +115,8 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import EXCEPTION, RETRY, Results
         from buildbot.status.builder import worst_status
         # reference the symbols to avoid failure from pyflakes
-        (SUCCESS, WARNINGS, FAILURE, SKIPPED,EXCEPTION, RETRY, Results,
-                worst_status)
+        (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, Results,
+         worst_status)
 
     def test_status_builder_BuildStepStatus(self):
         from buildbot.status.builder import BuildStepStatus
@@ -207,14 +210,14 @@ class OldImportPaths(unittest.TestCase):
 
     def test_buildstep_remotecommand(self):
         from buildbot.process.buildstep import RemoteCommand, \
-                LoggedRemoteCommand, RemoteShellCommand
+            LoggedRemoteCommand, RemoteShellCommand
         assert RemoteCommand
         assert LoggedRemoteCommand
         assert RemoteShellCommand
 
     def test_buildstep_logobserver(self):
         from buildbot.process.buildstep import LogObserver, \
-                LogLineObserver, OutputProgressObserver
+            LogLineObserver, OutputProgressObserver
         assert LogObserver
         assert LogLineObserver
         assert OutputProgressObserver

@@ -14,10 +14,12 @@
 # Copyright Buildbot Team Members
 
 import pprint
-from twisted.python import log
-from buildbot.mq import base
+
 from buildbot import config
+from buildbot.mq import base
 from buildbot.util import tuplematch
+from twisted.python import log
+
 
 class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
@@ -30,7 +32,7 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def reconfigService(self, new_config):
         self.debug = new_config.mq.get('debug', False)
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                 new_config)
 
     def produce(self, routingKey, data):
         if self.debug:
@@ -56,7 +58,7 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
 class QueueRef(base.QueueRef):
 
-    __slots__ = [ 'mq', 'filter' ]
+    __slots__ = ['mq', 'filter']
 
     def __init__(self, mq, callback, filter):
         base.QueueRef.__init__(self, callback)
@@ -73,7 +75,7 @@ class QueueRef(base.QueueRef):
 
 class PersistentQueueRef(QueueRef):
 
-    __slots__ = [ 'active', 'queue' ]
+    __slots__ = ['active', 'queue']
 
     def __init__(self, mq, callback, filter):
         QueueRef.__init__(self, mq, callback, filter)

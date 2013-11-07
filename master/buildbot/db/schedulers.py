@@ -15,11 +15,14 @@
 
 import sqlalchemy as sa
 import sqlalchemy.exc
-from twisted.internet import defer
+
 from buildbot.db import base
+from twisted.internet import defer
+
 
 class SchedulerAlreadyClaimedError(Exception):
     pass
+
 
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
@@ -30,23 +33,23 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
-                    ((tbl.c.schedulerid == schedulerid)
-                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
+                ((tbl.c.schedulerid == schedulerid)
+                 & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in classifications.items():
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = important and 1 or 0
                 try:
                     conn.execute(ins_q,
-                            schedulerid=schedulerid,
-                            changeid=changeid,
-                            important=imp_int)
+                                 schedulerid=schedulerid,
+                                 changeid=changeid,
+                                 important=imp_int)
                 except (sqlalchemy.exc.ProgrammingError,
                         sqlalchemy.exc.IntegrityError):
                     # insert failed, so try an update
                     conn.execute(upd_q,
-                            wc_changeid=changeid,
-                            important=imp_int)
+                                 wc_changeid=changeid,
+                                 important=imp_int)
 
             transaction.commit()
         return self.db.pool.do(thd)
@@ -91,22 +94,22 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     wc &= w
 
             q = sa.select(
-                [ sch_ch_tbl.c.changeid, sch_ch_tbl.c.important ],
+                [sch_ch_tbl.c.changeid, sch_ch_tbl.c.important],
                 whereclause=wc)
-            return dict([ (r.changeid, [False,True][r.important])
-                          for r in conn.execute(q) ])
+            return dict([(r.changeid, [False, True][r.important])
+                         for r in conn.execute(q)])
         return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
-        tbl=self.db.model.schedulers
-        name_hash=self.hashColumns(name)
+        tbl = self.db.model.schedulers
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
-                tbl=tbl,
-                whereclause=(tbl.c.name_hash == name_hash),
-                insert_values=dict(
-                    name=name,
-                    name_hash=name_hash,
-                    ))
+            tbl=tbl,
+            whereclause=(tbl.c.name_hash == name_hash),
+            insert_values=dict(
+                name=name,
+                name_hash=name_hash,
+            ))
 
     def setSchedulerMaster(self, schedulerid, masterid):
         def thd(conn):
@@ -115,7 +118,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = sch_mst_tbl.delete(
-                        whereclause=(sch_mst_tbl.c.schedulerid==schedulerid))
+                    whereclause=(sch_mst_tbl.c.schedulerid == schedulerid))
                 conn.execute(q)
                 return
 
@@ -123,7 +126,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             try:
                 q = sch_mst_tbl.insert()
                 conn.execute(q,
-                    dict(schedulerid=schedulerid, masterid=masterid))
+                             dict(schedulerid=schedulerid, masterid=masterid))
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # someone already owns this scheduler.
                 raise SchedulerAlreadyClaimedError
@@ -146,7 +149,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 return []
 
             join = sch_tbl.outerjoin(sch_mst_tbl,
-                (sch_tbl.c.id == sch_mst_tbl.c.schedulerid))
+                                     (sch_tbl.c.id == sch_mst_tbl.c.schedulerid))
 
             # if we're given a _schedulerid, select only that row
             wc = None
@@ -161,11 +164,11 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 elif active is not None:
                     wc = (sch_mst_tbl.c.masterid == None)
 
-            q = sa.select([ sch_tbl.c.id, sch_tbl.c.name,
-                            sch_mst_tbl.c.masterid ],
-                from_obj=join, whereclause=wc)
+            q = sa.select([sch_tbl.c.id, sch_tbl.c.name,
+                           sch_mst_tbl.c.masterid],
+                          from_obj=join, whereclause=wc)
 
-            return [ dict(id=row.id, name=row.name,
-                        masterid=row.masterid)
-                    for row in conn.execute(q).fetchall() ]
+            return [dict(id=row.id, name=row.name,
+                         masterid=row.masterid)
+                    for row in conn.execute(q).fetchall()]
         return self.db.pool.do(thd)

@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import json
 import types
-from twisted.internet import defer
-from twisted.python import failure
+
 from buildbot.data import connector
 from buildbot.test.util import validation
+from buildbot.util import json
+from twisted.internet import defer
+from twisted.python import failure
+
 
 class FakeUpdates(object):
 
@@ -30,18 +32,18 @@ class FakeUpdates(object):
         self.testcase = testcase
 
         # test cases should assert the values here:
-        self.changesAdded = [] # Changes are numbered starting at 1.
+        self.changesAdded = []  # Changes are numbered starting at 1.
         self.changesourceIds = {}  # { name : id }; users can add changesources here
-        self.buildsetsAdded = [] # Buildsets are numbered starting at 1
+        self.buildsetsAdded = []  # Buildsets are numbered starting at 1
         self.maybeBuildsetCompleteCalls = 0
-        self.masterStateChanges = [] # dictionaries
-        self.schedulerIds = {} # { name : id }; users can add schedulers here
-        self.builderIds = {} # { name : id }; users can add schedulers here
-        self.schedulerMasters = {} # { schedulerid : masterid }
-        self.changesourceMasters = {} # { changesourceid : masterid }
-        self.buildslaveIds = {} # { name : id }; users can add buildslaves here
+        self.masterStateChanges = []  # dictionaries
+        self.schedulerIds = {}  # { name : id }; users can add schedulers here
+        self.builderIds = {}  # { name : id }; users can add schedulers here
+        self.schedulerMasters = {}  # { schedulerid : masterid }
+        self.changesourceMasters = {}  # { changesourceid : masterid }
+        self.buildslaveIds = {}  # { name : id }; users can add buildslaves here
 
-    ## extra assertions
+    # extra assertions
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
@@ -59,17 +61,17 @@ class FakeUpdates(object):
             except:
                 self.testcase.fail("value for %s is not JSON-able" % (k,))
 
-    ## update methods
+    # update methods
 
     def addChange(self, files=None, comments=None, author=None,
-            revision=None, when_timestamp=None, branch=None, category=None,
-            revlink=u'', properties={}, repository=u'', codebase=None,
-            project=u'', src=None):
+                  revision=None, when_timestamp=None, branch=None, category=None,
+                  revlink=u'', properties={}, repository=u'', codebase=None,
+                  project=u'', src=None):
 
         # double-check args, types, etc.
         if files is not None:
             self.testcase.assertIsInstance(files, list)
-            map(lambda f : self.testcase.assertIsInstance(f, unicode), files)
+            map(lambda f: self.testcase.assertIsInstance(f, unicode), files)
         self.testcase.assertIsInstance(comments, (types.NoneType, unicode))
         self.testcase.assertIsInstance(author, (types.NoneType, unicode))
         self.testcase.assertIsInstance(revision, (types.NoneType, unicode))
@@ -108,20 +110,20 @@ class FakeUpdates(object):
 
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
-            properties={}, builderNames=[], external_idstring=None):
+                    properties={}, builderNames=[], external_idstring=None):
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
             if not isinstance(ss, int) and not isinstance(ss, dict):
                 self.testcase.fail("%s (%s) is not an integer or a dictionary"
-                                        % (ss, type(ss)))
-            del ss # since we use locals(), below
+                                   % (ss, type(ss)))
+            del ss  # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderNames, list)
         self.testcase.assertIsInstance(external_idstring,
-                                    (types.NoneType, unicode))
+                                       (types.NoneType, unicode))
 
         self.buildsetsAdded.append(locals())
         self.buildsetsAdded[-1].pop('self')
@@ -129,9 +131,9 @@ class FakeUpdates(object):
         # call through to the db layer, since many scheduler tests expect to
         # find the buildset in the db later - TODO fix this!
         bsid, brids = yield self.master.db.buildsets.addBuildset(
-                sourcestamps=sourcestamps, reason=reason,
-                properties=properties, builderNames=builderNames,
-                waited_for=waited_for, external_idstring=external_idstring)
+            sourcestamps=sourcestamps, reason=reason,
+            properties=properties, builderNames=builderNames,
+            waited_for=waited_for, external_idstring=external_idstring)
         defer.returnValue((bsid, brids))
 
     def maybeBuildsetComplete(self, bsid):
@@ -150,21 +152,21 @@ class FakeUpdates(object):
 
     def findSchedulerId(self, name):
         validation.verifyType(self.testcase, 'scheduler name', name,
-                validation.StringValidator())
+                              validation.StringValidator())
         if name not in self.schedulerIds:
             self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
         validation.verifyType(self.testcase, 'changesource name', name,
-                validation.StringValidator())
+                              validation.StringValidator())
         if name not in self.changesourceIds:
             self.changesourceIds[name] = max([0] + self.changesourceIds.values()) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
         validation.verifyType(self.testcase, 'builder name', name,
-                validation.StringValidator())
+                              validation.StringValidator())
         if name not in self.builderIds:
             self.builderIds[name] = max([0] + self.builderIds.values()) + 1
         return defer.succeed(self.builderIds[name])
@@ -191,95 +193,95 @@ class FakeUpdates(object):
 
     def newBuild(self, builderid, buildrequestid, buildslaveid):
         validation.verifyType(self.testcase, 'builderid', builderid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'buildslaveid', buildslaveid,
-                validation.IntValidator())
+                              validation.IntValidator())
         return defer.succeed((10, 1))
 
     def setBuildStateStrings(self, buildid, state_strings):
         validation.verifyType(self.testcase, 'buildid', buildid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.t, 'state_strings', state_strings,
-                validation.ListValidator(validation.StringValidator()))
+                              validation.ListValidator(validation.StringValidator()))
         return defer.succeed(None)
 
     def finishBuild(self, buildid, results):
         validation.verifyType(self.testcase, 'buildid', buildid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'results', results,
-                validation.IntValidator())
+                              validation.IntValidator())
         return defer.succeed(None)
 
     def newStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
-                validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(50))
         return defer.succeed((10, 1))
 
     def setStepStateStrings(self, stepid, state_strings):
         validation.verifyType(self.testcase, 'stepid', stepid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.t, 'state_strings', state_strings,
-                validation.ListValidator(validation.StringValidator()))
+                              validation.ListValidator(validation.StringValidator()))
         return defer.succeed(None)
 
     def finishStep(self, stepid, results):
         validation.verifyType(self.testcase, 'stepid', stepid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'results', results,
-                validation.IntValidator())
+                              validation.IntValidator())
         return defer.succeed(None)
 
     def newLog(self, stepid, name, type):
         validation.verifyType(self.testcase, 'stepid', stepid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
-                validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(50))
         validation.verifyType(self.testcase, 'type', type,
-                validation.IdentifierValidator(1))
+                              validation.IdentifierValidator(1))
         return defer.succeed(10)
 
     def finishLog(self, logid):
         validation.verifyType(self.testcase, 'logid', logid,
-                validation.IntValidator())
+                              validation.IntValidator())
         return defer.succeed(None)
 
     def compressLog(self, logid):
         validation.verifyType(self.testcase, 'logid', logid,
-                validation.IntValidator())
+                              validation.IntValidator())
         return defer.succeed(None)
 
     def appendLog(self, logid, content):
         validation.verifyType(self.testcase, 'logid', logid,
-                validation.IntValidator())
+                              validation.IntValidator())
         validation.verifyType(self.testcase, 'content', content,
-                validation.StringValidator())
+                              validation.StringValidator())
         self.testcase.assertEqual(content[-1], u'\n')
         return defer.succeed(None)
 
     def findBuildslaveId(self, name):
         validation.verifyType(self.testcase, 'buildslave name', name,
-                validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(50))
         # this needs to actually get inserted into the db (fake or real) since
         # getBuildslave will get called later
         return self.master.db.buildslaves.findBuildslaveId(name)
 
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         return self.master.db.buildslaves.buildslaveConnected(
-                buildslaveid=buildslaveid,
-                masterid=masterid,
-                slaveinfo=slaveinfo)
+            buildslaveid=buildslaveid,
+            masterid=masterid,
+            slaveinfo=slaveinfo)
 
     def buildslaveDisconnected(self, buildslaveid, masterid):
         return self.master.db.buildslaves.buildslaveDisconnected(
-                buildslaveid=buildslaveid,
-                masterid=masterid)
+            buildslaveid=buildslaveid,
+            masterid=masterid)
 
 
-class FakeDataConnector(object) :
+class FakeDataConnector(object):
     # FakeDataConnector delegates to the real DataConnector so it can get all
     # of the proper getter and consumer behavior; it overrides all of the
     # relevant updates with fake methods, though.
@@ -302,11 +304,11 @@ class FakeDataConnector(object) :
         return self.realConnector.getEndpoint(path)
 
     def get(self, path, filters=None, fields=None,
-                        order=None, limit=None, offset=None):
+            order=None, limit=None, offset=None):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
         return self.realConnector.get(path, filters=filters, fields=fields,
-                order=order, limit=limit, offset=offset)
+                                      order=order, limit=limit, offset=offset)
 
     def startConsuming(self, callback, options, path):
         if not isinstance(path, tuple):

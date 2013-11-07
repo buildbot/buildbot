@@ -21,11 +21,13 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-from twisted.python import usage, reflect
 import re
-import sys
 import sqlalchemy as sa
+import sys
+
 from buildbot.scripts import base
+from twisted.python import reflect
+from twisted.python import usage
 
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
@@ -57,9 +59,9 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
         ["develop", "d", "link to buildbot dir rather than copy, with no "
                          "JS optimization (UNIX only)"],
         ["replace", "r", "Replace any modified files without confirmation."],
-        ]
+    ]
     optParameters = [
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
@@ -102,7 +104,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
                          "JS optimization (UNIX only)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
-        ]
+    ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
         ["log-size", "s", "10000000",
@@ -111,7 +113,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "limit the number of kept old twisted log files"],
         ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
@@ -172,7 +174,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ["clean", "c", "Clean shutdown master"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot stop [<basedir>]"
@@ -184,7 +186,7 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ["clean", "c", "Clean shutdown master"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
@@ -195,7 +197,7 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"
@@ -205,7 +207,7 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.reconfig.reconfig"
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot reconfig [<basedir>]"
@@ -217,11 +219,11 @@ class DebugClientOptions(base.SubcommandOptions):
         ["master", "m", None,
          "Location of the buildmaster's slaveport (host:port)"],
         ["passwd", "p", None, "Debug password to use"],
-        ]
+    ]
     buildbotOptions = [
         ['master', 'master'],
         ['debugMaster', 'master'],
-        ]
+    ]
     requiredOptions = ['master', 'passwd']
 
     def getSynopsis(self):
@@ -243,14 +245,14 @@ class DebugClientOptions(base.SubcommandOptions):
 class BaseStatusClientOptions(base.SubcommandOptions):
     optFlags = [
         ['help', 'h', "Display this message"],
-        ]
+    ]
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's status port (host:port)"],
         ["username", "u", "statusClient",
          "Username performing the trial build"],
         ["passwd", 'p', "clientpw", "password for PB authentication"],
-        ]
+    ]
     buildbotOptions = [
         ['master', 'master'],
         ['masterstatus', 'master'],
@@ -298,7 +300,7 @@ class SendChangeOptions(base.SubcommandOptions):
         ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
         ("vc", "s", None, "The VC system in use, one of: cvs, svn, darcs, hg, "
-                           "bzr, git, mtn, p4"),
+         "bzr, git, mtn, p4"),
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
         ("category", "C", None, "Category of repository"),
@@ -315,7 +317,7 @@ class SendChangeOptions(base.SubcommandOptions):
         ("revlink", "l", '', "Revision link (revlink)"),
         ("encoding", "e", 'utf8',
             "Encoding of other parameters (default utf8)"),
-        ]
+    ]
 
     buildbotOptions = [
         ['master', 'master'],
@@ -349,7 +351,7 @@ class SendChangeOptions(base.SubcommandOptions):
                 self['when'] = float(self['when'])
             except:
                 raise usage.UsageError('invalid "when" value %s'
-                                        % (self['when'],))
+                                       % (self['when'],))
         else:
             self['when'] = None
 
@@ -528,7 +530,7 @@ class TryServerOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.tryserver.tryserver"
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
-        ]
+    ]
     requiredOptions = ['jobdir']
 
     def getSynopsis(self):
@@ -592,7 +594,7 @@ class UserOptions(base.SubcommandOptions):
         ['user_master', 'master'],
         ['user_username', 'username'],
         ['user_passwd', 'passwd'],
-        ]
+    ]
     requiredOptions = ['master']
 
     longdesc = """
@@ -642,7 +644,7 @@ class UserOptions(base.SubcommandOptions):
                 if attr_type not in valid:
                     raise usage.UsageError(
                         "Type not a valid attr_type, must be in: %s"
-                                % ', '.join(valid))
+                        % ', '.join(valid))
 
     def postOptions(self):
         base.SubcommandOptions.postOptions(self)
@@ -655,7 +657,7 @@ class UserOptions(base.SubcommandOptions):
                                    "remove, update, get")
         if op not in ['add', 'remove', 'update', 'get']:
             raise usage.UsageError("bad op %r, use 'add', 'remove', 'update', "
-                                    "or 'get'" % op)
+                                   "or 'get'" % op)
 
         if not self.get('username') or not self.get('passwd'):
             raise usage.UsageError("A username and password must be given")
@@ -686,26 +688,27 @@ class UserOptions(base.SubcommandOptions):
                 for user in info:
                     if 'identifier' not in user:
                         raise usage.UsageError("no ids found in update info; "
-                                    "use: --info=id:type=value,type=value,..")
+                                               "use: --info=id:type=value,type=value,..")
             if op == 'add':
                 for user in info:
                     if 'identifier' in user:
                         raise usage.UsageError("identifier found in add info, "
-                                    "use: --info=type=value,type=value,..")
+                                               "use: --info=type=value,type=value,..")
         if op == 'remove' or op == 'get':
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")
 
+
 class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.dataspec.dataspec"
-    optParameters  = [
+    optParameters = [
         ['out', 'o', "dataspec.json", "output to specified path"],
         ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
-        ]
+    ]
+
     def getSynopsis(self):
         return "Usage:   buildbot dataspec [options]"
-
 
 
 class Options(usage.Options):
@@ -744,7 +747,7 @@ class Options(usage.Options):
          "Manage users in buildbot's database"],
         ['dataspec', None, DataSpecOption,
          "Output data api spec"]
-        ]
+    ]
 
     def opt_version(self):
         import buildbot

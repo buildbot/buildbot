@@ -13,10 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.data import root, base, connector
+from buildbot.data import base
+from buildbot.data import connector
+from buildbot.data import root
 from buildbot.test.util import endpoint
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -35,10 +38,11 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get(self):
         rootlinks = yield self.callGet(('',))
-        [ self.validateData(root) for root in rootlinks ]
+        [self.validateData(root) for root in rootlinks]
         self.assertEqual(rootlinks, [
             {'name': u'abc', 'link': base.Link(('abc',))},
         ])
+
 
 class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -56,28 +60,28 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get(self):
         specs = yield self.callGet(('application.spec',))
-        [ self.validateData(s) for s in specs ]
+        [self.validateData(s) for s in specs]
         for s in specs:
             # only test an endpoint that is reasonably stable
             if s['path'] != "master":
                 continue
             self.assertEqual(s,
-                {'path': 'master',
-                    'type': 'master',
-                    'type_spec': {'fields': [{'name': 'active',
-                                            'type': 'boolean',
-                                            'type_spec': {'name': 'boolean'}},
-                                            {'name': 'masterid',
-                                            'type': 'integer',
-                                            'type_spec': {'name': 'integer'}},
-                                            {'name': 'link',
-                                            'type': 'link',
-                                            'type_spec': {'name': 'link'}},
-                                            {'name': 'name',
-                                            'type': 'string',
-                                            'type_spec': {'name': 'string'}},
-                                            {'name': 'last_active',
-                                            'type': 'integer',
-                                            'type_spec': {'name': 'integer'}}],
-                                'type': 'master'},
-                    'plural':'masters'})
+                             {'path': 'master',
+                              'type': 'master',
+                              'type_spec': {'fields': [{'name': 'active',
+                                                        'type': 'boolean',
+                                                        'type_spec': {'name': 'boolean'}},
+                                                       {'name': 'masterid',
+                                                        'type': 'integer',
+                                                        'type_spec': {'name': 'integer'}},
+                                                       {'name': 'link',
+                                                        'type': 'link',
+                                                        'type_spec': {'name': 'link'}},
+                                                       {'name': 'name',
+                                                        'type': 'string',
+                                                        'type_spec': {'name': 'string'}},
+                                                       {'name': 'last_active',
+                                                        'type': 'integer',
+                                                        'type_spec': {'name': 'integer'}}],
+                                            'type': 'master'},
+                              'plural': 'masters'})

@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import subscription, service
 from buildbot import config
+from buildbot.util import service
+from buildbot.util import subscription
+
 
 class Listener(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
@@ -30,7 +32,7 @@ class Connection(object):
         self.buildslave = buildslave
         name = buildslave.slavename
         self._disconnectSubs = subscription.SubscriptionPoint(
-                "disconnections from %s" % name)
+            "disconnections from %s" % name)
 
     # disconnection handling
 

@@ -13,23 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.spread import pb
-from twisted.python import failure, log
-from twisted.internet import defer
-from twisted.cred import portal, checkers, credentials, error
-from twisted.application import strports
 from buildbot.util import service
+from twisted.application import strports
+from twisted.cred import checkers
+from twisted.cred import credentials
+from twisted.cred import error
+from twisted.cred import portal
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+from twisted.spread import pb
+from zope.interface import implements
 
 debug = False
 
+
 class PBManager(service.AsyncMultiService):
+
     """
     A centralized manager for PB ports and authentication on them.
 
     Allows various pieces of code to request a (port, username) combo, along
     with a password and a perspective factory.
     """
+
     def __init__(self):
         service.AsyncMultiService.__init__(self)
         self.setName('pbmanager')
@@ -42,7 +49,7 @@ class PBManager(service.AsyncMultiService):
         Registration object which can be used to unregister later.
         """
         # do some basic normalization of portstrs
-        if type(portstr) == type(0) or ':' not in portstr:
+        if isinstance(portstr, type(0)) or ':' not in portstr:
             portstr = "tcp:%s" % portstr
 
         reg = Registration(self, portstr, username)
@@ -67,7 +74,9 @@ class PBManager(service.AsyncMultiService):
             return defer.maybeDeferred(disp.disownServiceParent)
         return defer.succeed(None)
 
+
 class Registration(object):
+
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr
         "portstr this registration is active on"
@@ -78,7 +87,7 @@ class Registration(object):
 
     def __repr__(self):
         return "<pbmanager.Registration for %s on %s>" % \
-                            (self.username, self.portstr)
+            (self.username, self.portstr)
 
     def unregister(self):
         """
@@ -100,8 +109,8 @@ class Registration(object):
 class Dispatcher(service.AsyncService):
     implements(portal.IRealm, checkers.ICredentialsChecker)
 
-    credentialInterfaces = [ credentials.IUsernamePassword,
-                             credentials.IUsernameHashedPassword ]
+    credentialInterfaces = [credentials.IUsernamePassword,
+                            credentials.IUsernameHashedPassword]
 
     def __init__(self, portstr):
         self.portstr = portstr
@@ -116,21 +125,21 @@ class Dispatcher(service.AsyncService):
 
     def __repr__(self):
         return "<pbmanager.Dispatcher for %s on %s>" % \
-                            (", ".join(self.users.keys()), self.portstr)
+            (", ".join(self.users.keys()), self.portstr)
 
     def stopService(self):
         # stop listening on the port when shut down
         d = defer.maybeDeferred(self.port.stopListening)
-        d.addCallback(lambda _ : service.AsyncService.stopService(self))
+        d.addCallback(lambda _: service.AsyncService.stopService(self))
         return d
 
     def register(self, username, password, pfactory):
         if debug:
             log.msg("registering username '%s' on pb port %s: %s"
-                % (username, self.portstr, pfactory))
+                    % (username, self.portstr, pfactory))
         if username in self.users:
-            raise KeyError, ("username '%s' is already registered on PB port %s"
-                             % (username, self.portstr))
+            raise KeyError("username '%s' is already registered on PB port %s"
+                           % (username, self.portstr))
         self.users[username] = (password, pfactory)
 
     def unregister(self, username):
@@ -144,7 +153,7 @@ class Dispatcher(service.AsyncService):
     def requestAvatar(self, username, mind, interface):
         assert interface == pb.IPerspective
         if username not in self.users:
-            d = defer.succeed(None) # no perspective
+            d = defer.succeed(None)  # no perspective
         else:
             _, afactory = self.users.get(username)
             d = defer.maybeDeferred(afactory, mind, username)
@@ -159,7 +168,7 @@ class Dispatcher(service.AsyncService):
         # call the perspective's attached(mind)
         def call_attached(persp):
             d = defer.maybeDeferred(persp.attached, mind)
-            d.addCallback(lambda _ : persp) # keep returning the perspective
+            d.addCallback(lambda _: persp)  # keep returning the perspective
             return d
         d.addCallback(call_attached)
 
@@ -176,6 +185,7 @@ class Dispatcher(service.AsyncService):
         if creds.username in self.users:
             password, _ = self.users[creds.username]
             d = defer.maybeDeferred(creds.checkPassword, password)
+
             def check(matched):
                 if not matched:
                     log.msg("invalid login from user '%s'" % creds.username)

@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data import base, types, masters
+from buildbot.data import base
+from buildbot.data import masters
+from buildbot.data import types
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+from twisted.internet import defer
+
 
 class Db2DataMixin(object):
 
@@ -24,7 +27,7 @@ class Db2DataMixin(object):
         master = None
         if dbdict['masterid'] is not None:
             master = yield self.master.data.get(
-                                    ('master', dbdict['masterid']))
+                ('master', dbdict['masterid']))
         data = {
             'schedulerid': dbdict['id'],
             'name': dbdict['name'],
@@ -45,12 +48,12 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         dbdict = yield self.master.db.schedulers.getScheduler(
-                                                        kwargs['schedulerid'])
+            kwargs['schedulerid'])
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return
         defer.returnValue((yield self.db2data(dbdict))
-                                if dbdict else None)
+                          if dbdict else None)
 
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
@@ -65,23 +68,23 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         schedulers = yield self.master.db.schedulers.getSchedulers(
-                                masterid=kwargs.get('masterid'))
+            masterid=kwargs.get('masterid'))
         schdicts = yield defer.DeferredList(
-                [ self.db2data(schdict) for schdict in schedulers ],
-                consumeErrors=True, fireOnOneErrback=True)
-        defer.returnValue([ r for (s, r) in schdicts ])
+            [self.db2data(schdict) for schdict in schedulers],
+            consumeErrors=True, fireOnOneErrback=True)
+        defer.returnValue([r for (s, r) in schdicts])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('scheduler', None, None))
+                                             ('scheduler', None, None))
 
 
 class Scheduler(base.ResourceType):
 
     name = "scheduler"
     plural = "schedulers"
-    endpoints = [ SchedulerEndpoint, SchedulersEndpoint ]
-    keyFields = [ 'schedulerid' ]
+    endpoints = [SchedulerEndpoint, SchedulersEndpoint]
+    keyFields = ['schedulerid']
 
     class EntityType(types.Entity):
         schedulerid = types.Integer()
@@ -97,7 +100,7 @@ class Scheduler(base.ResourceType):
     @base.updateMethod
     def trySetSchedulerMaster(self, schedulerid, masterid):
         d = self.master.db.schedulers.setSchedulerMaster(
-                                            schedulerid, masterid)
+            schedulerid, masterid)
 
         # set is successful: deferred result is True
         d.addCallback(lambda _: True)
@@ -107,7 +110,7 @@ class Scheduler(base.ResourceType):
             # the db layer throws an exception if the claim fails; we squash
             # that error but let other exceptions continue upward
             why.trap(SchedulerAlreadyClaimedError)
-            
+
             # set failed: deferred result is False
             return False
 
@@ -116,6 +119,6 @@ class Scheduler(base.ResourceType):
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):
         schedulers = yield self.master.db.schedulers.getSchedulers(
-                                masterid=masterid)
+            masterid=masterid)
         for sch in schedulers:
             yield self.master.db.schedulers.setSchedulerMaster(sch['id'], None)

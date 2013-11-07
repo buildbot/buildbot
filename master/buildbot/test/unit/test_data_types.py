@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.trial import unittest
-from buildbot.data import types, base
 
 
 class TypeMixin(object):
@@ -35,15 +36,15 @@ class TypeMixin(object):
     def test_valueFromString(self):
         for string, expValue in self.stringValues:
             self.assertEqual(self.ty.valueFromString(string), expValue,
-                    "value of string %r" % (string,))
+                             "value of string %r" % (string,))
         for string in self.badStringValues:
             self.assertRaises(Exception, self.ty.valueFromString, string,
-                    "expected error for %r" % (string,))
+                              "expected error for %r" % (string,))
 
     def test_cmp(self):
         for val, string, expResult in self.cmpResults:
             self.assertEqual(self.ty.cmp(val, string), expResult,
-                    "compare of %r and %r" % (val, string))
+                             "compare of %r and %r" % (val, string))
 
     def test_validate(self):
         for o in self.good:
@@ -69,7 +70,7 @@ class NoneOk(TypeMixin, unittest.TestCase):
 class Integer(TypeMixin, unittest.TestCase):
 
     klass = types.Integer
-    good = [0, -1, 1000, 100**100]
+    good = [0, -1, 1000, 100 ** 100]
     bad = [None, '', '0']
     stringValues = [('0', 0), ('-10', -10)]
     badStringValues = ['one', '', '0x10']

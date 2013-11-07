@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+
 class TupleMatchingMixin(object):
 
     # a bunch of tuple-matching tests that all call do_test_match
@@ -50,4 +51,3 @@ class TupleMatchingMixin(object):
 
     def test_None_no_match(self):
         self.do_test_match(('a', 'b', 'c'), False, ('a', None, 'x'))
-

@@ -23,6 +23,7 @@ def sibpath(*elts):
 
 
 class Application(object):
+
     def __init__(self):
         self.description = "Buildbot UI"
         # VERSION's location differs depending on whether we're installed

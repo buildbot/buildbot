@@ -20,10 +20,12 @@ from twisted.internet import defer
 
 
 class DeferredPool(object):
+
     """
     Maintain a pool of not-yet-fired deferreds and provide a mechanism to
     request a deferred that fires when the pool size goes to zero.
     """
+
     def __init__(self):
         self._pool = set()
         self._waiting = []

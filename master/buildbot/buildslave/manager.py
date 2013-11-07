@@ -13,17 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
+from buildbot import config
+from buildbot.buildslave.protocols import pb as bbpb
+from buildbot.util import misc
 from twisted.application import service
+from twisted.internet import defer
 from twisted.python import log
 from twisted.python.failure import Failure
-from buildbot.buildslave.protocols import pb as bbpb
-from buildbot import config
-from buildbot.util import misc
+
 
 class BuildslaveRegistration(object):
 
-    __slots__ = [ 'master', 'buildslave', 'pbReg' ]
+    __slots__ = ['master', 'buildslave', 'pbReg']
 
     def __init__(self, master, buildslave):
         self.master = master
@@ -45,8 +46,8 @@ class BuildslaveRegistration(object):
         # For most protocols, there's nothing to do, but for PB we must
         # update the registration in case the port or password has changed.
         self.pbReg = yield self.master.buildslaves.pb.updateRegistration(
-                slave_config.slavename, slave_config.password,
-                global_config.protocols['pb']['port'])
+            slave_config.slavename, slave_config.password,
+            global_config.protocols['pb']['port'])
 
     def getPBPort(self):
         return self.pbReg.getPort()
@@ -80,7 +81,7 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config)
+                                                                new_config)
 
     def getBuildslaveByName(self, buildslaveName):
         return self.registrations[buildslaveName].buildslave
@@ -99,11 +100,11 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
     def newConnection(self, conn, buildslaveName):
         if buildslaveName in self.connections:
             log.msg("Got duplication connection from '%s'"
-                " starting arbitration procedure" % buildslaveName)
+                    " starting arbitration procedure" % buildslaveName)
             old_conn = self.connections[buildslaveName]
             try:
                 yield misc.cancelAfter(self.PING_TIMEOUT,
-                    old_conn.remotePrint("master got a duplicate connection"))
+                                       old_conn.remotePrint("master got a duplicate connection"))
                 # if we get here then old connection is still alive, and new
                 # should be rejected
                 defer.returnValue(
@@ -116,7 +117,7 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
             except Exception, e:
                 old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected slave %s:"
-                    "%s" % (buildslaveName, e))
+                        "%s" % (buildslaveName, e))
             log.msg("Old connection for '%s' was lost, accepting new" % buildslaveName)
 
         try:
@@ -125,12 +126,13 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
             log.msg("Got slaveinfo from '%s'" % buildslaveName)
         except Exception, e:
             log.msg("Failed to communicate with slave '%s'\n"
-                "%s" % (buildslaveName, e)
-            )
+                    "%s" % (buildslaveName, e)
+                    )
             defer.returnValue(False)
 
         conn.info = info
         self.connections[buildslaveName] = conn
+
         def remove():
             del self.connections[buildslaveName]
         conn.notifyOnDisconnect(remove)

@@ -14,7 +14,9 @@
 # Copyright  Team Members
 
 from buildbot.util import json
-from twisted.web import server, resource
+from twisted.web import resource
+from twisted.web import server
+
 
 class EventResource(resource.Resource):
     isLeaf = True
@@ -49,7 +51,7 @@ class EventResource(resource.Resource):
         return server.NOT_DONE_YET
 
     def _sendEvent(self, request, event, data):
-        ## FIXME
+        # FIXME
         #request.write("event: " + '.'.join(event) + "\n")
         request.write("event: " + 'event' + "\n")
         request.write("data: " + json.dumps(data) + "\n")

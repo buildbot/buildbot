@@ -13,26 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.python import failure, log
-from twisted.internet import defer
-from buildbot.process.properties import Properties
+from buildbot import config
+from buildbot import interfaces
 from buildbot.changes import changes
-from buildbot import config, interfaces
-from buildbot.util.state import StateMixin
+from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredService
+from buildbot.util.state import StateMixin
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+from zope.interface import implements
+
 
 class BaseScheduler(ClusteredService, StateMixin):
 
     implements(interfaces.IScheduler)
 
-    DEFAULT_CODEBASES = {'':{}}
+    DEFAULT_CODEBASES = {'': {}}
 
     compare_attrs = ClusteredService.compare_attrs + \
-                      ('builderNames', 'properties', 'codebases')
+        ('builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties,
-                 codebases = DEFAULT_CODEBASES):
+                 codebases=DEFAULT_CODEBASES):
         ClusteredService.__init__(self, name)
 
         ok = True
@@ -45,7 +48,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         if not ok:
             config.error(
                 "The builderNames argument to a scheduler must be a list "
-                  "of Builder names.")
+                "of Builder names.")
 
         self.builderNames = builderNames
 
@@ -75,7 +78,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
-    ## activity handling
+    # activity handling
 
     def activate(self):
         return defer.succeed(None)
@@ -83,7 +86,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     def deactivate(self):
         return defer.maybeDeferred(self._stopConsumingChanges)
 
-    ## service handling
+    # service handling
 
     def _getServiceId(self):
         return self.master.data.updates.findSchedulerId(self.name)
@@ -96,7 +99,7 @@ class BaseScheduler(ClusteredService, StateMixin):
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
                                                               None)
 
-    ## status queries
+    # status queries
 
     # deprecated: these aren't compatible with distributed schedulers
 
@@ -106,7 +109,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     def getPendingBuildTimes(self):
         return []
 
-    ## change handling
+    # change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
                               onlyImportant=False):
@@ -115,15 +118,15 @@ class BaseScheduler(ClusteredService, StateMixin):
         # register for changes with the data API
         assert not self._change_consumer
         self._change_consumer = self.master.data.startConsuming(
-                lambda k,m : self._changeCallback(k, m, fileIsImportant,
-                                            change_filter, onlyImportant),
-                {},
-                ('change',))
+            lambda k, m: self._changeCallback(k, m, fileIsImportant,
+                                              change_filter, onlyImportant),
+            {},
+            ('change',))
         return defer.succeed(None)
 
     @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,
-                                onlyImportant):
+                        onlyImportant):
 
         # ignore changes delivered while we're not running
         if not self._change_consumer:
@@ -138,8 +141,8 @@ class BaseScheduler(ClusteredService, StateMixin):
             return
         if change.codebase not in self.codebases:
             log.msg(format='change contains codebase %(codebase)s that is '
-                'not processed by scheduler %(name)s',
-                codebase=change.codebase, name=self.name)
+                    'not processed by scheduler %(name)s',
+                    codebase=change.codebase, name=self.name)
             return
         if fileIsImportant:
             try:
@@ -172,10 +175,10 @@ class BaseScheduler(ClusteredService, StateMixin):
     def gotChange(self, change, important):
         raise NotImplementedError
 
-    ## starting bulids
+    # starting bulids
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-            waited_for=False, properties=None, builderNames=None):
+                                               waited_for=False, properties=None, builderNames=None):
 
         if sourcestamps is None:
             sourcestamps = []
@@ -199,8 +202,8 @@ class BaseScheduler(ClusteredService, StateMixin):
             stampsWithDefaults.append(ss)
 
         return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
-                reason=reason, waited_for=waited_for, properties=properties,
-                builderNames=builderNames)
+                                               reason=reason, waited_for=waited_for, properties=properties,
+                                               builderNames=builderNames)
 
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does
@@ -209,12 +212,12 @@ class BaseScheduler(ClusteredService, StateMixin):
 
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, waited_for=False, reason='',
-            external_idstring=None, changeids=[], builderNames=None,
-            properties=None):
+                              external_idstring=None, changeids=[], builderNames=None,
+                              properties=None):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
-            return max(changesByCodebase[codebase],key = lambda change: change["changeid"])
+            return max(changesByCodebase[codebase], key=lambda change: change["changeid"])
 
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
@@ -240,16 +243,16 @@ class BaseScheduler(ClusteredService, StateMixin):
             sourcestamps.append(ss)
 
         # add one buildset, using the calculated sourcestamps
-        bsid,brids = yield self.addBuildsetForSourceStamps(
-                waited_for, sourcestamps=sourcestamps, reason=reason,
-                external_idstring=external_idstring, builderNames=builderNames,
-                properties=properties)
+        bsid, brids = yield self.addBuildsetForSourceStamps(
+            waited_for, sourcestamps=sourcestamps, reason=reason,
+            external_idstring=external_idstring, builderNames=builderNames,
+            properties=properties)
 
-        defer.returnValue((bsid,brids))
+        defer.returnValue((bsid, brids))
 
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
-            reason='', external_idstring=None, properties=None,
-            builderNames=None):
+                                   reason='', external_idstring=None, properties=None,
+                                   builderNames=None):
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)
@@ -265,6 +268,6 @@ class BaseScheduler(ClusteredService, StateMixin):
         properties_dict = properties.asDict()
 
         return self.master.data.updates.addBuildset(
-                scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
-                waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
-                external_idstring=external_idstring)
+            scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
+            waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
+            external_idstring=external_idstring)

@@ -14,11 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-from buildbot.util import in_reactor, json
+import os
+
 from buildbot.data import connector
 from buildbot.test.fake import fakemaster
-import os
+from buildbot.util import in_reactor
+from buildbot.util import json
+from twisted.internet import defer
+
 
 @in_reactor
 @defer.inlineCallbacks

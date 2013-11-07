@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot import util, interfaces, config
-from buildbot.status.results import SUCCESS, WARNINGS
+from buildbot import config
+from buildbot import interfaces
+from buildbot import util
 from buildbot.schedulers import base
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from twisted.internet import defer
+
 
 class Dependent(base.BaseScheduler):
 
@@ -43,13 +47,13 @@ class Dependent(base.BaseScheduler):
         yield base.BaseScheduler.deactivate(self)
 
         self._buildset_new_consumer = self.master.data.startConsuming(
-                    self._buildset_new_cb,
-                    {}, ('buildset',))
+            self._buildset_new_cb,
+            {}, ('buildset',))
         # TODO: refactor to subscribe only to interesting buildsets, and
         # subscribe to them directly, via the data API
         self._buildset_complete_consumer = self.master.mq.startConsuming(
-                    self._buildset_complete_cb,
-                    ('buildset', None, 'complete'))
+            self._buildset_complete_cb,
+            ('buildset', None, 'complete'))
 
         # check for any buildsets completed before we started
         yield self._checkCompletedBuildsets(None, )
@@ -95,8 +99,8 @@ class Dependent(base.BaseScheduler):
             # differ from one another)
             if sub_results in (SUCCESS, WARNINGS):
                 yield self.addBuildsetForSourceStamps(
-                        sourcestamps=[ ssid for ssid in sub_ssids ],
-                        reason=u'downstream')
+                    sourcestamps=[ssid for ssid in sub_ssids],
+                    reason=u'downstream')
 
             sub_bsids.append(sub_bsid)
 
@@ -107,7 +111,7 @@ class Dependent(base.BaseScheduler):
     def _updateCachedUpstreamBuilds(self):
         if self._cached_upstream_bsids is None:
             bsids = yield self.master.db.state.getState(self.objectid,
-                                        'upstream_bsids', [])
+                                                        'upstream_bsids', [])
             self._cached_upstream_bsids = bsids
 
     @defer.inlineCallbacks
@@ -125,12 +129,12 @@ class Dependent(base.BaseScheduler):
                 changed = True
                 continue
 
-            ssids = [ ss['ssid'] for ss in buildset['sourcestamps'] ]
+            ssids = [ss['ssid'] for ss in buildset['sourcestamps']]
             rv.append((bsid, ssids, buildset['complete'], buildset['results']))
 
         if changed:
             yield self.master.db.state.setState(self.objectid,
-                                'upstream_bsids', self._cached_upstream_bsids)
+                                                'upstream_bsids', self._cached_upstream_bsids)
 
         defer.returnValue(rv)
 
@@ -142,7 +146,7 @@ class Dependent(base.BaseScheduler):
             self._cached_upstream_bsids.append(bsid)
 
             yield self.master.db.state.setState(self.objectid,
-                                'upstream_bsids', self._cached_upstream_bsids)
+                                                'upstream_bsids', self._cached_upstream_bsids)
 
     @defer.inlineCallbacks
     def _removeUpstreamBuildsets(self, bsids):
@@ -152,5 +156,4 @@ class Dependent(base.BaseScheduler):
         self._cached_upstream_bsids = list(old - set(bsids))
 
         yield self.master.db.state.setState(self.objectid,
-                            'upstream_bsids', self._cached_upstream_bsids)
-
+                                            'upstream_bsids', self._cached_upstream_bsids)

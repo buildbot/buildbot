@@ -19,31 +19,35 @@
 Standard setup script.
 """
 
-import sys
-import os
 import glob
+import os
+import sys
 
-from distutils.core import setup
 from buildbot import version
+from distutils.core import setup
 
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
+
 
 def include(d, e):
     """Generate a pair of (directory, file-list) for installation.
 
     'd' -- A directory
     'e' -- A glob pattern"""
-    
+
     return (d, [f for f in glob.glob('%s/%s' % (d, e)) if os.path.isfile(f)])
+
 
 def include_statics(d):
     r = []
     for root, ds, fs in os.walk(d):
-        r.append((root, [ os.path.join(root, f) for f in fs]))
+        r.append((root, [os.path.join(root, f) for f in fs]))
     return r
 
+
 class install_data_twisted(install_data):
+
     """make sure data files are installed in package.
     this is evil.
     copied from Twisted/setup.py.
@@ -51,8 +55,8 @@ class install_data_twisted(install_data):
 
     def finalize_options(self):
         self.set_undefined_options('install',
-            ('install_lib', 'install_dir'),
-        )
+                                   ('install_lib', 'install_dir'),
+                                   )
         install_data.finalize_options(self)
 
     def run(self):
@@ -61,6 +65,7 @@ class install_data_twisted(install_data):
         fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
         open(fn, 'w').write(version)
         self.outfiles.append(fn)
+
 
 class our_sdist(sdist):
 
@@ -80,7 +85,7 @@ class our_sdist(sdist):
         open(dst_fn, 'w').write(src)
 
 
-long_description="""
+long_description = """
 The BuildBot is a system to automate the compile/test cycle required by
 most software projects to validate code changes. By automatically
 rebuilding and testing the tree each time something has changed, build
@@ -121,59 +126,59 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
-        ],
+    ],
 
     'packages': ["buildbot",
-              "buildbot.status",
-              "buildbot.www",
-              "buildbot.changes",
-              "buildbot.buildslave",
-              "buildbot.buildslave.protocols",
-              "buildbot.steps",
-              "buildbot.steps.package",
-              "buildbot.steps.package.deb",
-              "buildbot.steps.package.rpm",
-              "buildbot.steps.source",
-              "buildbot.process",
-              "buildbot.process.users",
-              "buildbot.clients",
-              "buildbot.monkeypatches",
-              "buildbot.schedulers",
-              "buildbot.scripts",
-              "buildbot.db",
-              "buildbot.db.types",
-              "buildbot.db.migrate.versions",
-              "buildbot.mq",
-              "buildbot.data",
-              "buildbot.test",
-              "buildbot.test.fake",
-              "buildbot.test.fuzz",
-              "buildbot.test.integration",
-              "buildbot.test.regressions",
-              "buildbot.test.unit",
-              "buildbot.test.util",
-              "buildbot.util",
-              ],
+                 "buildbot.status",
+                 "buildbot.www",
+                 "buildbot.changes",
+                 "buildbot.buildslave",
+                 "buildbot.buildslave.protocols",
+                 "buildbot.steps",
+                 "buildbot.steps.package",
+                 "buildbot.steps.package.deb",
+                 "buildbot.steps.package.rpm",
+                 "buildbot.steps.source",
+                 "buildbot.process",
+                 "buildbot.process.users",
+                 "buildbot.clients",
+                 "buildbot.monkeypatches",
+                 "buildbot.schedulers",
+                 "buildbot.scripts",
+                 "buildbot.db",
+                 "buildbot.db.types",
+                 "buildbot.db.migrate.versions",
+                 "buildbot.mq",
+                 "buildbot.data",
+                 "buildbot.test",
+                 "buildbot.test.fake",
+                 "buildbot.test.fuzz",
+                 "buildbot.test.integration",
+                 "buildbot.test.regressions",
+                 "buildbot.test.unit",
+                 "buildbot.test.util",
+                 "buildbot.util",
+                 ],
     'data_files': [
-                ("buildbot", [
-                    "buildbot/buildbot.png",
-                ]),
-                ("buildbot/db/migrate", [
-                    "buildbot/db/migrate/migrate.cfg",
-                ]),
-                include("buildbot/db/migrate/versions", "*.py"),
-                ("buildbot/clients", [
-                    "buildbot/clients/debug.glade",
-                ]),
-                ("buildbot/scripts", [
-                    "buildbot/scripts/sample.cfg",
-                    "buildbot/scripts/buildbot_tac.tmpl",
-                ]),
-                ] + include_statics("buildbot/www/static"),
+        ("buildbot", [
+            "buildbot/buildbot.png",
+        ]),
+        ("buildbot/db/migrate", [
+            "buildbot/db/migrate/migrate.cfg",
+        ]),
+        include("buildbot/db/migrate/versions", "*.py"),
+        ("buildbot/clients", [
+            "buildbot/clients/debug.glade",
+        ]),
+        ("buildbot/scripts", [
+            "buildbot/scripts/sample.cfg",
+            "buildbot/scripts/buildbot_tac.tmpl",
+        ]),
+    ] + include_statics("buildbot/www/static"),
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
-    }
+}
 
 # set zip_safe to false to force Windows installs to always unpack eggs
 # into directories, which seems to work better --
@@ -186,11 +191,11 @@ py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_inf
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools #@UnusedImport
+    import setuptools  # @UnusedImport
 except ImportError:
     pass
 else:
-    ## dependencies
+    # dependencies
     setup_args['install_requires'] = []
 
     if sys.version_info[:2] >= (2, 6):

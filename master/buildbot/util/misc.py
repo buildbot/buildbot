@@ -18,8 +18,10 @@ Miscellaneous utilities; these should be imported from C{buildbot.util}, not
 directly from this module.
 """
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
+
 
 def deferredLocked(lock_or_attr):
     def decorator(fn):
@@ -31,7 +33,9 @@ def deferredLocked(lock_or_attr):
         return wrapper
     return decorator
 
+
 class SerializedInvocation(object):
+
     def __init__(self, method):
         self.method = method
         self.running = False
@@ -64,8 +68,9 @@ class SerializedInvocation(object):
                 self._quiet()
         d.addBoth(next)
 
-    def _quiet(self): # hook for tests
+    def _quiet(self):  # hook for tests
         pass
+
 
 def cancelAfter(seconds, deferred, _reactor=reactor):
     delayedCall = _reactor.callLater(seconds, deferred.cancel)

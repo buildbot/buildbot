@@ -14,9 +14,10 @@
 # Copyright  Team Members
 
 from buildbot.util import json
-from twisted.python import log
-from twisted.internet import protocol
 from buildbot.www import websocket
+from twisted.internet import protocol
+from twisted.python import log
+
 
 class WsProtocol(protocol.Protocol):
 
@@ -48,7 +49,7 @@ class WsProtocol(protocol.Protocol):
         log.msg("connection lost", system=self)
         for qref in self.qrefs.values():
             qref.stopConsuming()
-        self.qrefs = None # to be sure we don't add any more
+        self.qrefs = None  # to be sure we don't add any more
 
 
 class WsProtocolFactory(protocol.Factory):

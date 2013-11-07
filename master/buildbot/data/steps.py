@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data import base, types
+from buildbot.data import base
+from buildbot.data import types
 from buildbot.util import datetime2epoch
+from twisted.internet import defer
+
 
 class Db2DataMixin(object):
 
@@ -24,7 +26,7 @@ class Db2DataMixin(object):
             'stepid': dbdict['id'],
             'number': dbdict['number'],
             'name': dbdict['name'],
-            'buildid' : dbdict['buildid'],
+            'buildid': dbdict['buildid'],
             'build_link': base.Link(('build', str(dbdict['buildid']))),
             'started_at': datetime2epoch(dbdict['started_at']),
             'complete': dbdict['complete_at'] is not None,
@@ -53,17 +55,19 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
             defer.returnValue((yield self.db2data(dbdict))
-                                if dbdict else None)
+                              if dbdict else None)
             return
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return
         dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                number=kwargs.get('step_number'), name=kwargs.get('step_name'))
+                                                           number=kwargs.get('step_number'), name=kwargs.get('step_name'))
         defer.returnValue((yield self.db2data(dbdict))
-                            if dbdict else None)
+                          if dbdict else None)
 
 # FIXME: need unit tests!
+
+
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
@@ -81,15 +85,15 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if buildid is None:
                 return
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
-        defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in steps ])
+        defer.returnValue([(yield self.db2data(dbdict)) for dbdict in steps])
 
 
 class Step(base.ResourceType):
 
     name = "step"
     plural = "steps"
-    endpoints = [ StepEndpoint, StepsEndpoint ]
-    keyFields = [ 'builderid', 'stepid' ]
+    endpoints = [StepEndpoint, StepsEndpoint]
+    keyFields = ['builderid', 'stepid']
 
     class EntityType(types.Entity):
         stepid = types.Integer()
@@ -109,14 +113,14 @@ class Step(base.ResourceType):
     @base.updateMethod
     def newStep(self, buildid, name):
         return self.master.db.steps.addStep(
-                buildid=buildid, name=name, state_strings=['starting'])
+            buildid=buildid, name=name, state_strings=['starting'])
 
     @base.updateMethod
     def setStepStateStrings(self, stepid, state_strings):
         return self.master.db.steps.setStepStateStrings(
-                stepid=stepid, state_strings=state_strings)
+            stepid=stepid, state_strings=state_strings)
 
     @base.updateMethod
     def finishStep(self, stepid, results):
         return self.master.db.steps.finishStep(
-                stepid=stepid, results=results)
+            stepid=stepid, results=results)

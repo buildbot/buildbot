@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
+
 from buildbot import config
-from buildbot.mq import connector, base
+from buildbot.mq import base
+from buildbot.mq import connector
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class FakeMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
@@ -43,14 +46,14 @@ class MQConnector(unittest.TestCase):
 
     def patchFakeMQ(self, name='fake'):
         self.patch(connector.MQConnector, 'classes',
-            { name :
-                { 'class':'buildbot.test.unit.test_mq_connector.FakeMQ' },
-            })
+                   {name:
+                    {'class': 'buildbot.test.unit.test_mq_connector.FakeMQ'},
+                    })
 
     def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
-        self.assertRaises(AssertionError, lambda :
-                self.conn.setup())
+        self.assertRaises(AssertionError, lambda:
+                          self.conn.setup())
 
     def test_setup_simple_type(self):
         self.patchFakeMQ(name='simple')
@@ -68,6 +71,7 @@ class MQConnector(unittest.TestCase):
         new_config = mock.Mock()
         new_config.mq = dict(type='fake')
         d = self.conn.reconfigService(new_config)
+
         @d.addCallback
         def check(_):
             self.assertIdentical(self.conn.impl.new_config, new_config)
@@ -83,6 +87,6 @@ class MQConnector(unittest.TestCase):
         try:
             yield self.conn.reconfigService(new_config)
         except AssertionError:
-            pass # expected
+            pass  # expected
         else:
             self.fail("should have failed")

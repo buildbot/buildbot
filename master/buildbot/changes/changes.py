@@ -17,16 +17,19 @@ from __future__ import with_statement
 
 import time
 
-from zope.interface import implements
-from twisted.python import log
-from twisted.internet import defer
-from twisted.web import html
 from buildbot.util import datetime2epoch
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web import html
+from zope.interface import implements
 
-from buildbot import interfaces, util
+from buildbot import interfaces
+from buildbot import util
 from buildbot.process.properties import Properties
 
+
 class Change:
+
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
@@ -36,8 +39,8 @@ class Change:
     number = None
     branch = None
     category = None
-    revision = None # used to create a source-stamp
-    links = [] # links are gone, but upgrade code expects this attribute
+    revision = None  # used to create a source-stamp
+    links = []  # links are gone, but upgrade code expects this attribute
 
     @classmethod
     def fromChdict(cls, master, chdict):
@@ -77,14 +80,14 @@ class Change:
         change.files.sort()
 
         change.properties = Properties()
-        for n, (v,s) in chdict['properties'].iteritems():
+        for n, (v, s) in chdict['properties'].iteritems():
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='', 
+                 revlink='', properties={}, repository='', codebase='',
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
@@ -95,7 +98,8 @@ class Change:
         self.isdir = isdir
 
         def none_or_unicode(x):
-            if x is None: return x
+            if x is None:
+                return x
             return unicode(x)
 
         self.revision = none_or_unicode(revision)
@@ -134,9 +138,9 @@ class Change:
         return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
                 u"when=%r, category=%r, project=%r, repository=%r, " +
                 u"codebase=%r)") % (
-                self.revision, self.who, self.branch, self.comments,
-                self.when, self.category, self.project, self.repository,
-                self.codebase)
+            self.revision, self.who, self.branch, self.comments,
+            self.when, self.category, self.project, self.repository,
+            self.codebase)
 
     def __cmp__(self, other):
         return self.number - other.number
@@ -163,7 +167,7 @@ class Change:
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
 
-        files = [ dict(name=f) for f in self.files ]
+        files = [dict(name=f) for f in self.files]
         files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
         # Constant
@@ -198,7 +202,6 @@ class Change:
 
     def getText(self):
         return [html.escape(self.who)]
+
     def getLogs(self):
         return {}
-
-

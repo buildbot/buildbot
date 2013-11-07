@@ -29,8 +29,8 @@ try:
     mock = mock
 except ImportError:
     raise ImportError("\nBuildbot tests require the 'mock' module; "
-                         "try 'pip install mock'")
+                      "try 'pip install mock'")
 
 if LooseVersion(mock.__version__) < LooseVersion("0.8"):
     raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
-                         "higher; try 'pip install -U mock'")
+                      "higher; try 'pip install -U mock'")

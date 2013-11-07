@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
+
 
 class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
 
@@ -41,7 +43,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
             if stepid is None:
                 return
             dbdict = yield self.master.db.logs.getLogByName(stepid,
-                                                kwargs.get('log_name'))
+                                                            kwargs.get('log_name'))
             if not dbdict:
                 return
             logid = dbdict['id']
@@ -63,7 +65,7 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
             return
 
         logLines = yield self.master.db.logs.getLogLines(
-                                logid, firstline, lastline)
+            logid, firstline, lastline)
         defer.returnValue({
             'logid': logid,
             'firstline': firstline,
@@ -74,8 +76,8 @@ class LogChunk(base.ResourceType):
 
     name = "logchunk"
     plural = "logchunks"
-    endpoints = [ LogChunkEndpoint ]
-    keyFields = [ 'stepid', 'logid' ]
+    endpoints = [LogChunkEndpoint]
+    keyFields = ['stepid', 'logid']
 
     class EntityType(types.Entity):
         logid = types.Integer()
@@ -86,4 +88,3 @@ class LogChunk(base.ResourceType):
     @base.updateMethod
     def appendLog(self, logid, content):
         return self.master.db.logs.appendLog(logid=logid, content=content)
-

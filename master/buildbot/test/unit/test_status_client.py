@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.status import client
+from buildbot.status import master
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from twisted.trial import unittest
-from buildbot.status import master, client
-from buildbot.test.fake import fakemaster, fakedb
+
 
 class TestStatusClientPerspective(unittest.TestCase):
 
@@ -23,7 +26,7 @@ class TestStatusClientPerspective(unittest.TestCase):
         m = fakemaster.make_master(testcase=self, wantDb=True)
         self.db = m.db
         m.basedir = r'C:\BASEDIR'
-        s = master.Status(m) 
+        s = master.Status(m)
         persp = client.StatusClientPerspective(s)
         return persp
 
@@ -31,15 +34,15 @@ class TestStatusClientPerspective(unittest.TestCase):
         persp = self.makeStatusClientPersp()
         self.db.insertTestData([
             fakedb.Buildset(id=91, complete=0,
-                    complete_at=298297875, results=-1, submitted_at=266761875,
-                    external_idstring='extid', reason='rsn1'),
+                            complete_at=298297875, results=-1, submitted_at=266761875,
+                            external_idstring='extid', reason='rsn1'),
         ])
 
         d = persp.perspective_getBuildSets()
+
         def check(bslist):
             self.assertEqual(len(bslist), 1)
             self.assertEqual(bslist[0][1], 91)
             self.failUnlessIsInstance(bslist[0][0], client.RemoteBuildSet)
         d.addCallback(check)
         return d
-

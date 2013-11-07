@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from buildbot.schedulers import base
-from buildbot.test.fake import fakemaster, fakedb
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
+from twisted.internet import defer
+
 
 class SchedulerMixin(interfaces.InterfaceTests):
+
     """
     This class fakes out enough of a master and the various relevant database
     connectors to test schedulers.  All of the database methods have identical
@@ -44,7 +47,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         pass
 
     def attachScheduler(self, scheduler, objectid,
-            overrideBuildsetMethods=False):
+                        overrideBuildsetMethods=False):
         """Set up a scheduler with a fake master and db; sets self.sched, and
         sets the master's basedir to the absolute path of 'basedir' in the test
         directory.
@@ -65,14 +68,14 @@ class SchedulerMixin(interfaces.InterfaceTests):
 
         # set up a fake master
         self.master = fakemaster.make_master(testcase=self,
-                wantDb=True, wantMq=True, wantData=True)
+                                             wantDb=True, wantMq=True, wantData=True)
         db = self.db = self.master.db
         self.mq = self.master.mq
         scheduler.master = self.master
 
         db.insertTestData([
             fakedb.Object(id=objectid, name=scheduler.name,
-                class_name='SomeScheduler'),
+                          class_name='SomeScheduler'),
         ])
 
         if overrideBuildsetMethods:
@@ -92,12 +95,14 @@ class SchedulerMixin(interfaces.InterfaceTests):
             # temporarily override the sourcestamp and sourcestampset methods
             self.addedSourceStamps = []
             self.addedSourceStampSets = []
+
             def fake_addSourceStamp(**kwargs):
                 self.assertEqual(kwargs['sourcestampsetid'],
-                        400 + len(self.addedSourceStampSets) - 1)
+                                 400 + len(self.addedSourceStampSets) - 1)
                 self.addedSourceStamps.append(kwargs)
                 return defer.succeed(300 + len(self.addedSourceStamps) - 1)
             self.db.sourcestamps.addSourceStamp = fake_addSourceStamp
+
             def fake_addSourceStampSet():
                 self.addedSourceStampSets.append([])
                 return defer.succeed(400 + len(self.addedSourceStampSets) - 1)
@@ -107,18 +112,21 @@ class SchedulerMixin(interfaces.InterfaceTests):
         # deactivate methods .. unless we're testing BaseScheduler
         def patch(meth):
             oldMethod = getattr(scheduler, meth)
+
             def newMethod():
                 self._parentMethodCalled = False
                 d = defer.maybeDeferred(oldMethod)
+
                 @d.addCallback
                 def check(rv):
                     self.assertTrue(self._parentMethodCalled,
-                        "'%s' did not call its parent" % meth)
+                                    "'%s' did not call its parent" % meth)
                     return rv
                 return d
             setattr(scheduler, meth, newMethod)
 
             oldParent = getattr(base.BaseScheduler, meth)
+
             def newParent(self_):
                 self._parentMethodCalled = True
                 return oldParent(self_)
@@ -141,17 +149,17 @@ class SchedulerMixin(interfaces.InterfaceTests):
         who = ''
         files = []
         comments = ''
-        isdir=0
-        links=None
-        revision=None
-        when=None
-        branch=None
-        category=None
-        revlink=''
-        properties={}
-        repository=''
-        project=''
-        codebase=''
+        isdir = 0
+        links = None
+        revision = None
+        when = None
+        branch = None
+        category = None
+        revlink = ''
+        properties = {}
+        repository = ''
+        project = ''
+        codebase = ''
 
     def makeFakeChange(self, **kwargs):
         """Utility method to make a fake Change object with the given
@@ -168,31 +176,31 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return defer.succeed((bsid, brids))
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-            waited_for=False, properties=None, builderNames=None):
+                                                    waited_for=False, properties=None, builderNames=None):
         properties = properties.asDict()
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
-                                            locals()))
+                                      locals()))
         self.addBuildsetCalls[-1][1].pop('self')
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
-            changeids=[], builderNames=None, properties=None):
+                                   changeids=[], builderNames=None, properties=None):
         properties = properties.asDict() if properties is not None else None
         self.addBuildsetCalls.append(('addBuildsetForChanges', locals()))
         self.addBuildsetCalls[-1][1].pop('self')
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
-            reason='', external_idstring=None, properties=None,
-            builderNames=None):
-        properties=properties.asDict() if properties is not None else None
+                                        reason='', external_idstring=None, properties=None,
+                                        builderNames=None):
+        properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
-            dict(reason=reason, external_idstring=external_idstring,
-                properties=properties, builderNames=builderNames,
-                sourcestamps=sourcestamps)))
+                                      dict(reason=reason, external_idstring=external_idstring,
+                                           properties=properties, builderNames=builderNames,
+                                           sourcestamps=sourcestamps)))
 
         return self._addBuildsetReturnValue(builderNames)

@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.internet import reactor
+
 from buildbot.db import base
-from buildbot.util import epoch2datetime, json
+from buildbot.util import epoch2datetime
+from buildbot.util import json
+from twisted.internet import reactor
+
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
@@ -39,8 +42,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     def getBuildByNumber(self, builderid, number):
         return self._getBuild(
-                (self.db.model.builds.c.builderid == builderid)
-              & (self.db.model.builds.c.number == number))
+            (self.db.model.builds.c.builderid == builderid)
+            & (self.db.model.builds.c.number == number))
 
     def getBuilds(self, builderid=None, buildrequestid=None):
         def thd(conn):
@@ -51,18 +54,19 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             if buildrequestid:
                 q = q.where(tbl.c.buildrequestid == buildrequestid)
             res = conn.execute(q)
-            return [ self._builddictFromRow(row) for row in res.fetchall() ]
+            return [self._builddictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
-            state_strings, _reactor=reactor, _race_hook=None):
+                 state_strings, _reactor=reactor, _race_hook=None):
         started_at = _reactor.seconds()
         state_strings_json = json.dumps(state_strings)
+
         def thd(conn):
             tbl = self.db.model.builds
             # get the highest current number
-            r = conn.execute(sa.select([ sa.func.max(tbl.c.number) ],
-                    whereclause=(tbl.c.builderid==builderid)))
+            r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
+                                       whereclause=(tbl.c.builderid == builderid)))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
 
@@ -73,11 +77,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                 try:
                     r = conn.execute(self.db.model.builds.insert(),
-                        dict(number=new_number, builderid=builderid,
-                            buildrequestid=buildrequestid,
-                            buildslaveid=buildslaveid, masterid=masterid,
-                            started_at=started_at, complete_at=None,
-                            state_strings_json=state_strings_json))
+                                     dict(number=new_number, builderid=builderid,
+                                          buildrequestid=buildrequestid,
+                                          buildslaveid=buildslaveid, masterid=masterid,
+                                          started_at=started_at, complete_at=None,
+                                          state_strings_json=state_strings_json))
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     new_number += 1
                     continue
@@ -97,8 +101,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=(tbl.c.id == buildid))
             conn.execute(q,
-                complete_at=_reactor.seconds(),
-                results=results)
+                         complete_at=_reactor.seconds(),
+                         results=results)
         return self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):

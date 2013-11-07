@@ -13,15 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import mock
+import re
+
+from buildbot.test.fake import endpoint
+from buildbot.test.util import compat
+from buildbot.test.util import www
+from buildbot.util import json
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
-from buildbot.test.util import www, compat
-from buildbot.test.fake import endpoint
-from buildbot.util import json
 from twisted.internet import defer
 from twisted.trial import unittest
+
 
 class RestRootResource(www.WwwTestMixin, unittest.TestCase):
 
@@ -32,6 +35,7 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = rest.RestRootResource(master)
 
         d = self.render_resource(rsrc, '/')
+
         @d.addCallback
         def check(rv):
             self.assertIn('api_versions', rv)
@@ -41,16 +45,17 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
         self.assertEqual(sorted(rsrc.listNames()),
-                sorted([ 'latest' ] +
-                    [ 'v%d' % v for v in range(2, self.maxVersion+1) ]))
+                         sorted(['latest'] +
+                                ['v%d' % v for v in range(2, self.maxVersion + 1)]))
 
     def test_versions_limited(self):
         master = self.make_master(url='h:/a/b/')
         master.config.www['rest_minimum_version'] = 2
         rsrc = rest.RestRootResource(master)
         self.assertEqual(sorted(rsrc.listNames()),
-                sorted([ 'latest' ] +
-                    [ 'v%d' % v for v in range(2, self.maxVersion+1) ]))
+                         sorted(['latest'] +
+                                ['v%d' % v for v in range(2, self.maxVersion + 1)]))
+
 
 class V2RootResource(www.WwwTestMixin, unittest.TestCase):
 
@@ -62,7 +67,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
 
     def assertSimpleError(self, message, responseCode):
         self.assertRequest(content=json.dumps({'error': message}),
-                responseCode=responseCode)
+                           responseCode=responseCode)
 
     @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
@@ -77,6 +82,7 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, '/', method='PATCH')
         self.assertSimpleError('invalid HTTP method', 400)
 
+
 class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -85,6 +91,7 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.rsrc = rest.V2RootResource(self.master)
         self.master.config.www['allowed_origins'] = ['h://good']
         self.rsrc.reconfigResource(self.master.config)
+
         def renderRest(request):
             request.write('ok')
             return defer.succeed(None)
@@ -100,7 +107,7 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
 
     def assertNotOk(self, message):
         self.assertRequest(content=json.dumps({'error': message}),
-                responseCode=400)
+                           responseCode=400)
 
     @defer.inlineCallbacks
     def test_cors_no_origin(self):
@@ -141,29 +148,29 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_cors_origin_preflight_match_GET(self):
         yield self.render_resource(self.rsrc, '/',
-                method='OPTIONS', origin='h://good',
-                access_control_request_method='GET')
+                                   method='OPTIONS', origin='h://good',
+                                   access_control_request_method='GET')
         self.assertOk(content='')
 
     @defer.inlineCallbacks
     def test_cors_origin_preflight_match_POST(self):
         yield self.render_resource(self.rsrc, '/',
-                method='OPTIONS', origin='h://good',
-                access_control_request_method='POST')
+                                   method='OPTIONS', origin='h://good',
+                                   access_control_request_method='POST')
         self.assertOk(content='')
 
     @defer.inlineCallbacks
     def test_cors_origin_preflight_bad_method(self):
         yield self.render_resource(self.rsrc, '/',
-                method='OPTIONS', origin='h://good',
-                access_control_request_method='PATCH')
+                                   method='OPTIONS', origin='h://good',
+                                   access_control_request_method='PATCH')
         self.assertNotOk(message='invalid method')
 
     @defer.inlineCallbacks
     def test_cors_origin_preflight_bad_origin(self):
         yield self.render_resource(self.rsrc, '/',
-                method='OPTIONS', origin='h://bad',
-                access_control_request_method='GET')
+                                   method='OPTIONS', origin='h://bad',
+                                   access_control_request_method='GET')
         self.assertNotOk(message='invalid origin')
 
 
@@ -183,12 +190,12 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
                       key=lambda l: (l['rel'], l['href']))
 
     def assertRestCollection(self, typeName, items, links={'self': '%(self)s'},
-            total=None, contentType=None, orderSignificant=False):
+                             total=None, contentType=None, orderSignificant=False):
         self.failIf(isinstance(self.request.written, unicode))
         got = {}
         got['content'] = json.loads(self.request.written)
         got['contentType'] = self.request.headers['content-type']
-        got['responseCode'] =  self.request.responseCode
+        got['responseCode'] = self.request.responseCode
 
         meta = {'links': self._expLinks(links)}
         if total is not None:
@@ -206,16 +213,16 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             exp['content'][typeName].sort()
         if 'meta' in got['content'] and 'links' in got['content']['meta']:
             got['content']['meta']['links'].sort(
-                    key=lambda l: (l['rel'], l['href']))
+                key=lambda l: (l['rel'], l['href']))
 
         self.assertEqual(got, exp)
 
     def assertRestDetails(self, typeName, item, links={'self': '%(self)s'},
-            contentType=None):
+                          contentType=None):
         got = {}
         got['content'] = json.loads(self.request.written)
         got['contentType'] = self.request.headers['content-type']
-        got['responseCode'] =  self.request.responseCode
+        got['responseCode'] = self.request.responseCode
 
         exp = {}
         exp['content'] = {
@@ -230,7 +237,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def assertRestError(self, responseCode, message):
         got = {}
         got['content'] = json.loads(self.request.written)
-        got['responseCode'] =  self.request.responseCode
+        got['responseCode'] = self.request.responseCode
 
         exp = {}
         exp['content'] = {'error': message}
@@ -266,63 +273,63 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection(self):
         yield self.render_resource(self.rsrc, '/test')
         self.assertRestCollection(typeName='tests',
-            items=endpoint.testData.values(),
-            total=8)
+                                  items=endpoint.testData.values(),
+                                  total=8)
 
     @defer.inlineCallbacks
     def do_test_api_collection_pagination(self, query, ids, links):
         yield self.render_resource(self.rsrc, '/test' + query)
         self.assertRestCollection(typeName='tests',
-            items=[v for k,v in endpoint.testData.iteritems()
-                        if k in ids],
-            links=links, total=8)
+                                  items=[v for k, v in endpoint.testData.iteritems()
+                                         if k in ids],
+                                  links=links, total=8)
 
     def test_api_collection_limit(self):
         return self.do_test_api_collection_pagination('?limit=2',
-                [13, 14], {
-                    'self': '%(self)s?limit=2',
-                    'next': '%(self)s?offset=2&limit=2',
-                })
+                                                      [13, 14], {
+                                                          'self': '%(self)s?limit=2',
+                                                          'next': '%(self)s?offset=2&limit=2',
+                                                      })
 
     def test_api_collection_offset(self):
         return self.do_test_api_collection_pagination('?offset=2',
-                [15, 16, 17, 18, 19, 20], {
-                    'self': '%(self)s?offset=2',
-                    'first': '%(self)s',
-                })
+                                                      [15, 16, 17, 18, 19, 20], {
+                                                          'self': '%(self)s?offset=2',
+                                                          'first': '%(self)s',
+                                                      })
 
     def test_api_collection_offset_limit(self):
         return self.do_test_api_collection_pagination('?offset=5&limit=2',
-                [18, 19], {
-                    'first': '%(self)s?limit=2',
-                    'prev': '%(self)s?offset=3&limit=2',
-                    'next': '%(self)s?offset=7&limit=2',
-                    'self': '%(self)s?offset=5&limit=2',
-                })
+                                                      [18, 19], {
+                                                          'first': '%(self)s?limit=2',
+                                                          'prev': '%(self)s?offset=3&limit=2',
+                                                          'next': '%(self)s?offset=7&limit=2',
+                                                          'self': '%(self)s?offset=5&limit=2',
+                                                      })
 
     def test_api_collection_limit_at_end(self):
         return self.do_test_api_collection_pagination('?offset=5&limit=3',
-                [18, 19, 20], {
-                    'first': '%(self)s?limit=3',
-                    'prev': '%(self)s?offset=2&limit=3',
-                    'self': '%(self)s?offset=5&limit=3',
-                })
+                                                      [18, 19, 20], {
+                                                          'first': '%(self)s?limit=3',
+                                                          'prev': '%(self)s?offset=2&limit=3',
+                                                          'self': '%(self)s?offset=5&limit=3',
+                                                      })
 
     def test_api_collection_limit_past_end(self):
         return self.do_test_api_collection_pagination('?offset=5&limit=20',
-                [18, 19, 20], {
-                    'first': '%(self)s?limit=20',
-                    'prev': '%(self)s?limit=5',
-                    'self': '%(self)s?offset=5&limit=20',
-                })
+                                                      [18, 19, 20], {
+                                                          'first': '%(self)s?limit=20',
+                                                          'prev': '%(self)s?limit=5',
+                                                          'self': '%(self)s?offset=5&limit=20',
+                                                      })
 
     def test_api_collection_offset_past_end(self):
         return self.do_test_api_collection_pagination('?offset=50&limit=10',
-                [], {
-                    'first': '%(self)s?limit=10',
-                    'prev': '%(self)s?offset=40&limit=10',
-                    'self': '%(self)s?offset=50&limit=10',
-                })
+                                                      [], {
+                                                          'first': '%(self)s?limit=10',
+                                                          'prev': '%(self)s?offset=40&limit=10',
+                                                          'self': '%(self)s?offset=50&limit=10',
+                                                      })
 
     @defer.inlineCallbacks
     def test_api_collection_invalid_limit(self):
@@ -360,10 +367,10 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_fields(self):
         yield self.render_resource(self.rsrc, '/test?field=success&field=info')
         self.assertRestCollection(typeName='tests',
-                items=[{'success': v['success'], 'info': v['info']}
-                        for v in endpoint.testData.values() ],
-                total=8,
-                links={'self': '%(self)s?field=success&field=info'})
+                                  items=[{'success': v['success'], 'info': v['info']}
+                                         for v in endpoint.testData.values()],
+                                  total=8,
+                                  links={'self': '%(self)s?field=success&field=info'})
 
     @defer.inlineCallbacks
     def test_api_collection_invalid_field(self):
@@ -377,59 +384,59 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_simple_filter(self):
         yield self.render_resource(self.rsrc, '/test?success=yes')
         self.assertRestCollection(typeName='tests',
-                items=[v for v in endpoint.testData.values()
-                        if v['success']],
-                total=5,
-                links={'self': '%(self)s?success=yes'})
+                                  items=[v for v in endpoint.testData.values()
+                                         if v['success']],
+                                  total=5,
+                                  links={'self': '%(self)s?success=yes'})
 
     @defer.inlineCallbacks
     def test_api_collection_operator_filter(self):
         yield self.render_resource(self.rsrc, '/test?info__lt=skipped')
         self.assertRestCollection(typeName='tests',
-                items=[v for v in endpoint.testData.values()
-                        if v['info'] < 'skipped'],
-                total=4,
-                links={'self': '%(self)s?info__lt=skipped'})
+                                  items=[v for v in endpoint.testData.values()
+                                         if v['info'] < 'skipped'],
+                                  total=4,
+                                  links={'self': '%(self)s?info__lt=skipped'})
 
     @defer.inlineCallbacks
     def test_api_collection_order(self):
         yield self.render_resource(self.rsrc, '/test?order=info')
         self.assertRestCollection(typeName='tests',
-                items=sorted(endpoint.testData.values(),
-                            key=lambda v: v['info']),
-                total=8, orderSignificant=True,
-                links={'self': '%(self)s?order=info'})
+                                  items=sorted(endpoint.testData.values(),
+                                               key=lambda v: v['info']),
+                                  total=8, orderSignificant=True,
+                                  links={'self': '%(self)s?order=info'})
 
     @defer.inlineCallbacks
     def test_api_collection_order_on_unselected(self):
         yield self.render_resource(self.rsrc, '/test?field=id&order=info')
         self.assertRestError(message="cannot order on un-selected fields",
-            responseCode=400)
+                             responseCode=400)
 
     @defer.inlineCallbacks
     def test_api_collection_filter_on_unselected(self):
         yield self.render_resource(self.rsrc, '/test?field=id&info__gt=xx')
         self.assertRestError(message="cannot filter on un-selected fields",
-            responseCode=400)
+                             responseCode=400)
 
     @defer.inlineCallbacks
     def test_api_collection_filter_pagination(self):
         yield self.render_resource(self.rsrc, '/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(typeName='tests',
-                items=sorted([v for v in endpoint.testData.values()
-                    if not v['success']], key=lambda v: v['id'])[:2],
-                total=3,
-                links={
-                    'self': '%(self)s?success=false&limit=2',
-                    'next': '%(self)s?success=false&offset=2&limit=2',
-                })
+                                  items=sorted([v for v in endpoint.testData.values()
+                                                if not v['success']], key=lambda v: v['id'])[:2],
+                                  total=3,
+                                  links={
+                                      'self': '%(self)s?success=false&limit=2',
+                                      'next': '%(self)s?success=false&offset=2&limit=2',
+                                  })
 
     @defer.inlineCallbacks
     def test_api_details(self):
         yield self.render_resource(self.rsrc, '/test/13')
         self.assertRestDetails(typeName='tests',
-            item=endpoint.testData[13])
+                               item=endpoint.testData[13])
 
     @defer.inlineCallbacks
     def test_api_details_none(self):
@@ -451,24 +458,24 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_details_fields(self):
         yield self.render_resource(self.rsrc, '/test/13?field=info')
         self.assertRestDetails(typeName='tests',
-            item={'info': endpoint.testData[13]['info']},
-            links={'self': '%(self)s?field=info'})
+                               item={'info': endpoint.testData[13]['info']},
+                               links={'self': '%(self)s?field=info'})
 
     @defer.inlineCallbacks
     def test_api_with_accept(self):
         # when 'application/json' is accepted, the result has that type
         yield self.render_resource(self.rsrc, '/test/13',
-                accept='application/json')
+                                   accept='application/json')
         self.assertRestDetails(typeName='tests',
-            item=endpoint.testData[13],
-            contentType='application/json; charset=utf-8')
+                               item=endpoint.testData[13],
+                               contentType='application/json; charset=utf-8')
 
     @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_api_fails(self):
         yield self.render_resource(self.rsrc, '/test/fail')
         self.assertRestError(message="RuntimeError('oh noes',)",
-            responseCode=500)
+                             responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
 
@@ -483,12 +490,12 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     def assertJsonRpcError(self, message, responseCode=400, jsonrpccode=None):
         got = {}
         got['contentType'] = self.request.headers['content-type']
-        got['responseCode'] =  self.request.responseCode
+        got['responseCode'] = self.request.responseCode
         content = json.loads(self.request.written)
         if ('error' not in content
                 or sorted(content['error'].keys()) != ['code', 'message']):
             self.fail("response does not have proper error form: %r"
-                        % (content,))
+                      % (content,))
         got['error'] = content['error']
 
         exp = {}
@@ -524,7 +531,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_invalid_json(self):
         yield self.render_control_resource(self.rsrc, '/test',
-                requestJson="{abc")
+                                           requestJson="{abc")
         self.assertJsonRpcError(
             message=re.compile('^JSON parse error'),
             jsonrpccode=JSONRPC_CODES['parse_error'])
@@ -532,7 +539,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_list_request(self):
         yield self.render_control_resource(self.rsrc, '/test',
-                requestJson="[1,2]")
+                                           requestJson="[1,2]")
         self.assertJsonRpcError(
             message="JSONRPC batch requests are not supported",
             jsonrpccode=JSONRPC_CODES['invalid_request'])
@@ -540,7 +547,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_bad_req_type(self):
         yield self.render_control_resource(self.rsrc, '/test',
-                requestJson='"a string?!"')
+                                           requestJson='"a string?!"')
         self.assertJsonRpcError(
             message="JSONRPC root object must be an object",
             jsonrpccode=JSONRPC_CODES['invalid_request'])
@@ -548,7 +555,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_invalid_req(self, requestJson, message):
         yield self.render_control_resource(self.rsrc, '/test',
-                requestJson=requestJson)
+                                           requestJson=requestJson)
         self.assertJsonRpcError(
             message=message,
             jsonrpccode=JSONRPC_CODES['invalid_request'])
@@ -585,7 +592,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
 
     def test_bad_req_id_type(self):
         return self.do_test_invalid_req(
-                '{"jsonrpc": "2.0", "method": "foo", "id": {}, "params": {}}',
+            '{"jsonrpc": "2.0", "method": "foo", "id": {}, "params": {}}',
             "'id' must be a string, number, or null")
 
     def test_bad_req_params_missing(self):
@@ -601,7 +608,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_valid(self):
         yield self.render_control_resource(self.rsrc, '/test/13',
-                action="testy", params={'foo': 3, 'bar': 5})
+                                           action="testy", params={'foo': 3, 'bar': 5})
         self.assertRequest(
             contentJson={
                 'id': self.UUID,
@@ -618,7 +625,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_valid_int_id(self):
         yield self.render_control_resource(self.rsrc, '/test/13',
-                action="testy", params={'foo': 3, 'bar': 5}, id=1823)
+                                           action="testy", params={'foo': 3, 'bar': 5}, id=1823)
         self.assertRequest(
             contentJson={
                 'id': 1823,
@@ -636,7 +643,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_valid_fails(self):
         yield self.render_control_resource(self.rsrc, '/test/13',
-                action="fail")
+                                           action="fail")
         self.assertJsonRpcError(
             message=re.compile('^RuntimeError'),
             jsonrpccode=JSONRPC_CODES['internal_error'],

@@ -14,17 +14,22 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.internet import defer, task
+
+from buildbot.process import properties
+from buildbot.schedulers import triggerable
+from buildbot.test.util import interfaces
+from buildbot.test.util import scheduler
+from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
-from buildbot.schedulers import triggerable
-from buildbot.process import properties
-from buildbot.test.util import interfaces, scheduler
+
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
 
     def test_interface(self):
         self.assertInterfacesImplemented(triggerable.Triggerable)
+
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -47,15 +52,15 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(
-                triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
-                self.OBJECTID)
+            triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
+            self.OBJECTID)
 
         return sched
 
     @defer.inlineCallbacks
     def assertTriggeredBuildset(self, idsDeferred, waited_for, properties={}, sourcestamps=None):
         bsid, brids = yield idsDeferred
-        properties.update({ u'scheduler' : ( 'n', u'Scheduler') })
+        properties.update({u'scheduler': ('n', u'Scheduler')})
 
         self.assertEqual(
             self.master.db.buildsets.buildsets[bsid]['properties'],
@@ -81,8 +86,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
             }
         )
-        
-        
+
         actual_sourcestamps = yield defer.gatherResults([
             self.master.db.sourcestamps.getSourceStamp(ssid)
             for ssid in ssids
@@ -96,7 +100,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 if key not in expected_ss:
                     del actual_ss[key]
             self.assertEqual(expected_ss, actual_ss)
-            
 
         for brid in brids.values():
             #from datetime import datetime
@@ -119,20 +122,19 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     'waited_for': waited_for,
                 }
             )
-            
 
     def sendCompletionMessage(self, bsid, results=3):
         self.master.mq.callConsumer(('buildset', str(bsid), 'complete'),
-            dict(
-                bsid=bsid,
-                submitted_at=100,
-                complete=True,
-                complete_at=200,
-                external_idstring=None,
-                reason=u'triggering',
-                results=results,
-                sourcestamps=[],
-                ))
+                                    dict(
+                                        bsid=bsid,
+                                        submitted_at=100,
+                                        complete=True,
+                                        complete_at=200,
+                                        external_idstring=None,
+                                        reason=u'triggering',
+                                        results=results,
+                                        sourcestamps=[],
+                                    ))
 
     # tests
 
@@ -145,9 +147,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         self.assertEqual(sched.reason, "The Triggerable scheduler named 'n' triggered this build")
 
-
     def test_trigger(self):
-        sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})
+        sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet
         self.assertEqual(sched.master.mq.qrefs, [])
 
@@ -155,27 +156,29 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         waited_for = True
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
-        ss = {'revision':'myrev',
-              'branch':'br',
-              'project':'p',
-              'repository':'r',
-              'codebase':'cb' }
+        ss = {'revision': 'myrev',
+              'branch': 'br',
+              'project': 'p',
+              'repository': 'r',
+              'codebase': 'cb'}
         idsDeferred, d = sched.trigger(waited_for, sourcestamps=[ss], set_props=set_props)
 
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
-            properties={ u'pr': ('op', u'test') },
+            properties={u'pr': ('op', u'test')},
             sourcestamps=[
-                 dict(branch='br', project='p', repository='r',
+                dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev'),
             ])
 
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
-        def fired((result, brids)):
-            self.assertEqual(result, 3) # from sendCompletionMessage
-            self.assertEqual(brids, {u'b':1000})
+
+        def fired(xxx_todo_changeme):
+            (result, brids) = xxx_todo_changeme
+            self.assertEqual(result, 3)  # from sendCompletionMessage
+            self.assertEqual(brids, {u'b': 1000})
             self.fired = True
         d.addCallback(fired)
         d.addErrback(log.err)
@@ -183,7 +186,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
         self.assertEqual(
-            [ q.filter for q in sched.master.mq.qrefs ],
+            [q.filter for q in sched.master.mq.qrefs],
             [('buildset', None, 'complete',)])
         self.assertFalse(self.fired)
 
@@ -192,7 +195,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # scheduler should not have reacted
         self.assertEqual(
-            [ q.filter for q in sched.master.mq.qrefs ],
+            [q.filter for q in sched.master.mq.qrefs],
             [('buildset', None, 'complete',)])
         self.assertFalse(self.fired)
 
@@ -201,50 +204,51 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # scheduler should have reacted
         self.assertEqual(
-            [ q.filter for q in sched.master.mq.qrefs ],
+            [q.filter for q in sched.master.mq.qrefs],
             [])
         self.assertTrue(self.fired)
         return d
 
     def test_trigger_overlapping(self):
-        sched = self.makeScheduler(codebases = {'cb':{'repository':'r'}})
+        sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
 
         # no subscription should be in place yet
         self.assertEqual(sched.master.mq.qrefs, [])
 
         waited_for = False
+
         def makeSS(rev):
-            return { 'revision':rev, 'branch':'br', 'project':'p',
-                     'repository':'r', 'codebase':'cb' }
+            return {'revision': rev, 'branch': 'br', 'project': 'p',
+                    'repository': 'r', 'codebase': 'cb'}
 
         # trigger the scheduler the first time
-        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev1')]) # triggers bsid 200
+        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev1')])  # triggers bsid 200
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
             sourcestamps=[
-                 dict(branch='br', project='p', repository='r',
+                dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev1'),
-                ])
-        d.addCallback(lambda (res, brids) : self.assertEqual(res, 11)
-                and self.assertEqual(brids, {u'b':1000}))
+            ])
+        d.addCallback(lambda res_brids: self.assertEqual(res_brids[0], 11)
+                      and self.assertEqual(res_brids[1], {u'b': 1000}))
 
         waited_for = True
         # and the second time
-        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev2')]) # triggers bsid 201
+        idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev2')])  # triggers bsid 201
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
             sourcestamps=[
-                 dict(branch='br', project='p', repository='r',
+                dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev2'),
-                ])
-        d.addCallback(lambda (res, brids) : self.assertEqual(res, 22) 
-                and self.assertEqual(brids, {u'b':1001}))
+            ])
+        d.addCallback(lambda res_brids1: self.assertEqual(res_brids1[0], 22)
+                      and self.assertEqual(res_brids1[1], {u'b': 1001}))
 
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
-            [ q.filter for q in sched.master.mq.qrefs ],
+            [q.filter for q in sched.master.mq.qrefs],
             [('buildset', None, 'complete',)])
 
         # let a few buildsets complete
@@ -260,14 +264,14 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_trigger_with_sourcestamp(self):
         # Test a scheduler with 2 repositories.
         # Trigger the scheduler with a sourcestamp that is unknown to the scheduler
-        # Expected Result: 
+        # Expected Result:
         #    sourcestamp 1 for repository 1 based on configured sourcestamp
         #    sourcestamp 2 for repository 2 based on configured sourcestamp
         sched = self.makeScheduler()
 
         waited_for = False
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
-               'branch': 'default', 'project': 'p' }
+              'branch': 'default', 'project': 'p'}
         idsDeferred = sched.trigger(waited_for, sourcestamps=[ss])[0]
 
         self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[ss])

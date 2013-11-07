@@ -14,13 +14,19 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.python import log, reflect
-from twisted.internet import defer, reactor
-from buildbot.util import service
-from buildbot.process.builder import Builder
-from buildbot import interfaces, locks, config, util
+from buildbot import config
+from buildbot import interfaces
+from buildbot import locks
+from buildbot import util
 from buildbot.process import metrics
+from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.python import reflect
+
 
 class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
@@ -45,7 +51,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # If the slave is connected, self.slaves[slavename].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        self.slaves = {} # maps slavename to BuildSlave
+        self.slaves = {}  # maps slavename to BuildSlave
         self.watchers = {}
 
         # self.locks holds the real Lock instances
@@ -128,8 +134,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
-        return [ b for b in self.builders.values()
-                 if slavename in b.config.slavenames ]
+        return [b for b in self.builders.values()
+                if slavename in b.config.slavenames]
 
     def getBuildernames(self):
         return self.builderNames
@@ -142,11 +148,11 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.maybeStartBuildsForBuilder(msg['buildername'])
         # consume both 'new' and 'unclaimed' build requests
         self.buildrequest_consumer_new = self.master.mq.startConsuming(
-                buildRequestAdded,
-                ('buildrequest', None, None, None, 'new'))
+            buildRequestAdded,
+            ('buildrequest', None, None, None, 'new'))
         self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
-                buildRequestAdded,
-                ('buildrequest', None, None, None, 'unclaimed'))
+            buildRequestAdded,
+            ('buildrequest', None, None, None, 'unclaimed'))
         return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
@@ -162,14 +168,13 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # call up
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config)
+                                                                new_config)
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case
         self.maybeStartBuildsForAllBuilders()
 
         timer.stop()
-
 
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):
@@ -178,12 +183,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         timer.start()
 
         # arrange slaves by name
-        old_by_name = dict([ (s.slavename, s)
+        old_by_name = dict([(s.slavename, s)
                             for s in list(self)
-                            if interfaces.IBuildSlave.providedBy(s) ])
+                            if interfaces.IBuildSlave.providedBy(s)])
         old_set = set(old_by_name.iterkeys())
-        new_by_name = dict([ (s.slavename, s)
-                            for s in new_config.slaves ])
+        new_by_name = dict([(s.slavename, s)
+                            for s in new_config.slaves])
         new_set = set(new_by_name.iterkeys())
 
         # calculate new slaves, by name, and removed slaves
@@ -218,10 +223,9 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 self.slaves[n] = slave
 
         metrics.MetricCountEvent.log("num_slaves",
-                len(self.slaves), absolute=True)
+                                     len(self.slaves), absolute=True)
 
         timer.stop()
-
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):
@@ -230,12 +234,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         timer.start()
 
         # arrange builders by name
-        old_by_name = dict([ (b.name, b)
+        old_by_name = dict([(b.name, b)
                             for b in list(self)
-                            if isinstance(b, Builder) ])
+                            if isinstance(b, Builder)])
         old_set = set(old_by_name.iterkeys())
-        new_by_name = dict([ (bc.name, bc)
-                            for bc in new_config.builders ])
+        new_by_name = dict([(bc.name, bc)
+                            for bc in new_config.builders])
         new_set = set(new_by_name.iterkeys())
 
         # calculate new builders, by name, and removed builders
@@ -252,8 +256,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 builder.master = None
                 builder.botmaster = None
 
-                yield defer.maybeDeferred(lambda :
-                        builder.disownServiceParent())
+                yield defer.maybeDeferred(lambda:
+                                          builder.disownServiceParent())
 
             for n in added_names:
                 builder = Builder(n)
@@ -266,14 +270,13 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.builderNames = self.builders.keys()
 
         yield self.master.data.updates.updateBuilderList(
-                self.master.masterid,
-                [ util.ascii2unicode(n) for n in self.builderNames ])
+            self.master.masterid,
+            [util.ascii2unicode(n) for n in self.builderNames])
 
         metrics.MetricCountEvent.log("num_builders",
-                len(self.builders), absolute=True)
+                                     len(self.builders), absolute=True)
 
         timer.stop()
-
 
     def stopService(self):
         if self.buildrequest_consumer_new:
@@ -326,7 +329,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         @param buildslave_name: the name of the slave
         """
         builders = self.getBuildersForSlave(buildslave_name)
-        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
+        self.brd.maybeStartBuildsOn([b.name for b in builders])
 
     def maybeStartBuildsForAllBuilders(self):
         """

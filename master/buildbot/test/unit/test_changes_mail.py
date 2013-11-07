@@ -76,7 +76,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         def check(_):
             self.assertMailProcessed()
-            self.assertEqual(self.master.data.updates.changesAdded, [ {
+            self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': 'jimmy',
                 'branch': None,
                 'category': None,
@@ -109,7 +109,7 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
 
         def check(_):
             self.assertMailProcessed()
-            self.assertEqual(self.master.data.updates.changesAdded, [ {
+            self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': 'jimmy',
                 'branch': None,
                 'category': None,

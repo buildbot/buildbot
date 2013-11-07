@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from buildbot.buildslave.protocols import base
+from twisted.internet import defer
+
 
 class FakeConnection(base.Connection):
 
@@ -42,7 +43,7 @@ class FakeConnection(base.Connection):
 
     def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
         self.remoteCalls.append(('startCommands', remoteCommand, builderName,
-            commandId, commandName, args))
+                                 commandId, commandName, args))
         return defer.succeed(None)
 
     def remoteShutdown(self):

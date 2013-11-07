@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.db import changesources
-from buildbot.test.util import interfaces, connector_component, validation
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import connector_component
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -63,7 +67,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_fresh(self):
         """setChangeSourceMaster with a good pair"""
-        yield self.insertTestData([ self.cs42, self.master13 ])
+        yield self.insertTestData([self.cs42, self.master13])
         yield self.db.changesources.setChangeSourceMaster(42, 13)
         cs = yield self.db.changesources.getChangeSource(42)
         self.assertEqual(cs['masterid'], 13)
@@ -75,8 +79,8 @@ class Tests(interfaces.InterfaceTests):
             self.master13, self.master14,
             self.cs87master14,
         ])
-        d.addCallback(lambda _ :
-            self.db.changesources.setChangeSourceMaster(87, 13))
+        d.addCallback(lambda _:
+                      self.db.changesources.setChangeSourceMaster(87, 13))
         self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
         return d
 
@@ -85,8 +89,8 @@ class Tests(interfaces.InterfaceTests):
         d = self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
         ])
-        d.addCallback(lambda _ :
-            self.db.changesources.setChangeSourceMaster(42, 14))
+        d.addCallback(lambda _:
+                      self.db.changesources.setChangeSourceMaster(42, 14))
         self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
         return d
 
@@ -103,7 +107,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None_unowned(self):
         """A 'None' master for a disconnected changesource"""
-        yield self.insertTestData([ self.cs87 ])
+        yield self.insertTestData([self.cs87])
         yield self.db.changesources.setChangeSourceMaster(87, None)
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs['masterid'], None)
@@ -117,7 +121,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource(self):
         """getChangeSource for a changesource that exists"""
-        yield self.insertTestData([ self.cs87 ])
+        yield self.insertTestData([self.cs87])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
         self.assertEqual(cs, dict(
@@ -134,8 +138,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource_active(self):
         """getChangeSource for a changesource that exists and is active"""
-        yield self.insertTestData([ self.cs42, self.master13,
-                                    self.cs42master13 ])
+        yield self.insertTestData([self.cs42, self.master13,
+                                   self.cs42master13])
         cs = yield self.db.changesources.getChangeSource(42)
         validation.verifyDbDict(self, 'changesourcedict', cs)
         self.assertEqual(cs, dict(
@@ -146,14 +150,14 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getChangeSource_inactive_but_linked(self):
         """getChangeSource for a changesource that is assigned but is inactive"""
-        yield self.insertTestData([ self.cs87, self.master14,
-                                    self.cs87master14 ])
+        yield self.insertTestData([self.cs87, self.master14,
+                                   self.cs87master14])
         cs = yield self.db.changesources.getChangeSource(87)
         validation.verifyDbDict(self, 'changesourcedict', cs)
         self.assertEqual(cs, dict(
             id=87,
             name='lame_source',
-            masterid=14)) # row exists, but marked inactive
+            masterid=14))  # row exists, but marked inactive
 
     def test_signature_getChangeSources(self):
         """getChangeSources has right signature"""
@@ -167,9 +171,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87,
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources()
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
             dict(id=87, name='lame_source', masterid=None),
@@ -181,9 +185,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87,
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources(masterid=13)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
@@ -194,9 +198,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources(active=True)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
@@ -207,17 +211,17 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources(
-                                            active=True, masterid=13)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+            active=True, masterid=13)
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
 
         cslist = yield self.db.changesources.getChangeSources(
-                                            active=True, masterid=14)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+            active=True, masterid=14)
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), [])
 
     @defer.inlineCallbacks
@@ -226,9 +230,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources(active=False)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=87, name='lame_source', masterid=None),
         ]))
@@ -239,15 +243,15 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.cs42, self.master13, self.cs42master13,
             self.cs87
-            ])
+        ])
         cslist = yield self.db.changesources.getChangeSources(
-                active=False, masterid=13)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+            active=False, masterid=13)
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), [])
 
         cslist = yield self.db.changesources.getChangeSources(
-                active=False, masterid=14)
-        [ validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist ]
+            active=False, masterid=14)
+        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
         self.assertEqual(sorted(cslist), [])   # always returns [] by spec!
 
 
@@ -266,17 +270,17 @@ class TestFakeDB(unittest.TestCase, Tests):
 
 
 class TestRealDB(unittest.TestCase,
-        connector_component.ConnectorComponentMixin,
-        RealTests):
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'changesources', 'masters',
-                         'patches', 'sourcestamps', 'changesource_masters' ])
+                         'patches', 'sourcestamps', 'changesource_masters'])
 
         def finish_setup(_):
             self.db.changesources = \
-                    changesources.ChangeSourcesConnectorComponent(self.db)
+                changesources.ChangeSourcesConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
         return d

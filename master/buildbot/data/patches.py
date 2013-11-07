@@ -13,7 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import base, types
+from buildbot.data import base
+from buildbot.data import types
 
 
 # NOTE: patches are not available via endpoints
@@ -23,8 +24,8 @@ class Patch(base.ResourceType):
 
     name = "patch"
     plural = "patches"
-    endpoints = [ ]
-    keyFields = [ 'patchid' ]
+    endpoints = []
+    keyFields = ['patchid']
 
     class EntityType(types.Entity):
         patchid = types.Integer()

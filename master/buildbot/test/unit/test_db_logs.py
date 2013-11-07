@@ -14,11 +14,16 @@
 # Copyright Buildbot Team Members
 
 import textwrap
-from twisted.trial import unittest
-from twisted.internet import defer
+
 from buildbot.db import logs
-from buildbot.test.util import interfaces, connector_component, validation
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import connector_component
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -29,14 +34,14 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-            builderid=88, buildslaveid=47),
+                     builderid=88, buildslaveid=47),
         fakedb.Step(id=101, buildid=30, number=1, name='one'),
         fakedb.Step(id=102, buildid=30, number=2, name='two'),
     ]
 
     testLogLines = [
         fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-            num_lines=7, type=u's'),
+                   num_lines=7, type=u's'),
         fakedb.LogChunk(logid=201, first_line=0, last_line=1, compressed=0,
             content=textwrap.dedent("""\
                     line zero
@@ -47,23 +52,23 @@ class Tests(interfaces.InterfaceTests):
                     line 3
                     line 2**2""")),
         fakedb.LogChunk(logid=201, first_line=5, last_line=5, compressed=0,
-            content="another line"),
+                        content="another line"),
         fakedb.LogChunk(logid=201, first_line=6, last_line=6, compressed=0,
-            content="yet another line"),
+                        content="yet another line"),
     ]
 
     def checkTestLogLines(self):
-        expLines = [ 'line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
-                      'another line', 'yet another line']
+        expLines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
+                    'another line', 'yet another line']
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
                 got_lines = yield self.db.logs.getLogLines(201,
-                                        first_line, last_line)
+                                                           first_line, last_line)
                 self.assertEqual(got_lines,
-                        "\n".join(expLines[first_line:last_line+1]+"\n"))
+                                 "\n".join(expLines[first_line:last_line + 1] + "\n"))
         # check overflow
         self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)),
-                        "\n".join(expLines[5:7]+"\n"))
+                         "\n".join(expLines[5:7] + "\n"))
 
     # signature tests
 
@@ -113,7 +118,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getLog(self):
         yield self.insertTestData(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
         ])
         logdict = yield self.db.logs.getLog(201)
         validation.verifyDbDict(self, 'logdict', logdict)
@@ -135,9 +140,9 @@ class Tests(interfaces.InterfaceTests):
     def test_getLogByName(self):
         yield self.insertTestData(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
             fakedb.Log(id=202, stepid=101, name=u'debug_log',
-                complete=1, num_lines=200, type=u's'),
+                       complete=1, num_lines=200, type=u's'),
         ])
         logdict = yield self.db.logs.getLogByName(101, u'debug_log')
         validation.verifyDbDict(self, 'logdict', logdict)
@@ -147,7 +152,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getLogByName_missing(self):
         yield self.insertTestData(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
         ])
         logdict = yield self.db.logs.getLogByName(102, u'stdio')
         self.assertEqual(logdict, None)
@@ -156,11 +161,11 @@ class Tests(interfaces.InterfaceTests):
     def test_getLogs(self):
         yield self.insertTestData(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
             fakedb.Log(id=202, stepid=101, name=u'debug_log', complete=1,
-                num_lines=300, type=u't'),
+                       num_lines=300, type=u't'),
             fakedb.Log(id=203, stepid=102, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
         ])
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
@@ -179,7 +184,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getLogLines_empty(self):
         yield self.insertTestData(self.backgroundData + [
             fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                num_lines=200, type=u's'),
+                       num_lines=200, type=u's'),
         ])
         self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
@@ -204,13 +209,13 @@ class Tests(interfaces.InterfaceTests):
     def test_appendLog_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         self.assertEqual((yield self.db.logs.appendLog(201, u'abc\ndef\n')),
-                (7, 8))
+                         (7, 8))
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 7)),
-                        u"yet another line\nabc\n")
+                         u"yet another line\nabc\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 7, 8)),
-                        u"abc\ndef\n")
+                         u"abc\ndef\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 8, 8)),
-                        u"def\n")
+                         u"def\n")
 
     @defer.inlineCallbacks
     def test_compressLog(self):
@@ -223,7 +228,7 @@ class Tests(interfaces.InterfaceTests):
     def test_addLogLines_big_chunk(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         self.assertEqual(
-            (yield self.db.logs.appendLog(201, u'abc\n' * 20000)), # 80k
+            (yield self.db.logs.appendLog(201, u'abc\n' * 20000)),  # 80k
             (7, 20006))
         lines = yield self.db.logs.getLogLines(201, 7, 50000)
         self.assertEqual(len(lines), 80000)
@@ -233,11 +238,11 @@ class Tests(interfaces.InterfaceTests):
     def test_addLogLines_big_chunk_big_lines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = u'x' * 33000 + '\n'
-        self.assertEqual((yield self.db.logs.appendLog(201, line*3)),
-                (7, 9)) # three long lines, all truncated
+        self.assertEqual((yield self.db.logs.appendLog(201, line * 3)),
+                         (7, 9))  # three long lines, all truncated
         lines = yield self.db.logs.getLogLines(201, 7, 100)
         self.assertEqual(len(lines), 99003)
-        self.assertEqual(lines, (line*3))
+        self.assertEqual(lines, (line * 3))
 
 
 class RealTests(Tests):
@@ -248,6 +253,7 @@ class RealTests(Tests):
         self.assertEqual(
             (yield self.db.logs.appendLog(201, u'abc\ndef\nghi\njkl\n')),
             (7, 10))
+
         def thd(conn):
             res = conn.execute(self.db.model.logchunks.select(
                 whereclause=self.db.model.logchunks.c.first_line > 6))
@@ -266,7 +272,7 @@ class RealTests(Tests):
     def test_addLogLines_huge_lines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = u'xy' * 70000 + '\n'
-        yield self.db.logs.appendLog(201, line*3)
+        yield self.db.logs.appendLog(201, line * 3)
         for lineno in 7, 8, 9:
             line = yield self.db.logs.getLogLines(201, lineno, lineno)
             self.assertEqual(len(line), 65537)
@@ -274,8 +280,8 @@ class RealTests(Tests):
     def test_splitBigChunk_unicode_misalignment(self):
         unaligned = (u'a ' + u'\N{SNOWMAN}' * 30000 + '\n').encode('utf-8')
         # the first 65536 bytes of that line are not valid utf-8
-        self.assertRaises(UnicodeDecodeError, lambda :
-                unaligned[:65536].decode('utf-8'))
+        self.assertRaises(UnicodeDecodeError, lambda:
+                          unaligned[:65536].decode('utf-8'))
         chunk, remainder = self.db.logs._splitBigChunk(unaligned, 1)
         # see that it was truncated by two bytes, and now properly decodes
         self.assertEqual(len(chunk), 65534)
@@ -294,8 +300,8 @@ class TestFakeDB(unittest.TestCase, Tests):
 
 
 class TestRealDB(unittest.TestCase,
-        connector_component.ConnectorComponentMixin,
-        RealTests):
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
@@ -307,7 +313,6 @@ class TestRealDB(unittest.TestCase,
         def finish_setup(_):
             self.db.logs = logs.LogsConnectorComponent(self.db)
         return d
-
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

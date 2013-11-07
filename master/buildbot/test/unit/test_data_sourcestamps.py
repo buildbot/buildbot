@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.data import sourcestamps
-from buildbot.test.util import endpoint
 from buildbot.test.fake import fakedb
+from buildbot.test.util import endpoint
+from twisted.trial import unittest
+
 
 class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -28,8 +29,8 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.SourceStamp(id=13, branch=u'oak'),
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                patch_author='bar', patch_comment='foo', subdir='/foo',
-                patchlevel=3),
+                         patch_author='bar', patch_comment='foo', subdir='/foo',
+                         patchlevel=3),
             fakedb.SourceStamp(id=14, patchid=99, branch=u'poplar'),
         ])
 
@@ -38,6 +39,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_existing(self):
         d = self.callGet(('sourcestamp', 13))
+
         @d.addCallback
         def check(sourcestamp):
             self.validateData(sourcestamp)
@@ -47,6 +49,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_existing_patch(self):
         d = self.callGet(('sourcestamp', 14))
+
         @d.addCallback
         def check(sourcestamp):
             self.validateData(sourcestamp)
@@ -63,6 +66,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_missing(self):
         d = self.callGet(('sourcestamp', 99))
+
         @d.addCallback
         def check(sourcestamp):
             self.assertEqual(sourcestamp, None)
@@ -86,16 +90,17 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get(self):
         d = self.callGet(('sourcestamp',))
+
         @d.addCallback
         def check(sourcestamps):
-            [ self.validateData(m) for m in sourcestamps ]
+            [self.validateData(m) for m in sourcestamps]
             self.assertEqual(sorted([m['ssid'] for m in sourcestamps]),
                              [13, 14])
         return d
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                expected_filter=('sourcestamp', None, None))
+                                expected_filter=('sourcestamp', None, None))
 
 
 class SourceStamp(unittest.TestCase):

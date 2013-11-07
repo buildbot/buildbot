@@ -16,8 +16,9 @@
 # This is a static resource type and set of endpoints uesd as common data by
 # tests.
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
 
 testData = {
     13: {'id': 13, 'info': 'ok', 'success': True},
@@ -30,13 +31,14 @@ testData = {
     20: {'id': 20, 'info': 'error', 'success': False},
 }
 
+
 class TestsEndpoint(base.Endpoint):
     isCollection = True
     pathPatterns = "/test"
 
     def get(self, resultSpec, kwargs):
         # results are sorted by ID for test stability
-        return defer.succeed(sorted(testData.values(), key=lambda v : v['id']))
+        return defer.succeed(sorted(testData.values(), key=lambda v: v['id']))
 
 
 class FailEndpoint(base.Endpoint):
@@ -65,7 +67,7 @@ class TestEndpoint(base.Endpoint):
 class Test(base.ResourceType):
     name = "test"
     plural = "tests"
-    endpoints = [ TestsEndpoint, TestEndpoint, FailEndpoint ]
+    endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint]
 
     class EntityType(types.Entity):
         id = types.Integer()

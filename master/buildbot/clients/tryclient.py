@@ -37,12 +37,14 @@ from buildbot.util import json
 from buildbot.util import now
 from buildbot.util.eventual import fireEventually
 
+
 class SourceStamp(object):
 
     def __init__(self, branch, revision, patch, repository=''):
         self.branch = branch
         self.revision = revision
         self.patch = patch
+
 
 class SourceStampExtractor:
 

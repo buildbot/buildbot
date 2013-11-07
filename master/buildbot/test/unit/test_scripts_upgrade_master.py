@@ -15,19 +15,26 @@
 
 from __future__ import with_statement
 
-import os
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.scripts import upgrade_master
+import os
+
 from buildbot import config as config_module
-from buildbot.db import connector, model
-from buildbot.test.util import dirs, misc, compat, www
+from buildbot.db import connector
+from buildbot.db import model
+from buildbot.scripts import upgrade_master
+from buildbot.test.util import compat
+from buildbot.test.util import dirs
+from buildbot.test.util import misc
+from buildbot.test.util import www
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 def mkconfig(**kwargs):
     config = dict(quiet=False, replace=False, basedir='test')
     config.update(kwargs)
     return config
+
 
 class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
                         unittest.TestCase):
@@ -36,7 +43,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         # createMaster is decorated with @in_reactor, so strip that decoration
         # since the master is already running
         self.patch(upgrade_master, 'upgradeMaster',
-                upgrade_master.upgradeMaster._orig)
+                   upgrade_master.upgradeMaster._orig)
         self.setUpDirs('test')
         self.setUpStdoutAssertions()
 
@@ -67,6 +74,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_upgradeMaster_success(self):
         self.patchFunctions()
         d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+
         @d.addCallback
         def check(rv):
             self.assertEqual(rv, 0)
@@ -76,6 +84,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_upgradeMaster_quiet(self):
         self.patchFunctions()
         d = upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
+
         @d.addCallback
         def check(rv):
             self.assertEqual(rv, 0)
@@ -85,6 +94,7 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_upgradeMaster_bad_basedir(self):
         self.patchFunctions(basedirOk=False)
         d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+
         @d.addCallback
         def check(rv):
             self.assertEqual(rv, 1)
@@ -93,10 +103,12 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_upgradeMaster_bad_config(self):
         self.patchFunctions(configOk=False)
         d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+
         @d.addCallback
         def check(rv):
             self.assertEqual(rv, 1)
         return d
+
 
 class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                                  misc.StdoutAssertionsMixin, unittest.TestCase):
@@ -209,7 +221,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_installFile_quiet(self):
         self.writeFile('test/srcfile', 'source data')
         upgrade_master.installFile(mkconfig(quiet=True), 'test/destfile',
-                                                         'test/srcfile')
+                                   'test/srcfile')
         self.assertWasQuiet()
 
     def test_upgradeFiles(self):
@@ -218,7 +230,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
                 'test/public_html',
                 'test/templates',
                 'test/master.cfg.sample',
-                ]:
+        ]:
             self.assertTrue(os.path.exists(f), "%s not found" % f)
         self.assertInStdout('upgrading basedir')
 
@@ -242,13 +254,13 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def test_upgradeDatabase(self):
-        setup = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
+        setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
-        upgrade = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
+        upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
         yield upgrade_master.upgradeDatabase(
-                mkconfig(basedir='test', quiet=True),
-                config_module.MasterConfig())
+            mkconfig(basedir='test', quiet=True),
+            config_module.MasterConfig())
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called()
         self.assertWasQuiet()

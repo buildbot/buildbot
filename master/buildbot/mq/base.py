@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log, failure
-from twisted.internet import defer
 from buildbot.util import service
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+
 
 class MQBase(service.AsyncService):
 
@@ -26,7 +28,7 @@ class MQBase(service.AsyncService):
 
 class QueueRef(object):
 
-    __slots__ = [ 'callback' ]
+    __slots__ = ['callback']
 
     def __init__(self, callback):
         self.callback = callback

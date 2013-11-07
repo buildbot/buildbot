@@ -22,13 +22,18 @@ __all__ = [
     'InvalidControlException',
 ]
 
+
 class DataException(Exception):
     pass
 
+
 class InvalidPathError(DataException):
+
     "A path argument was invalid or unknown"
     pass
 
+
 class InvalidControlException(DataException):
+
     "Action is not supported"
     pass

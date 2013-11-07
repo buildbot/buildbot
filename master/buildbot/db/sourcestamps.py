@@ -14,28 +14,32 @@
 # Copyright Buildbot Team Members
 
 import base64
-from twisted.internet import defer
-from twisted.python import log
-from twisted.internet import reactor
-from buildbot.util import epoch2datetime
+
 from buildbot.db import base
+from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+
 
 class SsDict(dict):
     pass
 
+
 class SsList(list):
     pass
+
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
     def findSourceStampId(self, branch=None, revision=None, repository=None,
-                        project=None, codebase=None, patch_body=None,
-                        patch_level=None, patch_author=None,
-                        patch_comment=None, patch_subdir=None,
-                        _reactor=reactor):
-        tbl=self.db.model.sourcestamps
+                          project=None, codebase=None, patch_body=None,
+                          patch_level=None, patch_author=None,
+                          patch_comment=None, patch_subdir=None,
+                          _reactor=reactor):
+        tbl = self.db.model.sourcestamps
 
         assert codebase is not None, "codebase cannot be None"
         assert project is not None, "project cannot be None"
@@ -61,20 +65,20 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         patchid = yield self.db.pool.do(thd)
 
         ss_hash = self.hashColumns(branch, revision, repository, project,
-                                    codebase, patchid)
+                                   codebase, patchid)
         sourcestampid = yield self.findSomethingId(
-                tbl=tbl,
-                whereclause=tbl.c.ss_hash==ss_hash,
-                insert_values={
-                    'branch' : branch,
-                    'revision' : revision,
-                    'repository' : repository,
-                    'codebase' : codebase,
-                    'project' : project,
-                    'patchid' : patchid,
-                    'ss_hash' : ss_hash,
-                    'created_at' : _reactor.seconds(),
-                })
+            tbl=tbl,
+            whereclause=tbl.c.ss_hash == ss_hash,
+            insert_values={
+                'branch': branch,
+                'revision': revision,
+                'repository': repository,
+                'codebase': codebase,
+                'project': project,
+                'patchid': patchid,
+                'ss_hash': ss_hash,
+                'created_at': _reactor.seconds(),
+            })
         defer.returnValue(sourcestampid)
 
     @base.cached("ssdicts")
@@ -96,18 +100,18 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.sourcestamps
             q = tbl.select()
             res = conn.execute(q)
-            return [ self._rowToSsdict_thd(conn, row)
-                     for row in res.fetchall() ]
+            return [self._rowToSsdict_thd(conn, row)
+                    for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     def _rowToSsdict_thd(self, conn, row):
         ssid = row.id
         ssdict = SsDict(ssid=ssid, branch=row.branch,
-                revision=row.revision, patchid=None, patch_body=None,
-                patch_level=None, patch_author=None, patch_comment=None,
-                patch_subdir=None, repository=row.repository,
-                codebase=row.codebase, project=row.project,
-                created_at=epoch2datetime(row.created_at))
+                        revision=row.revision, patchid=None, patch_body=None,
+                        patch_level=None, patch_author=None, patch_comment=None,
+                        patch_subdir=None, repository=row.repository,
+                        codebase=row.codebase, project=row.project,
+                        created_at=epoch2datetime(row.created_at))
         patchid = row.patchid
 
         # fetch the patch, if necessary
