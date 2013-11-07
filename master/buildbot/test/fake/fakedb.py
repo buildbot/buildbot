@@ -775,7 +775,8 @@ class FakeChangesComponent(FakeDBComponent):
             properties=change.properties,
             repository=change.repository,
             codebase=change.codebase,
-            project=change.project)
+            project=change.project,
+            uids=[])
         self.changes[changeid] = row
 
 

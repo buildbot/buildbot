@@ -22,7 +22,7 @@ from twisted.trial import unittest
 
 # suppress warnings on Python-2.6 and higher; catch_warnings doesn't
 # exist in 2.5
-if sys.version >= (2, 6):
+if sys.version_info >= (2, 6):
     with warnings.catch_warnings():
         # ignore deprecation warnings
         warnings.simplefilter('ignore')

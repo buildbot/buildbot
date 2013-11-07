@@ -1,1 +1,1 @@
-git diff --name-only HEAD^ | common/style_check_and_fix.sh
+common/validate.sh HEAD~ --quick
