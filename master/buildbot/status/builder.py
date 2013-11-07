@@ -16,9 +16,9 @@
 from __future__ import with_statement
 
 
+import itertools
 import os
 import re
-import itertools
 
 from buildbot import interfaces
 from buildbot import util

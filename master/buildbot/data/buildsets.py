@@ -16,7 +16,7 @@
 import copy
 
 from buildbot.data import base
-from buildbot.data import sourcestamps
+from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import types
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -118,7 +118,7 @@ class Buildset(base.ResourceType):
         complete_at = types.NoneOk(types.Integer())
         results = types.NoneOk(types.Integer())
         sourcestamps = types.List(
-            of=sourcestamps.SourceStamp.entityType)
+            of=sourcestampsapi.SourceStamp.entityType)
         link = types.Link()
     entityType = EntityType(name)
 

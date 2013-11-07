@@ -436,8 +436,8 @@ def RegisterWithFirewall(exe_name, description):
     #/library/en-us/ics/ics/wf_adding_an_application.asp
     from win32com.client import Dispatch
     #  Set constants
-    NET_FW_PROFILE_DOMAIN = 0
-    NET_FW_PROFILE_STANDARD = 1
+    #NET_FW_PROFILE_DOMAIN = 0
+    #NET_FW_PROFILE_STANDARD = 1
 
     # Scope
     NET_FW_SCOPE_ALL = 0

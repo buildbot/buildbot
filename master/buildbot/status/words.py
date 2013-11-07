@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import random
 import re
 import shlex
-import random
 
 from string import capitalize
 from string import join

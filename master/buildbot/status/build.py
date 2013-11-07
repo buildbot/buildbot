@@ -16,8 +16,8 @@
 from __future__ import with_statement
 
 import os
-import shutil
 import re
+import shutil
 
 from buildbot import interfaces
 from buildbot import util

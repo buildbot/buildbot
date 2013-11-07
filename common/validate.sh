@@ -105,9 +105,10 @@ done < ${tempfile}
 echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
-status "running 'setup.py develop' for www"
-(cd www; python setup.py develop 2>&1 >/dev/null) || not_ok "www/setup.py failed"
-
+if $slow; then
+    status "running 'setup.py develop' for www"
+    (cd www; python setup.py develop 2>&1 >/dev/null) || not_ok "www/setup.py failed"
+fi
 if $slow; then
     status "running tests"
     run_tests || not_ok "tests failed"

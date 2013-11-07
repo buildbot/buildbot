@@ -29,11 +29,11 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import WithProperties
 
-import gzip
-import bz2
 import base64
-import re
+import bz2
 import cStringIO
+import gzip
+import re
 
 # TODO: docs, maybe a test of some sort just to make sure it actually imports
 # and can format email without raising an exception.
