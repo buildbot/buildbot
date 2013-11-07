@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.test.fake import fakedb, fakemaster
-from buildbot.test.util import interfaces, connector_component, validation
 from buildbot.db import builders
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import connector_component
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -59,7 +63,7 @@ class Tests(interfaces.InterfaceTests):
         id = yield self.db.builders.findBuilderId('some:builder')
         builderdict = yield self.db.builders.getBuilder(id)
         self.assertEqual(builderdict,
-                dict(id=id, name='some:builder', masterids=[]))
+                         dict(id=id, name='some:builder', masterids=[]))
 
     @defer.inlineCallbacks
     def test_findBuilderId_exists(self):
@@ -81,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                dict(id=7, name='some:builder', masterids=[9, 10]))
+                         dict(id=7, name='some:builder', masterids=[9, 10]))
 
     @defer.inlineCallbacks
     def test_addBuilderMaster_already_present(self):
@@ -95,7 +99,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                dict(id=7, name='some:builder', masterids=[9]))
+                         dict(id=7, name='some:builder', masterids=[9]))
 
     @defer.inlineCallbacks
     def test_removeBuilderMaster(self):
@@ -110,7 +114,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                dict(id=7, name='some:builder', masterids=[10]))
+                         dict(id=7, name='some:builder', masterids=[10]))
 
     @defer.inlineCallbacks
     def test_getBuilder_no_masters(self):
@@ -120,7 +124,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                dict(id=7, name='some:builder', masterids=[]))
+                         dict(id=7, name='some:builder', masterids=[]))
 
     @defer.inlineCallbacks
     def test_getBuilder_with_masters(self):
@@ -134,7 +138,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                dict(id=7, name='some:builder', masterids=[3,4]))
+                         dict(id=7, name='some:builder', masterids=[3, 4]))
 
     @defer.inlineCallbacks
     def test_getBuilder_missing(self):
@@ -158,7 +162,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
             dict(id=7, name='some:builder', masterids=[3]),
-            dict(id=8, name='other:builder', masterids=[3,4]),
+            dict(id=8, name='other:builder', masterids=[3, 4]),
             dict(id=9, name='third:builder', masterids=[]),
         ]))
 
@@ -179,7 +183,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
             dict(id=7, name='some:builder', masterids=[3]),
-            dict(id=8, name='other:builder', masterids=[3,4]),
+            dict(id=8, name='other:builder', masterids=[3, 4]),
         ]))
 
     @defer.inlineCallbacks
@@ -204,8 +208,8 @@ class TestFakeDB(unittest.TestCase, Tests):
 
 
 class TestRealDB(unittest.TestCase,
-        connector_component.ConnectorComponentMixin,
-        RealTests):
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
@@ -215,7 +219,6 @@ class TestRealDB(unittest.TestCase,
         def finish_setup(_):
             self.db.builders = builders.BuildersConnectorComponent(self.db)
         return d
-
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

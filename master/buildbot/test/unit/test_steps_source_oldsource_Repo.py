@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
+
 import sys
 import warnings
+
 from twisted.trial import unittest
 
 # suppress warnings on Python-2.6 and higher; catch_warnings doesn't
 # exist in 2.5
-if sys.version >= (2,6):
+if sys.version_info >= (2, 6):
     with warnings.catch_warnings():
         # ignore deprecation warnings
         warnings.simplefilter('ignore')
@@ -29,15 +31,18 @@ if sys.version >= (2,6):
 else:
     from buildbot.steps.source import Repo
 
+
 class RepoURL(unittest.TestCase):
 
     def test_parse1(self):
         r = Repo()
-        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12"),["test/bla 564/12"])
+        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12"), ["test/bla 564/12"])
+
     def test_parse2(self):
         r = Repo()
-        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12 repo download test/bla 564/2"),["test/bla 564/12","test/bla 564/2"])
+        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12 repo download test/bla 564/2"), ["test/bla 564/12", "test/bla 564/2"])
+
     def test_parse3(self):
         r = Repo()
-        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12 repo download test/bla 564/2 test/foo 5/1"),["test/bla 564/12","test/bla 564/2","test/foo 5/1"])
-        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12"),["test/bla 564/12"])
+        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12 repo download test/bla 564/2 test/foo 5/1"), ["test/bla 564/12", "test/bla 564/2", "test/foo 5/1"])
+        self.assertEqual(r.parseDownloadProperty("repo download test/bla 564/12"), ["test/bla 564/12"])

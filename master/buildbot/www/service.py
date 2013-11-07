@@ -14,12 +14,18 @@
 # Copyright Buildbot Team Members
 
 import pkg_resources
-from twisted.internet import defer
-from twisted.application import strports
-from twisted.web import server, static
+
 from buildbot import config
-from buildbot.util import json, service
-from buildbot.www import rest, ws, sse
+from buildbot.util import json
+from buildbot.util import service
+from buildbot.www import rest
+from buildbot.www import sse
+from buildbot.www import ws
+from twisted.application import strports
+from twisted.internet import defer
+from twisted.web import server
+from twisted.web import static
+
 
 class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
@@ -33,16 +39,16 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.site = None
 
         # load the apps early, in case something goes wrong in Python land
-        epAndApps = [ (ep, ep.load())
-                for ep in pkg_resources.iter_entry_points('buildbot.www') ]
+        epAndApps = [(ep, ep.load())
+                     for ep in pkg_resources.iter_entry_points('buildbot.www')]
 
         # look for duplicate names
-        names = set([ ep.name for ep, app in epAndApps ])
+        names = set([ep.name for ep, app in epAndApps])
         seen = set()
         dupes = set(n for n in names if n in seen or seen.add(n))
         if dupes:
             raise RuntimeError("duplicate buildbot.www entry points: %s"
-                                % (dupes,))
+                               % (dupes,))
 
         self.apps = dict((ep.name, app) for (ep, app) in epAndApps)
 
@@ -70,14 +76,14 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if www['port'] != self.port:
             if self.port_service:
-                yield defer.maybeDeferred(lambda :
-                        self.port_service.disownServiceParent())
+                yield defer.maybeDeferred(lambda:
+                                          self.port_service.disownServiceParent())
                 self.port_service = None
 
             self.port = www['port']
             if self.port:
                 port = self.port
-                if type(port) is int:
+                if isinstance(port, int):
                     port = "tcp:%d" % port
                 self.port_service = strports.service(port, self.site)
 
@@ -86,18 +92,20 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 if port == "tcp:0:interface=127.0.0.1":
                     if hasattr(self.port_service, 'endpoint'):
                         old_listen = self.port_service.endpoint.listen
+
                         def listen(factory):
                             d = old_listen(factory)
+
                             @d.addCallback
                             def keep(port):
-                                self._getPort = lambda : port
+                                self._getPort = lambda: port
                                 return port
                             return d
                         self.port_service.endpoint.listen = listen
                     else:
                         # older twisted's just have the port sitting there
                         # as an instance attribute
-                        self._getPort = lambda : self.port_service._port
+                        self._getPort = lambda: self.port_service._port
 
                 yield self.port_service.setServiceParent(self)
 
@@ -120,8 +128,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # /config.js
         root.putChild('config.js', static.Data("this.config = "
-                                        + json.dumps(new_config.www),
-                            "text/javascript"))
+                                               + json.dumps(new_config.www),
+                                               "text/javascript"))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))

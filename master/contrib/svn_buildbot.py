@@ -26,10 +26,10 @@
 '''
 
 import commands
-import sys
 import os
 import re
 import sets
+import sys
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
@@ -40,7 +40,7 @@ DEBUG = None
 
 if '-d' in sys.argv:
     i = sys.argv.index('-d')
-    DEBUG = sys.argv[i+1]
+    DEBUG = sys.argv[i + 1]
     del sys.argv[i]
     del sys.argv[i]
 
@@ -50,10 +50,11 @@ if DEBUG:
     sys.stdout = f
 
 
-from twisted.internet import defer, reactor
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb
-from twisted.cred import credentials
 
 
 class Options(usage.Options):
@@ -86,12 +87,12 @@ You may provide more than one -F argument to try multiple
 patterns.  Excludes override includes, that is, patterns that match both an
 include and an exclude will be excluded.'''],
         ['encoding', 'e', "utf8",
-         "The encoding of the strings from subversion (default: utf8)" ],
+         "The encoding of the strings from subversion (default: utf8)"],
         ['project', 'P', None, "The project for the source."]
-        ]
+    ]
     optFlags = [
         ['dryrun', 'n', "Do not actually send changes"],
-        ]
+    ]
 
     def __init__(self):
         usage.Options.__init__(self)
@@ -139,9 +140,9 @@ def split_file_branches(changed_file):
                 os.path.join(*pieces[2:]))
     if pieces[0] == 'trunk':
         return (pieces[0], os.path.join(*pieces[1:]))
-    ## there are other sibilings of 'trunk' and 'branches'. Pretend they are
-    ## all just funny-named branches, and let the Schedulers ignore them.
-    #return (pieces[0], os.path.join(*pieces[1:]))
+    # there are other sibilings of 'trunk' and 'branches'. Pretend they are
+    # all just funny-named branches, and let the Schedulers ignore them.
+    # return (pieces[0], os.path.join(*pieces[1:]))
 
     raise RuntimeError("cannot determine branch for '%s'" % changed_file)
 
@@ -211,8 +212,8 @@ class ChangeSender:
                  'repository': unicode(slave_repo, encoding=encoding),
                  'comments': unicode(message, encoding=encoding),
                  'revision': revision,
-                 'project' : unicode(opts['project'] or "", encoding=encoding),
-                 'src' : 'svn',
+                 'project': unicode(opts['project'] or "", encoding=encoding),
+                 'src': 'svn',
                  }
             if branch:
                 d['branch'] = unicode(branch, encoding=encoding)
@@ -253,9 +254,8 @@ class ChangeSender:
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for i, c in enumerate(changes):
-                print "CHANGE #%d" % (i+1)
-                keys = c.keys()
-                keys.sort()
+                print "CHANGE #%d" % (i + 1)
+                keys = sorted(c.keys())
                 for k in keys:
                     print "[%10s]: %s" % (k, c[k])
             print "*NOT* sending any changes"

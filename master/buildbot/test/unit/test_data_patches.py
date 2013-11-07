@@ -13,15 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.data import patches
 from buildbot.test.fake import fakemaster
+from twisted.trial import unittest
+
 
 class Patch(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                            wantData=True, testcase=self)
+                                             wantData=True, testcase=self)
         self.rtype = patches.Patch(self.master)
 
     # no update methods -> nothing to test

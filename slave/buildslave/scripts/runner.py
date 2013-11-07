@@ -16,9 +16,11 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 import os
-import sys
 import re
-from twisted.python import usage, reflect
+import sys
+
+from twisted.python import reflect
+from twisted.python import usage
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -31,7 +33,7 @@ class MakerBase(usage.Options):
     optFlags = [
         ['help', 'h', "Display this message"],
         ["quiet", "q", "Do not emit the commands being run"],
-        ]
+    ]
 
     longdesc = """
     Operates upon the specified <basedir> (or the current directory, if not
@@ -65,7 +67,7 @@ class StartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildslave start [<basedir>]"
@@ -83,7 +85,7 @@ class RestartOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
@@ -92,9 +94,9 @@ class RestartOptions(MakerBase):
 class UpgradeSlaveOptions(MakerBase):
     subcommandFunction = "buildslave.scripts.upgrade_slave.upgradeSlave"
     optFlags = [
-        ]
+    ]
     optParameters = [
-        ]
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildslave upgrade-slave [<basedir>]"
@@ -113,7 +115,7 @@ class CreateSlaveOptions(MakerBase):
          "Create a relocatable buildbot.tac"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
-        ]
+    ]
     optParameters = [
         ["keepalive", "k", 600,
          "Interval at which keepalives should be sent (in seconds)"],
@@ -132,7 +134,7 @@ class CreateSlaveOptions(MakerBase):
         ["allow-shutdown", "a", None,
          "Allows the buildslave to initiate a graceful shutdown. One of "
          "'signal' or 'file'"]
-        ]
+    ]
 
     longdesc = """
     This command creates a buildslave working directory and buildbot.tac
@@ -178,7 +180,7 @@ class CreateSlaveOptions(MakerBase):
 
     def getSynopsis(self):
         return "Usage:    buildslave create-slave " \
-                    "[options] <basedir> <master> <name> <passwd>"
+            "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
         if len(args) != 4:
@@ -198,7 +200,7 @@ class CreateSlaveOptions(MakerBase):
                 self[argument] = int(self[argument])
             except ValueError:
                 raise usage.UsageError("%s parameter needs to be an number"
-                                                                    % argument)
+                                       % argument)
 
         if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
@@ -228,7 +230,7 @@ class Options(usage.Options):
         ['stop', None, StopOptions, "Stop a buildslave"],
         ['restart', None, RestartOptions,
          "Restart a buildslave"],
-        ]
+    ]
 
     def opt_version(self):
         import buildslave

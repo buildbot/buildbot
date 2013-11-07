@@ -13,13 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot import config
-from buildbot.schedulers import dependent, base
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.test.util import scheduler
+from buildbot.schedulers import base
+from buildbot.schedulers import dependent
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakedb
+from buildbot.test.util import scheduler
+from twisted.internet import defer
+from twisted.trial import unittest
 
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
@@ -38,6 +41,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, upstream=None):
         # build a fake upstream scheduler
         class Upstream(base.BaseScheduler):
+
             def __init__(self, name):
                 self.name = name
         if not upstream:
@@ -50,7 +54,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def assertBuildsetSubscriptions(self, bsids=None):
         self.db.state.assertState(OBJECTID,
-                upstream_bsids=bsids)
+                                  upstream_bsids=bsids)
 
     # tests
 
@@ -61,36 +65,37 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_string_arg(self):
         self.assertRaises(config.ConfigErrors,
-                lambda : self.makeScheduler(upstream='foo'))
+                          lambda: self.makeScheduler(upstream='foo'))
 
     def test_activate(self):
         sched = self.makeScheduler()
         sched.activate()
 
         self.assertEqual(
-            sorted([ q.filter for q in sched.master.mq.qrefs ]),
+            sorted([q.filter for q in sched.master.mq.qrefs]),
             [('buildset', None, 'complete',), ('buildset', None, 'new',)])
 
         d = sched.deactivate()
+
         def check(_):
-            self.assertEqual([ q.filter for q in sched.master.mq.qrefs ], [])
+            self.assertEqual([q.filter for q in sched.master.mq.qrefs], [])
         d.addCallback(check)
         return d
 
     def sendBuildsetMessage(self, scheduler_name=None, results=-1,
-            complete=False):
+                            complete=False):
         """Call callConsumer with a buildset message.  Most of the values here
         are hard-coded to correspond to those in do_test."""
         msg = dict(
-                bsid=44,
-                sourcestamps=[], # blah blah blah
-                submitted_at=SUBMITTED_AT_TIME,
-                complete=complete,
-                complete_at=COMPLETE_AT_TIME if complete else None,
-                external_idstring=None,
-                reason=u'Because',
-                results=results if complete else -1,
-                )
+            bsid=44,
+            sourcestamps=[],  # blah blah blah
+            submitted_at=SUBMITTED_AT_TIME,
+            complete=complete,
+            complete_at=COMPLETE_AT_TIME if complete else None,
+            external_idstring=None,
+            reason=u'Because',
+            results=results if complete else -1,
+        )
         if not complete:
             msg['scheduler'] = scheduler_name
         self.master.mq.callConsumer(
@@ -98,7 +103,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             msg)
 
     def do_test(self, scheduler_name, expect_subscription,
-            results, expect_buildset):
+                results, expect_buildset):
         """Test the dependent scheduler by faking a buildset and subsequent
         completion from an upstream scheduler.
 
@@ -116,19 +121,19 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         # announce a buildset with a matching name..
         self.db.insertTestData([
             fakedb.SourceStamp(id=93, revision='555',
-                            branch='master', project='proj', repository='repo',
-                            codebase = 'cb'),
+                               branch='master', project='proj', repository='repo',
+                               codebase='cb'),
             fakedb.Buildset(
-                    id=44,
-                    submitted_at=SUBMITTED_AT_TIME,
-                    complete=False,
-                    complete_at=None,
-                    external_idstring=None,
-                    reason=u'Because',
-                    results=-1,
-                ),
+                id=44,
+                submitted_at=SUBMITTED_AT_TIME,
+                complete=False,
+                complete_at=None,
+                external_idstring=None,
+                reason=u'Because',
+                results=-1,
+            ),
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
-            ])
+        ])
         self.sendBuildsetMessage(scheduler_name=scheduler_name, complete=False)
 
         # check whether scheduler is subscribed to that buildset
@@ -145,7 +150,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         if expect_buildset:
             self.assertEqual(self.addBuildsetCalls, [
                 ('addBuildsetForSourceStamp', dict(
-                    builderNames=None, # defaults
+                    builderNames=None,  # defaults
                     external_idstring=None,
                     properties=None,
                     reason=u'downstream',
@@ -178,12 +183,12 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=13, sourcestampid=1234),
             fakedb.Object(id=OBJECTID),
             fakedb.ObjectState(objectid=OBJECTID,
-                name='upstream_bsids', value_json='[11,12,13]'),
+                               name='upstream_bsids', value_json='[11,12,13]'),
         ])
 
         # check return value (missing 12)
         self.assertEqual((yield sched._getUpstreamBuildsets()),
-                [(11, [], False, -1), (13, [1234], False, -1)])
+                         [(11, [], False, -1), (13, [1234], False, -1)])
 
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])

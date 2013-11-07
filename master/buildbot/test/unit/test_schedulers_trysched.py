@@ -15,20 +15,21 @@
 
 from __future__ import with_statement
 
+import cStringIO as StringIO
 import mock
 import os
 import shutil
-import cStringIO as StringIO
 import sys
 
 import twisted
-from twisted.internet import defer
-from twisted.trial import unittest
-from twisted.protocols import basic
+
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
 from buildbot.util import json
+from twisted.internet import defer
+from twisted.protocols import basic
+from twisted.trial import unittest
 
 
 class TryBase(unittest.TestCase):
@@ -62,7 +63,8 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         self.tearDownDirs()
 
     def test_messageReceived(self):
-        scheduler =  mock.Mock()       # stub out svc.scheduler.handleJobFile and .jobdir
+        scheduler = mock.Mock()       # stub out svc.scheduler.handleJobFile and .jobdir
+
         def handleJobFile(filename, f):
             self.assertEqual(filename, 'jobdata')
             self.assertEqual(f.read(), 'JOBDATA')
@@ -129,28 +131,28 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_startService_reldir(self):
         self.setup_test_startService(
-                'jobdir',
-                os.path.abspath('basedir/jobdir'))
+            'jobdir',
+            os.path.abspath('basedir/jobdir'))
         return self.do_test_startService()
 
     def test_startService_reldir_subdir(self):
         self.setup_test_startService(
-                'jobdir',
-                os.path.abspath('basedir/jobdir/cur'))
+            'jobdir',
+            os.path.abspath('basedir/jobdir/cur'))
         return self.do_test_startService()
 
     def test_startService_absdir(self):
         self.setup_test_startService(
-                os.path.abspath('jobdir'),
-                os.path.abspath('jobdir'))
+            os.path.abspath('jobdir'),
+            os.path.abspath('jobdir'))
         return self.do_test_startService()
 
     @defer.inlineCallbacks
     def do_test_startService_but_not_active(self, jobdir, exp_jobdir):
         """Same as do_test_startService, but the master wont activate this service"""
         self.setup_test_startService(
-                'jobdir',
-                os.path.abspath('basedir/jobdir'))
+            'jobdir',
+            os.path.abspath('basedir/jobdir'))
 
         self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
@@ -185,7 +187,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         test_temp_file = StringIO.StringIO(jobstr)
 
         self.assertRaises(trysched.BadJobfile,
-            lambda : sched.parseJob(test_temp_file))
+                          lambda: sched.parseJob(test_temp_file))
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(
@@ -229,7 +231,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring(
-                # blank branch, rev are turned to None
+            # blank branch, rev are turned to None
             '1', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
             'buildera', 'builderc'
         )
@@ -282,7 +284,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring(
-                # blank branch, rev are turned to None
+            # blank branch, rev are turned to None
             '2', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
             'repo', 'proj',
             'buildera', 'builderc'
@@ -338,7 +340,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring(
-                # blank branch, rev are turned to None
+            # blank branch, rev are turned to None
             '3', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
             'repo', 'proj', 'who',
             'buildera', 'builderc'
@@ -394,7 +396,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring(
-                # blank branch, rev are turned to None
+            # blank branch, rev are turned to None
             '4', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
             'repo', 'proj', 'who', 'comment',
             'buildera', 'builderc'
@@ -454,7 +456,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring(
-                # blank branch, rev are turned to None
+            # blank branch, rev are turned to None
             '4', 'extid', '', '', '1', 'this is my diff, -- ++, etc.',
             'repo', 'proj', 'who', 'comment',
             'buildera', 'builderc'
@@ -507,7 +509,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             trysched.Try_Jobdir(
                 name='tsched', builderNames=['buildera', 'builderb'],
                 jobdir='foo'), self.OBJECTID,
-                overrideBuildsetMethods=True)
+            overrideBuildsetMethods=True)
         fakefile = mock.Mock()
 
         def parseJob_(f):
@@ -518,15 +520,16 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeSampleParsedJob(self, **overrides):
         pj = dict(baserev='1234', branch='trunk',
-            builderNames=['buildera', 'builderb'],
-            jobid='extid', patch_body='this is my diff, -- ++, etc.',
-            patch_level=1, project='proj', repository='repo', who='who',
-            comment='comment', properties={})
+                  builderNames=['buildera', 'builderb'],
+                  jobid='extid', patch_body='this is my diff, -- ++, etc.',
+                  patch_level=1, project='proj', repository='repo', who='who',
+                  comment='comment', properties={})
         pj.update(overrides)
         return pj
 
     def test_handleJobFile(self):
         d = self.call_handleJobFile(lambda f: self.makeSampleParsedJob())
+
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
                 ('addBuildsetForSourceStamp', dict(
@@ -546,7 +549,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='repo',
                             revision='1234'),
                     ])),
-                ])
+            ])
         d.addCallback(check)
         return d
 
@@ -568,7 +571,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_handleJobFile_bad_builders(self):
         d = self.call_handleJobFile(
-                lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
+            lambda f: self.makeSampleParsedJob(builderNames=['xxx']))
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [])
@@ -598,7 +601,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='repo',
                             revision='1234'),
                     ])),
-                ])
+            ])
         d.addCallback(check)
         return d
 
@@ -609,9 +612,9 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
                 ('addBuildsetForSourceStamp', dict(
-                    builderNames=['buildera','builderb'],
+                    builderNames=['buildera', 'builderb'],
                     external_idstring=u'extid',
-                    properties={'foo':('bar', u'try build')},
+                    properties={'foo': ('bar', u'try build')},
                     reason=u"'try' job by user who",
                     sourcestamps=[
                         dict(
@@ -625,7 +628,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='repo',
                             revision='1234'),
                     ])),
-                ])
+            ])
         d.addCallback(check)
         return d
 
@@ -647,7 +650,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                self.OBJECTID, overrideBuildsetMethods=True)
+                                     self.OBJECTID, overrideBuildsetMethods=True)
         # Try will return a remote version of master.status, so give it
         # something to return
         sched.master.status = mock.Mock()
@@ -655,7 +658,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
     def call_perspective_try(self, *args, **kwargs):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
-                port='xxx', userpass=[('a', 'b')], properties=dict(frm='schd'))
+                                   port='xxx', userpass=[('a', 'b')], properties=dict(frm='schd'))
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
 
         # patch out all of the handling after addBuildsetForSourceStamp
@@ -664,17 +667,20 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.getBuildset = getBuildset
 
         class BuildSetStatus(object):
+
             def __init__(self, *args):
                 self.args = args
         self.patch(trysched, 'BuildSetStatus', BuildSetStatus)
 
         class RemoteBuildSetStatus(object):
+
             def __init__(self, bss):
                 self.bss = bss
         from buildbot.status import client
         self.patch(client, 'makeRemote', RemoteBuildSetStatus)
 
         d = persp.perspective_try(*args, **kwargs)
+
         def check(rbss):
             if rbss is None:
                 return
@@ -694,7 +700,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                 ('addBuildsetForSourceStamp', dict(
                     builderNames=['a'],
                     external_idstring=None,
-                    properties={'pr':('op', u'try build')},
+                    properties={'pr': ('op', u'try build')},
                     reason=u"'try' job",
                     sourcestamps=[
                         dict(
@@ -708,7 +714,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='repo',
                             revision='abcdef'),
                     ])),
-                ])
+            ])
         d.addCallback(check)
         return d
 
@@ -722,7 +728,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                 ('addBuildsetForSourceStamp', dict(
                     builderNames=['a'],
                     external_idstring=None,
-                    properties={'pr':('op', u'try build')},
+                    properties={'pr': ('op', u'try build')},
                     reason=u"'try' job by user who (comment)",
                     sourcestamps=[
                         dict(
@@ -736,7 +742,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             repository='repo',
                             revision='abcdef'),
                     ])),
-                ])
+            ])
         d.addCallback(check)
         return d
 
@@ -752,7 +758,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_getAvailableBuilderNames(self):
         sched = self.makeScheduler(name='tsched', builderNames=['a', 'b'],
-                port='xxx', userpass=[('a', 'b')])
+                                   port='xxx', userpass=[('a', 'b')])
         persp = trysched.Try_Userpass_Perspective(sched, 'a')
         d = defer.maybeDeferred(persp.perspective_getAvailableBuilderNames)
 
@@ -774,12 +780,12 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                self.OBJECTID)
+                                     self.OBJECTID)
         return sched
 
     def test_service(self):
         sched = self.makeScheduler(name='tsched', builderNames=['a'],
-                port='tcp:9999', userpass=[('fred', 'derf')])
+                                   port='tcp:9999', userpass=[('fred', 'derf')])
         # patch out the pbmanager's 'register' command both to be sure
         # the registration is correct and to get a copy of the factory
         registration = mock.Mock()
@@ -803,7 +809,7 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_service_but_not_active(self):
         sched = self.makeScheduler(name='tsched', builderNames=['a'],
-                port='tcp:9999', userpass=[('fred', 'derf')])
+                                   port='tcp:9999', userpass=[('fred', 'derf')])
 
         self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 

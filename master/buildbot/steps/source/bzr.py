@@ -15,17 +15,20 @@
 
 import os
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep, remotecommand
-from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
+from buildbot.process import remotecommand
+from buildbot.steps.source.base import Source
+
 
 class Bzr(Source):
 
     name = 'bzr'
-    renderables = [ 'repourl', 'baseURL' ]
+    renderables = ['repourl', 'baseURL']
 
     def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, **kwargs):
@@ -63,6 +66,7 @@ class Bzr(Source):
             self.repourl = os.path.join(self.baseURL, self.branch)
 
         d = self.checkBzr()
+
         def checkInstall(bzrInstalled):
             if not bzrInstalled:
                 raise BuildSlaveTooOldError("bzr is not installed on slave")
@@ -70,6 +74,7 @@ class Bzr(Source):
         d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
+
         def checkPatched(patched):
             if patched:
                 return self._dovccmd(['clean-tree', '--ignored', '--force'])
@@ -123,9 +128,10 @@ class Bzr(Source):
 
     def _clobber(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
+                                                    'logEnviron': self.logEnviron, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def checkRemoval(res):
             if res != 0:
                 raise RuntimeError("Failed to delete directory")
@@ -140,15 +146,16 @@ class Bzr(Source):
 
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': 'build',
-                                                'logEnviron': self.logEnviron,})
+                                                    'logEnviron': self.logEnviron, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self.incremental())
+
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir':'build',
-                                           'logEnviron': self.logEnviron,})
+                                              {'fromdir': 'source',
+                                               'todir': 'build',
+                                               'logEnviron': self.logEnviron, })
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -181,14 +188,15 @@ class Bzr(Source):
         else:
             abandonOnFailure = True
         d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+
         def _retry(res):
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
-                    % (repeats, delay))
-                self.retry = (delay, repeats-1)
+                log.msg("Checkout failed, trying %d more times after %d seconds"
+                        % (repeats, delay))
+                self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._clobber())
                 df.addCallback(lambda _: self._doFull())
@@ -202,9 +210,10 @@ class Bzr(Source):
 
     def finish(self, res):
         d = defer.succeed(res)
+
         def _gotResults(results):
             self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " % \
+            log.msg("Closing log, sending result of the command %s " %
                     (self.cmd))
             return results
         d.addCallback(_gotResults)
@@ -222,12 +231,13 @@ class Bzr(Source):
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False):
         cmd = remotecommand.RemoteShellCommand(self.workdir, ['bzr'] + command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout)
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
@@ -241,6 +251,7 @@ class Bzr(Source):
 
     def checkBzr(self):
         d = self._dovccmd(['--version'])
+
         def check(res):
             if res == 0:
                 return True
@@ -259,6 +270,7 @@ class Bzr(Source):
     def parseGotRevision(self, _):
         d = self._dovccmd(["version-info", "--custom", "--template='{revno}"],
                           collectStdout=True)
+
         def setrev(stdout):
             revision = stdout.strip("'")
             try:
@@ -272,4 +284,3 @@ class Bzr(Source):
             return 0
         d.addCallback(setrev)
         return d
-

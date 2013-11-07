@@ -13,21 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-## Source step code for darcs
+# Source step code for darcs
 
 import StringIO
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep, remotecommand
-from buildbot.steps.source.base import Source
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
+from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
+from buildbot.steps.source.base import Source
 from buildbot.steps.transfer import _FileReader
 
+
 class Darcs(Source):
+
     """ Class for Darcs with all smarts """
 
     name = 'darcs'
@@ -49,9 +53,9 @@ class Darcs(Source):
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
-        
+
         if self.mode == 'full':
-            if self.method == None:
+            if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
                 errors.append("Invalid method for mode == %s" % (self.mode))
@@ -67,12 +71,14 @@ class Darcs(Source):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkDarcs()
+
         def checkInstall(darcsInstalled):
             if not darcsInstalled:
                 raise BuildSlaveTooOldError("Darcs is not installed on slave")
             return 0
         d.addCallback(checkInstall)
         d.addCallback(lambda _: self.sourcedirIsPatched())
+
         def checkPatched(patched):
             if patched:
                 return self.copy()
@@ -95,11 +101,12 @@ class Darcs(Source):
 
     def checkDarcs(self):
         cmd = remotecommand.RemoteShellCommand(self.workdir, ['darcs', '--version'],
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout)
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluate(cmd):
             if cmd.rc != 0:
                 return False
@@ -127,23 +134,25 @@ class Darcs(Source):
 
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout,})
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
+
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir':'build',
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout,})
+                                              {'fromdir': 'source',
+                                               'todir': 'build',
+                                               'logEnviron': self.logEnviron,
+                                               'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
         d.addCallback(copy)
+
         def resetWorkdir(_):
             self.workdir = 'build'
             return 0
@@ -169,7 +178,7 @@ class Darcs(Source):
                                               wkdir='.'))
 
         return d
-        
+
     def _checkout(self):
 
         if self.retry:
@@ -178,14 +187,15 @@ class Darcs(Source):
             abandonOnFailure = True
 
         d = self._clone(abandonOnFailure)
+
         def _retry(res):
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
-                    % (repeats, delay))
-                self.retry = (delay, repeats-1)
+                log.msg("Checkout failed, trying %d more times after %d seconds"
+                        % (repeats, delay))
+                self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
                 df.addCallback(lambda _: self._checkout())
@@ -199,10 +209,11 @@ class Darcs(Source):
 
     def finish(self, res):
         d = defer.succeed(res)
+
         def _gotResults(results):
             self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " % \
-                        (self.cmd))
+            log.msg("Closing log, sending result of the command %s " %
+                    (self.cmd))
             return results
         d.addCallback(_gotResults)
         d.addCallbacks(self.finished, self.checkDisconnect)
@@ -214,20 +225,21 @@ class Darcs(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
                  abandonOnFailure=True, wkdir=None):
         if not command:
             raise ValueError("No command specified")
         workdir = wkdir or self.workdir
         cmd = remotecommand.RemoteShellCommand(workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin,
-                                           decodeRC=decodeRC)
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin,
+                                               decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
@@ -248,18 +260,19 @@ class Darcs(Source):
             'slavedest': filename,
             'maxsize': None,
             'reader': filereader,
-            'blocksize': 16*1024,
+            'blocksize': 16 * 1024,
             'workdir': self.workdir,
-            'mode' : None
-            }
+            'mode': None
+        }
         cmd = remotecommand.RemoteCommand('downloadFile', args)
         cmd.useLog(self.stdio_log, False)
         log.msg("Downloading file: %s" % (filename))
         d = self.runCommand(cmd)
+
         def evaluateCommand(_):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-                
+
         d.addCallback(evaluateCommand)
         return d

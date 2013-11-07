@@ -14,10 +14,14 @@
 # Copyright Buildbot Team Members
 
 import datetime
-from twisted.trial import unittest
+
+from buildbot.changes.p4poller import P4PollerError
+from buildbot.changes.p4poller import P4Source
+from buildbot.changes.p4poller import get_simple_split
+from buildbot.test.util import changesource
+from buildbot.test.util import gpo
 from buildbot.util import datetime2epoch
-from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
-from buildbot.test.util import changesource, gpo
+from twisted.trial import unittest
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
@@ -78,6 +82,7 @@ p4change = {
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
                    unittest.TestCase):
+
     def setUp(self):
         self.setUpGetProcessOutput()
         return self.setUpChangeSource()
@@ -87,7 +92,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
     def add_p4_describe_result(self, number, result):
         self.expectCommands(
-                gpo.Expect('p4', 'describe', '-s', str(number)).stdout(result))
+            gpo.Expect('p4', 'describe', '-s', str(number)).stdout(result))
 
     def makeTime(self, timestring):
         datefmt = '%Y/%m/%d %H:%M:%S'
@@ -98,35 +103,35 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
     def test_describe(self):
         self.attachChangeSource(
-                P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1)))
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1)))
         self.assertSubstring("p4source", self.changesource.describe())
 
     def test_name(self):
         # no name:
         cs1 = P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1))
+                       p4base='//depot/myproject/',
+                       split_file=lambda x: x.split('/', 1))
         self.assertEqual("P4Source:None://depot/myproject/", cs1.name)
 
         # explicit name:
         cs2 = P4Source(p4port=None, p4user=None, name='MyName',
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1))
+                       p4base='//depot/myproject/',
+                       split_file=lambda x: x.split('/', 1))
         self.assertEqual("MyName", cs2.name)
 
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
         self.attachChangeSource(
-                P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1),
-                         **kwargs))
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     **kwargs))
         self.expectCommands(
-                gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes),
-                gpo.Expect('p4', 'changes', '//depot/myproject/...@2,now').stdout(second_p4changes),
-                )
+            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes),
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@2,now').stdout(second_p4changes),
+        )
         encoded_p4change = p4change.copy()
         encoded_p4change[3] = encoded_p4change[3].encode(encoding)
         self.add_p4_describe_result(2, encoded_p4change[2])
@@ -135,13 +140,15 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         # The first time, it just learns the change to start at.
         self.assert_(self.changesource.last_change is None)
         d = self.changesource.poll()
+
         def check_first_check(_):
             self.assertEquals(self.master.data.updates.changesAdded, [])
             self.assertEquals(self.changesource.last_change, 1)
         d.addCallback(check_first_check)
 
         # Subsequent times, it returns Change objects for new changes.
-        d.addCallback(lambda _ : self.changesource.poll())
+        d.addCallback(lambda _: self.changesource.poll())
+
         def check_second_check(res):
 
             # when_timestamp is converted from a local time spec, so just
@@ -154,7 +161,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             changesAdded = self.master.data.updates.changesAdded
             if changesAdded[1]['branch'] == 'branch_c':
                 changesAdded[1:] = reversed(changesAdded[1:])
-            self.assertEqual(self.master.data.updates.changesAdded, [ {
+            self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'slamb',
                 'branch': u'trunk',
                 'category': None,
@@ -209,11 +216,11 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
     def test_poll_failed_changes(self):
         self.attachChangeSource(
-                P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1)))
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1)))
         self.expectCommands(
-                gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout('Perforce client error:\n...'))
+            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout('Perforce client error:\n...'))
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
@@ -221,20 +228,21 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
     def test_poll_failed_describe(self):
         self.attachChangeSource(
-                P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=lambda x: x.split('/', 1)))
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1)))
         self.expectCommands(
-                gpo.Expect('p4', 'changes', '//depot/myproject/...@3,now').stdout(second_p4changes),
-                )
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@3,now').stdout(second_p4changes),
+        )
         self.add_p4_describe_result(2, p4change[2])
         self.add_p4_describe_result(3, 'Perforce client error:\n...')
 
-        self.changesource.last_change = 2 # tell poll() that it's already been called once
+        self.changesource.last_change = 2  # tell poll() that it's already been called once
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
         self.assertFailure(d, P4PollerError)
+
         @d.addCallback
         def check(_):
             # check that 2 was processed OK
@@ -245,16 +253,17 @@ class TestP4Poller(changesource.ChangeSourceMixin,
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
         self.attachChangeSource(
-                P4Source(p4port=None, p4user=None,
-                         p4base='//depot/myproject/',
-                         split_file=get_simple_split))
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=get_simple_split))
         self.expectCommands(
-                gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
-                )
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
+        )
         self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
         d = self.changesource.poll()
+
         def check(res):
             # when_timestamp is converted from a local time spec, so just
             # replicate that here
@@ -288,13 +297,15 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
-                }])
+            }])
             self.assertEquals(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d
 
+
 class TestSplit(unittest.TestCase):
+
     def test_get_simple_split(self):
         self.assertEqual(get_simple_split('foo/bar'), ('foo', 'bar'))
         self.assertEqual(get_simple_split('foo-bar'), (None, None))

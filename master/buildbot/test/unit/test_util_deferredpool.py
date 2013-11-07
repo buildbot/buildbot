@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.util.deferredpool import DeferredPool
 
 
 class TestPool(unittest.TestCase):
+
     """
     Test the L{DeferredPool} class used by L{ResizableDispatchQueue}.
     """
@@ -206,7 +207,7 @@ class TestPool(unittest.TestCase):
 
 
 class TestDeferredPool(unittest.TestCase):
-    
+
     def test_trivial(self):
         dp = DeferredPool()
         d = dp.notifyWhenEmpty()
@@ -242,7 +243,7 @@ class TestDeferredPool(unittest.TestCase):
         self.assertIdentical(d1.result, None)
         self.assertIdentical(d2.result, None)
         self.assertIdentical(deferred.result, expected_value)
-    
+
     def test_errback(self):
         dp = DeferredPool()
         d1 = dp.notifyWhenEmpty(testImmediately=False)

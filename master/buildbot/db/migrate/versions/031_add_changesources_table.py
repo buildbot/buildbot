@@ -15,28 +15,29 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     sa.Table('masters', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-        # ..
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             # ..
+             )
 
     changesources = sa.Table('changesources', metadata,
-        sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column('name', sa.Text, nullable=False),
-        sa.Column('name_hash', sa.String(40), nullable=False),
-    )
+                             sa.Column("id", sa.Integer, primary_key=True),
+                             sa.Column('name', sa.Text, nullable=False),
+                             sa.Column('name_hash', sa.String(40), nullable=False),
+                             )
 
     changesource_masters = sa.Table('changesource_masters', metadata,
-        sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
-            nullable=False, primary_key=True),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-            nullable=False),
-    )
+                                    sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
+                                              nullable=False, primary_key=True),
+                                    sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                              nullable=False),
+                                    )
 
     # create the new tables
     changesources.create()

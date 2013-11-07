@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data import base, types
+from buildbot.data import base
+from buildbot.data import types
 from buildbot.util import datetime2epoch
+from twisted.internet import defer
+
 
 class Db2DataMixin(object):
 
@@ -59,7 +61,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
         defer.returnValue((yield self.db2data(dbdict))
-                                if dbdict else None)
+                          if dbdict else None)
 
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
@@ -75,22 +77,22 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         builds = yield self.master.db.builds.getBuilds(
-                                builderid=kwargs.get('builderid'),
-                                buildrequestid=kwargs.get('buildrequestid'))
+            builderid=kwargs.get('builderid'),
+            buildrequestid=kwargs.get('buildrequestid'))
         defer.returnValue(
-                [ (yield self.db2data(dbdict)) for dbdict in builds ])
+            [(yield self.db2data(dbdict)) for dbdict in builds])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('build', None, None, None))
+                                             ('build', None, None, None))
 
 
 class Build(base.ResourceType):
 
     name = "build"
     plural = "builds"
-    endpoints = [ BuildEndpoint, BuildsEndpoint ]
-    keyFields = [ 'builderid', 'buildid' ]
+    endpoints = [BuildEndpoint, BuildsEndpoint]
+    keyFields = ['builderid', 'buildid']
 
     class EntityType(types.Entity):
         buildid = types.Integer()
@@ -114,18 +116,18 @@ class Build(base.ResourceType):
     @base.updateMethod
     def newBuild(self, builderid, buildrequestid, buildslaveid):
         return self.master.db.builds.addBuild(
-                builderid=builderid,
-                buildrequestid=buildrequestid,
-                buildslaveid=buildslaveid,
-                masterid=self.master.masterid,
-                state_strings=[u'starting'])
+            builderid=builderid,
+            buildrequestid=buildrequestid,
+            buildslaveid=buildslaveid,
+            masterid=self.master.masterid,
+            state_strings=[u'starting'])
 
     @base.updateMethod
     def setBuildStateStrings(self, buildid, state_strings):
         return self.master.db.builds.setBuildStateStrings(
-                buildid=buildid, state_strings=state_strings)
+            buildid=buildid, state_strings=state_strings)
 
     @base.updateMethod
     def finishBuild(self, buildid, results):
         return self.master.db.builds.finishBuild(
-                buildid=buildid, results=results)
+            buildid=buildid, results=results)

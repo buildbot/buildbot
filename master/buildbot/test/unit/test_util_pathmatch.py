@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.util import pathmatch
+from twisted.trial import unittest
+
 
 class Matcher(unittest.TestCase):
 
@@ -28,7 +29,7 @@ class Matcher(unittest.TestCase):
         self.assertRaises(AssertionError, set)
 
     def test_empty(self):
-        self.assertRaises(KeyError, lambda : self.m[('abc',)])
+        self.assertRaises(KeyError, lambda: self.m[('abc',)])
 
     def test_diff_length(self):
         self.m[('abc', 'def')] = 2
@@ -43,30 +44,30 @@ class Matcher(unittest.TestCase):
     def test_pattern_variables(self):
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(self.m[('A', 'a', 'B', 'b')],
-                ('AB', dict(a='a', b='b')))
+                         ('AB', dict(a='a', b='b')))
 
     def test_pattern_variables_underscore(self):
         self.m[('A', ':a_a_a')] = 'AB'
         self.assertEqual(self.m[('A', 'a')],
-                ('AB', dict(a_a_a='a')))
+                         ('AB', dict(a_a_a='a')))
 
     def test_pattern_variables_num(self):
         self.m[('A', 'n:a', 'B', 'n:b')] = 'AB'
         self.assertEqual(self.m[('A', '10', 'B', '-20')],
-                ('AB', dict(a=10, b=-20)))
+                         ('AB', dict(a=10, b=-20)))
 
     def test_pattern_variables_ident(self):
         self.m[('A', 'i:a', 'B', 'i:b')] = 'AB'
         self.assertEqual(self.m[('A', 'abc', 'B', 'x-z-B')],
-                ('AB', dict(a='abc', b='x-z-B')))
+                         ('AB', dict(a='abc', b='x-z-B')))
 
     def test_pattern_variables_num_invalid(self):
         self.m[('A', 'n:a')] = 'AB'
-        self.assertRaises(KeyError, lambda : self.m[('A', '1x0')])
+        self.assertRaises(KeyError, lambda: self.m[('A', '1x0')])
 
     def test_pattern_variables_ident_invalid(self):
         self.m[('A', 'i:a')] = 'AB'
-        self.assertRaises(KeyError, lambda : self.m[('A', '10')])
+        self.assertRaises(KeyError, lambda: self.m[('A', '10')])
 
     def test_pattern_variables_ident_num_distinguised(self):
         self.m[('A', 'n:a')] = 'num'
@@ -78,8 +79,8 @@ class Matcher(unittest.TestCase):
         self.m[('A', ':a')] = 'A'
         self.m[('A', ':a', 'B', ':b')] = 'AB'
         self.assertEqual(
-           (self.m[('A', 'a1', 'B', 'b')], self.m['A', 'a2']),
-           (('AB', dict(a='a1', b='b')), ('A', dict(a='a2'))))
+            (self.m[('A', 'a1', 'B', 'b')], self.m['A', 'a2']),
+            (('AB', dict(a='a1', b='b')), ('A', dict(a='a2'))))
 
     def test_dirty_again(self):
         self.m[('abc', 'def')] = 2

@@ -13,25 +13,31 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.util import misc
 from buildbot import util
-from twisted.python import failure
-from twisted.internet import defer, reactor, task
 from buildbot.test.util import compat
+from buildbot.util import misc
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import failure
+from twisted.trial import unittest
+
 
 class deferredLocked(unittest.TestCase):
+
     def test_name(self):
         self.assertEqual(util.deferredLocked, misc.deferredLocked)
 
     def test_fn(self):
         l = defer.DeferredLock()
+
         @util.deferredLocked(l)
         def check_locked(arg1, arg2):
             self.assertEqual([l.locked, arg1, arg2], [True, 1, 2])
             return defer.succeed(None)
         d = check_locked(1, 2)
+
         def check_unlocked(_):
             self.assertFalse(l.locked)
         d.addCallback(check_unlocked)
@@ -39,32 +45,38 @@ class deferredLocked(unittest.TestCase):
 
     def test_fn_fails(self):
         l = defer.DeferredLock()
+
         @util.deferredLocked(l)
         def do_fail():
             return defer.fail(RuntimeError("oh noes"))
         d = do_fail()
+
         def check_unlocked(_):
             self.assertFalse(l.locked)
-        d.addCallbacks(lambda _ : self.fail("didn't errback"),
-                       lambda _ : self.assertFalse(l.locked))
+        d.addCallbacks(lambda _: self.fail("didn't errback"),
+                       lambda _: self.assertFalse(l.locked))
         return d
 
     def test_fn_exception(self):
         l = defer.DeferredLock()
+
         @util.deferredLocked(l)
         def do_fail():
             raise RuntimeError("oh noes")
         # using decorators confuses pylint and gives a false positive below
         d = do_fail()           # pylint: disable=assignment-from-no-return
+
         def check_unlocked(_):
             self.assertFalse(l.locked)
-        d.addCallbacks(lambda _ : self.fail("didn't errback"),
-                       lambda _ : self.assertFalse(l.locked))
+        d.addCallbacks(lambda _: self.fail("didn't errback"),
+                       lambda _: self.assertFalse(l.locked))
         return d
 
     def test_method(self):
         testcase = self
+
         class C:
+
             @util.deferredLocked('aLock')
             def check_locked(self, arg1, arg2):
                 testcase.assertEqual([self.aLock.locked, arg1, arg2], [True, 1, 2])
@@ -72,16 +84,18 @@ class deferredLocked(unittest.TestCase):
         obj = C()
         obj.aLock = defer.DeferredLock()
         d = obj.check_locked(1, 2)
+
         def check_unlocked(_):
             self.assertFalse(obj.aLock.locked)
         d.addCallback(check_unlocked)
         return d
 
+
 class SerializedInvocation(unittest.TestCase):
 
     def waitForQuiet(self, si):
         d = defer.Deferred()
-        si._quiet = lambda : d.callback(None)
+        si._quiet = lambda: d.callback(None)
         return d
 
     # tests
@@ -91,8 +105,10 @@ class SerializedInvocation(unittest.TestCase):
 
     def testCallFolding(self):
         events = []
+
         def testfn():
             d = defer.Deferred()
+
             def done():
                 events.append('TM')
                 d.callback(None)
@@ -108,8 +124,9 @@ class SerializedInvocation(unittest.TestCase):
 
         dq = self.waitForQuiet(si)
         d = defer.gatherResults([d1, d2, d3, dq])
+
         def check(_):
-            self.assertEqual(events, [ 'TM', 'TM' ])
+            self.assertEqual(events, ['TM', 'TM'])
         d.addCallback(check)
         return d
 
@@ -129,6 +146,7 @@ class SerializedInvocation(unittest.TestCase):
         d.addCallback(check)
         return d
 
+
 class TestCancelAfter(unittest.TestCase):
 
     def setUp(self):
@@ -137,6 +155,7 @@ class TestCancelAfter(unittest.TestCase):
     def test_succeeds(self):
         d = misc.cancelAfter(10, self.d)
         self.assertIdentical(d, self.d)
+
         @d.addCallback
         def check(r):
             self.assertEqual(r, "result")
@@ -168,4 +187,3 @@ class TestCancelAfter(unittest.TestCase):
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
         self.assertFailure(d, defer.CancelledError)
-

@@ -15,26 +15,35 @@
 
 
 import weakref
-from zope.interface import implements
-from twisted.python import log, failure
-from twisted.spread import pb
-from twisted.application import service, internet
-from twisted.internet import defer, reactor
-from buildbot.util import epoch2datetime, ascii2unicode
-from buildbot import interfaces, config
-from buildbot.status.progress import Expectations
-from buildbot.status.builder import RETRY
-from buildbot.process import buildrequest, slavebuilder
+
+from buildbot import config
+from buildbot import interfaces
+from buildbot.process import buildrequest
+from buildbot.process import slavebuilder
 from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
+from buildbot.status.builder import RETRY
+from buildbot.status.progress import Expectations
+from buildbot.util import ascii2unicode
+from buildbot.util import epoch2datetime
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import log
+from twisted.spread import pb
+from zope.interface import implements
+
 
 def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):
-            return slavename==slavebuilder.slave.slavename
+            return slavename == slavebuilder.slave.slavename
 
     return True
+
 
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
@@ -71,13 +80,13 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status = None
 
         if _addServices:
-            self.reclaim_svc = internet.TimerService(10*60,
-                                            self.reclaimAllBuilds)
+            self.reclaim_svc = internet.TimerService(10 * 60,
+                                                     self.reclaimAllBuilds)
             self.reclaim_svc.setServiceParent(self)
 
             # update big status every 30 minutes, working around #1980
-            self.updateStatusService = internet.TimerService(30*60,
-                                            self.updateBigStatus)
+            self.updateStatusService = internet.TimerService(30 * 60,
+                                                             self.updateBigStatus)
             self.updateStatusService.setServiceParent(self)
 
     @defer.inlineCallbacks
@@ -92,10 +101,10 @@ class Builder(config.ReconfigurableServiceMixin,
         # set up a builder status object on the first reconfig
         if not self.builder_status:
             self.builder_status = self.master.status.builderAdded(
-                    builder_config.name,
-                    builder_config.builddir,
-                    builder_config.category,
-                    builder_config.description)
+                builder_config.name,
+                builder_config.builddir,
+                builder_config.category,
+                builder_config.description)
 
         self.config = builder_config
 
@@ -112,9 +121,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # if we have any slavebuilders attached which are no longer configured,
         # drop them.
         new_slavenames = set(builder_config.slavenames)
-        self.slaves = [ s for s in self.slaves
-                        if s.slave.slavename in new_slavenames ]
-
+        self.slaves = [s for s in self.slaves
+                       if s.slave.slavename in new_slavenames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -128,6 +136,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # hurt to check again
         name = ascii2unicode(self.name)
         d = self.master.data.updates.findBuilderId(name)
+
         @d.addCallback
         def keep(builderid):
             self._builderid = builderid
@@ -136,7 +145,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def getOldestRequestTime(self):
-
         """Returns the submitted_at of the oldest unclaimed build request for
         this builder, or None if there are no build requests.
 
@@ -144,11 +152,10 @@ class Builder(config.ReconfigurableServiceMixin,
         """
         # TODO: use data API here
         unclaimed = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False)
+            buildername=self.name, claimed=False)
 
         if unclaimed:
-            unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
-            unclaimed.sort()
+            unclaimed = sorted([brd['submitted_at'] for brd in unclaimed])
             defer.returnValue(unclaimed[0])
         else:
             defer.returnValue(None)
@@ -268,7 +275,7 @@ class Builder(config.ReconfigurableServiceMixin,
             self.slaves.remove(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.slavename])
-        sb.detached() # inform the SlaveBuilder that their slave went away
+        sb.detached()  # inform the SlaveBuilder that their slave went away
         self.updateBigStatus()
 
     def updateBigStatus(self):
@@ -286,11 +293,11 @@ class Builder(config.ReconfigurableServiceMixin,
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
     def getAvailableSlaves(self):
-        return [ sb for sb in self.slaves if sb.isAvailable() ]
+        return [sb for sb in self.slaves if sb.isAvailable()]
 
     def canStartWithSlavebuilder(self, slavebuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
-                    for access in self.config.locks ]
+                 for access in self.config.locks]
         return Build.canStartWithSlavebuilder(locks, slavebuilder)
 
     def canStartBuild(self, slavebuilder, breq):
@@ -307,6 +314,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # Build a stack of cleanup functions so that, at any point, we can
         # abort this operation and unwind the commitments made so far.
         cleanups = []
+
         def run_cleanups():
             try:
                 while cleanups:
@@ -317,7 +325,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
-        cleanups.append(lambda : self.updateBigStatus())
+        cleanups.append(lambda: self.updateBigStatus())
 
         builderid = yield self.getBuilderId()
 
@@ -327,14 +335,14 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(lambda : slavebuilder.slave.releaseLocks())
+        cleanups.append(lambda: slavebuilder.slave.releaseLocks())
 
         if len(self.config.env) > 0:
             build.setSlaveEnvironment(self.config.env)
 
         # append the build to self.building
         self.building.append(build)
-        cleanups.append(lambda : self.building.remove(build))
+        cleanups.append(lambda: self.building.remove(build))
 
         # update the big status accordingly
         self.updateBigStatus()
@@ -380,7 +388,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         slavebuilder.buildStarted()
-        cleanups.append(lambda : slavebuilder.buildFinished())
+        cleanups.append(lambda: slavebuilder.buildFinished())
 
         # tell the remote that it's starting a build, too
         try:
@@ -404,9 +412,9 @@ class Builder(config.ReconfigurableServiceMixin,
             req = build.requests[-1]
             # TODO: get id's for builder, slave
             bid, number = yield self.master.db.builds.addBuild(
-                    builderid=builderid, buildrequestid=req.id,
-                    buildslaveid=buildslaveid, masterid=self.master.masterid,
-                    state_strings=['created'])
+                builderid=builderid, buildrequestid=req.id,
+                buildslaveid=buildslaveid, masterid=self.master.masterid,
+                state_strings=['created'])
             bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
@@ -420,7 +428,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.slave.conn: # TODO: replace with isConnected()
+        if not slavebuilder.slave.conn:  # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
@@ -438,11 +446,11 @@ class Builder(config.ReconfigurableServiceMixin,
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
-                bs, self.expectations, slavebuilder)
+                                bs, self.expectations, slavebuilder)
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
-            'serious error - please file a bug at http://buildbot.net')
+                     'serious error - please file a bug at http://buildbot.net')
 
         # make sure the builder's status is represented correctly
         self.updateBigStatus()
@@ -454,8 +462,8 @@ class Builder(config.ReconfigurableServiceMixin,
         if len(self.config.properties) > 0:
             for propertyname in self.config.properties:
                 props.setProperty(propertyname,
-                        self.config.properties[propertyname],
-                        "Builder")
+                                  self.config.properties[propertyname],
+                                  "Builder")
 
     def buildFinished(self, build, sb, bids):
         """This is called when the Build has finished (either success or
@@ -483,10 +491,10 @@ class Builder(config.ReconfigurableServiceMixin,
             brids = [br.id for br in build.requests]
             db = self.master.db
             d = db.buildrequests.completeBuildRequests(brids, results,
-                                    complete_at=complete_at)
-            d.addCallback(lambda _ :
-                self._notify_completions(build.requests, results,
-                                            complete_at_epoch))
+                                                       complete_at=complete_at)
+            d.addCallback(lambda _:
+                          self._notify_completions(build.requests, results,
+                                                   complete_at_epoch))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
@@ -504,7 +512,7 @@ class Builder(config.ReconfigurableServiceMixin,
             bsid = br.bsid
             brid = br.id
             key = ('buildrequest', str(bsid), str(builderid),
-                                                str(brid), 'complete')
+                   str(brid), 'complete')
             msg = dict(
                 brid=brid,
                 bsid=bsid,
@@ -526,6 +534,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
         d = self.master.db.buildrequests.unclaimBuildRequests(brids)
+
         @d.addCallback
         def notify(_):
             # XXX method does not exist
@@ -606,19 +615,19 @@ class BuilderControl:
     def getPendingBuildRequestControls(self):
         master = self.original.master
         brdicts = yield master.db.buildrequests.getBuildRequests(
-                buildername=self.original.name,
-                claimed=False)
+            buildername=self.original.name,
+            claimed=False)
 
         # convert those into BuildRequest objects
-        buildrequests = [ ]
+        buildrequests = []
         for brdict in brdicts:
             br = yield buildrequest.BuildRequest.fromBrdict(
-                    self.control.master, brdict)
+                self.control.master, brdict)
             buildrequests.append(br)
 
         # and return the corresponding control objects
-        defer.returnValue([ buildrequest.BuildRequestControl(self.original, r)
-                            for r in buildrequests ])
+        defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
+                           for r in buildrequests])
 
     def getBuild(self, number):
         return self.original.getBuild(number)
@@ -626,7 +635,7 @@ class BuilderControl:
     def ping(self):
         if not self.original.slaves:
             self.original.builder_status.addPointEvent(["ping", "no slave"])
-            return defer.succeed(False) # interfaces.NoSlaveError
+            return defer.succeed(False)  # interfaces.NoSlaveError
         dl = []
         for s in self.original.slaves:
             dl.append(s.ping(self.original.builder_status))
@@ -635,7 +644,7 @@ class BuilderControl:
         return d
 
     def _gatherPingResults(self, res):
-        for ignored,success in res:
+        for ignored, success in res:
             if not success:
                 return False
         return True

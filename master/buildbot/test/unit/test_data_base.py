@@ -14,10 +14,12 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
+
 from buildbot.data import base
-from buildbot.test.util import endpoint
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import endpoint
+from twisted.trial import unittest
+
 
 class ResourceType(unittest.TestCase):
 
@@ -35,7 +37,7 @@ class ResourceType(unittest.TestCase):
         ep = base.Endpoint(None, None)
         cls = self.makeResourceTypeSubclass(endpoints=[ep])
         inst = cls(None)
-        self.assertRaises(TypeError, lambda : inst.getEndpoints())
+        self.assertRaises(TypeError, lambda: inst.getEndpoints())
 
     def test_getEndpoints_classes(self):
         class MyEndpoint(base.Endpoint):
@@ -49,13 +51,13 @@ class ResourceType(unittest.TestCase):
 
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
-                name='singular',
-                keyFields=('fooid', 'barid'))
+            name='singular',
+            keyFields=('fooid', 'barid'))
         master = fakemaster.make_master(testcase=self, wantMq=True)
-        master.mq.verifyMessages = False # since this is a pretend message
+        master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
-        inst.produceEvent(dict(fooid=10, barid='20'), # note integer vs. string
-                         'tested')
+        inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
+                          'tested')
         master.mq.assertProductions([
             (('singular', '10', '20', 'tested'), dict(fooid=10, barid='20'))
         ])
@@ -87,33 +89,33 @@ class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 class ListResult(unittest.TestCase):
 
     def test_constructor(self):
-        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
-        self.assertEqual(lr.data, [1,2,3])
+        lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
+        self.assertEqual(lr.data, [1, 2, 3])
         self.assertEqual(lr.offset, 10)
         self.assertEqual(lr.total, 20)
         self.assertEqual(lr.limit, 3)
 
     def test_repr(self):
-        lr = base.ListResult([1,2,3], offset=10, total=20, limit=3)
-        self.assertTrue(`lr`.startswith('ListResult'))
+        lr = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
+        self.assertTrue(repr(lr).startswith('ListResult'))
 
     def test_eq(self):
-        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
-        lr2 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
-        lr3 = base.ListResult([1,2,3], offset=20, total=30, limit=3)
+        lr1 = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
+        lr2 = base.ListResult([1, 2, 3], offset=20, total=30, limit=3)
+        lr3 = base.ListResult([1, 2, 3], offset=20, total=30, limit=3)
         self.assertEqual(lr2, lr3)
         self.assertNotEqual(lr1, lr2)
         self.assertNotEqual(lr1, lr3)
 
     def test_eq_to_list(self):
-        list = [1,2,3]
-        lr1 = base.ListResult([1,2,3], offset=10, total=20, limit=3)
+        list = [1, 2, 3]
+        lr1 = base.ListResult([1, 2, 3], offset=10, total=20, limit=3)
         self.assertNotEqual(lr1, list)
-        lr2 = base.ListResult([1,2,3], offset=None, total=None, limit=None)
+        lr2 = base.ListResult([1, 2, 3], offset=None, total=None, limit=None)
         self.assertEqual(lr2, list)
-        lr3 = base.ListResult([1,2,3], total=3)
+        lr3 = base.ListResult([1, 2, 3], total=3)
         self.assertEqual(lr3, list)
-        lr4 = base.ListResult([1,2,3], total=4)
+        lr4 = base.ListResult([1, 2, 3], total=4)
         self.assertNotEqual(lr4, list)
 
 
@@ -125,29 +127,28 @@ class Link(unittest.TestCase):
 
     def test_repr(self):
         l = base.Link(('a', 'b'))
-        self.assertEqual(`l`, "Link(('a', 'b'), [])")
+        self.assertEqual(repr(l), "Link(('a', 'b'), [])")
 
     def test_cmp(self):
         self.failUnless(base.Link(('a', 'b'))
-                      < base.Link(('b', 'b')))
+                        < base.Link(('b', 'b')))
         self.failUnless(base.Link(('a',), [('f', 1)])
-                      < base.Link(('a',), [('g', 1)]))
+                        < base.Link(('a',), [('g', 1)]))
 
     def test_makeUrl(self):
         self.assertEqual(
             base.Link(('a', 'b'))
-                    .makeUrl('//h/', 3),
+            .makeUrl('//h/', 3),
             '//h/api/v3/a/b')
 
     def test_makeUrl_root(self):
         self.assertEqual(
             base.Link(())
-                    .makeUrl('//h/', 3),
-            '//h/api/v3') # note no trailing /
+            .makeUrl('//h/', 3),
+            '//h/api/v3')  # note no trailing /
 
     def test_makeUrl_query(self):
         self.assertEqual(
             base.Link(('a', 'b'), [('x', '10'), ('y', '20')])
-                    .makeUrl('//h/', 3),
+            .makeUrl('//h/', 3),
             '//h/api/v3/a/b?x=10&y=20')
-

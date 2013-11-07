@@ -15,6 +15,7 @@
 
 from buildbot.test.util import interfaces
 
+
 class ConnectionInterfaceTest(interfaces.InterfaceTests):
 
     def setUp(self):
@@ -49,7 +50,7 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
     def test_sig_startCommands(self):
         @self.assertArgSpecMatches(self.conn.startCommands)
         def startCommands(self, remoteCommand, builderName, commandId,
-                                commandName, args):
+                          commandName, args):
             pass
 
     def test_sig_remoteShutdown(self):
@@ -66,4 +67,3 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.conn.remoteInterruptCommand)
         def remoteInterruptCommand(commandId, why):
             pass
-

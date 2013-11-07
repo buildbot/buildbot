@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.www import resource
 from buildbot.test.util import www
+from buildbot.www import resource
 from twisted.trial import unittest
+
 
 class ResourceSubclass(resource.Resource):
 
@@ -42,4 +43,3 @@ class RedirectResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = resource.RedirectResource(master, 'foo')
         self.render_resource(rsrc, '/')
         self.assertEqual(self.request.redirected_to, 'h:/a/b/foo')
-

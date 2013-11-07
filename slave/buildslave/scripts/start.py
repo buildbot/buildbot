@@ -14,10 +14,15 @@
 # Copyright Buildbot Team Members
 
 
-import os, sys, time
+import os
+import sys
+import time
+
 from buildslave.scripts import base
 
+
 class Follower:
+
     def follow(self):
         from twisted.internet import reactor
         from buildslave.scripts.logwatcher import LogWatcher
@@ -38,7 +43,7 @@ class Follower:
     def _failure(self, why):
         from twisted.internet import reactor
         from buildslave.scripts.logwatcher import BuildmasterTimeoutError, \
-             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
+            ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
         if why.check(BuildmasterTimeoutError):
             print """
 The buildslave took more than 10 seconds to start, so we were unable to
@@ -85,6 +90,7 @@ def startCommand(config):
 
     return startSlave(basedir, config['quiet'], config['nodaemon'])
 
+
 def startSlave(basedir, quiet, nodaemon):
     """
     Start slave process.
@@ -123,6 +129,7 @@ def startSlave(basedir, quiet, nodaemon):
     time.sleep(0.2)
     launch(nodaemon)
 
+
 def launch(nodaemon):
     sys.path.insert(0, os.path.abspath(os.getcwd()))
 
@@ -132,7 +139,7 @@ def launch(nodaemon):
     from twisted.python.runtime import platformType
     argv = ["twistd",
             "--no_save",
-            "--logfile=twistd.log", # windows doesn't use the same default
+            "--logfile=twistd.log",  # windows doesn't use the same default
             "--python=buildbot.tac"]
     if nodaemon:
         argv.extend(['--nodaemon'])
@@ -152,4 +159,3 @@ def launch(nodaemon):
         from twisted.scripts import twistd
         run = twistd.run
     run()
-

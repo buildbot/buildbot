@@ -42,17 +42,23 @@ The WebSockets protocol (RFC 6455), provided as a resource which wraps a
 factory.
 """
 
-from base64 import b64encode, b64decode
+from base64 import b64decode
+from base64 import b64encode
 from hashlib import sha1
-from struct import pack, unpack
+from struct import pack
+from struct import unpack
 
-from twisted.protocols.policies import ProtocolWrapper, WrappingFactory
+from twisted.protocols.policies import ProtocolWrapper
+from twisted.protocols.policies import WrappingFactory
 from twisted.python import log
-from twisted.web.resource import IResource, NoResource
+from twisted.web.resource import IResource
+from twisted.web.resource import NoResource
 from twisted.web.server import NOT_DONE_YET
 from zope.interface import implements
 
+
 class WSException(Exception):
+
     """
     Something stupid happened here.
 
@@ -91,6 +97,7 @@ decoders = {
 
 # Authentication for WS.
 
+
 def make_accept(key):
     """
     Create an "accept" response for a given key.
@@ -106,6 +113,7 @@ def make_accept(key):
 # Separated out to make unit testing a lot easier.
 # Frames are bonghits in newer WS versions, so helpers are appreciated.
 
+
 def mask(buf, key):
     """
     Mask or unmask a buffer of bytes with a masking key.
@@ -119,6 +127,7 @@ def mask(buf, key):
     for i, char in enumerate(buf):
         buf[i] = chr(ord(char) ^ key[i % 4])
     return "".join(buf)
+
 
 def make_hybi07_frame(buf, opcode=NORMAL):
     """
@@ -139,6 +148,7 @@ def make_hybi07_frame(buf, opcode=NORMAL):
     header = chr(0x80 | opcode_for_type[opcode])
     frame = "%s%s%s" % (header, length, buf)
     return frame
+
 
 def parse_hybi07_frames(buf):
     """
@@ -230,7 +240,9 @@ def parse_hybi07_frames(buf):
 
     return frames, buf[start:]
 
+
 class WebSocketsProtocol(ProtocolWrapper):
+
     """
     Protocol which wraps another protocol to provide a WebSockets transport
     layer.
@@ -280,7 +292,7 @@ class WebSocketsProtocol(ProtocolWrapper):
                 # 5.5.2 PINGs must be responded to with PONGs.
                 # 5.5.3 PONGs must contain the data that was sent with the
                 # provoking PING.
-                raise AssertionError, "this doesn't work" # due to unknown symbol below
+                raise AssertionError("this doesn't work")  # due to unknown symbol below
                 #self.transport.write(make_hybi07_packet(data, opcode=PONG))
 
     def sendFrames(self):
@@ -349,7 +361,9 @@ class WebSocketsProtocol(ProtocolWrapper):
 
             ProtocolWrapper.loseConnection(self)
 
+
 class WebSocketsFactory(WrappingFactory):
+
     """
     Factory which wraps another factory to provide WebSockets frames for all
     of its protocols.
@@ -360,7 +374,9 @@ class WebSocketsFactory(WrappingFactory):
 
     protocol = WebSocketsProtocol
 
+
 class WebSocketsResource(object):
+
     """
     A resource for serving a protocol through WebSockets.
 

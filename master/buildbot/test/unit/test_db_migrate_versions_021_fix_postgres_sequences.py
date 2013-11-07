@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -50,10 +52,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             for i, col in enumerate(self.cols):
                 tbl_name, col_name = col.split('.')
                 tbl = sa.Table(tbl_name, metadata,
-                        sa.Column(col_name, sa.Integer, primary_key=True))
+                               sa.Column(col_name, sa.Integer, primary_key=True))
                 tbl.create()
                 if i > 1:
-                    conn.execute(tbl.insert(), { col_name : i })
+                    conn.execute(tbl.insert(), {col_name: i})
 
         def verify_thd(conn):
             metadata = sa.MetaData()
@@ -64,10 +66,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             for i, col in enumerate(self.cols):
                 tbl_name, col_name = col.split('.')
                 tbl = sa.Table(tbl_name, metadata,
-                        sa.Column(col_name, sa.Integer, primary_key=True))
+                               sa.Column(col_name, sa.Integer, primary_key=True))
                 r = conn.execute(tbl.insert(), {})
                 if i > 1:
-                    exp = i+1
+                    exp = i + 1
                 else:
                     exp = 1
                 self.assertEqual(r.inserted_primary_key[0], exp)

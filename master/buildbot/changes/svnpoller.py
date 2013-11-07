@@ -20,19 +20,24 @@ from __future__ import with_statement
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
 
+from twisted.internet import defer
+from twisted.internet import utils
 from twisted.python import log
-from twisted.internet import defer, utils
 
 from buildbot import util
 from buildbot.changes import base
 
+import os
+import urllib
 import xml.dom.minidom
-import os, urllib
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
+
+
 def split_file_alwaystrunk(path):
     return dict(path=path)
+
 
 def split_file_branches(path):
     # turn "trunk/subdir/file.c" into (None, "subdir/file.c")
@@ -49,6 +54,7 @@ def split_file_branches(path):
     else:
         return None
 
+
 def split_file_projects_branches(path):
     # turn projectname/trunk/subdir/file.c into dict(project=projectname, branch=trunk, path=subdir/file.c)
     if not "/" in path:
@@ -62,7 +68,9 @@ def split_file_projects_branches(path):
         return info
     return f
 
+
 class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
+
     """
     Poll a Subversion repository for changes and submit them to the change
     master.
@@ -73,14 +81,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath")
 
-    parent = None # filled in when we're added
+    parent = None  # filled in when we're added
     last_change = None
     loop = None
 
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
-                 pollInterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None, 
+                 pollInterval=10 * 60, histmax=100,
+                 svnbin='svn', revlinktmpl='', category=None,
                  project='', cachepath=None, pollinterval=-2,
                  extra_args=None, name=None):
 
@@ -94,7 +102,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
 
         if svnurl.endswith("/"):
-            svnurl = svnurl[:-1] # strip the trailing slash
+            svnurl = svnurl[:-1]  # strip the trailing slash
         self.svnurl = svnurl
         self.extra_args = extra_args
         self.split_file = split_file or split_file_alwaystrunk
@@ -103,7 +111,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         self.revlinktmpl = revlinktmpl
 
-        self.environ = os.environ.copy() # include environment variables
+        self.environ = os.environ.copy()  # include environment variables
                                          # required for ssh-agent auth
 
         self.svnbin = svnbin
@@ -169,7 +177,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         d = defer.succeed(None)
         if not self._prefix:
-            d.addCallback(lambda _ : self.get_prefix())
+            d.addCallback(lambda _: self.get_prefix())
+
             def set_prefix(prefix):
                 self._prefix = prefix
             d.addCallback(set_prefix)
@@ -180,7 +189,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         d.addCallback(self.create_changes)
         d.addCallback(self.submit_changes)
         d.addCallback(self.finished_ok)
-        d.addErrback(log.err, 'SVNPoller: Error in  while polling') # eat errors
+        d.addErrback(log.err, 'SVNPoller: Error in  while polling')  # eat errors
         return d
 
     def getProcessOutput(self, args):
@@ -197,6 +206,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if self.extra_args:
             args.extend(self.extra_args)
         d = self.getProcessOutput(args)
+
         def determine_prefix(output):
             try:
                 doc = xml.dom.minidom.parseString(output)
@@ -217,7 +227,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 log.msg(format="svnurl='%(svnurl)s' doesn't start with <root>='%(root)s'",
                         svnurl=self.svnurl, root=root)
                 raise RuntimeError("Can't handle redirected svn connections!? "
-                        "This shouldn't happen.")
+                                   "This shouldn't happen.")
             prefix = self.svnurl[len(root):]
             if prefix.startswith("/"):
                 prefix = prefix[1:]
@@ -250,7 +260,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         logentries = doc.getElementsByTagName("logentry")
         return logentries
 
-
     def get_new_logentries(self, logentries):
         last_change = old_last_change = self.last_change
 
@@ -276,13 +285,12 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     if last_change == int(el.getAttribute("revision")):
                         break
                     new_logentries.append(el)
-                new_logentries.reverse() # return oldest first
+                new_logentries.reverse()  # return oldest first
 
         self.last_change = new_last_change
         log.msg('SVNPoller: _process_changes %s .. %s' %
                 (old_last_change, new_last_change))
         return new_logentries
-
 
     def _get_text(self, element, tag_name):
         try:
@@ -315,14 +323,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         for el in new_logentries:
             revision = unicode(el.getAttribute("revision"))
 
-            revlink=u''
+            revlink = u''
 
             if self.revlinktmpl and revision:
                 revlink = self.revlinktmpl % urllib.quote_plus(revision)
                 revlink = unicode(revlink)
 
             log.msg("Adding change revision %s" % (revision,))
-            author   = self._get_text(el, "author")
+            author = self._get_text(el, "author")
             comments = self._get_text(el, "msg")
             # there is a "date" field, but it provides localtime in the
             # repository's timezone, whereas we care about buildmaster's
@@ -332,7 +340,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             branches = {}
             try:
                 pathlist = el.getElementsByTagName("paths")[0]
-            except IndexError: # weird, we got an empty revision
+            except IndexError:  # weird, we got an empty revision
                 log.msg("ignoring commit with no paths")
                 continue
 
@@ -353,7 +361,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     branch = where.get("branch", None)
                     filename = where["path"]
                     if not branch in branches:
-                        branches[branch] = { 'files': [], 'number_of_directories': 0}
+                        branches[branch] = {'files': [], 'number_of_directories': 0}
                     if filename == "":
                         # root directory of branch
                         branches[branch]['files'].append(filename)
@@ -374,7 +382,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
             for branch in branches.keys():
                 action = branches[branch]['action']
-                files  = branches[branch]['files']
+                files = branches[branch]['files']
 
                 number_of_directories_changed = branches[branch]['number_of_directories']
                 number_of_files_changed = len(files)
@@ -385,18 +393,18 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     chdict = dict(
                         author=author,
                         # weakly assume filenames are utf-8
-                        files=[ f.decode('utf-8', 'replace') for f in files ],
+                        files=[f.decode('utf-8', 'replace') for f in files],
                         comments=comments,
                         revision=revision,
                         branch=util.ascii2unicode(branch),
                         revlink=revlink,
                         category=self.category,
                         repository=util.ascii2unicode(
-                                branches[branch].get('repository', self.svnurl)),
+                            branches[branch].get('repository', self.svnurl)),
                         project=util.ascii2unicode(
-                                branches[branch].get('project', self.project)),
+                            branches[branch].get('project', self.project)),
                         codebase=util.ascii2unicode(
-                                branches[branch].get('codebase', None)))
+                            branches[branch].get('codebase', None)))
                     changes.append(chdict)
 
         return changes

@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import migration
 import sqlalchemy as sa
+
+from buildbot.test.util import migration
 from sqlalchemy.engine import reflection
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,62 +33,62 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         self.changes = sa.Table('changes', metadata,
-            sa.Column('changeid', sa.Integer,  primary_key=True),
-            sa.Column('author', sa.String(256), nullable=False),
-            sa.Column('comments', sa.String(1024), nullable=False),
-            sa.Column('is_dir', sa.SmallInteger, nullable=False),
-            sa.Column('branch', sa.String(256)),
-            sa.Column('revision', sa.String(256)),
-            sa.Column('revlink', sa.String(256)),
-            sa.Column('when_timestamp', sa.Integer, nullable=False),
-            sa.Column('category', sa.String(256)),
-            sa.Column('repository', sa.String(length=512), nullable=False,
-                server_default=''),
-            sa.Column('project', sa.String(length=512), nullable=False,
-                server_default=''),
-        )
+                                sa.Column('changeid', sa.Integer, primary_key=True),
+                                sa.Column('author', sa.String(256), nullable=False),
+                                sa.Column('comments', sa.String(1024), nullable=False),
+                                sa.Column('is_dir', sa.SmallInteger, nullable=False),
+                                sa.Column('branch', sa.String(256)),
+                                sa.Column('revision', sa.String(256)),
+                                sa.Column('revlink', sa.String(256)),
+                                sa.Column('when_timestamp', sa.Integer, nullable=False),
+                                sa.Column('category', sa.String(256)),
+                                sa.Column('repository', sa.String(length=512), nullable=False,
+                                          server_default=''),
+                                sa.Column('project', sa.String(length=512), nullable=False,
+                                          server_default=''),
+                                )
         self.changes.create(bind=conn)
 
         self.schedulers = sa.Table("schedulers", metadata,
-            sa.Column('schedulerid', sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(128), nullable=False),
-            sa.Column('class_name', sa.String(128), nullable=False),
-        )
+                                   sa.Column('schedulerid', sa.Integer, primary_key=True),
+                                   sa.Column('name', sa.String(128), nullable=False),
+                                   sa.Column('class_name', sa.String(128), nullable=False),
+                                   )
         self.schedulers.create(bind=conn)
 
         self.users = sa.Table("users", metadata,
-            sa.Column("uid", sa.Integer, primary_key=True),
-            sa.Column("identifier", sa.String(256), nullable=False),
-            sa.Column("bb_username", sa.String(128)),
-            sa.Column("bb_password", sa.String(128)),
-        )
+                              sa.Column("uid", sa.Integer, primary_key=True),
+                              sa.Column("identifier", sa.String(256), nullable=False),
+                              sa.Column("bb_username", sa.String(128)),
+                              sa.Column("bb_password", sa.String(128)),
+                              )
         self.users.create(bind=conn)
 
         self.objects = sa.Table("objects", metadata,
-            sa.Column("id", sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(128), nullable=False),
-            sa.Column('class_name', sa.String(128), nullable=False),
-        )
+                                sa.Column("id", sa.Integer, primary_key=True),
+                                sa.Column('name', sa.String(128), nullable=False),
+                                sa.Column('class_name', sa.String(128), nullable=False),
+                                )
         self.objects.create()
 
         self.object_state = sa.Table("object_state", metadata,
-            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
-                nullable=False),
-            sa.Column("name", sa.String(length=256), nullable=False),
-            sa.Column("value_json", sa.Text, nullable=False),
-        )
+                                     sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                                               nullable=False),
+                                     sa.Column("name", sa.String(length=256), nullable=False),
+                                     sa.Column("value_json", sa.Text, nullable=False),
+                                     )
         self.object_state.create()
 
         # these indices should already exist everywhere but on sqlite
         if conn.dialect.name != 'sqlite':
             sa.Index('name_and_class', self.schedulers.c.name,
-                    self.schedulers.c.class_name).create()
+                     self.schedulers.c.class_name).create()
             sa.Index('changes_branch', self.changes.c.branch).create()
             sa.Index('changes_revision', self.changes.c.revision).create()
             sa.Index('changes_author', self.changes.c.author).create()
             sa.Index('changes_category', self.changes.c.category).create()
             sa.Index('changes_when_timestamp',
-                    self.changes.c.when_timestamp).create()
+                     self.changes.c.when_timestamp).create()
 
         # create this index without the unique attribute
         sa.Index('users_identifier', self.users.c.identifier).create()
@@ -100,9 +102,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             insp = reflection.Inspector.from_engine(conn)
             indexes = (insp.get_indexes('changes')
-                    + insp.get_indexes('schedulers'))
+                       + insp.get_indexes('schedulers'))
             self.assertEqual(
-                sorted([ i['name'] for i in indexes ]),
+                sorted([i['name'] for i in indexes]),
                 sorted([
                     'changes_author',
                     'changes_branch',
@@ -120,5 +122,3 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 self.fail("no users_identifier index")
 
         return self.do_test_migration(16, 17, setup_thd, verify_thd)
-
-

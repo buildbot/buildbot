@@ -15,6 +15,7 @@
 
 from twisted.web import resource
 
+
 class Resource(resource.Resource):
 
     # if this is true for a class, then instances will have their

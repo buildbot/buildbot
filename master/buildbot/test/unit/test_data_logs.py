@@ -14,11 +14,16 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
+
+from buildbot.data import base
+from buildbot.data import logs
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import endpoint
+from buildbot.test.util import interfaces
 from twisted.internet import defer
-from buildbot.data import logs, base
-from buildbot.test.util import endpoint, interfaces
-from buildbot.test.fake import fakemaster, fakedb
+from twisted.trial import unittest
+
 
 class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -34,12 +39,11 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
-                    buildrequestid=82, number=3),
+                         buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=5, name='make'),
             fakedb.Log(id=60, stepid=50, name=u'stdio', type='s'),
             fakedb.Log(id=61, stepid=50, name=u'errors', type='t'),
         ])
-
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -57,7 +61,6 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'num_lines': 0,
             'type': u's',
             'link': base.Link(('log', '60'))})
-
 
     @defer.inlineCallbacks
     def test_get_missing(self):
@@ -79,15 +82,15 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_by_builder(self):
         log = yield self.callGet(
-                ('builder', '77', 'build', 3, 'step', 5, 'log', 'errors'))
+            ('builder', '77', 'build', 3, 'step', 5, 'log', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
         log = yield self.callGet(
-                ('builder', '77', 'build', 3, 'step', 'make',
-                 'log', 'errors'))
+            ('builder', '77', 'build', 3, 'step', 'make',
+             'log', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
@@ -106,7 +109,7 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
-                    buildrequestid=82, number=3),
+                         buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=9, name='make'),
             fakedb.Log(id=60, stepid=50, name='stdio', type='s'),
             fakedb.Log(id=61, stepid=50, name='errors', type='t'),
@@ -122,9 +125,9 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_stepid(self):
         logs = yield self.callGet(('step', 50, 'log'))
-        [ self.validateData(log)
-          for log in logs ]
-        self.assertEqual(sorted([ b['name'] for b in logs ]),
+        [self.validateData(log)
+         for log in logs]
+        self.assertEqual(sorted([b['name'] for b in logs]),
                          ['errors', 'stdio'])
 
     @defer.inlineCallbacks
@@ -140,36 +143,36 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildid_step_name(self):
         logs = yield self.callGet(
-                ('build', 13, 'step', 'make_install', 'log'))
-        [ self.validateData(log)
-          for log in logs ]
-        self.assertEqual(sorted([ b['name'] for b in logs ]),
+            ('build', 13, 'step', 'make_install', 'log'))
+        [self.validateData(log)
+         for log in logs]
+        self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_number(self):
         logs = yield self.callGet(('build', 13, 'step', 10, 'log'))
-        [ self.validateData(log)
-          for log in logs ]
-        self.assertEqual(sorted([ b['name'] for b in logs ]),
+        [self.validateData(log)
+         for log in logs]
+        self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_name(self):
         logs = yield self.callGet(
-                ('builder', 77, 'build', 3, 'step', 'make', 'log'))
-        [ self.validateData(log)
-          for log in logs ]
-        self.assertEqual(sorted([ b['name'] for b in logs ]),
+            ('builder', 77, 'build', 3, 'step', 'make', 'log'))
+        [self.validateData(log)
+         for log in logs]
+        self.assertEqual(sorted([b['name'] for b in logs]),
                          ['errors', 'stdio'])
 
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_number(self):
         logs = yield self.callGet(
-                ('builder', 77, 'build', 3, 'step', 10, 'log'))
-        [ self.validateData(log)
-          for log in logs ]
-        self.assertEqual(sorted([ b['name'] for b in logs ]),
+            ('builder', 77, 'build', 3, 'step', 10, 'log'))
+        [self.validateData(log)
+         for log in logs]
+        self.assertEqual(sorted([b['name'] for b in logs]),
                          ['results_html', 'stdio'])
 
 
@@ -177,11 +180,11 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
-                wantMq=True, wantDb=True, wantData=True)
+                                             wantMq=True, wantDb=True, wantData=True)
         self.rtype = logs.Log(self.master)
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
-            exp_kwargs=None, *args, **kwargs):
+                            exp_kwargs=None, *args, **kwargs):
         rv = defer.succeed(None)
         m = mock.Mock(return_value=rv)
         setattr(self.master.db.logs, dbMethodName, m)
@@ -190,34 +193,34 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_newLog(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.newLog, # fake
-            self.rtype.newLog) # real
+            self.master.data.updates.newLog,  # fake
+            self.rtype.newLog)  # real
         def newLog(self, stepid, name, type):
             pass
 
     def test_newLog(self):
         self.do_test_callthrough('addLog', self.rtype.newLog,
-                stepid=203, name='stdio', type='s')
+                                 stepid=203, name='stdio', type='s')
 
     def test_signature_finishLog(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.finishLog, # fake
-            self.rtype.finishLog) # real
+            self.master.data.updates.finishLog,  # fake
+            self.rtype.finishLog)  # real
         def finishLog(self, logid):
             pass
 
     def test_finishLog(self):
         self.do_test_callthrough('finishLog', self.rtype.finishLog,
-                logid=10)
+                                 logid=10)
 
     def test_signature_compressLog(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.compressLog, # fake
-            self.rtype.compressLog) # real
+            self.master.data.updates.compressLog,  # fake
+            self.rtype.compressLog)  # real
         def compressLog(self, logid):
             pass
 
     def test_compressLog(self):
         self.do_test_callthrough('compressLog',
-                self.rtype.compressLog,
-                logid=10)
+                                 self.rtype.compressLog,
+                                 logid=10)

@@ -14,12 +14,15 @@
 # Copyright Buildbot Team Members
 
 import cStringIO
-from twisted.trial import unittest
+
 from buildbot.util import pickle
+from twisted.trial import unittest
+
 
 class TestClass(object):
     # referenced by the pickle, below
     pass
+
 
 class Tests(unittest.TestCase):
 

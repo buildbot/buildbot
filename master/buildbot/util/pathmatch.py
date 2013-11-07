@@ -16,10 +16,13 @@
 import re
 
 _ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+
+
 def ident(x):
     if _ident_re.match(x):
         return x
     raise TypeError
+
 
 class Matcher(object):
 
@@ -37,6 +40,7 @@ class Matcher(object):
 
     path_elt_re = re.compile('^(.?):([a-z0-9_]+)$')
     type_fns = dict(n=int, i=ident)
+
     def __getitem__(self, path):
         if self._dirty:
             self._compile()
@@ -53,7 +57,7 @@ class Matcher(object):
                             type_fn = self.type_fns[type_flag]
                         except Exception:
                             assert type_flag in self.type_fns, \
-                                    "no such type flag %s" % type_flag
+                                "no such type flag %s" % type_flag
                         try:
                             path_elt = type_fn(path_elt)
                         except Exception:
@@ -66,7 +70,7 @@ class Matcher(object):
                 # complete match
                 return patterns[pattern], kwargs
         else:
-            raise KeyError, 'No match for %r' % (path,)
+            raise KeyError('No match for %r' % (path,))
 
     def iterPatterns(self):
         return self._patterns.iteritems()

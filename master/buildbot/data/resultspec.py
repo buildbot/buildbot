@@ -15,22 +15,23 @@
 
 from buildbot.data import base
 
+
 class Filter(object):
 
     __slots__ = ['field', 'op', 'values']
 
     singular_operators = {
-        'eq': lambda d, v : d == v[0],
-        'ne': lambda d, v : d != v[0],
-        'lt': lambda d, v : d < v[0],
-        'le': lambda d, v : d <= v[0],
-        'gt': lambda d, v : d > v[0],
-        'ge': lambda d, v : d >= v[0],
+        'eq': lambda d, v: d == v[0],
+        'ne': lambda d, v: d != v[0],
+        'lt': lambda d, v: d < v[0],
+        'le': lambda d, v: d <= v[0],
+        'gt': lambda d, v: d > v[0],
+        'ge': lambda d, v: d >= v[0],
     }
 
     plural_operators = {
-        'eq': lambda d, v : d in v,
-        'ne': lambda d, v : d not in v,
+        'eq': lambda d, v: d in v,
+        'ne': lambda d, v: d not in v,
     }
 
     def __init__(self, field, op, values):
@@ -55,7 +56,7 @@ class ResultSpec(object):
     __slots__ = ['filters', 'fields', 'order', 'limit', 'offset']
 
     def __init__(self, filters=None, fields=None, order=None,
-                       limit=None, offset=None):
+                 limit=None, offset=None):
         self.filters = filters or []
         self.fields = fields
         self.order = order
@@ -96,14 +97,15 @@ class ResultSpec(object):
 
         if self.fields:
             fields = set(self.fields)
+
             def includeFields(d):
-                return dict((k,v) for k,v in d.iteritems()
-                        if k in fields)
+                return dict((k, v) for k, v in d.iteritems()
+                            if k in fields)
             applyFields = includeFields
         else:
             fields = None
 
-        if type(data) == dict:
+        if isinstance(data, dict):
             # item details
             if fields:
                 data = applyFields(data)
@@ -136,10 +138,11 @@ class ResultSpec(object):
 
             # precompute the ordering functions and sort
             if self.order:
-                order = [(lambda a, b, k=k[1:] : cmp(b[k], a[k]))
-                            if k[0] == '-' else
-                        (lambda a, b, k=k : cmp(a[k], b[k]))
-                    for k in self.order ]
+                order = [(lambda a, b, k=k[1:]: cmp(b[k], a[k]))
+                         if k[0] == '-' else
+                         (lambda a, b, k=k: cmp(a[k], b[k]))
+                         for k in self.order]
+
                 def cmpFunc(a, b):
                     for f in order:
                         c = f(a, b)
@@ -153,7 +156,7 @@ class ResultSpec(object):
                 if offset is not None or limit is not None:
                     raise AssertionError("endpoint must clear offset/limit")
                 end = (self.offset or 0) + self.limit \
-                        if self.limit is not None else None
+                    if self.limit is not None else None
                 data = data[self.offset:end]
                 offset = self.offset
                 limit = self.limit

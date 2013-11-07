@@ -15,13 +15,16 @@
 
 
 import mock
-from twisted.trial import unittest
+
 from buildbot.buildslave.protocols import base
-from buildbot.test.fake import fakemaster, fakeprotocol
+from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakeprotocol
 from buildbot.test.util import protocols
+from twisted.trial import unittest
 
 
 class TestListener(unittest.TestCase):
+
     def test_constructor(self):
         master = fakemaster.make_master()
         listener = base.Listener(master)

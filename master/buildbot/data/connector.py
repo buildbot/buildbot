@@ -14,10 +14,15 @@
 # Copyright Buildbot Team Members
 
 import inspect
-from twisted.python import reflect
+
+from buildbot.data import base
+from buildbot.data import exceptions
+from buildbot.data import resultspec
+from buildbot.util import pathmatch
+from buildbot.util import service
 from twisted.internet import defer
-from buildbot.util import pathmatch, service
-from buildbot.data import exceptions, base, resultspec
+from twisted.python import reflect
+
 
 class Updates(object):
     # empty container object; see _scanModule, below
@@ -53,7 +58,7 @@ class DataConnector(service.AsyncService):
         self.master = master
 
         self.matcher = pathmatch.Matcher()
-        self.rootLinks = [] # links from the root of the API
+        self.rootLinks = []  # links from the root of the API
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):
@@ -75,8 +80,8 @@ class DataConnector(service.AsyncService):
                     clsdict = ep.__class__.__dict__
                     pathPatterns = clsdict.get('pathPatterns', '')
                     pathPatterns = pathPatterns.split()
-                    pathPatterns = [ tuple(pp.split('/')[1:])
-                                     for pp in pathPatterns ]
+                    pathPatterns = [tuple(pp.split('/')[1:])
+                                    for pp in pathPatterns]
                     for pp in pathPatterns:
                         # special-case the root
                         if pp == ('',):
@@ -103,9 +108,9 @@ class DataConnector(service.AsyncService):
 
     @defer.inlineCallbacks
     def get(self, path, filters=None, fields=None, order=None,
-                        limit=None, offset=None):
+            limit=None, offset=None):
         resultSpec = resultspec.ResultSpec(filters=filters, fields=fields,
-                        order=order, limit=limit, offset=offset)
+                                           order=order, limit=limit, offset=offset)
         endpoint, kwargs = self.getEndpoint(path)
         rv = yield endpoint.get(resultSpec, kwargs)
         if resultSpec:

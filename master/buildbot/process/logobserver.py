@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.protocols import basic
 from buildbot import interfaces
+from twisted.protocols import basic
+from zope.interface import implements
 
 
 class LogObserver:
@@ -48,11 +48,12 @@ class LogObserver:
 
 
 class LogLineObserver(LogObserver):
+
     def __init__(self):
         self.stdoutParser = basic.LineOnlyReceiver()
         self.stdoutParser.delimiter = "\n"
         self.stdoutParser.lineReceived = self.outLineReceived
-        self.stdoutParser.transport = self # for the .disconnecting attribute
+        self.stdoutParser.transport = self  # for the .disconnecting attribute
         self.disconnecting = False
 
         self.stderrParser = basic.LineOnlyReceiver()
@@ -95,4 +96,3 @@ class OutputProgressObserver(LogObserver):
     def logChunk(self, build, step, log, channel, text):
         self.length += len(text)
         self.step.setProgress(self.name, self.length)
-

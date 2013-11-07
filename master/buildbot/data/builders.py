@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
+
 
 class BuilderEndpoint(base.Endpoint):
 
@@ -53,24 +55,24 @@ class BuildersEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
-                masterid=kwargs.get('masterid', None))
+            masterid=kwargs.get('masterid', None))
         defer.returnValue([
             dict(builderid=bd['id'],
                  name=bd['name'],
                  link=base.Link(('builder', str(bd['id']))))
-            for bd in bdicts ])
+            for bd in bdicts])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('builder', None, None))
+                                             ('builder', None, None))
 
 
 class Builder(base.ResourceType):
 
     name = "builder"
     plural = "builders"
-    endpoints = [ BuilderEndpoint, BuildersEndpoint ]
-    keyFields = [ 'builderid' ]
+    endpoints = [BuilderEndpoint, BuildersEndpoint]
+    keyFields = ['builderid']
 
     class EntityType(types.Entity):
         builderid = types.Integer()
@@ -99,10 +101,10 @@ class Builder(base.ResourceType):
             if bldr['name'] not in builderNames_set:
                 builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
-                        masterid=masterid, builderid=builderid)
+                    masterid=masterid, builderid=builderid)
                 self.master.mq.produce(('builder', str(builderid), 'stopped'),
-                        dict(builderid=builderid, masterid=masterid,
-                            name=bldr['name']))
+                                       dict(builderid=builderid, masterid=masterid,
+                                            name=bldr['name']))
             else:
                 builderNames_set.remove(bldr['name'])
 
@@ -110,9 +112,9 @@ class Builder(base.ResourceType):
         for name in builderNames_set:
             builderid = yield self.master.db.builders.findBuilderId(name)
             yield self.master.db.builders.addBuilderMaster(
-                        masterid=masterid, builderid=builderid)
+                masterid=masterid, builderid=builderid)
             self.master.mq.produce(('builder', str(builderid), 'started'),
-                    dict(builderid=builderid, masterid=masterid, name=name))
+                                   dict(builderid=builderid, masterid=masterid, name=name))
 
     @defer.inlineCallbacks
     def _masterDeactivated(self, masterid):

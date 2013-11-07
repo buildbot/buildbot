@@ -15,25 +15,30 @@
 # Portions Copyright Canonical Ltd. 2009
 
 import time
+
 from email.Message import Message
 from email.Utils import formatdate
-from zope.interface import implements
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
 from twisted.python.reflect import namedModule
+from zope.interface import implements
 
-from buildbot.status.slave import SlaveStatus
-from buildbot.status.mail import MailNotifier
-from buildbot.process import metrics
-from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
-from buildbot.process.properties import Properties
-from buildbot.util import ascii2unicode, service
-from buildbot.util.eventual import eventually
 from buildbot import config
+from buildbot.interfaces import IBuildSlave
+from buildbot.interfaces import ILatentBuildSlave
+from buildbot.process import metrics
+from buildbot.process.properties import Properties
+from buildbot.status.mail import MailNotifier
+from buildbot.status.slave import SlaveStatus
+from buildbot.util import ascii2unicode
+from buildbot.util import service
+from buildbot.util.eventual import eventually
 
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin,
-                        service.AsyncMultiService):
+                         service.AsyncMultiService):
+
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
@@ -120,11 +125,11 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = [ (self.botmaster.getLockFromLockAccess(a), a)
-                    for a in self.access ]
+        locks = [(self.botmaster.getLockFromLockAccess(a), a)
+                 for a in self.access]
         self.locks = [(l.getLock(self), la) for l, la in locks]
-        self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
-                                    for l, la in self.locks ]
+        self.lock_subscriptions = [l.subscribeToReleases(self._lockReleased)
+                                   for l, la in self.locks]
 
     def locksAvailable(self):
         """
@@ -166,7 +171,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         """One of the locks for this slave was released; try scheduling
         builds."""
         if not self.botmaster:
-            return # oh well..
+            return  # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def _applySlaveInfo(self, info):
@@ -181,7 +186,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
         buildslave = yield self.master.data.get(
-                ('buildslave', self.buildslaveid))
+            ('buildslave', self.buildslaveid))
         self._applySlaveInfo(buildslave['slaveinfo'])
 
     def setServiceParent(self, parent):
@@ -196,7 +201,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.startMissingTimer()
 
         self.buildslaveid = yield self.master.data.updates.findBuildslaveId(
-                                                        self.slavename)
+            self.slavename)
 
         yield self._getSlaveInfo()
         yield service.AsyncMultiService.startService(self)
@@ -240,7 +245,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         yield self.updateSlave()
 
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                new_config)
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -259,9 +264,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
     def startMissingTimer(self):
         if self.notify_on_missing and self.missing_timeout and self.parent:
-            self.stopMissingTimer() # in case it's already running
+            self.stopMissingTimer()  # in case it's already running
             self.missing_timer = reactor.callLater(self.missing_timeout,
-                                                self._missing_timer_fired)
+                                                   self._missing_timer_fired)
 
     def stopMissingTimer(self):
         if self.missing_timer:
@@ -284,7 +289,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
                  self.slavename)
         text += "\n"
         text += ("It last disconnected at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout)) # approx
+                 time.ctime(time.time() - self.missing_timeout))  # approx
         text += "\n"
         text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
         text += "was '%s'.\n" % self.slave_status.getAdmin()
@@ -296,7 +301,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         text += "%s\n" % status.getURLForThing(self.slave_status)
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
-
 
     def updateSlave(self):
         """Called to add or remove builders after the slave has connected.
@@ -329,7 +333,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
-        self._old_builder_list = None # clear builder list before proceed
+        self._old_builder_list = None  # clear builder list before proceed
 
         self.slave_status.setConnected(True)
 
@@ -424,7 +428,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             # but really we don't want to wait for the transmit queue to
             # drain. The remote end is unlikely to ACK the data, so we'd
             # probably have to wait for a (20-minute) TCP timeout.
-            #tport._closeSocket()
+            # tport._closeSocket()
             # however, doing _closeSocket (whether before or after
             # loseConnection) somehow prevents the notifyOnDisconnect
             # handlers from being run. Bummer.
@@ -445,6 +449,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             return defer.succeed(None)
 
         d = self.conn.remoteSetBuilderList(builders=blist)
+
         def sentBuilderList(ign):
             self._old_builder_list = blist
             return ign
@@ -562,10 +567,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
     def isPaused(self):
         return self.paused
 
+
 class BuildSlave(AbstractBuildSlave):
 
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
+
         def _sent(slist):
             # Nothing has changed, so don't need to re-attach to everything
             if not slist:
@@ -578,6 +585,7 @@ class BuildSlave(AbstractBuildSlave):
                     d1 = b.attached(self, self.slave_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
+
         def _set_failed(why):
             log.msg("BuildSlave.sendBuilderList (%s) failed" % self)
             log.err(why)
@@ -601,6 +609,7 @@ class BuildSlave(AbstractBuildSlave):
 
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
+
     """A build slave that will start up a slave instance when needed.
 
     To use, subclass and implement start_instance and stop_instance.
@@ -619,8 +628,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     _shutdown_callback_handle = None
 
     def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=[], missing_timeout=60*20,
-                 build_wait_timeout=60*10,
+                 notify_on_missing=[], missing_timeout=60 * 20,
+                 build_wait_timeout=60 * 10,
                  properties={}, locks=None):
         AbstractBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -653,7 +662,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             self.substantiation_deferred = defer.Deferred()
             self.substantiation_build = build
             if self.slave is None:
-                d = self._substantiate(build) # start up instance
+                d = self._substantiate(build)  # start up instance
                 d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
@@ -664,6 +673,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         d = self.start_instance(build)
         self._shutdown_callback_handle = reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
+
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
             if not result:
@@ -672,6 +682,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 self.substantiation_deferred = None
                 d.callback(False)
             return result
+
         def clean_up(failure):
             if self.missing_timer is not None:
                 self.missing_timer.cancel()
@@ -687,7 +698,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def attached(self, bot):
         if self.substantiation_deferred is None and self.build_wait_timeout >= 0:
             msg = 'Slave %s received connection while not trying to ' \
-                    'substantiate.  Disconnecting.' % (self.slavename,)
+                'substantiate.  Disconnecting.' % (self.slavename,)
             log.msg(msg)
             self._disconnect(bot)
             return defer.fail(RuntimeError(msg))
@@ -719,7 +730,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         text += "never substantiated after a request\n"
         text += "\n"
         text += ("The request was made at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout)) # approx
+                 time.ctime(time.time() - self.missing_timeout))  # approx
         text += "\n"
         text += "Sincerely,\n"
         text += " The Buildbot\n"
@@ -770,7 +781,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             del self._shutdown_callback_handle
             reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
-        self.building.clear() # just to be sure
+        self.building.clear()  # just to be sure
         yield d
         self.insubstantiating = False
 
@@ -809,7 +820,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             yield defer.DeferredList([
                 AbstractBuildSlave.disconnect(self),
                 self.insubstantiate(fast)
-                ], consumeErrors=True, fireOnOneErrback=True)
+            ], consumeErrors=True, fireOnOneErrback=True)
         else:
             yield AbstractBuildSlave.disconnect(self)
             yield self.stop_instance(fast)
@@ -842,6 +853,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
+
         def _sent(slist):
             if not slist:
                 return
@@ -856,6 +868,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                     d1 = sb.attached(self, remote, self.slave_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
+
         def _set_failed(why):
             log.msg("BuildSlave.sendBuilderList (%s) failed" % self)
             log.err(why)
@@ -872,6 +885,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # TODO: maybe log?  send an email?
             return why
         d.addCallbacks(_sent, _set_failed)
+
         def _substantiated(res):
             log.msg(r"Slave %s substantiated \o/" % self.slavename)
             self.substantiated = True

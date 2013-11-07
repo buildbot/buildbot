@@ -14,12 +14,18 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from twisted.python import reflect
+
+from buildbot.data import base
+from buildbot.data import connector
+from buildbot.data import exceptions
+from buildbot.data import resultspec
+from buildbot.data import types
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
-from buildbot.data import connector, base, types, resultspec, exceptions
+from twisted.internet import defer
+from twisted.python import reflect
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -29,7 +35,7 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_get(self):
         @self.assertArgSpecMatches(self.data.get)
         def get(self, path, filters=None, fields=None,
-                    order=None, limit=None, offset=None):
+                order=None, limit=None, offset=None):
             pass
 
     def test_signature_getEndpoint(self):
@@ -50,9 +56,9 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_updates_addChange(self):
         @self.assertArgSpecMatches(self.data.updates.addChange)
         def addChange(self, files=None, comments=None, author=None,
-                revision=None, when_timestamp=None, branch=None, category=None,
-                revlink=u'', properties={}, repository=u'', codebase=None,
-                project=u'', src=None):
+                      revision=None, when_timestamp=None, branch=None, category=None,
+                      revlink=u'', properties={}, repository=u'', codebase=None,
+                      project=u'', src=None):
             pass
 
     def test_signature_updates_masterActive(self):
@@ -68,8 +74,8 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_updates_addBuildset(self):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=[],
-                reason='', properties={}, builderNames=[],
-                external_idstring=None):
+                        reason='', properties={}, builderNames=[],
+                        external_idstring=None):
             pass
 
     def test_signature_updates_maybeBuildsetComplete(self):
@@ -87,7 +93,7 @@ class TestFakeData(unittest.TestCase, Tests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
-                wantMq=True, wantData=True, wantDb=True)
+                                             wantMq=True, wantData=True, wantDb=True)
         self.data = self.master.data
 
 
@@ -95,7 +101,7 @@ class TestDataConnector(unittest.TestCase, Tests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
-                wantMq=True)
+                                             wantMq=True)
         self.data = connector.DataConnector(self.master)
 
 
@@ -120,7 +126,7 @@ class DataConnector(unittest.TestCase):
         ep = cls(None, self.master)
         ep.get = mock.Mock(name='FoosEndpoint.get')
         ep.get.return_value = defer.succeed(
-                [{'val': v} for v in range(900, 920)])
+            [{'val': v} for v in range(900, 920)])
         self.data.matcher[('foo',)] = ep
         return ep
 
@@ -145,7 +151,7 @@ class DataConnector(unittest.TestCase):
         match = self.data.matcher[('test',)]
         self.assertIsInstance(match[0], TestsEndpoint)
         self.assertEqual(match[1], dict())
-        match = self.data.matcher[('test','foo')]
+        match = self.data.matcher[('test', 'foo')]
         self.assertIsInstance(match[0], TestsEndpointSubclass)
         self.assertEqual(match[1], dict())
 
@@ -154,7 +160,7 @@ class DataConnector(unittest.TestCase):
 
         # and that it added the single root link
         self.assertEqual(self.data.rootLinks,
-                [ {'name': 'tests', 'link': base.Link(('test',))} ])
+                         [{'name': 'tests', 'link': base.Link(('test',))}])
 
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)
@@ -165,8 +171,8 @@ class DataConnector(unittest.TestCase):
         self.assertEqual(got, (ep, {'fooid': 10}))
 
     def test_getEndpoint_missing(self):
-        self.assertRaises(exceptions.InvalidPathError, lambda :
-                self.data.getEndpoint(('xyz',)))
+        self.assertRaises(exceptions.InvalidPathError, lambda:
+                          self.data.getEndpoint(('xyz',)))
 
     def test_get(self):
         ep = self.patchFooPattern()
@@ -175,13 +181,13 @@ class DataConnector(unittest.TestCase):
         @d.addCallback
         def check(gotten):
             self.assertEqual(gotten, {'val': 9999})
-            ep.get.assert_called_once_with(mock.ANY, {'fooid' : 10})
+            ep.get.assert_called_once_with(mock.ANY, {'fooid': 10})
         return d
 
     def test_get_filters(self):
         ep = self.patchFooListPattern()
         d = self.data.get(('foo',),
-            filters=[resultspec.Filter('val', 'lt', [902])])
+                          filters=[resultspec.Filter('val', 'lt', [902])])
 
         @d.addCallback
         def check(gotten):
@@ -194,7 +200,7 @@ class DataConnector(unittest.TestCase):
         ep = self.patchFooListPattern()
         f = resultspec.Filter('val', 'gt', [909])
         d = self.data.get(('foo',), filters=[f], fields=['val'],
-                                order=['-val'], limit=2)
+                          order=['-val'], limit=2)
 
         @d.addCallback
         def check(gotten):
@@ -223,21 +229,25 @@ class DataConnector(unittest.TestCase):
         @d.addCallback
         def check(gotten):
             self.assertEqual(gotten, 'controlled')
-            ep.control.assert_called_once_with('foo!', {'arg' : 2},
-                                                        {'fooid' : 10})
+            ep.control.assert_called_once_with('foo!', {'arg': 2},
+                                               {'fooid': 10})
         return d
 
 # classes discovered by test_scanModule, above
+
 
 class TestsEndpoint(base.Endpoint):
     pathPatterns = "/test"
     rootLinkName = 'tests'
 
+
 class TestsEndpointParentClass(base.Endpoint):
     rootLinkName = 'shouldnt-see-this'
 
+
 class TestsEndpointSubclass(TestsEndpointParentClass):
     pathPatterns = "/test/foo"
+
 
 class TestEndpoint(base.Endpoint):
     pathPatterns = """
@@ -246,10 +256,11 @@ class TestEndpoint(base.Endpoint):
         /test/n:testid/p2
     """
 
+
 class TestResourceType(base.ResourceType):
     name = 'test'
-    endpoints = [ TestsEndpoint, TestEndpoint, TestsEndpointSubclass ]
-    keyFields = ( 'testid', )
+    endpoints = [TestsEndpoint, TestEndpoint, TestsEndpointSubclass]
+    keyFields = ('testid', )
 
     class EntityType(types.Entity):
         testid = types.Integer()

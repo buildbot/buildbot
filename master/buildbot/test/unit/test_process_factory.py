@@ -15,8 +15,11 @@
 
 from twisted.trial import unittest
 
-from buildbot.process.factory import BuildFactory, s
-from buildbot.process.buildstep import BuildStep, _BuildStepFactory
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import _BuildStepFactory
+from buildbot.process.factory import BuildFactory
+from buildbot.process.factory import s
+
 
 class TestBuildFactory(unittest.TestCase):
 

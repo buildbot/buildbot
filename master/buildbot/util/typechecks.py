@@ -16,6 +16,8 @@
 import re
 
 _ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+
+
 def isIdentifier(maxLength, object):
     if not isinstance(object, unicode):
         return False

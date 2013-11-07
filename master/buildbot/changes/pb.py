@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.python import log
 from twisted.internet import defer
+from twisted.python import log
 
-from buildbot.pbutil import NewCredPerspective
-from buildbot.changes import base
 from buildbot import config
+from buildbot.changes import base
+from buildbot.pbutil import NewCredPerspective
+
 
 class ChangePerspective(NewCredPerspective):
 
@@ -29,6 +30,7 @@ class ChangePerspective(NewCredPerspective):
 
     def attached(self, mind):
         return self
+
     def detached(self, mind):
         pass
 
@@ -66,11 +68,11 @@ class ChangePerspective(NewCredPerspective):
         # in the first place, but older clients do not, so this fallback is
         # useful.
         for key in changedict:
-            if type(changedict[key]) == str:
+            if isinstance(changedict[key], str):
                 changedict[key] = changedict[key].decode('utf8', 'replace')
         changedict['files'] = list(changedict['files'])
         for i, file in enumerate(changedict.get('files', [])):
-            if type(file) == str:
+            if isinstance(file, str):
                 changedict['files'][i] = file.decode('utf8', 'replace')
 
         files = []
@@ -87,21 +89,22 @@ class ChangePerspective(NewCredPerspective):
             log.msg("No files listed in change... bit strange, but not fatal.")
 
         if "links" in changedict:
-            log.msg("Found links: "+repr(changedict['links']))
+            log.msg("Found links: " + repr(changedict['links']))
             del changedict['links']
 
         d = self.master.data.updates.addChange(**changedict)
 
         # set the return value to None, so we don't get users depending on
         # getting a changeid
-        d.addCallback(lambda _ : None)
+        d.addCallback(lambda _: None)
         return d
+
 
 class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None,
-            prefix=None, name=None):
+                 prefix=None, name=None):
 
         if name is None:
             if prefix:
@@ -138,7 +141,7 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             self._register(port)
 
         yield config.ReconfigurableServiceMixin.reconfigService(
-                self, new_config)
+            self, new_config)
 
     def activate(self):
         self._register(self.port)
@@ -153,8 +156,8 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             return
         self.registered_port = port
         self.registration = self.master.pbmanager.register(
-                port, self.user, self.passwd,
-                self.getPerspective)
+            port, self.user, self.passwd,
+            self.getPerspective)
 
     def _unregister(self):
         self.registered_port = None

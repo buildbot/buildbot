@@ -14,14 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from twisted.spread import pb as twisted_pb
+
 from buildbot.buildslave.protocols import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
+from twisted.internet import defer
+from twisted.spread import pb as twisted_pb
+from twisted.trial import unittest
+
 
 class TestListener(unittest.TestCase):
+
     def setUp(self):
         self.master = fakemaster.make_master()
 
@@ -35,7 +38,7 @@ class TestListener(unittest.TestCase):
         listener = pb.Listener(self.master)
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
-            [('tcp:1234', 'example', 'pass')])
+                         [('tcp:1234', 'example', 'pass')])
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
     @defer.inlineCallbacks
@@ -68,6 +71,7 @@ class TestListener(unittest.TestCase):
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertIsInstance(conn, pb.Connection)
 
+
 class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
                         unittest.TestCase):
 
@@ -75,7 +79,9 @@ class TestConnectionApi(util_protocols.ConnectionInterfaceTest,
         self.master = fakemaster.make_master()
         self.conn = pb.Connection(self.master, mock.Mock(), mock.Mock())
 
+
 class TestConnection(unittest.TestCase):
+
     def setUp(self):
         self.master = fakemaster.make_master()
         self.mind = mock.Mock()
@@ -181,7 +187,7 @@ class TestConnection(unittest.TestCase):
         conn.startCommands(RCInstance, builder_name, commandID, remote_command, args)
 
         ret_val['builder'].callRemote.assert_called_with('startCommand',
-            RCInstance, commandID, remote_command, args)
+                                                         RCInstance, commandID, remote_command, args)
 
     def test_doKeepalive(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)

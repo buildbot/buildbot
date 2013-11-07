@@ -14,12 +14,20 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer, task, reactor
-from buildbot import config, locks
+
+from buildbot import config
+from buildbot import locks
 from buildbot.buildslave import base
-from buildbot.test.fake import fakemaster, fakedb, bslavemanager, fakeprotocol
+from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake.botmaster import FakeBotMaster
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
+
 
 class TestAbstractBuildSlave(unittest.TestCase):
 
@@ -28,7 +36,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
-                                                testcase=self)
+                                             testcase=self)
         self.botmaster = FakeBotMaster(self.master)
 
         self.clock = task.Clock()
@@ -56,11 +64,11 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                max_builds=2,
-                notify_on_missing=['me@me.com'],
-                missing_timeout=120,
-                properties={'a':'b'},
-                locks=[lock1, lock2])
+                                     max_builds=2,
+                                     notify_on_missing=['me@me.com'],
+                                     missing_timeout=120,
+                                     properties={'a': 'b'},
+                                     locks=[lock1, lock2])
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
@@ -70,14 +78,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_constructor_notify_on_missing_not_list(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                notify_on_missing='foo@foo.com')
+                                     notify_on_missing='foo@foo.com')
         # turned into a list:
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
     def test_constructor_notify_on_missing_not_string(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-            self.ConcreteBuildSlave('bot', 'pass',
-                    notify_on_missing=['a@b.com', 13]))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          self.ConcreteBuildSlave('bot', 'pass',
+                                                  notify_on_missing=['a@b.com', 13]))
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
@@ -88,24 +96,24 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield old.startService()
 
         new_config = mock.Mock()
-        new_config.slaves = [ new ]
+        new_config.slaves = [new]
 
         yield old.reconfigService(new_config)
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
         old = self.ConcreteBuildSlave('bot', 'pass',
-                max_builds=2,
-                notify_on_missing=['me@me.com'],
-                missing_timeout=120,
-                properties={'a':'b'})
+                                      max_builds=2,
+                                      notify_on_missing=['me@me.com'],
+                                      missing_timeout=120,
+                                      properties={'a': 'b'})
         new = self.ConcreteBuildSlave('bot', 'pass',
-                max_builds=3,
-                notify_on_missing=['her@me.com'],
-                missing_timeout=121,
-                properties={'a':'c'})
+                                      max_builds=3,
+                                      notify_on_missing=['her@me.com'],
+                                      missing_timeout=121,
+                                      properties={'a': 'c'})
 
-        old.updateSlave = mock.Mock(side_effect=lambda : defer.succeed(None))
+        old.updateSlave = mock.Mock(side_effect=lambda: defer.succeed(None))
 
         yield self.do_test_reconfigService(old, new)
 
@@ -126,7 +134,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_reconfigService_initial_registration(self):
         old = self.ConcreteBuildSlave('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
-                existingRegistration=False)
+                                           existingRegistration=False)
         self.assertIn('bot', self.master.buildslaves.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
 
@@ -137,7 +145,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         config = mock.Mock()
         config.protocols = {'pb': {'port': 'tcp:1234'}}
-        config.slaves = [ slave ]
+        config.slaves = [slave]
 
         yield slave.reconfigService(config)
 
@@ -156,30 +164,30 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_startMissingTimer_no_parent(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                notify_on_missing=['abc'],
-                missing_timeout=10)
+                                     notify_on_missing=['abc'],
+                                     missing_timeout=10)
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_timeout(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                notify_on_missing=['abc'],
-                missing_timeout=0)
+                                     notify_on_missing=['abc'],
+                                     missing_timeout=0)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_notify(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                missing_timeout=3600)
+                                     missing_timeout=3600)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_missing_timer(self):
         bs = self.ConcreteBuildSlave('bot', 'pass',
-                notify_on_missing=['abc'],
-                missing_timeout=100)
+                                     notify_on_missing=['abc'],
+                                     missing_timeout=100)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertNotEqual(bs.missing_timer, None)
@@ -203,7 +211,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.MasterLock('masterlock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock.access("counting")])
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(botmaster)
 
     def test_setServiceParent_slaveLocks(self):
@@ -214,7 +222,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.SlaveLock('lock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock.access("counting")])
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(botmaster)
 
     @defer.inlineCallbacks
@@ -246,9 +254,9 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         self.assertEqual(slave.buildslaveid, 9292)
-        self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
-        self.assertEqual(slave.slave_status.getHost(),    'TheHost')
-        self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
+        self.assertEqual(slave.slave_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(slave.slave_status.getHost(), 'TheHost')
+        self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
@@ -261,8 +269,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         conn = fakeprotocol.FakeConnection(slave.master, slave)
         conn.info = {
-            'admin':   'TheAdmin',
-            'host':    'TheHost',
+            'admin': 'TheAdmin',
+            'host': 'TheHost',
             'access_uri': 'TheURI',
             'environ': ENVIRON,
             'basedir': 'TheBaseDir',
@@ -273,13 +281,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.attached(conn)
 
         # check the values get set right
-        self.assertEqual(slave.slave_status.getAdmin(),     "TheAdmin")
-        self.assertEqual(slave.slave_status.getHost(),      "TheHost")
+        self.assertEqual(slave.slave_status.getAdmin(), "TheAdmin")
+        self.assertEqual(slave.slave_status.getHost(), "TheHost")
         self.assertEqual(slave.slave_status.getAccessURI(), "TheURI")
         self.assertEqual(slave.slave_environ, ENVIRON)
         self.assertEqual(slave.slave_basedir, 'TheBaseDir')
-        self.assertEqual(slave.slave_system,  'TheSlaveSystem')
-        self.assertEqual(slave.slave_commands,  COMMANDS)
+        self.assertEqual(slave.slave_system, 'TheSlaveSystem')
+        self.assertEqual(slave.slave_commands, COMMANDS)
 
     @defer.inlineCallbacks
     def test_attached_callsMaybeStartBuildsForSlave(self):
@@ -296,7 +304,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_attached_slaveInfoUpdates(self):
         # put in stale info:
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={ 
+            fakedb.Buildslave(name='bot', info={
                 'admin': 'WrongAdmin',
                 'host': 'WrongHost',
                 'access_uri': 'WrongURI',
@@ -308,16 +316,16 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         conn = fakeprotocol.FakeConnection(slave.master, slave)
         conn.info = {
-            'admin':   'TheAdmin',
-            'host':    'TheHost',
+            'admin': 'TheAdmin',
+            'host': 'TheHost',
             'access_uri': 'TheURI',
             'version': 'TheVersion',
         }
         yield slave.attached(conn)
 
-        self.assertEqual(slave.slave_status.getAdmin(),   'TheAdmin')
-        self.assertEqual(slave.slave_status.getHost(),    'TheHost')
-        self.assertEqual(slave.slave_status.getAccessURI(),'TheURI')
+        self.assertEqual(slave.slave_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(slave.slave_status.getHost(), 'TheHost')
+        self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:

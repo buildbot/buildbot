@@ -14,9 +14,11 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.internet import defer
+
 from buildbot.db import base
 from buildbot.util import typechecks
+from twisted.internet import defer
+
 
 class BuildslavesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -26,20 +28,20 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
         # callers should verify this and give good user error messages
         assert typechecks.isIdentifier(50, name)
         return self.findSomethingId(
-                tbl=tbl,
-                whereclause=(tbl.c.name == name),
-                insert_values=dict(
-                    name=name,
-                    info={},
-                    ))
+            tbl=tbl,
+            whereclause=(tbl.c.name == name),
+            insert_values=dict(
+                name=name,
+                info={},
+            ))
 
     @defer.inlineCallbacks
     def getBuildslave(self, buildslaveid=None, name=None, masterid=None,
-                            builderid=None):
+                      builderid=None):
         if buildslaveid is None and name is None:
             defer.returnValue(None)
         bslaves = yield self.getBuildslaves(_buildslaveid=buildslaveid,
-                _name=name, masterid=masterid, builderid=builderid)
+                                            _name=name, masterid=masterid, builderid=builderid)
         if bslaves:
             defer.returnValue(bslaves[0])
 
@@ -59,8 +61,8 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(cfg_tbl)
             j = j.outerjoin(bm_tbl)
             q = sa.select(
-                    [bslave_tbl.c.id, bslave_tbl.c.name, bslave_tbl.c.info,
-                    bm_tbl.c.builderid, bm_tbl.c.masterid],
+                [bslave_tbl.c.id, bslave_tbl.c.name, bslave_tbl.c.info,
+                 bm_tbl.c.builderid, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[bslave_tbl.c.id])
 
@@ -82,11 +84,11 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                     lastId = row.id
                     cfgs = []
                     res = {
-                        'id' : lastId,
-                        'name' : row.name,
-                        'configured_on' : cfgs,
-                        'connected_to' : [],
-                        'slaveinfo' : row.info}
+                        'id': lastId,
+                        'name': row.name,
+                        'configured_on': cfgs,
+                        'connected_to': [],
+                        'slaveinfo': row.info}
                     rv[lastId] = res
                 if row.builderid and row.masterid:
                     cfgs.append({'builderid': row.builderid,
@@ -100,9 +102,9 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                 # buildslaves, they were captured in rv above
                 j = j.join(bslave_tbl)
             q = sa.select(
-                    [conn_tbl.c.buildslaveid, conn_tbl.c.masterid],
-                    from_obj=[j],
-                    order_by=[conn_tbl.c.buildslaveid])
+                [conn_tbl.c.buildslaveid, conn_tbl.c.masterid],
+                from_obj=[j],
+                order_by=[conn_tbl.c.buildslaveid])
 
             if _buildslaveid is not None:
                 q = q.where(conn_tbl.c.buildslaveid == _buildslaveid)
@@ -126,7 +128,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             q = conn_tbl.insert()
             try:
                 conn.execute(q,
-                    {'buildslaveid': buildslaveid, 'masterid': masterid})
+                             {'buildslaveid': buildslaveid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
@@ -140,6 +142,6 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.connected_buildslaves
             q = tbl.delete(whereclause=(tbl.c.buildslaveid == buildslaveid)
-                                     & (tbl.c.masterid == masterid))
+                           & (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)

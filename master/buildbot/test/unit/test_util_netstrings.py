@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.util import netstrings
 from twisted.protocols import basic
 from twisted.trial import unittest
-from buildbot.util import netstrings
+
 
 class NetstringParser(unittest.TestCase):
 
@@ -27,13 +28,13 @@ class NetstringParser(unittest.TestCase):
     def test_valid_netstrings_byte_by_byte(self):
         # (this is really testing twisted's support, but oh well)
         p = netstrings.NetstringParser()
-        [ p.feed(c) for c in "5:hello,5:world," ]
+        [p.feed(c) for c in "5:hello,5:world,"]
         self.assertEqual(p.strings, ['hello', 'world'])
 
     def test_invalid_netstring(self):
         p = netstrings.NetstringParser()
         self.assertRaises(basic.NetstringParseError,
-                lambda : p.feed("5-hello!"))
+                          lambda: p.feed("5-hello!"))
 
     def test_incomplete_netstring(self):
         p = netstrings.NetstringParser()

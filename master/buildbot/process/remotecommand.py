@@ -13,14 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, error
-from twisted.spread import pb
+from buildbot import interfaces
+from buildbot import util
+from buildbot.process import metrics
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.util.eventual import eventually
+from twisted.internet import defer
+from twisted.internet import error
 from twisted.python import log
 from twisted.python.failure import Failure
-from buildbot import interfaces, util
-from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.process import metrics
-from buildbot.util.eventual import eventually
+from twisted.spread import pb
 
 
 class RemoteCommand(pb.Referenceable):
@@ -33,7 +36,7 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-            collectStdout=False, collectStderr=False, decodeRC={0:SUCCESS}):
+                 collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS}):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
@@ -104,7 +107,7 @@ class RemoteCommand(pb.Referenceable):
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         d = self.conn.startCommands(self, self.builder_name, self.commandID,
-            self.remote_command, self.args)
+                                    self.remote_command, self.args)
         return d
 
     def _finished(self, failure=None):
@@ -223,8 +226,8 @@ class RemoteCommand(pb.Referenceable):
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
         if self.debug:
-            for k,v in update.items():
-                log.msg("Update[%s]: %s" % (k,v))
+            for k, v in update.items():
+                log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
             self.addStdout(update['stdout'])
@@ -257,7 +260,7 @@ class RemoteCommand(pb.Referenceable):
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
-        for name,loog in self.logs.items():
+        for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
                     loog.addHeader("\nremoteFailed: %s" % maybeFailure)
@@ -277,22 +280,23 @@ LoggedRemoteCommand = RemoteCommand
 
 
 class RemoteShellCommand(RemoteCommand):
+
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, maxTime=None, sigtermTime=None,
+                 timeout=20 * 60, maxTime=None, sigtermTime=None,
                  logfiles={}, usePTY="slave-config", logEnviron=True,
-                 collectStdout=False,collectStderr=False,
+                 collectStdout=False, collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0:SUCCESS}):
+                 initialStdin=None, decodeRC={0: SUCCESS}):
 
-        self.command = command # stash .command, set it later
+        self.command = command  # stash .command, set it later
         if isinstance(self.command, basestring):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:
             # Try to obfuscate command.
             def obfuscate(arg):
-                if isinstance(arg, tuple) and len(arg) == 3 and arg[0] =='obfuscated':
+                if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
                 else:
                     return arg
@@ -337,4 +341,3 @@ class RemoteShellCommand(RemoteCommand):
 
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.fake_command)
-

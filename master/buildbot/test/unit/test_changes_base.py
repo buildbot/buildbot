@@ -13,14 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer, reactor, task
-from buildbot.test.util import changesource, compat
-from buildbot.changes import base
 import mock
+
+from buildbot.changes import base
+from buildbot.test.util import changesource
+from buildbot.test.util import compat
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+
     class Subclass(base.ChangeSource):
         pass
 
@@ -33,7 +38,6 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownChangeSource()
 
-
     @defer.inlineCallbacks
     def test_activation(self):
         cs = self.Subclass(name="DummyCS")
@@ -45,9 +49,9 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         cs.startService()
-        cs.clock.advance(cs.POLL_INTERVAL_SEC/2)
-        cs.clock.advance(cs.POLL_INTERVAL_SEC/5)
-        cs.clock.advance(cs.POLL_INTERVAL_SEC/5)
+        cs.clock.advance(cs.POLL_INTERVAL_SEC / 2)
+        cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
+        cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
         self.assertFalse(cs.activate.called)
         self.assertFalse(cs.deactivate.called)
         self.assertFalse(cs.active)
@@ -68,6 +72,7 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
 
 
 class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+
     class Subclass(base.PollingChangeSource):
         pass
 
@@ -78,6 +83,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
         d = self.setUpChangeSource()
+
         def create_changesource(_):
             self.attachChangeSource(self.Subclass(name="DummyCS"))
         d.addCallback(create_changesource)
@@ -93,13 +99,14 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         # track when poll() gets called
         loops = []
         self.changesource.poll = \
-                lambda : loops.append(self.clock.seconds())
+            lambda: loops.append(self.clock.seconds())
 
         self.changesource.pollInterval = 5
         self.startChangeSource()
 
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
+
         def check(_):
             # note that it does *not* poll at time 0
             self.assertEqual(loops, [5.0, 10.0])
@@ -111,6 +118,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
     def test_loop_exception(self):
         # track when poll() gets called
         loops = []
+
         def poll():
             loops.append(self.clock.seconds())
             raise RuntimeError("oh noes")
@@ -121,6 +129,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
+
         def check(_):
             # note that it keeps looping after error
             self.assertEqual(loops, [5.0, 10.0])
@@ -136,7 +145,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         loops = []
         self.changesource.poll = \
-                lambda : loops.append(self.clock.seconds())
+            lambda: loops.append(self.clock.seconds())
 
         self.changesource.pollInterval = 5
         self.startChangeSource()

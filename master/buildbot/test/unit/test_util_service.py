@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer, task
-from buildbot.util import service
+
 from buildbot.test.util import compat
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
+
 
 class DeferredStartStop(service.AsyncService):
 
@@ -100,24 +103,23 @@ class ClusteredService(unittest.TestCase):
     def tearDown(self):
         pass
 
-
     def makeService(self, name=SVC_NAME, serviceid=SVC_ID):
         svc = self.DummyService(name=name)
 
         svc.clock = task.Clock()
 
-        self.setServiceClaimable(svc,   defer.succeed(False))
-        self.setActivateToReturn(svc,   defer.succeed(None))
+        self.setServiceClaimable(svc, defer.succeed(False))
+        self.setActivateToReturn(svc, defer.succeed(None))
         self.setDeactivateToReturn(svc, defer.succeed(None))
         self.setGetServiceIdToReturn(svc, defer.succeed(serviceid))
-        self.setUnclaimToReturn(svc,    defer.succeed(None))
+        self.setUnclaimToReturn(svc, defer.succeed(None))
 
         return svc
 
     def makeMock(self, value):
         mockObj = mock.Mock()
         if isinstance(value, Exception):
-            mockObj.side_effect  = value
+            mockObj.side_effect = value
         else:
             mockObj.return_value = value
         return mockObj
@@ -137,7 +139,6 @@ class ClusteredService(unittest.TestCase):
     def setDeactivateToReturn(self, svc, deactivate):
         svc.deactivate = self.makeMock(deactivate)
 
-
     def test_name_PreservesUnicodePromotion(self):
         svc = self.makeService(name=u'n')
 
@@ -151,20 +152,20 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(svc.name, u'n')
 
     def test_compare(self):
-        a  = self.makeService(name='a', serviceid=20)
+        a = self.makeService(name='a', serviceid=20)
         b1 = self.makeService(name='b', serviceid=21)
-        b2 = self.makeService(name='b', serviceid=21) # same args as 'b1'
-        b3 = self.makeService(name='b', serviceid=20) # same id as 'a'
+        b2 = self.makeService(name='b', serviceid=21)  # same args as 'b1'
+        b3 = self.makeService(name='b', serviceid=20)  # same id as 'a'
 
-        self.assertTrue( a == a )
-        self.assertTrue( a != b1 )
-        self.assertTrue( a != b2 )
-        self.assertTrue( a != b3 )
+        self.assertTrue(a == a)
+        self.assertTrue(a != b1)
+        self.assertTrue(a != b2)
+        self.assertTrue(a != b3)
 
-        self.assertTrue( b1 != a )
-        self.assertTrue( b1 == b1 )
-        self.assertTrue( b1 == b2 )
-        self.assertTrue( b1 == b3 )
+        self.assertTrue(b1 != a)
+        self.assertTrue(b1 == b1)
+        self.assertTrue(b1 == b2)
+        self.assertTrue(b1 == b3)
 
     def test_create_NothingCalled(self):
         # None of the member functions get called until startService happens
@@ -199,7 +200,7 @@ class ClusteredService(unittest.TestCase):
         self.svc.startService()
 
         # right before the poll interval, nothing has tried again yet
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC*0.95)
+        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 0.95)
 
         self.assertEqual(0, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -214,7 +215,7 @@ class ClusteredService(unittest.TestCase):
         self.svc.startService()
 
         # at the POLL time, it gets called again, but we're still inactive...
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC*1.05)
+        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 1.05)
 
         self.assertEqual(0, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -234,7 +235,7 @@ class ClusteredService(unittest.TestCase):
             self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC)
 
         self.assertEqual(1, self.svc._getServiceId.call_count)
-        self.assertEqual(1+NUMBER_OF_POLLS, self.svc._claimService.call_count)
+        self.assertEqual(1 + NUMBER_OF_POLLS, self.svc._claimService.call_count)
 
     def test_start_ClaimSucceeds(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
@@ -256,7 +257,7 @@ class ClusteredService(unittest.TestCase):
         self.svc.startService()
 
         # another epoch shouldnt do anything further...
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC*2)
+        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc.activate.call_count)
         self.assertEqual(1, self.svc._getServiceId.call_count)
@@ -277,7 +278,7 @@ class ClusteredService(unittest.TestCase):
         self.successResultOf(stopDeferred)
 
         # advance the clock, and nothing should happen
-        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC*2)
+        self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc._claimService.call_count)
         self.assertEqual(0, self.svc._unclaimService.call_count)
@@ -308,10 +309,10 @@ class ClusteredService(unittest.TestCase):
         # set all the child-class functions to return non-deferreds,
         # just to check we can handle both:
         self.setServiceClaimable(self.svc, True)
-        self.setActivateToReturn(self.svc,   None)
+        self.setActivateToReturn(self.svc, None)
         self.setDeactivateToReturn(self.svc, None)
         self.setGetServiceIdToReturn(self.svc, self.SVC_ID)
-        self.setUnclaimToReturn(self.svc,    None)
+        self.setUnclaimToReturn(self.svc, None)
 
         self.svc.startService()
 
@@ -496,7 +497,7 @@ class ClusteredService(unittest.TestCase):
         self.setServiceClaimable(self.svc, RuntimeError())
 
         self.svc.startService()
-        
+
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
 
@@ -506,7 +507,7 @@ class ClusteredService(unittest.TestCase):
         self.setActivateToReturn(self.svc, RuntimeError())
 
         self.svc.startService()
-        
+
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         # half-active: we actually return True in this case:
         self.assertEqual(True, self.svc.isActive())
@@ -518,7 +519,7 @@ class ClusteredService(unittest.TestCase):
 
         self.svc.startService()
         self.svc.stopService()
-        
+
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
 

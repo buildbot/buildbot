@@ -14,15 +14,20 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import task, defer
+
 from buildbot.data import masters
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import endpoint
+from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
-from buildbot.test.util import endpoint, interfaces
-from buildbot.test.fake import fakemaster, fakedb
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 SOMETIME = 1349016870
 OTHERTIME = 1249016870
+
 
 class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -34,55 +39,54 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.name = "myname"
         self.db.insertTestData([
             fakedb.Master(id=13, name='some:master', active=False,
-                            last_active=SOMETIME),
+                          last_active=SOMETIME),
             fakedb.Master(id=14, name='other:master', active=False,
-                            last_active=SOMETIME),
+                          last_active=SOMETIME),
             fakedb.Builder(id=23, name='bldr1'),
             fakedb.BuilderMaster(builderid=23, masterid=13),
             fakedb.Builder(id=24, name='bldr2'),
         ])
 
-
     def tearDown(self):
         self.tearDownEndpoint()
 
-
     def test_get_existing(self):
         d = self.callGet(('master', 14))
+
         @d.addCallback
         def check(master):
             self.validateData(master)
             self.assertEqual(master['name'], 'other:master')
         return d
 
-
     def test_get_builderid_existing(self):
         d = self.callGet(('builder', 23, 'master', 13))
+
         @d.addCallback
         def check(master):
             self.validateData(master)
             self.assertEqual(master['name'], 'some:master')
         return d
 
-
     def test_get_builderid_no_match(self):
         d = self.callGet(('builder', 24, 'master', 13))
+
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
         return d
-
 
     def test_get_builderid_missing(self):
         d = self.callGet(('builder', 25, 'master', 13))
+
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
         return d
 
-
     def test_get_missing(self):
         d = self.callGet(('master', 99))
+
         @d.addCallback
         def check(master):
             self.assertEqual(master, None)
@@ -99,38 +103,39 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.master.name = "myname"
         self.db.insertTestData([
             fakedb.Master(id=13, name='some:master', active=False,
-                            last_active=SOMETIME),
+                          last_active=SOMETIME),
             fakedb.Master(id=14, name='other:master', active=True,
-                            last_active=OTHERTIME),
+                          last_active=OTHERTIME),
             fakedb.Builder(id=22),
             fakedb.BuilderMaster(masterid=13, builderid=22),
         ])
 
-
     def tearDown(self):
         self.tearDownEndpoint()
 
-
     def test_get(self):
         d = self.callGet(('master',))
+
         @d.addCallback
         def check(masters):
-            [ self.validateData(m) for m in masters ]
+            [self.validateData(m) for m in masters]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13, 14])
         return d
 
     def test_get_builderid(self):
         d = self.callGet(('builder', 22, 'master'))
+
         @d.addCallback
         def check(masters):
-            [ self.validateData(m) for m in masters ]
+            [self.validateData(m) for m in masters]
             self.assertEqual(sorted([m['masterid'] for m in masters]),
                              [13])
         return d
 
     def test_get_builderid_missing(self):
         d = self.callGet(('builder', 23, 'master'))
+
         @d.addCallback
         def check(masters):
             self.assertEqual(masters, [])
@@ -138,36 +143,36 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                expected_filter=('master', None, None))
+                                expected_filter=('master', None, None))
 
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                                            wantData=True, testcase=self)
+                                             wantData=True, testcase=self)
         # mock out the _masterDeactivated methods this will call
         self.master.data.rtypes.builder = mock.Mock(
-                spec=self.master.data.rtypes.builder)
+            spec=self.master.data.rtypes.builder)
         self.master.data.rtypes.builder._masterDeactivated.side_effect = \
-                            lambda masterid : defer.succeed(None)
+            lambda masterid: defer.succeed(None)
 
         self.master.data.rtypes.scheduler = mock.Mock(
-                spec=self.master.data.rtypes.scheduler)
+            spec=self.master.data.rtypes.scheduler)
         self.master.data.rtypes.scheduler._masterDeactivated.side_effect = \
-                            lambda masterid : defer.succeed(None)
+            lambda masterid: defer.succeed(None)
 
         self.master.data.rtypes.changesource = mock.Mock(
-                spec=self.master.data.rtypes.changesource)
+            spec=self.master.data.rtypes.changesource)
         self.master.data.rtypes.changesource._masterDeactivated.side_effect = \
-                            lambda masterid : defer.succeed(None)
+            lambda masterid: defer.succeed(None)
 
         self.rtype = masters.Master(self.master)
 
     def test_signature_masterActive(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.masterActive, # fake
-            self.rtype.masterActive) # real
+            self.master.data.updates.masterActive,  # fake
+            self.rtype.masterActive)  # real
         def masterActive(self, name, masterid):
             pass
 
@@ -178,19 +183,19 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name='myname', active=0,
-                            last_active=0),
+                          last_active=0),
             fakedb.Master(id=14, name='other', active=1,
-                            last_active=0),
+                          last_active=0),
             fakedb.Master(id=15, name='other2', active=1,
-                            last_active=0),
+                          last_active=0),
         ])
 
         # initial checkin
         yield self.rtype.masterActive(
-                name=u'myname', masterid=13, _reactor=clock)
+            name=u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
-                    active=True, last_active=epoch2datetime(60)))
+                                      active=True, last_active=epoch2datetime(60)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
              dict(masterid=13, name='myname', active=True)),
@@ -201,10 +206,10 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         clock.advance(60)
         yield self.master.db.masters.markMasterInactive(13)
         yield self.rtype.masterActive(
-                u'myname', masterid=13, _reactor=clock)
+            u'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
-                    active=True, last_active=epoch2datetime(120)))
+                                      active=True, last_active=epoch2datetime(120)))
         self.assertEqual(self.master.mq.productions, [
             (('master', '13', 'started'),
              dict(masterid=13, name='myname', active=True)),
@@ -213,8 +218,8 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_masterStopped(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.masterStopped, # fake
-            self.rtype.masterStopped) # real
+            self.master.data.updates.masterStopped,  # fake
+            self.rtype.masterStopped)  # real
         def masterStopped(self, name, masterid):
             pass
 
@@ -225,7 +230,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name=u'aname', active=1,
-                            last_active=clock.seconds()),
+                          last_active=clock.seconds()),
         ])
 
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
@@ -241,7 +246,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         self.master.db.insertTestData([
             fakedb.Master(id=13, name=u'aname', active=0,
-                            last_active=0),
+                          last_active=0),
         ])
 
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
@@ -249,8 +254,8 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_expireMasters(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.expireMasters, # fake
-            self.rtype.expireMasters) # real
+            self.master.data.updates.expireMasters,  # fake
+            self.rtype.expireMasters)  # real
         def expireMasters(self):
             pass
 
@@ -261,9 +266,9 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         self.master.db.insertTestData([
             fakedb.Master(id=14, name='other', active=1,
-                            last_active=0),
+                          last_active=0),
             fakedb.Master(id=15, name='other', active=1,
-                            last_active=0),
+                          last_active=0),
         ])
 
         # check after 10 minutes, and see #14 deactivated; #15 gets deactivated
@@ -273,14 +278,14 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.expireMasters(_reactor=clock)
         master = yield self.master.db.masters.getMaster(14)
         self.assertEqual(master, dict(id=14, name='other',
-                    active=False, last_active=None))
+                                      active=False, last_active=None))
         self.assertEqual(self.master.mq.productions, [
             (('master', '14', 'stopped'),
              dict(masterid=14, name='other', active=False)),
         ])
         self.master.data.rtypes.builder._masterDeactivated. \
-                assert_called_with(masterid=14)
+            assert_called_with(masterid=14)
         self.master.data.rtypes.scheduler._masterDeactivated. \
-                assert_called_with(masterid=14)
+            assert_called_with(masterid=14)
         self.master.data.rtypes.changesource._masterDeactivated. \
-                assert_called_with(masterid=14)
+            assert_called_with(masterid=14)

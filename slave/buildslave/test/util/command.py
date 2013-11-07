@@ -16,11 +16,15 @@
 import os
 import shutil
 
-from buildslave.test.fake import slavebuilder, runprocess
-from buildslave.commands import utils
 import buildslave.runprocess
 
+from buildslave.commands import utils
+from buildslave.test.fake import runprocess
+from buildslave.test.fake import slavebuilder
+
+
 class CommandTestMixin:
+
     """
     Support for testing Command subclasses.
     """
@@ -128,8 +132,10 @@ class CommandTestMixin:
         Patch utils.getCommand to return RESULT for NAME
         """
         old_getCommand = utils.getCommand
+
         def new_getCommand(n):
-            if n == name: return result
+            if n == name:
+                return result
             return old_getCommand(n)
         self.patch(utils, 'getCommand', new_getCommand)
 
@@ -137,4 +143,4 @@ class CommandTestMixin:
         """
         Temporarily clean out os.environ to { 'PWD' : '.' }
         """
-        self.patch(os, 'environ', { 'PWD' : '.' })
+        self.patch(os, 'environ', {'PWD': '.'})

@@ -15,14 +15,15 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import subprocess
-from setuptools import setup
-import setuptools.command.sdist
-import setuptools.command.install
-import setuptools.command.develop
-from distutils.core import Command
 import json
+import os
+import setuptools.command.develop
+import setuptools.command.install
+import setuptools.command.sdist
+import subprocess
+
+from distutils.core import Command
+from setuptools import setup
 
 # This script can run either in a source checkout (e.g., to 'setup.py sdist')
 # or in an sdist tarball (to install)
@@ -74,18 +75,18 @@ package_json.update(base_json)
 # in a crazy CI fashion
 bower_json = {
     "dependencies": {
-    "requirejs": "~2.1.5",
-    "d3": "latest",
-    # test deps
-    "angular": "latest",
-    "jasmine": "~1.3.1",
-    "angular-mocks": "latest"
+        "requirejs": "~2.1.5",
+        "d3": "latest",
+        # test deps
+        "angular": "latest",
+        "jasmine": "~1.3.1",
+        "angular-mocks": "latest"
     }
 }
 
 bower_json.update(base_json)
 
-## command classes
+# command classes
 
 cmdclass = {}
 
@@ -130,7 +131,7 @@ class grunt(Command):
     user_options = [
         ('devel', 'd',
          "Do not minify JS")
-        ]
+    ]
 
     sub_commands = [
         ('bower_install', None)
@@ -173,7 +174,7 @@ class install_www(Command):
         ('install-dir=', 'd',
          "base directory for installing WWW files "
          "(default: `$install_lib/buildbot_www`)"),
-        ]
+    ]
 
     boolean_options = ['force']
 
@@ -199,6 +200,7 @@ cmdclass['install_www'] = install_www
 
 
 class sdist(setuptools.command.sdist.sdist):
+
     """
     Customize sdist to run grunt first
     """
@@ -212,6 +214,7 @@ cmdclass['sdist'] = sdist
 
 
 class install(setuptools.command.install.install):
+
     """
     Customize install to run grunt first, and to run install_js after.
     """
@@ -229,6 +232,7 @@ cmdclass['install'] = install
 
 
 class develop(setuptools.command.develop.develop):
+
     """
     Customize develop to run npm/bower install.
     """

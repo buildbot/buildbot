@@ -14,27 +14,31 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
+
 from buildbot.changes import pb
-from buildbot.test.util import changesource, pbmanager
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import changesource
+from buildbot.test.util import pbmanager
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class TestPBChangeSource(
-            changesource.ChangeSourceMixin,
-            pbmanager.PBManagerMixin,
-            unittest.TestCase):
+    changesource.ChangeSourceMixin,
+    pbmanager.PBManagerMixin,
+        unittest.TestCase):
 
-    DEFAULT_CONFIG = dict(port='9999', 
-        user='alice', 
-        passwd='sekrit',
-        name=changesource.ChangeSourceMixin.DEFAULT_NAME)
+    DEFAULT_CONFIG = dict(port='9999',
+                          user='alice',
+                          passwd='sekrit',
+                          name=changesource.ChangeSourceMixin.DEFAULT_NAME)
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
 
     def setUp(self):
         self.setUpPBChangeSource()
         d = self.setUpChangeSource()
+
         @d.addCallback
         def setup(_):
             self.master.pbmanager = self.pbmanager
@@ -43,19 +47,19 @@ class TestPBChangeSource(
 
     def test_registration_no_slaveport(self):
         return self._test_registration(None,
-                user='alice', passwd='sekrit')
+                                       user='alice', passwd='sekrit')
 
     def test_registration_global_slaveport(self):
         return self._test_registration(self.EXP_DEFAULT_REGISTRATION,
-                **self.DEFAULT_CONFIG)
+                                       **self.DEFAULT_CONFIG)
 
     def test_registration_custom_port(self):
         return self._test_registration(('8888', 'alice', 'sekrit'),
-                user='alice', passwd='sekrit', port='8888')
+                                       user='alice', passwd='sekrit', port='8888')
 
     def test_registration_no_userpass(self):
         return self._test_registration(('9939', 'change', 'changepw'),
-                slavePort='9939')
+                                       slavePort='9939')
 
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None)
@@ -78,16 +82,16 @@ class TestPBChangeSource(
         self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC*4/5)
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
         self.assertNotRegistered()
 
         # there we go!
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC*2/5)
+        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
     def _test_registration(self, exp_registration, slavePort=None,
-                        **constr_kwargs):
+                           **constr_kwargs):
         config = mock.Mock()
         config.protocols = {'pb': {'port': slavePort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
@@ -197,13 +201,15 @@ class TestPBChangeSource(
 
 
 class TestChangePerspective(unittest.TestCase):
+
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
-                wantDb=True, wantData=True)
+                                             wantDb=True, wantData=True)
 
     def test_addChange_noprefix(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(who="bar", files=['a']))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'bar',
@@ -226,6 +232,7 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_codebase(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'bar',
@@ -248,7 +255,8 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
         d = cp.perspective_addChange(
-                dict(who="bar", files=['xx/a', 'yy/b']))
+            dict(who="bar", files=['xx/a', 'yy/b']))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'bar',
@@ -271,8 +279,9 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_sanitize_None(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(
-                dict(project=None, revlink=None, repository=None)
-                )
+            dict(project=None, revlink=None, repository=None)
+        )
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': None,
@@ -295,8 +304,9 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_when_None(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(
-                dict(when=None)
-                )
+            dict(when=None)
+        )
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': None,
@@ -312,15 +322,16 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
-                }])
+            }])
         d.addCallback(check)
         return d
 
     def test_addChange_files_tuple(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(
-                dict(files=('a', 'b'))
-                )
+            dict(files=('a', 'b'))
+        )
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': None,
@@ -343,8 +354,9 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
-                    comments=u"\N{SNOWMAN}",
-                    files=[u'\N{VERY MUCH GREATER-THAN}']))
+                                          comments=u"\N{SNOWMAN}",
+                                          files=[u'\N{VERY MUCH GREATER-THAN}']))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'\u2603',
@@ -367,8 +379,9 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
-                    comments=u"\N{SNOWMAN}".encode('utf8'),
-                    files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
+                                          comments=u"\N{SNOWMAN}".encode('utf8'),
+                                          files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'\u2603',
@@ -393,6 +406,7 @@ class TestChangePerspective(unittest.TestCase):
         bogus_utf8 = '\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
         d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': replacement,
@@ -416,6 +430,7 @@ class TestChangePerspective(unittest.TestCase):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(isdir=1, who='me', when=1234,
                                           files=[]))
+
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'me',
@@ -438,6 +453,7 @@ class TestChangePerspective(unittest.TestCase):
     def test_createUserObject_git_src(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(who="c <h@c>", src='git'))
+
         def check_change(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'c <h@c>',

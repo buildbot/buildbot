@@ -15,7 +15,9 @@
 
 from buildbot.util import service
 
+
 class FakeBotMaster(service.AsyncMultiService):
+
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
         self.setName("fake-botmaster")

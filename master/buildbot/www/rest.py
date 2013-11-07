@@ -15,18 +15,22 @@
 
 from __future__ import with_statement
 
-import re
-import fnmatch
 import datetime
+import fnmatch
+import re
 import types
+
+from buildbot.data import base
+from buildbot.data import exceptions
+from buildbot.data import resultspec
+from buildbot.util import json
+from buildbot.www import resource
 from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import server
-from buildbot.www import resource
-from buildbot.data import base, resultspec
-from buildbot.data import exceptions
-from buildbot.util import json
+
+
 class BadRequest(Exception):
     pass
 
@@ -62,19 +66,19 @@ class RestRootResource(resource.Resource):
     def render(self, request):
         request.setHeader("content-type", 'application/json')
         min_vers = self.master.config.www.get('rest_minimum_version', 0)
-        api_versions = dict( ('v%d' % v, '%sapi/v%d' % (self.base_url, v))
-                             for v in self.version_classes
-                             if v > min_vers)
+        api_versions = dict(('v%d' % v, '%sapi/v%d' % (self.base_url, v))
+                            for v in self.version_classes
+                            if v > min_vers)
         return json.dumps(dict(api_versions=api_versions))
 
 
 URL_ENCODED = "application/x-www-form-urlencoded"
 JSON_ENCODED = "application/json"
-JSONRPC_CODES = dict(parse_error= -32700,
-                     invalid_request= -32600,
-                     method_not_found= -32601,
-                     invalid_params= -32602,
-                     internal_error= -32603)
+JSONRPC_CODES = dict(parse_error=-32700,
+                     invalid_request=-32600,
+                     method_not_found=-32601,
+                     invalid_params=-32602,
+                     internal_error=-32603)
 
 
 class V2RootResource(resource.Resource):
@@ -107,15 +111,15 @@ class V2RootResource(resource.Resource):
             yield
         except exceptions.InvalidPathError, e:
             writeError(str(e) or "invalid path", errcode=404,
-                    jsonrpccode=JSONRPC_CODES['invalid_request'])
+                       jsonrpccode=JSONRPC_CODES['invalid_request'])
             return
         except exceptions.InvalidControlException, e:
             writeError(str(e) or "invalid control action", errcode=501,
-                    jsonrpccode=JSONRPC_CODES["method_not_found"])
+                       jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadRequest, e:
             writeError(str(e) or "invalid request", errcode=400,
-                    jsonrpccode=JSONRPC_CODES["method_not_found"])
+                       jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadJsonRpc2, e:
             writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
@@ -123,10 +127,10 @@ class V2RootResource(resource.Resource):
         except Exception, e:
             log.err(_why='while handling API request')
             writeError(repr(e), errcode=500,
-                    jsonrpccode=JSONRPC_CODES["internal_error"])
+                       jsonrpccode=JSONRPC_CODES["internal_error"])
             return
 
-    ## JSONRPC2 support
+    # JSONRPC2 support
 
     def decodeJsonRPC2(self, request):
         # Content-Type is ignored, so that AJAX requests can be sent without
@@ -134,44 +138,45 @@ class V2RootResource(resource.Resource):
         # suggest a Content-Type anyway.
         try:
             data = json.loads(request.content.read())
-        except Exception,e:
+        except Exception, e:
             raise BadJsonRpc2("JSON parse error: %s" % (str(e),),
-                    JSONRPC_CODES["parse_error"])
+                              JSONRPC_CODES["parse_error"])
 
-        if type(data) == list:
+        if isinstance(data, list):
             raise BadJsonRpc2("JSONRPC batch requests are not supported",
-                    JSONRPC_CODES["invalid_request"])
-        if type(data) != dict:
+                              JSONRPC_CODES["invalid_request"])
+        if not isinstance(data, dict):
             raise BadJsonRpc2("JSONRPC root object must be an object",
-                    JSONRPC_CODES["invalid_request"])
+                              JSONRPC_CODES["invalid_request"])
 
         def check(name, types, typename):
             if name not in data:
                 raise BadJsonRpc2("missing key '%s'" % (name,),
-                        JSONRPC_CODES["invalid_request"])
+                                  JSONRPC_CODES["invalid_request"])
             if not isinstance(data[name], types):
                 raise BadJsonRpc2("'%s' must be %s" % (name, typename),
-                        JSONRPC_CODES["invalid_request"])
-        check("jsonrpc", (str,unicode), "a string")
-        check("method", (str,unicode), "a string")
-        check("id", (str,unicode,int,types.NoneType),
-                "a string, number, or null")
+                                  JSONRPC_CODES["invalid_request"])
+        check("jsonrpc", (str, unicode), "a string")
+        check("method", (str, unicode), "a string")
+        check("id", (str, unicode, int, types.NoneType),
+              "a string, number, or null")
         check("params", (dict,), "an object")
         if data['jsonrpc'] != '2.0':
             raise BadJsonRpc2("only JSONRPC 2.0 is supported",
-                    JSONRPC_CODES['invalid_request'])
+                              JSONRPC_CODES['invalid_request'])
         return data["method"], data["id"], data['params']
 
     @defer.inlineCallbacks
     def renderJsonRpc(self, request):
-        jsonRpcReply = {'jsonrpc' : "2.0"}
+        jsonRpcReply = {'jsonrpc': "2.0"}
+
         def writeError(msg, errcode=399,
-                jsonrpccode=JSONRPC_CODES["internal_error"]):
+                       jsonrpccode=JSONRPC_CODES["internal_error"]):
             if self.debug:
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', JSON_ENCODED)
-            if not "error" in jsonRpcReply: #already filled in by caller
+            if not "error" in jsonRpcReply:  # already filled in by caller
                 jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
             request.write(json.dumps(jsonRpcReply))
 
@@ -184,7 +189,7 @@ class V2RootResource(resource.Resource):
             jsonRpcReply['result'] = result
 
             data = json.dumps(jsonRpcReply, default=self._toJson,
-                                    sort_keys=True, separators=(',',':'))
+                              sort_keys=True, separators=(',', ':'))
 
             request.setHeader('content-type', JSON_ENCODED)
             if request.method == "HEAD":
@@ -193,7 +198,7 @@ class V2RootResource(resource.Resource):
             else:
                 request.write(data)
 
-    ## JSONAPI support
+    # JSONAPI support
 
     def decodeResultSpec(self, request, endpoint):
         reqArgs = request.args
@@ -242,13 +247,13 @@ class V2RootResource(resource.Resource):
                 field, op = arg.rsplit('__', 1)
                 args = reqArgs[arg]
                 operators = (resultspec.Filter.singular_operators
-                                if len(args) == 1
-                            else resultspec.Filter.plural_operators)
+                             if len(args) == 1
+                             else resultspec.Filter.plural_operators)
                 if op in operators and field in entityType.fieldNames:
                     fieldType = entityType.fields[field]
                     try:
                         values = [fieldType.valueFromString(v)
-                                for v in reqArgs[arg]]
+                                  for v in reqArgs[arg]]
                     except Exception:
                         raise BadRequest('invalid filter value for %s' % arg)
                     filters.append(resultspec.Filter(field, op, values))
@@ -266,7 +271,7 @@ class V2RootResource(resource.Resource):
 
         # bulid the result spec
         rspec = resultspec.ResultSpec(fields=fields, limit=limit,
-                offset=offset, order=order, filters=filters)
+                                      offset=offset, order=order, filters=filters)
 
         # for singular endpoints, only allow fields
         if not endpoint.isCollection:
@@ -301,16 +306,17 @@ class V2RootResource(resource.Resource):
             meta = {}
             links = meta['links'] = []
             ignore = set(['limit', 'offset'])
-            query = [ (k,v)
-                        for (k,vs) in request.args.iteritems()
-                        for v in vs
-                        if k not in ignore ]
+            query = [(k, v)
+                     for (k, vs) in request.args.iteritems()
+                     for v in vs
+                     if k not in ignore]
+
             def mklink(rel, offset, limit):
                 o = [('offset', offset)] if offset else []
                 l = [('limit', limit)] if limit else []
                 links.append({'rel': rel,
-                    'href': base.Link(tuple(request.postpath),
-                                    query + o + l)})
+                              'href': base.Link(tuple(request.postpath),
+                                                query + o + l)})
 
             if ep.isCollection:
                 offset, total, limit = data.offset, data.total, data.limit
@@ -356,27 +362,27 @@ class V2RootResource(resource.Resource):
             if 'application/json' in (request.getHeader('accept') or ''):
                 compact = True
                 request.setHeader("content-type",
-                            'application/json; charset=utf-8')
+                                  'application/json; charset=utf-8')
             else:
                 compact = False
                 request.setHeader("content-type",
-                            'text/plain; charset=utf-8')
+                                  'text/plain; charset=utf-8')
 
             # set up caching
             if self.cache_seconds:
                 now = datetime.datetime.utcnow()
                 expires = now + datetime.timedelta(seconds=self.cache_seconds)
                 request.setHeader("Expires",
-                                expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
+                                  expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
                 request.setHeader("Pragma", "no-cache")
 
             # filter out blanks if necessary and render the data
             if compact:
                 data = json.dumps(data, default=self._toJson,
-                                        sort_keys=True, separators=(',',':'))
+                                  sort_keys=True, separators=(',', ':'))
             else:
                 data = json.dumps(data, default=self._toJson,
-                                        sort_keys=True, indent=2)
+                                  sort_keys=True, indent=2)
 
             if request.method == "HEAD":
                 request.setHeader("content-length", len(data))
@@ -385,8 +391,8 @@ class V2RootResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         # pre-translate the origin entries in the config
-        self.origins = [ re.compile(fnmatch.translate(o.lower()))
-                        for o in new_config.www.get('allowed_origins', []) ]
+        self.origins = [re.compile(fnmatch.translate(o.lower()))
+                        for o in new_config.www.get('allowed_origins', [])]
 
         # and copy some other flags
         self.debug = new_config.www.get('debug')
@@ -413,7 +419,7 @@ class V2RootResource(resource.Resource):
                     err = "invalid origin"
                 elif request.method == 'OPTIONS':
                     preflightMethod = request.getHeader(
-                            'access-control-request-method')
+                        'access-control-request-method')
                     if preflightMethod not in ('GET', 'POST', 'HEAD'):
                         err = 'invalid method'
                     isPreflight = True
@@ -448,7 +454,7 @@ class V2RootResource(resource.Resource):
         def finish(_):
             try:
                 request.finish()
-            except RuntimeError: # pragma: no-cover
+            except RuntimeError:  # pragma: no-cover
                 # this occurs when the client has already disconnected; ignore
                 # it (see #2027)
                 log.msg("http client disconnected before results were sent")

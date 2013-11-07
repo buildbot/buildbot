@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from buildbot.db.types.json import JsonObject
+
 
 def upgrade(migrate_engine):
 
@@ -22,36 +24,36 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     sa.Table('builder_masters', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-        # ..
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             # ..
+             )
 
     sa.Table('masters', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-        # ..
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             # ..
+             )
 
     buildslaves = sa.Table("buildslaves", metadata,
-        sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("name", sa.String(256), nullable=False),
-        sa.Column("info", JsonObject, nullable=False),
-    )
+                           sa.Column("id", sa.Integer, primary_key=True),
+                           sa.Column("name", sa.String(256), nullable=False),
+                           sa.Column("info", JsonObject, nullable=False),
+                           )
 
     configured_buildslaves = sa.Table('configured_buildslaves', metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('buildermasterid', sa.Integer,
-            sa.ForeignKey('builder_masters.id'), nullable=False),
-        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-            nullable=False),
-    )
+                                      sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                      sa.Column('buildermasterid', sa.Integer,
+                                                sa.ForeignKey('builder_masters.id'), nullable=False),
+                                      sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                                                nullable=False),
+                                      )
 
     connected_buildslaves = sa.Table('connected_buildslaves', metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('masterid', sa.Integer,
-            sa.ForeignKey('masters.id'), nullable=False),
-        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-            nullable=False),
-    )
+                                     sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                     sa.Column('masterid', sa.Integer,
+                                               sa.ForeignKey('masters.id'), nullable=False),
+                                     sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                                               nullable=False),
+                                     )
 
     # update the column length in bulidslaves
     buildslaves.c.name.alter(sa.String(50), nullable=False)
@@ -66,27 +68,27 @@ def upgrade(migrate_engine):
 
     # and the indices
     idx = sa.Index('configured_slaves_buildmasterid',
-            configured_buildslaves.c.buildermasterid)
+                   configured_buildslaves.c.buildermasterid)
     idx.create()
 
     idx = sa.Index('configured_slaves_slaves',
-            configured_buildslaves.c.buildslaveid)
+                   configured_buildslaves.c.buildslaveid)
     idx.create()
 
     idx = sa.Index('configured_slaves_identity',
-            configured_buildslaves.c.buildermasterid,
-            configured_buildslaves.c.buildslaveid, unique=True)
+                   configured_buildslaves.c.buildermasterid,
+                   configured_buildslaves.c.buildslaveid, unique=True)
     idx.create()
 
     idx = sa.Index('connected_slaves_masterid',
-            connected_buildslaves.c.masterid)
+                   connected_buildslaves.c.masterid)
     idx.create()
 
     idx = sa.Index('connected_slaves_slaves',
-            connected_buildslaves.c.buildslaveid)
+                   connected_buildslaves.c.buildslaveid)
     idx.create()
 
     idx = sa.Index('connected_slaves_identity',
-            connected_buildslaves.c.masterid,
-            connected_buildslaves.c.buildslaveid, unique=True)
+                   connected_buildslaves.c.masterid,
+                   connected_buildslaves.c.buildslaveid, unique=True)
     idx.create()

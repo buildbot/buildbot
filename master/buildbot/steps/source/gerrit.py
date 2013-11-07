@@ -15,10 +15,11 @@
 
 from buildbot.steps.source.git import Git
 
+
 class Gerrit(Git):
+
     def __init__(self, **kwargs):
         Git.__init__(self, **kwargs)
-
 
     def startVC(self, branch, revision, patch):
         gerrit_branch = None
@@ -30,7 +31,7 @@ class Gerrit(Git):
                 change = self.build.getProperty("gerrit_change", '').split('/')
                 if len(change) == 2:
                     gerrit_branch = "refs/changes/%2.2d/%d/%d" \
-                                                 % (int(change[0]) % 100, int(change[0]), int(change[1]))
+                        % (int(change[0]) % 100, int(change[0]), int(change[1]))
                     self.updateSourceProperty("gerrit_branch", gerrit_branch)
             except:
                 pass

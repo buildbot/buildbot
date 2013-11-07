@@ -16,16 +16,17 @@
 import os
 
 from twisted.internet import defer
-from twisted.python import log
 from twisted.protocols import basic
+from twisted.python import log
 
 from buildbot import pbutil
-from buildbot.util.maildir import MaildirService
-from buildbot.util import json, ascii2unicode
-from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.status.buildset import BuildSetStatus
+from buildbot.util import ascii2unicode
+from buildbot.util import json
+from buildbot.util import netstrings
+from buildbot.util.maildir import MaildirService
 
 
 class TryBase(base.BaseScheduler):
@@ -83,8 +84,8 @@ class Try_Jobdir(TryBase):
         self.jobdir = jobdir
         self.watcher = JobdirService(scheduler=self)
 
-    # TryBase used to be a MultiService and managed the JobdirService via a parent/child 
-    # relationship. We stub out the addService/removeService and just keep track of 
+    # TryBase used to be a MultiService and managed the JobdirService via a parent/child
+    # relationship. We stub out the addService/removeService and just keep track of
     # JobdirService as self.watcher. We'll refactor these things later and remove
     # the need for this.
     def addService(self, child):
@@ -139,10 +140,10 @@ class Try_Jobdir(TryBase):
         #  builderNames: list of builder names
         #  properties: dict of build properties
         p = netstrings.NetstringParser()
-        f.seek(0,2)
+        f.seek(0, 2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
             raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
-        f.seek(0,0)
+        f.seek(0, 0)
         try:
             p.feed(f.read())
         except basic.NetstringParseError:
@@ -212,15 +213,15 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        sourcestamp=dict(branch=parsed_job['branch'],
-            revision=parsed_job['baserev'],
-            patch_body=parsed_job['patch_body'],
-            patch_level=parsed_job['patch_level'],
-            patch_author=who,
-            patch_comment=comment,
-            patch_subdir='',  # TODO: can't set this remotely - #1769
-            project=parsed_job['project'],
-            repository=parsed_job['repository'])
+        sourcestamp = dict(branch=parsed_job['branch'],
+                           revision=parsed_job['baserev'],
+                           patch_body=parsed_job['patch_body'],
+                           patch_level=parsed_job['patch_level'],
+                           patch_author=who,
+                           patch_comment=comment,
+                           patch_subdir='',  # TODO: can't set this remotely - #1769
+                           project=parsed_job['project'],
+                           repository=parsed_job['repository'])
         reason = u"'try' job"
         if parsed_job['who']:
             reason += u" by user %s" % ascii2unicode(parsed_job['who'])
@@ -237,6 +238,7 @@ class Try_Jobdir(TryBase):
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
+
     def __init__(self, scheduler, username):
         self.scheduler = scheduler
         self.username = username
@@ -271,8 +273,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         requested_props = Properties()
         requested_props.update(properties, "try build")
         (bsid, brids) = yield self.scheduler.addBuildsetForSourceStamps(
-                sourcestamps=[sourcestamp], reason=reason,
-                properties=requested_props, builderNames=builderNames)
+            sourcestamps=[sourcestamp], reason=reason,
+            properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object
         bsdict = yield db.buildsets.getBuildset(bsid)

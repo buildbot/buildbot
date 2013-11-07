@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 
 
-from unittest import TestResult
 from StringIO import StringIO
 from buildbot.process import logobserver
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
 from buildbot.status.testresult import TestResult as aTestResult
-from buildbot.status.results import SUCCESS, FAILURE, SKIPPED
 from buildbot.steps.shell import ShellCommand
+from unittest import TestResult
+
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
+
     """Observe a log that may contain subunit output.
 
     This class extends TestResult to receive the callbacks from the subunit
@@ -36,7 +40,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
             from subunit import PROGRESS_PUSH, PROGRESS_POP
         except ImportError:
             raise ImportError("subunit is not importable, but is required for "
-                "SubunitLogObserver support.")
+                              "SubunitLogObserver support.")
         self.PROGRESS_CUR = PROGRESS_CUR
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
@@ -44,7 +48,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.warningio = StringIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
-        self.seen_tags = set() #don't yet know what tags does in subunit
+        self.seen_tags = set()  # don't yet know what tags does in subunit
 
     def outLineReceived(self, line):
         """Process a received stdout line."""
@@ -64,7 +68,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.addAResult(test, SUCCESS, 'SUCCESS')
 
     def addSkip(self, test, detail):
-        if hasattr(TestResult,'addSkip'):
+        if hasattr(TestResult, 'addSkip'):
             TestResult.addSkip(self, test, detail)
         else:
             self.skips.append((test, detail))
@@ -85,11 +89,12 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
         self.addAResult(test, FAILURE, 'FAILURE', err)
-        self.step.setProgress('tests failed', len(self.failures) + 
-            len(self.errors))
+        self.step.setProgress('tests failed', len(self.failures) +
+                              len(self.errors))
 
     expectedTests = 0
     contextLevel = 0
+
     def progress(self, offset, whence):
         if not self.contextLevel:
             if whence == self.PROGRESS_CUR:
@@ -97,7 +102,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
             elif whence == self.PROGRESS_SET:
                 self.expectedTests = offset
             self.step.progress.setExpectations({'tests': self.expectedTests})
-        #TODO: properly support PUSH/POP
+        # TODO: properly support PUSH/POP
         if whence == self.PROGRESS_PUSH:
             self.contextLevel += 1
         elif whence == self.PROGRESS_POP:
@@ -107,7 +112,9 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         """Accumulate the seen tags."""
         self.seen_tags.update(new_tags)
 
+
 class SubunitShellCommand(ShellCommand):
+
     """A ShellCommand that sniffs subunit output.
     """
 
@@ -135,10 +142,10 @@ class SubunitShellCommand(ShellCommand):
         if not count:
             results = SUCCESS
             if total:
-                text += ["%d %s" % \
-                          (total,
+                text += ["%d %s" %
+                         (total,
                           total == 1 and "test" or "tests"),
-                          "passed"]
+                         "passed"]
             else:
                 if self.failureOnNoTests:
                     results = FAILURE
@@ -147,26 +154,25 @@ class SubunitShellCommand(ShellCommand):
             results = FAILURE
             text.append("Total %d test(s)" % total)
             if failures:
-                text.append("%d %s" % \
+                text.append("%d %s" %
                             (failures,
                              failures == 1 and "failure" or "failures"))
             if errors:
-                text.append("%d %s" % \
+                text.append("%d %s" %
                             (errors,
                              errors == 1 and "error" or "errors"))
             text2 = "%d %s" % (count, (count == 1 and 'test' or 'tests'))
 
-
         if skips:
-            text.append("%d %s" %  (skips,
-                         skips == 1 and "skip" or "skips"))
+            text.append("%d %s" % (skips,
+                                   skips == 1 and "skip" or "skips"))
 
-        #TODO: expectedFailures/unexpectedSuccesses
+        # TODO: expectedFailures/unexpectedSuccesses
 
         self.results = results
         self.text = text
         self.text2 = [text2]
-        
+
     def evaluateCommand(self, cmd):
         if cmd.didFail():
             return FAILURE
@@ -185,5 +191,6 @@ class SubunitShellCommand(ShellCommand):
 
     def getText(self, cmd, results):
         return self.text
+
     def getText2(self, cmd, results):
         return self.text2

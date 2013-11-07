@@ -15,29 +15,30 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     sa.Table('masters', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-        # ..
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             # ..
+             )
 
     builders = sa.Table('builders', metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('name', sa.Text, nullable=False),
-        sa.Column('name_hash', sa.String(40), nullable=False),
-    )
+                        sa.Column('id', sa.Integer, primary_key=True),
+                        sa.Column('name', sa.Text, nullable=False),
+                        sa.Column('name_hash', sa.String(40), nullable=False),
+                        )
     builders.create()
 
     builder_masters = sa.Table('builder_masters', metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
-            nullable=False),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-            nullable=False),
-    )
+                               sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                               sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+                                         nullable=False),
+                               sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                         nullable=False),
+                               )
     builder_masters.create()
 
     idx = sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
@@ -47,6 +48,6 @@ def upgrade(migrate_engine):
     idx = sa.Index('builder_masters_masterid', builder_masters.c.masterid)
     idx.create()
     idx = sa.Index('builder_masters_identity',
-            builder_masters.c.builderid, builder_masters.c.masterid,
-            unique=True)
+                   builder_masters.c.builderid, builder_masters.c.masterid,
+                   unique=True)
     idx.create()

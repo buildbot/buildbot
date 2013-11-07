@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
+
 
 class Db2DataMixin(object):
 
@@ -24,14 +26,14 @@ class Db2DataMixin(object):
             'name': dbdict['name'],
             'slaveinfo': dbdict['slaveinfo'],
             'connected_to': [
-                    {'masterid': id, 'link': base.Link(('master', str(id)))}
-                    for id in dbdict['connected_to'] ],
+                {'masterid': id, 'link': base.Link(('master', str(id)))}
+                for id in dbdict['connected_to']],
             'configured_on': [
-                    {'masterid': c['masterid'],
-                     'builderid': c['builderid'],
-                     'link': base.Link(('master', str(c['masterid']),
-                                        'builder', str(c['builderid'])))}
-                    for c in dbdict['configured_on'] ],
+                {'masterid': c['masterid'],
+                 'builderid': c['builderid'],
+                 'link': base.Link(('master', str(c['masterid']),
+                                    'builder', str(c['builderid'])))}
+                for c in dbdict['configured_on']],
             'link': base.Link(('buildslave', str(dbdict['id']))),
         }
 
@@ -84,19 +86,19 @@ class Buildslave(base.ResourceType):
 
     name = "buildslave"
     plural = "buildslaves"
-    endpoints = [ BuildslaveEndpoint, BuildslavesEndpoint ]
-    keyFields = [ 'buildslaveid' ]
+    endpoints = [BuildslaveEndpoint, BuildslavesEndpoint]
+    keyFields = ['buildslaveid']
 
     class EntityType(types.Entity):
         buildslaveid = types.Integer()
         name = types.String()
         connected_to = types.List(of=types.Dict(
-                                        masterid=types.Integer(),
-                                        link=types.Link()))
+            masterid=types.Integer(),
+            link=types.Link()))
         configured_on = types.List(of=types.Dict(
-                                        masterid=types.Integer(),
-                                        builderid=types.Integer(),
-                                        link=types.Link()))
+            masterid=types.Integer(),
+            builderid=types.Integer(),
+            link=types.Link()))
         slaveinfo = types.JsonObject()
         link = types.Link()
     entityType = EntityType(name)
@@ -109,9 +111,9 @@ class Buildslave(base.ResourceType):
     @defer.inlineCallbacks
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         yield self.master.db.buildslaves.buildslaveConnected(
-                buildslaveid=buildslaveid,
-                masterid=masterid,
-                slaveinfo=slaveinfo)
+            buildslaveid=buildslaveid,
+            masterid=masterid,
+            slaveinfo=slaveinfo)
         bs = yield self.master.data.get(('buildslave', buildslaveid))
         self.produceEvent(bs, 'connected')
 
@@ -119,7 +121,7 @@ class Buildslave(base.ResourceType):
     @defer.inlineCallbacks
     def buildslaveDisconnected(self, buildslaveid, masterid):
         yield self.master.db.buildslaves.buildslaveDisconnected(
-                buildslaveid=buildslaveid,
-                masterid=masterid)
+            buildslaveid=buildslaveid,
+            masterid=masterid)
         bs = yield self.master.data.get(('buildslave', buildslaveid))
         self.produceEvent(bs, 'disconnected')
