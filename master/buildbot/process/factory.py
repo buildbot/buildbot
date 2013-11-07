@@ -85,7 +85,6 @@ class BuildFactory(util.ComparableMixin):
 
 
 class GNUAutoconf(BuildFactory):
-    """GNU Autoconf based buildfactory"""
 
     def __init__(self, source, configure="./configure",
                  configureEnv={},
@@ -94,21 +93,6 @@ class GNUAutoconf(BuildFactory):
                  compile=["make", "all"],
                  test=["make", "check"],
                  distcheck=["make", "distcheck"]):
-        """
-        GNUAutoconf initialisation
-        @param self         Pointer to this object
-        @param source       BuildStep to fetch the source
-        @param configure    Definition of the "./configure" command
-        @param configureEnv The environment in which to run configure
-                            (to set CC or CFLAGS or similar)
-        @param reconf       use autoreconf to generate the ./configure
-                            file, set to True to use a buildbot default
-                            autoreconf command, or define the preferred
-                            command for the ShellCommand
-        @param compile      Command used to compile the program
-        @param test         Command used to run the test scripts
-        @param distcheck    Command to run to test package integrity
-        """
         BuildFactory.__init__(self, [source])
 
         if reconf is True:
