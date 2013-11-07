@@ -19,19 +19,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-import commands
-import xml.dom.minidom
 import ConfigParser
+import commands
 import os.path
+import xml.dom.minidom
 
 # change these settings to match your project
 svnurl = "https://pse.cheme.cmu.edu/svn/ascend/code/trunk"
 statefilename = "~/changemonitor/config.ini"
-buildmaster = "buildbot.example.org:9989" # connects to a PBChangeSource
+buildmaster = "buildbot.example.org:9989"  # connects to a PBChangeSource
 
 xml1 = commands.getoutput(
     "svn log --non-interactive --verbose --xml --limit=1 " + svnurl)
-#print "XML\n-----------\n"+xml1+"\n\n"
+# print "XML\n-----------\n"+xml1+"\n\n"
 
 try:
     doc = xml.dom.minidom.parseString(xml1)
@@ -46,8 +46,8 @@ try:
     paths = []
     for p in pathlist.getElementsByTagName("path"):
         paths.append("".join([t.data for t in p.childNodes]))
-    #print "PATHS"
-    #print paths
+    # print "PATHS"
+    # print paths
 except xml.parsers.expat.ExpatError, e:
     print "FAILED TO PARSE 'svn log' XML:"
     print str(e)
@@ -80,11 +80,11 @@ except ConfigParser.NoSectionError:
 if lastrevision != revision:
 
     #comments = codecs.encodings.unicode_escape.encode(comments)
-    cmd = "buildbot sendchange --master="+buildmaster+" --branch=trunk \
---revision=\""+revision+"\" --username=\""+author+"\" --vc=\"svn\" \
---comments=\""+comments+"\" "+" ".join(paths)
+    cmd = "buildbot sendchange --master=" + buildmaster + " --branch=trunk \
+--revision=\"" + revision + "\" --username=\"" + author + "\" --vc=\"svn\" \
+--comments=\"" + comments + "\" " + " ".join(paths)
 
-    #print cmd
+    # print cmd
     res = commands.getoutput(cmd)
 
     print "SUBMITTING NEW REVISION", revision
@@ -94,6 +94,6 @@ if lastrevision != revision:
         ini.set("CurrentRevision", "changeset", revision)
         f = open(fname, "w")
         ini.write(f)
-        #print "WROTE CHANGES TO",fname
+        # print "WROTE CHANGES TO",fname
     except:
         print "FAILED TO RECORD INI FILE"

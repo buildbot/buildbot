@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.test.util import interfaces
+from twisted.trial import unittest
+
 
 class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
 
@@ -41,15 +42,16 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
     def test_double_decorator(self):
         def myfunc(x, y):
             pass
+
         def myfunc2(x, y):
             pass
+
         def myfunc3(x, yy):
             pass
 
         @self.assertArgSpecMatches(myfunc, myfunc2)
         def myfunc4(x, y):
             pass
-
 
         try:
             @self.assertArgSpecMatches(myfunc, myfunc3)
@@ -62,7 +64,6 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
 
         self.assertIdentical(type(error), unittest.FailTest)
         self.assertEqual(error.args, ('Expected: (x, y); got: (x, yy)',))
-
 
         try:
             @self.assertArgSpecMatches(myfunc, myfunc3)
@@ -79,8 +80,10 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
     def test_function_style(self):
         def myfunc(x, y=2, *args):
             pass
+
         def myfunc2(x, y=2, *args):
             pass
+
         def myfunc3(x, y=3, *args):
             pass
 

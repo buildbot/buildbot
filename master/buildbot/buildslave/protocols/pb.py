@@ -15,10 +15,12 @@
 
 from __future__ import absolute_import
 
-from twisted.python import log
-from twisted.internet import defer, reactor
 from buildbot.buildslave.protocols import base
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 from twisted.spread import pb
+
 
 class Listener(base.Listener):
 
@@ -34,7 +36,7 @@ class Listener(base.Listener):
         # use registrations
         if username in self._registrations:
             currentPassword, currentPortStr, currentReg = \
-                    self._registrations[username]
+                self._registrations[username]
         else:
             currentPassword, currentPortStr, currentReg = None, None, None
 
@@ -44,7 +46,7 @@ class Listener(base.Listener):
                 del self._registrations[username]
             if portStr:
                 reg = self.master.pbmanager.register(
-                        portStr, username, password, self._getPerspective)
+                    portStr, username, password, self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
                 defer.returnValue(reg)
 
@@ -52,7 +54,7 @@ class Listener(base.Listener):
     def _getPerspective(self, mind, buildslaveName):
         bslaves = self.master.buildslaves
         log.msg("slave '%s' attaching from %s" % (buildslaveName,
-                                        mind.broker.transport.getPeer()))
+                                                  mind.broker.transport.getPeer()))
 
         # try to use TCP keepalives
         try:
@@ -72,6 +74,7 @@ class Listener(base.Listener):
         else:
             # TODO: return something more useful
             raise RuntimeError("rejecting duplicate slave")
+
 
 class Connection(base.Connection, pb.Avatar):
 
@@ -119,7 +122,7 @@ class Connection(base.Connection, pb.Avatar):
     def startKeepaliveTimer(self):
         assert self.keepalive_interval
         self.keepalive_timer = reactor.callLater(self.keepalive_interval,
-            self.doKeepalive)
+                                                 self.doKeepalive)
 
     # methods to send messages to the slave
 
@@ -157,8 +160,8 @@ class Connection(base.Connection, pb.Avatar):
     def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startCommand',
-            remoteCommand, commandId, commandName, args
-        )
+                                       remoteCommand, commandId, commandName, args
+                                       )
 
     @defer.inlineCallbacks
     def remoteShutdown(self):
@@ -167,19 +170,21 @@ class Connection(base.Connection, pb.Avatar):
         # failures.
         def new_way():
             d = self.mind.callRemote('shutdown')
-            d.addCallback(lambda _ : True) # successful shutdown request
+            d.addCallback(lambda _: True)  # successful shutdown request
+
             def check_nsm(f):
                 f.trap(pb.NoSuchMethod)
-                return False # fall through to the old way
+                return False  # fall through to the old way
             d.addErrback(check_nsm)
+
             def check_connlost(f):
                 f.trap(pb.PBConnectionLost)
-                return True # the slave is gone, so call it finished
+                return True  # the slave is gone, so call it finished
             d.addErrback(check_connlost)
             return d
 
         if (yield new_way()):
-            return # done!
+            return  # done!
 
         # Now, the old way. Look for a builder with a remote reference to the
         # client side slave. If we can find one, then call "shutdown" on the
@@ -200,12 +205,13 @@ class Connection(base.Connection, pb.Avatar):
                 # Here we look at the reason why the remote call failed, and if
                 # it's because the connection was lost, that means the slave
                 # shutdown as expected.
+
                 def _errback(why):
                     if why.check(pb.PBConnectionLost):
                         log.msg("Lost connection to %s" % name)
                     else:
                         log.err("Unexpected error when trying to shutdown %s"
-                                                                        % name)
+                                % name)
                 d.addErrback(_errback)
                 return d
             log.err("Couldn't find remote builder to shut down slave")
@@ -218,7 +224,7 @@ class Connection(base.Connection, pb.Avatar):
 
     def remoteInterruptCommand(self, commandId, why):
         return defer.maybeDeferred(self.mind.callRemote, "interruptCommand",
-            commandId, why)
+                                   commandId, why)
 
     # perspective methods called by the slave
 

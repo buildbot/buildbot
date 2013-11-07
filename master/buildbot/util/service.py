@@ -14,16 +14,18 @@
 # Copyright Buildbot Team Members
 
 from twisted.application import service
-from twisted.internet import defer, task
+from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 
 from buildbot import util
+
 
 class ClusteredService(service.Service, util.ComparableMixin):
 
     compare_attrs = ('name',)
 
-    POLL_INTERVAL_SEC = 5*60 # 5 minutes
+    POLL_INTERVAL_SEC = 5 * 60  # 5 minutes
 
     serviceid = None
     active = False
@@ -37,7 +39,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
         self.serviceid = None
         self.active = False
 
-    ## activity handling
+    # activity handling
 
     def isActive(self):
         return self.active
@@ -51,7 +53,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
     # will run when this instance loses its chosen status
         return defer.succeed(None)
 
-    ## service arbitration hooks
+    # service arbitration hooks
 
     def _getServiceId(self):
         # retrieve the id for this service; we assume that, once we have a valid id,
@@ -70,7 +72,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
         # a Deferred.
         raise NotImplementedError
 
-    ## default implementation to delegate to the above methods
+    # default implementation to delegate to the above methods
 
     def startService(self):
         # subclasses should override startService only to perform actions that should

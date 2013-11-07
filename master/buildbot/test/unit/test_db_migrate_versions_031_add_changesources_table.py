@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,9 +33,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             sa.Table('masters', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                # ..
-            ).create()
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     # ..
+                     ).create()
 
         def verify_thd(conn):
             metadata = sa.MetaData()
@@ -41,14 +43,14 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             changesources = sa.Table('changesources', metadata, autoload=True)
             changesource_masters = sa.Table('changesource_masters', metadata,
-                    autoload=True)
+                                            autoload=True)
 
-            q = sa.select([ changesources.c.id, changesources.c.name,
-                            changesources.c.name_hash ])
+            q = sa.select([changesources.c.id, changesources.c.name,
+                           changesources.c.name_hash])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-            q = sa.select([ changesource_masters.c.changesourceid,
-                            changesource_masters.c.masterid ])
+            q = sa.select([changesource_masters.c.changesourceid,
+                           changesource_masters.c.masterid])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
         return self.do_test_migration(30, 31, setup_thd, verify_thd)

@@ -13,15 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.util import state
 from buildbot.test.fake.fakemaster import make_master
+from buildbot.util import state
+from twisted.trial import unittest
+
 
 class FakeObject(state.StateMixin):
     name = "fake-name"
 
     def __init__(self, master):
         self.master = master
+
 
 class TestStateMixin(unittest.TestCase):
 
@@ -33,8 +35,9 @@ class TestStateMixin(unittest.TestCase):
 
     def test_getState(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject',
-                fav_color=['red','purple'])
+                                       fav_color=['red', 'purple'])
         d = self.object.getState('fav_color')
+
         def check(res):
             self.assertEqual(res, ['red', 'purple'])
         d.addCallback(check)
@@ -42,6 +45,7 @@ class TestStateMixin(unittest.TestCase):
 
     def test_getState_default(self):
         d = self.object.getState('fav_color', 'black')
+
         def check(res):
             self.assertEqual(res, 'black')
         d.addCallback(check)
@@ -49,10 +53,12 @@ class TestStateMixin(unittest.TestCase):
 
     def test_getState_KeyError(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject',
-                fav_color=['red','purple'])
+                                       fav_color=['red', 'purple'])
         d = self.object.getState('fav_book')
+
         def cb(_):
             self.fail("should not succeed")
+
         def check_exc(f):
             f.trap(KeyError)
             pass
@@ -61,17 +67,19 @@ class TestStateMixin(unittest.TestCase):
 
     def test_setState(self):
         d = self.object.setState('y', 14)
+
         def check(_):
             self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                    y=14)
+                                                    y=14)
         d.addCallback(check)
         return d
 
     def test_setState_existing(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject', x=13)
         d = self.object.setState('x', 14)
+
         def check(_):
             self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                    x=14)
+                                                    x=14)
         d.addCallback(check)
         return d

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+
 class FakeSlave(object):
     slave_system = 'posix'
     slavename = 'fakeslave'

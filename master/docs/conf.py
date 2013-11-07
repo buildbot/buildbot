@@ -11,7 +11,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os, textwrap
+import os
+import sys
+import textwrap
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -25,7 +27,7 @@ needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = [ 'sphinx.ext.todo', 'bbdocs.ext' ]
+extensions = ['sphinx.ext.todo', 'bbdocs.ext']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -79,7 +81,7 @@ if release == 'latest':
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = [ '_build', 'release-notes/*.rst' ]
+exclude_patterns = ['_build', 'release-notes/*.rst']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -104,7 +106,7 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'python': ('http://python.readthedocs.org/en/latest/', None),
     'sqlalchemy': ('http://sqlalchemy.readthedocs.org/en/latest/', None),
-    }
+}
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -197,8 +199,8 @@ latex_paper_size = 'a4'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'BuildBot.tex', u'BuildBot Documentation',
-   u'Brian Warner', 'manual'),
+    ('index', 'BuildBot.tex', u'BuildBot Documentation',
+     u'Brian Warner', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -236,10 +238,11 @@ man_pages = [
 
 
 # Monkey-patch Sphinx to treat unhiglighted code as error.
-from sphinx.errors import SphinxWarning
 import sphinx
 import sphinx.highlighting
+
 from pkg_resources import parse_version
+from sphinx.errors import SphinxWarning
 
 # Versions of Sphinx below changeset 1860:19b394207746 (before v0.6.6 release)
 # won't work due to different PygmentsBridge interface.
@@ -253,11 +256,14 @@ sphinx_version_supported = \
 # for fixing lots of unhighlighted code.
 fail_on_first_unhighlighted = True
 
+
 class UnhighlightedError(SphinxWarning):
     pass
 
 # PygmentsBridge.unhighlighted() added in Sphinx in changeset 574:f1c885fdd6ad
 # (0.5 release).
+
+
 def patched_unhighlighted(self, source):
     indented_source = '    ' + '\n    '.join(source.split('\n'))
 
@@ -294,6 +300,8 @@ def patched_unhighlighted(self, source):
 
 # Compatible with PygmentsBridge.highlight_block since Sphinx'
 # 1860:19b394207746 changeset (v0.6.6 release)
+
+
 def patched_highlight_block(self, *args, **kwargs):
     try:
         return orig_highlight_block(self, *args, **kwargs)

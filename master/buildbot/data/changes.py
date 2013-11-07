@@ -14,14 +14,21 @@
 # Copyright Buildbot Team Members
 
 import copy
-from twisted.internet import defer, reactor
-from twisted.python import log
-from buildbot.data import base, types, sourcestamps
+
+from buildbot.data import base
+from buildbot.data import sourcestamps
+from buildbot.data import types
 from buildbot.process import metrics
 from buildbot.process.users import users
-from buildbot.util import datetime2epoch, epoch2datetime
+from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+
 
 class FixerMixin(object):
+
     @defer.inlineCallbacks
     def _fixChange(self, change):
         # TODO: make these mods in the DB API
@@ -35,6 +42,7 @@ class FixerMixin(object):
             change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
         defer.returnValue(change)
+
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
 
@@ -60,20 +68,20 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         changes = yield self.master.db.changes.getChanges()
-        changes = [ (yield self._fixChange(ch)) for ch in changes ]
+        changes = [(yield self._fixChange(ch)) for ch in changes]
         defer.returnValue(changes)
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('change', None, 'new'))
+                                             ('change', None, 'new'))
 
 
 class Change(base.ResourceType):
 
     name = "change"
     plural = "changes"
-    endpoints = [ ChangeEndpoint, ChangesEndpoint ]
-    keyFields = [ 'changeid' ]
+    endpoints = [ChangeEndpoint, ChangesEndpoint]
+    keyFields = ['changeid']
 
     class EntityType(types.Entity):
         changeid = types.Integer()
@@ -81,7 +89,7 @@ class Change(base.ResourceType):
         files = types.List(of=types.String())
         comments = types.String()
         revision = types.NoneOk(types.String())
-        when_timestamp  = types.Integer()
+        when_timestamp = types.Integer()
         branch = types.NoneOk(types.String())
         category = types.NoneOk(types.String())
         revlink = types.NoneOk(types.String())
@@ -96,9 +104,9 @@ class Change(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addChange(self, files=None, comments=None, author=None, revision=None,
-            when_timestamp=None, branch=None, category=None, revlink=u'',
-            properties={}, repository=u'', codebase=None, project=u'',
-            src=None, _reactor=reactor):
+                  when_timestamp=None, branch=None, category=None, revlink=u'',
+                  properties={}, repository=u'', codebase=None, project=u'',
+                  src=None, _reactor=reactor):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         # add the source to the properties
@@ -109,7 +117,7 @@ class Change(base.ResourceType):
         if src:
             # create user object, returning a corresponding uid
             uid = yield users.createUserObject(self.master,
-                    author, src)
+                                               author, src)
         else:
             uid = None
 

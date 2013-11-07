@@ -17,12 +17,13 @@ from buildbot import config
 from buildbot.util import service
 from twisted.python.reflect import namedObject
 
+
 class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     classes = {
-        'simple' : {
-            'class' : "buildbot.mq.simple.SimpleMQ",
-            'keys' : set(['debug']),
+        'simple': {
+            'class': "buildbot.mq.simple.SimpleMQ",
+            'keys': set(['debug']),
         },
     }
 
@@ -30,8 +31,8 @@ class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         service.AsyncMultiService.__init__(self)
         self.setName('mq')
         self.master = master
-        self.impl = None # set in setup
-        self.impl_type = None # set in setup
+        self.impl = None  # set in setup
+        self.impl_type = None  # set in setup
 
     def setup(self):
         assert not self.impl
@@ -39,7 +40,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # imports are done locally so that we don't try to import
         # implementation-specific modules unless they're required.
         typ = self.master.config.mq['type']
-        assert typ in self.classes # this is checked by MasterConfig
+        assert typ in self.classes  # this is checked by MasterConfig
         self.impl_type = typ
         cls = namedObject(self.classes[typ]['class'])
         self.impl = cls(self.master)
@@ -59,7 +60,7 @@ class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         assert self.impl_type == new_config.mq['type']
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                 new_config)
 
     def produce(self, routing_key, data):
         # will be patched after configuration to point to the running

@@ -15,8 +15,10 @@
 
 import UserList
 import urllib
-from twisted.internet import defer
+
 from buildbot.data import exceptions
+from twisted.internet import defer
+
 
 class ResourceType(object):
     name = None
@@ -37,8 +39,8 @@ class ResourceType(object):
 
     def produceEvent(self, msg, event):
         routingKey = (self.name,) \
-             + tuple(str(msg[k]) for k in self.keyFields) \
-             + (event,)
+            + tuple(str(msg[k]) for k in self.keyFields) \
+            + (event,)
         self.master.mq.produce(routingKey, msg)
 
 
@@ -62,6 +64,7 @@ class Endpoint(object):
 
 
 class BuildNestingMixin(object):
+
     """
     A mixin for methods to decipher the many ways a build, step, or log can be
     specified.
@@ -91,8 +94,8 @@ class BuildNestingMixin(object):
                 return
 
             dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                    number=kwargs.get('step_number'),
-                    name=kwargs.get('step_name'))
+                                                               number=kwargs.get('step_number'),
+                                                               name=kwargs.get('step_name'))
             if not dbdict:
                 return
             defer.returnValue(dbdict['id'])
@@ -100,7 +103,7 @@ class BuildNestingMixin(object):
 
 class ListResult(UserList.UserList):
 
-    __slots__ = [ 'offset', 'total', 'limit']
+    __slots__ = ['offset', 'total', 'limit']
 
     # if set, this is the index in the overall results of the first element of
     # this list
@@ -113,7 +116,7 @@ class ListResult(UserList.UserList):
     limit = None
 
     def __init__(self, values,
-            offset=None, total=None, limit=None):
+                 offset=None, total=None, limit=None):
         UserList.UserList.__init__(self, values)
         self.offset = offset
         self.total = total
@@ -121,7 +124,7 @@ class ListResult(UserList.UserList):
 
     def __repr__(self):
         return "ListResult(%r, offset=%r, total=%r, limit=%r)" % \
-                (self.data, self.offset, self.total, self.limit)
+            (self.data, self.offset, self.total, self.limit)
 
     def __eq__(self, other):
         if isinstance(other, ListResult):
@@ -131,7 +134,7 @@ class ListResult(UserList.UserList):
                 and self.limit == other.limit
         else:
             return self.data == other \
-                and self.offset == self.limit == None \
+                and self.offset == self.limit is None \
                 and (self.total is None or self.total == len(other))
 
     def __ne__(self, other):
@@ -139,9 +142,10 @@ class ListResult(UserList.UserList):
 
 
 class Link(object):
+
     "A Link points to another resource, specified by path"
 
-    __slots__ = [ 'path', 'query' ]
+    __slots__ = ['path', 'query']
 
     def __init__(self, path, query=None):
         assert isinstance(path, tuple)
@@ -153,8 +157,8 @@ class Link(object):
 
     def __cmp__(self, other):
         return cmp(self.__class__, other.__class__) \
-                or cmp(self.path, other.path) \
-                or cmp(self.query, other.query)
+            or cmp(self.path, other.path) \
+            or cmp(self.query, other.query)
 
     def makeUrl(self, baseUrl, apiVersion):
         querystr = ''

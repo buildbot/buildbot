@@ -14,9 +14,11 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
+from buildbot.db import base
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.db import base
+
 
 class LogsConnectorComponent(base.DBConnectorComponent):
 
@@ -51,7 +53,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
             res = conn.execute(q)
-            return [ self._logdictFromRow(row) for row in res.fetchall() ]
+            return [self._logdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     def getLogLines(self, logid, first_line, last_line):
@@ -72,13 +74,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     idx = -1
                     count = first_line - row.first_line
                     for _ in xrange(count):
-                        idx = content.index('\n', idx+1)
-                    content = content[idx+1:]
+                        idx = content.index('\n', idx + 1)
+                    content = content[idx + 1:]
                 if row.last_line > last_line:
                     idx = len(content) + 1
                     count = row.last_line - last_line
                     for _ in xrange(count):
-                        idx = content.rindex('\n', 0, idx-1)
+                        idx = content.rindex('\n', 0, idx - 1)
                     content = content[:idx]
                 rv.append(content)
             return u'\n'.join(rv) + u'\n' if rv else u''
@@ -86,15 +88,15 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     def addLog(self, stepid, name, type):
         assert type in 'tsh', "Log type must be one of t, s, or h"
+
         def thd(conn):
             try:
                 r = conn.execute(self.db.model.logs.insert(),
-                    dict(name=name, stepid=stepid, complete=0,
-                         num_lines=0, type=type))
+                                 dict(name=name, stepid=stepid, complete=0,
+                                      num_lines=0, type=type))
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                raise KeyError, \
-                    "log with name '%r' already exists in this step" % (name,)
+                raise KeyError("log with name '%r' already exists in this step" % (name,))
         return self.db.pool.do(thd)
 
     def appendLog(self, logid, content):
@@ -102,6 +104,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         # the trailing newline
         assert content[-1] == u'\n'
         content = content[:-1]
+
         def thd(conn):
             q = sa.select([self.db.model.logs.c.num_lines])
             q = q.where(self.db.model.logs.c.id == logid)
@@ -109,7 +112,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             res.close()
             if not row:
-                return # ignore a missing log
+                return  # ignore a missing log
 
             # Break the content up into chunks.  This takes advantage of the
             # fact that no character but u'\n' maps to b'\n' in UTF-8.
@@ -121,14 +124,14 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
                 last_line = chunk_first_line + chunk.count('\n')
                 conn.execute(self.db.model.logchunks.insert(),
-                    dict(logid=logid, first_line=chunk_first_line,
-                        last_line=last_line, content=chunk,
-                        compressed=0))
+                             dict(logid=logid, first_line=chunk_first_line,
+                                  last_line=last_line, content=chunk,
+                                  compressed=0))
                 chunk_first_line = last_line + 1
 
             conn.execute(self.db.model.logs.update(),
-                whereclause=(self.db.model.logs.c.id == logid),
-                    num_lines=last_line + 1)
+                         whereclause=(self.db.model.logs.c.id == logid),
+                         num_lines=last_line + 1)
             return (first_line, last_line)
         return self.db.pool.do(thd)
 
@@ -144,7 +147,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         # find the last newline before the limit
         i = content.rfind('\n', 0, self.MAX_CHUNK_SIZE)
         if i != -1:
-            return content[:i], content[i+1:]
+            return content[:i], content[i + 1:]
 
         log.msg('truncating long line for log %d' % logid)
 
@@ -162,7 +165,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         if i == -1:
             return truncline, None
         else:
-            return truncline, content[i+1:]
+            return truncline, content[i + 1:]
 
     def finishLog(self, logid):
         def thd(conn):

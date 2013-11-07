@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 
 import twisted
-from twisted.python import versions
+
 from buildbot.util import sautils
+from twisted.python import versions
 
 # NOTE: all of these patches test for applicability *before* importing the
 # patch module.  This will help cut down on unnecessary imports where the
 # patches are not needed, and also avoid problems with patches importing
 # private things in external libraries that no longer exist.
+
 
 def patch_bug4881():
     # this patch doesn't apply (or even import!) on Windows
@@ -33,6 +35,7 @@ def patch_bug4881():
         from buildbot.monkeypatches import bug4881
         bug4881.patch()
 
+
 def patch_bug4520():
     # this bug was patched in twisted-11.1.0, and only affects py26 and up
     import sys
@@ -42,38 +45,44 @@ def patch_bug4520():
         from buildbot.monkeypatches import bug4520
         bug4520.patch()
 
+
 def patch_bug5079():
     # this bug is patched in Twisted-12.0.0; it was probably
     # present in Twisted-8.x.0, but the patch doesn't work
     if (twisted.version < versions.Version('twisted', 12, 0, 0) and
-        twisted.version >= versions.Version('twisted', 9, 0, 0)):
+            twisted.version >= versions.Version('twisted', 9, 0, 0)):
         from buildbot.monkeypatches import bug5079
         bug5079.patch()
 
+
 def patch_sqlalchemy2364():
-    # fix for SQLAlchemy bug 2364 
-    if sautils.sa_version() < (0,7,5):
+    # fix for SQLAlchemy bug 2364
+    if sautils.sa_version() < (0, 7, 5):
         from buildbot.monkeypatches import sqlalchemy2364
         sqlalchemy2364.patch()
 
+
 def patch_sqlalchemy2189():
     # fix for SQLAlchemy bug 2189
-    if sautils.sa_version() <= (0,7,1):
+    if sautils.sa_version() <= (0, 7, 1):
         from buildbot.monkeypatches import sqlalchemy2189
         sqlalchemy2189.patch()
+
 
 def patch_gatherResults():
     if twisted.version < versions.Version('twisted', 11, 1, 0):
         from buildbot.monkeypatches import gatherResults
         gatherResults.patch()
 
+
 def patch_testcase_assert_raises_regexp():
     # pythons before 2.7 does not have TestCase.assertRaisesRegexp() method
     # add our local implementation if needed
     import sys
-    if sys.version_info[:2] < (2,7):
+    if sys.version_info[:2] < (2, 7):
         from buildbot.monkeypatches import testcase_assert
         testcase_assert.patch()
+
 
 def patch_python14653():
     # this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
@@ -81,6 +90,7 @@ def patch_python14653():
     if sys.version_info[:3] < (2, 7, 4):
         from buildbot.monkeypatches import python14653
         python14653.patch()
+
 
 def patch_all(for_tests=False):
     if for_tests:

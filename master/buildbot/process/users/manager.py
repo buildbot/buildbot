@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.application import service
 from buildbot import config
+from twisted.application import service
+from twisted.internet import defer
+
 
 class UserManagerManager(config.ReconfigurableServiceMixin,
                          service.MultiService):
@@ -32,8 +33,8 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
         # new ones.
 
         for mgr in list(self):
-            yield defer.maybeDeferred(lambda :
-                    mgr.disownServiceParent())
+            yield defer.maybeDeferred(lambda:
+                                      mgr.disownServiceParent())
             mgr.master = None
 
         for mgr in new_config.user_managers:
@@ -42,4 +43,4 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                new_config)

@@ -13,10 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, task
 from buildbot.test.fake import fakemaster
+from twisted.internet import defer
+from twisted.internet import task
+
 
 class ChangeSourceMixin(object):
+
     """
     This class is used for testing change sources, and handles a few things:
 
@@ -35,7 +38,7 @@ class ChangeSourceMixin(object):
         "Set up the mixin - returns a deferred."
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
-        assert not hasattr(self.master, 'addChange') # just checking..
+        assert not hasattr(self.master, 'addChange')  # just checking..
         return defer.succeed(None)
 
     def tearDownChangeSource(self):
@@ -63,6 +66,7 @@ class ChangeSourceMixin(object):
     def stopChangeSource(self):
         "stop the change source again; returns a deferred"
         d = self.changesource.stopService()
+
         def mark_stopped(_):
             self.started = False
         d.addCallback(mark_stopped)

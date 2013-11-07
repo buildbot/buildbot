@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data import base, types, patches
+from buildbot.data import base
+from buildbot.data import patches
+from buildbot.data import types
 from buildbot.util import datetime2epoch
+from twisted.internet import defer
+
 
 def _db2data(ss):
     data = {
@@ -32,11 +35,11 @@ def _db2data(ss):
     if ss['patch_body']:
         data['patch'] = {
             'patchid': ss['patchid'],
-            'level' : ss['patch_level'],
-            'subdir' : ss['patch_subdir'],
-            'author' : ss['patch_author'],
-            'comment' : ss['patch_comment'],
-            'body' : ss['patch_body'],
+            'level': ss['patch_level'],
+            'subdir': ss['patch_subdir'],
+            'author': ss['patch_author'],
+            'comment': ss['patch_comment'],
+            'body': ss['patch_body'],
         }
     return data
 
@@ -51,7 +54,7 @@ class SourceStampEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         ssdict = yield self.master.db.sourcestamps.getSourceStamp(
-                                                        kwargs['ssid'])
+            kwargs['ssid'])
         defer.returnValue(_db2data(ssdict) if ssdict else None)
 
 
@@ -65,20 +68,20 @@ class SourceStampsEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        defer.returnValue([ _db2data(ssdict) for ssdict in
-            (yield self.master.db.sourcestamps.getSourceStamps()) ])
+        defer.returnValue([_db2data(ssdict) for ssdict in
+                           (yield self.master.db.sourcestamps.getSourceStamps())])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('sourcestamp', None, None))
+                                             ('sourcestamp', None, None))
 
 
 class SourceStamp(base.ResourceType):
 
     name = "sourcestamp"
     plural = "sourcestamps"
-    endpoints = [ SourceStampEndpoint, SourceStampsEndpoint ]
-    keyFields = [ 'ssid' ]
+    endpoints = [SourceStampEndpoint, SourceStampsEndpoint]
+    keyFields = ['ssid']
 
     class EntityType(types.Entity):
         ssid = types.Integer()

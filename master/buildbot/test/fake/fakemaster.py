@@ -13,24 +13,31 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import weakref
-from twisted.internet import defer
-from buildbot.test.fake import fakedb, fakemq, fakedata
+
+from buildbot import config
+from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import fakedata
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
-from buildbot import config
-import mock
-from buildbot.test.fake import bslavemanager
+from twisted.internet import defer
+
 
 class FakeCache(object):
+
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
+
     def __init__(self, name, miss_fn):
         self.name = name
         self.miss_fn = miss_fn
 
     def get(self, key, **kwargs):
         d = self.miss_fn(key, **kwargs)
+
         def mkref(x):
             if x is not None:
                 weakref.ref(x)
@@ -85,6 +92,7 @@ class FakeBuilderStatus(object):
 
 
 class FakeMaster(object):
+
     """
     Create a fake Master instance: a Mock with some convenience
     implementations:
@@ -119,7 +127,7 @@ class FakeMaster(object):
 
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantMq=False, wantDb=False, wantData=False,
-        testcase=None, **kwargs):
+                testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
     if wantData:
         wantMq = wantDb = True

@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.db import schedulers
-from buildbot.test.util import interfaces, connector_component, validation
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import connector_component
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -47,11 +51,11 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_classifyChanges(self):
         yield self.insertTestData([self.ss92, self.change3, self.change4,
-                    self.scheduler24])
+                                   self.scheduler24])
         yield self.db.schedulers.classifyChanges(24,
-                                { 3 : False, 4: True })
+                                                 {3: False, 4: True})
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, {3 : False, 4 : True })
+        self.assertEqual(res, {3: False, 4: True})
 
     @defer.inlineCallbacks
     def test_classifyChanges_again(self):
@@ -63,24 +67,24 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler24,
             fakedb.SchedulerChange(schedulerid=24, changeid=3, important=0),
         ])
-        yield self.db.schedulers.classifyChanges(24, { 3 : True })
+        yield self.db.schedulers.classifyChanges(24, {3: True})
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, {3 : True })
+        self.assertEqual(res, {3: True})
 
     def test_signature_flushChangeClassifications(self):
         @self.assertArgSpecMatches(
-                self.db.schedulers.flushChangeClassifications)
+            self.db.schedulers.flushChangeClassifications)
         def flushChangeClassifications(self, schedulerid, less_than=None):
             pass
 
     @defer.inlineCallbacks
     def test_flushChangeClassifications(self):
         yield self.insertTestData([self.ss92, self.change3, self.change4,
-                    self.change5, self.scheduler24])
+                                   self.change5, self.scheduler24])
         yield self.addClassifications(24,
-                            (3, 1), (4, 0), (5, 1))
+                                      (3, 1), (4, 0), (5, 1))
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, {3:True, 4:False, 5:True})
+        self.assertEqual(res, {3: True, 4: False, 5: True})
         yield self.db.schedulers.flushChangeClassifications(24)
         res = yield self.db.schedulers.getChangeClassifications(24)
         self.assertEqual(res, {})
@@ -88,37 +92,37 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_flushChangeClassifications_less_than(self):
         yield self.insertTestData([self.ss92, self.change3,
-                    self.change4, self.change5, self.scheduler24])
+                                   self.change4, self.change5, self.scheduler24])
         yield self.addClassifications(24,
-                            (3, 1), (4, 0), (5, 1))
+                                      (3, 1), (4, 0), (5, 1))
         yield self.db.schedulers.flushChangeClassifications(24, less_than=5)
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, {5:True})
+        self.assertEqual(res, {5: True})
 
     def test_signature_getChangeClassifications(self):
         @self.assertArgSpecMatches(self.db.schedulers.getChangeClassifications)
         def getChangeClassifications(self, schedulerid, branch=-1,
-                repository=-1, project=-1, codebase=-1):
+                                     repository=-1, project=-1, codebase=-1):
             pass
 
     @defer.inlineCallbacks
     def test_getChangeClassifications(self):
         yield self.insertTestData([self.ss92, self.change3, self.change4,
-                    self.change5, self.change6, self.scheduler24])
+                                   self.change5, self.change6, self.scheduler24])
         yield self.addClassifications(24,
-                (3, 1), (4, 0), (5, 1), (6, 1))
+                                      (3, 1), (4, 0), (5, 1), (6, 1))
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, { 3 : True, 4 : False, 5 : True, 6: True })
+        self.assertEqual(res, {3: True, 4: False, 5: True, 6: True})
 
     @defer.inlineCallbacks
     def test_getChangeClassifications_branch(self):
         yield self.insertTestData([self.ss92, self.change3, self.change4,
-                    self.change5, self.change6, self.scheduler24])
+                                   self.change5, self.change6, self.scheduler24])
         yield self.addClassifications(24,
-                (3, 1), (4, 0), (5, 1), (6, 1))
+                                      (3, 1), (4, 0), (5, 1), (6, 1))
         res = yield self.db.schedulers.getChangeClassifications(24,
-                                                            branch='sql')
-        self.assertEqual(res, { 6: True })
+                                                                branch='sql')
+        self.assertEqual(res, {6: True})
 
     def test_signature_findSchedulerId(self):
         @self.assertArgSpecMatches(self.db.schedulers.findSchedulerId)
@@ -144,7 +148,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_fresh(self):
-        yield self.insertTestData([ self.scheduler24, self.master13 ])
+        yield self.insertTestData([self.scheduler24, self.master13])
         yield self.db.schedulers.setSchedulerMaster(24, 13)
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch['masterid'], 13)
@@ -154,8 +158,8 @@ class Tests(interfaces.InterfaceTests):
             self.master13,
             self.scheduler25, self.master14, self.scheduler25master,
         ])
-        d.addCallback(lambda _ :
-            self.db.schedulers.setSchedulerMaster(25, 13))
+        d.addCallback(lambda _:
+                      self.db.schedulers.setSchedulerMaster(25, 13))
         self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
         return d
 
@@ -163,8 +167,8 @@ class Tests(interfaces.InterfaceTests):
         d = self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
         ])
-        d.addCallback(lambda _ :
-            self.db.schedulers.setSchedulerMaster(24, 14))
+        d.addCallback(lambda _:
+                      self.db.schedulers.setSchedulerMaster(24, 14))
         self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
         return d
 
@@ -179,7 +183,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None_unowned(self):
-        yield self.insertTestData([ self.scheduler25 ])
+        yield self.insertTestData([self.scheduler25])
         yield self.db.schedulers.setSchedulerMaster(25, None)
         sch = yield self.db.schedulers.getScheduler(25)
         self.assertEqual(sch['masterid'], None)
@@ -191,7 +195,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler(self):
-        yield self.insertTestData([ self.scheduler24 ])
+        yield self.insertTestData([self.scheduler24])
         sch = yield self.db.schedulers.getScheduler(24)
         validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
@@ -206,8 +210,8 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler_active(self):
-        yield self.insertTestData([ self.scheduler24, self.master13,
-                                    self.scheduler24master ])
+        yield self.insertTestData([self.scheduler24, self.master13,
+                                   self.scheduler24master])
         sch = yield self.db.schedulers.getScheduler(24)
         validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
@@ -217,14 +221,14 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getScheduler_inactive_but_linked(self):
-        yield self.insertTestData([ self.scheduler25, self.master14,
-                                    self.scheduler25master ])
+        yield self.insertTestData([self.scheduler25, self.master14,
+                                   self.scheduler25master])
         sch = yield self.db.schedulers.getScheduler(25)
         validation.verifyDbDict(self, 'schedulerdict', sch)
         self.assertEqual(sch, dict(
             id=25,
             name='schname2',
-            masterid=14)) # row exists, but marked inactive
+            masterid=14))  # row exists, but marked inactive
 
     def test_signature_getSchedulers(self):
         @self.assertArgSpecMatches(self.db.schedulers.getSchedulers)
@@ -236,9 +240,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25,
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers()
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
             dict(id=25, name='schname2', masterid=None),
@@ -249,9 +253,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25,
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers(masterid=13)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
@@ -261,9 +265,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers(active=True)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
@@ -273,17 +277,17 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers(
-                                            active=True, masterid=13)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+            active=True, masterid=13)
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=24, name='schname', masterid=13),
         ]))
 
         schlist = yield self.db.schedulers.getSchedulers(
-                                            active=True, masterid=14)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+            active=True, masterid=14)
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), [])
 
     @defer.inlineCallbacks
@@ -291,9 +295,9 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers(active=False)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
             dict(id=25, name='schname2', masterid=None),
         ]))
@@ -303,15 +307,15 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25
-            ])
+        ])
         schlist = yield self.db.schedulers.getSchedulers(
-                active=False, masterid=13)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+            active=False, masterid=13)
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), [])
 
         schlist = yield self.db.schedulers.getSchedulers(
-                active=False, masterid=14)
-        [ validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist ]
+            active=False, masterid=14)
+        [validation.verifyDbDict(self, 'schedulerdict', sch) for sch in schlist]
         self.assertEqual(sorted(schlist), [])   # always returns [] by spec!
 
 
@@ -330,23 +334,23 @@ class TestFakeDB(unittest.TestCase, Tests):
 
     def addClassifications(self, schedulerid, *classifications):
         self.db.schedulers.fakeClassifications(schedulerid,
-                dict(classifications))
+                                               dict(classifications))
         return defer.succeed(None)
 
 
 class TestRealDB(unittest.TestCase,
-        connector_component.ConnectorComponentMixin,
-        RealTests):
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'schedulers', 'masters',
                          'sourcestamps', 'patches', 'scheduler_masters',
-                         'scheduler_changes' ])
+                         'scheduler_changes'])
 
         def finish_setup(_):
             self.db.schedulers = \
-                    schedulers.SchedulersConnectorComponent(self.db)
+                schedulers.SchedulersConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
         return d
@@ -359,5 +363,5 @@ class TestRealDB(unittest.TestCase,
             q = self.db.model.scheduler_changes.insert()
             conn.execute(q, [
                 dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
-                for c in classifications ])
+                for c in classifications])
         return self.db.pool.do(thd)

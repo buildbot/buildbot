@@ -13,13 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, reactor
-from buildbot.data import base, types
-from buildbot.util import datetime2epoch, epoch2datetime
+from buildbot.data import base
+from buildbot.data import types
+from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.internet import reactor
 
 # time, in minutes, after which a master that hasn't checked in will be
 # marked as inactive
 EXPIRE_MINUTES = 10
+
 
 def _db2data(master):
     return dict(masterid=master['id'],
@@ -27,6 +31,7 @@ def _db2data(master):
                 active=master['active'],
                 last_active=datetime2epoch(master['last_active']),
                 link=base.Link(('master', str(master['id']))))
+
 
 class MasterEndpoint(base.Endpoint):
 
@@ -42,7 +47,7 @@ class MasterEndpoint(base.Endpoint):
         # this builder
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(
-                    builderid=kwargs['builderid'])
+                builderid=kwargs['builderid'])
             if not builder or kwargs['masterid'] not in builder['masterids']:
                 defer.returnValue(None)
                 return
@@ -64,25 +69,25 @@ class MastersEndpoint(base.Endpoint):
         masterlist = yield self.master.db.masters.getMasters()
         if 'builderid' in kwargs:
             builder = yield self.master.db.builders.getBuilder(
-                    builderid=kwargs['builderid'])
+                builderid=kwargs['builderid'])
             if builder:
                 masterids = set(builder['masterids'])
-                masterlist = [ m for m in masterlist if m['id'] in masterids ]
+                masterlist = [m for m in masterlist if m['id'] in masterids]
             else:
                 masterlist = []
-        defer.returnValue([ _db2data(m) for m in masterlist ])
+        defer.returnValue([_db2data(m) for m in masterlist])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                ('master', None, None))
+                                             ('master', None, None))
 
 
 class Master(base.ResourceType):
 
     name = "master"
     plural = "masters"
-    endpoints = [ MasterEndpoint, MastersEndpoint ]
-    keyFields = [ 'masterid' ]
+    endpoints = [MasterEndpoint, MastersEndpoint]
+    keyFields = ['masterid']
 
     class EntityType(types.Entity):
         masterid = types.Integer()
@@ -96,7 +101,7 @@ class Master(base.ResourceType):
     @defer.inlineCallbacks
     def masterActive(self, name, masterid, _reactor=reactor):
         activated = yield self.master.db.masters.setMasterState(
-                masterid=masterid, active=True, _reactor=_reactor)
+            masterid=masterid, active=True, _reactor=_reactor)
         if activated:
             self.produceEvent(
                 dict(masterid=masterid, name=name, active=True),
@@ -105,7 +110,7 @@ class Master(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def expireMasters(self, _reactor):
-        too_old = epoch2datetime(_reactor.seconds() - 60*EXPIRE_MINUTES)
+        too_old = epoch2datetime(_reactor.seconds() - 60 * EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
             if m['last_active'] is not None and m['last_active'] >= too_old:
@@ -113,7 +118,7 @@ class Master(base.ResourceType):
 
             # mark the master inactive, and send a message on its behalf
             deactivated = yield self.master.db.masters.setMasterState(
-                    masterid=m['id'], active=False, _reactor=_reactor)
+                masterid=m['id'], active=False, _reactor=_reactor)
             if deactivated:
                 self._masterDeactivated(m['id'], m['name'])
 
@@ -121,7 +126,7 @@ class Master(base.ResourceType):
     @defer.inlineCallbacks
     def masterStopped(self, name, masterid):
         deactivated = yield self.master.db.masters.setMasterState(
-                masterid=masterid, active=False)
+            masterid=masterid, active=False)
         if deactivated:
             self._masterDeactivated(masterid, name)
 
@@ -129,11 +134,11 @@ class Master(base.ResourceType):
     def _masterDeactivated(self, masterid, name):
         # common code for deactivating a master
         yield self.master.data.rtypes.builder._masterDeactivated(
-                                                    masterid=masterid)
+            masterid=masterid)
         yield self.master.data.rtypes.scheduler._masterDeactivated(
-                                                    masterid=masterid)
+            masterid=masterid)
         yield self.master.data.rtypes.changesource._masterDeactivated(
-                                                    masterid=masterid)
+            masterid=masterid)
         self.produceEvent(
             dict(masterid=masterid, name=name, active=False),
             'stopped')

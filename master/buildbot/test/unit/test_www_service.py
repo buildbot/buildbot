@@ -15,11 +15,15 @@
 
 import mock
 import os
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.www import service, rest, resource
-from buildbot.test.util import www
+
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import www
+from buildbot.www import resource
+from buildbot.www import rest
+from buildbot.www import service
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class NeedsReconfigResource(resource.Resource):
 
@@ -48,6 +52,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
     def test_reconfigService_no_port(self):
         new_config = self.makeConfig()
         d = self.svc.reconfigService(new_config)
+
         @d.addCallback
         def check(_):
             self.assertEqual(self.svc.site, None)
@@ -70,6 +75,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
     def test_reconfigService_port(self):
         new_config = self.makeConfig(port=20)
         d = self.svc.reconfigService(new_config)
+
         @d.addCallback
         def check(_):
             self.assertNotEqual(self.svc.site, None)
@@ -80,10 +86,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
     def test_reconfigService_port_changes(self):
         new_config = self.makeConfig(port=20)
         d = self.svc.reconfigService(new_config)
+
         @d.addCallback
         def reconfig(_):
             newer_config = self.makeConfig(port=999)
             return self.svc.reconfigService(newer_config)
+
         @d.addCallback
         def check(_):
             self.assertNotEqual(self.svc.site, None)
@@ -94,10 +102,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
     def test_reconfigService_port_changes_to_none(self):
         new_config = self.makeConfig(port=20)
         d = self.svc.reconfigService(new_config)
+
         @d.addCallback
         def reconfig(_):
             newer_config = self.makeConfig()
             return self.svc.reconfigService(newer_config)
+
         @d.addCallback
         def check(_):
             # (note the site sticks around)
@@ -114,4 +124,4 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         root = site.resource
         req = mock.Mock()
         self.assertIsInstance(root.getChildWithDefault('api', req),
-                rest.RestRootResource)
+                              rest.RestRootResource)

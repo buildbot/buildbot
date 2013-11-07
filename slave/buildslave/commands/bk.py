@@ -17,11 +17,12 @@ import os
 
 from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
+from buildslave.commands.base import SourceBaseCommand
 
 
 class BK(SourceBaseCommand):
+
     """BitKeeper-specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -44,7 +45,7 @@ class BK(SourceBaseCommand):
                                        self.srcdir, ".buildbot-patched")):
             return False
         return os.path.isfile(os.path.join(self.builder.basedir,
-                                          self.srcdir, "BK/parent"))
+                                           self.srcdir, "BK/parent"))
 
     def doVCUpdate(self):
         bk = self.getCommand('bk')
@@ -56,9 +57,9 @@ class BK(SourceBaseCommand):
         # Revision is ignored since the BK free client doesn't support it.
         command = [bk, 'pull']
         c = runprocess.RunProcess(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         keepStdout=True, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  keepStdout=True, logEnviron=self.logEnviron,
+                                  usePTY=False)
         self.command = c
         return c.start()
 
@@ -72,10 +73,10 @@ class BK(SourceBaseCommand):
         d = self.builder.basedir
 
         command = [bk, 'clone', revision_arg] + self.bk_args + \
-                   [self.bkurl, self.srcdir]
+            [self.bkurl, self.srcdir]
         c = runprocess.RunProcess(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         logEnviron=self.logEnviron, usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         return c.start()
 
@@ -91,13 +92,14 @@ class BK(SourceBaseCommand):
 
     def parseGotRevision(self):
         c = runprocess.RunProcess(self.builder,
-                         self.getBKVersionCommand(),
-                         os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env, timeout=self.timeout,
-                         sendStdout=False, sendStderr=False, sendRC=False,
-                         keepStdout=True, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  self.getBKVersionCommand(),
+                                  os.path.join(self.builder.basedir, self.srcdir),
+                                  environ=self.env, timeout=self.timeout,
+                                  sendStdout=False, sendStderr=False, sendRC=False,
+                                  keepStdout=True, logEnviron=self.logEnviron,
+                                  usePTY=False)
         d = c.start()
+
         def _parse(res):
             r_raw = c.stdout.strip()
             try:
@@ -110,7 +112,3 @@ class BK(SourceBaseCommand):
             return r
         d.addCallback(_parse)
         return d
-
-
-
-

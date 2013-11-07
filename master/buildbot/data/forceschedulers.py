@@ -13,17 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import base, types
+from buildbot.data import base
+from buildbot.data import types
 from buildbot.schedulers import forcesched
 
 
 def forceScheduler2Data(sched):
-    ret = dict(all_fields = [],
-               name = sched.name,
-               builder_names = sched.builderNames)
+    ret = dict(all_fields=[],
+               name=sched.name,
+               builder_names=sched.builderNames)
     for field in sched.all_fields:
             ret["all_fields"].append(field.toJsonDict())
     return ret
+
 
 class ForceSchedulerEndpoint(base.Endpoint):
 
@@ -59,12 +61,11 @@ class ForceScheduler(base.ResourceType):
 
     name = "forcescheduler"
     plural = "forceschedulers"
-    endpoints = [ ForceSchedulerEndpoint, ForceSchedulersEndpoint ]
-    keyFields = [ ]
+    endpoints = [ForceSchedulerEndpoint, ForceSchedulersEndpoint]
+    keyFields = []
 
     class EntityType(types.Entity):
         name = types.String()
         builder_names = types.List(of=types.Identifier())
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)
-

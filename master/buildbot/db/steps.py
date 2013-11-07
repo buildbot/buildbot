@@ -14,9 +14,13 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.internet import reactor, defer
+
 from buildbot.db import base
-from buildbot.util import epoch2datetime, json
+from buildbot.util import epoch2datetime
+from buildbot.util import json
+from twisted.internet import defer
+from twisted.internet import reactor
+
 
 class StepsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
@@ -55,17 +59,18 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = q.where(tbl.c.buildid == buildid)
             q = q.order_by(tbl.c.number)
             res = conn.execute(q)
-            return [ self._stepdictFromRow(row) for row in res.fetchall() ]
+            return [self._stepdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     def addStep(self, buildid, name, state_strings, _reactor=reactor):
         started_at = _reactor.seconds()
         state_strings_json = json.dumps(state_strings)
+
         def thd(conn):
             tbl = self.db.model.steps
             # get the highest current number
-            r = conn.execute(sa.select([ sa.func.max(tbl.c.number) ],
-                                whereclause=(tbl.c.buildid==buildid)))
+            r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
+                                       whereclause=(tbl.c.buildid == buildid)))
             number = r.scalar()
             number = 0 if number is None else number + 1
 
@@ -73,9 +78,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # since only one master is inserting steps.  If there is a
             # conflict, then the name is likely already taken.
             insert_row = dict(buildid=buildid, number=number,
-                    started_at=started_at, complete_at=None,
-                    state_strings_json=state_strings_json,
-                    urls_json='[]', name=name)
+                              started_at=started_at, complete_at=None,
+                              state_strings_json=state_strings_json,
+                              urls_json='[]', name=name)
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
                 got_id = r.inserted_primary_key[0]
@@ -88,13 +93,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # we didn't get an id, so calculate a unique name and use that
             # instead.  Because names are truncated at the right to fit in a
             # 50-character identifier, this isn't a simple query.
-            res = conn.execute(sa.select([ tbl.c.name ],
-                        whereclause=((tbl.c.buildid==buildid))))
-            names = set([ row[0] for row in res ])
+            res = conn.execute(sa.select([tbl.c.name],
+                                         whereclause=((tbl.c.buildid == buildid))))
+            names = set([row[0] for row in res])
             num = 1
             while True:
                 numstr = '_%d' % num
-                newname = name[:50-len(numstr)] + numstr
+                newname = name[:50 - len(numstr)] + numstr
                 if newname not in names:
                     break
                 num += 1
@@ -107,7 +112,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
     def setStepStateStrings(self, stepid, state_strings):
         def thd(conn):
             tbl = self.db.model.steps
-            q = tbl.update(whereclause=(tbl.c.id==stepid))
+            q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, state_strings_json=json.dumps(state_strings))
         return self.db.pool.do(thd)
 
@@ -116,8 +121,8 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q,
-                complete_at=_reactor.seconds(),
-                results=results)
+                         complete_at=_reactor.seconds(),
+                         results=results)
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):

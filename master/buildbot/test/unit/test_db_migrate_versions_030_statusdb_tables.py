@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,8 +33,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             sa.Table('builds', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-            ).create()
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     ).create()
 
         def verify_thd(conn):
             r = conn.execute("select * from steps")

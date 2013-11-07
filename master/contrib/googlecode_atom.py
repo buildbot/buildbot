@@ -24,10 +24,11 @@
 #
 
 import datetime
+
 from xml.dom import minidom
 
-from twisted.python import log
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web.client import getPage
 
 from buildbot.changes import base
@@ -40,6 +41,7 @@ def googleCodePollerForProject(project, vcs, pollinterval=3600):
 
 
 class GoogleCodeAtomPoller(base.PollingChangeSource):
+
     """This source will poll a GoogleCode Atom feed for changes and
     submit them to the change master. Works for both Svn, Git, and Hg
     repos.
@@ -62,7 +64,7 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
         @param  pollinterval:   The time (in seconds) between queries for
                                 changes (default is 1 hour)
         """
-        base.PollingChangeSource(pollInterval = pollinterval)
+        base.PollingChangeSource(pollInterval=pollinterval)
 
         self.feedurl = feedurl
         self.branch = None
@@ -89,7 +91,7 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
 
     def describe(self):
         return ("Getting changes from the GoogleCode repo changes feed %s" %
-               self._make_url())
+                self._make_url())
 
     def poll(self):
         if self.working:
@@ -159,7 +161,7 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
 
             changes.append(d)
 
-        changes.reverse() # want them in chronological order
+        changes.reverse()  # want them in chronological order
         return changes
 
     @defer.inlineCallbacks
@@ -170,12 +172,12 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
         if self.lastChange is not None:
             for change in change_list:
                 yield self.master.data.updates.addChange(
-                        author=change["author"],
-                        revision=change["revision"],
-                        files=change["files"],
-                        comments=change["comments"],
-                        when_timestamp=change["when"],
-                        branch=self.branch,
-                        src=self.src)
+                    author=change["author"],
+                    revision=change["revision"],
+                    files=change["files"],
+                    comments=change["comments"],
+                    when_timestamp=change["when"],
+                    branch=self.branch,
+                    src=self.src)
         if change_list:
             self.lastChange = change_list[-1]["revision"]

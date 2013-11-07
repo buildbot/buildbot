@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
 
 
 class RootEndpoint(base.Endpoint):

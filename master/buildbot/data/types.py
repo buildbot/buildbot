@@ -16,9 +16,11 @@
 # See "Type Validation" in master/docs/developer/tests.rst
 
 import re
+
 from buildbot import util
-from buildbot.util import json
 from buildbot.data import base
+from buildbot.util import json
+
 
 class Type(object):
 
@@ -44,7 +46,9 @@ class Type(object):
             r["doc"] = self.doc
         return r
 
+
 class NoneOk(Type):
+
     def __init__(self, nestedType):
         assert isinstance(nestedType, Type)
         self.nestedType = nestedType
@@ -61,6 +65,7 @@ class NoneOk(Type):
             return
         for msg in self.nestedType.validate(name, object):
             yield msg
+
     def getSpec(self):
         r = self.nestedType.getSpec()
         r["can_be_null"] = True
@@ -74,7 +79,7 @@ class Instance(Type):
     def validate(self, name, object):
         if not isinstance(object, self.types):
             yield "%s (%r) is not a %s" % (
-                    name, object, self.name or `self.types`)
+                name, object, self.name or repr(self.types))
 
 
 class Integer(Instance):
@@ -143,18 +148,19 @@ class Identifier(Type):
             yield "%s - identifiers cannot be an empty string" % (name,)
         elif len(object) > self.len:
             yield "%s - %r - is longer than %d characters" % (name, object,
-                                                                self.len)
+                                                              self.len)
 
 
 class List(Type):
 
     name = "list"
+
     def __init__(self, of=None, **kwargs):
         Type.__init__(self, **kwargs)
         self.of = of
 
     def validate(self, name, object):
-        if type(object) != list: # we want a list, and NOT a subclass
+        if not isinstance(object, list):  # we want a list, and NOT a subclass
             yield "%s (%r) is not a %s" % (name, object, self.name)
             return
 
@@ -166,12 +172,13 @@ class List(Type):
         return dict(type=self.name,
                     of=self.of.getSpec())
 
+
 class SourcedProperties(Type):
 
     name = "sourced-properties"
 
     def validate(self, name, object):
-        if type(object) != dict: # we want a dict, and NOT a subclass
+        if not isinstance(object, dict):  # we want a dict, and NOT a subclass
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in object.iteritems():
@@ -197,9 +204,9 @@ class Dict(Type):
         self.keys = set(contents)
 
     def validate(self, name, object):
-        if type(object) != dict:
+        if not isinstance(object, dict):
             yield "%s (%r) is not a dictionary (got type %s)" \
-                    % (name, object, type(object))
+                % (name, object, type(object))
             return
 
         gotNames = set(object.keys())
@@ -207,12 +214,12 @@ class Dict(Type):
         unexpected = gotNames - self.keys
         if unexpected:
             yield "%s has unexpected keys %s" % (name,
-                    ", ".join([ `n` for n in unexpected ]))
+                                                 ", ".join([repr(n) for n in unexpected]))
 
         missing = self.keys - gotNames
         if missing:
             yield "%s is missing keys %s" % (name,
-                    ", ".join([ `n` for n in missing ]))
+                                             ", ".join([repr(n) for n in missing]))
 
         for k in gotNames & self.keys:
             f = self.contents[k]
@@ -230,10 +237,11 @@ class Dict(Type):
 
 class JsonObject(Type):
     name = "jsonobject"
+
     def validate(self, name, object):
-        if type(object) != dict:
+        if not isinstance(object, dict):
             yield "%s (%r) is not a dictionary (got type %s)" \
-                    % (name, object, type(object))
+                % (name, object, type(object))
             return
 
         # make sure JSON can represent it
@@ -251,7 +259,7 @@ class Entity(Type):
     #  * buildsets.Buildset.entityType or
     #  * self.master.data.rtypes.buildsets.entityType
 
-    name = None # set in constructor
+    name = None  # set in constructor
     fields = {}
     fieldNames = set([])
 
@@ -268,7 +276,7 @@ class Entity(Type):
         # this uses isinstance, allowing dict subclasses as used by the DB API
         if not isinstance(object, dict):
             yield "%s (%r) is not a dictionary (got type %s)" \
-                    % (name, object, type(object))
+                % (name, object, type(object))
             return
 
         gotNames = set(object.keys())
@@ -276,12 +284,12 @@ class Entity(Type):
         unexpected = gotNames - self.fieldNames
         if unexpected:
             yield "%s has unexpected keys %s" % (name,
-                    ", ".join([ `n` for n in unexpected ]))
+                                                 ", ".join([repr(n) for n in unexpected]))
 
         missing = self.fieldNames - gotNames
         if missing:
             yield "%s is missing keys %s" % (name,
-                    ", ".join([ `n` for n in missing ]))
+                                             ", ".join([repr(n) for n in missing]))
 
         for k in gotNames & self.fieldNames:
             f = self.fields[k]

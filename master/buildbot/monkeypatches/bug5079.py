@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.spread import pb
 from twisted.python import log
+from twisted.spread import pb
 from twisted.spread.interfaces import IJellyable
+
 
 def patch():
     log.msg("Applying patch for http://twistedmatrix.com/trac/ticket/5079")
@@ -24,11 +25,13 @@ def patch():
     else:
         pb._JellyableAvatarMixin._cbLogin = _fixed_cbLogin
 
-def _fixed_cbLogin(self, (interface, avatar, logout)):
+
+def _fixed_cbLogin(self, xxx_todo_changeme):
     """
     Ensure that the avatar to be returned to the client is jellyable and
     set up disconnection notification to call the realm's logout object.
     """
+    (interface, avatar, logout) = xxx_todo_changeme
     if not IJellyable.providedBy(avatar):
         avatar = pb.AsReferenceable(avatar, "perspective")
 
@@ -37,9 +40,11 @@ def _fixed_cbLogin(self, (interface, avatar, logout)):
     # only call logout once, whether the connection is dropped (disconnect)
     # or a logout occurs (cleanup), and be careful to drop the reference to
     # it in either case
-    logout = [ logout ]
+    logout = [logout]
+
     def maybeLogout():
-        if not logout: return
+        if not logout:
+            return
         fn = logout[0]
         del logout[0]
         fn()

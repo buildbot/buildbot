@@ -14,11 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
+
+from buildbot.mq import base
+from buildbot.test.util import compat
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.trial import unittest
-from buildbot.mq import base
-from buildbot.test.util import compat
+
 
 class QueueRef(unittest.TestCase):
 

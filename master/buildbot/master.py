@@ -14,53 +14,66 @@
 # Copyright Buildbot Team Members
 
 
+import datetime
 import os
 import signal
 import socket
-import datetime
 
-from zope.interface import implements
-from twisted.python import log, components, failure
-from twisted.internet import defer, reactor, task
 from twisted.application import internet
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import components
+from twisted.python import failure
+from twisted.python import log
+from zope.interface import implements
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import epoch2datetime, datetime2epoch, ascii2unicode
-from buildbot.status.master import Status
+
+from buildbot import config
+from buildbot import interfaces
+from buildbot import monkeypatches
+from buildbot.buildslave import manager as bslavemanager
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
-from buildbot import interfaces
-from buildbot.process.builder import BuilderControl
-from buildbot.db import connector as dbconnector, exceptions
-from buildbot.mq import connector as mqconnector
 from buildbot.data import connector as dataconnector
-from buildbot.www import service as wwwservice
-from buildbot.schedulers.manager import SchedulerManager
-from buildbot.buildslave import manager as bslavemanager
-from buildbot.process.botmaster import BotMaster
+from buildbot.db import connector as dbconnector
+from buildbot.db import exceptions
+from buildbot.mq import connector as mqconnector
+from buildbot.process import cache
 from buildbot.process import debug
 from buildbot.process import metrics
-from buildbot.process import cache
+from buildbot.process.botmaster import BotMaster
+from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.schedulers.manager import SchedulerManager
+from buildbot.status.master import Status
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.util import ascii2unicode
+from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot import monkeypatches
-from buildbot import config
+from buildbot.www import service as wwwservice
 
-########################################
+#
+
 
 class LogRotation(object):
+
     def __init__(self):
-        self.rotateLength = 1 * 1000 * 1000 
+        self.rotateLength = 1 * 1000 * 1000
         self.maxRotatedFiles = 10
+
 
 class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
-    RECLAIM_BUILD_INTERVAL = 10*60
+    RECLAIM_BUILD_INTERVAL = 10 * 60
 
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
@@ -73,7 +86,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.umask = umask
 
         self.basedir = basedir
-        if basedir is not None: # None is used in tests
+        if basedir is not None:  # None is used in tests
             assert os.path.isdir(self.basedir)
         self.configFileName = configFileName
 
@@ -101,13 +114,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # figure out local hostname
         try:
-            self.hostname = os.uname()[1] # only on unix
+            self.hostname = os.uname()[1]  # only on unix
         except AttributeError:
             self.hostname = socket.getfqdn()
 
         # public attributes
         self.name = ("%s:%s" % (self.hostname,
-                os.path.abspath(self.basedir or '.')))
+                                os.path.abspath(self.basedir or '.')))
         self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
@@ -161,13 +174,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         def heartbeat():
             if self.masterid is not None:
                 yield self.data.updates.masterActive(name=self.name,
-                                        masterid=self.masterid)
+                                                     masterid=self.masterid)
             yield self.data.updates.expireMasters()
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
 
     # setup and reconfig handling
 
     _already_started = False
+
     @defer.inlineCallbacks
     def startService(self, _reactor=reactor):
         assert not self._already_started, "can only start the master once"
@@ -175,7 +189,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         log.msg("Starting BuildMaster -- buildbot.version: %s" %
                 buildbot.version)
-        
+
         # Set umask
         if self.umask is not None:
             os.umask(self.umask)
@@ -193,7 +207,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             # load the configuration file, treating errors as fatal
             try:
                 self.config = config.MasterConfig.loadConfig(self.basedir,
-                                                        self.configFileName)
+                                                             self.configFileName)
 
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
@@ -233,7 +247,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             # API isn't initialized yet, and anyway, this method is aware of
             # the DB API since it just called its setup function
             self.masterid = yield self.db.masters.findMasterId(
-                                    name=self.name)
+                name=self.name)
 
             # call the parent method
             yield service.AsyncMultiService.startService(self)
@@ -244,8 +258,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
             # mark the master as active now that mq is running
             yield self.data.updates.masterActive(
-                                    name=self.name,
-                                    masterid=self.masterid)
+                name=self.name,
+                masterid=self.masterid)
         except:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
@@ -260,7 +274,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             yield service.AsyncMultiService.stopService(self)
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
-                    name=self.name, masterid=self.masterid)
+                name=self.name, masterid=self.masterid)
 
         log.msg("BuildMaster is stopped")
         self._master_initialized = False
@@ -278,9 +292,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # notify every 10 seconds that the reconfig is still going on, although
         # reconfigs should not take that long!
-        self.reconfig_notifier = task.LoopingCall(lambda :
-            log.msg("reconfig is ongoing for %d s" %
-                    (reactor.seconds() - self.reconfig_active)))
+        self.reconfig_notifier = task.LoopingCall(lambda:
+                                                  log.msg("reconfig is ongoing for %d s" %
+                                                          (reactor.seconds() - self.reconfig_active)))
         self.reconfig_notifier.start(10, now=False)
 
         timer = metrics.Timer("BuildMaster.reconfig")
@@ -301,8 +315,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         d.addErrback(log.err, 'while reconfiguring')
 
-        return d # for tests
-
+        return d  # for tests
 
     @defer.inlineCallbacks
     def doReconfig(self):
@@ -311,7 +324,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         failed = False
         try:
             new_config = config.MasterConfig.loadConfig(self.basedir,
-                                                    self.configFileName)
+                                                        self.configFileName)
             changes_made = True
             self.config = new_config
             yield self.reconfigService(new_config)
@@ -334,7 +347,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         else:
             log.msg("configuration update complete")
 
-
     def reconfigService(self, new_config):
         if self.configured_db_url is None:
             self.configured_db_url = new_config.db['db_url']
@@ -349,11 +361,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             ])
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                            new_config)
+                                                                 new_config)
 
-
-    ## informational methods
-
+    # informational methods
     def allSchedulers(self):
         return list(self.scheduler_manager)
 
@@ -363,7 +373,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         return self.status
 
-    ## triggering methods
+    # triggering methods
 
     @defer.inlineCallbacks
     def addChange(self, who=None, files=None, comments=None, **kwargs):
@@ -409,12 +419,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             if k in kwargs:
                 kwargs[k] = ascii2unicode(kwargs[k])
         if kwargs.get('files'):
-            kwargs['files'] = [ ascii2unicode(f)
-                                for f in kwargs['files'] ]
+            kwargs['files'] = [ascii2unicode(f)
+                               for f in kwargs['files']]
         if kwargs.get('properties'):
-            kwargs['properties'] = dict( (ascii2unicode(k), v)
-                for k, v in kwargs['properties'].iteritems() )
-
+            kwargs['properties'] = dict((ascii2unicode(k), v)
+                                        for k, v in kwargs['properties'].iteritems())
 
         # pass the converted call on to the data API
         changeid = yield self.data.updates.addChange(**kwargs)
@@ -430,8 +439,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         log.msg("WARNING: master.addBuildset is deprecated; "
                 "use the data API update method")
         bsid, brids = yield self.data.updates.addBuildset(
-                scheduler=scheduler, **kwargs)
-        defer.returnValue((bsid,brids))
+            scheduler=scheduler, **kwargs)
+        defer.returnValue((bsid, brids))
 
     @defer.inlineCallbacks
     def maybeBuildsetComplete(self, bsid, _reactor=reactor):
@@ -461,7 +470,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         complete_at_epoch = _reactor.seconds()
         complete_at = epoch2datetime(complete_at_epoch)
         yield self.db.buildsets.completeBuildset(bsid, cumulative_results,
-                complete_at=complete_at)
+                                                 complete_at=complete_at)
 
         # new-style notification
         msg = dict(
@@ -470,9 +479,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             results=cumulative_results)
         self.mq.produce(('buildset', str(bsid), 'complete'), msg)
 
-
-    ## state maintenance (private)
-
+    # state maintenance (private)
     def getObjectId(self):
         """
         Return the obejct id for this master, for associating state with the
@@ -488,7 +495,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # at the same time will not hurt
 
         d = self.db.state.getObjectId(self.name,
-                "buildbot.master.BuildMaster")
+                                      "buildbot.master.BuildMaster")
+
         def keep(id):
             self._object_id = id
             return id
@@ -498,6 +506,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def _getState(self, name, default=None):
         "private wrapper around C{self.db.state.getState}"
         d = self.getObjectId()
+
         def get(objectid):
             return self.db.state.getState(objectid, name, default)
         d.addCallback(get)
@@ -506,6 +515,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def _setState(self, name, value):
         "private wrapper around C{self.db.state.setState}"
         d = self.getObjectId()
+
         def set(objectid):
             return self.db.state.setState(objectid, name, value)
         d.addCallback(set)

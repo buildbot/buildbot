@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source
-from buildbot.test.util import steps, sourcesteps
+from buildbot.test.util import sourcesteps
+from buildbot.test.util import steps
+
 
 class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -29,12 +32,12 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_start_alwaysUseLatest_True(self):
         step = self.setupStep(Source(alwaysUseLatest=True),
-                {
-                    'branch': 'other-branch',
-                    'revision': 'revision',
-                },
-                patch = 'patch'
-                )
+                              {
+                                  'branch': 'other-branch',
+                                  'revision': 'revision',
+                              },
+                              patch='patch'
+                              )
         step.branch = 'branch'
         step.startVC = mock.Mock()
 
@@ -44,12 +47,12 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_start_alwaysUseLatest_False(self):
         step = self.setupStep(Source(),
-                {
-                    'branch': 'other-branch',
-                    'revision': 'revision',
-                },
-                patch = 'patch'
-                )
+                              {
+                                  'branch': 'other-branch',
+                                  'revision': 'revision',
+                              },
+                              patch='patch'
+                              )
         step.branch = 'branch'
         step.startVC = mock.Mock()
 
@@ -78,7 +81,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('',))
-        
+
         self.assertEqual(step.description, ['updating'])
 
     def test_start_with_codebase(self):
@@ -92,10 +95,10 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step.name, Source.name + " codebase")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))        
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
 
         self.assertEqual(step.describe(True), ['update', 'codebase'])
-        
+
     def test_start_with_codebase_and_descriptionSuffix(self):
         step = self.setupStep(Source(codebase='my-code',
                                      descriptionSuffix='suffix'))
@@ -108,8 +111,8 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step.name, Source.name + " my-code")
 
         step.startStep(mock.Mock())
-        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))        
-        
+        self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))
+
         self.assertEqual(step.describe(True), ['update', 'suffix'])
 
 
@@ -134,4 +137,3 @@ class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
                       descriptionDone=['svn', 'update'])
         self.assertEqual(step.description, ['svn', 'update', '(running)'])
         self.assertEqual(step.descriptionDone, ['svn', 'update'])
-

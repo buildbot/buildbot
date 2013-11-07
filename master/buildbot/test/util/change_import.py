@@ -17,12 +17,15 @@ from __future__ import with_statement
 
 import os
 import shutil
-from buildbot.util import pickle
+
 from buildbot.test.util import db
+from buildbot.util import pickle
 
 from buildbot.changes.changes import Change
 
+
 class ChangeImportMixin(db.RealDatabaseMixin):
+
     """
     We have a number of tests that examine the results of importing particular
     flavors of Change objects.  This class uses some pickling to make this easy
@@ -60,6 +63,7 @@ class ChangeImportMixin(db.RealDatabaseMixin):
 
     def tearDownChangeImport(self):
         d = self.tearDownRealDatabase()
+
         def rmtree(_):
             if os.path.exists(self.basedir):
                 shutil.rmtree(self.basedir)

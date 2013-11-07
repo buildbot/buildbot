@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.data import base
+from buildbot.data import types
 from twisted.internet import defer
-from buildbot.data import base, types
+
 
 class EndpointMixin(object):
 
@@ -49,7 +51,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
             defer.returnValue((yield self.db2data(dbdict))
-                                if dbdict else None)
+                              if dbdict else None)
             return
 
         stepid = yield self.getStepid(kwargs)
@@ -57,9 +59,9 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
             return
 
         dbdict = yield self.master.db.logs.getLogByName(stepid,
-                                            kwargs.get('log_name'))
+                                                        kwargs.get('log_name'))
         defer.returnValue((yield self.db2data(dbdict))
-                            if dbdict else None)
+                          if dbdict else None)
 
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
@@ -80,15 +82,15 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
             defer.returnValue([])
             return
         logs = yield self.master.db.logs.getLogs(stepid=stepid)
-        defer.returnValue([ (yield self.db2data(dbdict)) for dbdict in logs ])
+        defer.returnValue([(yield self.db2data(dbdict)) for dbdict in logs])
 
 
 class Log(base.ResourceType):
 
     name = "log"
     plural = "logs"
-    endpoints = [ LogEndpoint, LogsEndpoint ]
-    keyFields = [ 'stepid', 'logid' ]
+    endpoints = [LogEndpoint, LogsEndpoint]
+    keyFields = ['stepid', 'logid']
 
     class EntityType(types.Entity):
         logid = types.Integer()
@@ -104,7 +106,7 @@ class Log(base.ResourceType):
     @base.updateMethod
     def newLog(self, stepid, name, type):
         return self.master.db.logs.addLog(
-                stepid=stepid, name=name, type=type)
+            stepid=stepid, name=name, type=type)
 
     @base.updateMethod
     def finishLog(self, logid):
@@ -113,4 +115,3 @@ class Log(base.ResourceType):
     @base.updateMethod
     def compressLog(self, logid):
         return self.master.db.logs.compressLog(logid=logid)
-

@@ -16,6 +16,7 @@
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = range(7)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
 
+
 def worst_status(a, b):
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
     # CANCELLED needs to be considered the worst.

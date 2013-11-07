@@ -14,4 +14,4 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process.buildrequest import BuildRequest
-_hush_pyflakes = [ BuildRequest ]
+_hush_pyflakes = [BuildRequest]

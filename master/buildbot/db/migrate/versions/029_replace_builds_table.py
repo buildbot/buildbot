@@ -18,14 +18,16 @@ import sqlalchemy as sa
 # The existing builds table doesn't contain much useful information, and it's
 # horrendously denormalized.  So we kill it dead.
 
+
 def drop_builds(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     builds = sa.Table('builds', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-    )
+                      sa.Column('id', sa.Integer, primary_key=True),
+                      )
     builds.drop()
+
 
 def add_new_builds(migrate_engine):
     metadata = sa.MetaData()
@@ -33,32 +35,32 @@ def add_new_builds(migrate_engine):
 
     # foreign keys
     sa.Table('buildrequests', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             )
     sa.Table('builders', metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             )
     sa.Table("masters", metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-    )
+             sa.Column('id', sa.Integer, primary_key=True),
+             )
 
     builds = sa.Table('builds', metadata,
-        sa.Column('id', sa.Integer,  primary_key=True),
-        sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-        sa.Column('buildrequestid', sa.Integer,
-            sa.ForeignKey('buildrequests.id'), nullable=False),
-        sa.Column('buildslaveid', sa.Integer),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-            nullable=False),
-        sa.Column('started_at', sa.Integer, nullable=False),
-        sa.Column('complete_at', sa.Integer),
-        sa.Column('state_strings_json', sa.Text, nullable=False),
-        sa.Column('results', sa.Integer),
-    )
+                      sa.Column('id', sa.Integer, primary_key=True),
+                      sa.Column('number', sa.Integer, nullable=False),
+                      sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+                      sa.Column('buildrequestid', sa.Integer,
+                                sa.ForeignKey('buildrequests.id'), nullable=False),
+                      sa.Column('buildslaveid', sa.Integer),
+                      sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                nullable=False),
+                      sa.Column('started_at', sa.Integer, nullable=False),
+                      sa.Column('complete_at', sa.Integer),
+                      sa.Column('state_strings_json', sa.Text, nullable=False),
+                      sa.Column('results', sa.Integer),
+                      )
     builds.create()
     idx = sa.Index('builds_number', builds.c.builderid, builds.c.number,
-            unique=True)
+                   unique=True)
     idx.create()
     idx = sa.Index('builds_buildslaveid', builds.c.buildslaveid)
     idx.create()
@@ -66,6 +68,7 @@ def add_new_builds(migrate_engine):
     idx.create()
     idx = sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     idx.create()
+
 
 def upgrade(migrate_engine):
     drop_builds(migrate_engine)

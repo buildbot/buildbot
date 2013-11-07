@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 import os
-from twisted.internet import reactor, defer
+
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
+
 
 class FuzzTestCase(unittest.TestCase):
 

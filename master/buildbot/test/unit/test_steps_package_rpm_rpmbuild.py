@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import config
 from buildbot.status.results import SUCCESS
 from buildbot.steps.package.rpm import rpmbuild
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from twisted.trial import unittest
-from buildbot import config
+
 
 class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
 
@@ -29,21 +30,21 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_specfile(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                    rpmbuild.RpmBuild())
+        self.assertRaises(config.ConfigErrors, lambda:
+                          rpmbuild.RpmBuild())
 
     def test_success(self):
         self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el6"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
-                    '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
-                    '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
-                    '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el6" '
-                    '-ba foo.spec',
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
+                        '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
+                        '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el6" '
+                        '-ba foo.spec',
                         usePTY='slave-config')
             + ExpectShell.log('stdio',
                               stdout='lalala')
-            +0)
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['RPMBUILD'])
         return self.runStep()
 
@@ -52,13 +53,13 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
                                          autoRelease=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
-                '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
-                '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
-                '--define "_srcrpmdir `pwd`" --define "dist .el6" '
-                '--define "_release 0" -ba foo.spec',
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
+                        '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
+                        '--define "_srcrpmdir `pwd`" --define "dist .el6" '
+                        '--define "_release 0" -ba foo.spec',
                         usePTY='slave-config')
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
-            +0)
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['RPMBUILD'])
         return self.runStep()

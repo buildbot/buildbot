@@ -13,13 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.util import json
-from buildbot.test.util import changesource
 from buildbot.changes import gerritchangesource
+from buildbot.test.util import changesource
+from buildbot.util import json
+from twisted.trial import unittest
+
 
 class TestGerritChangeSource(changesource.ChangeSourceMixin,
                              unittest.TestCase):
+
     def setUp(self):
         return self.setUpChangeSource()
 
@@ -61,15 +63,15 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'src': None,
                        'when_timestamp': None,
                        'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
-                                       u'event.change.subject': u'fix 1234',
-                                       u'event.change.project': u'pr',
-                                       u'event.change.owner.name': u'Dustin',
-                                       u'event.change.number': u'4321',
-                                       u'event.change.url': u'http://buildbot.net',
-                                       u'event.change.branch': u'br',
-                                       u'event.type': u'patchset-created',
-                                       u'event.patchSet.revision': u'abcdef',
-                                       u'event.patchSet.number': u'12'}}
+                                      u'event.change.subject': u'fix 1234',
+                                      u'event.change.project': u'pr',
+                                      u'event.change.owner.name': u'Dustin',
+                                      u'event.change.number': u'4321',
+                                      u'event.change.url': u'http://buildbot.net',
+                                      u'event.change.branch': u'br',
+                                      u'event.type': u'patchset-created',
+                                      u'event.patchSet.revision': u'abcdef',
+                                      u'event.patchSet.number': u'12'}}
 
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')

@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
 from buildbot.status.web.hooks.github import process_change
 from buildbot.util import json
+from twisted.python import log
 
 
 def getChanges(request, options=None):

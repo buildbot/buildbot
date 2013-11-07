@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
 
     metadata = sa.MetaData()

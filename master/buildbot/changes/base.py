@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.internet import defer, task, reactor
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
 from twisted.python import log
+from zope.interface import implements
 
 from buildbot.interfaces import IChangeSource
-from buildbot.util import service, misc
+from buildbot.util import misc
+from buildbot.util import service
+
 
 class ChangeSource(service.ClusteredService):
     implements(IChangeSource)
@@ -26,7 +30,7 @@ class ChangeSource(service.ClusteredService):
     def describe(self):
         pass
 
-    ## activity handling
+    # activity handling
 
     def activate(self):
         return defer.succeed(None)
@@ -34,7 +38,7 @@ class ChangeSource(service.ClusteredService):
     def deactivate(self):
         return defer.succeed(None)
 
-    ## service handling
+    # service handling
 
     def _getServiceId(self):
         return self.master.data.updates.findChangeSourceId(self.name)
@@ -49,6 +53,7 @@ class ChangeSource(service.ClusteredService):
 
 
 class PollingChangeSource(ChangeSource):
+
     """
     Utility subclass for ChangeSources that use some kind of periodic polling
     operation.  Subclasses should define C{poll} and set C{self.pollInterval}.
@@ -62,7 +67,7 @@ class PollingChangeSource(ChangeSource):
 
     _loop = None
 
-    def __init__(self, name=None, pollInterval=60*10):
+    def __init__(self, name=None, pollInterval=60 * 10):
         ChangeSource.__init__(self, name)
         self.pollInterval = pollInterval
 

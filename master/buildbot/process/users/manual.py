@@ -16,12 +16,14 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
-from twisted.python import log
-from twisted.internet import defer
-from buildbot.util import service
 from buildbot import pbutil
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.python import log
+
 
 class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
+
     """
     Perspective registered in buildbot.pbmanager and contains the real
     workings of `buildbot user` by working with the database when
@@ -113,7 +115,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 # get identifier, guaranteed to be in user from checks
                 # done in C{scripts.runner}
                 uid = yield self.master.db.users.identifierToUid(
-                                            identifier=user)
+                    identifier=user)
 
                 result = None
                 if op == 'remove':
@@ -135,17 +137,17 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                 # done in C{scripts.runner}
                 ident = user.pop('identifier')
                 uid = yield self.master.db.users.identifierToUid(
-                                                 identifier=ident)
+                    identifier=ident)
 
                 # if only an identifier was in user, we're updating only
                 # the bb_username and bb_password.
                 if not user:
                     if uid:
                         result = yield self.master.db.users.updateUser(
-                                                       uid=uid,
-                                                       identifier=ident,
-                                                       bb_username=bb_username,
-                                                       bb_password=bb_password)
+                            uid=uid,
+                            identifier=ident,
+                            bb_username=bb_username,
+                            bb_password=bb_password)
                         results.append(ident)
                     else:
                         log.msg("Unable to find uid for identifier %s"
@@ -157,20 +159,20 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                         if op == 'update' or once_through:
                             if uid:
                                 result = yield self.master.db.users.updateUser(
-                                                      uid=uid,
-                                                      identifier=ident,
-                                                      bb_username=bb_username,
-                                                      bb_password=bb_password,
-                                                      attr_type=attr,
-                                                      attr_data=user[attr])
+                                    uid=uid,
+                                    identifier=ident,
+                                    bb_username=bb_username,
+                                    bb_password=bb_password,
+                                    attr_type=attr,
+                                    attr_data=user[attr])
                             else:
                                 log.msg("Unable to find uid for identifier %s"
                                         % user)
                         elif op == 'add':
                             result = yield self.master.db.users.findUserByAttr(
-                                                      identifier=ident,
-                                                      attr_type=attr,
-                                                      attr_data=user[attr])
+                                identifier=ident,
+                                attr_type=attr,
+                                attr_data=user[attr])
                             once_through = True
                         results.append(ident)
 
@@ -181,7 +183,9 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         results = self.formatResults(op, results)
         defer.returnValue(results)
 
+
 class CommandlineUserManager(service.AsyncMultiService):
+
     """
     Service that runs to set up and register CommandlineUserManagerPerspective
     so `buildbot user` calls get to perspective_commandline.
@@ -210,6 +214,7 @@ class CommandlineUserManager(service.AsyncMultiService):
 
     def stopService(self):
         d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)
+
         def unreg(_):
             if self.registration:
                 return self.registration.unregister()

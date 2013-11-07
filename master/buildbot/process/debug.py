@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
-from twisted.internet import defer
-from buildbot.util import service
+from buildbot import config
+from buildbot import interfaces
 from buildbot.pbutil import NewCredPerspective
-from buildbot import interfaces, config
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.python import log
+
 
 class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
@@ -30,7 +32,6 @@ class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService
         self.debug_password = None
         self.debug_registration = None
         self.manhole = None
-
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -48,10 +49,10 @@ class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService
                 self.debug_registration = None
 
         if new_config.debugPassword and config_changed:
-            factory = lambda mind, user : DebugPerspective(self.master)
+            factory = lambda mind, user: DebugPerspective(self.master)
             self.debug_registration = self.master.pbmanager.register(
-                    new_config_port, "debug", new_config.debugPassword,
-                    factory)
+                new_config_port, "debug", new_config.debugPassword,
+                factory)
 
         self.debug_password = new_config.debugPassword
         if self.debug_password:
@@ -73,8 +74,7 @@ class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService
 
         # chain up
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                    new_config)
-
+                                                                new_config)
 
     @defer.inlineCallbacks
     def stopService(self):

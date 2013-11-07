@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
+
 from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,28 +33,28 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             buildrequests = sa.Table('buildrequests', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-            )
+                                     sa.Column('id', sa.Integer, primary_key=True),
+                                     )
             buildrequests.create()
 
             builders = sa.Table('builders', metadata,
-                sa.Column('id', sa.Integer, primary_key=True),
-            )
+                                sa.Column('id', sa.Integer, primary_key=True),
+                                )
             builders.create()
 
             masters = sa.Table("masters", metadata,
-                sa.Column('id', sa.Integer, primary_key=True),
-            )
+                               sa.Column('id', sa.Integer, primary_key=True),
+                               )
             masters.create()
 
             builds = sa.Table('builds', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                sa.Column('number', sa.Integer, nullable=False),
-                sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                    nullable=False),
-                sa.Column('start_time', sa.Integer, nullable=False),
-                sa.Column('finish_time', sa.Integer),
-            )
+                              sa.Column('id', sa.Integer, primary_key=True),
+                              sa.Column('number', sa.Integer, nullable=False),
+                              sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                                        nullable=False),
+                              sa.Column('start_time', sa.Integer, nullable=False),
+                              sa.Column('finish_time', sa.Integer),
+                              )
             builds.create()
 
         def verify_thd(conn):

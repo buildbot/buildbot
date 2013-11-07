@@ -15,13 +15,14 @@
 
 from twisted.internet import defer
 
+
 def patch():
     """
     Patch gatherResults to support consumeErrors on old versions of twisted
     """
     defer.gatherResults = gatherResults
 
-#############################################################################
+#
 # Everything below this line was taken from Twisted, except as annotated.  See
 # https://twistedmatrix.com/trac/browser/trunk/twisted/internet/defer.py?rev=32405#L805
 #
@@ -29,12 +30,11 @@ def patch():
 #
 #    Author: dustin
 #    Reviewer: exarkun
-#    Fixes: #5159
+# Fixes: #5159
 #
 #    Add a `consumeErrors` parameter to `twisted.internet.defer.gatherResults`
 #    with the same meaning as the parameter of the same name accepted by
 #    `DeferredList`.
-
 
 
 def _parseDListResult(l, fireOnOneErrback=False):
@@ -42,6 +42,7 @@ def _parseDListResult(l, fireOnOneErrback=False):
         for success, value in l:
             assert success
     return [x[1] for x in l]
+
 
 def gatherResults(deferredList, consumeErrors=False):
     """
@@ -66,6 +67,6 @@ def gatherResults(deferredList, consumeErrors=False):
     @type consumeErrors: C{bool}
     """
     d = defer.DeferredList(deferredList, fireOnOneErrback=True,
-                                   consumeErrors=consumeErrors)
+                           consumeErrors=consumeErrors)
     d.addCallback(_parseDListResult)
     return d

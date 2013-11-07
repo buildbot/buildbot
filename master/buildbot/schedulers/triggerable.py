@@ -15,11 +15,12 @@
 
 from zope.interface import implements
 
-from twisted.python import failure
-from twisted.internet import defer
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from buildbot.schedulers import base
+from twisted.internet import defer
+from twisted.python import failure
+
 
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
@@ -33,7 +34,7 @@ class Triggerable(base.BaseScheduler):
         self._buildset_complete_consumer = None
         self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
 
-    def trigger(self, waited_for, sourcestamps = None, set_props=None):
+    def trigger(self, waited_for, sourcestamps=None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns two deferreds:
             idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are available.
@@ -49,8 +50,9 @@ class Triggerable(base.BaseScheduler):
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
         idsDeferred = self.addBuildsetForSourceStampsWithDefaults(self.reason,
-                sourcestamps, waited_for, properties=props)
+                                                                  sourcestamps, waited_for, properties=props)
         resultsDeferred = defer.Deferred()
+
         def setup_waiter(ids):
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
@@ -75,12 +77,11 @@ class Triggerable(base.BaseScheduler):
 
         return base.BaseScheduler.stopService(self)
 
-
     def _updateWaiters(self):
         if self._waiters and not self._buildset_complete_consumer:
             self._buildset_complete_consumer = self.master.mq.startConsuming(
-                    self._buildset_complete_cb,
-                    ('buildset', None, 'complete'))
+                self._buildset_complete_cb,
+                ('buildset', None, 'complete'))
         elif not self._waiters and self._buildset_complete_consumer:
             self._buildset_complete_consumer.stopConsuming()
             self._buildset_complete_consumer = None

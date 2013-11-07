@@ -14,9 +14,11 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
+
 from buildbot.clients import tryclient
 from buildbot.scripts import trycmd
+from twisted.trial import unittest
+
 
 class TestStatusLog(unittest.TestCase):
 
@@ -30,4 +32,3 @@ class TestStatusLog(unittest.TestCase):
         Try.assert_called_with(dict(cfg=1))
         inst.run.assert_called_with()
         self.assertEqual(rc, 0)
-

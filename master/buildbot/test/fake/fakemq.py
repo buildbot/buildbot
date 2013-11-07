@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.util import tuplematch
 from buildbot.test.util import validation
+from buildbot.util import tuplematch
+from twisted.internet import defer
+
 
 class FakeMQConnector(object):
 
@@ -41,7 +42,7 @@ class FakeMQConnector(object):
         self.testcase.assertIsInstance(routingKey, tuple)
         if self.verifyMessages:
             validation.verifyMessage(self.testcase, routingKey, data)
-        if [ k for k in routingKey if not isinstance(k, str) ]:
+        if [k for k in routingKey if not isinstance(k, str)]:
             raise AssertionError("%s is not all strings" % (routingKey,))
         self.productions.append((routingKey, data))
         # note - no consumers are called: IT'S A FAKE
@@ -58,7 +59,7 @@ class FakeMQConnector(object):
             raise AssertionError("no consumer found")
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        if [ k for k in filter if not isinstance(k, str) and k is not None ]:
+        if [k for k in filter if not isinstance(k, str) and k is not None]:
             raise AssertionError("%s is not a filter" % (filter,))
         qref = FakeQueueRef()
         qref.qrefs = self.qrefs
@@ -81,6 +82,7 @@ class FakeMQConnector(object):
         else:
             self.testcase.assertEqual(sorted(self.productions), sorted(exp))
         self.productions = []
+
 
 class FakeQueueRef(object):
 

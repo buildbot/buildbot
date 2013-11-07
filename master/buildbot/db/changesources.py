@@ -14,25 +14,28 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.internet import defer
+
 from buildbot.db import base
+from twisted.internet import defer
+
 
 class ChangeSourceAlreadyClaimedError(Exception):
     pass
+
 
 class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     def findChangeSourceId(self, name):
-        tbl=self.db.model.changesources
-        name_hash=self.hashColumns(name)
+        tbl = self.db.model.changesources
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
-                tbl=tbl,
-                whereclause=(tbl.c.name_hash == name_hash),
-                insert_values=dict(
-                    name=name,
-                    name_hash=name_hash,
-                    ))
+            tbl=tbl,
+            whereclause=(tbl.c.name_hash == name_hash),
+            insert_values=dict(
+                name=name,
+                name_hash=name_hash,
+            ))
 
     def setChangeSourceMaster(self, changesourceid, masterid):
         def thd(conn):
@@ -41,7 +44,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             # handle the masterid=None case to get it out of the way
             if masterid is None:
                 q = cs_mst_tbl.delete(
-                        whereclause=(cs_mst_tbl.c.changesourceid==changesourceid))
+                    whereclause=(cs_mst_tbl.c.changesourceid == changesourceid))
                 conn.execute(q)
                 return
 
@@ -49,7 +52,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             try:
                 q = cs_mst_tbl.insert()
                 conn.execute(q,
-                    dict(changesourceid=changesourceid, masterid=masterid))
+                             dict(changesourceid=changesourceid, masterid=masterid))
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError
@@ -72,7 +75,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 return []
 
             join = cs_tbl.outerjoin(cs_mst_tbl,
-                (cs_tbl.c.id == cs_mst_tbl.c.changesourceid))
+                                    (cs_tbl.c.id == cs_mst_tbl.c.changesourceid))
 
             # if we're given a _changesourceid, select only that row
             wc = None
@@ -87,11 +90,11 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 elif active is not None:
                     wc = (cs_mst_tbl.c.masterid == None)
 
-            q = sa.select([ cs_tbl.c.id, cs_tbl.c.name,
-                            cs_mst_tbl.c.masterid ],
-                from_obj=join, whereclause=wc)
+            q = sa.select([cs_tbl.c.id, cs_tbl.c.name,
+                           cs_mst_tbl.c.masterid],
+                          from_obj=join, whereclause=wc)
 
-            return [ dict(id=row.id, name=row.name,
-                        masterid=row.masterid)
-                    for row in conn.execute(q).fetchall() ]
+            return [dict(id=row.id, name=row.name,
+                         masterid=row.masterid)
+                    for row in conn.execute(q).fetchall()]
         return self.db.pool.do(thd)

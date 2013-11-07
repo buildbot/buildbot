@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer, reactor
 from buildbot.util import lineboundaries
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
 
 class LBF(unittest.TestCase):
 
@@ -64,6 +66,7 @@ class LBF(unittest.TestCase):
 
     def test_empty_flush(self):
         d = self.lbf.flush()
+
         @d.addCallback
         def check(_):
             self.assertEqual(self.callbacks, [])

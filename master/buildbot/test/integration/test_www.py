@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, reactor, protocol
-from twisted.trial import unittest
-from twisted.web import client
-from buildbot.util import json
-from buildbot.test.util import db, www
-from buildbot.test.fake import fakemaster, fakedb
+from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.mq import connector as mqconnector
-from buildbot.data import connector as dataconnector
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import db
+from buildbot.test.util import www
+from buildbot.util import json
 from buildbot.www import service as wwwservice
+from twisted.internet import defer
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.trial import unittest
+from twisted.web import client
 
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
@@ -54,7 +58,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     def setUp(self):
         # set up a full master serving HTTP
         yield self.setUpRealDatabase(table_names=['masters'],
-                sqlite_memory=False)
+                                     sqlite_memory=False)
 
         master = fakemaster.FakeMaster()
 
@@ -69,8 +73,8 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         master.data = dataconnector.DataConnector(master)
 
         master.config.www = dict(
-                port='tcp:0:interface=127.0.0.1',
-                debug=True)
+            port='tcp:0:interface=127.0.0.1',
+            debug=True)
         master.www = wwwservice.WWWService(master)
         yield master.www.startService()
         yield master.www.reconfigService(master.config)
@@ -130,9 +134,9 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     def test_masters(self):
         yield self.insertTestData([
             fakedb.Master(id=7, name='some:master',
-                        active=0, last_active=SOMETIME),
+                          active=0, last_active=SOMETIME),
             fakedb.Master(id=8, name='other:master',
-                        active=1, last_active=OTHERTIME),
+                          active=1, last_active=OTHERTIME),
         ])
 
         res = yield self.apiGet(self.link('master'))

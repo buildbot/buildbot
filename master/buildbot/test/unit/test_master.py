@@ -13,23 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
+import os
 import signal
-from twisted.internet import defer, reactor
-from twisted.trial import unittest
-from twisted.python import log
-from buildbot import master, monkeypatches, config
-from buildbot.db import exceptions
-from buildbot.test.util import dirs, compat, logging
-from buildbot.test.fake import fakedb, fakemq, fakedata
+
+from buildbot import config
+from buildbot import master
+from buildbot import monkeypatches
 from buildbot.changes.changes import Change
+from buildbot.db import exceptions
+from buildbot.test.fake import fakedata
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemq
+from buildbot.test.util import compat
+from buildbot.test.util import dirs
+from buildbot.test.util import logging
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.trial import unittest
+
 
 class OldTriggeringMethods(unittest.TestCase):
 
     def setUp(self):
         self.patch(master.BuildMaster, 'create_child_services',
-                lambda self : None)
+                   lambda self: None)
         self.master = master.BuildMaster(basedir=None)
 
         self.master.data = fakedata.FakeDataConnector(self.master, self)
@@ -39,6 +48,7 @@ class OldTriggeringMethods(unittest.TestCase):
         ])
 
         self.fake_Change = mock.Mock(name='fake_Change')
+
         def fromChdict(master, chdict):
             if chdict['author'] != 'this is a test':
                 raise AssertionError("did not get expected chdict")
@@ -66,49 +76,50 @@ class OldTriggeringMethods(unittest.TestCase):
         exp_data_kwargs = default_data_kwargs
 
         d = self.master.addChange(*args, **kwargs)
+
         @d.addCallback
         def check(change):
             self.assertIdentical(change, self.fake_Change)
             self.assertEqual(self.master.data.updates.changesAdded,
-                    [ exp_data_kwargs ])
+                             [exp_data_kwargs])
         return d
 
     def test_addChange_args_author(self):
         # who should come through as author
         return self.do_test_addChange_args(
-                kwargs=dict(who='me'),
-                exp_data_kwargs=dict(author='me'))
+            kwargs=dict(who='me'),
+            exp_data_kwargs=dict(author='me'))
 
     def test_addChange_args_isdir(self):
         # isdir should come through as is_dir
         return self.do_test_addChange_args(
-                kwargs=dict(isdir=1),
-                exp_data_kwargs=dict())
+            kwargs=dict(isdir=1),
+            exp_data_kwargs=dict())
 
     def test_addChange_args_when(self):
         # when should come through as when_timestamp, as a datetime
         return self.do_test_addChange_args(
-                kwargs=dict(when=892293875),
-                exp_data_kwargs=dict(when_timestamp=892293875))
+            kwargs=dict(when=892293875),
+            exp_data_kwargs=dict(when_timestamp=892293875))
 
     def test_addChange_args_properties(self):
         # properties should not be qualified with a source
         return self.do_test_addChange_args(
-                kwargs=dict(properties={ 'a' : 'b' }),
-                exp_data_kwargs=dict(properties={ u'a' : u'b'}))
+            kwargs=dict(properties={'a': 'b'}),
+            exp_data_kwargs=dict(properties={u'a': u'b'}))
 
     def test_addChange_args_properties_tuple(self):
         # properties should not be qualified with a source
         return self.do_test_addChange_args(
-                kwargs=dict(properties={ 'a' : ('b', 'Change') }),
-                exp_data_kwargs=dict(properties={ 'a' : ('b', 'Change') }))
+            kwargs=dict(properties={'a': ('b', 'Change')}),
+            exp_data_kwargs=dict(properties={'a': ('b', 'Change')}))
 
     def test_addChange_args_positional(self):
         # master.addChange can take author, files, comments as positional
         # arguments
         return self.do_test_addChange_args(
-                args=('me', ['a'], 'com'),
-                exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
+            args=('me', ['a'], 'com'),
+            exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
@@ -117,18 +128,19 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         d = self.setUpDirs(self.basedir)
+
         @d.addCallback
         def make_master(_):
             # don't create child services
             self.patch(master.BuildMaster, 'create_child_services',
-                    lambda self : None)
+                       lambda self: None)
 
             # patch out a few other annoying things the master likes to do
-            self.patch(monkeypatches, 'patch_all', lambda : None)
-            self.patch(signal, 'signal', lambda sig, hdlr : None)
-            self.patch(master, 'Status', lambda master : mock.Mock()) # XXX temporary
+            self.patch(monkeypatches, 'patch_all', lambda: None)
+            self.patch(signal, 'signal', lambda sig, hdlr: None)
+            self.patch(master, 'Status', lambda master: mock.Mock())  # XXX temporary
             self.patch(config.MasterConfig, 'loadConfig',
-                    classmethod(lambda cls, b, f : cls()))
+                       classmethod(lambda cls, b, f: cls()))
 
             self.master = master.BuildMaster(self.basedir)
             self.db = self.master.db = fakedb.FakeDBConnector(self.master, self)
@@ -151,9 +163,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             config.error('oh noes')
         self.patch(config.MasterConfig, 'loadConfig', loadConfig)
 
-
     # tests
-
     def test_startup_bad_config(self):
         reactor = self.make_reactor()
         self.patch_loadConfig_fail()
@@ -168,6 +178,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
     def test_startup_db_not_ready(self):
         reactor = self.make_reactor()
+
         def db_setup():
             log.msg("GOT HERE")
             raise exceptions.DatabaseNotReadyError()
@@ -184,6 +195,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     @compat.usesFlushLoggedErrors
     def test_startup_error(self):
         reactor = self.make_reactor()
+
         def db_setup():
             raise RuntimeError("oh noes")
         self.db.setup = db_setup
@@ -200,10 +212,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         reactor = self.make_reactor()
 
         d = self.master.startService(_reactor=reactor)
+
         @d.addCallback
         def check_started(_):
             self.assertTrue(self.master.data.updates.masterActive)
-        d.addCallback(lambda _ : self.master.stopService())
+        d.addCallback(lambda _: self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -217,11 +230,11 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def test_reconfig(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
-                side_effect=lambda n : defer.succeed(None))
+            side_effect=lambda n: defer.succeed(None))
 
         d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _ : self.master.reconfig())
-        d.addCallback(lambda _ : self.master.stopService())
+        d.addCallback(lambda _: self.master.reconfig())
+        d.addCallback(lambda _: self.master.stopService())
 
         @d.addCallback
         def check(_):
@@ -232,7 +245,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def test_reconfig_bad_config(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
-                side_effect=lambda n : defer.succeed(None))
+            side_effect=lambda n: defer.succeed(None))
 
         yield self.master.startService(_reactor=reactor)
 
@@ -257,5 +270,5 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
-        self.assertRaises(config.ConfigErrors, lambda :
-            self.master.reconfigService(new))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          self.master.reconfigService(new))

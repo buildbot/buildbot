@@ -14,22 +14,25 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from buildbot.db import base
+
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
 
     def findBuilderId(self, name):
         tbl = self.db.model.builders
         return self.findSomethingId(
-                tbl=tbl,
-                whereclause=(tbl.c.name == name),
-                insert_values=dict(
-                    name=name,
-                    name_hash=self.hashColumns(name),
-                    ))
+            tbl=tbl,
+            whereclause=(tbl.c.name == name),
+            insert_values=dict(
+                name=name,
+                name_hash=self.hashColumns(name),
+            ))
 
     def getBuilder(self, builderid):
         d = self.getBuilders(_builderid=builderid)
+
         @d.addCallback
         def first(bldrs):
             if bldrs:
@@ -53,7 +56,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builder_masters
             conn.execute(tbl.delete(
                 whereclause=((tbl.c.builderid == builderid)
-                           & (tbl.c.masterid == masterid))))
+                             & (tbl.c.masterid == masterid))))
         return self.db.pool.do(thd)
 
     def getBuilders(self, masterid=None, _builderid=None):
@@ -67,7 +70,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             if masterid is not None:
                 limiting_bm_tbl = bm_tbl.alias('limiting_bm')
                 j = j.join(limiting_bm_tbl,
-                    onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
+                           onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
                 [bldr_tbl.c.id, bldr_tbl.c.name, bm_tbl.c.masterid],
                 from_obj=[j],

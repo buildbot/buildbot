@@ -15,6 +15,7 @@
 
 import inspect
 
+
 class InterfaceTests(object):
 
     # assertions
@@ -38,7 +39,7 @@ class InterfaceTests(object):
             args = spec[0]
             defaults = list(spec[3] if spec[3] is not None else [])
             di = -1
-            for ai in xrange(len(args)-1, -1, -1):
+            for ai in xrange(len(args) - 1, -1, -1):
                 arg = args[ai]
                 if arg.startswith('_') or (arg == 'self' and ai == 0):
                     del args[ai]
@@ -63,17 +64,17 @@ class InterfaceTests(object):
                 self.fail(msg)
 
         actual_argspec = filter(
-                inspect.getargspec(remove_decorators(actualMethod)))
+            inspect.getargspec(remove_decorators(actualMethod)))
 
         for fakeMethod in fakeMethods:
             fake_argspec = filter(
-                    inspect.getargspec(remove_decorators(fakeMethod)))
-            assert_same_argspec(actual_argspec, fake_argspec) 
+                inspect.getargspec(remove_decorators(fakeMethod)))
+            assert_same_argspec(actual_argspec, fake_argspec)
 
         def assert_same_argspec_decorator(decorated):
             expected_argspec = filter(
-                    inspect.getargspec(remove_decorators(decorated)))
-            assert_same_argspec(expected_argspec, actual_argspec) 
+                inspect.getargspec(remove_decorators(decorated)))
+            assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
             return decorated
         return assert_same_argspec_decorator

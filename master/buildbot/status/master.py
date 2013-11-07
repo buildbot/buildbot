@@ -15,17 +15,25 @@
 
 from __future__ import with_statement
 
-import os, urllib
-from twisted.python import log
-from twisted.persisted import styles
-from twisted.internet import defer
-from buildbot.util import service
-from zope.interface import implements
-from buildbot import config, interfaces, util
-from buildbot.util import bbcollections, pickle
-from buildbot.util.eventual import eventually
+import os
+import urllib
+
+from buildbot import config
+from buildbot import interfaces
+from buildbot import util
 from buildbot.changes import changes
-from buildbot.status import buildset, builder, buildrequest
+from buildbot.status import builder
+from buildbot.status import buildrequest
+from buildbot.status import buildset
+from buildbot.util import bbcollections
+from buildbot.util import pickle
+from buildbot.util import service
+from buildbot.util.eventual import eventually
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import log
+from zope.interface import implements
+
 
 class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
@@ -52,13 +60,13 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def startService(self):
         # subscribe to the things we need to know about
         self._buildset_new_consumer = self.master.mq.startConsuming(
-                self.bs_new_consumer_cb, ('buildset', None, 'new'))
+            self.bs_new_consumer_cb, ('buildset', None, 'new'))
         self._buildset_complete_consumer = self.master.mq.startConsuming(
-                self.bs_complete_consumer_cb, ('buildset', None, 'complete'))
+            self.bs_complete_consumer_cb, ('buildset', None, 'complete'))
         self._br_consumer = self.master.mq.startConsuming(
-                self.br_consumer_cb, ('buildrequest', None, None, None, 'new'))
+            self.br_consumer_cb, ('buildrequest', None, None, None, 'new'))
         self._change_consumer = self.master.mq.startConsuming(
-                self.change_consumer_cb, ('change', None, 'new'))
+            self.change_consumer_cb, ('change', None, 'new'))
 
         return service.AsyncMultiService.startService(self)
 
@@ -66,8 +74,8 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def reconfigService(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            yield defer.maybeDeferred(lambda :
-                    sr.disownServiceParent())
+            yield defer.maybeDeferred(lambda:
+                                      sr.disownServiceParent())
 
             # WebStatus instances tend to "hang around" longer than we'd like -
             # if there's an ongoing HTTP request, or even a connection held
@@ -84,7 +92,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                new_config)
 
     def stopService(self):
         if self._buildset_complete_consumer:
@@ -117,8 +125,10 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getTitle(self):
         return self.master.config.title
+
     def getTitleURL(self):
         return self.master.config.titleURL
+
     def getBuildbotURL(self):
         return self.master.config.buildbotURL
 
@@ -149,12 +159,12 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             bldr = thing
             return prefix + "builders/%s" % (
                 urllib.quote(bldr.getName(), safe=''),
-                )
+            )
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
             return self.getURLForBuild(bldr.getName(), build.getNumber())
-            
+
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
@@ -169,8 +179,8 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         if interfaces.ISlaveStatus.providedBy(thing):
             slave = thing
             return prefix + "buildslaves/%s" % (
-                    urllib.quote(slave.getName(), safe=''),
-                    )
+                urllib.quote(slave.getName(), safe=''),
+            )
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -203,6 +213,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getChange(self, number):
         """Get a Change object; returns a deferred"""
         d = self.master.db.changes.getChange(number)
+
         def chdict2change(chdict):
             if not chdict:
                 return None
@@ -214,9 +225,9 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.master.allSchedulers()
 
     def getBuilderNames(self, categories=None):
-        if categories == None:
-            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
-        
+        if categories is None:
+            return util.naturalSort(self.botmaster.builderNames)  # don't let them break it
+
         l = []
         # respect addition order
         for name in self.botmaster.builderNames:
@@ -239,9 +250,10 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
+
         def make_status_objects(bsdicts):
-            return [ buildset.BuildSetStatus(bsdict, self)
-                    for bsdict in bsdicts ]
+            return [buildset.BuildSetStatus(bsdict, self)
+                    for bsdict in bsdicts]
         d.addCallback(make_status_objects)
         return d
 
@@ -272,7 +284,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         next_build = [None] * len(sources)
 
         def refill():
-            for i,g in enumerate(sources):
+            for i, g in enumerate(sources):
                 if next_build[i]:
                     # already filled
                     continue
@@ -290,9 +302,9 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             refill()
             # find the latest build among all the candidates
             candidates = [(i, b, b.getTimes()[1])
-                          for i,b in enumerate(next_build)
+                          for i, b in enumerate(next_build)
                           if b is not None]
-            candidates.sort(lambda x,y: cmp(x[2], y[2]))
+            candidates.sort(lambda x, y: cmp(x[2], y[2]))
             if not candidates:
                 return
 
@@ -309,12 +321,11 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.watchers.append(target)
         for name in self.botmaster.builderNames:
             self.announceNewBuilder(target, name, self.getBuilder(name))
+
     def unsubscribe(self, target):
         self.watchers.remove(target)
 
-
     # methods called by upstream objects
-
     def announceNewBuilder(self, target, name, builder_status):
         t = target.builderAdded(name, builder_status)
         if t:
@@ -339,7 +350,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             # upgradeToVersionNN methods all set this.
             versioneds = styles.versionedsToUpgrade
             styles.doUpgrade()
-            if True in [ hasattr(o, 'wasUpgraded') for o in versioneds.values() ]:
+            if True in [hasattr(o, 'wasUpgraded') for o in versioneds.values()]:
                 log.msg("re-writing upgraded builder pickle")
                 builder_status.saveYourself()
 
@@ -360,7 +371,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.description = description
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
-        builder_status.name = name # it might have been updated
+        builder_status.name = name  # it might have been updated
         builder_status.status = self
 
         if not os.path.isdir(builder_status.basedir):
@@ -393,7 +404,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         buildername = msg['buildername']
         if buildername in self._builder_observers:
             brs = buildrequest.BuildRequestStatus(buildername,
-                                                msg['brid'], self)
+                                                  msg['brid'], self)
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestSubmitted'):
                     eventually(observer.requestSubmitted, brs)
@@ -402,8 +413,8 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def change_consumer_cb(self, key, msg):
         # get a list of watchers - no sense querying the change
         # if nobody's listening
-        interested = [ t for t in self.watchers
-                       if hasattr(t, 'changeAdded') ]
+        interested = [t for t in self.watchers
+                      if hasattr(t, 'changeAdded')]
         if not interested:
             return
 
@@ -446,6 +457,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         if bsid not in self._buildset_finished_waiters:
             return
         d = self.master.db.buildsets.getBuildset(bsid)
+
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             if bss.isFinished():
@@ -464,6 +476,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def bs_new_consumer_cb(self, key, msg):
         bsid = msg['bsid']
         d = self.master.db.buildsets.getBuildset(bsid)
+
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             for t in self.watchers:
@@ -474,4 +487,3 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def bs_complete_consumer_cb(self, key, msg):
         self._maybeBuildsetFinished(msg['bsid'])
-

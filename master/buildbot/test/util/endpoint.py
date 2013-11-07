@@ -15,11 +15,15 @@
 
 import mock
 import types
-from twisted.internet import defer
-from buildbot.data import resultspec, base
+
+from buildbot.data import base
+from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import interfaces, validation
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
 from buildbot.util import pathmatch
+from twisted.internet import defer
+
 
 class EndpointMixin(interfaces.InterfaceTests):
     # test mixin for testing Endpoint subclasses
@@ -33,7 +37,7 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     def setUpEndpoint(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
-                wantData=True, testcase=self)
+                                             wantData=True, testcase=self)
         self.db = self.master.db
         self.mq = self.master.mq
         self.data = self.master.data
@@ -52,14 +56,14 @@ class EndpointMixin(interfaces.InterfaceTests):
                 continue
             if not pp.startswith('/') or pp.endswith('/'):
                 raise AssertionError("invalid pattern %r" % (pp,))
-        pathPatterns = [ tuple(pp.split('/')[1:])
-                            for pp in pathPatterns ]
+        pathPatterns = [tuple(pp.split('/')[1:])
+                        for pp in pathPatterns]
         for pp in pathPatterns:
             self.matcher[pp] = self.ep
 
         self.pathArgs = [
-            set([ arg.split(':', 1)[1] for arg in pp if ':' in arg ])
-            for pp in pathPatterns if pp is not None ]
+            set([arg.split(':', 1)[1] for arg in pp if ':' in arg])
+            for pp in pathPatterns if pp is not None]
 
     def tearDownEndpoint(self):
         pass
@@ -77,6 +81,7 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.assertIdentical(endpoint, self.ep)
         d = endpoint.get(resultSpec, kwargs)
         self.assertIsInstance(d, defer.Deferred)
+
         @d.addCallback
         def checkNumber(rv):
             if self.ep.isCollection:

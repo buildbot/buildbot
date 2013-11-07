@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from buildbot.test.fake import fakemaster
-from buildbot.test.util import interfaces, tuplematching
+
 from buildbot.mq import simple
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import interfaces
+from buildbot.test.util import tuplematching
+from twisted.trial import unittest
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -39,7 +42,8 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     def test_signature_stopConsuming(self):
-        cons = self.mq.startConsuming(lambda : None, ('a',))
+        cons = self.mq.startConsuming(lambda: None, ('a',))
+
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
             pass
@@ -110,6 +114,7 @@ class TestFakeMQ(unittest.TestCase, Tests):
         self.master = fakemaster.make_master(testcase=self, wantMq=True)
         self.mq = self.master.mq
         self.mq.verifyMessages = False
+
 
 class TestSimpleMQ(unittest.TestCase, RealTests):
 

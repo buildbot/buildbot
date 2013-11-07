@@ -15,6 +15,7 @@
 
 import itertools
 
+
 def matchTuple(routingKey, filter):
     if len(filter) != len(routingKey):
         return False

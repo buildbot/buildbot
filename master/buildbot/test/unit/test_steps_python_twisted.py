@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.steps import python_twisted
-from buildbot.status.results import SUCCESS
-from buildbot.test.util import steps
-from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.process.properties import Property
-
+from buildbot.status.results import SUCCESS
+from buildbot.steps import python_twisted
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import steps
+from twisted.trial import unittest
 
 
 class Trial(steps.BuildStepMixin, unittest.TestCase):
@@ -32,10 +31,10 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_env(self):
         self.setupStep(
-                python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     testpath = None,
-                                     env = {'PYTHONPATH': 'somepath'}))
+            python_twisted.Trial(workdir='build',
+                                 tests='testname',
+                                 testpath=None,
+                                 env={'PYTHONPATH': 'somepath'}))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
@@ -50,10 +49,10 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_env_supplement(self):
         self.setupStep(
-                python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     testpath = 'path1',
-                                     env = {'PYTHONPATH': ['path2','path3']}))
+            python_twisted.Trial(workdir='build',
+                                 tests='testname',
+                                 testpath='path1',
+                                 env={'PYTHONPATH': ['path2', 'path3']}))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
@@ -68,16 +67,16 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_env_nodupe(self):
         self.setupStep(
-                python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     testpath = 'path2',
-                                     env = {'PYTHONPATH': ['path1','path2']}))
+            python_twisted.Trial(workdir='build',
+                                 tests='testname',
+                                 testpath='path2',
+                                 env={'PYTHONPATH': ['path1', 'path2']}))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
                         usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
-                        env=dict(PYTHONPATH=['path1','path2']))
+                        env=dict(PYTHONPATH=['path1', 'path2']))
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
@@ -86,9 +85,9 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_singular(self):
         self.setupStep(
-                python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     testpath=None))
+            python_twisted.Trial(workdir='build',
+                                 tests='testname',
+                                 testpath=None))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
@@ -102,9 +101,9 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_plural(self):
         self.setupStep(
-                python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     testpath=None))
+            python_twisted.Trial(workdir='build',
+                                 tests='testname',
+                                 testpath=None))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
@@ -115,12 +114,12 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
         return self.runStep()
-        
+
     def testProperties(self):
         self.setupStep(python_twisted.Trial(workdir='build',
-                                     tests = Property('test_list'),
-                                     testpath=None))
-        self.properties.setProperty('test_list',['testname'], 'Test')
+                                            tests=Property('test_list'),
+                                            testpath=None))
+        self.properties.setProperty('test_list', ['testname'], 'Test')
 
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -140,9 +139,9 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         logfiles.
         """
         self.setupStep(python_twisted.Trial(workdir='build',
-                                    tests = 'testname',
-                                    testpath = None,
-                                    jobs=2))
+                                            tests='testname',
+                                            testpath=None,
+                                            jobs=2))
 
         self.expectCommands(
             ExpectShell(workdir='build',
@@ -168,9 +167,9 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         C{jobs} should accept Properties
         """
         self.setupStep(python_twisted.Trial(workdir='build',
-                                     tests = 'testname',
-                                     jobs=Property('jobs_count'),
-                                     testpath=None))
+                                            tests='testname',
+                                            jobs=Property('jobs_count'),
+                                            testpath=None))
         self.properties.setProperty('jobs_count', '2', 'Test')
 
         self.expectCommands(
@@ -191,4 +190,3 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
         return self.runStep()
-

@@ -14,9 +14,11 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from twisted.trial import unittest
-from buildbot.test.util import migration
+
 from buildbot.db.types.json import JsonObject
+from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -32,18 +34,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             sa.Table('builder_masters', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                # ..
-            ).create()
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     # ..
+                     ).create()
             sa.Table('masters', metadata,
-                sa.Column('id', sa.Integer,  primary_key=True),
-                # ..
-            ).create()
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     # ..
+                     ).create()
             buildslaves = sa.Table("buildslaves", metadata,
-                sa.Column("id", sa.Integer, primary_key=True),
-                sa.Column("name", sa.String(256), nullable=False),
-                sa.Column("info", JsonObject, nullable=False),
-            )
+                                   sa.Column("id", sa.Integer, primary_key=True),
+                                   sa.Column("name", sa.String(256), nullable=False),
+                                   sa.Column("info", JsonObject, nullable=False),
+                                   )
             buildslaves.create()
             conn.execute(buildslaves.insert(), {
                 'id': 29,
@@ -55,13 +57,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             buildslaves = sa.Table('buildslaves',
-                        metadata, autoload=True)
+                                   metadata, autoload=True)
             configured_buildslaves = sa.Table('configured_buildslaves',
-                    metadata, autoload=True)
+                                              metadata, autoload=True)
             connected_buildslaves = sa.Table('connected_buildslaves',
-                    metadata, autoload=True)
+                                             metadata, autoload=True)
 
-            q = sa.select([ buildslaves ])
+            q = sa.select([buildslaves])
             self.assertEqual(map(dict, conn.execute(q).fetchall()), [
                 # (the info does not get de-JSON'd due to use of autoload)
                 {'id': 29, 'name': u'windows', 'info': '{}'}])
@@ -69,12 +71,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # check that the name column was resized
             self.assertEqual(buildslaves.c.name.type.length, 50)
 
-            q = sa.select([ configured_buildslaves.c.buildermasterid,
-                            configured_buildslaves.c.buildslaveid ])
+            q = sa.select([configured_buildslaves.c.buildermasterid,
+                           configured_buildslaves.c.buildslaveid])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
-            q = sa.select([ connected_buildslaves.c.masterid,
-                            connected_buildslaves.c.buildslaveid ])
+            q = sa.select([connected_buildslaves.c.masterid,
+                           connected_buildslaves.c.buildslaveid])
             self.assertEqual(conn.execute(q).fetchall(), [])
 
         return self.do_test_migration(31, 32, setup_thd, verify_thd)
