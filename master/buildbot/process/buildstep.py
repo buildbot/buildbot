@@ -569,6 +569,7 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
         self.deferred = defer.Deferred()
@@ -591,10 +592,61 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.setText(self.describe(False))
         self.step_status.stepStarted()
 
-        d = self.acquireLocks()
-        d.addCallback(self._startStep_2)
-        d.addErrback(self.failed)
-        return self.deferred
+        try:
+            # set up locks
+            yield self.acquireLocks()
+
+            if self.stopped:
+                self.finished(EXCEPTION)
+                defer.returnValue((yield self.deferred))
+
+            # ste up progress
+            if self.progress:
+                self.progress.start()
+
+            # check doStepIf
+            if isinstance(self.doStepIf, bool):
+                doStep = self.doStepIf
+            else:
+                doStep = yield self.doStepIf(self)
+
+            # render renderables in parallel
+            renderables = []
+            accumulateClassList(self.__class__, 'renderables', renderables)
+
+            def setRenderable(res, attr):
+                setattr(self, attr, res)
+
+            dl = []
+            for renderable in renderables:
+                d = self.build.render(getattr(self, renderable))
+                d.addCallback(setRenderable, renderable)
+                dl.append(d)
+            yield defer.gatherResults(dl)
+
+            try:
+                if doStep:
+                    result = yield defer.maybeDeferred(self.start)
+                    if result == SKIPPED:
+                        doStep = False
+            except:
+                log.msg("BuildStep.startStep exception in .start")
+                self.failed(Failure())
+
+            if not doStep:
+                self.step_status.setText(self.describe(True) + ['skipped'])
+                self.step_status.setSkipped(True)
+                # this return value from self.start is a shortcut to finishing
+                # the step immediately; we skip calling finished() as
+                # subclasses may have overridden that an expect it to be called
+                # after start() (bug #837)
+                eventually(self._finishFinished, SKIPPED)
+        except Exception:
+            self.failed(Failure())
+
+        # and finally, wait for self.deferred to get triggered and return its
+        # value
+        defer.returnValue((yield self.deferred))
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
@@ -616,56 +668,6 @@ class BuildStep(object, properties.PropertiesMixin):
             lock.claim(self, access)
         self.step_status.setWaitingForLocks(False)
         return defer.succeed(None)
-
-    def _startStep_2(self, res):
-        if self.stopped:
-            self.finished(EXCEPTION)
-            return
-
-        if self.progress:
-            self.progress.start()
-
-        if isinstance(self.doStepIf, bool):
-            doStep = defer.succeed(self.doStepIf)
-        else:
-            doStep = defer.maybeDeferred(self.doStepIf, self)
-
-        renderables = []
-        accumulateClassList(self.__class__, 'renderables', renderables)
-
-        def setRenderable(res, attr):
-            setattr(self, attr, res)
-
-        dl = [doStep]
-        for renderable in renderables:
-            d = self.build.render(getattr(self, renderable))
-            d.addCallback(setRenderable, renderable)
-            dl.append(d)
-        dl = defer.gatherResults(dl)
-
-        dl.addCallback(self._startStep_3)
-        return dl
-
-    @defer.inlineCallbacks
-    def _startStep_3(self, doStep):
-        doStep = doStep[0]
-        try:
-            if doStep:
-                result = yield defer.maybeDeferred(self.start)
-                if result == SKIPPED:
-                    doStep = False
-        except:
-            log.msg("BuildStep.startStep exception in .start")
-            self.failed(Failure())
-
-        if not doStep:
-            self.step_status.setText(self.describe(True) + ['skipped'])
-            self.step_status.setSkipped(True)
-            # this return value from self.start is a shortcut to finishing
-            # the step immediately; we skip calling finished() as
-            # subclasses may have overridden that an expect it to be called
-            # after start() (bug #837)
-            eventually(self._finishFinished, SKIPPED)
 
     def start(self):
         raise NotImplementedError("your subclass must implement this method")
