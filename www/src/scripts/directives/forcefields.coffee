@@ -38,7 +38,7 @@ angular.module('app').directive 'forcefield',
 
 # these directives, combined with "recursive" implement
 # the template of recursively nested field groups
-_.each ['verticallayout', 'simplelayout'], (fieldtype) ->
+_.each ['verticallayout', 'simplelayout', 'tabslayout'], (fieldtype) ->
   angular.module('app').directive fieldtype, ->
     replace: true
     restrict: 'E'
