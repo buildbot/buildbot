@@ -112,7 +112,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink=u'', properties={}, repository=u'', codebase=None,
-                      project=u'', src=None):
+                      project=u'', src=None, uid=None):
             pass
 
     def do_test_addChange(self, kwargs,
@@ -141,7 +141,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       files=[u'master/buildbot/__init__.py'],
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                      when_timestamp=256738404,
+                      when_timestamp=256738404, uid=112,
                       properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
@@ -168,7 +168,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                 'created_at': 10000000,
                 'ssid': 100,
             },
-            # uid
+            'uid': 112,
         }
         expectedRow = fakedb.Change(
             changeid=500,
@@ -181,22 +181,24 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             category='devel',
             repository='git://warner',
             codebase='',
+            uid=112,
             project='Buildbot',
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
-                                      expectedRoutingKey, expectedMessage, expectedRow)
+                                      expectedRoutingKey, expectedMessage, expectedRow,
+                                      expectedChangeUsers=[112])
 
     def test_addChange_src_codebase(self):
         createUserObject = mock.Mock(spec=users.createUserObject)
-        createUserObject.return_value = defer.succeed(123)
+        createUserObject.return_value = defer.succeed(112)
         self.patch(users, 'createUserObject', createUserObject)
         kwargs = dict(author=u'warner', branch=u'warnerdb',
                       category=u'devel', comments=u'fix whitespace',
                       files=[u'master/buildbot/__init__.py'],
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
-                      when_timestamp=256738404,
+                      when_timestamp=256738404, uid=112,
                       properties={u'foo': 20}, src=u'git', codebase=u'cb')
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
@@ -223,7 +225,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                 'created_at': 10000000,
                 'ssid': 100,
             },
-            # uid
+            'uid': 112
         }
         expectedRow = fakedb.Change(
             changeid=500,
@@ -236,13 +238,13 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             category='devel',
             repository='git://warner',
             codebase='cb',
+            uid=112,
             project='Buildbot',
             sourcestampid=100,
         )
         d = self.do_test_addChange(kwargs,
                                    expectedRoutingKey, expectedMessage, expectedRow,
-                                   expectedChangeUsers=[123])
-
+                                   expectedChangeUsers=[112])
         @d.addCallback
         def check(_):
             createUserObject.assert_called_once_with(
@@ -259,7 +261,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={u'foo': 20}, uid=112)
         expectedRoutingKey = ('change', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -285,7 +287,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                 'created_at': 10000000,
                 'ssid': 100,
             },
-            # uid
+            'uid': 112,
         }
         expectedRow = fakedb.Change(
             changeid=500,
@@ -299,7 +301,10 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             repository='git://warner',
             codebase='cb-devel',
             project='Buildbot',
+            uid=112,
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
-                                      expectedRoutingKey, expectedMessage, expectedRow)
+                                      expectedRoutingKey, expectedMessage, expectedRow,
+                                      expectedChangeUsers=[112])
+

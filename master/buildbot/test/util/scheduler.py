@@ -157,6 +157,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         category = None
         revlink = ''
         properties = {}
+        uid=0
         repository = ''
         project = ''
         codebase = ''

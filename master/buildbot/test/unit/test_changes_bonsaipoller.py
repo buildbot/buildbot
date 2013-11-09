@@ -284,6 +284,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
                 'revision': None,
                 'revlink': '',
                 'src': None,
+                'uid': None,
                 'when_timestamp': 1161908700,
             }, {
                 'author': 'aarrg@ooacm.org',
@@ -300,6 +301,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': 1161910620,
             }, {
@@ -315,6 +317,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
                 'revision': None,
                 'revlink': '',
                 'src': None,
+                'uid': None,
                 'when_timestamp': 1089822728,
             }])
         d.addCallback(check)

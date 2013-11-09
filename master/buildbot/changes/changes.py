@@ -70,6 +70,7 @@ class Change:
         change.codebase = chdict['codebase']
         change.project = chdict['project']
         change.number = chdict['changeid']
+        change.uid = chdict['uid']
 
         when = chdict['when_timestamp']
         if when:
@@ -87,7 +88,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='',
+                 revlink='', properties={}, repository='', codebase='', uid=None,
                  project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
@@ -121,6 +122,7 @@ class Change:
         self.repository = repository
         self.codebase = codebase
         self.project = project
+        self.uid = uid
 
         # keep a sorted list of the files, for easier display
         self.files = (files or [])[:]

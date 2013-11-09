@@ -502,6 +502,7 @@ message['change'].add(None,
                               properties=SourcedPropertiesValidator(),
                               repository=StringValidator(),
                               project=StringValidator(),
+                              uid=IntValidator(),
                               codebase=StringValidator(),
                               sourcestamp=DictValidator(
                                   **_sourcestamp
@@ -521,6 +522,7 @@ dbdict['chdict'] = DictValidator(
     properties=SourcedPropertiesValidator(),
     repository=StringValidator(),
     project=StringValidator(),
+    uid=IntValidator(),
     codebase=StringValidator(),
     is_dir=IntValidator(),
     sourcestampid=IntValidator(),

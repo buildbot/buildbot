@@ -188,6 +188,7 @@ class Change(Row):
         codebase=u'',
         project=u'proj',
         sourcestampid=92,
+        uid = 0,
     )
 
     lists = ('files', 'uids')
@@ -689,6 +690,7 @@ class FakeChangesComponent(FakeDBComponent):
             repository=repository,
             project=project,
             codebase=codebase,
+            uid=uid,
             uids=[],
             files=files,
             properties=properties,
@@ -776,7 +778,7 @@ class FakeChangesComponent(FakeDBComponent):
             repository=change.repository,
             codebase=change.codebase,
             project=change.project,
-            uids=[])
+            uid=change.uid)
         self.changes[changeid] = row
 
 

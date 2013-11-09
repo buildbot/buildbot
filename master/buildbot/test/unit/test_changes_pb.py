@@ -224,6 +224,7 @@ class TestChangePerspective(unittest.TestCase):
                 'revision': None,
                 'revlink': '',
                 'src': None,
+                'uid': None,
                 'when_timestamp': None,
             }])
         d.addCallback(check)
@@ -246,6 +247,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -270,6 +272,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -295,6 +298,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': u'',
                 'revision': None,
                 'revlink': u'',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -320,6 +324,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -345,6 +350,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -370,6 +376,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -395,6 +402,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -420,6 +428,7 @@ class TestChangePerspective(unittest.TestCase):
                 'repository': '',
                 'revision': None,
                 'revlink': '',
+                'uid': None,
                 'src': None,
                 'when_timestamp': None,
             }])
@@ -445,6 +454,7 @@ class TestChangePerspective(unittest.TestCase):
                 'revision': None,
                 'revlink': '',
                 'src': None,
+                'uid': None,
                 'when_timestamp': 1234,
             }])
         d.addCallback(check)
@@ -468,6 +478,7 @@ class TestChangePerspective(unittest.TestCase):
                 'revision': None,
                 'revlink': '',
                 'src': u'git',
+                'uid': None,
                 'when_timestamp': None,
             }])
         d.addCallback(check_change)

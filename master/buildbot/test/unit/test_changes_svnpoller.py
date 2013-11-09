@@ -475,6 +475,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
                 'revision': '2',
                 'revlink': '',
+                'uid': None,
                 'src': 'svn',
                 'when_timestamp': None,
             }])
@@ -501,6 +502,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'revision': '3',
                 'revlink': '',
                 'src': 'svn',
+                'uid': None,
                 'when_timestamp': None,
             }, {
                 'author': u'warner',
@@ -515,6 +517,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'revision': '4',
                 'revlink': '',
                 'src': 'svn',
+                'uid': None,
                 'when_timestamp': None,
             }])
             self.failUnlessEqual(s.last_change, 4)

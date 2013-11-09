@@ -97,6 +97,7 @@ class Change(base.ResourceType):
         repository = types.String()
         project = types.String()
         codebase = types.String()
+        uid = types.Integer()
         sourcestamp = sourcestamps.SourceStamp.entityType
         link = types.Link()
     entityType = EntityType(name)
@@ -106,7 +107,7 @@ class Change(base.ResourceType):
     def addChange(self, files=None, comments=None, author=None, revision=None,
                   when_timestamp=None, branch=None, category=None, revlink=u'',
                   properties={}, repository=u'', codebase=None, project=u'',
-                  src=None, _reactor=reactor):
+                  src=None, uid=None, _reactor=reactor):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         # add the source to the properties
@@ -114,12 +115,10 @@ class Change(base.ResourceType):
             properties[k] = (properties[k], u'Change')
 
         # get a user id
-        if src:
+        if src or uid is None:
             # create user object, returning a corresponding uid
             uid = yield users.createUserObject(self.master,
                                                author, src)
-        else:
-            uid = None
 
         # set the codebase, either the default, supplied, or generated
         if codebase is None \
@@ -137,7 +136,7 @@ class Change(base.ResourceType):
                 'repository': repository,
                 'project': project,
                 'codebase': None,
-                # 'uid': uid, -- not in data API yet?
+                'uid': uid
             }
             codebase = self.master.config.codebaseGenerator(pre_change)
             codebase = unicode(codebase)

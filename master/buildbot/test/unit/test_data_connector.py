@@ -58,7 +58,7 @@ class Tests(interfaces.InterfaceTests):
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink=u'', properties={}, repository=u'', codebase=None,
-                      project=u'', src=None):
+                      project=u'', src=None, uid=None):
             pass
 
     def test_signature_updates_masterActive(self):
