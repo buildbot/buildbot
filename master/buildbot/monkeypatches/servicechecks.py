@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-def patch_servicechecks():
+def patch():
     """
     Patch startService and stopService so that they check the previous state
     first.
