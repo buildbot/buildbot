@@ -125,6 +125,8 @@ Features
 
 * The ``branch`` and ``codebase`` arguments to the :bb:step:`Git` step are now renderable.
 
+* reconf option for GNUAutotools to run autoreconf before ./configure
+
 Fixes
 ~~~~~
 
