@@ -16,7 +16,7 @@
 import re
 import time
 
-from email.Utils import formatdate
+from email.utils import formatdate
 
 from twisted.internet import defer
 from twisted.internet import reactor

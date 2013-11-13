@@ -16,8 +16,8 @@
 
 import time
 
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.utils import formatdate
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor

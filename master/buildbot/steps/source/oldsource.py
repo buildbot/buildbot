@@ -18,7 +18,7 @@ from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.interfaces import IRenderable
 from buildbot.process.buildstep import RemoteCommand
 from buildbot.steps.source.base import Source
-from email.Utils import formatdate
+from email.utils import formatdate
 from twisted.internet import defer
 from twisted.python import log
 from warnings import warn

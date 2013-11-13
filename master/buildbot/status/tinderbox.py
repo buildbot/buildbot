@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.utils import formatdate
 
 from twisted.internet import defer
 from zope.interface import implements
