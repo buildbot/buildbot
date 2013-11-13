@@ -209,8 +209,63 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.formCont .command_forcebuild .grey-btn').trigger('click');
 				});
 			});
+
+		// specific for the builddetail page
+		
+		
+		}, timeConverter: function(UNIX_timestamp) {
+
+			 var a = new Date(UNIX_timestamp*1000);
+			 var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+		     var year = a.getFullYear();
+		     var month = months[a.getMonth()];
+		     var date = a.getDate();
+		     var hour = a.getHours();
+		     var min = a.getMinutes();
+		     var sec = a.getSeconds();
+		     var time = date+','+month+' '+year+' '+hour+':'+min+':'+sec ;
+		     return time;
+			
+		}, getTime: function  (start, end) {
 	
-		}
+			if (end === null) {
+				end = Math.round(+new Date()/1000);	
+			}
+
+			var time = end - start;	
+
+			var getTime = Math.round(time)
+			var hours = Math.floor(time / 3600) == 0? '' : Math.floor(time / 3600) + ' hours ' ;
+			
+			var minutes = Math.floor(getTime / 60) == 0? '' : Math.floor(getTime / 60) + ' mins, ';
+			var seconds = getTime - Math.floor(getTime / 60) * 60 + ' secs ';
+			return hours + minutes + seconds;
+
+		}, getResult: function (resultIndex) {
+        		
+    		var results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled"];
+    		return results[resultIndex]
+        }, getJsonUrl: function () {
+
+        		var currentUrl = document.URL;
+				               	
+			    var parser = document.createElement('a');
+			    parser.href = currentUrl;
+			     
+			    parser.protocol; // => "http:"
+			    parser.hostname; // => "example.com"
+			    parser.port;     // => "3000"
+			    parser.pathname; // => "/pathname/"
+			    parser.search;   // => "?search=test"
+			    parser.hash;     // => "#hash"
+			    parser.host;     // => "example.com:3000"
+
+			    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
+			    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
+			    var fullUrl = 'http://localhost:8001/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
+			    
+			    return fullUrl;
+        }
 	};
 
     return helpers;

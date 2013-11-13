@@ -10,7 +10,8 @@ require.config({
 		'currentitem': 'project/set-current-item',
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
-		'popup': 'project/popup'
+		'popup': 'project/popup',
+		'realtime': 'project/realtime'
 	}
 });
 
@@ -28,6 +29,13 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        	dataTables.init();
 	        });
 		}
+
+		if ($('.realtime').length > 0) {
+			require(['realtime'],
+	        function(realtime) {
+	        	realtime.init();
+	        });
+		}	
 
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
