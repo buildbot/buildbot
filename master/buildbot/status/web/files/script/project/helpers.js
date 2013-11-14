@@ -265,6 +265,13 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    var fullUrl = 'http://localhost:8001/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
 			    
 			    return fullUrl;
+        }, getStepList: function(element, index) {
+        	var stepList = $('.step-list > li');
+        	if (element === false) {
+        		return $(stepList).eq(index -1);
+        	} else {
+        		return $(element, stepList).eq(index -1);
+        	}
         }
 	};
 

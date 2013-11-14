@@ -43,7 +43,7 @@
     Results
   </h2>
 
-  <span class="{{ result_css }} result">   
+  <span class="{{ result_css }} result overall-result-js overall-result">   
     {{ b.getText()|join(' ')|capitalize }}
   </span>
    
@@ -305,7 +305,7 @@ SourceStamps
             Logs
       </div>
     {% endif %}
-    <ul class="log-list">
+    <ul class="log-list log-list-js">
       
       {% for l in s.logs %}
         <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
