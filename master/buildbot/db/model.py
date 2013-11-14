@@ -16,18 +16,13 @@
 import migrate
 import migrate.versioning.repository
 import migrate.versioning.schema
+from migrate import exceptions
 import sqlalchemy as sa
 
 from buildbot.db import base
 from buildbot.db.types.json import JsonObject
 from twisted.python import log
 from twisted.python import util
-
-try:
-    from migrate.versioning import exceptions
-    _hush_pyflakes = exceptions
-except ImportError:
-    from migrate import exceptions
 
 
 class Model(base.DBConnectorComponent):
