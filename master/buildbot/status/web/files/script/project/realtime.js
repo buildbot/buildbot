@@ -8,10 +8,10 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	                
 	                
 	         window.sock = null;
-	         var ellog = null;
+	        
 
 	         var wsuri;
-	         ellog = document.getElementById('log');
+	        
 
 	         if (window.location.protocol === "file:") {
 	        	 wsuri = "ws://localhost:9000";
@@ -55,7 +55,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             }
 	        
 	         };
-	        
+	        // used in build detailpage
+	        var stepList = $('#stepList > li');
 	         function log(m) {
 	             if ($('#tb-root').length != 0) {
 	                     realtimePages.frontPage(m);
@@ -63,7 +64,7 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	        
 	         	// handles the builddetailpage
 
-	        	 realtimePages.buildDetail(m);
+	        	 realtimePages.buildDetail(m, stepList);
 	         };
                          
                          

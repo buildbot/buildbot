@@ -3,53 +3,37 @@ define(['jquery', 'helpers'], function ($, helpers) {
     var realtimePages;
     
     realtimePages = {
-        buildDetail: function (m, jsonFeed) {
+        buildDetail: function (m, stepList) {
 
-        		
-            try {
-            	
-                  var obj = JSON.parse(m);
+        	var stopRunning = $('body').hasClass('stopRunning-js');
                   
+              if (stopRunning) {
+              		// close the websocket connection
+              		sock.close();
+              		// reload the page to get all results
+              		if(!window.location.hash) {
+				        window.location = window.location + '#loaded';
+				        window.location.reload();
+					}
+              		
+              }
+        	   else  { 
+            	try {
+            	console.time('no cache');
+                  var obj = JSON.parse(m);
+
                  $.each(obj, function (key, value) {
                   	
                   	// update timing table
                   	var startTime = value.times[0];
                   	var endTime = value.times[1];
-                  	var stopRunning = $('.overall-result-js').hasClass('stopRunning-js');
-                  	
-                  	if (stopRunning) {
-                  		sock.close();
-                  	}
-                  	
+ 
                   	var resultTxt = value.text;
-                  		
-                  		if (!stopRunning) { 
-
-	                  		$('.overall-result-js').addClass(resultTxt).text(resultTxt);
-	                  	
-	                  	
-		                  	//console.log(startTime, endTime)
 
 		                  	$('.start-time-js').text(helpers.timeConverter(startTime));
 		                    $('.end-time-js').text(helpers.timeConverter(endTime));
 		                    $('.elapsed-time-js').text(helpers.getTime(startTime, endTime));
-		                    
-
-		                    //console.log(value.currentStep)
-
-
-		                    /*
-		                    var currentStepArray = [];
-		                    $.each(value.currentStep, function (key, value) {
-		                    	i = ++i
-		                    	if (key === "times") {
-		                    		console.log(value[0]);
-		                    		currentStepArray.push(key, value)
-		                    		$('.update-time-js', stepList).eq(i -1).html(getTime(startTime, endTime));
-		                    	}
-		                    });
-							//console.log(currentStepArray)
-		                    */
+		                   
 		                    var i = 0;
 		                    
 		                  	$.each(value.steps, function (key, value) {
@@ -66,48 +50,52 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		                  		 if (!value.hidden) {
 		                  			i = ++i;
 		                  			 
-		                  			// update step list
-		                  			if (!helpers.getStepList(false, i).hasClass('finished')) {
+		                  			// update step list is it is not finished
+		                  			if (!$(stepList).eq(i-1).hasClass('finished')) {
 
 		                  				if (isRunning) {
 		                  					// loop through the logs
+		                  					
 				                  			$.each(value.logs, function (key, value) {
+
 				                  				var logText = value[0];
 				                  				var logUrl = value[1];
-				                  				helpers.getStepList('.log-list-js', i).empty().append('<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>');;		
-				                  				
+				                  				//var list = '';
+				                  				if (logText) {
+				                  					//list += '<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>'; 
+				                  					$('.logs-txt',stepList).eq(i-1).text('Logs');
+				                  					$('.log-list-js',stepList).eq(i-1).empty().append('<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>');	
+				                  				}
 				                  			});
+				                  			 //$('.log-list-js',stepList).eq(i-1).empty().html(list);
 
-			                  				helpers.getStepList('.update-time-js',i).html(helpers.getTime(startTime, endTime));
-		          							helpers.getStepList('.s-text-js',i).html(value.text.join(' '));
-			          						helpers.getStepList('.s-result-js',i).removeClass().addClass('running result s-result-js');	
+			                  				$('.update-time-js',stepList).eq(i-1).html(helpers.getTime(startTime, endTime));
+		          							$('.s-text-js',stepList).eq(i-1).html(value.text.join(' '));
+			          						$('.s-result-js',stepList).eq(i-1).removeClass().addClass('running result s-result-js');	
+			          						
 			              				} else if (isFinished) {
-			              					helpers.getStepList('.s-result-js',i).removeClass().addClass(resultsClass + ' result s-result-js');					              				
-			              					helpers.getStepList(false, i).addClass('finished');
+
+			              					$('.s-result-js',stepList).eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              				
+			              					$(stepList).eq(i-1).addClass('finished');
 			              					
 			              				}
-			              				if (helpers.getStepList(false, i).hasClass('finished')) {
-			              					console.log(helpers.getStepList(false, i));
-			              				}
+			              				
 		              				}
 		              			}
 		              			
 		                  	});
 							if (endTime) { 
-								$('.overall-result-js').addClass('stopRunning-js');
+								$('body').addClass('stopRunning-js');
 							}
-							
-							
-							
-						}
+						
 	                });
-					
+					console.timeEnd('no cache');
           		}
-               
-            catch(err) {
-            	//console.log(err);
-            }
-		            
+             
+	            catch(err) {
+	            	//console.log(err);
+	            }
+		    }        
         },
         frontPage: function(m){
         	function sumVal(arr) {

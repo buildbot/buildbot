@@ -281,7 +281,7 @@ SourceStamps
  #                       (target, ex_url_class, html.escape(name)))
  #}
 
-<ol class="step-list">
+<ol id="stepList" class="step-list">
 {% for s in steps %}
 
   <li>
@@ -311,9 +311,9 @@ SourceStamps
         <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
       {% else %}
         <li>
-          <span>
+          <div class="logs-txt">
             no logs
-          </span>
+          </div>
         </li>
       {% endfor %}
     
