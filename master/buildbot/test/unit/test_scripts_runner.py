@@ -182,6 +182,11 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
         exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
+    def test_log_count_none(self):
+        opts = self.parse('--log-count=None')
+        exp = self.defaults_and(**{'log-count': None})
+        self.assertOptions(opts, exp)
+
     def test_log_count_noninteger(self):
         self.assertRaises(usage.UsageError,
                           lambda: self.parse('--log-count=M'))
