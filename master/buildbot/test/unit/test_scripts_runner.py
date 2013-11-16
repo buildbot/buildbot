@@ -91,8 +91,8 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
     def defaults_and(self, **kwargs):
         defaults = dict(force=False, relocatable=False, config='master.cfg',
                         db='sqlite:///state.sqlite', basedir=os.getcwd(), quiet=False,
-                        **{'no-logrotate': False, 'log-size': '10000000',
-                           'log-count': '10'})
+                        **{'no-logrotate': False, 'log-size': 10000000,
+                           'log-count': 10})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
         assert not unk_keys, "invalid keys %s" % (unk_keys,)
         opts = defaults.copy()

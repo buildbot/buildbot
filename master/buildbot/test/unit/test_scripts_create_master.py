@@ -30,8 +30,8 @@ from twisted.trial import unittest
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
                   db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
-                  quiet=False, **{'no-logrotate': False, 'log-size': '10000000',
-                                  'log-count': '10'})
+                  quiet=False, **{'no-logrotate': False, 'log-size': 10000000,
+                                  'log-count': 10})
     config.update(kwargs)
     return config
 
