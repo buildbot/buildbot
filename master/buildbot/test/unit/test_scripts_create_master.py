@@ -167,10 +167,9 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_count(self):
-        self.assertRaisesRegexp(TypeError,
-                                "a number is required, not str",
-                                create_master.makeTAC,
-                                mkconfig(basedir='test', **{'log-count': '30'}))
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-count': '30'}))
 
     def test_makeTAC_none_log_count(self):
         create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
@@ -183,10 +182,9 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_size(self):
-        self.assertRaisesRegexp(TypeError,
-                                "a number is required, not str",
-                                create_master.makeTAC,
-                                mkconfig(basedir='test', **{'log-size': '3000'}))
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
