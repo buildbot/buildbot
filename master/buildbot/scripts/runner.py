@@ -21,7 +21,6 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-import re
 import sqlalchemy as sa
 import sys
 
