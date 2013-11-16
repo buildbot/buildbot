@@ -160,12 +160,12 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_size(self):
         opts = self.parse('-s124')
-        exp = self.defaults_and(**{'log-size': '124'})
+        exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
     def test_log_size_long(self):
         opts = self.parse('--log-size=124')
-        exp = self.defaults_and(**{'log-size': '124'})
+        exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
     def test_log_size_noninteger(self):
@@ -174,12 +174,12 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_count(self):
         opts = self.parse('-l124')
-        exp = self.defaults_and(**{'log-count': '124'})
+        exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
     def test_log_count_long(self):
         opts = self.parse('--log-count=124')
-        exp = self.defaults_and(**{'log-count': '124'})
+        exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
     def test_log_count_noninteger(self):
