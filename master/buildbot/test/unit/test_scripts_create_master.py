@@ -30,8 +30,8 @@ from twisted.trial import unittest
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
                   db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
-                  quiet=False, **{'no-logrotate': False, 'log-size': '10000000',
-                                  'log-count': '10'})
+                  quiet=False, **{'no-logrotate': False, 'log-size': 10000000,
+                                  'log-count': 10})
     config.update(kwargs)
     return config
 
@@ -160,6 +160,31 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         create_master.makeTAC(mkconfig(basedir='test', **{'no-logrotate': True}))
         self.assertNotInTacFile("import Log")
         self.assertWasQuiet()
+
+    def test_makeTAC_int_log_count(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-count': 30}))
+        self.assertInTacFile("\nmaxRotatedFiles = 30\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_str_log_count(self):
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-count': '30'}))
+
+    def test_makeTAC_none_log_count(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
+        self.assertInTacFile("\nmaxRotatedFiles = None\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_int_log_size(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-size': 3000}))
+        self.assertInTacFile("\nrotateLength = 3000\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_str_log_size(self):
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
