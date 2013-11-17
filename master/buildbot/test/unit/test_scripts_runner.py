@@ -91,8 +91,8 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
     def defaults_and(self, **kwargs):
         defaults = dict(force=False, relocatable=False, config='master.cfg',
                         db='sqlite:///state.sqlite', basedir=os.getcwd(), quiet=False,
-                        **{'no-logrotate': False, 'log-size': '10000000',
-                           'log-count': '10'})
+                        **{'no-logrotate': False, 'log-size': 10000000,
+                           'log-count': 10})
         unk_keys = set(kwargs.keys()) - set(defaults.keys())
         assert not unk_keys, "invalid keys %s" % (unk_keys,)
         opts = defaults.copy()
@@ -160,12 +160,12 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_size(self):
         opts = self.parse('-s124')
-        exp = self.defaults_and(**{'log-size': '124'})
+        exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
     def test_log_size_long(self):
         opts = self.parse('--log-size=124')
-        exp = self.defaults_and(**{'log-size': '124'})
+        exp = self.defaults_and(**{'log-size': 124})
         self.assertOptions(opts, exp)
 
     def test_log_size_noninteger(self):
@@ -174,12 +174,17 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_count(self):
         opts = self.parse('-l124')
-        exp = self.defaults_and(**{'log-count': '124'})
+        exp = self.defaults_and(**{'log-count': 124})
         self.assertOptions(opts, exp)
 
     def test_log_count_long(self):
         opts = self.parse('--log-count=124')
-        exp = self.defaults_and(**{'log-count': '124'})
+        exp = self.defaults_and(**{'log-count': 124})
+        self.assertOptions(opts, exp)
+
+    def test_log_count_none(self):
+        opts = self.parse('--log-count=None')
+        exp = self.defaults_and(**{'log-count': None})
         self.assertOptions(opts, exp)
 
     def test_log_count_noninteger(self):
