@@ -50,7 +50,7 @@ def shell_quote(cmd_list):
     # it.  The pipes module is only available on UNIX, and Windows "shell"
     # quoting is indescribably convoluted - so much so that it's not clear it's
     # reversible.  Also, the quote function is undocumented (although it looks
-    # like it will be documentd soon: http://bugs.python.org/issue9723).
+    # like it will be documented soon: http://bugs.python.org/issue9723).
     # Finally, it has a nasty bug in some versions where an empty string is not
     # quoted.
     #

@@ -227,7 +227,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         """
         raise NotImplementedError
 
-    # starting bulids
+    # starting builds
 
     @defer.inlineCallbacks
     def addBuildsetForLatest(self, reason='', external_idstring=None,
