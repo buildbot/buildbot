@@ -197,8 +197,10 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             try:
                 len(words)
-            except AttributeError:
+            except (AttributeError, TypeError):
                 # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
                 return ["???"]
 
             # flatten any nested lists
