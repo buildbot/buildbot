@@ -363,8 +363,12 @@ class MailNotifier(base.StatusReceiverMultiService):
                 mode = (mode,)
         for m in mode:
             if m not in self.possible_modes:
-                config.error(
-                    "mode %s is not a valid mode" % (m,))
+                if m == "all":
+                    config.error(
+                        "mode 'all' is not valid in an iterator and must be passed in as a separate string")
+                else:
+                    config.error(
+                        "mode %s is not a valid mode" % (m,))
         self.mode = mode
         self.categories = categories
         self.builders = builders

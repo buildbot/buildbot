@@ -25,6 +25,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake.fakebuild import FakeBuildStatus
+from buildbot.test.util.config import ConfigErrorsMixin
 from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -66,7 +67,7 @@ class FakeSource:
         self.patch = None
 
 
-class TestMailNotifier(unittest.TestCase):
+class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         builds = [FakeBuildStatus(name='build')]
@@ -177,6 +178,10 @@ class TestMailNotifier(unittest.TestCase):
         self.assertRaises(config.ConfigErrors,
                           MailNotifier, 'from@example.org',
                           categories=['fast', 'slow'], builders=['a', 'b'])
+
+    def test_init_warns_notifier_mode_all_in_iter(self):
+        self.assertRaisesConfigError("mode 'all' is not valid in an iterator and must be passed in as a separate string",
+                                     lambda: MailNotifier('from@example.org', mode=['all']))
 
     def test_builderAdded_ignores_unspecified_categories(self):
         mn = MailNotifier('from@example.org', categories=['fast'])
