@@ -223,7 +223,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment
         # This can be set from a Builder-level environment, or from earlier
-        # BuildSteps. The latter method is deprecated and superceded by
+        # BuildSteps. The latter method is deprecated and superseded by
         # BuildProperties.
         # Environment variables passed in by a BuildStep override
         # those passed in at the Builder level.

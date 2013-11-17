@@ -194,7 +194,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     @util.deferredLocked('_stable_timers_lock')
     @defer.inlineCallbacks
     def stableTimerFired(self, timer_name):
-        # if the service has already been stoppd then just bail out
+        # if the service has already been stopped then just bail out
         if not self._stable_timers[timer_name]:
             return
 
