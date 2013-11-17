@@ -264,6 +264,6 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
             self.failUnless(any([
                 'files' in upd and sorted(upd['files']) == ['file1', 'file2']
                 for upd in self.get_updates()]),
-                          self.builder.show())
+                self.builder.show())
         d.addCallback(check)
         return d
