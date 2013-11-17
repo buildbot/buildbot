@@ -15,18 +15,30 @@
 
 import re
 
-from zope.interface import implements
-from twisted.internet import defer, error
-from twisted.python import log, components
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import components
+from twisted.python import log
 from twisted.python.failure import Failure
-from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
+from twisted.web.util import formatFailure
+from zope.interface import implements
 
-from buildbot import interfaces, util, config
+from buildbot import config
+from buildbot import interfaces
+from buildbot import util
+from buildbot.process import logobserver
+from buildbot.process import properties
+from buildbot.process import remotecommand
 from buildbot.status import progress
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-    EXCEPTION, RETRY, CANCELLED, worst_status
-from buildbot.process import remotecommand, logobserver, properties
+from buildbot.status.results import CANCELLED
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util.eventual import eventually
 
 

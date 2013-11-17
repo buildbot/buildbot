@@ -15,11 +15,15 @@
 
 
 import os
-from twisted.trial import unittest
-from buildbot.test.util import dirs
 
-from buildbot.status.persistent_queue import MemoryQueue, DiskQueue, \
-    IQueue, PersistentQueue, WriteFile
+from buildbot.test.util import dirs
+from twisted.trial import unittest
+
+from buildbot.status.persistent_queue import DiskQueue
+from buildbot.status.persistent_queue import IQueue
+from buildbot.status.persistent_queue import MemoryQueue
+from buildbot.status.persistent_queue import PersistentQueue
+from buildbot.status.persistent_queue import WriteFile
 
 
 class test_Queues(dirs.DirsMixin, unittest.TestCase):

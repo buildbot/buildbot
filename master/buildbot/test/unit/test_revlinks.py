@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, \
-    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch, default_revlink_matcher
+from buildbot.revlinks import GithubRevlink
+from buildbot.revlinks import GitwebMatch
+from buildbot.revlinks import RevlinkMatch
+from buildbot.revlinks import SourceforgeGitRevlink
+from buildbot.revlinks import SourceforgeGitRevlink_AlluraPlatform
+from buildbot.revlinks import default_revlink_matcher
 from twisted.trial import unittest
 
 

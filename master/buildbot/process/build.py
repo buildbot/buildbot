@@ -16,17 +16,26 @@
 
 import types
 
-from zope.interface import implements
-from twisted.python import log, components
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import components
+from twisted.python import log
 from twisted.python.failure import Failure
-from twisted.internet import defer, error
+from zope.interface import implements
 
 from buildbot import interfaces
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-    RETRY, SKIPPED, CANCELLED, worst_status
+from buildbot.process import metrics
+from buildbot.process import properties
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
-from buildbot.process import metrics, properties
+from buildbot.status.results import CANCELLED
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util.eventual import eventually
 
 

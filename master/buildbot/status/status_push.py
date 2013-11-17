@@ -33,10 +33,13 @@ except ImportError:
 
 from buildbot import config
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
-    MemoryQueue, PersistentQueue
+from buildbot.status.persistent_queue import DiskQueue
+from buildbot.status.persistent_queue import IndexedQueue
+from buildbot.status.persistent_queue import MemoryQueue
+from buildbot.status.persistent_queue import PersistentQueue
 from buildbot.status.web.status_json import FilterOut
-from twisted.internet import defer, reactor
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client
 
