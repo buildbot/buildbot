@@ -14,22 +14,32 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.web import html
-import urllib
+import collections
 import time
-from twisted.python import log
-from twisted.internet import defer
+import urllib
+
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_change, \
-    path_to_root, ICurrentBox, build_get_class, \
-    map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset
+from buildbot import util
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import ValidationError
-from buildbot.status.web.build import BuildsResource, StatusResourceBuild
-from buildbot import util
-import collections
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import BuildLineMixin
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import ICurrentBox
+from buildbot.status.web.base import build_get_class
+from buildbot.status.web.base import getRequestCharset
+from buildbot.status.web.base import map_branches
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
+from buildbot.status.web.base import path_to_change
+from buildbot.status.web.base import path_to_root
+from buildbot.status.web.base import path_to_slave
+from buildbot.status.web.build import BuildsResource
+from buildbot.status.web.build import StatusResourceBuild
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web import html
 
 
 class ForceAction(ActionResource):

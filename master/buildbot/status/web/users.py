@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import urllib
+
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_root
 from twisted.internet import defer
 from twisted.web.util import redirectTo
-from buildbot.status.web.base import HtmlResource, path_to_authzfail, \
-    path_to_root, ActionResource
 
 
 class UsersActionResource(ActionResource):

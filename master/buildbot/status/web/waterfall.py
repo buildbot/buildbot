@@ -14,22 +14,34 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
-from twisted.python import log, components
-from twisted.internet import defer
 import urllib
 
-import time
+from twisted.internet import defer
+from twisted.python import components
+from twisted.python import log
+from zope.interface import implements
+
 import locale
 import operator
+import time
 
-from buildbot import interfaces, util
-from buildbot.status import builder, buildstep, build
+from buildbot import interfaces
+from buildbot import util
 from buildbot.changes import changes
+from buildbot.status import build
+from buildbot.status import builder
+from buildbot.status import buildstep
 
-from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-    ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
-    map_branches
+from buildbot.status.web.base import Box
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import IBox
+from buildbot.status.web.base import ICurrentBox
+from buildbot.status.web.base import ITopBox
+from buildbot.status.web.base import build_get_class
+from buildbot.status.web.base import map_branches
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_root
+from buildbot.status.web.base import path_to_step
 
 
 def earlier(old, new):

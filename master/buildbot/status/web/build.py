@@ -14,21 +14,31 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.web import html
-from twisted.internet import defer, reactor
-from twisted.web.util import Redirect, DeferredResource
+from twisted.web.util import DeferredResource
+from twisted.web.util import Redirect
 
-import urllib
 import time
-from twisted.python import log
-from buildbot.status.web.base import HtmlResource, \
-    css_classes, path_to_build, path_to_builder, path_to_slave, \
-    getAndCheckProperties, ActionResource, path_to_authzfail, \
-    getRequestCharset
-from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
+import urllib
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import TextParameter
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import css_classes
+from buildbot.status.web.base import getAndCheckProperties
+from buildbot.status.web.base import getRequestCharset
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
+from buildbot.status.web.base import path_to_slave
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
-from buildbot import util, interfaces
+from twisted.python import log
 
 
 class ForceBuildActionResource(ActionResource):

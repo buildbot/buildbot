@@ -17,40 +17,49 @@
 import os
 import weakref
 
-from zope.interface import implements
-from twisted.python import log
-from twisted.application import strports, service
-from twisted.internet import defer
-from twisted.web import server, distrib, static
-from twisted.spread import pb
-from twisted.web.util import Redirect
 from buildbot import config
 from buildbot.interfaces import IStatusReceiver
-from buildbot.status.web.base import StaticFile, createJinjaEnv
-from buildbot.status.web.feeds import Rss20StatusResource, \
-    Atom10StatusResource
-from buildbot.status.web.pngstatus import PngStatusResource
-from buildbot.status.web.waterfall import WaterfallStatusResource
-from buildbot.status.web.console import ConsoleStatusResource
-from buildbot.status.web.olpb import OneLinePerBuild
-from buildbot.status.web.grid import GridStatusResource
-from buildbot.status.web.grid import TransposedGridStatusResource
-from buildbot.status.web.changes import ChangesResource
+from buildbot.status.web.about import AboutBuildbot
+from buildbot.status.web.auth import AuthFailResource
+from buildbot.status.web.auth import AuthzFailResource
+from buildbot.status.web.auth import LoginResource
+from buildbot.status.web.auth import LogoutResource
+from buildbot.status.web.authz import Authz
+from buildbot.status.web.base import StaticFile
+from buildbot.status.web.base import createJinjaEnv
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
+from buildbot.status.web.change_hook import ChangeHookResource
+from buildbot.status.web.changes import ChangesResource
+from buildbot.status.web.console import ConsoleStatusResource
+from buildbot.status.web.feeds import Atom10StatusResource
+from buildbot.status.web.feeds import Rss20StatusResource
+from buildbot.status.web.grid import GridStatusResource
+from buildbot.status.web.grid import TransposedGridStatusResource
+from buildbot.status.web.olpb import OneLinePerBuild
+from buildbot.status.web.pngstatus import PngStatusResource
+from buildbot.status.web.root import RootPage
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
-from buildbot.status.web.about import AboutBuildbot
-from buildbot.status.web.authz import Authz
-from buildbot.status.web.auth import AuthFailResource, AuthzFailResource, LoginResource, LogoutResource
-from buildbot.status.web.root import RootPage
 from buildbot.status.web.users import UsersResource
-from buildbot.status.web.change_hook import ChangeHookResource
-from twisted.cred.portal import IRealm, Portal
+from buildbot.status.web.waterfall import WaterfallStatusResource
+from twisted.application import service
+from twisted.application import strports
 from twisted.cred import strcred
 from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.credentials import IUsernamePassword
-from twisted.web import resource, guard
+from twisted.cred.portal import IRealm
+from twisted.cred.portal import Portal
+from twisted.internet import defer
+from twisted.python import log
+from twisted.spread import pb
+from twisted.web import distrib
+from twisted.web import guard
+from twisted.web import resource
+from twisted.web import server
+from twisted.web import static
+from twisted.web.util import Redirect
+from zope.interface import implements
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.

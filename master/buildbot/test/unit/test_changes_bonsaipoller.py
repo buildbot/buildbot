@@ -13,16 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-from copy import deepcopy
 import re
 
-from twisted.trial import unittest
-from twisted.internet import defer
-from twisted.web import client
+from copy import deepcopy
+
+from buildbot.changes.bonsaipoller import BonsaiParser
+from buildbot.changes.bonsaipoller import BonsaiPoller
+from buildbot.changes.bonsaipoller import BonsaiResult
+from buildbot.changes.bonsaipoller import CiNode
+from buildbot.changes.bonsaipoller import EmptyResult
+from buildbot.changes.bonsaipoller import FileNode
+from buildbot.changes.bonsaipoller import InvalidResultError
 from buildbot.test.util import changesource
 from buildbot.util import epoch2datetime
-from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
-    BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
+from twisted.internet import defer
+from twisted.trial import unittest
+from twisted.web import client
 
 log1 = "Add Bug 338541a"
 who1 = "sar@gmail.com"

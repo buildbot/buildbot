@@ -52,19 +52,6 @@ class TestFixImports(unittest.TestCase):
             from twisted.trial import unittest
             """)
 
-    def testDontSort(self):
-        self.oneTest("""
-            from twisted.internet import defer,\\
-                 reactor
-            from twisted.trial import unittest
-            import fiximports
-            """, """
-            from twisted.internet import defer,\\
-                 reactor
-            from twisted.trial import unittest
-            import fiximports
-            """)
-
     def testFutureFirst(self):
         self.oneTest("""
             from __future__ import with_statement
@@ -78,4 +65,41 @@ class TestFixImports(unittest.TestCase):
 
             from twisted.internet import defer
             from twisted.trial import unittest
+            """)
+
+    def testSplitBackslashedSingle(self):
+        self.oneTest("""
+            from twisted.internet import \\
+                 reactor
+            """, """
+            from twisted.internet import reactor
+            """)
+
+    def testSplitBackslashedList(self):
+        self.oneTest("""
+            from twisted.internet import defer,\\
+                 reactor
+            from X import A, B, \\
+                 C, D, E
+            """, """
+            from X import A
+            from X import B
+            from X import C
+            from X import D
+            from X import E
+            from twisted.internet import defer
+            from twisted.internet import reactor
+            """)
+
+    def testSplitBackslashedListMultiline(self):
+        self.oneTest("""
+            from X import A, B, \\
+                 C, D, \\
+                 E
+            """, """
+            from X import A
+            from X import B
+            from X import C
+            from X import D
+            from X import E
             """)

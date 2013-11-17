@@ -15,9 +15,12 @@
 
 
 import urllib
-from buildbot.status.web.base import HtmlResource, path_to_builder, \
-    path_to_build, css_classes
+
 from buildbot.status.builder import Results
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import css_classes
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
 

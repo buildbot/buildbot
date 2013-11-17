@@ -29,7 +29,7 @@ class FixImports(object):
 
     def isBadLineFixable(self, line):
         '''I return True is the given line is an import line than I know how to split'''
-        if self.isImportLine(line) and ',' in line and '(' not in line and '\\' not in line:
+        if self.isImportLine(line) and '(' not in line:
             return True
         return False
 
@@ -37,20 +37,21 @@ class FixImports(object):
         '''I look at the line and print all error I find'''
         res = True
         if self.isImportLine(line):
+            if ',' in line:
+                self.printErrorMsg(filename, lineNb,
+                                   "multiple modules imported on one line - will fix")
+                res = False
+            if '\\' in line:
+                self.printErrorMsg(filename, lineNb,
+                                   "line-continuation character found - will fix.")
+                res = False
+            # these two don't occur in the Buildbot codebase, so we don't try to
+            # fix them
             if ';' in line:
                 self.printErrorMsg(filename, lineNb,
                                    "multiple import statement on one line. "
                                    "Put each import on its own line.")
                 res = False
-            if ',' in line:
-                self.printErrorMsg(filename, lineNb,
-                                   "multiple module imported on one line. "
-                                   "Please import each module on a single line.")
-                res = False
-            if '\\' in line:
-                self.printErrorMsg(filename, lineNb,
-                                   "new line character found. "
-                                   "Please import each module on a single line")
             if '(' in line:
                 self.printErrorMsg(filename, lineNb,
                                    "parenthesis character found. "
@@ -93,8 +94,16 @@ class FixImports(object):
                 self.groups.append((self.group_start, len(newlines)))
                 self.group_start = None
 
-        for line in lines:
+        iter = lines.__iter__()
+        while True:
+            try:
+                line = iter.next()
+            except StopIteration:
+                break
             if self.isImportLine(line):
+                # join any continuation lines (\\)
+                while line[-1] == '\\':
+                    line = line[:-1] + iter.next()
                 if self.group_start is None:
                     self.group_start = len(newlines)
 

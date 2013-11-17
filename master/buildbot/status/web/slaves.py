@@ -16,14 +16,19 @@
 
 import time
 import urllib
-from twisted.web import html
-from twisted.web.util import Redirect
-from twisted.web.resource import NoResource
-from twisted.internet import defer
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail
+from twisted.internet import defer
+from twisted.web import html
+from twisted.web.resource import NoResource
+from twisted.web.util import Redirect
+
 from buildbot import util
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import BuildLineMixin
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import abbreviate_age
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_slave
 
 
 class ShutdownActionResource(ActionResource):
