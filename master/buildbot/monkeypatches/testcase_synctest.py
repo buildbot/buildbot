@@ -13,24 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-import twisted
-
 from twisted.python import failure
 from twisted.trial import unittest
 
 
-def patch_testcase_synctest():
+def patch():
     """
     Patch in successResultOf, failureResultOf and assertNoResult for versions
     of twisted that don't support them.
 
     (used for testing only)
     """
-    if twisted.version.major < 13 or (
-            twisted.version.major == 13 and twisted.version.minor == 0):
-        unittest.TestCase.successResultOf = successResultOf
-        unittest.TestCase.failureResultOf = failureResultOf
-        unittest.TestCase.assertNoResult = assertNoResult
+    unittest.TestCase.successResultOf = successResultOf
+    unittest.TestCase.failureResultOf = failureResultOf
+    unittest.TestCase.assertNoResult = assertNoResult
 
 #
 # Everything below this line was taken from Twisted, except as annotated.  See

@@ -228,8 +228,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         d = self.runStep()
         d.addErrback(log.err)
         d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(defer.FirstError)), 1))
-        d.addCallback(lambda _:
                       self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         d.addCallback(lambda _: self.assertTrue(called[0]))
         return d

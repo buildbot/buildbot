@@ -175,7 +175,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     def gotChange(self, change, important):
         raise NotImplementedError
 
-    # starting bulids
+    # starting builds
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                                waited_for=False, properties=None, builderNames=None):

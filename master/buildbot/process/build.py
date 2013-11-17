@@ -419,7 +419,7 @@ class Build(properties.PropertiesMixin):
         text = None
         if isinstance(result, types.TupleType):
             result, text = result
-        assert isinstance(result, type(SUCCESS))
+        assert isinstance(result, type(SUCCESS)), "got %r" % (result,)
         log.msg(" step '%s' complete: %s" % (step.name, Results[result]))
         self.results.append(result)
         if text:

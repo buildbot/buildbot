@@ -21,7 +21,6 @@ from __future__ import with_statement
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
 
-import re
 import sqlalchemy as sa
 import sys
 
@@ -107,9 +106,9 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
-        ["log-size", "s", "10000000",
-         "size at which to rotate twisted log files"],
-        ["log-count", "l", "10",
+        ["log-size", "s", 10000000,
+         "size at which to rotate twisted log files", int],
+        ["log-count", "l", 10,
          "limit the number of kept old twisted log files"],
         ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
@@ -150,15 +149,15 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     def postOptions(self):
         base.BasedirMixin.postOptions(self)
 
-        # validate 'log-size' parameter
-        if not re.match(r'^\d+$', self['log-size']):
-            raise usage.UsageError("log-size parameter needs to be an int")
-
         # validate 'log-count' parameter
-        if not re.match(r'^\d+$', self['log-count']) and \
-                self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int " +
-                                   " or None")
+        if self['log-count'] == 'None':
+            self['log-count'] = None
+        else:
+            try:
+                self['log-count'] = int(self['log-count'])
+            except ValueError:
+                raise usage.UsageError(
+                    "log-count parameter needs to be an int or None")
 
         # validate 'db' parameter
         try:

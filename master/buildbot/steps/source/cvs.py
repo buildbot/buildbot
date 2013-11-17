@@ -119,7 +119,8 @@ class CVS(Source):
 
     def _clobber(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron})
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -147,7 +148,8 @@ class CVS(Source):
 
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron})
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         old_workdir = self.workdir
@@ -158,7 +160,8 @@ class CVS(Source):
             cmd = remotecommand.RemoteCommand('cpdir', {
                 'fromdir': self.srcdir,
                 'todir': old_workdir,
-                'logEnviron': self.logEnviron, })
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d

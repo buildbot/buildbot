@@ -144,15 +144,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
-        early = []
-        d.addCallback(early.append)
         if self.step.waitForFinish:
-            # it should not have been!
-            expected_early = []
+            self.assertFalse(d.called)
         else:
-            expected_early = [None]
-
-        self.assertEqual(early, expected_early)
+            self.assertTrue(d.called)
 
         def check(_):
             self.assertEqual(self.scheduler_a.triggered_with,
