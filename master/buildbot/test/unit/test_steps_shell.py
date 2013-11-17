@@ -167,19 +167,23 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
+    def test_describe_unrendered_custom_new_style_class_rendarable(self):
+        step = shell.ShellCommand(command=object())
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],) * 2)
+
+    def test_describe_unrendered_custom_old_style_class_rendarable(self):
+        class C:
+            pass
+        step = shell.ShellCommand(command=C())
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],) * 2)
+
     def test_describe_unrendered_WithProperties_list(self):
         step = shell.ShellCommand(
             command=['x', properties.WithProperties(''), 'y'])
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'x", "y'"],) * 2)
-
-    @compat.usesFlushLoggedErrors
-    def test_describe_fail(self):
-        step = shell.ShellCommand(command=object())
-        self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???'],) * 2)
-        # (describe is called twice, so two exceptions)
-        self.assertEqual(len(self.flushLoggedErrors(TypeError)), 2)
 
     def test_run_simple(self):
         self.setupStep(
