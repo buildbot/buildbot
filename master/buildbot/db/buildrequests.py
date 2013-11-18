@@ -213,28 +213,49 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def mergeBuildingRequest(self, requests):
+        def thd(conn):
+            transaction = conn.begin()
+            try:
+                self.claimBuildRequestsTransaction(conn, requests)
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                transaction.rollback()
+                raise e
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
+
+
     def mergeRunningBuildRequest(self, requests):
         def thd(conn):
+            transaction = conn.begin()
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]
 
-            q = sa.select([buildrequests_tbl.c.artifactbrid]) \
-                .where(id == requests[0].id)
-            res = conn.execute(q)
-            row = res.fetchone()
-            # by default it will mark using artifact generated from merged brid
-            stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                .values(artifactbrid=requests[0].id)\
-                .values(mergebrid=requests[0].id)
-
-            if row and (row.artifactbrid is not None):
+            try:
+                q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                    .where(id == requests[0].id)
+                res = conn.execute(q)
+                row = res.fetchone()
+                # by default it will mark using artifact generated from merged brid
                 stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                .values(artifactbrid=row.artifactbrid)\
-                .values(mergebrid=requests[0].id)
-            res = conn.execute(stmt2)
-            return res.rowcount
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=requests[0].id)\
+                    .values(mergebrid=requests[0].id)
+
+                if row and (row.artifactbrid is not None):
+                    stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=row.artifactbrid)\
+                    .values(mergebrid=requests[0].id)
+                res = conn.execute(stmt2)
+
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                transaction.rollback()
+                raise e
+
+            transaction.commit()
 
         return self.db.pool.do(thd)
 
@@ -250,7 +271,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(buildrequests_tbl.c.results == 0)
 
             res = conn.execute(q)
-            print "\n q %s startbrid %s buildername %s \n" % (q,startbrid,buildername)
             row = res.fetchone()
             rv = None
             if row:
@@ -297,7 +317,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 stmt2 = stmt2.values(artifactbrid=brdict['artifactbrid'])
 
             res = conn.execute(stmt2)
-            print "\n stmt2 %s \n" % stmt2
 
             # insert builds
             stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
@@ -384,6 +403,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return  self.db.pool.do(thd)
 
+    def insertBuildRequestClaimsTable(self, _master_objectid, brids, claimed_at, conn):
+        tbl = self.db.model.buildrequest_claims
+        q = tbl.insert()
+        conn.execute(q, [dict(brid=id, objectid=_master_objectid,
+                              claimed_at=claimed_at)
+                         for id in brids])
+
+    def getClaimedAtValue(self, _reactor, claimed_at):
+        if claimed_at is not None:
+            claimed_at = datetime2epoch(claimed_at)
+        else:
+            claimed_at = _reactor.seconds()
+        return claimed_at
+
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
                             _master_objectid=None):
@@ -408,6 +441,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
         return self.db.pool.do(thd)
+
+    @with_master_objectid
+    def claimBuildRequestsTransaction(self, conn, brids, claimed_at=None,
+                                      _reactor=reactor, _master_objectid=None):
+        claimed_at = self.getClaimedAtValue(_reactor, claimed_at)
+
+        self.insertBuildRequestClaimsTable(_master_objectid, brids, claimed_at, conn)
 
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,

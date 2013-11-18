@@ -467,27 +467,16 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brdicts, brids, breqs):
         # check only the first br others will be compatible to merge
-        print "\n\n #--# br  %s #--# \n\n" % brdicts[0]
         brobj = yield self._brdictToBuildRequest(brdicts[0])
-        print "\n\n #--# brobj  %s #--# \n\n" % brobj
-        print "\n\n #--# brobj  %s #--# \n\n" % brobj.sources
         for b in self.building:
-            print "\n\n #--# building %s #--# \n\n" % b
-            print "\n\n #--# building requests %s #--# \n\n" % b.requests
-            print "\n\n #--# buildrequest building %s #--# \n\n" % b.requests[0]
-            print "\n\n #--# buildrequest building %s #--# \n\n" % b.requests[0].sources
-
             if self._defaultMergeRequestFn(b.requests[0], brobj):
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield self.master.db.buildrequests.mergeBuildingRequest(brids)
+                #yield  self.master.db.buildrequests.claimBuildRequests(brids)
                 yield self.master.db.builds.addBuilds(brids, b.build_status.number)
-                b.requests = b.requests + breqs
-                # todo: update merged buildrequest with artifactbrid check it has compatible properties (clean_build)
                 yield self.master.db.buildrequests.mergeRunningBuildRequest([b.requests[0]] + breqs)
-                print "\n\n #--# merged requests %s #--# \n\n" % b.requests
+                b.requests = b.requests + breqs
                 defer.returnValue(True)
                 return
-
-            print "\n\n #--# addBuild %s, %s, %s #--# \n\n" % (brids,b.requests[0].id,b.build_status.number)
         defer.returnValue(False)
 
     # Build Creation
@@ -529,8 +518,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # match them up until we're out of options
         while (available_slavebuilders or self.building) and unclaimed_requests:
-            print "\n\n ## available_slavebuilders %s ## \n ## self.building %s ##\n\n" % (available_slavebuilders, self.building)
-
             # then choose a request (using nextBuild)
             brdict = yield self._chooseBuild(unclaimed_requests)
 
@@ -544,6 +531,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             # merge the chosen request with any compatible requests in the
             # queue
+            # todo: check it has compatible properties (clean_build)
             brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
                                                 Builder._defaultMergeRequestFn)
             #mergeRequests_fn)
@@ -557,7 +545,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             # merge current brdicts with currently running builds
             try:
-                if (yield self.mergeBuildingRequests(brdicts,brids, breqs)):
+                if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
                     self._breakBrdictRefloops(brdicts)
                     for br in brdicts:
                         unclaimed_requests.remove(br)
@@ -584,8 +572,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
                     try:
                         yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
-                        print "\n brdicts %s \n" % brdicts
-                        print "\n merged_brdicts %s \n" % merged_brdicts
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
                         self._breakBrdictRefloops(merged_brdicts)
                         for br in merged_brids:
