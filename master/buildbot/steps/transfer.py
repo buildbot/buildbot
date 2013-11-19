@@ -17,6 +17,7 @@ from __future__ import with_statement
 
 
 import os.path
+import stat
 import tarfile
 import tempfile
 try:
@@ -33,6 +34,7 @@ from buildbot.process.buildstep import SKIPPED
 from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
 from twisted.python import log
 from twisted.spread import pb
 
@@ -364,6 +366,132 @@ class DirectoryUpload(_TransferBuildStep):
         def cancel(res):
             dirWriter.cancel()
             return res
+        d.addCallback(self.finished).addErrback(self.failed)
+
+    def finished(self, result):
+        # Subclasses may choose to skip a transfer. In those cases, self.cmd
+        # will be None, and we should just let BuildStep.finished() handle
+        # the rest
+        if result == SKIPPED:
+            return BuildStep.finished(self, SKIPPED)
+
+        if self.cmd.didFail():
+            return BuildStep.finished(self, FAILURE)
+        return BuildStep.finished(self, SUCCESS)
+
+
+class MultipleFileUpload(_TransferBuildStep):
+
+    name = 'upload'
+
+    renderables = ['slavesrcs', 'masterdest', 'url']
+
+    def __init__(self, slavesrcs, masterdest,
+                 workdir=None, maxsize=None, blocksize=16 * 1024,
+                 mode=None, compress=None, keepstamp=False, url=None, **buildstep_kwargs):
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+
+        self.slavesrcs = slavesrcs
+        self.masterdest = masterdest
+        self.maxsize = maxsize
+        self.blocksize = blocksize
+        if not isinstance(mode, (int, type(None))):
+            config.error(
+                'mode must be an integer or None')
+        self.mode = mode
+        if compress not in (None, 'gz', 'bz2'):
+            config.error(
+                "'compress' must be one of None, 'gz', or 'bz2'")
+        self.compress = compress
+        self.keepstamp = keepstamp
+        self.url = url
+
+    def uploadFile(self, source, masterdest):
+        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+
+        args = {
+            'slavesrc': source,
+            'workdir': self._getWorkdir(),
+            'writer': fileWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize,
+            'keepstamp': self.keepstamp,
+        }
+
+        cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
+        d = self.runCommand(cmd)
+
+        @d.addErrback
+        def cancel(res):
+            fileWriter.cancel()
+            return res
+
+        return d
+
+    def uploadDirectory(self, source, masterdest):
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, self.mode)
+
+        args = {
+            'slavesrc': source,
+            'workdir': self._getWorkdir(),
+            'writer': dirWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize,
+            'compress': self.compress
+        }
+
+        cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
+        d = self.runCommand(cmd)
+
+        @d.addErrback
+        def cancel(res):
+            dirWriter.cancel()
+            return res
+
+        return d
+
+    def startUpload(self, source, destdir):
+        masterdest = os.path.join(destdir, os.path.basename(source))
+        args = {
+            'file': source,
+            'workdir': self._getWorkdir()
+        }
+        cmd = makeStatusRemoteCommand(self, 'stat', args)
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def checkStat(_):
+            s = cmd.updates['stat'][-1]
+            if stat.S_ISDIR(s[stat.ST_MODE]):
+                return self.uploadDirectory(source, masterdest)
+            elif stat.S_ISREG(s[stat.ST_MODE]):
+                return self.uploadFile(source, masterdest)
+            else:
+                return defer.fail('%r is neither a regular file, nor a directory' % source)
+
+        return d
+
+    def start(self):
+        self.checkSlaveVersion("uploadDirectory")
+        self.checkSlaveVersion("uploadFile")
+        self.checkSlaveVersion("stat")
+
+        masterdest = os.path.expanduser(self.masterdest)
+        sources = self.slavesrcs
+
+        if not sources:
+           return self.finished(SKIPPED)
+
+        d = defer.gatherResults([self.startUpload(source, masterdest) for source in sources])
+
+        log.msg("MultipleFileUpload started, from slave %r to master %r"
+                % (sources, masterdest))
+
+        nsrcs = len(sources)
+        self.step_status.setText(['uploading', '%d %s' % (nsrcs, 'file' if nsrcs == 1 else 'files')])
+        if self.url is not None:
+            self.addURL(os.path.basename(masterdest), self.url)
+
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):

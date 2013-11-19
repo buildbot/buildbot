@@ -29,13 +29,32 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process.properties import Properties
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, SKIPPED
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.util import json
 
+from cStringIO import StringIO
+
+def uploadString(string):
+    def behavior(command):
+        writer = command.args['writer']
+        writer.remote_write(string + "\n")
+        writer.remote_close()
+    return behavior
+
+def uploadTarFile(filename, **members):
+    def behaviour(command):
+        f = StringIO()
+        archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
+        for name, content in members.iteritems():
+            archive.addfile(tarfile.TarInfo(name), StringIO(content))
+        writer = command.args['writer']
+        writer.remote_write(f.getvalue())
+        writer.remote_unpack()
+    return behaviour
 
 # Test buildbot.steps.transfer._FileWriter class.
 class TestFileWriter(unittest.TestCase):
@@ -244,24 +263,111 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             transfer.DirectoryUpload(slavesrc="srcdir", masterdest=self.destdir))
 
-        def upload_behavior(command):
-            from cStringIO import StringIO
-            f = StringIO()
-            archive = tarfile.TarFile(fileobj=f, name='fake.tar', mode='w')
-            archive.addfile(tarfile.TarInfo("test"), StringIO("Hello World!"))
-            writer = command.args['writer']
-            writer.remote_write(f.getvalue())
-            writer.remote_unpack()
-
         self.expectCommands(
             Expect('uploadDirectory', dict(
                 slavesrc="srcdir", workdir='wkdir',
                 blocksize=16384, compress=None, maxsize=None,
                 writer=ExpectRemoteRef(transfer._DirectoryWriter)))
-            + Expect.behavior(upload_behavior)
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
 
         self.expectOutcome(result=SUCCESS, status_text=["uploading", "srcdir"])
+        d = self.runStep()
+        return d
+
+
+class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.destdir = os.path.abspath('destdir')
+        if os.path.exists(self.destdir):
+            shutil.rmtree(self.destdir)
+
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        if os.path.exists(self.destdir):
+            shutil.rmtree(self.destdir)
+
+        return self.tearDownBuildStep()
+
+    def testEmpty(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(slavesrcs=[], masterdest=self.destdir))
+
+        self.expectCommands()
+
+        self.expectOutcome(result=SKIPPED, status_text=["upload"])
+        d = self.runStep()
+        return d
+
+    def testFile(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(slavesrcs=["srcfile"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test'))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", "1 file"])
+        d = self.runStep()
+        return d
+
+    def testDirectory(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(slavesrcs=["srcdir"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', dict(file="srcdir",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFDIR, 99, 99])
+            + 0,
+            Expect('uploadDirectory', dict(
+                slavesrc="srcdir", workdir='wkdir',
+                blocksize=16384, compress=None, maxsize=None,
+                writer=ExpectRemoteRef(transfer._DirectoryWriter)))
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", "1 file"])
+        d = self.runStep()
+        return d
+
+    def testMultiple(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(slavesrcs=["srcfile","srcdir"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test'))
+            + 0,
+            Expect('stat', dict(file="srcdir",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFDIR, 99, 99])
+            + 0,
+            Expect('uploadDirectory', dict(
+                slavesrc="srcdir", workdir='wkdir',
+                blocksize=16384, compress=None, maxsize=None,
+                writer=ExpectRemoteRef(transfer._DirectoryWriter)))
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", "2 files"])
         d = self.runStep()
         return d
 
