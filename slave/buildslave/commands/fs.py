@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+import os, glob
 import shutil
 import sys
 
@@ -204,6 +204,24 @@ class StatFile(base.Command):
         try:
             stat = os.stat(filename)
             self.sendStatus({'stat': tuple(stat)})
+            self.sendStatus({'rc': 0})
+        except:
+            self.sendStatus({'rc': 1})
+
+
+class GlobPath(base.Command):
+
+    header = "glob"
+
+    def start(self):
+        args = self.args
+        # args['path'] is relative to Builder directory, and is required.
+        assert args['path'] is not None
+        globpath = os.path.join(self.builder.basedir, args['path'])
+
+        try:
+            files = glob.glob(globpath)
+            self.sendStatus({'glob': files})
             self.sendStatus({'rc': 0})
         except:
             self.sendStatus({'rc': 1})

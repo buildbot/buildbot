@@ -226,6 +226,59 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         return d
 
 
+class TestGlobPath(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    def test_non_existant(self):
+        self.make_command(fs.GlobPath, dict(
+            path='no-*-file',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertTrue(self.get_updates()[0]['glob'] == [])
+            self.assertIn({'rc': 0},
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_directory(self):
+        self.make_command(fs.GlobPath, dict(
+            path='[wxyz]or?d*',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertTrue(self.get_updates()[0]['glob'] == [os.path.join(self.basedir, 'workdir')])
+            self.assertIn({'rc': 0},
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_file(self):
+        self.make_command(fs.GlobPath, dict(
+            path='t*-file',
+        ), True)
+        open(os.path.join(self.basedir, 'test-file'), "w")
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertTrue(self.get_updates()[0]['glob'] == [os.path.join(self.basedir, 'test-file')])
+            self.assertIn({'rc': 0},
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
+
+
 class TestListDir(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
