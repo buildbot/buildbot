@@ -38,11 +38,13 @@ from buildbot.util import json
 
 from cStringIO import StringIO
 
-def uploadString(string):
+def uploadString(string, timestamp=None):
     def behavior(command):
         writer = command.args['writer']
         writer.remote_write(string + "\n")
         writer.remote_close()
+        if timestamp:
+            writer.remote_utime(timestamp)
     return behavior
 
 def uploadTarFile(filename, **members):
@@ -129,119 +131,91 @@ class TestTransferBuildStep(unittest.TestCase):
                                 step.checkSlaveVersion, "foo")
 
 
-class TestFileUpload(unittest.TestCase):
+class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
         os.unlink(self.destfile)
+        return self.setUpBuildStep()
 
     def tearDown(self):
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
+        return self.tearDownBuildStep()
 
     def test_constructor_mode_type(self):
         self.assertRaises(config.ConfigErrors, lambda:
                           transfer.FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
 
     def testBasic(self):
-        s = transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile)
-        s.build = Mock()
-        s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        self.setupStep(
+            transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
 
-        s.step_status = Mock()
-        s.buildslave = Mock()
-        s.remote = Mock()
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test'))
+            + 0)
 
-        s.start()
-
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'uploadFile':
-                self.assertEquals(kwargs['slavesrc'], __file__)
-                writer = kwargs['writer']
-                with open(__file__, "rb") as f:
-                    writer.remote_write(f.read())
-                self.assert_(not os.path.exists(self.destfile))
-                writer.remote_close()
-                break
-        else:
-            self.assert_(False, "No uploadFile command found")
-
-        with open(self.destfile, "rb") as dest:
-            with open(__file__, "rb") as expect:
-                self.assertEquals(dest.read(), expect.read())
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", "srcfile"])
+        d = self.runStep()
+        return d
 
     def testTimestamp(self):
-        s = transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True)
-        s.build = Mock()
-        s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = "2.13"
+        self.setupStep(
+            transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True))
 
-        s.step_status = Mock()
-        s.buildslave = Mock()
-        s.remote = Mock()
-        s.start()
         timestamp = (os.path.getatime(__file__),
                      os.path.getmtime(__file__))
 
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'uploadFile':
-                self.assertEquals(kwargs['slavesrc'], __file__)
-                writer = kwargs['writer']
-                with open(__file__, "rb") as f:
-                    writer.remote_write(f.read())
-                self.assert_(not os.path.exists(self.destfile))
-                writer.remote_close()
-                writer.remote_utime(timestamp)
-                break
-        else:
-            self.assert_(False, "No uploadFile command found")
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                slavesrc=__file__, workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=True,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test', timestamp=timestamp))
+            + 0)
 
-        desttimestamp = (os.path.getatime(self.destfile),
-                         os.path.getmtime(self.destfile))
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
 
-        timestamp = map(int, timestamp)
-        desttimestamp = map(int, desttimestamp)
+        d = self.runStep()
+        @d.addCallback
+        def checkTimestamp(_):
+            desttimestamp = (os.path.getatime(self.destfile),
+                             os.path.getmtime(self.destfile))
 
-        self.assertEquals(timestamp[0], desttimestamp[0])
-        self.assertEquals(timestamp[1], desttimestamp[1])
+            srctimestamp = map(int, timestamp)
+            desttimestamp = map(int, desttimestamp)
+
+            self.assertEquals(timestamp[0], desttimestamp[0])
+            self.assertEquals(timestamp[1], desttimestamp[1])
+        return d
 
     def testURL(self):
-        s = transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file")
-        s.build = Mock()
-        s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = "2.13"
+        self.setupStep(
+            transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file"))
 
-        s.step_status = Mock()
-        s.step_status.addURL = Mock()
-        s.buildslave = Mock()
-        s.remote = Mock()
-        s.start()
+        self.step.step_status.addURL = Mock()
 
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'uploadFile':
-                self.assertEquals(kwargs['slavesrc'], __file__)
-                writer = kwargs['writer']
-                with open(__file__, "rb") as f:
-                    writer.remote_write(f.read())
-                self.assert_(not os.path.exists(self.destfile))
-                writer.remote_close()
-                break
-        else:
-            self.assert_(False, "No uploadFile command found")
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                slavesrc=__file__, workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test'))
+            + 0)
 
-        s.step_status.addURL.assert_called_once_with(
-            os.path.basename(self.destfile), "http://server/file")
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
+
+        d = self.runStep()
+        @d.addCallback
+        def checkURL(_):
+            self.step.step_status.addURL.assert_called_once_with(
+                os.path.basename(self.destfile), "http://server/file")
+        return d
 
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
