@@ -263,6 +263,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
 			    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
 			    var fullUrl = 'http://localhost:8001/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
+			    //var fullUrl = 'http://localhost:8001/jsontest.json';
 			    
 			    return fullUrl;
         }

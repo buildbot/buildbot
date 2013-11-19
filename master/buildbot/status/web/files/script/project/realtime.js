@@ -30,8 +30,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 
 	         if (sock) {
 	             sock.onopen = function() {
-	             // get the json url to parse
-	             broadcast(helpers.getJsonUrl());
+		             // get the json url to parse
+		             broadcast(helpers.getJsonUrl());
 	         	    log("Connected to " + wsuri);
 	             }
 
@@ -55,20 +55,22 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             }
 	        
 	         };
-	        // used in build detailpage
-	        var stepList = $('#stepList > li');
-	         function log(m) {
-	             if ($('#tb-root').length != 0) {
-	                     realtimePages.frontPage(m);
-	             }
-	        
-	         	// handles the builddetailpage
 
-	        	 realtimePages.buildDetail(m, stepList);
-	         };
-                         
-                         
-                        
+	        // For the build detailpage
+	        if ($('#buildDetail').length != 0) {
+	        	var stepList = $('#stepList > li');
+	        }
+	        
+	        function log(m) {
+				if ($('#tb-root').length != 0) {
+					// For the frontpage
+					realtimePages.frontPage(m);
+				}
+				if ($('#buildDetail').length != 0) {
+					// For the builddetailpage
+					realtimePages.buildDetail(m, stepList);
+				}
+	        };
         }
     };
    return realtime

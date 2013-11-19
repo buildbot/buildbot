@@ -11,7 +11,8 @@
 
 {% block content %}
 
-<div class="clear realtime"></div>
+{# The realtime class is invoking the websocket scripts #}
+<div id="buildDetail" class="clear realtime"></div>
 
 <div class="column-1">
 <div class="column-2">
@@ -90,7 +91,7 @@
       <td>
         Elapsed
       </td>
-      <td class="elapsed-time-js">
+      <td id="elapsedTimeJs" class="elapsed-time-js">
         {{ elapsed }}
       </td>
     </tr>
@@ -300,21 +301,19 @@ SourceStamps
     <p>
       <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
     </p>
-    {% if s.logs %}
+    
       <div class="logs-txt">
+        {% if s.logs %}
             Logs
+        {% else %}
+          no logs
+        {% endif %}
       </div>
-    {% endif %}
+    
     <ul class="log-list log-list-js">
       
       {% for l in s.logs %}
         <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
-      {% else %}
-        <li>
-          <div class="logs-txt">
-            no logs
-          </div>
-        </li>
       {% endfor %}
     
       {% for u in s.urls %}
@@ -324,6 +323,7 @@ SourceStamps
         <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
         {% endif %}
       {% endfor %}
+
     </ul>  
     
   </li>

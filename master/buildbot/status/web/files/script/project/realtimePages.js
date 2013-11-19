@@ -12,16 +12,16 @@ define(['jquery', 'helpers'], function ($, helpers) {
               		sock.close();
               		// reload the page to get all results
               		if(!window.location.hash) {
-				        window.location = window.location + '#loaded';
+				        window.location = window.location + '#finished';
 				        window.location.reload();
 					}
               		
               }
         	   else  { 
             	try {
-            	console.time('no cache');
+            	
                   var obj = JSON.parse(m);
-
+                  
                  $.each(obj, function (key, value) {
                   	
                   	// update timing table
@@ -30,51 +30,58 @@ define(['jquery', 'helpers'], function ($, helpers) {
  
                   	var resultTxt = value.text;
 
-		                  	$('.start-time-js').text(helpers.timeConverter(startTime));
-		                    $('.end-time-js').text(helpers.timeConverter(endTime));
-		                    $('.elapsed-time-js').text(helpers.getTime(startTime, endTime));
+		                    // timetable
+		                    $('#elapsedTimeJs').text(helpers.getTime(startTime, endTime));
 		                   
 		                    var i = 0;
 		                    
 		                  	$.each(value.steps, function (key, value) {
-		                  			
+		                  		
 		                  		 var isStarted = value.isStarted;
 		                  		 var isFinished = value.isFinished;
-
 		                  		 var isRunning = isStarted && !isFinished;
 		                  		 var startTime = value.times[0];
 		                  		 var endTime = value.times[1];
 		                  		 var resultsClass = helpers.getResult(value.results[0]);
-		                  		 		              			 
+		                  		 var isHidden = value.hidden;
 		              			
-		                  		 if (!value.hidden) {
+		                  		 if (!isHidden) {
 		                  			i = ++i;
 		                  			 
-		                  			// update step list is it is not finished
+		                  			// update step list if it's not finished
 		                  			if (!$(stepList).eq(i-1).hasClass('finished')) {
 
 		                  				if (isRunning) {
-		                  					// loop through the logs
 		                  					
-				                  			$.each(value.logs, function (key, value) {
+		                  					// loop through the logs
+		                  					if (value.logs) {
+		                  						var logList = '';  
+		                  						$('.logs-txt',stepList).eq(i-1).text('Logs');
+					                  			$.each(value.logs, function (key, value) {
+					                  				var logText = value[0];
+					                  				var logUrl = value[1];
+					                  				logList += '<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>';	
+					                  			});
+					                  			$('.log-list-js',stepList).eq(i-1).html(logList);
+				                  			}
+											// loop through urls
+											if (value.urls) {
+					                  			var urlList = '';  
+												$.each(value.urls, function (key, value) {
+													 urlList += '<li class="urls-mod log-list-'+ helpers.getResult(value.results) +'"><a href="'+ value.url +'">'+ key +'</a></li>'; 
+												});				                  			
+					                  			$('.log-list-js',stepList).eq(i-1).append(urlList);
+				                  			}
 
-				                  				var logText = value[0];
-				                  				var logUrl = value[1];
-				                  				//var list = '';
-				                  				if (logText) {
-				                  					//list += '<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>'; 
-				                  					$('.logs-txt',stepList).eq(i-1).text('Logs');
-				                  					$('.log-list-js',stepList).eq(i-1).empty().append('<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>');	
-				                  				}
-				                  			});
-				                  			 //$('.log-list-js',stepList).eq(i-1).empty().html(list);
-
+				                  			//update elapsed or end time
 			                  				$('.update-time-js',stepList).eq(i-1).html(helpers.getTime(startTime, endTime));
+			                  				// update build text
 		          							$('.s-text-js',stepList).eq(i-1).html(value.text.join(' '));
+		          							// update result class
 			          						$('.s-result-js',stepList).eq(i-1).removeClass().addClass('running result s-result-js');	
 			          						
 			              				} else if (isFinished) {
-
+			              					// Apply the updates from the finished state before applying finished class
 			              					$('.s-result-js',stepList).eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              				
 			              					$(stepList).eq(i-1).addClass('finished');
 			              					
@@ -85,11 +92,12 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		              			
 		                  	});
 							if (endTime) { 
+								// If the build is finished
 								$('body').addClass('stopRunning-js');
 							}
 						
 	                });
-					console.timeEnd('no cache');
+				
           		}
              
 	            catch(err) {
