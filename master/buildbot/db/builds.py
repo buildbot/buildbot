@@ -65,26 +65,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
 
-    def addBuilds(self, brids, number, _reactor=reactor):
-        def thd(conn):
-            transaction = conn.begin()
-            builds_tbl = self.db.model.builds
-
-            try:
-                start_time = _reactor.seconds()
-                # todo: check finished time with merged brid
-                q = builds_tbl.insert()
-                conn.execute(q, [ dict(number=number, brid=id,
-                                       start_time=start_time,finish_time=None)
-                                  for id in brids ])
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
-                transaction.rollback()
-                raise e
-
-            transaction.commit()
-
-        return self.db.pool.do(thd)
-
     def finishBuilds(self, bids, _reactor=reactor):
         def thd(conn):
             transaction = conn.begin()

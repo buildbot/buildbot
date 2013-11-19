@@ -213,11 +213,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def mergeBuildingRequest(self, requests):
+    def mergeBuildingRequest(self, requests, brids, number):
         def thd(conn):
             transaction = conn.begin()
             try:
-                self.claimBuildRequestsTransaction(conn, requests)
+                self.tryClaimBuildRequests(conn, brids)
+                self.addBuilds(conn, brids, number)
+                self.executeMergeBuildingRequests(conn, requests)
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
                 raise e
@@ -227,37 +229,27 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
 
-    def mergeRunningBuildRequest(self, requests):
-        def thd(conn):
-            transaction = conn.begin()
+    def executeMergeBuildingRequests(self, conn, requests):
+
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]
 
-            try:
-                q = sa.select([buildrequests_tbl.c.artifactbrid]) \
-                    .where(id == requests[0].id)
-                res = conn.execute(q)
-                row = res.fetchone()
-                # by default it will mark using artifact generated from merged brid
+            q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                .where(id == requests[0].id)
+            res = conn.execute(q)
+            row = res.fetchone()
+            # by default it will mark using artifact generated from merged brid
+            stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                .values(artifactbrid=requests[0].id)\
+                .values(mergebrid=requests[0].id)
+
+            if row and (row.artifactbrid is not None):
                 stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                    .values(artifactbrid=requests[0].id)\
-                    .values(mergebrid=requests[0].id)
-
-                if row and (row.artifactbrid is not None):
-                    stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                    .values(artifactbrid=row.artifactbrid)\
-                    .values(mergebrid=requests[0].id)
-                res = conn.execute(stmt2)
-
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
-                transaction.rollback()
-                raise e
-
-            transaction.commit()
-
-        return self.db.pool.do(thd)
+                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                .values(artifactbrid=row.artifactbrid)\
+                .values(mergebrid=requests[0].id)
+            conn.execute(stmt2)
 
     def findCompatibleBuildRequest(self, buildername, startbrid):
         def thd(conn):
@@ -443,11 +435,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def claimBuildRequestsTransaction(self, conn, brids, claimed_at=None,
+    def tryClaimBuildRequests(self, conn, brids, claimed_at=None,
                                       _reactor=reactor, _master_objectid=None):
         claimed_at = self.getClaimedAtValue(_reactor, claimed_at)
 
         self.insertBuildRequestClaimsTable(_master_objectid, brids, claimed_at, conn)
+
+    def addBuilds(self, conn, brids, number, _reactor=reactor):
+        builds_tbl = self.db.model.builds
+        start_time = _reactor.seconds()
+        # todo: check finished time with merged brid
+        q = builds_tbl.insert()
+        conn.execute(q, [ dict(number=number, brid=id,
+                               start_time=start_time,finish_time=None)
+                          for id in brids ])
 
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,

@@ -470,10 +470,10 @@ class Builder(config.ReconfigurableServiceMixin,
         brobj = yield self._brdictToBuildRequest(brdicts[0])
         for b in self.building:
             if self._defaultMergeRequestFn(b.requests[0], brobj):
-                yield self.master.db.buildrequests.mergeBuildingRequest(brids)
+                yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
                 #yield  self.master.db.buildrequests.claimBuildRequests(brids)
-                yield self.master.db.builds.addBuilds(brids, b.build_status.number)
-                yield self.master.db.buildrequests.mergeRunningBuildRequest([b.requests[0]] + breqs)
+                #yield self.master.db.builds.addBuilds(brids, b.build_status.number)
+                #yield self.master.db.buildrequests.mergeRunningBuildRequest([b.requests[0]] + breqs)
                 b.requests = b.requests + breqs
                 defer.returnValue(True)
                 return
@@ -571,7 +571,7 @@ class Builder(config.ReconfigurableServiceMixin,
                             merged_brdicts.append(br)
 
                     try:
-                        yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
+                        yield self.master.db.buildrequests.tryClaimBuildRequests(merged_brids)
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
                         self._breakBrdictRefloops(merged_brdicts)
                         for br in merged_brids:
@@ -599,7 +599,7 @@ class Builder(config.ReconfigurableServiceMixin,
             print "\n\n #--# unclaimed_brids %s #--# \n\n" % unclaimed_brids
 
             try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield self.master.db.buildrequests.tryClaimBuildRequests(brids)
                 yield self.master.db.buildrequests.mergeBuildRequests(brids[0], brids[1:])
 
             except buildrequests.AlreadyClaimedError:
