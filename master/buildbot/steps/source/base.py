@@ -35,9 +35,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = LoggingBuildStep.renderables + [
-        'description', 'descriptionDone', 'descriptionSuffix',
-        'workdir']
+    renderables = ['description', 'descriptionDone', 'descriptionSuffix',
+                   'workdir']
 
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
