@@ -110,6 +110,8 @@ class BaseParameter(object):
         @type regex: unicode or regex
         """
 
+        if name in ["owner", "builderNames", "builderid"]:
+            config.error("%s cannot be used as a parameter name, because it is reserved" % (name,))
         self.name = name
         self.label = name if label is None else label
         self.tablabel = self.label if tablabel is None else tablabel

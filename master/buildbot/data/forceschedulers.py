@@ -23,9 +23,9 @@ from twisted.internet import defer
 
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
-               name=sched.name,
-               label=sched.label,
-               builder_names=sched.builderNames)
+               name=unicode(sched.name),
+               label=unicode(sched.label),
+               builder_names=map(unicode, sched.builderNames))
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
@@ -40,17 +40,20 @@ class ForceSchedulerEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         for sched in self.master.allSchedulers():
             if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
-                return forceScheduler2Data(sched)
+                return defer.succeed(forceScheduler2Data(sched))
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def control(self, method, args, kwargs):
-        for sched in self.master.allSchedulers():
-            if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
-                try:
-                    res = yield sched.force("user", **args)
-                    defer.returnValue(res)
-                except forcesched.CollectedValidationError as e:
-                    raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
+    def control(self, action, args, kwargs):
+        if action == "force":
+            for sched in self.master.allSchedulers():
+                if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
+                    try:
+                        res = yield sched.force("user", **args)
+                        defer.returnValue(res)
+                    except forcesched.CollectedValidationError as e:
+                        raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
+        defer.returnValue(None)
 
 
 class ForceSchedulersEndpoint(base.Endpoint):
@@ -84,7 +87,8 @@ class ForceScheduler(base.ResourceType):
     keyFields = []
 
     class EntityType(types.Entity):
-        name = types.String()
-        builder_names = types.List(of=types.Identifier())
+        name = types.Identifier(20)
+        label = types.String()
+        builder_names = types.List(of=types.Identifier(20))
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)
