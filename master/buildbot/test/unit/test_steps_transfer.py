@@ -190,8 +190,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             srctimestamp = map(int, timestamp)
             desttimestamp = map(int, desttimestamp)
 
-            self.assertEquals(timestamp[0], desttimestamp[0])
-            self.assertEquals(timestamp[1], desttimestamp[1])
+            self.assertEquals(srctimestamp[0], desttimestamp[0])
+            self.assertEquals(srctimestamp[1], desttimestamp[1])
         return d
 
     def testURL(self):
