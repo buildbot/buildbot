@@ -76,7 +76,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     """
 
     name = "shell"
-    renderables = buildstep.LoggingBuildStep.renderables + [
+    renderables = [
         'slaveEnvironment', 'remote_kwargs', 'command',
         'description', 'descriptionDone', 'descriptionSuffix',
         'haltOnFailure', 'flunkOnFailure']
