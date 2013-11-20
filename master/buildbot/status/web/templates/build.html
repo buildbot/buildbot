@@ -54,14 +54,15 @@
   {% endif %}
 {% endif %}
 
-{% if authz.advertiseAction('forceBuild', request) %}
+{% if authz.advertiseAction('forceBuild', request) and b.isFinished() %}
   <h2 class="head-2">
     Resubmit Build
   </h2>
   {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0]) }}
+    <div class="divider"></div>
 {% endif %}
 
-<div class="divider"></div>
+
 
 <h2 class="head-2">
   Timing
