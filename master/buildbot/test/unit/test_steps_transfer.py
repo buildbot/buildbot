@@ -38,6 +38,7 @@ from buildbot.util import json
 
 from cStringIO import StringIO
 
+
 def uploadString(string, timestamp=None):
     def behavior(command):
         writer = command.args['writer']
@@ -46,6 +47,7 @@ def uploadString(string, timestamp=None):
         if timestamp:
             writer.remote_utime(timestamp)
     return behavior
+
 
 def uploadTarFile(filename, **members):
     def behaviour(command):
@@ -57,6 +59,7 @@ def uploadTarFile(filename, **members):
         writer.remote_write(f.getvalue())
         writer.remote_unpack()
     return behaviour
+
 
 # Test buildbot.steps.transfer._FileWriter class.
 class TestFileWriter(unittest.TestCase):
@@ -182,6 +185,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
 
         d = self.runStep()
+
         @d.addCallback
         def checkTimestamp(_):
             desttimestamp = (os.path.getatime(self.destfile),
@@ -211,6 +215,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
 
         d = self.runStep()
+
         @d.addCallback
         def checkURL(_):
             self.step.step_status.addURL.assert_called_once_with(
@@ -317,7 +322,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testMultiple(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcfile","srcdir"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
             Expect('stat', dict(file="srcfile",

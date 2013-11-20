@@ -480,7 +480,7 @@ class MultipleFileUpload(_TransferBuildStep):
         sources = self.slavesrcs
 
         if not sources:
-           return self.finished(SKIPPED)
+            return self.finished(SKIPPED)
 
         d = defer.gatherResults([self.startUpload(source, masterdest) for source in sources])
 
