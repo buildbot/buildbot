@@ -571,7 +571,7 @@ class Builder(config.ReconfigurableServiceMixin,
                             merged_brdicts.append(br)
 
                     try:
-                        yield self.master.db.buildrequests.tryClaimBuildRequests(merged_brids)
+                        yield self.master.db.buildrequests.claimBuildRequests(merged_brids)
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
                         self._breakBrdictRefloops(merged_brdicts)
                         for br in merged_brids:
@@ -599,7 +599,7 @@ class Builder(config.ReconfigurableServiceMixin,
             print "\n\n #--# unclaimed_brids %s #--# \n\n" % unclaimed_brids
 
             try:
-                yield self.master.db.buildrequests.tryClaimBuildRequests(brids)
+                yield self.master.db.buildrequests.claimBuildRequests(brids)
                 yield self.master.db.buildrequests.mergeBuildRequests(brids[0], brids[1:])
 
             except buildrequests.AlreadyClaimedError:
