@@ -13,7 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import os, glob
+import os
+import glob
 import shutil
 import sys
 
