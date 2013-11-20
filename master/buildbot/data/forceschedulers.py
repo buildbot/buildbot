@@ -26,8 +26,7 @@ def forceScheduler2Data(sched):
                name=sched.name,
                label=sched.label,
                builder_names=sched.builderNames)
-    for field in sched.all_fields:
-            ret["all_fields"].append(field.toJsonDict())
+    ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
 

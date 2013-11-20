@@ -18,6 +18,7 @@ import re
 import traceback
 
 from twisted.internet import defer
+from twisted.python.reflect import accumulateClassList
 
 from buildbot import config
 from buildbot.process.properties import Properties
@@ -65,18 +66,19 @@ class BaseParameter(object):
     """
     BaseParameter provides a base implementation for property customization
     """
+    spec_attributes = ["name", "fullName", "label", "tablabel", "type", "default", "required",
+                       "multiple", "regex", "hide"]
     name = ""
     parentName = None
     label = ""
+    tablabel = ""
     type = ""
-    subtype = ""
     default = ""
     required = False
     multiple = False
     regex = None
     debug = True
     hide = False
-    css_class = ""
 
     @property
     def fullName(self):
@@ -167,12 +169,12 @@ class BaseParameter(object):
     def parse_from_arg(self, s):
         return s
 
-    def toJsonDict(self):
+    def getSpec(self):
+        spec_attributes = []
+        accumulateClassList(self.__class__, 'spec_attributes', spec_attributes)
         ret = {}
-        for i in dir(self):
-            v = getattr(self, i)
-            if not callable(v) and not i.startswith("__"):
-                ret[i] = v
+        for i in spec_attributes:
+            ret[i] = getattr(self, i)
         return ret
 
 
@@ -190,6 +192,7 @@ class FixedParameter(BaseParameter):
 class StringParameter(BaseParameter):
 
     """A simple string parameter"""
+    spec_attributes = ["size"]
     type = "text"
     size = 10
 
@@ -200,6 +203,7 @@ class StringParameter(BaseParameter):
 class TextParameter(StringParameter):
 
     """A generic string parameter that may span multiple lines"""
+    spec_attributes = ["cols", "rows"]
     type = "textarea"
     cols = 80
     rows = 20
@@ -228,6 +232,7 @@ class BooleanParameter(BaseParameter):
 class UserNameParameter(StringParameter):
 
     """A username parameter to supply the 'owner' of a build"""
+    spec_attributes = ["need_email"]
     type = "text"
     default = ""
     size = 30
@@ -252,6 +257,7 @@ class ChoiceStringParameter(BaseParameter):
     """A list of strings, allowing the selection of one of the predefined values.
        The 'strict' parameter controls whether values outside the predefined list
        of choices are allowed"""
+    spec_attributes = ["choices", "strict"]
     type = "list"
     choices = []
     strict = True
@@ -269,7 +275,6 @@ class InheritBuildParameter(ChoiceStringParameter):
 
     """A parameter that takes its values from another build"""
     type = ChoiceStringParameter.type
-    subtype = "inherit"
     name = "inherit"
     compatible_builds = None
 
@@ -355,6 +360,7 @@ class NestedParameter(BaseParameter):
        The result of a NestedParameter is typically a dictionary, with the key/value
        being the name/value of the children.
     """
+    spec_attributes = ["layout", "columns"]  # field is recursive, and thus managed in custom getSpec
     type = 'nested'
     layout = 'vertical'
     fields = None
@@ -410,9 +416,9 @@ class NestedParameter(BaseParameter):
             d = properties
         d.update(kwargs[self.fullName])
 
-    def toJsonDict(self):
-        ret = BaseParameter.toJsonDict(self)
-        ret['fields'] = [field.toJsonDict() for field in self.fields]
+    def getSpec(self):
+        ret = BaseParameter.getSpec(self)
+        ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
 
 ParameterGroup = NestedParameter
@@ -423,7 +429,6 @@ class AnyPropertyParameter(NestedParameter):
     """A generic property parameter, where both the name and value of the property
        must be given."""
     type = NestedParameter.type
-    subtype = "any"
 
     def __init__(self, name, **kw):
         fields = [
@@ -462,7 +467,6 @@ class CodebaseParameter(NestedParameter):
 
     """A parameter whose result is a codebase specification instead of a property"""
     type = NestedParameter.type
-    subtype = "codebase"
     codebase = ''
 
     def __init__(self,

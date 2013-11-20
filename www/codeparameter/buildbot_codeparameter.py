@@ -20,6 +20,7 @@ from buildbot.schedulers.forcesched import TextParameter
 
 class CodeParameter(TextParameter):
     """A code editor using ace"""
+    spec_attributes = ["mode", "height"]
     type = "code"
     mode = "text"
     height = 200
