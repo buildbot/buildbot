@@ -212,7 +212,6 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 
 		// specific for the builddetail page
 		
-		
 		}, timeConverter: function(UNIX_timestamp) {
 
 			 var a = new Date(UNIX_timestamp*1000);
@@ -247,27 +246,51 @@ define(['jquery', 'screensize'], function ($, screenSize) {
     		return results[resultIndex]
         }, getJsonUrl: function () {
 
-        		var currentUrl = document.URL;
-				               	
-			    var parser = document.createElement('a');
-			    parser.href = currentUrl;
-			     
-			    parser.protocol; // => "http:"
-			    parser.hostname; // => "example.com"
-			    parser.port;     // => "3000"
-			    parser.pathname; // => "/pathname/"
-			    parser.search;   // => "?search=test"
-			    parser.hash;     // => "#hash"
-			    parser.host;     // => "example.com:3000"
+    		var currentUrl = document.URL;
+			               	
+		    var parser = document.createElement('a');
+		    parser.href = currentUrl;
+		     
+		    parser.protocol; // => "http:"
+		    parser.hostname; // => "example.com"
+		    parser.port;     // => "3000"
+		    parser.pathname; // => "/pathname/"
+		    parser.search;   // => "?search=test"
+		    parser.hash;     // => "#hash"
+		    parser.host;     // => "example.com:3000"
 
-			    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
-			    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
-			    var fullUrl = 'http://localhost:8001/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
-			    //var fullUrl = 'http://localhost:8001/jsontest.json';
-			    
-			    return fullUrl;
+		    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
+		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
+
+		    
+			if (helpers.getCurrentPage() === '#builders_page') {
+				var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/';
+			}
+
+		    if (helpers.getCurrentPage() === '#builddetail_page') {
+
+		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
+		    }
+		    
+		    return fullUrl;
+        }, getCurrentPage: function (isRealTime) {
+        	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page')];
+        	var currentPage = [$('#builddetail_page')];
+        	var isRealTimePage = false;
+
+        	$.each(currentPage, function(key, value) {
+        		if (value.length === 1) {
+        			isRealTimePage = true;
+        			currentPage = value;
+        		}
+			});
+			
+        	if (isRealTime) {
+				return isRealTimePage;
+			} else {
+				return currentPage.selector;
+			}
         }
-
     };
 
     return helpers;

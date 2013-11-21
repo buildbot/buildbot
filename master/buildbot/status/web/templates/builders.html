@@ -11,7 +11,7 @@
 
   {% block content %}
 
-<div class="filter-table-input">
+<div class="filter-table-input realtime">
 
     <label>
         <input type="text" id="filterTableInput" placeholder="Filter results">
@@ -23,9 +23,9 @@
   <thead>
     <tr>
       <th class="txt-align-left">Builder</th>
-      <th class="txt-align-left">Current jobs</th>
-      <th class="txt-align-left">Last run</th>
-      <th>
+      <th class="txt-align-left no-tablesorter-js">Current jobs</th>
+      <th class="txt-align-left no-tablesorter-js">Last run</th>
+      <th class="no-tablesorter-js">
         Status
       </th>
 
@@ -40,7 +40,7 @@
 
     <tr>
       <td class="box txt-align-left">
-        <a href="{{ b.link }}">
+        <a class="bname-js" href="{{ b.link }}">
           {{ b.name|e }}
         </a>
       </td>

@@ -4312,7 +4312,7 @@ li {
   clear: both;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\00003178}}
-.sub-menu-container.root {
+.sub-menu-container#frontpage_page {
   height: 39px;
 }
 

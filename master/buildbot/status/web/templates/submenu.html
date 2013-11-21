@@ -1,18 +1,27 @@
 {% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName) %}
+	{% set classPath = '' %}
+
+	{% if active_page == 'frontpage' %}
+		{% set classPath = 'frontpage' %}
+		{% set classPath = 'frontpage' %}
+	{% endif %}
 
 	{% if active_page == 'codebases' %}
+		{% set classPath = 'codebases' %}
 		{% set codebasesPath = '' %}
 	{% else %}
 		{% set codebasesPath = codebasesPath %}	
 	{% endif %}
 
 	{% if active_page == 'builders' %}
+		{% set classPath = 'builders' %}
 		{% set buildersPath = '' %}
 	{% else %}
 		{% set buildersPath = buildersPath %}
 	{% endif %}
 
 	{% if active_page == builderName %}
+		{% set classPath = 'builder' %}
 		{% set builderName = builderName %}
 		{% set builderPath = '' %}
 	{% else %}
@@ -21,6 +30,7 @@
 	{% endif %}
 
 	{% if active_page == buildNumber %}
+		{% set classPath = 'builddetail' %}
 		{% set buildNumber = buildNumber %}
 		{% set buildPath = '' %}
 	{% else %}
@@ -29,6 +39,7 @@
 	{% endif %}
 
 	{% if active_page == stepName %}
+		{% set classPath = 'stepname' %}
 		{% set stepName = stepName %}
 	{% else %}
 		{% set stepName = '' %}
@@ -44,28 +55,35 @@
 	    ('', stepName, stepName)
 	] -%}
 
-	<nav class="sub-menu-container {{active_page}}_page">
-		<div class="container-inner">
-			<div class="wrap">
-			  <ul class="breadcrumbs-nav">
-				{% for href, id, caption in navigation_bar %}
-					{% if id == active_page %}
-						<li>{{caption|e}}</li>
-					{% elif loop.index == 3 and pathNum >= 3 %}
-						<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
-					{% elif loop.index <= pathNum %}
-						<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
-					{% endif %}
-				{% endfor %}
-				</ul>
+
+	<nav id="{{classPath}}_page" class="sub-menu-container">
+		{% if active_page != 'frontpage' %}
+			<div class="container-inner">
+				<div class="wrap">
+				  <ul class="breadcrumbs-nav">
+					{% for href, id, caption in navigation_bar %}
+						{% if id == active_page %}
+							<li>{{caption|e}}</li>
+						{% elif loop.index == 3 and pathNum >= 3 %}
+							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
+						{% elif loop.index <= pathNum %}
+							<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+						{% endif %}
+					{% endfor %}
+					</ul>
+				</div>
 			</div>
-		</div>
+		{% endif %}
 	</nav>
 {% endmacro %}
 
 {% macro buildsubmenu_slaves(active_page, pathNum, buildSlaveName) %}
-
+	
+	{% if active_page == 'buildslaves' %}
+		{% set classPath = 'buildslaves' %}	
+	{% endif %}
 	{% if active_page == buildSlaveName %}
+		{% set classPath = 'buildslave' %}	
 		{% set buildSlaveName = buildSlaveName %}
 	{% else %}
 		{% set buildSlaveName = '' %}
@@ -77,7 +95,7 @@
 	    ('', buildSlaveName, buildSlaveName)
 	] -%}
 
-	<nav class="sub-menu-container">
+	<nav id="{{classPath}}_page" class="sub-menu-container">
 		<div class="container-inner">
 			<div class="wrap">
 				<ul class="breadcrumbs-nav ">
@@ -102,7 +120,7 @@
 	    ('/buildqueue', 'buildqueue', 'Build Queue')
 	] -%}	
 	
-	<nav class="sub-menu-container">
+	<nav id="buildqueue_page" class="sub-menu-container">
 	<div class="container-inner">
 		<div class="wrap">
 			<ul class="breadcrumbs-nav ">

@@ -11,7 +11,8 @@ require.config({
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup',
-		'realtime': 'project/realtime'
+		'realtime': 'project/realtime',
+		'jqache': 'plugins/jqache-0-1-1-min'
 	}
 });
 
@@ -30,8 +31,8 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        });
 		}
 
-		if ($('.realtime').length > 0) {
-			require(['realtime'],
+		if (helpers.getCurrentPage('isrealtime')) {
+			require(['realtime', 'jqache'],
 	        function(realtime) {
 	        	realtime.init();
 	        });

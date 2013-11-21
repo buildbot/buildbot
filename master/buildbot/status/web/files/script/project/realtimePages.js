@@ -4,7 +4,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
     
     realtimePages = {
         buildDetail: function (m, stepList) {
-
+        	
         	var stopRunning = $('body').hasClass('stopRunning-js');
                   
               if (stopRunning) {
@@ -54,7 +54,12 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		                  				if (isRunning) {
 		                  					
 		                  					// loop through the logs
-		                  					if (value.logs) {
+		                  					
+		                  					var hasLogs = value.logs != undefined || value.logs != null || value.logs.length > 0; 
+		                  					var hasUrls = value.urls != undefined || value.urls != null || value.urls.length > 0; 
+
+		                  					if (hasLogs) {
+		                  						
 		                  						var logList = '';  
 		                  						$('.logs-txt',stepList).eq(i-1).text('Logs');
 					                  			$.each(value.logs, function (key, value) {
@@ -65,7 +70,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
 					                  			$('.log-list-js',stepList).eq(i-1).html(logList);
 				                  			}
 											// loop through urls
-											if (value.urls) {
+											if (hasUrls) {
 					                  			var urlList = '';  
 												$.each(value.urls, function (key, value) {
 													 urlList += '<li class="urls-mod log-list-'+ helpers.getResult(value.results) +'"><a href="'+ value.url +'">'+ key +'</a></li>'; 
@@ -105,10 +110,53 @@ define(['jquery', 'helpers'], function ($, helpers) {
 	            }
 		    }        
         },
+        buildersPage: function(m, tableRowList) {
+			
+		  	try {            	
+	          	var obj = JSON.parse(m);  
+	          	var i = 0;
+	             $.each(obj, function (key, value) {
+	             	if (value.project === "All Branches") {
+	             	i = ++i;
+	             	
+	             	//var bNameTxt = $('.bname-js', tableRowList).text();
+	             	//var trimmed = bNameTxt.trim();
+	             	//console.log(bNameTxt)
+	             	//console.log(key)
+	             	
+		             	tableRowList.each(function(){
+		             		//console.log($(this).text().trim());
+		             		if (key === $('.bname-js',this).text().trim() && value.pendingBuilds) {
+		             			$('.current-cont',this).html('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in="'+ (i -1) +'"> Pending jobs </a>');
+		             				//$('.current-cont',this).html(value.pendingBuilds);
+		             		}
+		             	});
+	             	}
+	             	/*
+	             	if (value.pendingBuilds) {
+	             		//console.log($('.bname-js', tableRowList))
+	             		if (!$('.current-cont a', tableRowList).eq(i-1).hasClass('popup-btn-js')) {
+	             			$('.current-cont', tableRowList).eq(i-1).html('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in="'+ (i -1) +'"> Pending jobs </a>');	
+	             		} 
+	             		
+	             		//$('.current-cont', tableRowList).eq(i-1).removeClass();
+	             	} else if (!$('.current-cont span', tableRowList).eq(i-1).hasClass('small-txt')) {
+	             		
+	             		$('.current-cont', tableRowList).eq(i-1).html('<span class="small-txt"> No jobs </span>');	             			
+	             	}
+	             	*/
+	             	
+	        		//console.log(value.project);     	
+	             });
+	        }
+	           catch(err) {
+	        	//console.log(err);
+	        }
+        },
         frontPage: function(m){
         	function sumVal(arr) {
 	          var sum = 0;
-	          $.each(arr,function(){
+	          $.each(arr,function() {
 	            sum+=parseFloat(this) || 0;
 	          });
 	          return sum;

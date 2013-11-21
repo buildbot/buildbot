@@ -57,19 +57,43 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	         };
 
 	        // For the build detailpage
-	        if ($('#buildDetail').length != 0) {
+
+	        /*
+	        function cachedHtml(returnHtml) {
+
+	        	if (returnHtml === '#builddetail_page') {	        	
+		        	var stepList = $('#stepList > li');
+			        return stepList
+		        } else if (returnHtml === '#builders_page') {
+		        	var moreInfo = $('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in=""> Pending jobs </a>');
+		        	return moreInfo;
+		        }
+
+	        };
+	        */
+			
+	        if (helpers.getCurrentPage() === '#builddetail_page') {
 	        	var stepList = $('#stepList > li');
 	        }
-	        
+	       // console.log(cachedHtml())
+	        if (helpers.getCurrentPage() === '#builders_page') {	        	
+	        	var tableRowList = $('.tablesorter-js tbody > tr');
+
+	        }
+
 	        function log(m) {
 				if ($('#tb-root').length != 0) {
 					// For the frontpage
 					realtimePages.frontPage(m);
 				}
-				if ($('#buildDetail').length != 0) {
+				if (helpers.getCurrentPage() === '#builddetail_page') {
 					// For the builddetailpage
 					realtimePages.buildDetail(m, stepList);
 				}
+				if (helpers.getCurrentPage() === '#builders_page') {
+					realtimePages.buildersPage(m);	
+				}
+
 	        };
         }
     };
