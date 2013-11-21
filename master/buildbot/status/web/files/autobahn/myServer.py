@@ -1,157 +1,152 @@
+import json
 import sys
-
 import urllib2
-
-import re
-
-from twisted.web.client import Agent, getPage
-
+import time
+from twisted.web.client import Agent
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web.server import Site
 from twisted.web.static import File
+from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 
-from autobahn.websocket import WebSocketServerFactory, \
-                               WebSocketServerProtocol, \
-                               listenWS
+POLL_INTERVAL = 5
 
 agent = Agent(reactor)
+
+def dict_compare(d1, d2):
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    intersect_keys = d1_keys.intersection(d2_keys)
+    added = d1_keys - d2_keys
+    removed = d2_keys - d1_keys
+    modified = {o : (d1[o], d2[o]) for o in intersect_keys if d1[o] != d2[o]}
+    same = set(o for o in intersect_keys if d1[o] == d2[o])
+    return added, removed, modified, same
+
+
+class CachedURL():
+    def __init__(self, url):
+        self.url = url
+        self.cachedJSON = None
+        self.clients = []
+        self.lastChecked = 0
+
+    def pollNeeded(self):
+        return (time.time() - self.lastChecked) > POLL_INTERVAL
+
 class BroadcastServerProtocol(WebSocketServerProtocol):
+    def onOpen(self):
+        self.factory.register(self)
 
-   def onOpen(self):
-      self.factory.register(self)
+    def onMessage(self, msg, binary):
+        if not binary:
+            self.factory.clientMessage(msg, self)
 
-   def onMessage(self, msg, binary):
-      if not binary:
-         self.factory.broadcast("'%s' from %s" % (msg, self.peerstr))
-
-   def connectionLost(self, reason):
-      WebSocketServerProtocol.connectionLost(self, reason)
-      self.factory.unregister(self)
+    def connectionLost(self, reason):
+        WebSocketServerProtocol.connectionLost(self, reason)
+        self.factory.unregister(self)
 
 
 class BroadcastServerFactory(WebSocketServerFactory):
-   """
-Simple broadcast server broadcasting any message it receives to all
-currently connected clients.
-"""
+    """
+    Checks given JSON URLs by clients and broadcasts back to them
+    if the JSON has changed
+    """
 
-   def __init__(self, url, debug = False, debugCodePaths = False):
-      WebSocketServerFactory.__init__(self, url, debug = debug, debugCodePaths = debugCodePaths)
-      self.clients = []
-      self.tickcount = 0
-      self.clients_urls = {}
-      self.tick()
+    def __init__(self, url, debug=False, debugCodePaths=False):
+        WebSocketServerFactory.__init__(self, url, debug=debug, debugCodePaths=debugCodePaths)
+        self.urlCacheDict = {}
+        self.clients = []
+        self.tickcount = 0
+        self.clients_urls = {}
+        self.tick()
 
-   def tick(self):
-      self.tickcount += 1
-      self.broadcast()
-      reactor.callLater(1, self.tick)
+    def jsonChanged(self, json, cachedJSON):
+        if cachedJSON is None:
+            return True
+        else:
+            added, removed, modified, same = dict_compare(json, cachedJSON)
+            if len(added) > 0 or len(removed) > 0 or len(modified) > 0:
+                return True
 
-   def register(self, client):
-      if not client in self.clients:
-         print "registered client " + client.peerstr
-         self.clients.append(client)
+        return False
 
-   def unregister(self, client):
-      if client in self.clients:
-         print "unregistered client " + client.peerstr
-         self.clients.remove(client)
-         if client.peerstr in self.clients_urls:
-            del self.clients_urls[client.peerstr]
+    def tick(self):
+        self.tickcount += 1
+        self.checkURLs()
+        reactor.callLater(1, self.tick)
 
-   def clientbroadcast(self, msg):
-      print "message from client %s" % msg
-      if isinstance(msg, str) and "http://" in msg:
-         _re_client = re.compile(r"'(http://.*)' from (.*)")
-         m = _re_client.search(msg)
-         if m:
-            url = m.group(1).strip()
-            client = m.group(2).strip()
-            print "url %s client %s" % (url,client)
-            self.clients_urls[client] = url
-            response = urllib2.urlopen(url)
-            data = response.read();
+    def checkURLs(self):
+        for urlCache in self.urlCacheDict.values():
+            url = urlCache.url
+            if urlCache.pollNeeded():
+                print("Polling: {0}".format(url))
+                response = urllib2.urlopen(url)
+                jsonObj = json.load(response)
+                urlCache.lastChecked = time.time()
+                if self.jsonChanged(jsonObj, self.urlCacheDict[url].cachedJSON):
+                    self.urlCacheDict[url].cachedJSON = jsonObj
+                    clients = self.urlCacheDict[url].clients
+                    jsonString = json.dumps(jsonObj)
+                    print("JSON Changed, informing {0} client(s)".format(len(clients)))
+                    for client in clients:
+                        client.sendMessage(jsonString)
 
-   def serverbroadcast(self, msg):
-      for c in self.clients:
-         if c.peerstr in self.clients_urls:
-            print "url %s peerstr %s" %(self.clients_urls[c.peerstr], c.peerstr)
-            response = urllib2.urlopen(self.clients_urls[c.peerstr])
-            data = response.read();        
-            c.sendMessage(data)
+    def register(self, client):
+        if not client in self.clients:
+            print "registered client " + client.peerstr
+            self.clients.append(client)
 
-   def broadcast(self, msg=None):
-      print "msg %s" % msg
-      print "clients_urls %s" % self.clients_urls
-      if isinstance(msg, str) and "http://" in msg:
-         self.clientbroadcast(msg)
-      else:
-         self.serverbroadcast(msg)
+    def unregister(self, client):
+        if client in self.clients:
+            print "unregistered client " + client.peerstr
+            self.clients.remove(client)
+            for items in self.urlCacheDict.items():
+                url = items[0]
+                urlCache = items[1]
+                if client in urlCache.clients:
+                    urlCache.clients.remove(client)
 
-   '''
-   def broadcast(self, msg=None):
+                if len(urlCache.clients) == 0:
+                    del self.urlCacheDict[url]
+                    print("Removed stale cached URL")
 
-      data = ""
-      if isinstance(msg, str) and "http://" in msg:
-         _re_url = re.compile(r"'(http://.*)'")
-         url = ""
-         m = _re_url.search(msg)
-         if m:
-            url = m.group(1)
-            #if url not in urls:
-            #   urls.append(url)
-            response = urllib2.urlopen(url)
-            data = response.read();
+                break
 
-      else:
-         for url in urls:
-            response = urllib2.urlopen(url)
-            data = response.read();
-      
-      #datastate = responsestate.read();
-      print "broadcasting message '%s' .." % msg
-      for c in self.clients:
-         c.sendMessage(data)
+    def clientMessage(self, msg, client):
+        if msg.startswith("http://"):
+            if not msg in self.urlCacheDict:
+                self.urlCacheDict[msg] = CachedURL(msg)
+                self.urlCacheDict[msg].clients = [client, ]
+            else:
+                self.urlCacheDict[msg].clients.append(client)
 
-         #print "message sent to " + c.peerstr
-      '''
-
-class BroadcastPreparedServerFactory(BroadcastServerFactory):
-   """
-Functionally same as above, but optimized broadcast using
-prepareMessage and sendPreparedMessage.
-"""
-
-   def broadcast(self, msg):
-      print "broadcasting prepared message '%s' .." % msg
-      preparedMsg = self.prepareMessage(msg)
-      for c in self.clients:
-         c.sendPreparedMessage(preparedMsg)
-         print "prepared message sent to " + c.peerstr
+            if self.urlCacheDict[msg].cachedJSON is not None:
+                jsonString = json.dumps(self.urlCacheDict[msg].cachedJSON)
+                print("Sending cached JSON to client {0}".format(client.peerstr))
+                client.sendMessage(jsonString)
 
 
 if __name__ == '__main__':
 
-   if len(sys.argv) > 1 and sys.argv[1] == 'debug':
-      log.startLogging(sys.stdout)
-      debug = True
-   else:
-      debug = False
+    if len(sys.argv) > 1 and sys.argv[1] == 'debug':
+        log.startLogging(sys.stdout)
+        debug = True
+    else:
+        debug = False
 
-   ServerFactory = BroadcastServerFactory
-   #ServerFactory = BroadcastPreparedServerFactory
+    ServerFactory = BroadcastServerFactory
 
-   factory = ServerFactory("ws://localhost:9000",
-                           debug = debug,
-                           debugCodePaths = debug)
+    factory = ServerFactory("ws://localhost:9000",
+                            debug=debug,
+                            debugCodePaths=debug)
 
-   factory.protocol = BroadcastServerProtocol
-   factory.setProtocolOptions(allowHixie76 = True)
-   listenWS(factory)
+    factory.protocol = BroadcastServerProtocol
+    factory.setProtocolOptions(allowHixie76=True)
+    listenWS(factory)
 
-   webdir = File(".")
-   web = Site(webdir)
-   reactor.listenTCP(8080, web)
+    webdir = File(".")
+    web = Site(webdir)
+    reactor.listenTCP(8080, web)
 
-   reactor.run()
+    reactor.run()
