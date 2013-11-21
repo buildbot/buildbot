@@ -143,13 +143,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         return prefix + self.getBuildersPath(builder_name, build_number)
 
     def getURLForBuildRequest(self, brid, builder_name, build_number):
-        print "\n\n-- getURLForBuildRequest brid %s -- \n\n" % brid
         d = self.master.db.mastersconfig.getMasterURL(brid)
         
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
-            bldr = self.botmaster.builders[builder_name]
-            print "\n\n ## bmdict %s builder_name %s build_number %s ##\n\n" % (bmdict, builder_name, build_number)
             url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
             url['text'] = "%s #%d" % (builder_name, build_number)
             return url

@@ -204,12 +204,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             mergedrequests = [br.id for br in requests[1:]]
 
-            stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(mergedrequests))\
-                .values(artifactbrid=requests[0].id)
+            if len(mergedrequests) > 0:
+                stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests))\
+                    .values(artifactbrid=requests[0].id)
 
-            res = conn.execute(stmt2)
-            return res.rowcount
+                res = conn.execute(stmt2)
+                return res.rowcount
 
         return self.db.pool.do(thd)
 
@@ -234,22 +235,23 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]
 
-            q = sa.select([buildrequests_tbl.c.artifactbrid]) \
-                .where(id == requests[0].id)
-            res = conn.execute(q)
-            row = res.fetchone()
-            # by default it will mark using artifact generated from merged brid
-            stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                .values(artifactbrid=requests[0].id)\
-                .values(mergebrid=requests[0].id)
-
-            if row and (row.artifactbrid is not None):
+            if len(mergedrequests) > 0:
+                q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                    .where(id == requests[0].id)
+                res = conn.execute(q)
+                row = res.fetchone()
+                # by default it will mark using artifact generated from merged brid
                 stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                .values(artifactbrid=row.artifactbrid)\
-                .values(mergebrid=requests[0].id)
-            conn.execute(stmt2)
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=requests[0].id)\
+                    .values(mergebrid=requests[0].id)
+
+                if row and (row.artifactbrid is not None):
+                    stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=row.artifactbrid)\
+                    .values(mergebrid=requests[0].id)
+                conn.execute(stmt2)
 
     def findCompatibleFinishedBuildRequest(self, buildername, startbrid):
         def thd(conn):
@@ -271,7 +273,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getRequestCompatibleToMerge(self, buildername, startbrid, compatible_brids):
+    def getRequestsCompatibleToMerge(self, buildername, startbrid, compatible_brids):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
@@ -344,18 +346,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             try:
                 self.tryClaimBuildRequests(conn, brids)
-                buildrequests_tbl = self.db.model.buildrequests
-                stmt = buildrequests_tbl.update()\
-                    .where(buildrequests_tbl.c.id.in_(brids[1:]))\
-                    .values(mergebrid=brids[0])
+                if len(brids[1:]) > 0:
+                    buildrequests_tbl = self.db.model.buildrequests
+                    stmt = buildrequests_tbl.update()\
+                        .where(buildrequests_tbl.c.id.in_(brids[1:]))\
+                        .values(mergebrid=brids[0])
 
-                res = conn.execute(stmt)
+                    res = conn.execute(stmt)
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
                 transaction.rollback()
                 raise e
 
             transaction.commit()
-            return res.rowcount
 
         return self.db.pool.do(thd)
 
@@ -420,9 +422,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def insertBuildRequestClaimsTable(self, conn, _master_objectid, brids, claimed_at=None):
         tbl = self.db.model.buildrequest_claims
         q = tbl.insert()
-        params = [dict(brid=id, objectid=_master_objectid,
-                       claimed_at=claimed_at)
-                  for id in brids]
         conn.execute(q, [dict(brid=id, objectid=_master_objectid,
                               claimed_at=claimed_at)
                          for id in brids])
@@ -463,7 +462,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def tryClaimBuildRequests(self, conn, brids, claimed_at=None,
                                       _reactor=reactor, _master_objectid=None):
         claimed_at = self.getClaimedAtValue(_reactor, claimed_at)
-        print "\n ## brids %s ## \n" % brids
 
         self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
 
