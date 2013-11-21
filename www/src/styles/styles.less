@@ -1,20 +1,53 @@
 @import "bootstrap/bootstrap.less";
 @import "font-awesome/font-awesome.less";
 
+// Scale up the modal
+@media screen and (min-width: @screen-sm-min) {
+
+  .modal-dialog {
+    width: 90%;
+}}
 .ng-cloak {
 	display: none;
 }
 
-.animate-repeat.ng-enter,
 .animate-repeat.ng-leave {
-    transition: 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750) all;
+    transition: all 400ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
+}
+.animate-repeat.ng-enter{
+    transition: all 100ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
 }
 .animate-repeat.ng-leave.ng-leave-active,
 .animate-repeat.ng-enter {
   opacity: 0;
-  margin-top:-70px;
+  transform: translateY(-70px);
+  -webkit-transform: translateY(-70px);
+}
+.animate-repeat.ng-enter.ng-enter-active,
+.animate-repeat.ng-leave {
+  opacity: 1;
+  transform: translateY(0);
+  -webkit-transform: translateY(0px);
 }
 
+.reveal-animation.ng-enter,
+.reveal-animation.ng-leave{
+  transition: all 500ms cubic-bezier(0.000, 0.915, 0.480, 0.995);
+ /* The animation preparation code */
+}
+.reveal-animation.ng-enter,
+.reveal-animation.ng-leave.ng-leave-active {
+ /* The animation code itself */
+  opacity: 0;
+  transform: translateY(-150px) scale(.2);
+  -webkit-transform: translateY(-150px) scale(.2);
+}
+.reveal-animation.ng-leave,
+.reveal-animation.ng-enter.ng-enter-active {
+ /* The animation code itself */
+  opacity: 1;
+  -webkit-transform: translateY(0px) scale(1);
+}
 .breadcrumb .btn {
   height: 29px;
   margin-top: -5px;
@@ -24,6 +57,8 @@
 content: "";
 padding: 0 2px;
 }
-.modal.fade.in {
-	display: block !important;
+
+/* hack to make modal work with ng-animate */
+.modal {
+   display: block !important;
 }

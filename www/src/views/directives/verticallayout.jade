@@ -1,6 +1,6 @@
 .panel.panel-default
-    .panel-heading(ng-if="field.paneltitle")
-        | {{field.paneltitle}}
+    .panel-heading(ng-if="field.label")
+        | {{field.label}}
     .panel-body
         div.form-horizontal
             div(ng-repeat='field in field.fields | filter:{hide:false}',

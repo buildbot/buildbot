@@ -101,7 +101,7 @@ package_json.update(base_json)
 # we take angular 1.2.0 which has important new features
 # like ng-animate, and ng-if
 
-ANGULAR_TAG = "v1.2.0-rc.3"
+ANGULAR_TAG = "v1.2.1"
 bower_json = {
     "dependencies": {
         "bootstrap": "~3.0.0",

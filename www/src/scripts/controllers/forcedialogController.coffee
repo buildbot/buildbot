@@ -19,8 +19,8 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                         $state.go "^"
                     modal.modal.result.then(goUp, goUp)
             ]
-    forceDialogController = [ "$scope", "$state", "modal", "scheduler", "schedulers",
-        ($scope, $state, modal, scheduler, schedulers) ->
+    forceDialogController = [ "$scope", "$state", "modal", "scheduler", "schedulers","$rootScope"
+        ($scope, $state, modal, scheduler, schedulers, $rootScope) ->
             # prepare default values
             prepareFields = (fields) ->
                 for field in fields
@@ -41,6 +41,7 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                     fields_ref = {}
                     gatherFields = (fields) ->
                         for field in fields
+                            field.errors = ""
                             if field.type == "nested"
                                 gatherFields(field.fields)
                             else
@@ -55,6 +56,8 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                         if err.data.error.code == -32602
                             for k, v of err.data.error.message
                                 fields_ref[k].errors = v
+                        $rootScope.$apply()
+
                 cancel: ->
                     modal.modal.dismiss()
     ]

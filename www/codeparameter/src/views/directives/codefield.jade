@@ -3,4 +3,5 @@ basefield
         label.control-label.col-sm-12(for="{{field.name}}")
             | {{field.label}}
         .col-sm-12
-            div(style="height:{{field.height}}px", ui-ace="field.aceconfig", ng-model="field.value")
+            div(style="height:{{field.height}}px", ui-ace="{mode:field.mode}", readonly="field.readonly",
+            	ng-model="field.value")
