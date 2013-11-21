@@ -477,7 +477,8 @@ class WebStatus(service.MultiService):
         else:
             revlink = self.master.config.revlink
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects, self.jinja_loaders)
+                                        self.repositories, self.projects,
+                                        self.jinja_loaders, self.master.basedir)
 
         if not self.site:
 
