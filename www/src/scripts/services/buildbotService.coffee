@@ -6,8 +6,8 @@ BASEURLAPI = 'api/v2/'
 BASEURLSSE = 'sse/'
 jsonrpc2_id = 1
 angular.module('app').factory 'buildbotService',
-['$log', 'Restangular', 'EventSource',
-    ($log, Restangular, EventSource) ->
+['$log', 'Restangular', 'EventSource', '$rootScope'
+    ($log, Restangular, EventSource, $rootScope ) ->
         configurer = (RestangularConfigurer) ->
             responseExtractor =  (response) ->
                 # for now, we only support one resource type per request
@@ -31,24 +31,29 @@ angular.module('app').factory 'buildbotService',
                         scope_key = elem.route
                     if (isCollection)
                         onEvent = (e) ->
+                            console.log "new in service", e
+                            e.msg = JSON.parse(e.data)
                             $scope[scope_key].push(e.msg)
-                            $scope.$apply()
+                            elem.one(e.msg.number).bind($scope[scope_key], $scope[scope_key].length - 1)
+                            $rootScope.$apply()
                         p = elem.getList()
-                        p.then (res) ->
+                        p = p.then (res) ->
                             $scope[scope_key] = res
                             elem.on("new", onEvent)
                             return res
                     else
                         onEvent = (e) ->
+                            console.log e
+                            e.msg = JSON.parse(e.data)
                             for k, v of e.msg
                                 $scope[scope_key][k] = v
-                            $scope.$apply()
+                            $rootScope.$apply()
                         p = this.getList() # all is list with jsonAPI
-                        p.then (res) ->
+                        p = p.then (res) ->
                             $scope[scope_key] = res[0]
                             elem.on("update", onEvent)
                             return res
-                    $scope.$on("$destroy", -> elem.source?.close())
+                    $scope.$on?("$destroy", -> elem.source?.close())
                     return p
 
                 elem.unbind = () ->

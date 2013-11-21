@@ -4,5 +4,6 @@ angular.module('app').controller 'builderController',
         builder = buildbotService.one('builder', $stateParams.builder)
         builder.bind($scope, 'builder')
         builder.all('forceschedulers').bind($scope, 'forceschedulers')
-        builder.all('build').bind($scope, 'builds')
+        builds = builder.all('build')
+        builds.bind($scope, 'builds')
 ]

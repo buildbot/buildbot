@@ -15,8 +15,9 @@
 
 import os
 
-from twisted.web import static
 from buildbot.schedulers.forcesched import TextParameter
+from twisted.web import static
+
 
 class CodeParameter(TextParameter):
     """A code editor using ace"""

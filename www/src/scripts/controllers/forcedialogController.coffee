@@ -10,17 +10,19 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                         templateUrl: "views/forcedialog.html"
                         controller: forceDialogController
                         resolve:
-                           scheduler: -> scheduler
-                           schedulers: -> schedulers
-                           modal: -> modal
+                            builderid: -> $stateParams.builder
+                            scheduler: -> scheduler
+                            schedulers: -> schedulers
+                            modal: -> modal
 
                     # We exit the state if the dialog is closed or dismissed
                     goUp = (result) ->
                         $state.go "^"
                     modal.modal.result.then(goUp, goUp)
             ]
-    forceDialogController = [ "$scope", "$state", "modal", "scheduler", "schedulers","$rootScope"
-        ($scope, $state, modal, scheduler, schedulers, $rootScope) ->
+    forceDialogController = [ "$scope", "$state", "modal", "scheduler",
+        "schedulers","$rootScope", "builderid"
+        ($scope, $state, modal, scheduler, schedulers, $rootScope, builderid) ->
             # prepare default values
             prepareFields = (fields) ->
                 for field in fields
@@ -37,7 +39,8 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                     columns: 1
                 sch: schedulers[0]
                 ok: ->
-                    params = {}
+                    params =
+                        builderid: builderid
                     fields_ref = {}
                     gatherFields = (fields) ->
                         for field in fields
