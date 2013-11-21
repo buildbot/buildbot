@@ -211,6 +211,13 @@ Deprecations, Removals, and Non-Compatible Changes
 * The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:mod`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
   Similarly, the former ``buildbot.process.buildstep.LogObserver`` class and its subclasses are now in :py:mod`buildbot.process.logobserver`, although imports from the previous path will continue to work.
 
+* :py:mod:`buildbot.schedulers.forcesched` has the following changes:
+
+  - The default configuration does not contain 4 AnyPropertyParameter anymore
+  - configuring codebase is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
+  - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
+
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

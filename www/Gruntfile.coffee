@@ -185,7 +185,7 @@ module.exports = (grunt) ->
             font:
                 files: [
                     cwd: './src/'
-                    src: 'font/**/*.*'
+                    src: 'fonts/**/*.*'
                     dest: './.temp/'
                     expand: true
                 ]
@@ -222,7 +222,7 @@ module.exports = (grunt) ->
                     cwd: './.temp/'
                     src: [
                         'img/**/*.*'
-                        'font/**/*.*'
+                        'fonts/**/*.*'
                         'scripts/libs/html5shiv-printshiv.js'
                         'scripts/libs/json2.js'
 
@@ -371,8 +371,8 @@ module.exports = (grunt) ->
                 ]
                 singleRun: false
             dev:
-                options:
-                    browsers: (grunt.option('browsers') or 'Chrome,Firefox,PhantomJS').split(",")
+                options: # choose from Chrome,Firefox,PhantomJS
+                    browsers: (grunt.option('browsers') or 'PhantomJS').split(",")
             ci:
                 options:
                     background: false

@@ -16,12 +16,18 @@ angular.module('app').factory 'alert', ['$rootScope', ($rootScope) ->
     return alert
 ]
 angular.module('app').config ['$httpProvider', ($httpProvider) ->
-    $httpProvider.responseInterceptors.push ["alert", "$q", (alert, $q) ->
+    $httpProvider.responseInterceptors.push ["alert", "$q", "$timeout", (alert, $q, $timeout) ->
          return (promise) ->
             promise.then (res)->
                 res
             , (res, bla) ->
-                alert.error res.toString()
+                try
+                    msg = "Error: #{res.status}:#{res.data.error} when:#{res.config.method} #{res.config.url}"
+                catch e
+                    msg = res.toString()
+                $timeout ->
+                    alert.error(msg)
+                , 100
                 $q.reject res
     ]
 

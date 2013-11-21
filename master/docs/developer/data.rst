@@ -569,6 +569,7 @@ All strings in the data model are unicode strings.
     rtype-sourcestamp
     rtype-patch
     rtype-scheduler
+    rtype-forcescheduler
     rtype-build
     rtype-step
     rtype-log

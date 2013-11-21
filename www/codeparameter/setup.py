@@ -15,56 +15,30 @@
 #
 # Copyright Buildbot Team Members
 
+import json
 import os
 import setuptools.command.develop
 import setuptools.command.install
 import setuptools.command.sdist
 import subprocess
-import sys
 
 from distutils.core import Command
-from distutils.version import LooseVersion
 from setuptools import setup
-try:
-    import simplejson as json
-    assert json
-except ImportError:
-    try:
-        import json
-        assert json
-    except ImportError:
-        # a fresh python-2.5 environment may have neither json nor simplejson
-        # luckily it's only required for building from source
-        json = None
-
-
-def check_output(cmd):
-    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 # This script can run either in a source checkout (e.g., to 'setup.py sdist')
 # or in an sdist tarball (to install)
 MODE = 'SRC' if os.path.isdir('src') else 'SDIST'
 
-if MODE == 'SRC':
-    # if we're in a source tree, use master's __init__ to determine the
-    # version, and update the version file as a by-product
-    master_init = os.path.abspath("../master/buildbot/__init__.py")
-    globals = {"__file__": master_init}
-    execfile(master_init, globals)
-    version = globals['version']
-    open('VERSION', 'w').write(version + '\n')
-else:
-    # otherwise, use what the build left us
-    version = open('VERSION').read().strip()
+version = "0.1.0"
 
 base_json = {
-    "name": "buildbot-www",
+    "name": "buildbot-codeparameter",
     "version": version,
     "author": {
         "name": "Buildbot Team Members",
         "url": "https://github.com/buildbot"
     },
-    "description": "Buildbot UI",
+    "description": "Buildbot CodeEditor Plugin using ace",
     "repository": {
         "type": "git",
         "url": "https://github.com/buildbot/buildbot"
@@ -93,32 +67,18 @@ package_json = {
     },
     "engines": {
         "node": "0.8.x",
-        "npm": "1.2.x"
+        "npm": "1.1.x"
     }
 }
 package_json.update(base_json)
 
-# we take angular 1.2.0 which has important new features
-# like ng-animate, and ng-if
-
-ANGULAR_TAG = "v1.2.1"
+# we take latest angular version until we are stable
+# in a crazy CI fashion
 bower_json = {
     "dependencies": {
-        "bootstrap": "~3.0.0",
-        "font-awesome": "4.0.3",
-        "angular": ANGULAR_TAG,
-        "angular-animate": ANGULAR_TAG,
-        "angular-bootstrap": "~0.6.0",
-        "angular-ui-router": "~0.2.0",
-        "restangular": "latest",
-        "lodash": "latest",
-        "html5shiv": "~3.6.2",
-        "jquery": "~2.0.0",
         "requirejs": "~2.1.5",
-        "moment": "~2.1.0",
-        "json2": "latest",
-        # test deps
-        "angular-mocks": ANGULAR_TAG
+        "angular-ui-ace": "0.0.4",
+        "ace-builds": "1.1.1",
     }
 }
 
@@ -141,11 +101,7 @@ class npm_install(Command):
         pass
 
     def run(self):
-        assert json, "Install 'json' or 'simplejson' first"
         json.dump(package_json, open("package.json", "w"))
-        npm_version = check_output("npm -v").strip()
-        assert npm_version != "", "need nodejs and npm installed in current PATH"
-        assert LooseVersion(npm_version) >= LooseVersion("1.2"), "npm < 1.2 (%s)" % (npm_version)
         self.spawn(['npm', 'install'])
 
 cmdclass['npm_install'] = npm_install
@@ -161,9 +117,7 @@ class bower_install(npm_install):
     def run(self):
         for command in self.get_sub_commands():
             self.run_command(command)
-        assert json, "Install 'json' or 'simplejson' first"
         json.dump(bower_json, open("bower.json", "w"))
-        self.spawn(['rm', '-rf', 'bower_components'])
         self.spawn(['./node_modules/.bin/bower', 'install'])
 
 cmdclass['bower_install'] = bower_install
@@ -287,33 +241,24 @@ class develop(setuptools.command.develop.develop):
     ]
 
     def run(self):
-        if MODE == 'SRC':
-            for command in self.get_sub_commands():
-                self.run_command(command)
+        for command in self.get_sub_commands():
+            self.run_command(command)
         setuptools.command.develop.develop.run(self)
 
 cmdclass['develop'] = develop
 
-py_26 = (sys.version_info[0] > 2 or
-         (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
-
-install_requires = []
-if not py_26:
-    install_requires.append('simplejson')  # for setup.py itself, actually
-
 setup(
-    name='buildbot-www',
+    name='buildbot-codeparameter',
     version=version,
-    description='Buildbot UI',
+    description='Buildbot Sample Plugin',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
     license='GNU GPL',
-    py_modules=['buildbot_www'],
+    py_modules=['buildbot_codeparameter'],
     cmdclass=cmdclass,
-    install_requires=install_requires,
     entry_points="""
         [buildbot.www]
-        base = buildbot_www:ep
+        codeparameter = buildbot_codeparameter:ep
     """,
 )

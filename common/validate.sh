@@ -80,6 +80,8 @@ check_relnotes() {
 run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
+    else
+        warning "please provide a TRIALTMP env variable pointing to a ramfs for 30x speed up of the integration tests"
     fi
     find . -name \*.pyc -exec rm {} \;
     trial --reporter text ${TEMP_DIRECTORY_OPT} ${TEST}
