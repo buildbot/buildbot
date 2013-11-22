@@ -100,6 +100,11 @@ class Tests(interfaces.InterfaceTests):
         def addStep(self, buildid, name, state_strings):
             pass
 
+    def test_signature_startStep(self):
+        @self.assertArgSpecMatches(self.db.steps.startStep)
+        def addStep(self, stepid):
+            pass
+
     def test_signature_setStepStateStrings(self):
         @self.assertArgSpecMatches(self.db.steps.setStepStateStrings)
         def setStepStateStrings(self, stepid, state_strings):
@@ -175,7 +180,8 @@ class Tests(interfaces.InterfaceTests):
         clock.advance(TIME1)
         yield self.insertTestData(self.backgroundData)
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name=u'new', state_strings=[u'new'], _reactor=clock)
+                                                           name=u'new', state_strings=[u'new'])
+        yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (0, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -196,7 +202,8 @@ class Tests(interfaces.InterfaceTests):
         clock.advance(TIME1)
         yield self.insertTestData(self.backgroundData + [self.stepRows[0]])
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name=u'new', state_strings=[u'new'], _reactor=clock)
+                                                           name=u'new', state_strings=[u'new'])
+        yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (1, 'new'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -214,7 +221,8 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Step(id=76, number=3, name=u'new_step', buildid=30),
         ])
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name=u'new', state_strings=[u'new'], _reactor=clock)
+                                                           name=u'new', state_strings=[u'new'])
+        yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (4, u'new_3'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -253,7 +261,8 @@ class RealTests(Tests):
             fakedb.Step(id=74, number=1, name=u'a' * 48 + '_1', buildid=30),
         ])
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name=u'a' * 49, state_strings=[u'new'], _reactor=clock)
+                                                           name=u'a' * 49, state_strings=[u'new'])
+        yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (2, u'a' * 48 + '_2'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
@@ -272,7 +281,8 @@ class RealTests(Tests):
                   for i in range(10, 100)
                   ])
         stepid, number, name = yield self.db.steps.addStep(buildid=30,
-                                                           name=u'a' * 50, state_strings=[u'new'], _reactor=clock)
+                                                           name=u'a' * 50, state_strings=[u'new'])
+        yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (100, u'a' * 46 + '_100'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)
         validation.verifyDbDict(self, 'stepdict', stepdict)
