@@ -35,6 +35,7 @@ commandRegistry = {
     "rmdir": "buildslave.commands.fs.RemoveDirectory",
     "cpdir": "buildslave.commands.fs.CopyDirectory",
     "stat": "buildslave.commands.fs.StatFile",
+    "listdir": "buildslave.commands.fs.ListDir",
 }
 
 

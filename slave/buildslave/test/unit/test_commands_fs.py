@@ -224,3 +224,46 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
                           self.builder.show())
         d.addCallback(check)
         return d
+
+
+class TestListDir(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    def test_non_existant(self):
+        self.make_command(fs.ListDir,
+                          dict(dir='no-such-dir'),
+                          True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertUpdates(
+                [{'rc': 1}],
+                self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_dir(self):
+        self.make_command(fs.ListDir, dict(
+            dir='workdir',
+        ), True)
+        workdir = os.path.join(self.basedir, 'workdir')
+        open(os.path.join(workdir, 'file1'), "w")
+        open(os.path.join(workdir, 'file2'), "w")
+
+        d = self.run_command()
+
+        def check(_):
+            self.assertIn({'rc': 0},
+                          self.get_updates(),
+                          self.builder.show())
+            self.failUnless(any([
+                'files' in upd and sorted(upd['files']) == ['file1', 'file2']
+                for upd in self.get_updates()]),
+                self.builder.show())
+        d.addCallback(check)
+        return d

@@ -15,13 +15,14 @@
 
 import mock
 
+from twisted.trial import unittest
+
 from buildbot import config
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import WithProperties
 from buildbot.steps.shell import SetPropertyFromCommand
 from buildbot.steps.shell import ShellCommand
-from twisted.trial import unittest
 
 
 class FakeSlaveBuilder:
@@ -94,6 +95,7 @@ class TestShellCommandProperties(unittest.TestCase):
         req = FakeBuildRequest("Testing", {ss.repository: ss}, None)
 
         b = f.newBuild([req])
+        b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
 
@@ -115,6 +117,7 @@ class TestSetProperty(unittest.TestCase):
         req = FakeBuildRequest("Testing", {ss.repository: ss}, None)
 
         b = f.newBuild([req])
+        b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
 
