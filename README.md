@@ -85,6 +85,30 @@ The "process" part of Buildbot is the part that coordinates all of the other par
 * The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
 * The tour must be upgraded to cover the new web UI.
 
+## Asynchronous Steps ##
+
+In 0.8.x, build steps are *very* synchronous.
+Nine introduces "new-style" steps that call methods asynchronously and do not expect easy access to the full text of logfiles.
+However, there's also substantial work in place to maintain backward compatibility - at least temporarily - for old-style steps.
+This project is mostly in Dustin's head.
+Here are the remaining bits:
+
+* implement new-style compatibility on master, as well
+  * just return defer.succeed(..); no need for wrappers for old-style steps
+  * include enough checks that users can be confident their new-style steps are OK
+
+* change backend to use data API
+  * persist properties at build or step finish
+  * change addLog to return a ProcessLog instance
+
+* ensure that new-style steps don't see any removed methods or old behaviors
+  * all of the stuff listed as removed in the relnotes
+  * `createSummary`, `log_eval_func`, among others
+
+* rewrite steps to new style
+  * but not ShellCommand, yet, since user classes derive from it
+  * merge rewrites to master
+
 ## Data API ##
 
 ### Remaining Resource Types ###

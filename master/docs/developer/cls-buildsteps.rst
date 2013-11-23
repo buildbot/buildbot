@@ -305,7 +305,7 @@ BuildStep
     The following methods provide some useful behaviors.
     These methods can be called while the step is running, but not before.
 
-    .. py:method:: addLog(name)
+    .. py:method:: addLog(name, type="s")
 
         :param name: log name
         :param type: log type; see :bb:rtype:`logchunk`
@@ -402,20 +402,12 @@ LoggingBuildStep
         This is a general-purpose hook method for subclasses.
         It will be called after the remote command has finished, but before any of the other hook functions are called.
 
-    .. py:method:: createSummary(stdio)
-
-        :param stdio: stdio :class:`~buildbot.status.logfile.LogFile`
-
-        This hook is designed to perform any summarization of the step, based either on the contents of the stdio logfile, or on instance attributes set earlier in the step processing.
-        Implementations of this method often call e.g., :meth:`~BuildStep.addURL`.
-
     .. py:method:: evaluateCommand(command)
 
         :param command: the just-completed remote command
         :returns: step result from :mod:`buildbot.status.results`
 
         This hook should decide what result the step should have.
-        The default implementation invokes ``log_eval_func`` if it exists, and looks at :attr:`~buildbot.process.remotecommand.RemoteCommand.rc` to distinguish :data:`~buildbot.status.results.SUCCESS` from :data:`~buildbot.status.results.FAILURE`.
 
     The remaining methods provide an embarrassment of ways to set the summary of the step that appears in the various status interfaces.
     The easiest way to affect this output is to override :meth:`~BuildStep.describe`.
