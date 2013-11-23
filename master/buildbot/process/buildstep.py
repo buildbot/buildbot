@@ -529,6 +529,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.stopped = False
+        self.master = None
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
@@ -550,6 +551,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def setBuild(self, build):
         self.build = build
+        self.master = self.build.master
 
     def setBuildSlave(self, buildslave):
         self.buildslave = buildslave
