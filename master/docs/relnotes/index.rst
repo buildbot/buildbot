@@ -127,6 +127,8 @@ Features
 
 * reconf option for GNUAutotools to run autoreconf before ./configure
 
+* A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
+
 Fixes
 ~~~~~
 

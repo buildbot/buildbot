@@ -2821,6 +2821,30 @@ The optional ``compress`` argument can be given as ``'gz'`` or
           master as originally on the slave, see :option:`buildslave
           create-slave --umask` to change the default one.
 
+.. bb:step:: MultipleFileUpload
+
+Transferring Multiple Files At Once
++++++++++++++++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.transfer.MultipleFileUpload
+
+In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps
+there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files
+(and directories) in a single :class:`BuildStep`.
+The step supports all arguments that are supported by :bb:step:`FileUpload` and
+:bb:step:`DirectoryUpload`, but instead of a the single ``slavesrc`` parameter
+it takes a (plural) ``slavesrcs`` parameter. This parameter should either be a
+list, or something that can be rendered as a list.::
+
+    from buildbot.steps.shell import ShellCommand, Test
+    from buildbot.steps.transfer import MultipleFileUpload
+
+    f.addStep(ShellCommand(command=["make", "test"]))
+    f.addStep(ShellCommand(command=["make", "docs"]))
+    f.addStep(MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+                                 masterdest="~/public_html",
+                                 url="~buildbot"))
+
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
