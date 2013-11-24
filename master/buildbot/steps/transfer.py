@@ -406,6 +406,20 @@ class MultipleFileUpload(_TransferBuildStep):
         self.keepstamp = keepstamp
         self.url = url
 
+    def runUploadCommand(self, cmd, writer):
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def checkResult(_):
+            return FAILURE if cmd.didFail() else SUCCESS
+
+        @d.addErrback
+        def cancel(res):
+            writer.cancel()
+            return res
+
+        return d
+
     def uploadFile(self, source, masterdest):
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
@@ -419,14 +433,7 @@ class MultipleFileUpload(_TransferBuildStep):
         }
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        d = self.runCommand(cmd)
-
-        @d.addErrback
-        def cancel(res):
-            fileWriter.cancel()
-            return res
-
-        return d
+        return self.runUploadCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
         dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, self.mode)
@@ -441,14 +448,7 @@ class MultipleFileUpload(_TransferBuildStep):
         }
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        d = self.runCommand(cmd)
-
-        @d.addErrback
-        def cancel(res):
-            dirWriter.cancel()
-            return res
-
-        return d
+        return self.runUploadCommand(cmd, dirWriter)
 
     def startUpload(self, source, destdir):
         masterdest = os.path.join(destdir, os.path.basename(source))
@@ -456,6 +456,7 @@ class MultipleFileUpload(_TransferBuildStep):
             'file': source,
             'workdir': self._getWorkdir()
         }
+
         cmd = makeStatusRemoteCommand(self, 'stat', args)
         d = self.runCommand(cmd)
 
@@ -479,10 +480,23 @@ class MultipleFileUpload(_TransferBuildStep):
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.slavesrcs
 
+        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
+            m = ("This buildslave (%s) does not support preserving timestamps. "
+                 "Please upgrade the buildslave." % self.build.slavename)
+            raise BuildSlaveTooOldError(m)
+
         if not sources:
             return self.finished(SKIPPED)
 
-        d = defer.gatherResults([self.startUpload(source, masterdest) for source in sources])
+        @defer.inlineCallbacks
+        def uploadSources():
+            for source in sources:
+                result = yield self.startUpload(source, masterdest)
+                if result == FAILURE:
+                    yield defer.returnValue(FAILURE)
+            yield defer.returnValue(SUCCESS)
+
+        d = uploadSources()
 
         log.msg("MultipleFileUpload started, from slave %r to master %r"
                 % (sources, masterdest))
@@ -495,15 +509,7 @@ class MultipleFileUpload(_TransferBuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):
-        # Subclasses may choose to skip a transfer. In those cases, self.cmd
-        # will be None, and we should just let BuildStep.finished() handle
-        # the rest
-        if result == SKIPPED:
-            return BuildStep.finished(self, SKIPPED)
-
-        if self.cmd.didFail():
-            return BuildStep.finished(self, FAILURE)
-        return BuildStep.finished(self, SUCCESS)
+        return BuildStep.finished(self, result)
 
 
 class _FileReader(pb.Referenceable):
