@@ -67,7 +67,7 @@ if window.__karma__?
             $httpBackend.flush()
             expect(r.source.url).toBe("sse/build/1/step/2")
             expect($scope.step.res).toBe("PENDING")
-            r.source.fakeEvent("update", {event: "update", msg: {res: "SUCCESS"}})
+            r.source.fakeEvent("update", {event: "update", data: '{"res": "SUCCESS"}'})
             expect($scope.step.res).toBe("SUCCESS")
             # should not override other fields
             expect($scope.step.otherfield).toBe("FOO")
@@ -79,6 +79,6 @@ if window.__karma__?
             $httpBackend.flush()
             expect(r.source.url).toBe("sse/build/1/step")
             expect($scope.step.length).toBe(0)
-            r.source.fakeEvent("new", {event: "new", msg: {res: "SUCCESS"}})
+            r.source.fakeEvent("new", {event: "new", data: '{"res": "SUCCESS"}'})
             expect($scope.step.length).toBe(1)
             expect($scope.step[0].res).toBe("SUCCESS")

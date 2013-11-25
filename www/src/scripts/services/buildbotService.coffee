@@ -31,10 +31,8 @@ angular.module('app').factory 'buildbotService',
                         scope_key = elem.route
                     if (isCollection)
                         onEvent = (e) ->
-                            console.log "new in service", e
                             e.msg = JSON.parse(e.data)
                             $scope[scope_key].push(e.msg)
-                            elem.one(e.msg.number).bind($scope[scope_key], $scope[scope_key].length - 1)
                             $rootScope.$apply()
                         p = elem.getList()
                         p = p.then (res) ->
@@ -43,7 +41,6 @@ angular.module('app').factory 'buildbotService',
                             return res
                     else
                         onEvent = (e) ->
-                            console.log e
                             e.msg = JSON.parse(e.data)
                             for k, v of e.msg
                                 $scope[scope_key][k] = v
