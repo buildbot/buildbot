@@ -8,16 +8,14 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	                
 	                
 	         window.sock = null;
-	        
 
 	         var wsuri;
-	        
 
-	         if (window.location.protocol === "file:") {
-	        	 wsuri = "ws://localhost:9000";
-	         } else {
-	         	wsuri = "ws://" + window.location.hostname + ":9000";
-	         }
+	        var realTimeServer =  $('body').attr('data-realTimeServer');
+	         
+         	wsuri = realTimeServer;
+
+         	console.log($('body').attr('data-realTimeServer'));
 
 	         if ("WebSocket" in window) {
 	         	sock = new WebSocket(wsuri);
@@ -31,6 +29,7 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	         if (sock) {
 	             sock.onopen = function() {
 		             // get the json url to parse
+		             console.log(helpers.getJsonUrl())
 		             broadcast(helpers.getJsonUrl());
 	         	    log("Connected to " + wsuri);
 	             }
@@ -38,39 +37,23 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             sock.onclose = function(e) {
 	                 log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
 	                 sock = null;
+	                 console.log('closed')
 	             }
 
 	             sock.onmessage = function(e) {
+
 	         		log(e.data);
 	             }
 	         }
 	        
 	         function broadcast(msg) {
-	             console.log(msg)
 	             if (sock) {
 	             	sock.send(msg);
 	            	 //log("Sent: " + msg);
-	             } else {
-	             	//log("Not connected.");
-	             }
-	        
+	             }		         
 	         };
 
 	        // For the build detailpage
-
-	        /*
-	        function cachedHtml(returnHtml) {
-
-	        	if (returnHtml === '#builddetail_page') {	        	
-		        	var stepList = $('#stepList > li');
-			        return stepList
-		        } else if (returnHtml === '#builders_page') {
-		        	var moreInfo = $('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in=""> Pending jobs </a>');
-		        	return moreInfo;
-		        }
-
-	        };
-	        */
 			
 	        if (helpers.getCurrentPage() === '#builddetail_page') {
 	        	var stepList = $('#stepList > li');
@@ -82,12 +65,14 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	        }
 
 	        function log(m) {
+	        	
 				if ($('#tb-root').length != 0) {
 					// For the frontpage
 					realtimePages.frontPage(m);
 				}
 				if (helpers.getCurrentPage() === '#builddetail_page') {
 					// For the builddetailpage
+					
 					realtimePages.buildDetail(m, stepList);
 				}
 				if (helpers.getCurrentPage() === '#builders_page') {

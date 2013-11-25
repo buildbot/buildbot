@@ -209,9 +209,33 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.formCont .command_forcebuild .grey-btn').trigger('click');
 				});
 			});
-
+			
 		// specific for the builddetail page
+		}, startTimer: function(el, start) {		
+			
+			 var start = start,
+		     cDisplay = $(el);
 		
+		     var format = function(t) {
+			 var hours = Math.floor(t / 3600),
+		        minutes = Math.floor(t / 60 % 60),
+		        seconds = Math.floor(t % 60),
+		        arr = [];
+		   
+		         if (hours > 0) {
+				    arr.push(hours == 1 ? '1 hr' : hours + 'hrs');
+				 }
+				 if (minutes > 0 || hours > 0) {
+				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
+				 }
+				 if (seconds > 0 || minutes > 0 || hours > 0) {
+				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
+				 }
+				cDisplay.html(arr.join(' '));
+		     };
+		    
+		   format(new Date().getTime() / 1000 - start); 	
+
 		}, timeConverter: function(UNIX_timestamp) {
 
 			 var a = new Date(UNIX_timestamp*1000);

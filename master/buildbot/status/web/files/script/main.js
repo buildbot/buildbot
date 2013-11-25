@@ -30,13 +30,13 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        	dataTables.init();
 	        });
 		}
-
-		if (helpers.getCurrentPage('isrealtime')) {
+ 	
+		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {
 			require(['realtime', 'jqache'],
 	        function(realtime) {
 	        	realtime.init();
 	        });
-		}	
+		}
 
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
