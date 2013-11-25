@@ -6,6 +6,7 @@ language: python
 # Available Python versions:
 # http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
 python:
+  # "2.5" -- not supported by Travis CI anymore
   - "2.6"
   - "2.7"
 
