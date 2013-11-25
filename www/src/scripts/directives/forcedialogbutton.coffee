@@ -1,5 +1,4 @@
 angular.module('app').directive 'forcedialogbutton', ["buildbotService", "$modal", (buildbotService, $modal) ->
-  replace: true
   restrict: 'E'
   scope: ->
   link : (scope, elem, attrs) ->
