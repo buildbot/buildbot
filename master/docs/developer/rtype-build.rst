@@ -21,11 +21,11 @@ Builds
         The first is usually one word or phrase; the remainder are sized for one-line display.
     :attr Link link: link for this build
 
-    .. todo:
+    .. todo::
 
         * Currently build properties aren't available in this resource type
 
-    .. note:
+    .. note::
 
         Build requests are not available in pickled builds, so ``brid`` is always None for build requests imported from older versions of Buildbot.
         The field will always be set for new builds.
@@ -80,7 +80,7 @@ Update Methods
 
 All update methods are available as attributes of ``master.data.updates``.
 
-.. py:class:: buildbot.data.builds.BuildResourceType
+.. py:class:: buildbot.data.builds.Build
 
     .. py:method:: newBuild(builderid, buildrequestid, buildslaveid)
 
