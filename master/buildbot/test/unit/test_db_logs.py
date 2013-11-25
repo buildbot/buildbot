@@ -208,14 +208,30 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_appendLog_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
+        logid = yield self.db.logs.addLog(stepid=102,
+                                          name=u'another', type=u's')
+        self.assertEqual((yield self.db.logs.appendLog(logid, u'xyz\n')),
+                         (0, 0))
         self.assertEqual((yield self.db.logs.appendLog(201, u'abc\ndef\n')),
                          (7, 8))
+        self.assertEqual((yield self.db.logs.appendLog(logid, u'XYZ\n')),
+                         (1, 1))
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 7)),
                          u"yet another line\nabc\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 7, 8)),
                          u"abc\ndef\n")
         self.assertEqual((yield self.db.logs.getLogLines(201, 8, 8)),
                          u"def\n")
+        self.assertEqual((yield self.db.logs.getLogLines(logid, 0, 1)),
+                         u"xyz\nXYZ\n")
+        self.assertEqual((yield self.db.logs.getLog(logid)), {
+                            'complete': False,
+                            'id': logid,
+                            'name': u'another',
+                            'num_lines': 2,
+                            'stepid': 102,
+                            'type': u's',
+        })
 
     @defer.inlineCallbacks
     def test_compressLog(self):

@@ -1853,6 +1853,7 @@ class FakeLogsComponent(FakeDBComponent):
         self.logs[id] = dict(id=id, stepid=stepid,
                              name=name, type=type, complete=0,
                              num_lines=0)
+        self.log_lines[id] = []
         return defer.succeed(id)
 
     def appendLog(self, logid, content):
