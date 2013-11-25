@@ -30,7 +30,7 @@ def upgrade(migrate_engine):
                      sa.Column('number', sa.Integer, nullable=False),
                      sa.Column('name', sa.String(50), nullable=False),
                      sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
-                     sa.Column('started_at', sa.Integer, nullable=False),
+                     sa.Column('started_at', sa.Integer),
                      sa.Column('complete_at', sa.Integer),
                      sa.Column('state_strings_json', sa.Text, nullable=False),
                      sa.Column('results', sa.Integer),

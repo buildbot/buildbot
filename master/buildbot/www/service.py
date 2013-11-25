@@ -23,6 +23,7 @@ from buildbot.www import sse
 from buildbot.www import ws
 from twisted.application import strports
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web import server
 from twisted.web import static
 
@@ -39,8 +40,13 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.site = None
 
         # load the apps early, in case something goes wrong in Python land
-        epAndApps = [(ep, ep.load())
-                     for ep in pkg_resources.iter_entry_points('buildbot.www')]
+        epAndApps = []
+        for ep in pkg_resources.iter_entry_points('buildbot.www'):
+            try:
+                epAndApps.append((ep, ep.load()))
+            # ignore wrong ep (can happen in case of branch switch, without cleaning the sandbox)
+            except ImportError, e:
+                log.msg(e, "while loading www plugins")
 
         # look for duplicate names
         names = set([ep.name for ep, app in epAndApps])
