@@ -129,8 +129,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                   compressed=0))
                 chunk_first_line = last_line + 1
 
-            conn.execute(self.db.model.logs.update(),
-                         whereclause=(self.db.model.logs.c.id == logid),
+            conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
                          num_lines=last_line + 1)
             return (first_line, last_line)
         return self.db.pool.do(thd)
