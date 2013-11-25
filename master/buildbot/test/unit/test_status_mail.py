@@ -641,7 +641,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
                                       sendToInterestedUsers=True,
                                       exp_called_with=None, exp_TO=None,
                                       exp_CC=None):
-        from email.Message import Message
+        from email.message import Message
         m = Message()
 
         mn = MailNotifier(fromaddr='from@example.org',
@@ -754,7 +754,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             exp_TO="marla@mayhem.net")
 
     def test_sendToInterestedUsers_two_builds(self):
-        from email.Message import Message
+        from email.message import Message
         m = Message()
 
         mn = MailNotifier(fromaddr="from@example.org", lookup=None)

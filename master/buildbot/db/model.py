@@ -16,18 +16,13 @@
 import migrate
 import migrate.versioning.repository
 import migrate.versioning.schema
+from migrate import exceptions
 import sqlalchemy as sa
 
 from buildbot.db import base
 from buildbot.db.types.json import JsonObject
 from twisted.python import log
 from twisted.python import util
-
-try:
-    from migrate.versioning import exceptions
-    _hush_pyflakes = exceptions
-except ImportError:
-    from migrate import exceptions
 
 
 class Model(base.DBConnectorComponent):
@@ -538,12 +533,3 @@ class Model(base.DBConnectorComponent):
         check_sqlalchemy_migrate_version()
         return self.db.pool.do_with_engine(thd)
 
-# migrate has a bug in one of its warnings; this is fixed in version control
-# (3ba66abc4d), but not yet released. It can't hurt to fix it here, too, so we
-# get realistic tracebacks
-try:
-    import migrate.versioning.exceptions as ex1
-    import migrate.changeset.exceptions as ex2
-    ex1.MigrateDeprecationWarning = ex2.MigrateDeprecationWarning
-except (ImportError, AttributeError):
-    pass
