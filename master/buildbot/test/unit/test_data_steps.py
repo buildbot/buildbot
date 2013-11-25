@@ -174,7 +174,12 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         self.do_test_callthrough('addStep', self.rtype.newStep,
                                  buildid=10, name=u'name',
                                  exp_kwargs=dict(buildid=10, name=u'name',
-                                                 state_strings=['starting']))
+                                                 state_strings=['pending']))
+
+    def test_startStep(self):
+        self.do_test_callthrough('startStep', self.rtype.startStep,
+                                 stepid=10,
+                                 exp_kwargs=dict(stepid=10))
 
     def test_signature_setStepStateStrings(self):
         @self.assertArgSpecMatches(

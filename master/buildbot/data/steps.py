@@ -113,7 +113,11 @@ class Step(base.ResourceType):
     @base.updateMethod
     def newStep(self, buildid, name):
         return self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_strings=['starting'])
+            buildid=buildid, name=name, state_strings=['pending'])
+
+    @base.updateMethod
+    def startStep(self, stepid):
+        return self.master.db.steps.startStep(stepid=stepid)
 
     @base.updateMethod
     def setStepStateStrings(self, stepid, state_strings):

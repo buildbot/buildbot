@@ -9,7 +9,7 @@ Steps
     :type name: 50-character :ref:`identifier <type-identifier>`
     :attr integer buildid: id of the build containing this step
     :attr Link build_link: link to the build containing this step
-    :attr timestamp started_at: time at which this step started
+    :attr timestamp started_at: time at which this step started, or None if it hasn't started yet 
     :attr boolean complete: true if this step is complete
     :attr timestamp complete_at: time at which this step was complete, or None if it's still running
     :attr integer results: the results of the step (see :ref:`Build-Result-Codes`), or None if not complete
@@ -87,7 +87,13 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Create a new step and return its ID, number, and name.
         Note that the name may be different from the requested name, if that name was already in use.
-        The state strings for the new step will be set to 'starting'.
+        The state strings for the new step will be set to 'pending'.
+
+    .. py:method:: startStep(stepid)
+
+        :param integer stepid: the step to modify
+
+        Start the step.
 
     .. py:method:: setStepStateStrings(stepid, state_strings)
 
