@@ -19,6 +19,7 @@ from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.test.fake import fakebuild
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import slave
 
@@ -79,10 +80,12 @@ class BuildStepMixin(object):
         """
         factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
+        self.master = fakemaster.make_master(testcase=self)
 
         # step.build
 
         b = self.build = fakebuild.FakeBuild()
+        b.master = self.master
 
         def getSlaveVersion(cmd, oldversion):
             if cmd in slave_version:
@@ -224,17 +227,22 @@ class BuildStepMixin(object):
                              "assert all expected commands were run")
             got_outcome = dict(result=result,
                                status_text=self.step_status.status_text)
-            self.assertEqual(got_outcome, self.exp_outcome, "expected step outcome")
+            self.assertEqual(got_outcome, self.exp_outcome,
+                             "expected step outcome")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
-                self.assertEqual(self.properties.getProperty(pn), pv, "property '%s'" % pn)
+                self.assertEqual(self.properties.getProperty(pn),
+                                 pv, "property '%s'" % pn)
                 if ps is not None:
-                    self.assertEqual(self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
+                    self.assertEqual(
+                        self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
             for pn in self.exp_missing_properties:
-                self.assertFalse(self.properties.hasProperty(pn), "unexpected property '%s'" % pn)
+                self.assertFalse(self.properties.hasProperty(pn),
+                                 "unexpected property '%s'" % pn)
             for log, contents in self.exp_logfiles.iteritems():
-                self.assertEqual(self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
+                self.assertEqual(
+                    self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
             self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         d.addCallback(check)
         return d

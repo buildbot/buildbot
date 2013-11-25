@@ -137,6 +137,7 @@ class TestBuild(unittest.TestCase):
         self.builder = self.createBuilder()
         self.build = Build([r])
         self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)
+        self.build.master = self.master
         self.build.setBuilder(self.builder)
 
     def createBuilder(self):

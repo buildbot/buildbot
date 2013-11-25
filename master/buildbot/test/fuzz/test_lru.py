@@ -40,6 +40,19 @@ def deferUntilLater(secs, result=None):
 
 class LRUCacheFuzzer(fuzz.FuzzTestCase):
 
+    FUZZ_TIME = 60
+
+    def setUp(self):
+        lru.inv_failed = False
+
+    def tearDown(self):
+        self.assertFalse(lru.inv_failed, "invariant failed; see logs")
+        if hasattr(self, 'lru'):
+            log.msg("hits: %d; misses: %d; refhits: %d" % (self.lru.hits,
+                                                           self.lru.misses, self.lru.refhits))
+
+    # tests
+
     @defer.inlineCallbacks
     def do_fuzz(self, endTime):
         lru.inv_failed = False

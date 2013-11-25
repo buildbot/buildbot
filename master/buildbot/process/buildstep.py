@@ -155,6 +155,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.stopped = False
+        self.master = None
 
     def __new__(klass, *args, **kwargs):
         self = object.__new__(klass)
@@ -176,6 +177,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def setBuild(self, build):
         self.build = build
+        self.master = self.build.master
 
     def setBuildSlave(self, buildslave):
         self.buildslave = buildslave
@@ -569,7 +571,8 @@ class LoggingBuildStep(BuildStep):
                 # The dummy default argument local_logname is a work-around for
                 # Python name binding; default values are bound by value, but
                 # captured variables in the body are bound by name.
-                callback = lambda cmd_arg, local_logname=logname: self.addLog(local_logname)
+                callback = lambda cmd_arg, local_logname=logname: self.addLog(
+                    local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # tell the BuildStepStatus to add a LogFile
@@ -583,7 +586,8 @@ class LoggingBuildStep(BuildStep):
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
         if self.step_status.isWaitingForLocks():
-            self.addCompleteLog('cancelled while waiting for locks', str(reason))
+            self.addCompleteLog(
+                'cancelled while waiting for locks', str(reason))
         else:
             self.addCompleteLog('cancelled', str(reason))
 

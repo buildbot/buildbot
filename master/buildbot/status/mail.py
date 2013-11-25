@@ -126,10 +126,10 @@ def defaultMessage(mode, name, build, results, master_status):
                 projects.append(ss.project)
     if not projects:
         projects = [master_status.getTitle()]
-    text += " on builder %s while building %s.\n" % (name, ', '.join(projects))
+    text += " on builder %s while building %s." % (name, ', '.join(projects))
 
     if master_status.getURLForThing(build):
-        text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
+        text += " Full details are available at:\n    %s\n" % master_status.getURLForThing(build)
     text += "\n"
 
     if master_status.getBuildbotURL():
@@ -174,7 +174,7 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "BUILD FAILED%s\n" % t
 
     text += "\n"
-    text += "sincerely,\n"
+    text += "Sincerely,\n"
     text += " -The Buildbot\n"
     text += "\n"
     return {'body': text, 'type': 'plain'}
@@ -369,8 +369,12 @@ class MailNotifier(base.StatusReceiverMultiService):
                 mode = (mode,)
         for m in mode:
             if m not in self.possible_modes:
-                config.error(
-                    "mode %s is not a valid mode" % (m,))
+                if m == "all":
+                    config.error(
+                        "mode 'all' is not valid in an iterator and must be passed in as a separate string")
+                else:
+                    config.error(
+                        "mode %s is not a valid mode" % (m,))
         self.mode = mode
         self.categories = categories
         self.builders = builders

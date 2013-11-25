@@ -96,6 +96,7 @@ class Build(properties.PropertiesMixin):
         @type  builder: L{buildbot.process.builder.Builder}
         """
         self.builder = builder
+        self.master = builder.master
 
     def setLocks(self, lockList):
         # convert all locks into their real forms

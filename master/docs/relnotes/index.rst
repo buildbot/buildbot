@@ -199,6 +199,8 @@ Fixes
 * The Git step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
   so that it will receive any newly added submodules.
 
+* The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
