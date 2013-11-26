@@ -131,13 +131,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
-
-        def process(git_output):
-            git_output = git_output.decode(self.encoding)
-            if len(git_output) == 0:
-                raise EnvironmentError('could not get commit comment for rev')
-            return git_output
-        d.addCallback(process)
         return d
 
     def _get_commit_timestamp(self, rev):
