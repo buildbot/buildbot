@@ -119,6 +119,9 @@ bower_json = {
         "json2": "latest",
         # test deps
         "angular-mocks": ANGULAR_TAG
+    },
+    "devDependencies": {
+      "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js"
     }
 }
 

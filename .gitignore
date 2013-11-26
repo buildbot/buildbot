@@ -46,3 +46,4 @@ www/bower.json
 www/VERSION
 www/node_modules
 www/bower_components
+.idea

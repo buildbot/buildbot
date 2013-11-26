@@ -363,11 +363,12 @@ module.exports = (grunt) ->
                 autoWatch: false
                 background: true
                 reporters: ['progress']
-                frameworks: ['jasmine', 'requirejs'],
+                frameworks: ['jasmine', 'requirejs']
                 files: [
                     "./#{project_name}/scripts/test/main.js"
                     {pattern: "#{project_name}/scripts/**/*.js", included: false},
                     {pattern: "#{project_name}/scripts/**/*.js.map", included: false},
+                    {pattern: "#{project_name}/views/**/*.html", included: true}
                 ]
                 singleRun: false
             dev:

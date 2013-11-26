@@ -24,3 +24,6 @@ building the UI.
 Then, simply treat the `www` directory as a normal AngularJs project.  Either
 run `grunt` to build on demand, or use `grunt dev` to set up a watcher to
 build whenever files change.
+
+NOTE: if you add something to the bower dependencies in setup.py, you need to create a symlink
+from the scripts/libs/ (or scripts/test/libs) to the file in the bower_components directory (i.e. bower_components/<component>/<script>)
