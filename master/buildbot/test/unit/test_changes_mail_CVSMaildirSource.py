@@ -17,8 +17,8 @@ from twisted.trial import unittest
 
 from buildbot.changes.mail import CVSMaildirSource
 from email import message_from_string
-from email.Utils import mktime_tz
-from email.Utils import parsedate_tz
+from email.utils import mktime_tz
+from email.utils import parsedate_tz
 
 #
 # Sample message from CVS version 1.11

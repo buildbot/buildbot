@@ -22,10 +22,10 @@ import re
 import time
 
 from email import message_from_file
-from email.Iterators import body_line_iterator
-from email.Utils import mktime_tz
-from email.Utils import parseaddr
-from email.Utils import parsedate_tz
+from email.iterators import body_line_iterator
+from email.utils import mktime_tz
+from email.utils import parseaddr
+from email.utils import parsedate_tz
 
 from buildbot import util
 from buildbot.interfaces import IChangeSource
