@@ -221,17 +221,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 self.tryClaimBuildRequests(conn, brids)
                 self.addBuilds(conn, brids, number)
                 self.executeMergeBuildingRequests(conn, requests)
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+            except:
                 transaction.rollback()
-                raise e
+                raise
 
             transaction.commit()
 
         return self.db.pool.do(thd)
 
-
     def executeMergeBuildingRequests(self, conn, requests):
-
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]
 
@@ -258,7 +256,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             buildrequests_tbl = self.db.model.buildrequests
 
             q = sa.select([buildrequests_tbl]) \
-                .where(buildrequests_tbl.c.mergebrid == None) \
                 .where(buildrequests_tbl.c.startbrid == startbrid) \
                 .where(buildrequests_tbl.c.buildername == buildername) \
                 .where(buildrequests_tbl.c.complete == 1)\
@@ -333,10 +330,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 self.executeMergeFinishedBuildRequest(conn, brdict, merged_brids)
                 # insert builds
                 self.addFinishedBuilds(conn, brdict, merged_brids)
-
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+            except:
                 transaction.rollback()
-                raise e
+                raise
 
             transaction.commit()
         return self.db.pool.do(thd)
@@ -353,10 +349,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         .values(mergebrid=brids[0])
 
                     res = conn.execute(stmt)
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+            except:
                 transaction.rollback()
-                raise e
-
+                raise
             transaction.commit()
 
         return self.db.pool.do(thd)

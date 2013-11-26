@@ -29,6 +29,7 @@ from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
+import sys
 
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
@@ -478,7 +479,7 @@ class Builder(config.ReconfigurableServiceMixin,
         defer.returnValue(False)
 
 
-    def removeFromUnclaimRequests(self, brdicts, unclaimed_requests):
+    def removeFromUnclaimRequestsList(self, brdicts, unclaimed_requests):
         brs = [ br for br in brdicts ]
         self._breakBrdictRefloops(brdicts)
         for br in brdicts:
@@ -559,7 +560,7 @@ class Builder(config.ReconfigurableServiceMixin,
             # merge current brdicts with currently running builds
             try:
                 if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
-                    self.removeFromUnclaimRequests(brdicts, unclaimed_requests)
+                    self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
                     continue
 
             except:
@@ -580,10 +581,9 @@ class Builder(config.ReconfigurableServiceMixin,
                     try:
                         print "\n -- Merge finished resquest %s, %s --\n" % (finished_br, merged_brids)
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
-                        self.removeFromUnclaimRequests(merged_brdicts, unclaimed_requests)
+                        self.removeFromUnclaimRequestsList(merged_brdicts, unclaimed_requests)
                     except:
                         unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
-
                     continue
 
             # if couldn't been merge try starting a new build, choose a slave (using nextSlave)
@@ -607,7 +607,6 @@ class Builder(config.ReconfigurableServiceMixin,
                 # re-fetch the now-partially-claimed build requests and keep
                 # trying to match them
                 unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
-
                 # go around the loop again
                 continue
 
@@ -629,7 +628,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             # finally, remove the buildrequests and slavebuilder from the
             # respective queues
-            self.removeFromUnclaimRequests(brdicts, unclaimed_requests)
+            self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
             available_slavebuilders.remove(slavebuilder)
 
         self._breakBrdictRefloops(unclaimed_requests)
