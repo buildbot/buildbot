@@ -111,7 +111,7 @@ class GerritChangeSource(base.ChangeSource):
 
         if not (event['type'] in self.handled_events):
             msg = "the event type '{0}' is not setup to handle"
-            log.msg(msg.format(event.type))
+            log.msg(msg.format(event['type']))
             return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
@@ -145,18 +145,18 @@ class GerritChangeSource(base.ChangeSource):
     def addChangeFromEvent(self, properties, event):
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
-            self.addChange({
-                'author': "%s <%s>" % (
+            return self.addChange({
+                'author': "{0} <{1}>".format(
                     event_change["owner"]["name"],
                     event_change["owner"]["email"]),
                 'project': event_change["project"],
-                'repository': "ssh://%s@%s:%s/%s" % (
+                'repository': "ssh://{0}@{1}:{2}/{3}".format(
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
                 'branch': "{0}/{1}".format(
                     event_change["branch"], event_change["number"]),
                 'revision': event["patchSet"]["revision"],
-                'revlink': ["url"],
+                'revlink': event_change["url"],
                 'comments': event_change["subject"],
                 'files': ["unknown"],
                 'category': event["type"],
