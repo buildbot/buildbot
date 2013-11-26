@@ -102,7 +102,8 @@ class GridStatusMixin(object):
         This function returns an appropriate comparison key for that.
         """
         # TODO: Maybe order sourcestamps in key by codebases names?
-        return tuple([(ss.branch, ss.revision, ss.patch) for ss in sourcestamps])
+        return tuple([(ss.branch, ss.revision, ss.patch, ss.codebase,
+            ss.project) for ss in sourcestamps])
 
     def clearRecentBuildsCache(self):
         self.__recentBuildsCache__ = {}
