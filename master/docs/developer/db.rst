@@ -96,7 +96,7 @@ buildrequests
     * ``priority``
     * ``claimed`` (boolean, true if the request is claimed)
     * ``claimed_at`` (datetime object, time this request was last claimed)
-    * ``mine`` (boolean, true if the request is claimed by this master)
+    * ``claimed_by_masterid`` (integer, the id of the master that claimed this buildrequest)
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
 

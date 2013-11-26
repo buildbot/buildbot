@@ -74,7 +74,8 @@ class Tests(interfaces.InterfaceTests):
         def check(brdict):
             self.assertEqual(brdict,
                              dict(brid=44, buildsetid=self.BSID, buildername="bbb",
-                                  priority=7, claimed=True, mine=True, complete=True,
+                                  priority=7, claimed=True,
+                                  claimed_by_masterid=self.MASTER_ID, complete=True,
                                   results=75, claimed_at=self.CLAIMED_AT,
                                   submitted_at=self.SUBMITTED_AT,
                                   complete_at=self.COMPLETE_AT, waited_for=False))
@@ -356,7 +357,7 @@ class Tests(interfaces.InterfaceTests):
             self.assertNotEqual(expected, None,
                                 "unexpected success from claimBuildRequests")
             self.assertEqual(
-                sorted([(r['brid'], r['claimed_at'], r['mine'])
+                sorted([(r['brid'], r['claimed_at'], r['claimed_by_masterid'])
                         for r in results]),
                 sorted(expected))
         d.addCallback(check)
@@ -372,13 +373,13 @@ class Tests(interfaces.InterfaceTests):
         return self.do_test_claimBuildRequests([
             fakedb.BuildRequest(id=44, buildsetid=self.BSID),
         ], 1300305712, [44],
-            [(44, epoch2datetime(1300305712), True)])
+            [(44, epoch2datetime(1300305712), self.MASTER_ID)])
 
     def test_claimBuildRequests_single_explicit_claimed_at(self):
         return self.do_test_claimBuildRequests([
             fakedb.BuildRequest(id=44, buildsetid=self.BSID),
         ], 1300305712, [44],
-            [(44, epoch2datetime(14000000), True)],
+            [(44, epoch2datetime(14000000), self.MASTER_ID)],
             claimed_at=epoch2datetime(14000000))
 
     def test_claimBuildRequests_multiple(self):
@@ -388,9 +389,9 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuildRequest(id=46, buildsetid=self.BSID),
         ], 1300305712, [44, 46],
             [
-                (44, epoch2datetime(1300305712), True),
-                (45, None, False),
-                (46, epoch2datetime(1300305712), True),
+                (44, epoch2datetime(1300305712), self.MASTER_ID),
+                (45, None, None),
+                (46, epoch2datetime(1300305712), self.MASTER_ID),
             ])
 
     def test_claimBuildRequests_stress(self):
@@ -399,7 +400,7 @@ class Tests(interfaces.InterfaceTests):
             for id in xrange(1, 1000)
         ], 1300305713, range(1, 1000),
             [
-                (id, epoch2datetime(1300305713), True)
+                (id, epoch2datetime(1300305713), self.MASTER_ID)
                 for id in xrange(1, 1000)
             ])
 
@@ -430,10 +431,10 @@ class Tests(interfaces.InterfaceTests):
         def check(results):
             # check that [1,1000) were not claimed, and 1000 is still claimed
             self.assertEqual([
-                (r['brid'], r['mine'], r['claimed_at'])
+                (r['brid'], r['claimed_by_masterid'], r['claimed_at'])
                 for r in results
             ][:10], [
-                (1000, False, epoch2datetime(1300103810))
+                (1000, self.OTHER_MASTER_ID, epoch2datetime(1300103810))
             ])
         d.addCallback(check)
         return d
@@ -478,7 +479,7 @@ class Tests(interfaces.InterfaceTests):
                                 "unexpected success from claimBuildRequests")
             self.assertEqual(
                 sorted([
-                    (r['brid'], r['claimed_at'], r['mine'])
+                    (r['brid'], r['claimed_at'], r['claimed_by_masterid'])
                     for r in results
                 ]),
                 sorted(expected)
@@ -499,7 +500,7 @@ class Tests(interfaces.InterfaceTests):
                                      claimed_at=1300103810),
         ], 1300305712, [44],
             # note that the time is updated
-            [(44, epoch2datetime(1300305712), True)])
+            [(44, epoch2datetime(1300305712), self.MASTER_ID)])
 
     def test_reclaimBuildRequests_fail(self):
         d = self.do_test_reclaimBuildRequests([
@@ -522,11 +523,11 @@ class Tests(interfaces.InterfaceTests):
 
         def check(results):
             self.assertEqual(sorted(
-                (r['brid'], r['claimed_at'], r['mine'])
+                (r['brid'], r['claimed_at'], r['claimed_by_masterid'])
                 for r in results
             ), [
-                (44, epoch2datetime(1300103810), True),
-                (45, epoch2datetime(1300103810), False),
+                (44, epoch2datetime(1300103810), self.MASTER_ID),
+                (45, epoch2datetime(1300103810), self.OTHER_MASTER_ID),
             ])
         d.addCallback(check)
         return d

@@ -29,6 +29,7 @@ from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
 from buildbot.util import json
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -126,8 +127,8 @@ class BuildRequest(Row):
         priority=0,
         complete=0,
         results=-1,
-        submitted_at=0,
-        complete_at=0,
+        submitted_at=12345678,
+        complete_at=None,
         waited_for=0,
     )
 
@@ -1052,18 +1053,20 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     _reactor=reactor):
         # We've gotten this wrong a couple times.
         assert isinstance(waited_for, bool), 'waited_for should be boolean: %r' % waited_for
-        bsid = self._newBsid()
-        br_rows = []
-        for buildername in builderNames:
-            br_rows.append(
-                BuildRequest(buildsetid=bsid, buildername=buildername, waited_for=waited_for))
-        self.db.buildrequests.insertTestData(br_rows)
 
         # calculate submitted at
         if submitted_at:
             submitted_at = datetime2epoch(submitted_at)
         else:
             submitted_at = _reactor.seconds()
+
+        bsid = self._newBsid()
+        br_rows = []
+        for buildername in builderNames:
+            br_rows.append(
+                BuildRequest(buildsetid=bsid, buildername=buildername, waited_for=waited_for,
+                             submitted_at=submitted_at))
+        self.db.buildrequests.insertTestData(br_rows)
 
         # make up a row and keep its dictionary, with the properties tacked on
         bsrow = Buildset(id=bsid, reason=reason,
@@ -1436,9 +1439,18 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     # component methods
 
     def getBuildRequest(self, brid):
-        try:
-            return defer.succeed(self._brdictFromRow(self.reqs[brid]))
-        except:
+        row = self.reqs.get(brid)
+        if row:
+            claim_row = self.claims.get(brid, None)
+            if claim_row:
+                row.claimed_at = claim_row.claimed_at
+                row.claimed = True
+                row.masterid = claim_row.masterid
+                row.claimed_by_masterid = claim_row.masterid
+            else:
+                row.claimed_at = None
+            return defer.succeed(self._brdictFromRow(row))
+        else:
             return defer.succeed(None)
 
     @defer.inlineCallbacks
@@ -1453,8 +1465,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     continue
                 if not complete and br.complete:
                     continue
+            claim_row = self.claims.get(br.id)
+            if claim_row:
+                br.claimed_at = claim_row.claimed_at
+                br.claimed = True
+                br.masterid = claim_row.masterid
+                br.claimed_by_masterid = claim_row.masterid
+            else:
+                br.claimed_at = None
             if claimed is not None:
-                claim_row = self.claims.get(br.id)
                 if claimed == "mine":
                     if not claim_row or claim_row.masterid != self.MASTER_ID:
                         continue
@@ -1542,25 +1561,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if claim_row and claim_row.claimed_at < old_epoch:
                 del self.claims[br.id]
 
-    # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
-        claimed = mine = False
-        claimed_at = None
-        claim_row = self.claims.get(row.id, None)
-        if claim_row:
-            claimed = True
-            claimed_at = _mkdt(claim_row.claimed_at)
-            mine = claim_row.masterid == self.MASTER_ID
-
-        submitted_at = _mkdt(row.submitted_at)
-        complete_at = _mkdt(row.complete_at)
-
-        return dict(brid=row.id, buildsetid=row.buildsetid,
-                    buildername=row.buildername, priority=row.priority,
-                    claimed=claimed, claimed_at=claimed_at, mine=mine,
-                    complete=bool(row.complete), results=row.results,
-                    submitted_at=submitted_at, complete_at=complete_at,
-                    waited_for=bool(row.waited_for))
+        return buildrequests.BuildRequestsConnectorComponent._brdictFromRow(row, self.MASTER_ID)
 
     # fake methods
 

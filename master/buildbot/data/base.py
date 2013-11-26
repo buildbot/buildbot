@@ -22,8 +22,10 @@ from twisted.internet import defer
 
 class ResourceType(object):
     name = None
+    plural = None
     endpoints = []
     keyFields = []
+    entityType = None
 
     def __init__(self, master):
         self.master = master
