@@ -187,6 +187,8 @@ if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
 py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)
+if not py_26:
+    raise RuntimeError("Buildbot master requires at least Python-2.6")
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
@@ -196,24 +198,10 @@ except ImportError:
     pass
 else:
     # dependencies
-    setup_args['install_requires'] = []
-
-    if sys.version_info[:2] >= (2, 6):
-        setup_args['install_requires'] += [
-            'twisted >= 11.0.0',
-            'Jinja2 >= 2.1',
-        ]
-    else:
-        # Latest supported on Python 2.5 version of Twisted is 12.10, and
-        # pip/easy_install currently can't select correct version of Twisted.
-        # Twisted depends on zope.interface, which became incompatible with
-        # Python 2.5 starting from 4.0.0 release.
-        # Jinja2 dropped Python 2.5 support in 2.7 release.
-        setup_args['install_requires'] += [
-            'twisted >= 11.0.0, <= 12.1.0',
-            'zope.interface < 4.0.0',
-            'Jinja2 >= 2.1, < 2.7',
-        ]
+    setup_args['install_requires'] = [
+        'twisted >= 11.0.0',
+        'Jinja2 >= 2.1',
+    ]
 
     setup_args['install_requires'] += [
         # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
@@ -226,14 +214,6 @@ else:
     setup_args['tests_require'] = [
         'mock',
     ]
-    # Python-2.6 and up includes json
-    if not py_26:
-        setup_args['install_requires'].append('simplejson')
-
-    # Python-2.6 and up includes a working A sqlite (py25's is broken)
-    if not py_26:
-        setup_args['install_requires'].append('pysqlite')
-
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
         setup_args['tests_require'] = None
