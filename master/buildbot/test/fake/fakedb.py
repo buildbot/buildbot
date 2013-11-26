@@ -1754,13 +1754,19 @@ class FakeStepsComponent(FakeDBComponent):
             'buildid': buildid,
             'number': number,
             'name': name,
-            'started_at': _reactor.seconds(),
+            'started_at': None,
             'complete_at': None,
             'results': None,
             'state_strings_json': unicode(json.dumps(state_strings)),
             'urls_json': '[]'}
 
         return defer.succeed((id, number, name))
+
+    def startStep(self, stepid, _reactor=reactor):
+        b = self.steps.get(stepid)
+        if b:
+            b['started_at'] = _reactor.seconds()
+        return defer.succeed(None)
 
     def setStepStateStrings(self, stepid, state_strings):
         validation.verifyType(self.t, 'state_strings', state_strings,
@@ -1847,6 +1853,7 @@ class FakeLogsComponent(FakeDBComponent):
         self.logs[id] = dict(id=id, stepid=stepid,
                              name=name, type=type, complete=0,
                              num_lines=0)
+        self.log_lines[id] = []
         return defer.succeed(id)
 
     def appendLog(self, logid, content):

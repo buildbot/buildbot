@@ -37,10 +37,12 @@ if window.__karma__?
 
             forceDialogTpl =  directivePath + 'forcedialog.html'
             nestedFieldTpl = directivePath + 'nestedfield.html'
+            simpleLayoutTpl = directivePath + 'simplelayout.html'
 
             #TODO: use ng-html2js instead..w/ ng-html2js should be able to use w/ beforeEach module 'path/to/tpl'
             $templateCache.put(forceDialogTpl, window.__html__['buildbot_www/' + forceDialogTpl])
             $templateCache.put(nestedFieldTpl, window.__html__['buildbot_www/' + nestedFieldTpl])
+            $templateCache.put(simpleLayoutTpl, window.__html__['buildbot_www/' + simpleLayoutTpl])
 
             $httpBackend = $injector.get('$httpBackend')
             $document = $injector.get('$document')
@@ -53,12 +55,12 @@ if window.__karma__?
             buildbotService = $injector.get('buildbotService')
 
             $compile = $injector.get('$compile')
-            stubs.bbServiceAll = sinon.stub(buildbotService, "all")
-            pureStubs.getListStub = sinon.stub()
+            stubs.bbServiceGetOne = sinon.stub(buildbotService, "one")
             pureStubs.thenStub = sinon.stub()
             pureStubs.thenStub.callsArgWith(0, [
                 {
                     name : "someScheduler",
+                    label : "someSchedulerLabel"
                     "all_fields" : [{
                         "columns":1,
                         "css_class":"",
@@ -241,13 +243,12 @@ if window.__karma__?
                 },
                 {
                     name : "anotherScheduler.."
+                    label : "anotherScheduler..Label"
                 }
             ])
-            pureStubs.getListStub.returns({
-                then : pureStubs.thenStub
-            })
-            stubs.bbServiceAll.returns({
-                getList : pureStubs.getListStub
+            stubs.bbServiceGetOne.returns({
+                get : ->
+                    return { then : pureStubs.thenStub }
             })
 
 
@@ -266,7 +267,8 @@ if window.__karma__?
 
         beforeEach( ->
             $scope.scheduler = {
-                "name" : "someScheduler"
+                "name" : "someScheduler",
+                "label" : "someSchedulerLabel"
             }
 
             markup = '<forcedialogbutton class=".btn .btn-default" scheduler="{{scheduler.name}}">{{scheduler.name}}</forcedialogbutton>'
@@ -286,6 +288,7 @@ if window.__karma__?
                 expect($modal.open.called).toBe(true)
 
             it 'should have opened a new model DOM element', ->
+
                 expect($document).toHaveModalsOpen(1)
 
             it 'should open a modal with the expected title', ->
@@ -293,7 +296,7 @@ if window.__karma__?
                 #have to do this since a new scope is created for the modal..
                 $rootScope.$digest()
 
-                expect($document).toHaveModalWithTitle($scope.scheduler.name)
+                expect($document).toHaveModalWithTitle($scope.scheduler.label)
 
             describe 'when the modal cancel button is clicked', ->
 

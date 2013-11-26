@@ -18,7 +18,7 @@ from twisted.internet import defer
 
 class LineBoundaryFinder(object):
 
-    __slots_ = ['partialLine', 'callback']
+    __slots__ = ['partialLine', 'callback']
 
     def __init__(self, callback):
         self.partialLine = None

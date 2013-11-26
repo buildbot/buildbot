@@ -62,8 +62,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             return [self._stepdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
-    def addStep(self, buildid, name, state_strings, _reactor=reactor):
-        started_at = _reactor.seconds()
+    def addStep(self, buildid, name, state_strings):
         state_strings_json = json.dumps(state_strings)
 
         def thd(conn):
@@ -78,7 +77,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # since only one master is inserting steps.  If there is a
             # conflict, then the name is likely already taken.
             insert_row = dict(buildid=buildid, number=number,
-                              started_at=started_at, complete_at=None,
+                              started_at=None, complete_at=None,
                               state_strings_json=state_strings_json,
                               urls_json='[]', name=name)
             try:
@@ -107,6 +106,15 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(self.db.model.steps.insert(), insert_row)
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
+        return self.db.pool.do(thd)
+
+    def startStep(self, stepid, _reactor=reactor):
+        started_at = _reactor.seconds()
+
+        def thd(conn):
+            tbl = self.db.model.steps
+            q = tbl.update(whereclause=(tbl.c.id == stepid))
+            conn.execute(q, started_at=started_at)
         return self.db.pool.do(thd)
 
     def setStepStateStrings(self, stepid, state_strings):

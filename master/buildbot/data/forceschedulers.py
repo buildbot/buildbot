@@ -16,14 +16,17 @@
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.schedulers import forcesched
+from buildbot.www.rest import BadJsonRpc2
+from buildbot.www.rest import JSONRPC_CODES
+from twisted.internet import defer
 
 
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
-               name=sched.name,
-               builder_names=sched.builderNames)
-    for field in sched.all_fields:
-            ret["all_fields"].append(field.toJsonDict())
+               name=unicode(sched.name),
+               label=unicode(sched.label),
+               builder_names=map(unicode, sched.builderNames))
+    ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
 
@@ -37,7 +40,20 @@ class ForceSchedulerEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         for sched in self.master.allSchedulers():
             if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
-                return forceScheduler2Data(sched)
+                return defer.succeed(forceScheduler2Data(sched))
+        return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def control(self, action, args, kwargs):
+        if action == "force":
+            for sched in self.master.allSchedulers():
+                if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
+                    try:
+                        res = yield sched.force("user", **args)
+                        defer.returnValue(res)
+                    except forcesched.CollectedValidationError as e:
+                        raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
+        defer.returnValue(None)
 
 
 class ForceSchedulersEndpoint(base.Endpoint):
@@ -45,16 +61,22 @@ class ForceSchedulersEndpoint(base.Endpoint):
     isCollection = True
     pathPatterns = """
         /forceschedulers
+        /builder/:builderid/forceschedulers
     """
     rootLinkName = 'schedulers'
 
+    @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         l = []
+        builderid = kwargs.get('builderid', None)
+        if builderid is not None:
+            bdict = yield self.master.db.builders.getBuilder(builderid)
         for sched in self.master.allSchedulers():
-            print sched, isinstance(sched, forcesched.ForceScheduler)
             if isinstance(sched, forcesched.ForceScheduler):
+                if builderid is not None and bdict['name'] not in sched.builderNames:
+                    continue
                 l.append(forceScheduler2Data(sched))
-        return l
+        defer.returnValue(l)
 
 
 class ForceScheduler(base.ResourceType):
@@ -65,7 +87,8 @@ class ForceScheduler(base.ResourceType):
     keyFields = []
 
     class EntityType(types.Entity):
-        name = types.String()
-        builder_names = types.List(of=types.Identifier())
+        name = types.Identifier(20)
+        label = types.String()
+        builder_names = types.List(of=types.Identifier(20))
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)

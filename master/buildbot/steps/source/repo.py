@@ -92,7 +92,7 @@ class Repo(Source):
 
     """ Class for Repo with all the smarts """
     name = 'repo'
-    renderables = ["manifestURL", "manifestFile", "tarball", "jobs",
+    renderables = ["manifestURL", "manifestBranch", "manifestFile", "tarball", "jobs",
                    "syncAllBranches", "updateTarballAge", "manifestOverrideUrl",
                    "repoDownloads"]
 

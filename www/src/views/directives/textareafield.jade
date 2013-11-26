@@ -1,5 +1,5 @@
-div.form-group
+basefield
     label.control-label.col-sm-2(for="{{field.name}}")
         | {{field.label}}
     .col-sm-10
-        textarea.form-control(rows="{{field.rows}}", value="{{field.value}}")
+        textarea.form-control(rows="{{field.rows}}", ng-model="field.value")

@@ -1,10 +1,9 @@
-.modal-dialog(style="width:90%")
-    .modal-content
-        .modal-header
-            h4 {{sch.name}}
-        .modal-body
-            recursive
-                nestedfield(fields='sch.all_fields', columns=1)
-        .modal-footer
-            button.btn.btn-default(ng-click="cancel()") Cancel
-            button.btn.btn-primary(ng-click="ok()") Start Build
+.modal-content
+    .modal-header
+        h4 {{sch.label}}
+    .modal-body
+        div.form-horizontal
+            forcefield(field="rootfield",recursive)
+    .modal-footer
+        button.btn.btn-default(ng-click="cancel()") Cancel
+        button.btn.btn-primary(ng-click="ok()") Start Build

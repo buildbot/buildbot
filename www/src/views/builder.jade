@@ -8,25 +8,19 @@
         a(href="#/builders/{{builder.id}}")
           | {{builder.name}}
       li.pull-right(ng-repeat='sch in forceschedulers')
-        forcedialogbutton.btn.btn-default(scheduler="{{ sch.name }}") {{sch.name}}
+        forcedialogbutton.btn.btn-default(scheduler="{{ sch.name }}", builder="{{builder.id}}") {{sch.name}}
   .row
     table.table.table-hover.table-striped.table-condensed
       tr
-        td id
-        td Status
+        td #
         td Started At
         td Duration
         td Owner
-        td Results
+        td State
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
           td
-            a(href='#/builders/{{ builder.id }}/build/{{build.buildid}}',title='{{build}}')
-              | {{ build.buildid }}
-          td
-            span(ng-show="build.complete")
-              | Done
-            span(ng-hide="build.complete")
-              i.icon-spinner.icon-spin.icon-large
+            a(href='#/builders/{{ builder.id }}/build/{{build.number}}',title='{{build}}')
+              | {{ build.number }}
           td
             span(title="{{build.started_at | dateformat:'LLL'}}")
               | {{build.started_at | timeago }}
@@ -36,5 +30,7 @@
           td
           td
             ul.list-inline
+              li(ng-hide="build.complete")
+                  i.fa.fa-spinner.fa-spin.fa-large
               li(ng-repeat='st in build.state_strings')
                 | {{st}}

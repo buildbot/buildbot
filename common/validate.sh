@@ -80,6 +80,8 @@ check_relnotes() {
 run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
+    else
+        warning "please provide a TRIALTMP env variable pointing to a ramfs for 30x speed up of the integration tests"
     fi
     find . -name \*.pyc -exec rm {} \;
     trial --reporter text ${TEMP_DIRECTORY_OPT} ${TEST}
@@ -108,6 +110,8 @@ git log "$REVRANGE" --pretty=oneline || exit 1
 if $slow; then
     status "running 'setup.py develop' for www"
     (cd www; python setup.py develop 2>&1 >/dev/null) || not_ok "www/setup.py failed"
+    status "running 'grunt ci' for www"
+    (cd www; node_modules/.bin/grunt ci 2>&1 >/dev/null) || not_ok "grunt ci failed"
 fi
 if $slow; then
     status "running tests"

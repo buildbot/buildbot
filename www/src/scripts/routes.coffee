@@ -9,7 +9,7 @@ angular.module('app').provider 'topMenuStates', ->
         states.push(state)
     @$get = ->
         states
-
+    @
 angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuStatesProvider"
     ($stateProvider, $urlRouterProvider, topMenuStatesProvider) ->
 

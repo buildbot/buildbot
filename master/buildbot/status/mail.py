@@ -19,11 +19,11 @@ import types
 import urllib
 
 from StringIO import StringIO
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMENonMultipart import MIMENonMultipart
-from email.MIMEText import MIMEText
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.mime.multipart import MIMEMultipart
+from email.mime.nonmultipart import MIMENonMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -45,8 +45,8 @@ except ImportError:
 
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
-from email import Charset
-Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
+from email import charset
+charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 
 from buildbot import config
 from buildbot import interfaces
