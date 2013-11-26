@@ -103,9 +103,6 @@ class GerritChangeSource(base.ChangeSource):
             return defer.succeed(None)
         func_name = "eventReceived_%s" % event["type"].replace("-", "_")
         func = getattr(self, func_name, None)
-        if func is None:
-            log.msg("unsupported event %s" % (event["type"],))
-            return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
@@ -118,7 +115,14 @@ class GerritChangeSource(base.ChangeSource):
 
         properties = {}
         flatten(properties, "event", event)
-        return func(properties, event)
+        event_with_change = "change" in event and "patchSet" in event
+        if func is None and event_with_change:
+            return self. addChangeFromEvent(properties, event)
+        elif func is None:
+            log.msg("unsupported event %s" % (event["type"],))
+            return defer.succeed(None)
+        else:
+            return func(properties, event)
 
     def addChange(self, chdict):
         d = self.master.addChange(**chdict)
@@ -126,23 +130,25 @@ class GerritChangeSource(base.ChangeSource):
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
 
-    def eventReceived_patchset_created(self, properties, event):
-        change = event["change"]
-        return self.addChange(dict(
-            author="%s <%s>" % (
-                change["owner"]["name"], change["owner"]["email"]),
-            project=change["project"],
-            repository="ssh://%s@%s:%s/%s" % (
-                self.username, self.gerritserver,
-                self.gerritport, change["project"]),
-            branch="{0}/{1}".format(
-                change["branch"], change["number"]),
-            revision=event["patchSet"]["revision"],
-            revlink=change["url"],
-            comments=change["subject"],
-            files=["unknown"],
-            category=event["type"],
-            properties=properties))
+    def addChangeFromEvent(self, properties, event):
+        if "change" in event and "patchSet" in event:
+            event_change = event["change"]
+            self.addChange({
+                'author': "%s <%s>" % (
+                    event_change["owner"]["name"],
+                    event_change["owner"]["email"]),
+                'project': event_change["project"],
+                'repository': "ssh://%s@%s:%s/%s" % (
+                    self.username, self.gerritserver,
+                    self.gerritport, event_change["project"]),
+                'branch': "{0}/{1}".format(
+                    event_change["branch"], event_change["number"]),
+                'revision': event["patchSet"]["revision"],
+                'revlink': ["url"],
+                'comments': event_change["subject"],
+                'files': ["unknown"],
+                'category': event["type"],
+                'properties': properties})
 
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
@@ -174,7 +180,8 @@ class GerritChangeSource(base.ChangeSource):
             return
 
         now = util.now()
-        if now - self.lastStreamProcessStart < self.STREAM_GOOD_CONNECTION_TIME:
+        if now - self.lastStreamProcessStart < \
+           self.STREAM_GOOD_CONNECTION_TIME:
             # bad startup; start the stream process again after a timeout,
             # and then increase the timeout
             log.msg(
