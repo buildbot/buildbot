@@ -854,4 +854,4 @@ class WaterfallStatusResource(HtmlResource):
                 if strip[i]:
                     strip[i] = strip[i].td()
 
-        return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble, time=lastDate)
+        return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble)
