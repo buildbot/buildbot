@@ -45,7 +45,8 @@ class GerritChangeSource(base.ChangeSource):
                  gerritserver,
                  username,
                  gerritport=29418,
-                 identity_file=None):
+                 identity_file=None,
+                 handled_events=["patchset-created", "ref-updated"]):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -57,8 +58,10 @@ class GerritChangeSource(base.ChangeSource):
         @param username: the username to use to connect to gerrit,
 
         @type  identity_file: string
-        @param identity_file: identity file to for authentication (optional).
+        @param identity_file: identity file to for authentication (optional),
 
+        @type  handled_events: list
+        @param handled_events: event to be handled (optional).
         """
         # TODO: delete API comment when documented
 
@@ -66,6 +69,7 @@ class GerritChangeSource(base.ChangeSource):
         self.gerritport = gerritport
         self.username = username
         self.identity_file = identity_file
+        self.handled_events = handled_events
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
@@ -80,7 +84,8 @@ class GerritChangeSource(base.ChangeSource):
             """Do line buffering."""
             self.data += data
             lines = self.data.split("\n")
-            self.data = lines.pop(-1)  # last line is either empty or incomplete
+            # last line is either empty or incomplete
+            self.data = lines.pop(-1)
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
                 yield self.change_source.lineReceived(line)
@@ -101,8 +106,11 @@ class GerritChangeSource(base.ChangeSource):
         if not(isinstance(event, MutableMapping) and "type" in event):
             log.msg("no type in event %s" % (line,))
             return defer.succeed(None)
-        func_name = "eventReceived_%s" % event["type"].replace("-", "_")
-        func = getattr(self, func_name, None)
+
+        if not (event.type in self.handled_events):
+            msg = "the event type '{0}' is not setup to handle"
+            log.msg(msg.format(event.type))
+            return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
@@ -116,6 +124,8 @@ class GerritChangeSource(base.ChangeSource):
         properties = {}
         flatten(properties, "event", event)
         event_with_change = "change" in event and "patchSet" in event
+        func_name = "eventReceived_%s" % event["type"].replace("-", "_")
+        func = getattr(self, func_name, None)
         if func is None and event_with_change:
             return self. addChangeFromEvent(properties, event)
         elif func is None:
