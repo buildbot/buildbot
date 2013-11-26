@@ -14,9 +14,21 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot.process import logobserver
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
+
+
+class MaxQObserver(logobserver.LogLineObserver):
+
+    def __init__(self):
+        logobserver.LogLineObserver.__init__(self)
+        self.failures = 0
+
+    def outLineReceived(self, line):
+        if line.startswith('TEST FAILURE:'):
+            self.failures += 1
 
 
 class MaxQ(ShellCommand):
@@ -28,10 +40,11 @@ class MaxQ(ShellCommand):
             config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, **kwargs)
+        self.observer = MaxQObserver()
+        self.addLogObserver('stdio', self.observer)
 
     def commandComplete(self, cmd):
-        output = cmd.logs['stdio'].getText()
-        self.failures = output.count('\nTEST FAILURE:')
+        self.failures = self.observer.failures
 
     def evaluateCommand(self, cmd):
         # treat a nonzero exit status as a failure, if no other failures are
