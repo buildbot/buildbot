@@ -108,7 +108,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         return d
 
     def test_get_commit_author(self):
-        authorStr = 'Sammy Jankis <email@example.com>'
+        authorStr = u'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
                                              ['log', '--no-walk', '--format=%aN <%aE>', self.dummyRevStr, '--'],
                                              authorStr, authorStr)
@@ -119,8 +119,8 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
                                              commentStr, commentStr, emptyRaisesException=False)
 
     def test_get_commit_comments(self):
-        comments = ['this is a commit message\n\nthat is multiline',
-                    'single line message', '']
+        comments = [u'this is a commit message\n\nthat is multiline',
+                    u'single line message', u'']
         return defer.DeferredList([self._test_get_commit_comments(commentStr) for commentStr in comments])
 
     def test_get_commit_files(self):
