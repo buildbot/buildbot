@@ -303,23 +303,3 @@ if window.__karma__?
 
                 it 'should remove the modal', ->
                     expect($document).toHaveModalsOpen(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
