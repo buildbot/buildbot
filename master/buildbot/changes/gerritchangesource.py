@@ -100,14 +100,16 @@ class GerritChangeSource(base.ChangeSource):
         try:
             event = json.loads(line.decode('utf-8'))
         except ValueError:
-            log.msg("bad json line: %s" % (line,))
+            msg = "bad json line: {0}"
+            log.msg(msg.fromat(line))
             return defer.succeed(None)
 
         if not(isinstance(event, MutableMapping) and "type" in event):
-            log.msg("no type in event %s" % (line,))
+            msg = "no type in event {0}"
+            log.msg(msg.format(line))
             return defer.succeed(None)
 
-        if not (event.type in self.handled_events):
+        if not (event['type'] in self.handled_events):
             msg = "the event type '{0}' is not setup to handle"
             log.msg(msg.format(event.type))
             return defer.succeed(None)
@@ -235,5 +237,6 @@ class GerritChangeSource(base.ChangeSource):
         status = ""
         if not self.process:
             status = "[NOT CONNECTED - check log]"
-        return ('GerritChangeSource watching the remote Gerrit repository %s@%s %s' %
-               (self.username, self.gerritserver, status))
+        msg = ("GerritChangeSource watching the remote "
+               "Gerrit repository {0}@{1} {2}")
+        return msg.format(self.username, self.gerritserver, status)
