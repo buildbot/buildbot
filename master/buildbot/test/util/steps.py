@@ -155,6 +155,10 @@ class BuildStepMixin(object):
             observer.step = step
         step.addLogObserver = addLogObserver
 
+        # add any observers defined in the constructor, before this monkey-patch
+        for n, o in step._pendingLogObservers:
+            addLogObserver(n, o)
+
         # set defaults
 
         step.setDefaultWorkdir('wkdir')
