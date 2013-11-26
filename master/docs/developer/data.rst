@@ -570,6 +570,7 @@ All strings in the data model are unicode strings.
     rtype-patch
     rtype-scheduler
     rtype-build
+    rtype-buildrequest
     rtype-step
     rtype-log
     rtype-logchunk
