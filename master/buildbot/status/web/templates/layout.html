@@ -14,7 +14,7 @@
     {% endif %}
     <title>{{ pageTitle|e }}</title>
 
-    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/css/default.css?cachebust={{version}}" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
@@ -24,7 +24,7 @@
 
     <script type="text/javascript">
       var require = {
-          baseUrl: "/prod/script/",
+          baseUrl: "/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };

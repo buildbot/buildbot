@@ -101,9 +101,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				});
 			}
 			
-        // submenu overflow on small screens
-        
-
+       		// submenu overflow on small screens
 
 	        var isMediumScreen = screenSize.isMediumScreen();
 	                
@@ -176,7 +174,6 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.tool-tip').remove();
 					$(this).unbind(e);
 				});
-
 			}
 				
 			toolTip('.ellipsis-js');
@@ -204,12 +201,57 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				$('body').append(preloader).show();
 				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
 					$('#bowlG').remove();
-					$('<div/>').addClass('formCont').hide().appendTo('body')		
-					$(data).appendTo('.formCont')
+					$('<div/>').addClass('formCont').hide().appendTo('body');		
+					$(data).appendTo('.formCont');
 					$('.formCont .command_forcebuild .grey-btn').trigger('click');
 				});
 			});
-	
+			
+		}, summaryArtifactTests: function () {
+			// for the builddetailpage
+
+			// Artifacts produced in the buildsteplist
+			var artifactJS = $('li.artifact-js').clone();
+			
+			// Link to hold the number of artifacts
+			var showArtifactsJS = $('#showArtifactsJS');
+
+			// update the popup container if there are artifacts
+			if (artifactJS.length > 0) {
+				showArtifactsJS
+				.removeClass('no-artifacts')
+				.addClass('more-info', 'mod-1')
+				.text('(' + artifactJS.length + ') Artifacts ')
+				.next()
+				.find('.builders-list')
+				.append(artifactJS);
+			} else {
+				showArtifactsJS.text('No artifacts');
+			}
+
+			// Testreport and testresult
+			var sLogs = $('.s-logs-js').clone();
+
+			// Container to display the testresults
+			var testlistResultJS = $('#testsListJS');
+
+			var alist = [];
+			for (var i = 0; i < sLogs.length; i++) {
+				
+				// filter the test results by xml and html file
+				var str = sLogs.eq(i).text().split('.').pop();
+				
+				if (str === 'xml' || str === 'html') {
+					alist.push(sLogs.eq(i));
+				}
+			}
+
+			// Show the testresultlinks in the top if there are any
+			if (alist.length > 0) { 
+				testlistResultJS.html('<li>Test results</li>' + alist);
+			} else {
+				testlistResultJS.html('<li class="no-testresults">No testresults</li>');
+			}
 		}
 	};
 

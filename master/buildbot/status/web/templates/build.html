@@ -39,6 +39,7 @@
       <div class="divider"></div>
   {% endif %}
 {% else %}
+
   <h2 class="head-2">
     Results
   </h2>
@@ -47,6 +48,18 @@
     {{ b.getText()|join(' ')|capitalize }}
   </span>
    
+<div class="divider"></div>
+<h2 class="head-2">
+  BuildSlave
+</h2>
+  
+{% if slave_url %}  
+  <a class="small-head" href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+{% else %}
+  {{ b.getSlavename()|e }} 
+{% endif %}
+
+
   <div class="divider"></div>
 
   {% if b.getTestResults() %}
@@ -157,27 +170,6 @@ SourceStamps
  # that doesn't take up quite so much vertical space
  #}
 
-<h2 class="head-2">
-  BuildSlave
-</h2>
-  
-{% if slave_url %}  
-  <a href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
-{% else %}
-  {{ b.getSlavename()|e }} 
-{% endif %}
-
-<div class="divider"></div>
-
-<h2 class="head-2">
-  Reason
-</h2>
-<p>
-{{ b.getReason()|e }}
-</p>
-
-</div>
-<div class="column-2 last">
 
 <ul class="btn-list horisontal">
   <li>
@@ -265,7 +257,34 @@ SourceStamps
 </li>
 </ul>
 
+<div class="divider"></div>
 
+<h2 class="head-2">
+  Reason
+</h2>
+<p>
+{{ b.getReason()|e }}
+</p>
+
+</div>
+<div class="column-2 last">
+
+
+ <div class="clear"></div>
+
+  <a id="showArtifactsJS" class="popup-btn-js-2 no-artifacts" href="#"> 
+  </a>
+  <div class="more-info-box more-info-box-js">
+    <a class="close-btn" href="#"> </a>
+    
+    <ul class="builders-list">
+    </ul>
+  </div>
+
+<ul id="testsListJS" class="tests-summary-list">
+</ul>
+
+<div class="clear"></div>
 <div class="divider"></div>
 
 <h2 class="head-2">
@@ -316,12 +335,13 @@ SourceStamps
           </span>
         </li>
       {% endfor %}
-    
+         
+      
       {% for u in s.urls %}
        {% if 'results' in u.keys() %}
         <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
         {% else %}
-        <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+        <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
         {% endif %}
       {% endfor %}
     </ul>  

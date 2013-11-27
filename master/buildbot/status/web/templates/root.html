@@ -1,9 +1,9 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
+{% import 'submenu.html' as submenu %}
 
 {% block submenu %}
-  <nav class="sub-menu-container root">
-  </nav>
+    {{submenu.buildsubmenu(active_page="frontpage",builderName='', buildNumber='', stepName='')}}
 {% endblock %}
 
 {% block content %}

@@ -394,7 +394,7 @@ div.last {
     }
 	.not_started {
 		background-color:#eee;
-		&:before {
+		&:after {
 			content:"Not started";
 		}
 	}
@@ -405,8 +405,19 @@ div.last {
 		content:"Success";	
 	}
 	.running {
+		&:after {
+			content:"Running";
+			padding-left: 5px;		
+		}
 		&:before {
-			content:"Running";		
+			font-size: 11px;
+			font-family: katana_icons;
+			content: "";
+			-moz-animation: spin 2s infinite linear;
+			-o-animation: spin 2s infinite linear;
+			-webkit-animation: spin 2s infinite linear;
+			animation: spin 2s infinite linear;  
+			display: inline-block;
 		}
 	}
 	.waiting {
@@ -444,9 +455,11 @@ div.last {
 	}
 	
 	.result {
-		padding: 2px 7px;
 		float: right;
 		display: inline-block;
+		font-weight: bold;
+    	padding: 5px 9px 4px;
+    	text-transform: uppercase;
 	}	
 	p {
 		margin:0 60px 11px 0;
@@ -459,6 +472,30 @@ div.last {
 		}
 	}
 }
+
+.tests-summary-list {
+	 margin: 3px 5px 0 -1px;
+	 
+	li {
+		float: left;
+		margin-right: 10px;
+		&:first-child {
+			margin-right: 5px;
+			font-weight: bold;
+		}
+
+		a {
+			font-weight: bold;	
+		}
+		&.no-testresults {
+			font-weight: normal;
+		}
+	}
+}
+a.no-artifacts {
+		color:#666;
+		cursor:text;
+	}
 
 .logs-txt {
 	display:block;
@@ -980,7 +1017,85 @@ transform:rotate(0deg)}
 transform:rotate(360deg)}
 
 } 
+/*
+   For spinners
+*/
 
+@-moz-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-webkit-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-o-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-ms-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
 .shake { 
 	 @include animate (shake);
 }

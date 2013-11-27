@@ -46,6 +46,9 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 			        selectors.init();
 		    });
 		}
+		if ($('#builddetail_page').length > 0) {
+			helpers.summaryArtifactTests();
+		}
 		
 		popup.init();
 		projectDropDown.init();

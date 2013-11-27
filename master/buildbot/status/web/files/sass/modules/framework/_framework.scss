@@ -1,5 +1,5 @@
 /**
-* Mixins for browser alignment
+* 
 * 
 * Unity3d
 *
@@ -14,4 +14,8 @@
 	#{$bgImage}:-o-#{$selector};
 	#{$bgImage}:-ms-#{$selector};
 	#{$bgImage}:$selector;
+}
+
+.fl-left {
+	float:left;
 }
