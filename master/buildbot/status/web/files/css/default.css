@@ -4312,7 +4312,7 @@ li {
   clear: both;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_navigation\.scss}line{font-family:\00003178}}
-.sub-menu-container.root {
+.sub-menu-container#frontpage_page {
   height: 39px;
 }
 
@@ -5209,7 +5209,7 @@ div.last {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003476}}
 .tests-summary-list {
-  margin: 3px 5px 0 -1px;
+  margin: 3px 5px 0 0;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003479}}
 .tests-summary-list li {
@@ -5232,7 +5232,7 @@ div.last {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003495}}
 a.no-artifacts {
-  color: #666;
+  color: #444;
   cursor: text;
 }
 
@@ -5912,24 +5912,6 @@ div.force-text input.not-valid {
 /*
    For spinners
 */
-@-moz-keyframes spin {
-  /* line 1025, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  /* line 1032, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
 @-webkit-keyframes spin {
   /* line 1040, ../sass/modules/page-elements/_main.scss */
   0% {

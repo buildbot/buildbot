@@ -474,7 +474,7 @@ div.last {
 }
 
 .tests-summary-list {
-	 margin: 3px 5px 0 -1px;
+	 margin: 3px 5px 0 0;
 	 
 	li {
 		float: left;
@@ -493,7 +493,7 @@ div.last {
 	}
 }
 a.no-artifacts {
-		color:#666;
+		color:#444;
 		cursor:text;
 	}
 
@@ -1020,7 +1020,7 @@ transform:rotate(360deg)}
 /*
    For spinners
 */
-
+@mixin animateicon($selector) {
 @-moz-keyframes spin {
   0% {
     -moz-transform: rotate(0deg);
@@ -1028,7 +1028,7 @@ transform:rotate(360deg)}
     -webkit-transform: rotate(0deg);
     transform: rotate(0deg);
   }
-
+}
   100% {
     -moz-transform: rotate(359deg);
     -o-transform: rotate(359deg);
