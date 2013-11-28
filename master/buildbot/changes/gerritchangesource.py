@@ -46,7 +46,7 @@ class GerritChangeSource(base.ChangeSource):
                  username,
                  gerritport=29418,
                  identity_file=None,
-                 handled_events=["patchset-created", "ref-updated"]):
+                 handled_events=("patchset-created", "ref-updated")):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -69,7 +69,7 @@ class GerritChangeSource(base.ChangeSource):
         self.gerritport = gerritport
         self.username = username
         self.identity_file = identity_file
-        self.handled_events = handled_events
+        self.handled_events = list(handled_events)
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
