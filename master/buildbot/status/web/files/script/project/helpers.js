@@ -220,13 +220,13 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			if (artifactJS.length > 0) {
 				showArtifactsJS
 				.removeClass('no-artifacts')
-				.addClass('more-info', 'mod-1')
+				.addClass('more-info', 'mod-1', 'popup-btn-js-2')
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
 				.append(artifactJS);
 			} else {
-				showArtifactsJS.text('No artifacts');
+				showArtifactsJS.text('No Artifacts');
 			}
 
 			// Testreport and testresult
@@ -248,7 +248,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 						
 			// Show the testresultlinks in the top if there are any
 			if (alist.length > 0) { 
-				testlistResultJS.append($('<li>Test results</li>'));
+				testlistResultJS.append($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
 		}

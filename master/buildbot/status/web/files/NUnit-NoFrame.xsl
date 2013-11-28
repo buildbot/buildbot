@@ -28,8 +28,8 @@
 		<HEAD>
 			<title>Katana test results</title>
 			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
-			<link rel="stylesheet" href="/prod/css/default.css?cachebust=1" type="text/css" />
-			<link rel="stylesheet" href="/prod/css/log.css?cachebust=1" type="text/css" />
+			<link rel="stylesheet" href="/prod/css/default.css?cachebust=2" type="text/css" />
+			<link rel="stylesheet" href="/prod/css/log.css?cachebust=2" type="text/css" />
 		</HEAD>
 		<body class="interface log-main">
 			
@@ -65,7 +65,7 @@
 			<script type="text/javascript">
 			      var require = {
 			          baseUrl: "/prod/script/testresults",
-			          urlArgs : "cachebust=1",
+			          urlArgs : "cachebust=2",
 			          deps : ['testresults-main']
 			      };
 			</script>
