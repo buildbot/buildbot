@@ -546,7 +546,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             # merge the chosen request with any compatible requests in the
             # queue
-            # todo: check it has compatible properties (clean_build)
+            # todo: check it has compatible properties (force_build)
             brdicts = yield self._mergeRequests(brdict, unclaimed_requests,
                                                 Builder._defaultMergeRequestFn)
             #mergeRequests_fn)
