@@ -233,7 +233,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]
 
-            if len(mergedrequests) > 0:
+            # we'll need to batch the brids into groups of 100, so that the
+            # parameter lists supported by the DBAPI aren't
+            iterator = iter(mergedrequests)
+            batch = list(itertools.islice(iterator, 100))
+            while len(batch) > 0:
                 q = sa.select([buildrequests_tbl.c.artifactbrid]) \
                     .where(id == requests[0].id)
                 res = conn.execute(q)
@@ -250,6 +254,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     .values(artifactbrid=row.artifactbrid)\
                     .values(mergebrid=requests[0].id)
                 conn.execute(stmt2)
+                batch = list(itertools.islice(iterator, 100))
 
     def findCompatibleFinishedBuildRequest(self, buildername, startbrid):
         def thd(conn):
@@ -291,20 +296,24 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         buildrequests_tbl = self.db.model.buildrequests
 
         completed_at = datetime2epoch(brdict['complete_at'])
+        # we'll need to batch the brids into groups of 100, so that the
+        # parameter lists supported by the DBAPI aren't
+        iterator = iter(merged_brids)
+        batch = list(itertools.islice(iterator, 100))
+        while len(batch) > 0:
+            stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(batch)) \
+                .values(complete = 1) \
+                .values(results=brdict['results']) \
+                .values(mergebrid=brdict['brid']) \
+                .values(complete_at = completed_at)
 
-        stmt2 = buildrequests_tbl.update() \
-            .where(buildrequests_tbl.c.id.in_(merged_brids)) \
-            .values(complete = 1) \
-            .values(results=brdict['results']) \
-            .values(mergebrid=brdict['brid']) \
-            .values(complete_at = completed_at)
-
-        if brdict['artifactbrid'] is None:
-            stmt2 = stmt2.values(artifactbrid=brdict['brid'])
-        else:
-            stmt2 = stmt2.values(artifactbrid=brdict['artifactbrid'])
-
-        conn.execute(stmt2)
+            if brdict['artifactbrid'] is None:
+                stmt2 = stmt2.values(artifactbrid=brdict['brid'])
+            else:
+                stmt2 = stmt2.values(artifactbrid=brdict['artifactbrid'])
+            conn.execute(stmt2)
+            batch = list(itertools.islice(iterator, 100))
 
     def addFinishedBuilds(self, conn, brdict, merged_brids):
         builds_tbl = self.db.model.builds
@@ -342,13 +351,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             try:
                 self.tryClaimBuildRequests(conn, brids)
-                if len(brids[1:]) > 0:
+                # we'll need to batch the brids into groups of 100, so that the
+                # parameter lists supported by the DBAPI aren't
+                iterator = iter(brids[1:])
+                batch = list(itertools.islice(iterator, 100))
+                while len(batch) > 0:
                     buildrequests_tbl = self.db.model.buildrequests
                     stmt = buildrequests_tbl.update()\
-                        .where(buildrequests_tbl.c.id.in_(brids[1:]))\
+                        .where(buildrequests_tbl.c.id.in_(batch))\
                         .values(mergebrid=brids[0])
+                    conn.execute(stmt)
+                    batch = list(itertools.islice(iterator, 100))
 
-                    res = conn.execute(stmt)
             except:
                 transaction.rollback()
                 raise
