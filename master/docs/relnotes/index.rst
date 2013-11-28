@@ -146,6 +146,10 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The buildmaster now requires at least Twisted-11.0.0.
 
+* The ``hgbuildbot`` Mercurial hook has been moved to ``contrib/``, and does not work with recent versions of Mercurial and Twisted.
+  The runtimes for these two tools are incompatible, yet ``hgbuildbot`` attempts to run both in the same Python interpreter.
+  Mayhem ensues.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
