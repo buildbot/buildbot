@@ -335,8 +335,7 @@ SourceStamps
           </span>
         </li>
       {% endfor %}
-         
-      
+
       {% for u in s.urls %}
        {% if 'results' in u.keys() %}
         <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
@@ -344,6 +343,7 @@ SourceStamps
         <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
         {% endif %}
       {% endfor %}
+      
     </ul>  
     
   </li>

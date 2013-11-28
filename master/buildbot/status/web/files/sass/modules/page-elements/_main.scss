@@ -388,7 +388,7 @@ div.last {
 	    font-size: 33px;
 	    font-weight: bold;
 	    margin-left: -57px;
-	    margin-top: -10px;
+	    margin-top: -5px;
 	    min-width: 32px;
 	    text-align: right;
     }
@@ -473,6 +473,14 @@ div.last {
 	}
 }
 
+// artifact links
+.builders-list .artifact-js {
+	font-size:14px;
+	font-weight:bold;
+	line-height: 24px;
+}
+
+// test report and result links
 .tests-summary-list {
 	 margin: 3px 5px 0 0;
 	 
@@ -486,9 +494,6 @@ div.last {
 
 		a {
 			font-weight: bold;	
-		}
-		&.no-testresults {
-			font-weight: normal;
 		}
 	}
 }
@@ -516,6 +521,8 @@ a.no-artifacts {
 		list-style:none;
 		padding:0;
 		margin:0 0 1px;
+		font-weight: bold;
+    	line-height: 16px;
 	}
 	.urls-mod {margin:5px 0;}
 	.log-list-success a:before {

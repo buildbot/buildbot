@@ -236,21 +236,20 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			var testlistResultJS = $('#testsListJS');
 
 			var alist = [];
-			for (var i = 0; i < sLogs.length; i++) {
-				
+			
+			$(sLogs).each(function() {	
 				// filter the test results by xml and html file
-				var str = sLogs.eq(i).text().split('.').pop();
+				var str = $(this).text().split('.').pop();
 				
 				if (str === 'xml' || str === 'html') {
-					alist.push(sLogs.eq(i));
+					alist.push($(this));
 				}
-			}
-
+			});
+						
 			// Show the testresultlinks in the top if there are any
 			if (alist.length > 0) { 
-				testlistResultJS.html('<li>Test results</li>' + alist);
-			} else {
-				testlistResultJS.html('<li class="no-testresults">No testresults</li>');
+				testlistResultJS.append($('<li>Test results</li>'));
+				testlistResultJS.append(alist);
 			}
 		}
 	};
