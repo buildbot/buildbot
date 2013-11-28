@@ -26,7 +26,7 @@
 
 	<HTML>
 		<HEAD>
-			<title>Katana test results {cache}</title>
+			<title>Katana test results</title>
 			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
 			<link rel="stylesheet" type="text/css" > 
 			 	<xsl:attribute name="href">/prod/css/default.css?cachebust=<xsl:value-of select="cache" /></xsl:attribute>
