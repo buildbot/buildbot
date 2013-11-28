@@ -1125,7 +1125,8 @@ given below::
             unilist = list()
             for line in content[len(content)-limit_lines:]:
                 unilist.append(cgi.escape(unicode(line,'utf-8')))
-            text.append(u'<pre>'.join([uniline for uniline in unilist]))
+            text.append(u'<pre>')
+            text.extend(unilist)
             text.append(u'</pre>')
             text.append(u'<br><br>')
             text.append(u'<b>-The Buildbot</b>')
