@@ -41,16 +41,9 @@ module.exports = function(grunt) {
       compile: {
         options: {
           baseUrl: 'script/',
-          paths: {
-          jquery: 'libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
-          //jquery: 'empty:' //Use this to continue using CDN loading
-          dotdotdot: 'plugins/jquery-dotdotdot',
-          datatables: 'plugins/jquery-datatables',
-          select2: 'plugins/select2'
-        },
-          name: 'main',
-          out: 'prod/script/main.js',
-          removeCombined: false
+          dir: "prod/script",
+          optimize: 'uglify',
+          mainConfigFile:'script/main.js'
         }
       },
       compileLog: {

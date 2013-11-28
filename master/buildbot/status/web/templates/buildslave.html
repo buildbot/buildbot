@@ -14,10 +14,7 @@
   <div class="column-2">
     <h2 class="head-2">
       Administration options
-    </h2>
-
-    
-    
+    </h2>    
     
     <ul class="list">
       {% if authz.advertiseAction('gracefulShutdown', request) %}
@@ -34,15 +31,7 @@
         {% endif %}
       
     {% endif %}
-    <li>
-      Request the slave to <input type="submit" value="reboot" class="link-button" /> remotely. <span class="notimpl">Not implemented</span>
-    </li>
-    <li>
-      <input type="submit" value="Disable" class="link-button" /> the slave so that it cannot take any jobs. <span class="notimpl">Not implemented</span>
-    </li>
-    <li>
-        <input type="submit" value="Enable" class="link-button" /> a disabled slave. <span class="notimpl">Not implemented</span>
-    </li>
+    
   </ul>
 
   </div>

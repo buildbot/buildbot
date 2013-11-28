@@ -60,6 +60,10 @@ a.grey-btn,
     padding: 8px 10px;
     @include text-shadow( 0 -1px 0 rgba(0, 0, 0, 0.44));
     text-transform: uppercase;
+        &:hover {
+        color: rgba(247, 247, 247, 0.72);
+
+    }
 }
 
 .grey-btn.var-1 {
@@ -76,12 +80,26 @@ a.grey-btn,
 .grey-btn.var-2 {
     font-size: 9px;
     padding: 7px 8px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 1;
+}
+
+.grey-btn.var-3 {
+    font-size: 9px;
+    padding: 7px 8px;
     position: relative;
 }
 
-.codebases .grey-btn {
-    float:right;
+
+.codebases .blue-btn {
+    position: absolute;
+    right: 0;
+    top: -6px;
 }
+
+
 
 @include breakpoint($bkpt-small) {
     .codebases .grey-btn {

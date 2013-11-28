@@ -150,6 +150,7 @@
 -->
 
 	<xsl:template name="summary">
+		<a id="btd" href="#" class="back-to-detail"></a>
 		<h1 class="main-head" id=":i18n:Summary">Summary</h1>
 		
 		<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
@@ -271,7 +272,7 @@
 						
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:attribute name="class">method txt-align-left case-names</xsl:attribute>
+						<xsl:attribute name="class">method txt-align-left case-names first-child</xsl:attribute>
 						<xsl:call-template name="GetLastSegment">
 							<xsl:with-param name="value" select="./@name" />
 						</xsl:call-template>
@@ -313,12 +314,15 @@
 	      <xsl:attribute name="id">
 	         <xsl:value-of select="$newid"/>
 	      </xsl:attribute>
-	      <td class="FailureDetail txt-align-left">
-	         <xsl:apply-templates select="./failure"/> 
-	         <xsl:apply-templates select="./error"/>
-			 <xsl:apply-templates select="./reason"/>
+	      <td class="txt-align-left failure-detail-cont colspan-js" colspan="3">
+	      	
+	      	<div class="failure-detail-txt">
+	      		<xsl:apply-templates select="./failure"/>
+	      		<xsl:apply-templates select="./error"/>
+	      		<xsl:apply-templates select="./reason"/>
+	      	</div>
          </td>
-         <td class="results-con"><xsl:value-of select="$result"/></td>
+         <td>&#160;</td>
          <td>
          	&#160;
          </td>

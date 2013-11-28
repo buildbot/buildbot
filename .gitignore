@@ -43,3 +43,7 @@ master/buildbot/status/web/files/.sass-cache
 master/buildbot/status/web/files/App.js
 
 master/buildbot/status/web/files/testfail.xml
+
+master/buildbot/status/web/files/test2.xml
+
+master/buildbot/status/web/files/node_modules/grunt-usemin/node_modules/.bin/lodash

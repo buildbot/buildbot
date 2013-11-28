@@ -11,7 +11,7 @@
 
 {% block content %}
 
-<div class="clear"></div>
+<div class="clear realtime"></div>
 
 <div class="column-1">
 <div class="column-2">
@@ -54,14 +54,15 @@
   {% endif %}
 {% endif %}
 
-{% if authz.advertiseAction('forceBuild', request) %}
+{% if authz.advertiseAction('forceBuild', request) and b.isFinished() %}
   <h2 class="head-2">
     Resubmit Build
   </h2>
   {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0]) }}
+    <div class="divider"></div>
 {% endif %}
 
-<div class="divider"></div>
+
 
 <h2 class="head-2">
   Timing
@@ -72,7 +73,7 @@
       <td>
         Start
       </td>
-      <td>
+      <td class="start-time-js">
         {{ start }}
       </td>
     </tr>
@@ -81,7 +82,7 @@
       <td>
         End
       </td>
-    <td>
+    <td class="end-time-js">
       {{ end }}
     </td>
   </tr>
@@ -90,7 +91,7 @@
       <td>
         Elapsed
       </td>
-      <td>
+      <td class="elapsed-time-js">
         {{ elapsed }}
       </td>
     </tr>
@@ -181,7 +182,7 @@ SourceStamps
 
 <ul class="btn-list horisontal">
   <li>
-<a class="more-info popup-btn-js mod-1" href="#">
+<a class="more-info popup-btn-js-2 mod-1" href="#">
   Build Properties
 </a>
 
@@ -226,7 +227,7 @@ SourceStamps
 </li>
 
   <li>
-<a class="more-info popup-btn-js mod-1" href="#">
+<a class="more-info popup-btn-js-2 mod-1" href="#">
   Custom build properties
 </a>
 
@@ -298,7 +299,7 @@ SourceStamps
     </a>
   
     <p>
-      {{ s.text }}<span>{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
+      <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
     </p>
     {% if s.logs %}
       <div class="logs-txt">
@@ -308,7 +309,7 @@ SourceStamps
     <ul class="log-list">
       
       {% for l in s.logs %}
-        <li><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
+        <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
       {% else %}
         <li>
           <span>

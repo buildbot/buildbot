@@ -125,7 +125,7 @@
 
 .tablesorter .first-child,
 .case-names {
-	width:550px;
+	width:700px;
 	font-weight:bold;
 }
 .table-1 {
@@ -133,45 +133,42 @@
 	width: 100%;
 }
 
-.table-1 td {
-	word-wrap: break-word;
+.table-1 td {word-wrap: break-word;}
 
+.back-to-detail {
+	display:block;
+	float:right;
 }
 
-
-//.case-names,
 .results-con {color:#fff;}
 
-//.case-names {width:100px;}
 
-span.covered {
-	background: #00df00; 
-	
-}
+span.covered {background: #00df00;}
 span.uncovered {
 	background: #df0000; 
 	border-top:#9c9c9c 1px solid;
 	border-bottom:#9c9c9c 1px solid;
 	border-right:#9c9c9c 1px solid;
 	}
-span.ignored {
-	background: #ffff00;
-	
+span.ignored {background: #ffff00;}
+	 
+.Failure {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
+
+.table-1 tr td:first-child .failure-detail-txt {
+	padding-left: 15px;
+	font-family:"Courier New";
+    overflow: auto;
+    white-space: pre-line;
+    max-height: 100px;
 }
-	
-.Failure {
-	  background-color: #EFCFCF;
-		border-top: 1px solid #FFFFFF;
+ 
+.failure-detail-cont a {
+	margin-right:5px;
 }
 
-.table-1 tr td.FailureDetail:first-child {
-	color:#666;
-	padding-left: 15px;
-	white-space: pre-line;
-}
 .Pass {
 	 border-top: 1px solid #FFFFFF;
-	  background-color: #DDE6D6;
+	 background-color: #DDE6D6;
 }
 
 .Ignored {

@@ -1,3 +1,4 @@
+{% if not rt_update.rt_update  %}
 {% from 'build_line.html' import build_table %}
 {% import 'forms.html' as forms %}
 {% import 'submenu.html' as submenu %}
@@ -105,15 +106,49 @@
 
 <ul class="btn-list horisontal">
   <li>
-    <a class="more-info popup-btn-js mod-1" href="#">
-        Build slaves
+    
+     <a href="#" title="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">Build slaves
     </a>
-      <div class="more-info-box more-info-box-js">
-          <span class="close-btn">
-          </span>
-          <h3>Overview</h3>
-          
-            <table class="table-1">
+
+     
+  </li>
+  <li>
+
+      {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+        <a href="#" title="Run custom build" data-htmlchunk="isForm" data-rt_update="extforms" class="ajaxbtn more-info">Run build
+        </a>
+      {% endif %}          
+        
+  </li>
+</ul>
+
+<div class="divider"></div>
+
+<h2 class="head-2">
+  Recent Builds
+</h2>
+
+{{ build_table(recent) }}
+
+<!--
+{% if authz.advertiseAction('pingBuilder', request) %}
+  <h2>Ping slaves</h2>
+  {{ forms.ping_builder(builder_url+"/ping", authz) }}
+{% endif %}
+-->
+
+
+</div>
+</div>
+
+{% endblock %}
+ {% elif rt_update.rt_update[0] == 'extforms' %}
+
+    {% import 'forms.html' as forms %}
+
+    {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
+    {% elif rt_update.rt_update[0] == 'buildslaves' %}
+    <table class="table-1">
               <thead>
               {% if slaves %}
                 <tr>
@@ -147,42 +182,5 @@
               {% endfor %}
               </tbody>
             </table>
-      </div>
-  </li>
-  <li>
-      <a class="more-info popup-btn-js mod-1" href="#">
-        Run build
-      </a>
-        <div class="more-info-box more-info-box-js">
-          <span class="close-btn">
-          </span>
-          <h3>Run custom build</h3>
 
-          {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-            {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
-          {% endif %}          
-          
-      </div>
-  </li>
-</ul>
-
-<div class="divider"></div>
-
-<h2 class="head-2">
-  Recent Builds
-</h2>
-
-{{ build_table(recent) }}
-
-<!--
-{% if authz.advertiseAction('pingBuilder', request) %}
-  <h2>Ping slaves</h2>
-  {{ forms.ping_builder(builder_url+"/ping", authz) }}
 {% endif %}
--->
-
-
-</div>
-</div>
-
-{% endblock %}

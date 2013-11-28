@@ -1,4 +1,4 @@
-define(['jquery', 'project/selectors'], function ($, selectors) {
+define(['jquery'], function ($) {
 
     "use strict";
     var popup;
@@ -64,42 +64,72 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				
 			}
 
-			function popUpBtn(classBtn, classHide){
+			//For non ajax boxes
+			$('.popup-btn-js-2').click(function(e){
+				e.preventDefault();
 
-				$(classBtn).click(function(e){
-					e.preventDefault();
-					$('.cloned').remove();
-					$('.command_forcebuild').removeClass('form-open');
-
-					var clonedInfoBox = $(this).next().clone().addClass('cloned');
-
-					$('body').append(clonedInfoBox);
-
-					$(window).resize(function() {
-						$(clonedInfoBox).center();
-					});
-					
-					$(clonedInfoBox).center().fadeIn('fast', function (){
-						$('.command_forcebuild', this).addClass('form-open')
-						validateForm();
-					});
-				});
-			};
-			popUpBtn('.popup-btn-js');
-
-			function closePopUp() {
-					
-				$(document, '.close-btn').bind('click touchstart', function(e){
-					if (!$(e.target).closest('.more-info-box-js, .popup-btn-js, .popup-btn-js-2').length || $(e.target).closest('.close-btn').length ) {
-						$('.command_forcebuild').removeClass('form-open');
-						$('.more-info-box-js').hide();
-						$('#content').empty();
-						$('.cloned').remove();
-					}
-				}); 
+				var clonedInfoBox = $(this).next('.more-info-box-js').clone();
 				
-			}
-			closePopUp();
+				$(clonedInfoBox).appendTo('body').center().fadeIn('fast', function() {
+					$(document, '.close-btn').bind('click touchstart', function(e){
+						if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+							$(clonedInfoBox).remove();
+						}
+					});	
+				});
+				$(window).resize(function() {
+					$(clonedInfoBox).center();
+				});
+			});
+
+
+			//For builders pending box
+			$('.popup-btn-js').each(function(i){
+				$(this).attr('data-in', i)
+			});
+			
+			$('.popup-btn-js').click(function(e){
+				e.preventDefault();
+				var thisi = $(this).attr('data-in');
+				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+				var rtUpdate = $(this).attr('data-rt_update');
+
+				$('body').append(preloader).show();
+				$.ajax({
+						url:'',
+						cache: false,
+						dataType: "html",
+						data: {
+							rt_update:'pending'
+						},
+						success: function(data) {
+							$('#bowlG').remove();
+							var doc = document.createElement('html');
+		 					doc.innerHTML = data;
+							
+							var pendListRes = $('.more-info-box-js', doc);
+							
+							var mib;
+							$(pendListRes).each(function(i){
+								if (i == thisi) {
+									mib = $(this);
+								}
+							});
+							$(mib).appendTo('body').center().fadeIn('fast');
+		
+							$(window).resize(function() {
+								$(mib).center();
+							});
+
+							$(document, '.close-btn').bind('click touchstart', function(e){
+								if (!$(e.target).closest('.more-info-box-js').length || $(e.target).closest('.close-btn').length ) {
+									$(mib).remove();
+								}
+							});
+						}
+				});
+				
+			});
 
 			// display popup box with external content	
 			$('#getBtn').click(function() {
@@ -122,7 +152,10 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 					
 					$(fw).appendTo($('#content'));
 					
-					$('#content .filter-table-input').remove();
+					$('#content .blue-btn').val('update');
+
+					// remove unwanted html for the poopup box
+					$('#content .filter-table-input label, #content .filter-table-input .help-txt').remove();
 
 					$(mib).center().fadeIn('fast');
 					
@@ -130,27 +163,17 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 						$(mib).center();
 					});
 
-					$("#formWrapper .select-tools-js").select2({
-						width: selectors.getMaxChildWidth(".select-tools-js")
-					});
-					$("#formWrapper #commonBranch_select").select2({
-						placeholder: "Common branches"
-					});
 
-					selectors.comboBox('#formWrapper .select-tools-js');
-					
-					$('.select2-drop').bind('click touchstart', function(e){
-						e.stopPropagation();
-						$(this).unbind(e);
-					});	
-
-		  			selectors.clickSort('#select2-drop .select2-results');
-					$(window).resize(function() {
-						$('.more-info-box-js').center();
+					require(['selectors'],function(selectors) {
+			        	selectors.comboBox('#formWrapper .select-tools-js');
+			        	selectors.init();
+						$(window).resize(function() {
+							$('.more-info-box-js').center();
+						});
 					});
 					
 					$('#getForm').attr('action', window.location.href);	
-					$('#getForm .grey-btn[type="submit"]').click(function(){
+					$('#getForm .blue-btn[type="submit"]').click(function(){
 						$('.more-info-box-js').hide();				
 					});
 
@@ -163,17 +186,58 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				});
 			});
 
+			// html for 
+			function htmlModule (htmlChunk) {
+
+				if (htmlChunk == 'isForm') {
+					var mib3 = ""
+					mib3 += '<div class="more-info-box remove-js">';
+					mib3 += '<span class="close-btn"></span>';
+					mib3 +=	'<h3>Run custom build</h3>';
+					// Insert when the backend is ready mib3 +=	'<ul class="tabs-list"><li class="selected">General</li><li>Dependencies</li><li>Slaves</li></ul>';
+					mib3 += '<div id="content1"></div></div>';
+					var mib4 = $(mib3);
+				} else {
+					var mib3 = ""
+					mib3 += '<div class="more-info-box remove-js">';
+					mib3 += '<span class="close-btn"></span>';
+					mib3 +=	'<h3>Buildslaves</h3>';
+					mib3 += '<div id="content1"></div></div>';
+					var mib4 = $(mib3);
+				}
+				return mib4;
+			}
+
+			// tab list for custom build
+			function customTabs (){
+				$('.tabs-list li').click(function(i){
+					var indexLi = $(this).index();
+					$(this).parent().find('li').removeClass('selected');
+					$(this).addClass('selected');
+					$('.content-blocks > div').each(function(i){
+						if ($(this).index() != indexLi) {
+							$(this).hide();
+						} else {
+							$(this).show();
+						}
+					});
+
+				});
+			}
+			
+			// custom build on builder and builders
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
 				var datab = $(this).attr('data-b');
 				var dataindexb = $(this).attr('data-indexb');
-				
+				var rtUpdate = $(this).attr('data-rt_update');
+				var htmlChunk = $(this).attr('data-htmlchunk'); 
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
-				var mib3 = $('<div class="more-info-box remove-js"><span class="close-btn"></span><h3>Run custom build</h3><div id="content1"></div></div>');
+				var mib3 = htmlModule (htmlChunk);
 				$(mib3).appendTo('body');
 
-				$.get('', {extform: true, datab: datab, dataindexb: dataindexb}).done(function(data) {
+				$.get('', {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb}).done(function(data) {
 
 					$('#bowlG').remove();
 					$(data).appendTo($('#content1'));
@@ -182,7 +246,7 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 					$(window).resize(function() {
 						$(mib3).center();
 					});
-
+					customTabs();
 					$(document, '.close-btn').bind('click touchstart', function(e){
 				
 					    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
@@ -196,6 +260,8 @@ define(['jquery', 'project/selectors'], function ($, selectors) {
 				});
 
 			});
+			
+			
 
 		}
 	}

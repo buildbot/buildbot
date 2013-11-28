@@ -2,8 +2,10 @@ define(['jquery'], function ($) {
 
     "use strict";
 
-$(document).ready(function(){
-    $("#filterinput").val("");
+	$(document).ready(function(){
+
+    		$("#filterinput").val("");
+
 			$('.check-boxes-list input').attr('checked', false);
 			
 			var th = $('.table-holder');
@@ -11,6 +13,8 @@ $(document).ready(function(){
 			//  sort failues and ignored first
 			var failIgnoreArray = [];
 			$(th).each(function(){	
+
+				// count fail/ignored on each table
 				var igCount = $('.ignored-count',this).text() > 0;
 				var failCount = $('.failures-count',this).text() > 0;
 				if (igCount && !failCount) {
@@ -61,15 +65,11 @@ $(document).ready(function(){
 
 			//console.log(colList)
 			var oTable = $('.tablesorter-log-js').dataTable({
-				"asSorting": true,
-				"bSearchable": true,			
+				"asSorting": false,
 				"bPaginate": false,
 				"bFilter": true,
-				"bSort": true,
+				"bSort": false,
 				"bInfo": false,
-				"bSortable": true,
-				"aaSorting": [[ 1, "asc" ]],
-				"aoColumns": [{'bSortable': false },null,{'bSortable': false }],
 				"bAutoWidth": false
 			});
 
@@ -113,9 +113,91 @@ $(document).ready(function(){
 				inputVal($("#filterinput").val());	
 			});
 
+			// clear the input field
 			$('#clearFilter').click(function(){
 				location.reload();
 			});
 
-});
+			// remove empty tds for rows with colspan
+			$('.colspan-js').nextAll('td').remove();
+
+			$('.failure-detail-cont', th).each(function(){	
+				var fdTxt = $('.failure-detail-txt', this);
+				
+				if (!$(fdTxt).is(':empty')) {
+					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($(fdTxt));
+					if ($(fdTxt).height() >= 100) {
+						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));	
+					}
+				}				
+				
+			});		
+
+			function nWin(newWinHtml) {
+
+			  	var w = window.open();
+			  	
+				var html = "<style>body {padding:0 0 0 15px;margin:0;"+
+				"font-family:'Courier New';font-size:12px;white-space:"+
+				" pre-line;overflow:auto;}</style>"+newWinHtml;
+				
+				$(w.document.body).html(html);
+
+			}
+
+			// show content of exceptions in new window
+			$('.new-window').click(function(e){
+				e.preventDefault();
+				var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
+				nWin(newWinHtml);
+			});
+
+			// show more / hide
+			$('.height-toggle').click(function(e){
+				
+				e.preventDefault();
+				var fdtf = $(this).parent().find($('.failure-detail-txt'));
+				
+				$(fdtf).css({'max-height':'none', 'height': ''});
+
+				
+				if (!$(this).hasClass('expanded-js')) {
+					$(this).addClass('expanded-js');
+					$(this).text('Show less');
+					
+					$(fdtf).css('height',$(fdtf).height());
+				} else {
+
+					$(this).removeClass('expanded-js');
+					$(this).text('Show more');
+					$(fdtf).css('height',100);
+				}
+			});
+
+			// url for back to builddetailpage
+			if (window.location.pathname.indexOf('steps') > 0) {
+				(function( $ ) {
+					var sourceUrl = window.location.pathname.split('/');
+					var decodedUriSearch = window.location.search;
+
+					var decodedBuildDetailName = decodeURIComponent(sourceUrl.slice(4)[0]);
+					var decodedBuildDetailNumber = decodeURIComponent(sourceUrl.slice(6)[0])
+
+					var url = [];
+					
+					$.each(sourceUrl, function(i,value){
+						if (i < 7) {
+							url.push(value)
+						}
+					});
+					
+					var urlJoined = url.join('/');
+					var urljoinedSearch = urlJoined + decodedUriSearch
+					
+					$('#btd').text(decodedBuildDetailName + ' #' + decodedBuildDetailNumber);
+					$('#btd').attr('href', urljoinedSearch);
+
+				})( jQuery );
+			}
+	});
 });

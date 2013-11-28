@@ -148,16 +148,110 @@
      </table>
 
   {% else %}
-     <p class="form-message">Fill out revision information for all codebases or leave all revision information blank and click the 'Run' button.</p>
+     
 
         
   {% endif %}
   <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
-  {% for f in sch.all_fields %}
-    {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
-  {% endfor %}
+<div class="content-blocks">
+  <div class="general">
+    <p class="form-message">Fill out revision information for all codebases or leave all revision information blank and click the 'Run' button.</p>
+    {% for f in sch.all_fields %}
+      {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
+    {% endfor %}
+  </div>
+  {#
+   <div class="dependencies">
+    <table class="table-1"> 
+      <thead>
+        <tr>
+          <th class="txt-align-left">Dependencies</th>
+          <th class="txt-align-left">Build number</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="txt-align-left">
+            Build androidPlayer
+          </td>
+          <td class="txt-align-left">
+            <select>
+              <option>
+                auto
+              </option>
+              <option>
+                2
+              </option>
+            </select>    
+          </td>
+        </tr>
+        <tr>
+          <td class="txt-align-left">
+            Build androidPlayer
+          </td>
+          <td class="txt-align-left">
+            <select>
+              <option>
+                auto
+              </option>
+              <option>
+                2
+              </option>
+            </select>    
+          </td>
+        </tr>
+        <tr>
+          <td class="txt-align-left">
+            Build androidPlayer
+          </td>
+          <td class="txt-align-left">
+            <select>
+              <option>
+                auto
+              </option>
+              <option>
+                2
+              </option>
+            </select>    
+          </td>
+        </tr>
+        <tr>
+          <td class="txt-align-left">
+            Build androidPlayer
+          </td>
+          <td class="txt-align-left">
+            <select>
+              <option>
+                auto
+              </option>
+              <option>
+                2
+              </option>
+            </select>    
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+  </div>
+  <div class="slaves-block">
+    <div id="force-allBranches-username" class="row force-text">
+     <span class="label">Slaves</span>
+      <select>
+        <option>
+          mac-ios-slave-07 
+        </option>
+        <option>
+          mac-slave-01.local 
+        </option>
+      </select>  
+    </div>
+    
+  </div>
+  #}
+</div>
   
-  <input class="grey-btn" type="submit" value="Run" />
+<input class="grey-btn" type="submit" value="Run" />
   
 
  </form>

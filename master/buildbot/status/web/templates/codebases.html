@@ -11,16 +11,14 @@
 {% block content %}
 
 <div id="formWrapper" class="codebases">
-  <div class="select-tools-common">
-      <select autocomplete="off" id="commonBranch_select" name='common_branches'>
-        <option></option>
-      </select>
-  </div>
+  
   <form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
     
-  <input value="Show" class="grey-btn var-2" type="submit" />
-
+    
+  
   <div class="filter-table-input">
+    <input value="Show builders" class="blue-btn var-2" type="submit" />
+    <h4 class="help-txt">Select branch for each codebase before showing builders</h4>
     <label>
         <input type="text" id="filterTableInput" placeholder="Filter results">
     </label>
@@ -31,7 +29,18 @@
         <tr>
           <th>Codebase</th>
           <th>Url</th>
-          <th class="no-tablesorter-js" id="selectorWidth">Branches</th>
+          <th class="no-tablesorter-js">
+            <div class="pos-relative">
+              <span id="branchTxt">Branches</span> 
+              
+              <a class="show-common" href="#">Common</a>
+              
+                <select autocomplete="off" id="commonBranch_select" class="common-branch-select">
+                  <option></option>
+                </select>
+              </div>
+              
+          </th>
         </tr>
       </thead>
       <tbody>

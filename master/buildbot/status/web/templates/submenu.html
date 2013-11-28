@@ -44,7 +44,7 @@
 	    ('', stepName, stepName)
 	] -%}
 
-	<nav class="sub-menu-container">
+	<nav class="sub-menu-container {{active_page}}_page">
 		<div class="container-inner">
 			<div class="wrap">
 			  <ul class="breadcrumbs-nav">
@@ -52,7 +52,7 @@
 					{% if id == active_page %}
 						<li>{{caption|e}}</li>
 					{% elif loop.index == 3 and pathNum >= 3 %}
-						<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info popup-btn-js-2" href="#"></a></li>	
+						<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
 					{% elif loop.index <= pathNum %}
 						<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
 					{% endif %}

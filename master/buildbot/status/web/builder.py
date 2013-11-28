@@ -321,6 +321,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['codebases_arg'] = codebases_arg
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_builders'] = path_to_builders(req, project)
+
+        cxt['rt_update'] = req.args
+
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
         defer.returnValue(template.render(**cxt))
@@ -677,6 +680,7 @@ class BuildersResource(HtmlResource):
         buildForceContext(cxt, req, self.getBuildmaster(req))
 
         cxt['fbuildsch'] = req.args
+        cxt['rt_update'] = req.args
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))

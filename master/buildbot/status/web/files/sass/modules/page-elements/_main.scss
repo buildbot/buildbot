@@ -239,34 +239,74 @@
 
 .katana-main .dataTables_filter {display:none;}
 .filter-table-input {
-	margin-bottom: 23px;
+	height:58px;
+	position:relative;
 	label {
-		position: relative;
+		position: absolute;
 		font-weight: bold;
+		top: 7px;
 		@include text-shadow (0 1px 0 white);
+		input {
+		    border: 1px solid #CCCCCC;
+		    @include border-radius (4px);
+		    @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+		    color: #666666;
+		    font-size: 12px;
+		    line-height: 13px;
+		    padding: 9px 11px 8px 30px;
+		   	@include text-shadow (0 1px 0 white);
+		    width: 100px;
+		}
 		&:after {
 			color: #ADADAD;
 			font-family: katana_icons;
 		    content: "";
 		    left: 12px;
 		    position: absolute;
-		    top: 1px;
+    		top: 10px;
 		    line-height: 12px;
 		}
 	}
-	input {
-	    border: 1px solid #CCCCCC;
-	    @include border-radius (4px);
-	    @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-	    color: #666666;
-	    font-size: 12px;
-	    line-height: 13px;
-	    padding: 9px 11px 8px 30px;
-	   	@include text-shadow (0 1px 0 white);
-	    width: 100px;
+	.more-info-box & {
+		height: 32px;	
 	}
+
 }
  
+.border-table-holder  {
+	border-left: 2px solid #2B6194;
+    left: 210px;
+    padding: 0 0 0 4px;
+    position: absolute;
+    top: 7px;
+    @include box-shadow (1px 0 0px #FFFFFF inset);
+}
+
+table.codebase-branch-table {
+    text-align: left;
+    color: #666666;
+    @include text-shadow(1px 1px 0 #FFF);
+    font-size: 11px;
+    line-height: 15px;
+    td {
+    	@include box-shadow (1px 0 0px #FFFFFF inset);
+    	padding:0 11px;
+    	text-align: left;
+    	vertical-align: top;
+    	border-left: 1px solid #ADADAD;
+    }
+    th {
+    	vertical-align: top;
+    	font-weight:bold;
+    	padding:0 9px 0;
+    }
+    tr:first-child th{
+    	padding-bottom: 2px;
+    }
+}
+
+.codebase-branch {padding:0 10px;}
+
 .select-input {
 	text-align:right;
 	label {
@@ -482,7 +522,6 @@ div.last {
 .force-list,
 .force-bool {
 		display:block;
-		margin-bottom: 11px;
 		overflow: auto;
 	.label {
 		display:block;
@@ -599,9 +638,7 @@ div.force-text {
     	margin-bottom: 10px;
     	margin-top: 0;
     }
-    span {
-    	color: #8C8C8C;
-    }
+    
     h4 {
 		display: inline-block;
 	    margin: 0 0 13px 0 ;
@@ -622,6 +659,60 @@ div.force-text {
     	}
     }
 
+}
+.tabs-list {
+	li {
+		float:left;
+		@include border-radius(7px);
+		background-color: #FFFFFF;
+	    border: 1px solid #CCCCCC;
+	    @include border-radius(7px);
+	    cursor: pointer;
+	    display: block;
+	    font-size: 11px;
+	    font-weight: bold;
+	    margin-bottom: 16px;
+	    margin-right: 7px;
+	    padding: 5px 10px 6px;
+	    &.selected {
+	    	background-color: #eee;
+	    }
+	}
+}
+.content-blocks {
+	margin-bottom:15px;	
+}
+
+.dependencies {
+	display:none;
+	select {
+		width: 100%;
+	}
+}
+.slaves-block {
+	display:none;
+    background: none repeat scroll 0 0 #FFF;
+    border: 1px solid #CCCCCC;
+    @include border-radius (5px);
+    @include box-shadow (1px 1px 1px #FFF);
+    padding: 12px 12px 8px;
+    select {
+   		margin-top: 4px;
+    }
+}
+.selected-forcebuild-btn {
+	margin-bottom:10px;
+	@include border-radius(7px);
+	background-color: #fff;
+	border: 1px solid #CCCCCC;
+	color: inherit;
+	cursor: pointer;
+	padding: 5px 12px 7px;
+	font-weight: bold;
+	display:block;
+	&:hover {
+		color:#999;
+	}
 }
 
 // lists
@@ -1098,10 +1189,40 @@ Version: 3.4.2 Timestamp: Mon Aug 12 15:04:12 PDT 2013
     font-weight: bold;
 }
 
-.select-tools-common {
-	float:right; 
-	margin-left:10px;
-	margin-bottom:10px;
+.show-common {
+	clear: both;
+    display: block;
+    float: right;
+    font-size: 11px;
+    margin-top: 1px;
+    outline: none;
+}
+
+div.common-branch-select {
+	display:none;
+	right: 0;
+    top: 15px;
+    position: absolute;
+}
+
+.pos-relative {
+	position: relative;	
+}
+
+#branchTxt {
+	float:right;
+}
+
+.help-txt {
+    color: #787878;
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    font-weight: normal;
+    @include text-shadow(1px 1px 0 #fff);
+    width: 340px;
+    text-align:right;
 }
 
 .select2-container {
@@ -1594,7 +1715,7 @@ disabled look for disabled choices in the results dropdown
 		}
 	}
 	
-	.filter-table-input input {
+	.filter-table-input label input {
 		width: 67px;
 	}
 }
@@ -1625,7 +1746,10 @@ form.command_forcebuild .force-nested > .label {
     margin-bottom: 5px;
     margin-top:15px;
     font-size: 14px;
+    color:#8C8C8C;
 }
+
+
 
 @include breakpoint($bkpt-small) {
 	form.command_forcebuild {
