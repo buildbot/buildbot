@@ -6,7 +6,7 @@
     Project home: <a href="{{ title_url }}">{{ title|e }}</a><br/>
     Builder summary: <a href="{{ b.summary_link }}">{{ b.name }}</a><br/>
     Build details: <a href="{{ b.link }}">Build {{ b.number }}</a><br/>
-    Author list: <b>{{ b.responsible_users|join(', ') }}</b><br/>
+    Author list: <b>{{ b.responsible_users|join(', ')|e }}</b><br/>
     Failed step(s): <b>{{ b.failed_steps|join(', ') }}</b><br/>
   </p>
   {% for src in b.sources %}
