@@ -2,6 +2,7 @@
 <?xml-stylesheet  type="text/xsl" href="/NUnit-NoFrame.xsl"?>
 
 <test-results name="UNNAMED" total="638" failures="0" not-run="35" date="2013-06-05" time="16:43:07">
+<cache>fsdfdsf</cache>
   <environment nunit-version="2.4.7.0" clr-version="2.0.50727.4952" os-version="Microsoft Windows NT 6.1.7600.0" platform="Win32NT" cwd="C:\buildslave\unity\build\Projects\CSharp" machine-name="WIN-SLAVE-03" user="builduser" user-domain="WIN-SLAVE-03" />
   <culture-info current-culture="en-US" current-uiculture="en-US" />
   <test-suite name="UNNAMED" success="True" time="5287.320" asserts="0">
