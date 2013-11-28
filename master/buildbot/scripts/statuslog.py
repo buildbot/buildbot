@@ -18,6 +18,7 @@
 
 from buildbot.clients import text
 
+
 def statuslog(config):
     master = config.get('master')
     passwd = config.get('passwd')

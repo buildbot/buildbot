@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import interfaces
+from buildbot import util
 from zope.interface import implements
-from buildbot import interfaces, util
+
 
 class Event:
     implements(interfaces.IStatusEvent)
@@ -26,8 +28,10 @@ class Event:
     # IStatusEvent methods
     def getTimes(self):
         return (self.started, self.finished)
+
     def getText(self):
         return self.text
+
     def getLogs(self):
         return []
 

@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.python import log
-from twisted.internet import defer
-from twisted.application import service
-from buildbot import interfaces, config, util
+from buildbot import config
+from buildbot import interfaces
+from buildbot import util
 from buildbot.process import metrics
+from twisted.application import service
+from twisted.internet import defer
+from twisted.python import log
+from zope.interface import implements
+
 
 class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
+
     """
     This is the master-side service which receives file change notifications
     from version-control systems.
@@ -45,8 +49,8 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
         timer.start()
 
         removed, added = util.diffSets(
-                set(self),
-                new_config.change_sources)
+            set(self),
+            new_config.change_sources)
 
         if removed or added:
             log.msg("adding %d new changesources, removing %d" %
@@ -54,7 +58,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
 
             for src in removed:
                 yield defer.maybeDeferred(
-                        src.disownServiceParent)
+                    src.disownServiceParent)
                 src.master = None
 
             for src in added:
@@ -67,6 +71,6 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config)
+                                                                new_config)
 
         timer.stop()

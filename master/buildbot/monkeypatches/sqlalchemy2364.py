@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+
 def patch():
     # a fix for http://www.sqlalchemy.org/trac/ticket/2364
     from sqlalchemy.dialects.sqlite.base import SQLiteDialect
     old_get_foreign_keys = SQLiteDialect.get_foreign_keys
+
     def get_foreign_keys_wrapper(*args, **kwargs):
         fkeys = old_get_foreign_keys(*args, **kwargs)
         # foreign keys don't have names

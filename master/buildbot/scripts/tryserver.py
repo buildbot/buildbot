@@ -18,7 +18,9 @@ from __future__ import with_statement
 import os
 import sys
 import time
+
 from hashlib import md5
+
 
 def tryserver(config):
     jobdir = os.path.expanduser(config["jobdir"])

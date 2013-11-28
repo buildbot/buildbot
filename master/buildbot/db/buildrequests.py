@@ -15,31 +15,39 @@
 
 import itertools
 import sqlalchemy as sa
+
+from buildbot.db import base
+from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
 from twisted.internet import reactor
 from twisted.python import log
-from buildbot.db import base
-from buildbot.util import epoch2datetime, datetime2epoch
+
 
 class AlreadyClaimedError(Exception):
     pass
 
+
 class NotClaimedError(Exception):
     pass
+
 
 class BrDict(dict):
     pass
 
 # private decorator to add a _master_objectid keyword argument, querying from
 # the master
+
+
 def with_master_objectid(fn):
     def wrap(self, *args, **kwargs):
         d = self.db.master.getObjectId()
-        d.addCallback(lambda master_objectid :
-                fn(self, _master_objectid=master_objectid, *args, **kwargs))
+        d.addCallback(lambda master_objectid:
+                      fn(self, _master_objectid=master_objectid, *args, **kwargs))
         return d
     wrap.__name__ = fn.__name__
     wrap.__doc__ = fn.__doc__
     return wrap
+
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -51,7 +59,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             claims_tbl = self.db.model.buildrequest_claims
             res = conn.execute(sa.select([
                 reqs_tbl.outerjoin(claims_tbl,
-                                   (reqs_tbl.c.id == claims_tbl.c.brid)) ],
+                                   (reqs_tbl.c.id == claims_tbl.c.brid))],
                 whereclause=(reqs_tbl.c.id == brid)), use_labels=True)
             row = res.fetchone()
 
@@ -64,7 +72,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None, _master_objectid=None, branch=None, repository=None):
+                         bsid=None, _master_objectid=None, branch=None, repository=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -82,7 +90,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                                bsets_tbl.c.sourcestampsetid ==
                                                sstamps_tbls.c.sourcestampsetid)
 
-            q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
+            q = sa.select([reqs_tbl, claims_tbl]).select_from(from_clause)
             if claimed is not None:
                 if not claimed:
                     q = q.where(
@@ -111,13 +119,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             res = conn.execute(q)
 
-            return [ self._brdictFromRow(row, _master_objectid)
-                     for row in res.fetchall() ]
+            return [self._brdictFromRow(row, _master_objectid)
+                    for row in res.fetchall()]
         return self.db.pool.do(thd)
 
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
-                            _master_objectid=None):
+                           _master_objectid=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
@@ -129,9 +137,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             try:
                 q = tbl.insert()
-                conn.execute(q, [ dict(brid=id, objectid=_master_objectid,
-                                    claimed_at=claimed_at)
-                                  for id in brids ])
+                conn.execute(q, [dict(brid=id, objectid=_master_objectid,
+                                      claimed_at=claimed_at)
+                                 for id in brids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
                 raise AlreadyClaimedError
@@ -142,7 +150,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,
-                            _master_objectid=None):
+                             _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -152,13 +160,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # parameter lists supported by the DBAPI aren't exhausted
             iterator = iter(brids)
 
-            while 1:
+            while True:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 q = tbl.update(tbl.c.brid.in_(batch)
-                                & (tbl.c.objectid==_master_objectid))
+                               & (tbl.c.objectid == _master_objectid))
                 res = conn.execute(q, claimed_at=claimed_at)
 
                 # if fewer rows were updated than expected, then something
@@ -180,15 +188,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # parameter lists supported by the DBAPI aren't exhausted
             iterator = iter(brids)
 
-            while 1:
+            while True:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 try:
                     q = claims_tbl.delete(
-                            (claims_tbl.c.brid.in_(batch))
-                            & (claims_tbl.c.objectid == _master_objectid))
+                        (claims_tbl.c.brid.in_(batch))
+                        & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
                 except:
                     transaction.rollback()
@@ -199,7 +207,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def completeBuildRequests(self, brids, results, complete_at=None,
-                            _reactor=reactor, _master_objectid=None):
+                              _reactor=reactor, _master_objectid=None):
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -219,23 +227,23 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # parameter lists supported by the DBAPI aren't exhausted
             iterator = iter(brids)
 
-            while 1:
+            while True:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
                 res = conn.execute(q,
-                    complete=1,
-                    results=results,
-                    complete_at=complete_at)
+                                   complete=1,
+                                   results=results,
+                                   complete_at=complete_at)
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
                     log.msg("tried to complete %d buildreqests, "
-                        "but only completed %d" % (len(batch), res.rowcount))
+                            "but only completed %d" % (len(batch), res.rowcount))
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
@@ -248,13 +256,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             old_epoch = _reactor.seconds() - old
 
             # select any expired requests, and delete each one individually
-            expired_brids = sa.select([ reqs_tbl.c.id ],
-                        whereclause=(reqs_tbl.c.complete != 1))
+            expired_brids = sa.select([reqs_tbl.c.id],
+                                      whereclause=(reqs_tbl.c.complete != 1))
             res = conn.execute(claims_tbl.delete(
-                        (claims_tbl.c.claimed_at < old_epoch) &
-                        claims_tbl.c.brid.in_(expired_brids)))
+                (claims_tbl.c.claimed_at < old_epoch) &
+                claims_tbl.c.brid.in_(expired_brids)))
             return res.rowcount
         d = self.db.pool.do(thd)
+
         def log_nonzero_count(count):
             if count != 0:
                 log.msg("unclaimed %d expired buildrequests (over %d seconds "
@@ -278,7 +287,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed_at = mkdt(row.claimed_at)
 
         return BrDict(brid=row.id, buildsetid=row.buildsetid,
-                buildername=row.buildername, priority=row.priority,
-                claimed=claimed, claimed_at=claimed_at, mine=mine,
-                complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at)
+                      buildername=row.buildername, priority=row.priority,
+                      claimed=claimed, claimed_at=claimed_at, mine=mine,
+                      complete=bool(row.complete), results=row.results,
+                      submitted_at=submitted_at, complete_at=complete_at)

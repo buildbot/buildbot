@@ -15,25 +15,40 @@
 
 
 import os
-from twisted.python.failure import Failure
-from twisted.internet import defer, reactor, protocol, error
+
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import protocol
+from twisted.internet import reactor
 from twisted.protocols.basic import LineOnlyReceiver
+from twisted.python.failure import Failure
+
 
 class FakeTransport:
     disconnecting = False
 
+
 class BuildmasterTimeoutError(Exception):
     pass
+
+
 class BuildslaveTimeoutError(Exception):
     pass
+
+
 class ReconfigError(Exception):
     pass
+
+
 class BuildSlaveDetectedError(Exception):
     pass
 
+
 class TailProcess(protocol.ProcessProtocol):
+
     def outReceived(self, data):
         self.lw.dataReceived(data)
+
     def errReceived(self, data):
         print "ERR: '%s'" % (data,)
 

@@ -35,14 +35,17 @@ Basic architecture:
 """
 from collections import deque
 
-from twisted.python import log
-from twisted.internet.task import LoopingCall
-from twisted.internet import reactor
-from twisted.application import service
-from buildbot import util, config
+from buildbot import config
+from buildbot import util
 from collections import defaultdict
+from twisted.application import service
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
+from twisted.python import log
 
-import gc, os, sys
+import gc
+import os
+import sys
 # Make use of the resource module if we can
 try:
     import resource
@@ -50,18 +53,24 @@ try:
 except ImportError:
     resource = None
 
+
 class MetricEvent(object):
+
     @classmethod
     def log(cls, *args, **kwargs):
         log.msg(metric=cls(*args, **kwargs))
 
+
 class MetricCountEvent(MetricEvent):
+
     def __init__(self, counter, count=1, absolute=False):
         self.counter = counter
         self.count = count
         self.absolute = absolute
 
+
 class MetricTimeEvent(MetricEvent):
+
     def __init__(self, timer, elapsed):
         self.timer = timer
         self.elapsed = elapsed
@@ -69,11 +78,14 @@ class MetricTimeEvent(MetricEvent):
 ALARM_OK, ALARM_WARN, ALARM_CRIT = range(3)
 ALARM_TEXT = ["OK", "WARN", "CRIT"]
 
+
 class MetricAlarmEvent(MetricEvent):
+
     def __init__(self, alarm, msg=None, level=ALARM_OK):
         self.alarm = alarm
         self.level = level
         self.msg = msg
+
 
 def countMethod(counter):
     def decorator(func):
@@ -82,6 +94,7 @@ def countMethod(counter):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
 
 class Timer(object):
     # For testing
@@ -114,10 +127,12 @@ class Timer(object):
             MetricTimeEvent.log(timer=self.name, elapsed=elapsed)
             self.started = None
 
+
 def timeMethod(name, _reactor=None):
     def decorator(func):
         t = Timer(name)
-        t._reactor=_reactor
+        t._reactor = _reactor
+
         def wrapper(*args, **kwargs):
             t.start()
             try:
@@ -127,7 +142,9 @@ def timeMethod(name, _reactor=None):
         return wrapper
     return decorator
 
+
 class FiniteList(deque):
+
     def __init__(self, maxlen=10):
         self._maxlen = maxlen
         deque.__init__(self)
@@ -137,7 +154,9 @@ class FiniteList(deque):
         if len(self) > self._maxlen:
             self.popleft()
 
+
 class AveragingFiniteList(FiniteList):
+
     def __init__(self, maxlen=10):
         FiniteList.__init__(self, maxlen)
         self.average = 0
@@ -154,7 +173,9 @@ class AveragingFiniteList(FiniteList):
 
         return self.average
 
+
 class MetricHandler(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
         self.watchers = []
@@ -186,8 +207,10 @@ class MetricHandler(object):
     def asDict(self):
         raise NotImplementedError
 
+
 class MetricCountHandler(MetricHandler):
     _counters = None
+
     def reset(self):
         self._counters = defaultdict(int)
 
@@ -215,8 +238,10 @@ class MetricCountHandler(MetricHandler):
             retval[counter] = self.get(counter)
         return dict(counters=retval)
 
+
 class MetricTimeHandler(MetricHandler):
     _timers = None
+
     def reset(self):
         self._timers = defaultdict(AveragingFiniteList)
 
@@ -241,8 +266,10 @@ class MetricTimeHandler(MetricHandler):
             retval[timer] = self.get(timer)
         return dict(timers=retval)
 
+
 class MetricAlarmHandler(MetricHandler):
     _alarms = None
+
     def reset(self):
         self._alarms = defaultdict(lambda x: ALARM_OK)
 
@@ -264,7 +291,9 @@ class MetricAlarmHandler(MetricHandler):
             retval[alarm] = (ALARM_TEXT[level], msg)
         return dict(alarms=retval)
 
+
 class PollerWatcher(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
 
@@ -275,12 +304,12 @@ class PollerWatcher(object):
         if not h:
             log.msg("Couldn't get MetricTimeEvent handler")
             MetricAlarmEvent.log('PollerWatcher',
-                    msg="Coudln't get MetricTimeEvent handler",
-                    level=ALARM_WARN)
+                                 msg="Coudln't get MetricTimeEvent handler",
+                                 level=ALARM_WARN)
             return
 
         for method in ('BuildMaster.pollDatabaseChanges()',
-                'BuildMaster.pollDatabaseBuildRequests()'):
+                       'BuildMaster.pollDatabaseBuildRequests()'):
             t = h.get(method)
             master = self.metrics.parent
             db_poll_interval = master.config.db['db_poll_interval']
@@ -294,7 +323,9 @@ class PollerWatcher(object):
                     level = ALARM_CRIT
                 MetricAlarmEvent.log(method, level=level)
 
+
 class AttachedSlavesWatcher(object):
+
     def __init__(self, metrics):
         self.metrics = metrics
 
@@ -305,8 +336,8 @@ class AttachedSlavesWatcher(object):
         if not h:
             log.msg("Couldn't get MetricCountEvent handler")
             MetricAlarmEvent.log('AttachedSlavesWatcher',
-                    msg="Coudln't get MetricCountEvent handler",
-                    level=ALARM_WARN)
+                                 msg="Coudln't get MetricCountEvent handler",
+                                 level=ALARM_WARN)
             return
         botmaster_count = h.get('BotMaster.attached_slaves')
         buildslave_count = h.get('AbstractBuildSlave.attached_slaves')
@@ -319,8 +350,9 @@ class AttachedSlavesWatcher(object):
             level = ALARM_OK
 
         MetricAlarmEvent.log('attached_slaves',
-                msg='%s %s' % (botmaster_count, buildslave_count),
-                level=level)
+                             msg='%s %s' % (botmaster_count, buildslave_count),
+                             level=level)
+
 
 def _get_rss():
     if sys.platform == 'linux2':
@@ -330,6 +362,7 @@ def _get_rss():
         except:
             return 0
     return 0
+
 
 def periodicCheck(_reactor=reactor):
     try:
@@ -345,10 +378,10 @@ def periodicCheck(_reactor=reactor):
         if resource:
             r = resource.getrusage(resource.RUSAGE_SELF)
             attrs = ['ru_utime', 'ru_stime', 'ru_maxrss', 'ru_ixrss', 'ru_idrss',
-                    'ru_isrss', 'ru_minflt', 'ru_majflt', 'ru_nswap',
-                    'ru_inblock', 'ru_oublock', 'ru_msgsnd', 'ru_msgrcv',
-                    'ru_nsignals', 'ru_nvcsw', 'ru_nivcsw']
-            for i,a in enumerate(attrs):
+                     'ru_isrss', 'ru_minflt', 'ru_majflt', 'ru_nswap',
+                     'ru_inblock', 'ru_oublock', 'ru_msgsnd', 'ru_msgrcv',
+                     'ru_nsignals', 'ru_nvcsw', 'ru_nivcsw']
+            for i, a in enumerate(attrs):
                 # Linux versions prior to 2.6.32 didn't report this value, but we
                 # can calculate it from /proc/<pid>/statm
                 v = r[i]
@@ -359,6 +392,7 @@ def periodicCheck(_reactor=reactor):
         # Measure the reactor delay
         then = util.now(_reactor)
         dt = 0.1
+
         def cb():
             now = util.now(_reactor)
             delay = (now - then) - dt
@@ -367,9 +401,11 @@ def periodicCheck(_reactor=reactor):
     except Exception:
         log.err(None, "while collecting VM metrics")
 
+
 class MetricLogObserver(config.ReconfigurableServiceMixin,
                         service.MultiService):
     _reactor = reactor
+
     def __init__(self):
         service.MultiService.__init__(self)
         self.setName('metrics')
@@ -391,7 +427,7 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
         # Make sure our changes poller is behaving
         self.getHandler(MetricTimeEvent).addWatcher(PollerWatcher(self))
         self.getHandler(MetricCountEvent).addWatcher(
-                AttachedSlavesWatcher(self))
+            AttachedSlavesWatcher(self))
 
     def reconfigService(self, new_config):
         # first, enable or disable
@@ -421,13 +457,13 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
                     self.periodic_task = None
                 if periodic_interval:
                     self.periodic_task = LoopingCall(periodicCheck,
-                                                    self._reactor)
+                                                     self._reactor)
                     self.periodic_task.clock = self._reactor
                     self.periodic_task.start(periodic_interval)
 
         # upcall
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config)
+                                                                 new_config)
 
     def stopService(self):
         self.disable()

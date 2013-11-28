@@ -15,9 +15,12 @@
 
 
 import re
-from buildbot.status.results import SUCCESS, FAILURE, WARNINGS
-from buildbot.steps.shell import ShellCommand
+
 from buildbot import config
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.steps.shell import ShellCommand
 
 try:
     import cStringIO
@@ -147,7 +150,9 @@ class PyFlakes(ShellCommand):
             return WARNINGS
         return SUCCESS
 
+
 class PyLint(ShellCommand):
+
     '''A command that knows about pylint output.
     It is a good idea to add --output-format=parseable to your
     command, since it includes the filename in the message.
@@ -175,15 +180,15 @@ class PyLint(ShellCommand):
     # The message types:
 
     MESSAGES = {
-            'C': "convention", # for programming standard violation
-            'R': "refactor", # for bad code smell
-            'W': "warning", # for python specific problems
-            'E': "error", # for much probably bugs in the code
-            'F': "fatal", # error prevented pylint from further processing.
-            'I': "info",
-        }
+        'C': "convention",  # for programming standard violation
+        'R': "refactor",  # for bad code smell
+        'W': "warning",  # for python specific problems
+        'E': "error",  # for much probably bugs in the code
+        'F': "fatal",  # error prevented pylint from further processing.
+        'I': "info",
+    }
 
-    flunkingIssues = ["F", "E"] # msg categories that cause FAILURE
+    flunkingIssues = ["F", "E"]  # msg categories that cause FAILURE
 
     _re_groupname = 'errtype'
     _msgtypes_re_str = '(?P<%s>[%s])' % (_re_groupname, ''.join(MESSAGES.keys()))
@@ -197,7 +202,7 @@ class PyLint(ShellCommand):
             counts[m] = 0
             summaries[m] = []
 
-        line_re = None # decide after first match
+        line_re = None  # decide after first match
         for line in StringIO(log.getText()).readlines():
             if not line_re:
                 # need to test both and then decide on one
@@ -205,7 +210,7 @@ class PyLint(ShellCommand):
                     line_re = self._parseable_line_re
                 elif self._default_line_re.match(line):
                     line_re = self._default_line_re
-                else: # no match yet
+                else:  # no match yet
                     continue
             mo = line_re.match(line)
             if mo:
@@ -223,7 +228,7 @@ class PyLint(ShellCommand):
         self.setProperty("pylint-total", sum(counts.values()))
 
     def evaluateCommand(self, cmd):
-        if cmd.rc & (self.RC_FATAL|self.RC_ERROR|self.RC_USAGE):
+        if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
             return FAILURE
         for msg in self.flunkingIssues:
             if self.getProperty("pylint-%s" % self.MESSAGES[msg]):
@@ -232,7 +237,9 @@ class PyLint(ShellCommand):
             return WARNINGS
         return SUCCESS
 
+
 class Sphinx(ShellCommand):
+
     ''' A Step to build sphinx documentation '''
 
     name = "sphinx"
@@ -242,8 +249,8 @@ class Sphinx(ShellCommand):
     haltOnFailure = True
 
     def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
-                 sphinx_builder=None, sphinx = 'sphinx-build', tags = [],
-                 defines = {}, mode='incremental', **kwargs):
+                 sphinx_builder=None, sphinx='sphinx-build', tags=[],
+                 defines={}, mode='incremental', **kwargs):
 
         if sphinx_builddir is None:
             # Who the heck is not interested in the built doc ?
@@ -251,7 +258,7 @@ class Sphinx(ShellCommand):
 
         if mode not in ('incremental', 'full'):
             config.error("Sphinx argument mode has to be 'incremental' or" +
-                          "'full' is required")
+                         "'full' is required")
 
         self.warnings = 0
         self.success = False
@@ -275,7 +282,7 @@ class Sphinx(ShellCommand):
                 command.extend(['-D', '%s=%s' % (key, defines[key])])
 
         if mode == 'full':
-            command.extend(['-E']) # Don't use a saved environment
+            command.extend(['-E'])  # Don't use a saved environment
 
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
@@ -286,8 +293,8 @@ class Sphinx(ShellCommand):
 
         warnings = []
         for line in log.getText().split('\n'):
-            if (line.startswith('build succeeded') 
-                or line.startswith('no targets are out of date.')):
+            if (line.startswith('build succeeded')
+                    or line.startswith('no targets are out of date.')):
                 self.success = True
             else:
                 for msg in msgs:

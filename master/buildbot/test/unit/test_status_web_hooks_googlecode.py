@@ -18,6 +18,7 @@
 import StringIO
 
 import buildbot.status.web.change_hook as change_hook
+
 from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
@@ -44,7 +45,9 @@ from twisted.trial import unittest
 # }
 googleCodeJsonBody = r'{"repository_path":"https://code.google.com/p/webhook-test/","project_name":"webhook-test","revisions":[{"added":[],"parents":["6574485e26a09a0e743e0745374056891d6a836a"],"author":"Louis Opter \u003Clouis@lse.epitech.net\u003E","url":"http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/","timestamp":1324082130,"message":"Print a message","path_count":1,"removed":[],"modified":["/CMakeLists.txt"],"revision":"68e5df283a8e751cdbf95516b20357b2c46f93d4"}],"revision_count":1}'
 
+
 class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
+
     def setUp(self):
         self.request = FakeRequest()
         # Google Code simply transmit the payload as an UTF-8 JSON body
@@ -59,10 +62,10 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
         }
 
         self.changeHook = change_hook.ChangeHookResource(dialects={
-                'googlecode': {
-                    'secret_key': 'FSP3p-Ghdn4T0oqX',
-                    'branch': 'test'
-                }
+            'googlecode': {
+                'secret_key': 'FSP3p-Ghdn4T0oqX',
+                'branch': 'test'
+            }
         })
 
     # Test 'base' hook with attributes. We should get a json string representing
@@ -71,6 +74,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
         self.request.uri = "/change_hook/googlecode"
         self.request.method = "GET"
         d = self.request.test_render(self.changeHook)
+
         def check_changes(r):
             # Only one changeset has been submitted.
             self.assertEquals(len(self.request.addedChanges), 1)

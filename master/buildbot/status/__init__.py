@@ -1,5 +1,12 @@
-import build, builder, buildstep, buildset, testresult, logfile
-import slave, master, buildrequest
+import build
+import builder
+import buildrequest
+import buildset
+import buildstep
+import logfile
+import master
+import slave
+import testresult
 
 # styles.Versioned requires this, as it keys the version numbers on the fully
 # qualified class name; see master/buildbot/test/regressions/test_unpickling.py

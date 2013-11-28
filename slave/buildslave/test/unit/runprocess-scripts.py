@@ -18,13 +18,14 @@
 # have access to any of the Buildbot source.  Functions here should be kept
 # very simple!
 
-import sys
 import os
-import time
 import select
 import signal
+import sys
+import time
 
 # utils
+
 
 def write_pidfile(pidfile):
     pidfile_tmp = pidfile + "~"
@@ -33,10 +34,12 @@ def write_pidfile(pidfile):
     f.close()
     os.rename(pidfile_tmp, pidfile)
 
+
 def sleep_forever():
-    signal.alarm(110) # die after 110 seconds
+    signal.alarm(110)  # die after 110 seconds
     while True:
         time.sleep(10)
+
 
 def wait_for_parent_death():
     while True:
@@ -47,21 +50,25 @@ def wait_for_parent_death():
         # a dead pid, so check it for liveness
         try:
             os.kill(ppid, 0)
-        except OSError: # Probably ENOSUCH
+        except OSError:  # Probably ENOSUCH
             return
 
 script_fns = {}
+
+
 def script(fn):
     script_fns[fn.func_name] = fn
     return fn
 
 # scripts
 
+
 @script
 def write_pidfile_and_sleep():
     pidfile = sys.argv[2]
     write_pidfile(pidfile)
     sleep_forever()
+
 
 @script
 def spawn_child():
@@ -71,6 +78,7 @@ def spawn_child():
     else:
         write_pidfile(parent_pidfile)
     sleep_forever()
+
 
 @script
 def double_fork():
@@ -86,6 +94,7 @@ def double_fork():
         write_pidfile(parent_pidfile)
         sys.exit(0)
 
+
 @script
 def assert_stdin_closed():
     # EOF counts as readable data, so we should see stdin in the readable list,
@@ -93,15 +102,16 @@ def assert_stdin_closed():
     bail_at = time.time() + 10
     while True:
         r, w, x = select.select([0], [], [], 0.01)
-        if r == [0]: return # succcess!
+        if r == [0]:
+            return  # succcess!
         if time.time() > bail_at:
-            assert False # failure :(
+            assert False  # failure :(
 
 # make sure this process dies if necessary
 
 if not hasattr(signal, 'alarm'):
-    signal.alarm = lambda t : None
-signal.alarm(110) # die after 110 seconds
+    signal.alarm = lambda t: None
+signal.alarm(110)  # die after 110 seconds
 
 # dispatcher
 

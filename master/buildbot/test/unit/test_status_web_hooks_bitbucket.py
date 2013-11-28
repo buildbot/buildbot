@@ -16,12 +16,13 @@
 
 import calendar
 
-from twisted.trial import unittest
 from twisted.internet.defer import inlineCallbacks
+from twisted.trial import unittest
 
-from buildbot.test.util import compat
-from buildbot.test.fake.web import FakeRequest
 import buildbot.status.web.change_hook as change_hook
+
+from buildbot.test.fake.web import FakeRequest
+from buildbot.test.util import compat
 
 
 gitJsonPayload = """{
@@ -136,6 +137,7 @@ mercurialJsonNoCommitsPayload = """{
 
 
 class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
+
     """Unit tests for BitBucket Change Hook
     """
 

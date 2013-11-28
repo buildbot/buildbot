@@ -33,16 +33,19 @@ except ImportError:
 
 from buildbot import config
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
-        MemoryQueue, PersistentQueue
+from buildbot.status.persistent_queue import DiskQueue
+from buildbot.status.persistent_queue import IndexedQueue
+from buildbot.status.persistent_queue import MemoryQueue
+from buildbot.status.persistent_queue import PersistentQueue
 from buildbot.status.web.status_json import FilterOut
-from twisted.internet import defer, reactor
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client
 
 
-
 class StatusPush(StatusReceiverMultiService):
+
     """Event streamer to a abstract channel.
 
     It uses IQueue to batch push requests and queue the data when
@@ -83,6 +86,7 @@ class StatusPush(StatusReceiverMultiService):
         self.retryDelay = retryDelay
         if not callable(serverPushCb):
             raise NotImplementedError('Please pass serverPushCb parameter.')
+
         def hookPushCb():
             # Update the index so we know if the next push succeed or not, don't
             # update the value when the queue is empty.
@@ -170,8 +174,8 @@ class StatusPush(StatusReceiverMultiService):
         if delay:
             # Call in delay seconds.
             self.task = reactor.callLater(delay,
-                    lambda : self.serverPushCb().addErrback(
-                                    log.err, 'in serverPushCb'))
+                                          lambda: self.serverPushCb().addErrback(
+                                              log.err, 'in serverPushCb'))
         elif self.stopped:
             if self.queue.nbItems():
                 # Call right now, we're shutting down.
@@ -204,7 +208,7 @@ class StatusPush(StatusReceiverMultiService):
             state_path = os.path.join(self.path, 'state')
             with open(state_path, 'w') as f:
                 json.dump(self.state, f, sort_keys=True,
-                      indent=2)
+                          indent=2)
         # Make sure all Deferreds are called on time and in a sane order.
         defers = filter(None, [d, StatusReceiverMultiService.stopService(self)])
         return defer.DeferredList(defers)
@@ -246,7 +250,7 @@ class StatusPush(StatusReceiverMultiService):
             # No task queued since it was probably idle, let's queue a task.
             yield self.queueNextServerPush()
 
-    #### Events
+    # Events
 
     def initialPush(self):
         # Push everything we want to push from the initial configuration.
@@ -290,48 +294,48 @@ class StatusPush(StatusReceiverMultiService):
 
     def stepStarted(self, build, step):
         d = self.push('stepStarted',
-                  properties=build.getProperties().asList(),
-                  step=step)
+                      properties=build.getProperties().asList(),
+                      step=step)
         d.addErrback(log.err, 'while pushing status message')
 
     def stepTextChanged(self, build, step, text):
         d = self.push('stepTextChanged',
-                  properties=build.getProperties().asList(),
-                  step=step,
-                  text=text)
+                      properties=build.getProperties().asList(),
+                      step=step,
+                      text=text)
         d.addErrback(log.err, 'while pushing status message')
 
     def stepText2Changed(self, build, step, text2):
         d = self.push('stepText2Changed',
-                  properties=build.getProperties().asList(),
-                  step=step,
-                  text2=text2)
+                      properties=build.getProperties().asList(),
+                      step=step,
+                      text2=text2)
         d.addErrback(log.err, 'while pushing status message')
 
     def stepETAUpdate(self, build, step, ETA, expectations):
         d = self.push('stepETAUpdate',
-                  properties=build.getProperties().asList(),
-                  step=step,
-                  ETA=ETA,
-                  expectations=expectations)
+                      properties=build.getProperties().asList(),
+                      step=step,
+                      ETA=ETA,
+                      expectations=expectations)
         d.addErrback(log.err, 'while pushing status message')
 
     def logStarted(self, build, step, log):
         d = self.push('logStarted',
-                  properties=build.getProperties().asList(),
-                  step=step)
+                      properties=build.getProperties().asList(),
+                      step=step)
         d.addErrback(log.err, 'while pushing status message')
 
     def logFinished(self, build, step, log):
         d = self.push('logFinished',
-                  properties=build.getProperties().asList(),
-                  step=step)
+                      properties=build.getProperties().asList(),
+                      step=step)
         d.addErrback(log.err, 'while pushing status message')
 
     def stepFinished(self, build, step, results):
         d = self.push('stepFinished',
-                  properties=build.getProperties().asList(),
-                  step=step)
+                      properties=build.getProperties().asList(),
+                      step=step)
         d.addErrback(log.err, 'while pushing status message')
 
     def buildFinished(self, builderName, build, results):
@@ -356,10 +360,11 @@ class StatusPush(StatusReceiverMultiService):
 
 
 class HttpStatusPush(StatusPush):
+
     """Event streamer to a HTTP server."""
 
     def __init__(self, serverUrl, debug=None, maxMemoryItems=None,
-                 maxDiskItems=None, chunkSize=200, maxHttpRequestSize=2**20,
+                 maxDiskItems=None, chunkSize=200, maxHttpRequestSize=2 ** 20,
                  extra_post_params=None, **kwargs):
         """
         @serverUrl: Base URL to be used to push events notifications.
@@ -386,8 +391,8 @@ class HttpStatusPush(StatusPush):
             path = ('events_' +
                     urlparse.urlparse(self.serverUrl)[1].split(':')[0])
             queue = PersistentQueue(
-                        primaryQueue=MemoryQueue(maxItems=maxMemoryItems),
-                        secondaryQueue=DiskQueue(path, maxItems=maxDiskItems))
+                primaryQueue=MemoryQueue(maxItems=maxMemoryItems),
+                secondaryQueue=DiskQueue(path, maxItems=maxDiskItems))
         else:
             path = None
             queue = MemoryQueue(maxItems=maxMemoryItems)
@@ -419,12 +424,12 @@ class HttpStatusPush(StatusPush):
             if self.debug:
                 packets = json.dumps(newitems, indent=2, sort_keys=True)
             else:
-                packets = json.dumps(newitems, separators=(',',':'))
+                packets = json.dumps(newitems, separators=(',', ':'))
             params = {'packets': packets}
             params.update(self.extra_post_params)
             data = urllib.urlencode(params)
             if (not self.maxHttpRequestSize or
-                len(data) < self.maxHttpRequestSize):
+                    len(data) < self.maxHttpRequestSize):
                 return (data, items)
 
             if chunkSize == 1:

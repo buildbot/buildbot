@@ -15,10 +15,12 @@
 
 # Visual studio steps
 
-from buildbot.steps.shell import ShellCommand
-from buildbot.process.buildstep import LogLineObserver
 from buildbot import config
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.process.buildstep import LogLineObserver
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.steps.shell import ShellCommand
 
 import re
 
@@ -34,6 +36,7 @@ def addEnvPath(env, name, value):
     if not value.endswith(';'):
         value = value + ';'
     env[name] = oldval + value
+
 
 class MSLogLineObserver(LogLineObserver):
 
@@ -83,9 +86,8 @@ class VisualStudio(ShellCommand):
     description = "compiling"
     descriptionDone = "compile"
 
-
-    progressMetrics = ( ShellCommand.progressMetrics +
-                            ('projects', 'files','warnings',))
+    progressMetrics = (ShellCommand.progressMetrics +
+                       ('projects', 'files', 'warnings',))
 
     logobserver = None
 
@@ -103,19 +105,19 @@ class VisualStudio(ShellCommand):
     INCLUDE = []
     LIB = []
 
-    renderables = [ 'projectfile', 'config', 'project' ]
+    renderables = ['projectfile', 'config', 'project', 'mode']
 
     def __init__(self,
-                installdir = None,
-                mode = "rebuild",
-                projectfile = None,
-                config = 'release',
-                useenv = False,
-                project = None,
-                INCLUDE = [],
-                LIB = [],
-                PATH = [],
-                **kwargs):
+                 installdir=None,
+                 mode="rebuild",
+                 projectfile=None,
+                 config='release',
+                 useenv=False,
+                 project=None,
+                 INCLUDE=[],
+                 LIB=[],
+                 PATH=[],
+                 **kwargs):
         self.installdir = installdir
         self.mode = mode
         self.projectfile = projectfile
@@ -193,6 +195,7 @@ class VisualStudio(ShellCommand):
         self.getLog("errors").finish()
         ShellCommand.finished(self, result)
 
+
 class VC6(VisualStudio):
 
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
@@ -235,6 +238,7 @@ class VC6(VisualStudio):
             command.append("/USEENV")
         self.setCommand(command)
         return VisualStudio.start(self)
+
 
 class VC7(VisualStudio):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
@@ -279,8 +283,9 @@ class VC7(VisualStudio):
         self.setCommand(command)
         return VisualStudio.start(self)
 
-#alias VC7 as VS2003
+# alias VC7 as VS2003
 VS2003 = VC7
+
 
 class VC8(VC7):
 
@@ -290,7 +295,7 @@ class VC8(VC7):
 
     renderables = ['arch']
 
-    def __init__(self, arch = "x86", **kwargs):
+    def __init__(self, arch="x86", **kwargs):
         self.arch = arch
 
         # always upcall !
@@ -325,10 +330,12 @@ class VC8(VC7):
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\PlatformSDK\\lib' + archsuffix)
         addEnvPath(cmd.args['env'], "LIB", VSInstallDir + '\\SDK\\v2.0\\lib' + archsuffix)
 
-#alias VC8 as VS2005
+# alias VC8 as VS2005
 VS2005 = VC8
 
+
 class VCExpress9(VC8):
+
     def start(self):
         command = ["vcexpress"]
         command.append(self.projectfile)
@@ -348,22 +355,29 @@ class VCExpress9(VC8):
         return VisualStudio.start(self)
 
 # Add first support for VC9 (Same as VC8, with a different installdir)
+
+
 class VC9(VC8):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
 
 VS2008 = VC9
 
 # VC10 doesn't look like it needs extra stuff.
+
+
 class VC10(VC9):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10
 
 # VC11 doesn't look like it needs extra stuff.
+
+
 class VC11(VC10):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 11.0'
 
 VS2012 = VC11
+
 
 class MsBuild(VisualStudio):
     platform = None

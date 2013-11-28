@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import re
+
 from twisted.python import log
+
 
 class LoggingMixin(object):
 

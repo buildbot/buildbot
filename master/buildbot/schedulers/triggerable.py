@@ -15,11 +15,12 @@
 
 from zope.interface import implements
 
-from twisted.python import failure
-from twisted.internet import defer
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from buildbot.schedulers import base
+from twisted.internet import defer
+from twisted.python import failure
+
 
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
@@ -31,9 +32,9 @@ class Triggerable(base.BaseScheduler):
                                     **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
-        self.reason = "Triggerable(%s)" % name
+        self.reason = "The Triggerable scheduler named '%s' triggered this build" % name
 
-    def trigger(self, sourcestamps = None, set_props=None):
+    def trigger(self, sourcestamps=None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
@@ -47,8 +48,10 @@ class Triggerable(base.BaseScheduler):
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
         d = self.addBuildsetForSourceStampSetDetails(self.reason,
-                                                sourcestamps, props)
-        def setup_waiter((bsid,brids)):
+                                                     sourcestamps, props)
+
+        def setup_waiter(xxx_todo_changeme):
+            (bsid, brids) = xxx_todo_changeme
             d = defer.Deferred()
             self._waiters[bsid] = (d, brids)
             self._updateWaiters()
@@ -71,12 +74,11 @@ class Triggerable(base.BaseScheduler):
 
         return base.BaseScheduler.stopService(self)
 
-
     def _updateWaiters(self):
         if self._waiters and not self._bsc_subscription:
             self._bsc_subscription = \
-                    self.master.subscribeToBuildsetCompletions(
-                                                self._buildsetComplete)
+                self.master.subscribeToBuildsetCompletions(
+                    self._buildsetComplete)
         elif not self._waiters and self._bsc_subscription:
             self._bsc_subscription.unsubscribe()
             self._bsc_subscription = None

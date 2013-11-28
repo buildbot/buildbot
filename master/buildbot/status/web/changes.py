@@ -14,20 +14,25 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
 from twisted.python import components
 from twisted.web.resource import NoResource
+from zope.interface import implements
 
 from buildbot.changes.changes import Change
-from buildbot.status.web.base import HtmlResource, IBox, Box
+from buildbot.status.web.base import Box
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import IBox
+
 
 class ChangeResource(HtmlResource):
+
     def __init__(self, changeid):
         self.changeid = changeid
         self.pageTitle = "Change #%d" % changeid
 
     def content(self, req, cxt):
         d = self.getStatus(req).getChange(self.changeid)
+
         def cb(change):
             if not change:
                 return "No change number %d" % self.changeid
@@ -40,6 +45,8 @@ class ChangeResource(HtmlResource):
         return d
 
 # /changes/NN
+
+
 class ChangesResource(HtmlResource):
 
     def content(self, req, cxt):
@@ -55,6 +62,7 @@ class ChangesResource(HtmlResource):
 
         return ChangeResource(changeid)
 
+
 class ChangeBox(components.Adapter):
     implements(IBox)
 
@@ -68,4 +76,3 @@ class ChangeBox(components.Adapter):
                                             project=self.original.project)
         return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
-

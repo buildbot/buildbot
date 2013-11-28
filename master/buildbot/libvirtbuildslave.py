@@ -22,8 +22,8 @@ from buildbot.buildslave.libvirt import (
 
 for _attr in ["LibVirtSlave", "Connection", "Domain"]:
     deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
-            "It has been moved to buildbot.buildslave.libvirt",
-            "buildbot.libvirtbuildslave", _attr)
+                              "It has been moved to buildbot.buildslave.libvirt",
+                              "buildbot.libvirtbuildslave", _attr)
 
 _hush_pyflakes = [
     LibVirtSlave, Domain, Connection]

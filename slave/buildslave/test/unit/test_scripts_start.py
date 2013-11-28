@@ -14,15 +14,18 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
+
 from buildslave.scripts import start
 from buildslave.test.util import misc
+from twisted.trial import unittest
 
 
 class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
+
     """
     Test buildslave.scripts.startup.startCommand()
     """
+
     def test_start_command_bad_basedir(self):
         """
         test calling startCommand() with invalid basedir path

@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
-from twisted.trial import unittest
+import os
+
 from buildslave.scripts import upgrade_slave
 from buildslave.test.util import misc
+from twisted.trial import unittest
 
 MODERN_BUILDBOT_TAC = \
 """# dummy buildbot.tac
@@ -38,6 +39,7 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
                        misc.StdoutAssertionsMixin,
                        misc.FileIOMixin,
                        unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.upgradeSlave()
     """

@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer, utils
+from twisted.internet import defer
+from twisted.internet import utils
+
 
 class Expect(object):
     _stdout = ""
@@ -43,9 +45,9 @@ class Expect(object):
 
     def check(self, test, bin, path, args):
         test.assertEqual(
-                dict(bin=bin, path=path, args=tuple(args)),
-                dict(bin=self._bin, path=self._path, args=self._args),
-                "unexpected command run")
+            dict(bin=bin, path=path, args=tuple(args)),
+            dict(bin=self._bin, path=self._path, args=self._args),
+            "unexpected command run")
         return (self._stdout, self._stderr, self._exit)
 
     def __repr__(self):
@@ -67,12 +69,13 @@ class GetProcessOutputMixin:
         env = env or {}
         for var, value in self._gpo_expect_env.items():
             self.assertEqual(env.get(var), value,
-                'Expected environment to have %s = %r' % (var, value))
+                             'Expected environment to have %s = %r' % (var, value))
 
     def patched_getProcessOutput(self, bin, args, env=None,
-            errortoo=False, path=None):
+                                 errortoo=False, path=None):
         d = self.patched_getProcessOutputAndValue(bin, args, env=env,
-                path=path)
+                                                  path=path)
+
         @d.addCallback
         def cb(res):
             stdout, stderr, exit = res
@@ -86,12 +89,12 @@ class GetProcessOutputMixin:
         return d
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,
-            path=None):
+                                         path=None):
         self._check_env(env)
 
         if not self._expected_commands:
             self.fail("got command %s %s when no further commands were expected"
-                    % (bin, args))
+                      % (bin, args))
 
         expect = self._expected_commands.pop(0)
         return defer.succeed(expect.check(self, bin, path, args))
@@ -99,9 +102,9 @@ class GetProcessOutputMixin:
     def _patch_gpo(self):
         if not self._gpo_patched:
             self.patch(utils, "getProcessOutput",
-                            self.patched_getProcessOutput)
+                       self.patched_getProcessOutput)
             self.patch(utils, "getProcessOutputAndValue",
-                            self.patched_getProcessOutputAndValue)
+                       self.patched_getProcessOutputAndValue)
             self._gpo_patched = True
 
     def addGetProcessOutputExpectEnv(self, d):

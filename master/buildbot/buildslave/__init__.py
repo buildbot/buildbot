@@ -17,4 +17,4 @@ from buildbot.buildslave.base import (
     AbstractBuildSlave, BuildSlave, AbstractLatentBuildSlave)
 
 _hush_pyflakes = [
-    AbstractBuildSlave, BuildSlave, AbstractLatentBuildSlave ]
+    AbstractBuildSlave, BuildSlave, AbstractLatentBuildSlave]

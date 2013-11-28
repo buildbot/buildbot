@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import cStringIO
 import os
 import sys
-import cStringIO
+
 
 class PatcherMixin(object):
+
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -33,10 +35,13 @@ class PatcherMixin(object):
             self.addCleanup(cleanup)
             os.uname = replacement
 
+
 class StdoutAssertionsMixin(object):
+
     """
     Mix this in to be able to assert on stdout during the test
     """
+
     def setUpStdoutAssertions(self):
         self.stdout = cStringIO.StringIO()
         self.patch(sys, 'stdout', self.stdout)

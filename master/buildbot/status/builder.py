@@ -16,25 +16,39 @@
 from __future__ import with_statement
 
 
-import os, re, itertools
-from cPickle import load, dump
+import itertools
+import os
+import re
 
-from zope.interface import implements
-from twisted.python import log, runtime
-from twisted.persisted import styles
-from buildbot import interfaces, util
-from buildbot.util.lru import LRUCache
-from buildbot.status.event import Event
+from cPickle import dump
+from cPickle import load
+
+from buildbot import interfaces
+from buildbot import util
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.status.event import Event
+from buildbot.util.lru import LRUCache
+from twisted.persisted import styles
+from twisted.python import log
+from twisted.python import runtime
+from zope.interface import implements
 
 # user modules expect these symbols to be present here
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY, Results, worst_status
-_hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                   EXCEPTION, RETRY, Results, worst_status ]
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import Results
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
+_hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
+                  EXCEPTION, RETRY, Results, worst_status]
+
 
 class BuilderStatus(styles.Versioned):
+
     """I handle status information for a single process.build.Builder object.
     That object sends status changes to me (frequently as Events), and I
     provide them on demand to the various status recipients, like the HTML
@@ -56,11 +70,11 @@ class BuilderStatus(styles.Versioned):
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
     persistenceVersion = 1
-    persistenceForgets = ( 'wasUpgraded', )
+    persistenceForgets = ('wasUpgraded', )
 
     category = None
-    currentBigState = "offline" # or idle/waiting/interlocked/building
-    basedir = None # filled in by our parent
+    currentBigState = "offline"  # or idle/waiting/interlocked/building
+    basedir = None  # filled in by our parent
 
     def __init__(self, buildername, category, master, description):
         self.name = buildername
@@ -119,7 +133,7 @@ class BuilderStatus(styles.Versioned):
             self.slavenames = [self.slavename]
             del self.slavename
         if hasattr(self, 'nextBuildNumber'):
-            del self.nextBuildNumber # determineNextBuildNumber chooses this
+            del self.nextBuildNumber  # determineNextBuildNumber chooses this
         self.wasUpgraded = True
 
     def determineNextBuildNumber(self):
@@ -147,7 +161,7 @@ class BuilderStatus(styles.Versioned):
         try:
             with open(tmpfilename, "wb") as f:
                 dump(self, f, -1)
-            if runtime.platformType  == 'win32':
+            if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)
@@ -171,7 +185,7 @@ class BuilderStatus(styles.Versioned):
         filename = self.makeBuildFilename(number)
         try:
             log.msg("Loading builder %s's build %d from on-disk pickle"
-                % (self.name, number))
+                    % (self.name, number))
             with open(filename, "rb") as f:
                 build = load(f)
             build.setProcessObjects(self, self.master)
@@ -183,7 +197,7 @@ class BuilderStatus(styles.Versioned):
             # upgradeToVersionNN methods all set this.
             versioneds = styles.versionedsToUpgrade
             styles.doUpgrade()
-            if True in [ hasattr(o, 'wasUpgraded') for o in versioneds.values() ]:
+            if True in [hasattr(o, 'wasUpgraded') for o in versioneds.values()]:
                 log.msg("re-writing upgraded build pickle")
                 build.saveYourself()
 
@@ -255,18 +269,22 @@ class BuilderStatus(styles.Versioned):
                     num = int(mo.group(1))
                     is_logfile = True
 
-            if num is None: continue
-            if num in self.buildCache.cache: continue
+            if num is None:
+                continue
+            if num in self.buildCache.cache:
+                continue
 
             if (is_logfile and num < earliest_log) or num < earliest_build:
                 pathname = os.path.join(self.basedir, filename)
                 log.msg("pruning '%s'" % pathname)
-                try: os.unlink(pathname)
-                except OSError: pass
+                try:
+                    os.unlink(pathname)
+                except OSError:
+                    pass
 
     # IBuilderStatus methods
     def getName(self):
-        # if builderstatus page does show not up without any reason then 
+        # if builderstatus page does show not up without any reason then
         # str(self.name) may be a workaround
         return self.name
 
@@ -287,6 +305,7 @@ class BuilderStatus(styles.Versioned):
         db = self.status.master.db
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)
+
         def make_statuses(brdicts):
             return [BuildRequestStatus(self.name, brdict['brid'],
                                        self.status)
@@ -328,8 +347,8 @@ class BuilderStatus(styles.Versioned):
             return None
 
     def _getBuildBranches(self, build):
-        return set([ ss.branch
-            for ss in build.getSourceStamps() ])
+        return set([ss.branch
+                    for ss in build.getSourceStamps()])
 
     def generateFinishedBuilds(self, branches=[],
                                num_builds=None,
@@ -373,7 +392,7 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
+    def eventGenerator(self, branches=[], categories=[], committers=[], projects=[], minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -390,7 +409,7 @@ class BuilderStatus(styles.Versioned):
         eventIndex = -1
         e = self.getEvent(eventIndex)
         branches = set(branches)
-        for Nb in range(1, self.nextBuildNumber+1):
+        for Nb in range(1, self.nextBuildNumber + 1):
             b = self.getBuild(-Nb)
             if not b:
                 # HACK: If this is the first build we are looking at, it is
@@ -409,8 +428,10 @@ class BuilderStatus(styles.Versioned):
                 continue
             if committers and not [True for c in b.getChanges() if c.who in committers]:
                 continue
+            if projects and not b.getProperty('project') in projects:
+                continue
             steps = b.getSteps()
-            for Ns in range(1, len(steps)+1):
+            for Ns in range(1, len(steps) + 1):
                 if steps[-Ns].started:
                     step_start = steps[-Ns].getTimes()[0]
                     while e is not None and e.getTimes()[0] > step_start:
@@ -440,7 +461,7 @@ class BuilderStatus(styles.Versioned):
         self.watchers.remove(receiver)
         self.status._builder_unsubscribe(self.name, receiver)
 
-    ## Builder interface (methods called by the Builder which feeds us)
+    # Builder interface (methods called by the Builder which feeds us)
 
     def setSlavenames(self, names):
         self.slavenames = names
@@ -453,7 +474,7 @@ class BuilderStatus(styles.Versioned):
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)
-        return e # they are free to mangle it further
+        return e  # they are free to mangle it further
 
     def addPointEvent(self, text=[]):
         # this adds a point event, one which occurs as a single atomic
@@ -464,7 +485,7 @@ class BuilderStatus(styles.Versioned):
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)
-        return e # for consistency, but they really shouldn't touch it
+        return e  # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
         needToUpdate = state != self.currentBigState
@@ -505,7 +526,7 @@ class BuilderStatus(styles.Versioned):
         """Now the BuildStatus object is ready to go (it knows all of its
         Steps, its ETA, etc), so it is safe to notify our watchers."""
 
-        assert s.builder is self # paranoia
+        assert s.builder is self  # paranoia
         assert s not in self.currentBuilds
         self.currentBuilds.append(s)
         self.buildCache.get(s.number, val=s)
@@ -513,11 +534,11 @@ class BuilderStatus(styles.Versioned):
         # now that the BuildStatus is prepared to answer queries, we can
         # announce the new build to all our watchers
 
-        for w in self.watchers: # TODO: maybe do this later? callLater(0)?
+        for w in self.watchers:  # TODO: maybe do this later? callLater(0)?
             try:
                 receiver = w.buildStarted(self.getName(), s)
                 if receiver:
-                    if type(receiver) == type(()):
+                    if isinstance(receiver, type(())):
                         s.subscribe(receiver[0], receiver[1])
                     else:
                         s.subscribe(receiver)
@@ -541,8 +562,7 @@ class BuilderStatus(styles.Versioned):
                 log.msg("Exception caught notifying %r of buildFinished event" % w)
                 log.err()
 
-        self.prune() # conserve disk
-
+        self.prune()  # conserve disk
 
     def asDict(self):
         result = {}
@@ -551,9 +571,9 @@ class BuilderStatus(styles.Versioned):
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
         result['slaves'] = self.slavenames
-        result['schedulers'] = [ s.name
-                for s in self.status.master.allSchedulers()
-                if self.name in s.builderNames ]
+        result['schedulers'] = [s.name
+                                for s in self.status.master.allSchedulers()
+                                if self.name in s.builderNames]
         #result['url'] = self.parent.getURLForThing(self)
         # TODO(maruel): Add cache settings? Do we care?
 
@@ -561,8 +581,7 @@ class BuilderStatus(styles.Versioned):
         # Collect build numbers.
         # Important: Only grab the *cached* builds numbers to reduce I/O.
         current_builds = [b.getNumber() for b in self.currentBuilds]
-        cached_builds = list(set(self.buildCache.keys() + current_builds))
-        cached_builds.sort()
+        cached_builds = sorted(set(self.buildCache.keys() + current_builds))
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds
         result['state'] = self.getState()[0]
@@ -575,6 +594,7 @@ class BuilderStatus(styles.Versioned):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
         result = self.asDict()
         d = self.getPendingBuildRequestStatuses()
+
         def combine(statuses):
             result['pendingBuilds'] = len(statuses)
             return result

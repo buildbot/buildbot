@@ -17,9 +17,24 @@
 Steps and objects related to lintian
 """
 
-from buildbot.steps.shell import ShellCommand
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot import config
+from buildbot.process import buildstep
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.steps.shell import ShellCommand
+
+
+class MaxQObserver(buildstep.LogLineObserver):
+
+    def __init__(self):
+        buildstep.LogLineObserver.__init__(self)
+        self.failures = 0
+
+    def outLineReceived(self, line):
+        if line.startswith('TEST FAILURE:'):
+            self.failures += 1
+
 
 class DebLintian(ShellCommand):
     name = "lintian"
@@ -32,13 +47,13 @@ class DebLintian(ShellCommand):
     warnCount = 0
     errCount = 0
 
-    flunkOnFailure=False
-    warnOnFailure=True
+    flunkOnFailure = False
+    warnOnFailure = True
 
     def __init__(self, fileloc=None, suppressTags=None, **kwargs):
         """
         Create the DebLintian object.
-        
+
         @type fileloc: str
         @param fileloc: Location of the .deb or .changes to test.
         @type suppressTags: list
@@ -64,7 +79,7 @@ class DebLintian(ShellCommand):
     def createSummary(self, log):
         """
         Create nice summary logs.
-        
+
         @param log: log to create summary off of.
         """
         warnings = []
@@ -83,9 +98,8 @@ class DebLintian(ShellCommand):
             self.errCount = len(errors)
 
     def evaluateCommand(self, cmd):
-        if ( cmd.rc != 0 or self.errCount):
+        if (cmd.rc != 0 or self.errCount):
             return FAILURE
         if self.warnCount:
             return WARNINGS
         return SUCCESS
-

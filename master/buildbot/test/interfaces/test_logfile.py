@@ -15,15 +15,18 @@
 
 import mock
 import textwrap
+
 from buildbot.status import logfile
-from buildbot.test.util import interfaces, dirs
 from buildbot.test.fake import remotecommand
+from buildbot.test.util import dirs
+from buildbot.test.util import interfaces
 from twisted.trial import unittest
 
 # NOTE:
 #
 # This interface is considered private to Buildbot and may change without
 # warning in future versions.
+
 
 class Tests(interfaces.InterfaceTests):
 
@@ -41,48 +44,56 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getName(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.getName)
         def getName(self):
             pass
 
     def test_signature_addHeader(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.addHeader)
         def addHeader(self, text):
             pass
 
     def test_signature_addStdout(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.addStdout)
         def addStdout(self, text):
             pass
 
     def test_signature_addStderr(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.addStderr)
         def addStderr(self, text):
             pass
 
     def test_signature_readlines(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.readlines)
         def readlines(self):
             pass
 
     def test_signature_getText(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.getText)
         def getText(self):
             pass
 
     def test_signature_getChunks(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.getChunks)
         def getChunks(self, channels=[], onlyText=False):
             pass
 
     def test_signature_finish(self):
         log = self.makeLogFile()
+
         @self.assertArgSpecMatches(log.finish)
         def finish(self):
             pass
@@ -119,6 +130,7 @@ class RealTests(Tests):
             newlines
             also hidden"""))
 
+
 class TestLogFile(unittest.TestCase, dirs.DirsMixin, RealTests):
 
     def setUp(self):
@@ -140,5 +152,3 @@ class TestFakeLogFile(unittest.TestCase, Tests):
         step = mock.Mock(name='fake step')
         step.logobservers = []
         return remotecommand.FakeLogFile(name, step)
-
-

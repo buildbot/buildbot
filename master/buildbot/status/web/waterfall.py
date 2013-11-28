@@ -14,21 +14,34 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
-from twisted.python import log, components
-from twisted.internet import defer
 import urllib
 
-import time, locale
+from twisted.internet import defer
+from twisted.python import components
+from twisted.python import log
+from zope.interface import implements
+
+import locale
 import operator
+import time
 
-from buildbot import interfaces, util
-from buildbot.status import builder, buildstep, build
+from buildbot import interfaces
+from buildbot import util
 from buildbot.changes import changes
+from buildbot.status import build
+from buildbot.status import builder
+from buildbot.status import buildstep
 
-from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
-     map_branches
+from buildbot.status.web.base import Box
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import IBox
+from buildbot.status.web.base import ICurrentBox
+from buildbot.status.web.base import ITopBox
+from buildbot.status.web.base import build_get_class
+from buildbot.status.web.base import map_branches
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_root
+from buildbot.status.web.base import path_to_step
 
 
 def earlier(old, new):
@@ -38,6 +51,7 @@ def earlier(old, new):
             return new
         return old
     return new
+
 
 def later(old, new):
     # maximum of two things, but "None" counts as -infinity
@@ -65,7 +79,7 @@ class CurrentBox(components.Adapter):
         if eta_secs > 60:
             eta_parts.append("%d mins" % (eta_secs / 60))
             eta_secs %= 60
-        abstime = time.strftime("%H:%M", time.localtime(util.now()+eta))
+        abstime = time.strftime("%H:%M", time.localtime(util.now() + eta))
         return [prefix, " ".join(eta_parts), "at %s" % abstime]
 
     def getBox(self, status, brcounts):
@@ -136,11 +150,13 @@ class BuildTopBox(components.Adapter):
         url = path_to_build(req, b)
         text = b.getText()
         tests_failed = b.getSummaryStatistic('tests-failed', operator.add, 0)
-        if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
+        if tests_failed:
+            text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
         class_ = build_get_class(b)
         return Box(text, urlbase=url, class_="LastBuild %s" % class_)
 components.registerAdapter(BuildTopBox, builder.BuilderStatus, ITopBox)
+
 
 class BuildBox(components.Adapter):
     # this provides the yellow "starting line" box for each build
@@ -152,7 +168,7 @@ class BuildBox(components.Adapter):
         url = path_to_build(req, b)
         reason = b.getReason()
         template = req.site.buildbot_service.templates.get_template("box_macros.html")
-        text = template.module.build_box(reason=reason,url=url,number=number)
+        text = template.module.build_box(reason=reason, url=url, number=number)
         class_ = "start"
         if b.isFinished() and not b.getSteps():
             # the steps have been pruned, so there won't be any indication
@@ -160,6 +176,7 @@ class BuildBox(components.Adapter):
             class_ = build_get_class(b)
         return Box([text], class_="BuildStep " + class_)
 components.registerAdapter(BuildBox, build.BuildStatus, IBox)
+
 
 class StepBox(components.Adapter):
     implements(IBox)
@@ -172,7 +189,7 @@ class StepBox(components.Adapter):
             text = []
         text = text[:]
         logs = self.original.getLogs()
-        
+
         cxt = dict(text=text, logs=[], urls=[], stepinfo=self)
 
         for num in range(len(logs)):
@@ -184,11 +201,11 @@ class StepBox(components.Adapter):
             cxt['logs'].append(dict(name=name, url=url))
 
         for name, target in self.original.getURLs().items():
-            cxt['urls'].append(dict(link=target,name=name))
+            cxt['urls'].append(dict(link=target, name=name))
 
         template = req.site.buildbot_service.templates.get_template("box_macros.html")
         text = template.module.step_box(**cxt)
-        
+
         class_ = "BuildStep " + build_get_class(self.original)
         return Box(text, class_=class_)
 components.registerAdapter(StepBox, buildstep.BuildStepStatus, IBox)
@@ -202,7 +219,7 @@ class EventBox(components.Adapter):
         class_ = "Event"
         return Box(text, class_=class_)
 components.registerAdapter(EventBox, builder.Event, IBox)
-        
+
 
 class Spacer:
     implements(interfaces.IStatusEvent)
@@ -213,8 +230,10 @@ class Spacer:
 
     def getTimes(self):
         return (self.started, self.finished)
+
     def getText(self):
         return []
+
 
 class SpacerBox(components.Adapter):
     implements(IBox)
@@ -226,30 +245,36 @@ class SpacerBox(components.Adapter):
         return b
 components.registerAdapter(SpacerBox, Spacer, IBox)
 
+
 def insertGaps(g, showEvents, lastEventTime, idleGap=2):
     debug = False
 
     e = g.next()
     starts, finishes = e.getTimes()
-    if debug: log.msg("E0", starts, finishes)
+    if debug:
+        log.msg("E0", starts, finishes)
     if finishes == 0:
         finishes = starts
-    if debug: log.msg("E1 finishes=%s, gap=%s, lET=%s" % \
-                      (finishes, idleGap, lastEventTime))
+    if debug:
+        log.msg("E1 finishes=%s, gap=%s, lET=%s" %
+                (finishes, idleGap, lastEventTime))
     if finishes is not None and finishes + idleGap < lastEventTime:
-        if debug: log.msg(" spacer0")
+        if debug:
+            log.msg(" spacer0")
         yield Spacer(finishes, lastEventTime)
 
     followingEventStarts = starts
-    if debug: log.msg(" fES0", starts)
+    if debug:
+        log.msg(" fES0", starts)
     yield e
 
-    while 1:
+    while True:
         e = g.next()
         if not showEvents and isinstance(e, builder.Event):
             continue
         starts, finishes = e.getTimes()
-        if debug: log.msg("E2", starts, finishes)
+        if debug:
+            log.msg("E2", starts, finishes)
         if finishes == 0:
             finishes = starts
         if finishes is not None and finishes + idleGap < followingEventStarts:
@@ -257,12 +282,13 @@ def insertGaps(g, showEvents, lastEventTime, idleGap=2):
             # of the next one. Insert an idle event so the waterfall display
             # shows a gap here.
             if debug:
-                log.msg(" finishes=%s, gap=%s, fES=%s" % \
+                log.msg(" finishes=%s, gap=%s, fES=%s" %
                         (finishes, idleGap, followingEventStarts))
             yield Spacer(finishes, followingEventStarts)
         yield e
         followingEventStarts = starts
-        if debug: log.msg(" fES1", starts)
+        if debug:
+            log.msg(" fES1", starts)
 
 
 class WaterfallHelp(HtmlResource):
@@ -279,6 +305,7 @@ class WaterfallHelp(HtmlResource):
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
         cxt['committers'] = [c for c in request.args.get("committer", []) if c]
+        cxt['projects'] = [p for p in request.args.get("project", []) if p]
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
@@ -307,23 +334,25 @@ class WaterfallHelp(HtmlResource):
         if current_reload_time:
             current_reload_time = current_reload_time[0]
         if current_reload_time not in [t[0] for t in times]:
-            times.insert(0, (current_reload_time, current_reload_time) )
+            times.insert(0, (current_reload_time, current_reload_time))
 
         cxt['times'] = times
-        cxt['current_reload_time'] = current_reload_time   
+        cxt['current_reload_time'] = current_reload_time
 
         template = request.site.buildbot_service.templates.get_template("waterfallhelp.html")
         return template.render(**cxt)
 
 
 class ChangeEventSource(object):
+
     "A wrapper around a list of changes to supply the IEventSource interface"
+
     def __init__(self, changes):
         self.changes = changes
         # we want them in newest-to-oldest order
         self.changes.reverse()
 
-    def eventGenerator(self, branches, categories, committers, minTime):
+    def eventGenerator(self, branches, categories, committers, projects, minTime):
         for change in self.changes:
             if branches and change.branch not in branches:
                 continue
@@ -335,15 +364,17 @@ class ChangeEventSource(object):
                 continue
             yield change
 
+
 class WaterfallStatusResource(HtmlResource):
+
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
     def __init__(self, categories=None, num_events=200, num_events_max=None):
         HtmlResource.__init__(self)
         self.categories = categories
-        self.num_events=num_events
-        self.num_events_max=num_events_max
+        self.num_events = num_events
+        self.num_events_max = num_events_max
         self.putChild("help", WaterfallHelp(categories))
 
     def getPageTitle(self, request):
@@ -407,11 +438,13 @@ class WaterfallStatusResource(HtmlResource):
 
         # recent changes
         changes_d = master.db.changes.getRecentChanges(40)
+
         def to_changes(chdicts):
             return defer.gatherResults([
                 changes.Change.fromChdict(master, chdict)
-                for chdict in chdicts ])
+                for chdict in chdicts])
         changes_d.addCallback(to_changes)
+
         def keep_changes(changes):
             results['changes'] = changes
         changes_d.addCallback(keep_changes)
@@ -420,6 +453,7 @@ class WaterfallStatusResource(HtmlResource):
         allBuilderNames = status.getBuilderNames(categories=self.categories)
         brstatus_ds = []
         brcounts = {}
+
         def keep_count(statuses, builderName):
             brcounts[builderName] = len(statuses)
         for builderName in allBuilderNames:
@@ -429,10 +463,11 @@ class WaterfallStatusResource(HtmlResource):
             brstatus_ds.append(d)
 
         # wait for it all to finish
-        d = defer.gatherResults([ changes_d ] + brstatus_ds)
+        d = defer.gatherResults([changes_d] + brstatus_ds)
+
         def call_content(_):
             return self.content_with_db_data(results['changes'],
-                    brcounts, request, ctx)
+                                             brcounts, request, ctx)
         d.addCallback(call_content)
         return d
 
@@ -468,10 +503,10 @@ class WaterfallStatusResource(HtmlResource):
         failuresOnly = request.args.get("failures_only", ["false"])[0]
         if failuresOnly.lower() == "true":
             builders = [b for b in builders if not self.isSuccess(b)]
-        
+
         (changeNames, builderNames, timestamps, eventGrid, sourceEvents) = \
-                      self.buildGrid(request, builders, changes)
-            
+            self.buildGrid(request, builders, changes)
+
         # start the table: top-header material
         locale_enc = locale.getdefaultlocale()[1]
         if locale_enc is not None:
@@ -480,23 +515,23 @@ class WaterfallStatusResource(HtmlResource):
             locale_tz = unicode(time.tzname[time.localtime()[-1]])
         ctx['tz'] = locale_tz
         ctx['changes_url'] = request.childLink("../changes")
-        
+
         bn = ctx['builders'] = []
-                
+
         for name in builderNames:
             builder = status.getBuilder(name)
             top_box = ITopBox(builder).getBox(request)
             current_box = ICurrentBox(builder).getBox(status, brcounts)
             bn.append({'name': name,
-                       'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')), 
-                       'top': top_box.text, 
+                       'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')),
+                       'top': top_box.text,
                        'top_class': top_box.class_,
                        'status': current_box.text,
-                       'status_class': current_box.class_,                       
-                        })
+                       'status_class': current_box.class_,
+                       })
 
         ctx.update(self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
-                  sourceEvents))
+                               sourceEvents))
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -505,15 +540,15 @@ class WaterfallStatusResource(HtmlResource):
                 newargs[argname] = []
             if "branch" in newargs:
                 newargs["branch"] = [b for b in newargs["branch"] if b]
-            for k,v in new_args:
+            for k, v in new_args:
                 if k in newargs:
                     newargs[k].append(v)
                 else:
                     newargs[k] = [v]
             newquery = "&amp;".join(["%s=%s" % (urllib.quote(k), urllib.quote(v))
-                                 for k in newargs
-                                 for v in newargs[k]
-                                 ])
+                                     for k in newargs
+                                     for v in newargs[k]
+                                     ])
             if new_path:
                 new_url = new_path
             elif req.prepath:
@@ -527,8 +562,7 @@ class WaterfallStatusResource(HtmlResource):
         if timestamps:
             bottom = timestamps[-1]
             ctx['nextpage'] = with_args(request, ["last_time"],
-                                 [("last_time", str(int(bottom)))])
-
+                                        [("last_time", str(int(bottom)))])
 
         helpurl = path_to_root(request) + "waterfall/help"
         ctx['help_url'] = with_args(request, new_path=helpurl)
@@ -539,7 +573,7 @@ class WaterfallStatusResource(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("waterfall.html")
         data = template.render(**ctx)
         return data
-    
+
     def buildGrid(self, request, builders, changes):
         debug = False
         # TODO: see if we can use a cached copy
@@ -551,6 +585,7 @@ class WaterfallStatusResource(HtmlResource):
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
         filterCommitters = [c for c in request.args.get("committer", []) if c]
+        filterProjects = [p for p in request.args.get("project", []) if p]
         maxTime = int(request.args.get("last_time", [util.now()])[0])
         if "show_time" in request.args:
             minTime = maxTime - int(request.args["show_time"][0])
@@ -561,7 +596,7 @@ class WaterfallStatusResource(HtmlResource):
         else:
             minTime = 0
         spanLength = 10  # ten-second chunks
-        req_events=int(request.args.get("num_events", [self.num_events])[0])
+        req_events = int(request.args.get("num_events", [self.num_events])[0])
         if self.num_events_max and req_events > self.num_events_max:
             maxPageLen = self.num_events_max
         else:
@@ -610,6 +645,7 @@ class WaterfallStatusResource(HtmlResource):
             gen = insertGaps(s.eventGenerator(filterBranches,
                                               filterCategories,
                                               filterCommitters,
+                                              filterProjects,
                                               minTime),
                              showEvents,
                              lastEventTime)
@@ -629,8 +665,9 @@ class WaterfallStatusResource(HtmlResource):
         spanStart = lastEventTime - spanLength
         debugGather = 0
 
-        while 1:
-            if debugGather: log.msg("checking (%s,]" % spanStart)
+        while True:
+            if debugGather:
+                log.msg("checking (%s,]" % spanStart)
             # the tableau of potential events is in sourceEvents[]. The
             # window crawls backwards, and we examine one source at a time.
             # If the source's top-most event is in the window, is it pushed
@@ -638,12 +675,12 @@ class WaterfallStatusResource(HtmlResource):
             # continues until the tableau event is not in the window (or is
             # missing).
 
-            spanEvents = [] # for all sources, in this span. row of eventGrid
-            firstTimestamp = None # timestamp of first event in the span
-            lastTimestamp = None # last pre-span event, for next span
+            spanEvents = []  # for all sources, in this span. row of eventGrid
+            firstTimestamp = None  # timestamp of first event in the span
+            lastTimestamp = None  # last pre-span event, for next span
 
             for c in range(len(sourceGenerators)):
-                events = [] # for this source, in this span. cell of eventGrid
+                events = []  # for this source, in this span. cell of eventGrid
                 event = sourceEvents[c]
                 while event and spanStart < event.getTimes()[0]:
                     # to look at windows that don't end with the present,
@@ -663,10 +700,10 @@ class WaterfallStatusResource(HtmlResource):
                 if event:
                     # this is the last pre-span event for this source
                     lastTimestamp = later(lastTimestamp,
-                                               event.getTimes()[0])
+                                          event.getTimes()[0])
                 if debugGather:
                     log.msg(" got %s from %s" % (events, sourceNames[c]))
-                sourceEvents[c] = event # refill the tableau
+                sourceEvents[c] = event  # refill the tableau
                 spanEvents.append(events)
 
             # only show events older than maxTime. This makes it possible to
@@ -686,24 +723,23 @@ class WaterfallStatusResource(HtmlResource):
 
             if len(timestamps) > maxPageLen:
                 break
-            
-            
+
             # now loop
-            
         # loop is finished. now we have eventGrid[] and timestamps[]
-        if debugGather: log.msg("finished loop")
+        if debugGather:
+            log.msg("finished loop")
         assert(len(timestamps) == len(eventGrid))
         return (changeNames, builderNames, timestamps, eventGrid, sourceEvents)
-    
+
     def phase2(self, request, sourceNames, timestamps, eventGrid,
                sourceEvents):
 
         if not timestamps:
             return dict(grid=[], gridlen=0)
-        
+
         # first pass: figure out the height of the chunks, populate grid
         grid = []
-        for i in range(1+len(sourceNames)):
+        for i in range(1 + len(sourceNames)):
             grid.append([])
         # grid is a list of columns, one for the timestamps, and one per
         # event source. Each column is exactly the same height. Each element
@@ -715,10 +751,10 @@ class WaterfallStatusResource(HtmlResource):
             # chunkstrip is a horizontal strip of event blocks. Each block
             # is a vertical list of events, all for the same source.
             assert(len(chunkstrip) == len(sourceNames))
-            maxRows = reduce(lambda x,y: max(x,y),
+            maxRows = reduce(lambda x, y: max(x, y),
                              map(lambda x: len(x), chunkstrip))
             for i in range(maxRows):
-                if i != maxRows-1:
+                if i != maxRows - 1:
                     grid[0].append(None)
                 else:
                     # timestamp goes at the bottom of the chunk
@@ -743,25 +779,25 @@ class WaterfallStatusResource(HtmlResource):
             # maxRows boxes, most None but the last one has the time string
             for c in range(0, len(chunkstrip)):
                 block = chunkstrip[c]
-                assert(block != None) # should be [] instead
+                assert(block is not None)  # should be [] instead
                 for i in range(maxRows - len(block)):
                     # fill top of chunk with blank space
-                    grid[c+1].append(None)
+                    grid[c + 1].append(None)
                 for i in range(len(block)):
                     # so the events are bottom-justified
                     b = IBox(block[i]).getBox(request)
                     b.parms['valign'] = "top"
                     b.parms['align'] = "center"
-                    grid[c+1].append(b)
+                    grid[c + 1].append(b)
             # now all the other columns have maxRows new boxes too
         # populate the last row, if empty
         gridlen = len(grid[0])
         for i in range(len(grid)):
             strip = grid[i]
             assert(len(strip) == gridlen)
-            if strip[-1] == None:
-                if sourceEvents[i-1]:
-                    filler = IBox(sourceEvents[i-1]).getBox(request)
+            if strip[-1] is None:
+                if sourceEvents[i - 1]:
+                    filler = IBox(sourceEvents[i - 1]).getBox(request)
                 else:
                     # this can happen if you delete part of the build history
                     filler = Box(text=["?"], align="center")
@@ -770,24 +806,24 @@ class WaterfallStatusResource(HtmlResource):
         # second pass: bubble the events upwards to un-occupied locations
         # Every square of the grid that has a None in it needs to have
         # something else take its place.
-        noBubble = request.args.get("nobubble",['0'])
+        noBubble = request.args.get("nobubble", ['0'])
         noBubble = int(noBubble[0])
         if not noBubble:
             for col in range(len(grid)):
                 strip = grid[col]
-                if col == 1: # changes are handled differently
-                    for i in range(2, len(strip)+1):
+                if col == 1:  # changes are handled differently
+                    for i in range(2, len(strip) + 1):
                         # only merge empty boxes. Don't bubble commit boxes.
-                        if strip[-i] == None:
-                            next = strip[-i+1]
+                        if strip[-i] is None:
+                            next = strip[-i + 1]
                             assert(next)
                             if next:
-                                #if not next.event:
+                                # if not next.event:
                                 if next.spacer:
                                     # bubble the empty box up
                                     strip[-i] = next
                                     strip[-i].parms['rowspan'] += 1
-                                    strip[-i+1] = None
+                                    strip[-i + 1] = None
                                 else:
                                     # we are above a commit box. Leave it
                                     # be, and turn the current box into an
@@ -801,14 +837,14 @@ class WaterfallStatusResource(HtmlResource):
                                 # Shouldn't happen
                                 pass
                 else:
-                    for i in range(2, len(strip)+1):
+                    for i in range(2, len(strip) + 1):
                         # strip[-i] will go from next-to-last back to first
-                        if strip[-i] == None:
+                        if strip[-i] is None:
                             # bubble previous item up
-                            assert(strip[-i+1] != None)
-                            strip[-i] = strip[-i+1]
+                            assert(strip[-i + 1] is not None)
+                            strip[-i] = strip[-i + 1]
                             strip[-i].parms['rowspan'] += 1
-                            strip[-i+1] = None
+                            strip[-i + 1] = None
                         else:
                             strip[-i].parms['rowspan'] = 1
 
@@ -819,4 +855,3 @@ class WaterfallStatusResource(HtmlResource):
                     strip[i] = strip[i].td()
 
         return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble, time=lastDate)
-

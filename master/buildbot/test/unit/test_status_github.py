@@ -16,6 +16,7 @@
 Unit tests for GitHubStatus plugin.
 """
 from __future__ import absolute_import
+
 import datetime
 
 
@@ -24,7 +25,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
-from buildbot.status.builder import SUCCESS, FAILURE
+from buildbot.status.builder import FAILURE
+from buildbot.status.builder import SUCCESS
 try:
     # Try to import txgithub and skip tests if we fail to import it.
     import txgithub
@@ -39,12 +41,14 @@ from buildbot.test.util import logging
 
 
 class MarkerError(Exception):
+
     """
     An exceptions used as a marker in tests.
     """
 
 
 class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
+
     """
     Unit tests for `GitHubStatus`.
     """
@@ -64,14 +68,14 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             0,
             len(self._logEvents),
             'There are still logs not validated:\n%s' % self._logEvents,
-            )
+        )
 
         pending_errors = self.flushLoggedErrors()
         self.assertEqual(
             0,
             len(pending_errors),
             'There are still errors not validated:\n%s' % pending_errors,
-            )
+        )
 
         super(TestGitHubStatus, self).tearDown()
 
@@ -239,7 +243,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://domain.tld',
             'buildNumber': '1',
-            }
+        }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, None)
         startDateTime = datetime.datetime.fromtimestamp(1).isoformat(' ')
@@ -261,7 +265,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'startDateTime': startDateTime,
             'endDateTime': 'In progress',
             'duration': 'In progress',
-            })
+        })
 
     def test_sendFinishStatus_no_properties(self):
         """
@@ -298,7 +302,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://domain.tld',
             'buildNumber': '1',
-            }
+        }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, 3)
         startDateTime = datetime.datetime.fromtimestamp(1).isoformat(' ')
@@ -321,7 +325,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'startDateTime': startDateTime,
             'endDateTime': endDateTime,
             'duration': '2 seconds',
-            })
+        })
 
     def test_timeDeltaToHumanReadable(self):
         """
@@ -410,7 +414,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'owner',
             'sha': 'sha',
             'targetURL': 'http://thing',
-            },
+        },
             result)
 
     def test_getGitHubState(self):
@@ -439,7 +443,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': u'state-resum\xe9',
             'targetURL': u'targetURL-resum\xe9',
             'description': u'description-resum\xe9',
-            }
+        }
         self.status._github.repos.createStatus = Mock(
             return_value=defer.succeed(None))
 
@@ -454,12 +458,12 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             state='state-resum\xc3\xa9',
             target_url='targetURL-resum\xc3\xa9',
             description='description-resum\xc3\xa9',
-            )
+        )
 
         self.assertLog(
             u'Status "state-resum\xe9" sent for '
             u'owner-resum\xe9/name-resum\xe9 at sha-resum\xe9.'
-            )
+        )
 
     def test_sendGitHubStatus_error(self):
         """
@@ -472,7 +476,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': u'state',
             'targetURL': u'targetURL',
             'description': u'description',
-            }
+        }
         error = MarkerError('fail-send-status')
         self.status._github.repos.createStatus = Mock(
             return_value=defer.fail(error))

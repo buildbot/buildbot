@@ -41,8 +41,10 @@
 import os
 import re
 import time
-from twisted.web import resource
+
 from buildbot.status import results
+from twisted.web import resource
+
 
 class XmlResource(resource.Resource):
     contentType = "text/xml; charset=UTF-8"
@@ -59,15 +61,17 @@ class XmlResource(resource.Resource):
             return ''
         return data
 
-_abbr_day = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+_abbr_day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 _abbr_mon = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
-            'Sep', 'Oct', 'Nov', 'Dec']
+             'Sep', 'Oct', 'Nov', 'Dec']
+
 
 def rfc822_time(tstamp):
     res = time.strftime("%%s, %d %%s %Y %H:%M:%S GMT",
-                                       tstamp)
+                        tstamp)
     res = res % (_abbr_day[tstamp.tm_wday], _abbr_mon[tstamp.tm_mon])
     return res
+
 
 class FeedResource(XmlResource):
     pageTitle = None
@@ -125,6 +129,13 @@ class FeedResource(XmlResource):
         failures_only = request.args.get("failures_only", ["false"])
         failures_only = failures_only[0] not in ('false', '0', 'no', 'off')
 
+        filterProjects = [p for p in request.args.get("project", []) if p]
+
+        if not filterProjects:
+            filter_project = None
+        else:
+            filter_project = lambda b: b.getProperty('project') in filterProjects
+
         maxFeeds = 25
 
         # Copy all failed builds in a new list.
@@ -135,13 +146,14 @@ class FeedResource(XmlResource):
                 res = (results.FAILURE,)
             else:
                 res = None
-            builds.extend(b.generateFinishedBuilds(results=res, max_search=maxFeeds))
+            builds.extend(b.generateFinishedBuilds(results=res,
+                                                   max_search=maxFeeds,
+                                                   filter_fn=filter_project))
 
         # Sort build list by date, youngest first.
         # To keep compatibility with python < 2.4, use this for sorting instead:
         # We apply Decorate-Sort-Undecorate
-        deco = [(build.getTimes(), build) for build in builds]
-        deco.sort()
+        deco = sorted([(build.getTimes(), build) for build in builds])
         deco.reverse()
         builds = [build for (b1, build) in deco]
 
@@ -168,7 +180,7 @@ class FeedResource(XmlResource):
                 sc = {}
                 sc['codebase'] = ss.codebase
                 if (ss.branch is None and ss.revision is None and ss.patch is None
-                    and not ss.changes):
+                        and not ss.changes):
                     sc['repository'] = None
                     sc['branch'] = None
                     sc['revision'] = "Latest revision"
@@ -187,7 +199,7 @@ class FeedResource(XmlResource):
                 src_cxts.append(sc)
             res = build.getResults()
             pageTitle = ('Builder "%s": %s' %
-                (build.getBuilder().getName(), results.Results[res]))
+                         (build.getBuilder().getName(), results.Results[res]))
 
             # Add information about the failing steps.
             failed_steps = []
@@ -207,10 +219,10 @@ class FeedResource(XmlResource):
                             logdata = log.getText()
                         except IOError:
                             # Probably the log file has been removed
-                            logdata ='** log file not available **'
+                            logdata = '** log file not available **'
                         unilist = list()
                         for line in logdata.split('\n')[-30:]:
-                            unilist.append(unicode(line,'utf-8'))
+                            unilist.append(unicode(line, 'utf-8'))
                         log_lines.extend(unilist)
 
             bc = {}
@@ -218,7 +230,7 @@ class FeedResource(XmlResource):
             bc['date'] = rfc822_time(finishedTime)
             bc['summary_link'] = ('%sbuilders/%s' %
                                   (self.link,
-                                   build.getBuilder().getName()))            
+                                   build.getBuilder().getName()))
             bc['name'] = build.getBuilder().getName()
             bc['number'] = build.getNumber()
             bc['responsible_users'] = build.getResponsibleUsers()
@@ -230,7 +242,7 @@ class FeedResource(XmlResource):
             if finishedTime is not None:
                 bc['rfc822_pubdate'] = rfc822_time(finishedTime)
                 bc['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                               finishedTime)
+                                                      finishedTime)
 
                 # Every RSS/Atom item must have a globally unique ID
                 guid = ('tag:%s@%s,%s:%s' %
@@ -252,7 +264,7 @@ class FeedResource(XmlResource):
         cxt['language'] = self.language
         cxt['description'] = self.description
         if self.pubdate is not None:
-            cxt['rfc822_pubdate'] = rfc822_time( self.pubdate)
+            cxt['rfc822_pubdate'] = rfc822_time(self.pubdate)
             cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                    self.pubdate)
 
@@ -260,12 +272,14 @@ class FeedResource(XmlResource):
         template = request.site.buildbot_service.templates.get_template(self.template_file)
         return template.render(**cxt).encode('utf-8').strip()
 
+
 class Rss20StatusResource(FeedResource):
     # contentType = 'application/rss+xml' (browser dependent)
     template_file = 'feed_rss20.xml'
 
     def __init__(self, status, categories=None, pageTitle=None):
         FeedResource.__init__(self, status, categories, pageTitle)
+
 
 class Atom10StatusResource(FeedResource):
     # contentType = 'application/atom+xml' (browser dependent)

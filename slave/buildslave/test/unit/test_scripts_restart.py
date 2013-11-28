@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from buildslave.scripts import start, stop, restart
+
+from buildslave.scripts import restart
+from buildslave.scripts import start
+from buildslave.scripts import stop
 from buildslave.test.util import misc
+from twisted.trial import unittest
 
 
 class TestRestart(misc.IsBuildslaveDirMixin,
                   misc.StdoutAssertionsMixin,
                   unittest.TestCase):
+
     """
     Test buildslave.scripts.restart.restart()
     """

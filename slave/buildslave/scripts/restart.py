@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildslave.scripts import base, start, stop
+from buildslave.scripts import base
+from buildslave.scripts import start
+from buildslave.scripts import stop
 
 
 def restart(config):

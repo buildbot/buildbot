@@ -13,22 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-## Source step code for mercurial
+# Source step code for mercurial
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
-from buildbot.steps.source.base import Source
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
+from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS
+from buildbot.steps.source.base import Source
+
 
 class Mercurial(Source):
+
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
-    renderables = [ "repourl" ]
+    renderables = ["repourl"]
     possible_modes = ('incremental', 'full')
     possible_methods = (None, 'clean', 'fresh', 'clobber')
     possible_branchTypes = ('inrepo', 'dirname')
@@ -36,7 +39,6 @@ class Mercurial(Source):
     def __init__(self, repourl=None, mode='incremental',
                  method=None, defaultBranch=None, branchType='dirname',
                  clobberOnBranchChange=True, **kwargs):
-
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
@@ -64,7 +66,7 @@ class Mercurial(Source):
                                       at each branch change. Otherwise, just
                                       update to the branch.
         """
-        
+
         self.repourl = repourl
         self.defaultBranch = self.branch = defaultBranch
         self.branchType = branchType
@@ -76,17 +78,17 @@ class Mercurial(Source):
         errors = []
         if self.mode not in self.possible_modes:
             errors.append("mode %s is not one of %s" %
-                            (self.mode, self.possible_modes))
+                          (self.mode, self.possible_modes))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" %
-                            (self.method, self.possible_methods))
+                          (self.method, self.possible_methods))
         if self.branchType not in self.possible_branchTypes:
             errors.append("branchType %s is not one of %s" %
-                            (self.branchType, self.possible_branchTypes))
+                          (self.branchType, self.possible_branchTypes))
 
         if repourl is None:
             errors.append("you must provide a repourl")
-        
+
         if errors:
             raise ConfigErrors(errors)
 
@@ -95,6 +97,7 @@ class Mercurial(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
         d = self.checkHg()
+
         def checkInstall(hgInstalled):
             if not hgInstalled:
                 raise BuildSlaveTooOldError("Mercurial is not installed on slave")
@@ -143,6 +146,7 @@ class Mercurial(Source):
             raise ValueError(self.method)
 
         d = self._sourcedirIsUpdatable()
+
         @defer.inlineCallbacks
         def _cmd(updatable):
             if updatable:
@@ -158,14 +162,13 @@ class Mercurial(Source):
 
     def clean(self, _):
         command = ['--config', 'extensions.purge=', 'purge']
-        d =  self._dovccmd(command)
+        d = self._dovccmd(command)
         d.addCallback(self._pullUpdate)
         return d
 
-
     def _clobber(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron':self.logEnviron})
+                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         return d
@@ -184,6 +187,7 @@ class Mercurial(Source):
 
     def finish(self, res):
         d = defer.succeed(res)
+
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             return results
@@ -193,6 +197,7 @@ class Mercurial(Source):
 
     def parseGotRevision(self, _):
         d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
+
         def _setrev(stdout):
             revision = stdout.strip()
             if len(revision) != 40:
@@ -218,14 +223,12 @@ class Mercurial(Source):
         yield self._removeAddedFilesAndUpdate(None)
 
     def _pullUpdate(self, res):
-        command = ['pull' , self.repourl]
-        if self.revision:
-            command.extend(['--rev', self.revision])
+        command = ['pull', self.repourl]
         d = self._dovccmd(command)
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
                  abandonOnFailure=True):
         if not command:
             raise ValueError("No command specified")
@@ -238,6 +241,7 @@ class Mercurial(Source):
                                            decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
@@ -267,6 +271,7 @@ class Mercurial(Source):
             return defer.succeed(self.branch)
         else:
             d = self._dovccmd(['identify', '--branch'], collectStdout=True)
+
             def _getbranch(stdout):
                 return stdout.strip()
             d.addCallback(_getbranch).addErrback
@@ -285,11 +290,12 @@ class Mercurial(Source):
 
     def _removeAddedFilesAndUpdate(self, _):
         command = ['locate', 'set:added()']
-        d = self._dovccmd(command, collectStdout=True, decodeRC={0:SUCCESS,1:SUCCESS})
+        d = self._dovccmd(command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS})
+
         def parseAndRemove(stdout):
             files = []
-            for filename in stdout.splitlines() :
-                filename = self.workdir+'/'+filename
+            for filename in stdout.splitlines():
+                filename = self.workdir + '/' + filename
                 files.append(filename)
             if len(files) == 0:
                 d = defer.succeed(0)
@@ -299,7 +305,7 @@ class Mercurial(Source):
                 else:
                     cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
                                                             'logEnviron':
-                                                            self.logEnviron,})
+                                                            self.logEnviron, })
                     cmd.useLog(self.stdio_log, False)
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
@@ -312,7 +318,7 @@ class Mercurial(Source):
     def removeFiles(self, files):
         for filename in files:
             cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
-                                                    'logEnviron': self.logEnviron,})
+                                                    'logEnviron': self.logEnviron, })
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
@@ -334,16 +340,17 @@ class Mercurial(Source):
             abandonOnFailure = (self.retry[1] <= 0)
         else:
             abandonOnFailure = True
-        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'], 
+        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],
                           abandonOnFailure=abandonOnFailure)
+
         def _retry(res):
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
-                    % (repeats, delay))
-                self.retry = (delay, repeats-1)
+                log.msg("Checkout failed, trying %d more times after %d seconds"
+                        % (repeats, delay))
+                self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._clobber())
                 df.addCallback(lambda _: self._clone())
@@ -357,6 +364,7 @@ class Mercurial(Source):
 
     def checkHg(self):
         d = self._dovccmd(['--version'])
+
         def check(res):
             if res == 0:
                 return True
@@ -366,5 +374,5 @@ class Mercurial(Source):
 
     def applyPatch(self, patch):
         d = self._dovccmd(['import', '--no-commit', '-p', str(patch[0]), '-'],
-               initialStdin=patch[1])
+                          initialStdin=patch[1])
         return d

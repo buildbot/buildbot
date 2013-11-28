@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
 from buildbot import interfaces
+from zope.interface import implements
+
 
 class TestResult:
     implements(interfaces.ITestResult)

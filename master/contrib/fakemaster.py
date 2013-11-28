@@ -12,16 +12,21 @@
 # Licensed under the MPL version 2.0
 
 import sys
-from twisted.internet import reactor, defer
-from twisted.cred import portal, checkers
+
+from twisted.application import service
+from twisted.application import strports
+from twisted.cred import checkers
+from twisted.cred import portal
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.spread import pb
-from twisted.application import strports, service
 from zope.interface import implements
 
 from twisted.internet import stdio
 from twisted.protocols import basic
 
 from buildbot.process.buildstep import RemoteShellCommand
+
 
 class Dispatcher:
     implements(portal.IRealm)
@@ -31,6 +36,7 @@ class Dispatcher:
 
     def register(self, name, afactory):
         self.names[name] = afactory
+
     def unregister(self, name):
         del self.names[name]
 
@@ -46,16 +52,21 @@ class Dispatcher:
             raise ValueError("no perspective for '%s'" % avatarID)
 
         d = defer.maybeDeferred(p.attached, mind)
+
         def _avatarAttached(_, mind):
             return (pb.IPerspective, p, lambda: p.detached(mind))
         d.addCallback(_avatarAttached, mind)
         return d
 
+
 class DontCareChecker(checkers.InMemoryUsernamePasswordDatabaseDontUse):
+
     def requestAvatarId(self, credentials):
         return credentials.username
 
+
 class FakeLog:
+
     def addStdout(self, data):
         sys.stdout.write(data)
 
@@ -65,12 +76,15 @@ class FakeLog:
     def addStderr(self, data):
         sys.stderr.write(data)
 
+
 class FakeBot(pb.Avatar):
     parent = None
+
     def attached(self, remote):
         self.remote = remote
         remote.callRemote('print', 'attached')
         d = remote.callRemote('setBuilderList', [('shell', '.')])
+
         def setBuilderList_cb(builders):
             self.builder = builders['shell']
         d.addCallbacks(setBuilderList_cb)
@@ -96,6 +110,7 @@ class FakeBot(pb.Avatar):
         d = cmd.run(self, self.builder)
         return d
 
+
 class CmdInterface(basic.LineReceiver):
     delimiter = '\n'
     bot = None
@@ -113,7 +128,9 @@ class CmdInterface(basic.LineReceiver):
         d = self.bot.runCommand(line)
         d.addBoth(_done)
 
+
 class FakeMaster(service.MultiService):
+
     def __init__(self, port):
         service.MultiService.__init__(self)
         self.setName("fakemaster")

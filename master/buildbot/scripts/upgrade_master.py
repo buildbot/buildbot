@@ -18,14 +18,17 @@ from __future__ import with_statement
 import os
 import sys
 import traceback
-from twisted.internet import defer
-from twisted.python import util, runtime
+
 from buildbot import config as config_module
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
-from buildbot.util import in_reactor
 from buildbot.scripts import base
+from buildbot.util import in_reactor
+from twisted.internet import defer
+from twisted.python import runtime
+from twisted.python import util
+
 
 def checkBasedir(config):
     if not config['quiet']:
@@ -34,7 +37,7 @@ def checkBasedir(config):
     if not base.isBuildmasterDir(config['basedir']):
         return False
 
-    if runtime.platformType != 'win32': # no pids on win32
+    if runtime.platformType != 'win32':  # no pids on win32
         if not config['quiet']:
             print "checking for running master"
         pidfile = os.path.join(config['basedir'], 'twistd.pid')
@@ -44,13 +47,14 @@ def checkBasedir(config):
 
     return True
 
+
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
         print "checking %s" % configFileName
 
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
-                                            config['basedir'], configFileName)
+            config['basedir'], configFileName)
     except config_module.ConfigErrors, e:
         print "Errors loading configuration:"
         for msg in e.errors:
@@ -62,6 +66,7 @@ def loadConfig(config, configFileName='master.cfg'):
         return
 
     return master_cfg
+
 
 def installFile(config, target, source, overwrite=False):
     with open(source, "rt") as f:
@@ -88,6 +93,7 @@ def installFile(config, target, source, overwrite=False):
             print "creating %s" % target
         with open(target, "wt") as f:
             f.write(new_contents)
+
 
 def upgradeFiles(config):
     if not config['quiet']:
@@ -129,11 +135,12 @@ def upgradeFiles(config):
             try:
                 print "Notice: Moving %s to %s." % (index_html, root_html)
                 print "        You can (and probably want to) remove it if " \
-                              "you haven't modified this file."
+                    "you haven't modified this file."
                 os.renames(index_html, root_html)
             except Exception, e:
                 print "Error moving %s to %s: %s" % (index_html, root_html,
                                                      str(e))
+
 
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
@@ -147,10 +154,11 @@ def upgradeDatabase(config, master_cfg):
     yield db.setup(check_version=False, verbose=not config['quiet'])
     yield db.model.upgrade()
 
+
 @in_reactor
 @defer.inlineCallbacks
 def upgradeMaster(config, _noMonkey=False):
-    if not _noMonkey: # pragma: no cover
+    if not _noMonkey:  # pragma: no cover
         monkeypatches.patch_all()
 
     if not checkBasedir(config):

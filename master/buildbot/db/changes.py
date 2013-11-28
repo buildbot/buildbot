@@ -17,22 +17,27 @@
 Support for changes in the database
 """
 
-from buildbot.util import json
 import sqlalchemy as sa
-from twisted.internet import defer, reactor
+
 from buildbot.db import base
-from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.util import datetime2epoch
+from buildbot.util import epoch2datetime
+from buildbot.util import json
+from twisted.internet import defer
+from twisted.internet import reactor
+
 
 class ChDict(dict):
     pass
+
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
-            revision=None, when_timestamp=None, branch=None,
-            category=None, revlink='', properties={}, repository='', codebase='',
-            project='', uid=None, _reactor=reactor):
+                  revision=None, when_timestamp=None, branch=None,
+                  category=None, revlink='', properties={}, repository='', codebase='',
+                  project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -82,21 +87,21 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     self.check_length(tbl.c.filename, f)
                 conn.execute(tbl.insert(), [
                     dict(changeid=changeid, filename=f)
-                        for f in files
-                    ])
+                    for f in files
+                ])
             if properties:
                 tbl = self.db.model.change_properties
                 inserts = [
                     dict(changeid=changeid,
-                        property_name=k,
-                        property_value=json.dumps(v))
-                    for k,v in properties.iteritems()
+                         property_name=k,
+                         property_value=json.dumps(v))
+                    for k, v in properties.iteritems()
                 ]
                 for i in inserts:
                     self.check_length(tbl.c.property_name,
-                            i['property_name'])
+                                      i['property_name'])
                     self.check_length(tbl.c.property_value,
-                            i['property_value'])
+                                      i['property_value'])
 
                 conn.execute(tbl.insert(), inserts)
             if uid:
@@ -112,6 +117,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     @base.cached("chdicts")
     def getChange(self, changeid):
         assert changeid >= 0
+
         def thd(conn):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
@@ -127,12 +133,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
     def getChangeUids(self, changeid):
         assert changeid >= 0
+
         def thd(conn):
             cu_tbl = self.db.model.change_users
             q = cu_tbl.select(whereclause=(cu_tbl.c.changeid == changeid))
             res = conn.execute(q)
             rows = res.fetchall()
-            row_uids = [ row.uid for row in rows ]
+            row_uids = [row.uid for row in rows]
             return row_uids
         d = self.db.pool.do(thd)
         return d
@@ -142,27 +149,27 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # get the changeids from the 'changes' table
             changes_tbl = self.db.model.changes
             q = sa.select([changes_tbl.c.changeid],
-                    order_by=[sa.desc(changes_tbl.c.changeid)],
-                    limit=count)
+                          order_by=[sa.desc(changes_tbl.c.changeid)],
+                          limit=count)
             rp = conn.execute(q)
-            changeids = [ row.changeid for row in rp ]
+            changeids = [row.changeid for row in rp]
             rp.close()
             return list(reversed(changeids))
         d = self.db.pool.do(thd)
 
         # then turn those into changes, using the cache
         def get_changes(changeids):
-            return defer.gatherResults([ self.getChange(changeid)
-                                         for changeid in changeids ])
+            return defer.gatherResults([self.getChange(changeid)
+                                        for changeid in changeids])
         d.addCallback(get_changes)
         return d
 
     def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            q = sa.select([ changes_tbl.c.changeid ],
-                    order_by=sa.desc(changes_tbl.c.changeid),
-                    limit=1)
+            q = sa.select([changes_tbl.c.changeid],
+                          order_by=sa.desc(changes_tbl.c.changeid),
+                          limit=1)
             return conn.scalar(q)
         d = self.db.pool.do(thd)
         return d
@@ -177,6 +184,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         if not changeHorizon:
             return defer.succeed(None)
+
         def thd(conn):
             changes_tbl = self.db.model.changes
 
@@ -189,7 +197,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                           order_by=[sa.desc(changes_tbl.c.changeid)],
                           offset=changeHorizon)
             res = conn.execute(q)
-            ids_to_delete = [ r.changeid for r in res ]
+            ids_to_delete = [r.changeid for r in res]
 
             # and delete from all relevant tables, in dependency order
             for table_name in ('scheduler_changes', 'sourcestamp_changes',
@@ -210,23 +218,23 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         change_properties_tbl = self.db.model.change_properties
 
         chdict = ChDict(
-                changeid=ch_row.changeid,
-                author=ch_row.author,
-                files=[], # see below
-                comments=ch_row.comments,
-                is_dir=ch_row.is_dir,
-                revision=ch_row.revision,
-                when_timestamp=epoch2datetime(ch_row.when_timestamp),
-                branch=ch_row.branch,
-                category=ch_row.category,
-                revlink=ch_row.revlink,
-                properties={}, # see below
-                repository=ch_row.repository,
-                codebase=ch_row.codebase,
-                project=ch_row.project)
+            changeid=ch_row.changeid,
+            author=ch_row.author,
+            files=[],  # see below
+            comments=ch_row.comments,
+            is_dir=ch_row.is_dir,
+            revision=ch_row.revision,
+            when_timestamp=epoch2datetime(ch_row.when_timestamp),
+            branch=ch_row.branch,
+            category=ch_row.category,
+            revlink=ch_row.revlink,
+            properties={},  # see below
+            repository=ch_row.repository,
+            codebase=ch_row.codebase,
+            project=ch_row.project)
 
         query = change_files_tbl.select(
-                whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
+            whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
             chdict['files'].append(r.filename)
@@ -236,20 +244,20 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # change properties were recorded incorrectly
         def split_vs(vs):
             try:
-                v,s = vs
+                v, s = vs
                 if s != "Change":
-                    v,s = vs, "Change"
+                    v, s = vs, "Change"
             except:
-                v,s = vs, "Change"
+                v, s = vs, "Change"
             return v, s
 
         query = change_properties_tbl.select(
-                whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
+            whereclause=(change_properties_tbl.c.changeid == ch_row.changeid))
         rows = conn.execute(query)
         for r in rows:
             try:
                 v, s = split_vs(json.loads(r.property_value))
-                chdict['properties'][r.property_name] = (v,s)
+                chdict['properties'][r.property_name] = (v, s)
             except ValueError:
                 pass
 

@@ -9,8 +9,8 @@ basedir = '.'
 basedir = {{ basedir|repr }}
 {%- endif %}
 {% if not no_logrotate -%}
-rotateLength = {{ log_size|repr }}
-maxRotatedFiles = {{ log_count|repr }}
+rotateLength = {{ '%d' | format(log_size) }}
+maxRotatedFiles = {{ ('%d' | format(log_count)) if log_count != None else 'None' }}
 {%- endif %}
 configfile = {{ config|repr }}
 

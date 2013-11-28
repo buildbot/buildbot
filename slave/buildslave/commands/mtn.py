@@ -15,17 +15,20 @@
 
 import os
 
-from twisted.python import log
 from twisted.internet import defer
+from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
+from buildslave.commands.base import SourceBaseCommand
+
 
 class MonotoneError(Exception):
+
     """Error class for this module."""
 
 
 class Monotone(SourceBaseCommand):
+
     """Monotone specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -45,7 +48,7 @@ class Monotone(SourceBaseCommand):
 
         self.repourl = args['repourl']
         self.branch = args['branch']
-        
+
         self.revision = args.get('revision', None)
         self.progress = args.get('progress', False)
 
@@ -62,7 +65,7 @@ class Monotone(SourceBaseCommand):
             # Continue with start() method in superclass.
             return SourceBaseCommand.start(self)
 
-        d = self._checkDb();
+        d = self._checkDb()
         d.addCallback(cont)
         return d
 
@@ -146,8 +149,9 @@ class Monotone(SourceBaseCommand):
                                   keepStdout=True, sendStderr=False,
                                   usePTY=False, logEnviron=self.logEnviron)
         d = c.start()
+
         def afterCheckRepo(res, cdi):
-            if type(res) is int and res != 0:
+            if isinstance(res, int) and res != 0:
                 log.msg("No database found, creating it")
                 # mtn info fails, try to create shared repo.
                 # We'll be doing an initial pull, so up the timeout to
@@ -156,7 +160,7 @@ class Monotone(SourceBaseCommand):
                 c = runprocess.RunProcess(self.builder, [self.mtn, 'db', 'init',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c
@@ -168,13 +172,13 @@ class Monotone(SourceBaseCommand):
                                                          'db', 'migrate',
                                                          '--db', self.database],
                                           self.builder.basedir,
-                                          environ=self.env, 
+                                          environ=self.env,
                                           sendRC=False, usePTY=False,
                                           logEnviron=self.logEnviron)
                 self.command = c
                 return c.start()
             elif cdi.stdout.find("(too new, cannot use)") > 0:
-                raise MonotoneError, "The database is of a newer format than mtn can handle...  Abort!"
+                raise MonotoneError("The database is of a newer format than mtn can handle...  Abort!")
             else:
                 return defer.succeed(res)
         d.addCallback(afterCheckRepo, c)

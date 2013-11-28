@@ -16,11 +16,13 @@
 
 import time
 
-from twisted.internet import defer, threads
+from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
 
+from buildbot import config
+from buildbot import interfaces
 from buildbot.buildslave.base import AbstractLatentBuildSlave
-from buildbot import config, interfaces
 
 try:
     import novaclient.exceptions as nce
@@ -36,10 +38,11 @@ BUILD = 'BUILD'
 DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
+
 class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = None
-    _poll_resolution = 5 # hook point for tests
+    _poll_resolution = 5  # hook point for tests
 
     def __init__(self, name, password,
                  flavor,
@@ -49,8 +52,8 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                  os_tenant_name,
                  os_auth_url,
                  meta=None,
-                 max_builds=None, notify_on_missing=[], missing_timeout=60*20,
-                 build_wait_timeout=60*10, properties={}, locks=None):
+                 max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
+                 build_wait_timeout=60 * 10, properties={}, locks=None):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
@@ -104,7 +107,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration//60,
+                        (self.__class__.__name__, self.slavename, duration // 60,
                          instance.id))
             try:
                 inst = os_client.servers.get(instance.id)
@@ -115,14 +118,14 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                 raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                     instance.id, instance.status)
         if inst.status == ACTIVE:
-            minutes = duration//60
-            seconds = duration%60
+            minutes = duration // 60
+            seconds = duration % 60
             log.msg('%s %s instance %s (%s) started '
                     'in about %d minutes %d seconds' %
                     (self.__class__.__name__, self.slavename,
                      instance.id, instance.name, minutes, seconds))
             return [instance.id, image_uuid,
-                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+                    '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,

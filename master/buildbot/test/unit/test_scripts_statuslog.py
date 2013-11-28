@@ -14,9 +14,11 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
+
 from buildbot.clients import text
 from buildbot.scripts import statuslog
+from twisted.trial import unittest
+
 
 class TestStatusLog(unittest.TestCase):
 

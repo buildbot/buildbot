@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import lru
 from buildbot import config
+from buildbot.util import lru
 from twisted.application import service
 
+
 class CacheManager(config.ReconfigurableServiceMixin, service.Service):
+
     """
     A manager for a collection of caches, each for different types of objects
     and with potentially-overlapping key spaces.
@@ -61,10 +63,10 @@ class CacheManager(config.ReconfigurableServiceMixin, service.Service):
         self.config = new_config.caches
         for name, cache in self._caches.iteritems():
             cache.set_max_size(new_config.caches.get(name,
-                                                self.DEFAULT_CACHE_SIZE))
+                                                     self.DEFAULT_CACHE_SIZE))
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
+                                                                 new_config)
 
     def get_metrics(self):
         return dict([

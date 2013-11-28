@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
@@ -28,9 +29,9 @@ def upgrade(migrate_engine):
     object_state_table = sa.Table('object_state', metadata, autoload=True)
 
     # get the old, unwanted ID
-    q = sa.select([ objects_table.c.id ],
-        whereclause=(objects_table.c.name=='master')
-             & (objects_table.c.class_name == 'buildbot.master.BuildMaster'))
+    q = sa.select([objects_table.c.id],
+                  whereclause=(objects_table.c.name == 'master')
+                  & (objects_table.c.class_name == 'buildbot.master.BuildMaster'))
     res = q.execute()
     old_id = res.scalar()
 
@@ -38,8 +39,8 @@ def upgrade(migrate_engine):
     if old_id is not None:
 
         # get the new ID
-        q = sa.select([ objects_table.c.id ],
-            whereclause=objects_table.c.class_name == 'BuildMaster')
+        q = sa.select([objects_table.c.id],
+                      whereclause=objects_table.c.class_name == 'BuildMaster')
         res = q.execute()
         ids = res.fetchall()
 
@@ -53,19 +54,19 @@ def upgrade(migrate_engine):
 
             # update rows with the old id to use the new id
             q = object_state_table.update(
-                    whereclause=(object_state_table.c.objectid == old_id))
+                whereclause=(object_state_table.c.objectid == old_id))
             q.execute(objectid=new_id)
         else:
             q = object_state_table.delete(
-                    whereclause=(object_state_table.c.objectid == old_id))
+                whereclause=(object_state_table.c.objectid == old_id))
             q.execute()
 
         # in either case, delete the old object row
         q = objects_table.delete(
-                whereclause=(objects_table.c.id == old_id))
+            whereclause=(objects_table.c.id == old_id))
         q.execute()
 
     # and update the class name for the new rows
     q = objects_table.update(
-            whereclause=(objects_table.c.class_name == 'BuildMaster'))
+        whereclause=(objects_table.c.class_name == 'BuildMaster'))
     q.execute(class_name='buildbot.master.BuildMaster')

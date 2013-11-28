@@ -16,6 +16,7 @@
 import calendar
 import time
 
+
 def fixed_mktime_tz(data):
     if data[9] is None:
         # No zone info, so localtime is better assumption than GMT
@@ -23,6 +24,7 @@ def fixed_mktime_tz(data):
     else:
         t = calendar.timegm(data)
         return t - data[9]
+
 
 def patch():
     # Fix for http://bugs.python.org/issue14653 for Python 2.7.3 and below.

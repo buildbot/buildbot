@@ -16,22 +16,25 @@
 
 import re
 
-from twisted.spread import pb
-from twisted.cred import credentials, error
-from twisted.internet import reactor
 from buildbot.clients import base
+from twisted.cred import credentials
+from twisted.cred import error
+from twisted.internet import reactor
+from twisted.spread import pb
+
 
 class TextClient:
+
     def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
         """
         @type  master: string
         @param master: a host:port string to masters L{buildbot.status.client.PBListener}
 
         @type  username: string
-        @param username: 
+        @param username:
 
         @type  passwd: string
-        @param passwd: 
+        @param passwd:
 
         @type  events: string, one of builders, builds, steps, logs, full
         @param events: specify what level of detail should be reported.
@@ -41,7 +44,7 @@ class TextClient:
          - 'steps': also announce buildETAUpdate, stepStarted, stepFinished
          - 'logs': also announce stepETAUpdate, logStarted, logFinished
          - 'full': also announce log contents
-        """        
+        """
         self.master = master
         self.username = username
         self.passwd = passwd
@@ -66,9 +69,11 @@ class TextClient:
         reactor.connectTCP(host, port, cf)
         d.addCallbacks(self.connected, self.not_connected)
         return d
+
     def connected(self, ref):
         ref.notifyOnDisconnect(self.disconnected)
         self.listener.connected(ref)
+
     def not_connected(self, why):
         if why.check(error.UnauthorizedLogin):
             print """
@@ -77,6 +82,7 @@ buildbot.status.client.PBListener port and not to the slaveport?
 """
         reactor.stop()
         return why
+
     def disconnected(self, ref):
         print "lost connection"
         # we can get here in one of two ways: the buildmaster has
@@ -88,4 +94,3 @@ buildbot.status.client.PBListener port and not to the slaveport?
             reactor.stop()
         except RuntimeError:
             pass
-

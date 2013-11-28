@@ -13,19 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
+import os
 
-from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.trial import unittest
 
+from buildslave.commands import mtn
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
-from buildslave.commands import mtn
+
 
 class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
-    repourl='mtn://code.monotone.ca/sandbox'
-    branch='ca.monotone.sandbox.buildbot'
+    repourl = 'mtn://code.monotone.ca/sandbox'
+    branch = 'ca.monotone.sandbox.buildbot'
 
     def setUp(self):
         self.setUpCommand()
@@ -34,8 +35,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     def patch_sourcedirIsUpdateable(self, result):
-        self.cmd.sourcedirIsUpdateable = lambda : result
-
+        self.cmd.sourcedirIsUpdateable = lambda: result
 
     def test_no_db(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
@@ -49,7 +49,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             branch=self.branch
         ),
             # no sourcedata -> will do fresh checkout
-            initial_sourcedata = None,
+            initial_sourcedata=None,
         )
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
@@ -63,13 +63,13 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    self.basedir,
                    sendRC=False, usePTY=False,
                    environ=exp_environ) + 1,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'clobber', 'source' ],
+            Expect(['clobber', 'source'],
                    self.basedir) + 0,
-            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=none'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=none'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
@@ -82,16 +82,16 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_source,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
-            Expect([ 'copy', 'source', 'workdir'],
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
                    self.basedir)
-                   + 0,
-            ]
+            + 0,
+        ]
 
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_db_needs_migrating(self):
@@ -106,29 +106,29 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             branch=self.branch
         ),
             # no sourcedata -> will do fresh checkout
-            initial_sourcedata = None,
+            initial_sourcedata=None,
         )
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn') ],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ)
-            + { 'stdout' : 'blah blah (migration needed)\n' }
+            + {'stdout': 'blah blah (migration needed)\n'}
             + 0,
-            Expect([ 'path/to/mtn', 'db', 'migrate',
-                     '--db', os.path.join(self.basedir, 'db.mtn') ],
+            Expect(['path/to/mtn', 'db', 'migrate',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    sendRC=False, usePTY=False,
                    environ=exp_environ) + 0,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'clobber', 'source' ],
+            Expect(['clobber', 'source'],
                    self.basedir) + 0,
-            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=none'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=none'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
@@ -141,16 +141,16 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_source,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
-            Expect([ 'copy', 'source', 'workdir'],
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
                    self.basedir)
-                   + 0,
-            ]
+            + 0,
+        ]
 
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_db_too_new(self):
@@ -165,19 +165,19 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             branch=self.branch
         ),
             # no sourcedata -> will do fresh checkout
-            initial_sourcedata = None,
+            initial_sourcedata=None,
         )
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn') ],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ)
-            + { 'stdout' : 'blah blah (too new, cannot use)\n' }
+            + {'stdout': 'blah blah (too new, cannot use)\n'}
             + 0
-            ]
+        ]
 
         self.patch_runprocess(*expects)
 
@@ -196,7 +196,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             branch=self.branch
         ),
             # no sourcedata -> will do fresh checkout
-            initial_sourcedata = None,
+            initial_sourcedata=None,
         )
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
@@ -206,13 +206,13 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'clobber', 'source' ],
+            Expect(['clobber', 'source'],
                    self.basedir) + 0,
-            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=none'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=none'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
@@ -225,16 +225,16 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_source,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
-            Expect([ 'copy', 'source', 'workdir'],
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
                    self.basedir)
-                   + 0,
-            ]
+            + 0,
+        ]
 
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_run_mode_copy_update_sourcedir(self):
@@ -248,46 +248,46 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl=self.repourl,
             branch=self.branch,
-            progress=True, # added here for better coverage
+            progress=True,  # added here for better coverage
         ),
-            initial_sourcedata = self.repourl+"?"+self.branch
+            initial_sourcedata=self.repourl + "?" + self.branch
         )
         self.patch_sourcedirIsUpdateable(True)
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn')],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'update',
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '-r', 'h:ca.monotone.sandbox.buildbot',
-                     '-b', 'ca.monotone.sandbox.buildbot'],
+            Expect(['path/to/mtn', 'update',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '-r', 'h:ca.monotone.sandbox.buildbot',
+                    '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_source,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_source,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
-            Expect([ 'copy', 'source', 'workdir'],
+            + 0,
+            Expect(['copy', 'source', 'workdir'],
                    self.basedir)
-                   + 0,
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_run_mode_update_fresh(self):
@@ -299,24 +299,24 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl=self.repourl,
             branch=self.branch,
-            progress=True, # added here for better coverage
+            progress=True,  # added here for better coverage
         ),
-            initial_sourcedata = self.repourl+"?"+self.branch
+            initial_sourcedata=self.repourl + "?" + self.branch
         )
         self.patch_sourcedirIsUpdateable(False)
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn')],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
@@ -329,12 +329,12 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_run_mode_update_existing(self):
@@ -346,41 +346,41 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl=self.repourl,
             branch=self.branch,
-            progress=True, # added here for better coverage
+            progress=True,  # added here for better coverage
         ),
-            initial_sourcedata = self.repourl+"?"+self.branch
+            initial_sourcedata=self.repourl + "?" + self.branch
         )
         self.patch_sourcedirIsUpdateable(True)
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn')],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'update',
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '-r', 'h:ca.monotone.sandbox.buildbot',
-                     '-b', 'ca.monotone.sandbox.buildbot'],
+            Expect(['path/to/mtn', 'update',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '-r', 'h:ca.monotone.sandbox.buildbot',
+                    '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_run_mode_update_existing_known_rev(self):
@@ -392,41 +392,41 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision='abcdef01',
             repourl=self.repourl,
             branch=self.branch,
-            progress=True, # added here for better coverage
+            progress=True,  # added here for better coverage
         ),
-            initial_sourcedata = self.repourl+"?"+self.branch
+            initial_sourcedata=self.repourl + "?" + self.branch
         )
         self.patch_sourcedirIsUpdateable(True)
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn')],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'update',
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--revision', 'abcdef01',
-                     '-b', 'ca.monotone.sandbox.buildbot'],
+            Expect(['path/to/mtn', 'update',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--revision', 'abcdef01',
+                    '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
     def test_run_mode_update_existing_unknown_rev(self):
@@ -438,37 +438,37 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision='abcdef01',
             repourl=self.repourl,
             branch=self.branch,
-            progress=True, # added here for better coverage
+            progress=True,  # added here for better coverage
         ),
-            initial_sourcedata = self.repourl+"?"+self.branch
+            initial_sourcedata=self.repourl + "?" + self.branch
         )
         self.patch_sourcedirIsUpdateable(True)
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
-            Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', os.path.join(self.basedir, 'db.mtn')],
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
-            Expect([ 'path/to/mtn', 'update',
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--revision', 'abcdef01',
-                     '-b', 'ca.monotone.sandbox.buildbot'],
+            Expect(['path/to/mtn', 'update',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--revision', 'abcdef01',
+                    '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 1,
-            Expect([ 'clobber', 'workdir' ],
+            Expect(['clobber', 'workdir'],
                    self.basedir) + 0,
-            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
-                     '--db', os.path.join(self.basedir, 'db.mtn'),
-                     '--ticker=dot'],
+            Expect(['path/to/mtn', 'pull', self.repourl + "?" + self.branch,
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
+                    '--ticker=dot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
@@ -482,12 +482,12 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect(['path/to/mtn', 'automate', 'select', 'w:'],
                    self.basedir_workdir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False)
-                   + 0,
+            + 0,
         ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
         return d
 
 # Testing parseGotRevision
@@ -498,8 +498,9 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             repourl=self.repourl,
             branch=self.branch
         ))
+
         def _dovccmd(fn, dopull, callback=None, keepStdout=False):
-            #self.assertTrue(keepStdout)
+            # self.assertTrue(keepStdout)
             self.cmd.command = mock.Mock()
             self.cmd.command.stdout = stdout
             d = defer.succeed(None)
@@ -509,6 +510,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         self.cmd.srcdir = self.cmd.workdir
 
         d = self.cmd.parseGotRevision()
+
         def check(res):
             self.assertEqual(res, exp)
         d.addCallback(check)
@@ -522,6 +524,5 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
     def test_parseGotRevision_ok(self):
         return self.do_test_parseGotRevision(
-                "\n4026d33b0532b11f36b0875f63699adfa8ee8662\n",
-                  "4026d33b0532b11f36b0875f63699adfa8ee8662")
-
+            "\n4026d33b0532b11f36b0875f63699adfa8ee8662\n",
+            "4026d33b0532b11f36b0875f63699adfa8ee8662")

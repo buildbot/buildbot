@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import re, types
+import re
+import types
 
-from buildbot.util import ComparableMixin, NotABranch
+from buildbot.util import ComparableMixin
+from buildbot.util import NotABranch
+
 
 class ChangeFilter(ComparableMixin):
 
@@ -25,29 +28,31 @@ class ChangeFilter(ComparableMixin):
     compare_attrs = ('filter_fn', 'checks')
 
     def __init__(self,
-            # gets a Change object, returns boolean
-            filter_fn=None,
-            # change attribute comparisons: exact match to PROJECT, member of
-            # list PROJECTS, regular expression match to PROJECT_RE, or
-            # PROJECT_FN returns True when called with the project; repository,
-            # branch, and so on are similar.  Note that the regular expressions
-            # are anchored to the first character of the string.  For convenience,
-            # a list can also be specified to the singular option (e.g,. PROJETS
-            project=None, project_re=None, project_fn=None,
-            repository=None, repository_re=None, repository_fn=None,
-            branch=NotABranch, branch_re=None, branch_fn=None,
-            category=None, category_re=None, category_fn=None,
-            codebase=None, codebase_re=None, codebase_fn=None):
+                 # gets a Change object, returns boolean
+                 filter_fn=None,
+                 # change attribute comparisons: exact match to PROJECT, member of
+                 # list PROJECTS, regular expression match to PROJECT_RE, or
+                 # PROJECT_FN returns True when called with the project; repository,
+                 # branch, and so on are similar.  Note that the regular expressions
+                 # are anchored to the first character of the string.  For convenience,
+                 # a list can also be specified to the singular option (e.g,. PROJETS
+                 project=None, project_re=None, project_fn=None,
+                 repository=None, repository_re=None, repository_fn=None,
+                 branch=NotABranch, branch_re=None, branch_fn=None,
+                 category=None, category_re=None, category_fn=None,
+                 codebase=None, codebase_re=None, codebase_fn=None):
         def mklist(x):
-            if x is not None and type(x) is not types.ListType:
-                return [ x ]
+            if x is not None and not isinstance(x, types.ListType):
+                return [x]
             return x
-        def mklist_br(x): # branch needs to be handled specially
+
+        def mklist_br(x):  # branch needs to be handled specially
             if x is NotABranch:
                 return None
-            if type(x) is not types.ListType:
-                return [ x ]
+            if not isinstance(x, types.ListType):
+                return [x]
             return x
+
         def mkre(r):
             if r is not None and not hasattr(r, 'match'):
                 r = re.compile(r)
@@ -55,12 +60,12 @@ class ChangeFilter(ComparableMixin):
 
         self.filter_fn = filter_fn
         self.checks = [
-                (mklist(project), mkre(project_re), project_fn, "project"),
-                (mklist(repository), mkre(repository_re), repository_fn, "repository"),
-                (mklist_br(branch), mkre(branch_re), branch_fn, "branch"),
-                (mklist(category), mkre(category_re), category_fn, "category"),
-                (mklist(codebase), mkre(codebase_re), codebase_fn, "codebase"),
-            ]
+            (mklist(project), mkre(project_re), project_fn, "project"),
+            (mklist(repository), mkre(repository_re), repository_fn, "repository"),
+            (mklist_br(branch), mkre(branch_re), branch_fn, "branch"),
+            (mklist(category), mkre(category_re), category_fn, "category"),
+            (mklist(codebase), mkre(codebase_re), codebase_fn, "codebase"),
+        ]
 
     def filter_change(self, change):
         if self.filter_fn is not None and not self.filter_fn(change):
@@ -82,17 +87,16 @@ class ChangeFilter(ComparableMixin):
                 checks.append('%s == %s' % (chg_attr, filt_list[0]))
             elif filt_list is not None:
                 checks.append('%s in %r' % (chg_attr, filt_list))
-            if filt_re is not None :
+            if filt_re is not None:
                 checks.append('%s ~/%s/' % (chg_attr, filt_re))
-            if filt_fn is not None :
+            if filt_fn is not None:
                 checks.append('%s(%s)' % (filt_fn.__name__, chg_attr))
 
         return "<%s on %s>" % (self.__class__.__name__, ' and '.join(checks))
 
     @staticmethod
     def fromSchedulerConstructorArgs(change_filter=None,
-            branch=NotABranch, categories=None):
-
+                                     branch=NotABranch, categories=None):
         """
         Static method to create a filter based on constructor args
         change_filter, branch, and categories; use default values @code{None},
@@ -112,8 +116,10 @@ class ChangeFilter(ComparableMixin):
         elif branch is not NotABranch or categories:
             # build a change filter from the deprecated category and branch args
             cfargs = {}
-            if branch is not NotABranch: cfargs['branch'] = branch
-            if categories: cfargs['category'] = categories
+            if branch is not NotABranch:
+                cfargs['branch'] = branch
+            if categories:
+                cfargs['category'] = categories
             return ChangeFilter(**cfargs)
         else:
             return None

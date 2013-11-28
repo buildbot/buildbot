@@ -19,11 +19,12 @@
 Standard setup script.
 """
 
-import sys
 import os
-from distutils.core import setup
+import sys
+
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
+from distutils.core import setup
 
 from buildslave import version
 
@@ -34,12 +35,13 @@ if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildslave.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
+
 class our_install_data(install_data):
 
     def finalize_options(self):
         self.set_undefined_options('install',
-            ('install_lib', 'install_dir'),
-        )
+                                   ('install_lib', 'install_dir'),
+                                   )
         install_data.finalize_options(self)
 
     def run(self):
@@ -48,6 +50,7 @@ class our_install_data(install_data):
         fn = os.path.join(self.install_dir, 'buildslave', 'VERSION')
         open(fn, 'w').write(version)
         self.outfiles.append(fn)
+
 
 class our_sdist(sdist):
 
@@ -83,7 +86,7 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
-        ],
+    ],
 
     'packages': [
         "buildslave",
@@ -102,8 +105,8 @@ setup_args = {
     'cmdclass': {
         'install_data': our_install_data,
         'sdist': our_sdist
-        }
     }
+}
 
 # set zip_safe to false to force Windows installs to always unpack eggs
 # into directories, which seems to work better --
@@ -114,7 +117,7 @@ if sys.platform == "win32":
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools #@UnusedImport
+    import setuptools  # @UnusedImport
 except ImportError:
     pass
 else:

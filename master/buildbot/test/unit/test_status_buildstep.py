@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 
 import os
-from twisted.trial import unittest
-from buildbot.status import builder, master
+
+from buildbot.status import builder
+from buildbot.status import master
 from buildbot.test.fake import fakemaster
+from twisted.trial import unittest
+
 
 class TestBuildStepStatus(unittest.TestCase):
 
@@ -64,4 +67,4 @@ class TestBuildStepStatus(unittest.TestCase):
             bss1.asDict()['logs'],
             [['log_1', ('http://localhost:8080/builders/builder_1/'
                         'builds/0/steps/step_1/logs/log_1')]]
-            )
+        )

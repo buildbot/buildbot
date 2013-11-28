@@ -21,7 +21,9 @@
 
 import os
 
-from mercurial.node import bin, hex, nullid #@UnresolvedImport
+from mercurial.node import bin
+from mercurial.node import hex
+from mercurial.node import nullid  # @UnresolvedImport
 
 # mercurial's on-demand-importing hacks interfere with the:
 #from zope.interface import Interface
@@ -43,17 +45,18 @@ except ImportError:
     def fromlocal(s):
         return s
 
+
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
     baseurl = ui.config('hgbuildbot', 'baseurl',
-                            ui.config('web', 'baseurl', ''))
+                        ui.config('web', 'baseurl', ''))
     masters = ui.configlist('hgbuildbot', 'master')
     if masters:
         branchtype = ui.config('hgbuildbot', 'branchtype', 'inrepo')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
         # notify also has this setting
-        stripcount = int(ui.config('notify','strip') or ui.config('hgbuildbot','strip',3))
+        stripcount = int(ui.config('notify', 'strip') or ui.config('hgbuildbot', 'strip', 3))
         category = ui.config('hgbuildbot', 'category', None)
         project = ui.config('hgbuildbot', 'project', '')
         auth = ui.config('hgbuildbot', 'auth', None)
@@ -69,10 +72,10 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     if fork:
         child_pid = os.fork()
         if child_pid == 0:
-            #child
+            # child
             pass
         else:
-            #parent
+            # parent
             ui.status("Notifying buildbot...\n")
             return
 
@@ -133,7 +136,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
                 'comments': fromlocal(desc),
                 'files': files,
                 'branch': branch,
-                'properties':properties
+                'properties': properties
             }
             d.addCallback(_send, s, change)
 
@@ -144,7 +147,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         ui.warn(s.getFailureString(why) + '\n')
 
     d.addCallbacks(_printSuccess, _printFailure)
-    d.addBoth(lambda _ : reactor.stop())
+    d.addBoth(lambda _: reactor.stop())
     reactor.run()
 
     if fork:
@@ -153,6 +156,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         return
 
 # taken from the mercurial notify extension
+
+
 def strip(path, count):
     '''Strip the count first slash of the path'''
 

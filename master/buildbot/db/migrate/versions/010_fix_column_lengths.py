@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from migrate import changeset
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -23,41 +25,41 @@ def upgrade(migrate_engine):
     # the old (non-sqlalchemy-migrate) migration scripts messed up the
     # lengths of these columns, so fix them here.
     changeset.alter_column(
-            sa.Column('class_name', sa.String(128), nullable=False),
-            table="schedulers",
-            metadata=metadata,
-            engine=migrate_engine)
+        sa.Column('class_name', sa.String(128), nullable=False),
+        table="schedulers",
+        metadata=metadata,
+        engine=migrate_engine)
 
     changeset.alter_column(
-            sa.Column('name', sa.String(128), nullable=False),
-            table="schedulers",
-            metadata=metadata,
-            engine=migrate_engine)
+        sa.Column('name', sa.String(128), nullable=False),
+        table="schedulers",
+        metadata=metadata,
+        engine=migrate_engine)
 
     # sqlalchemy's reflection gets the server_defaults wrong, so this
     # table has to be included here.
     changes = sa.Table('changes', metadata,
-        sa.Column('changeid', sa.Integer,  primary_key=True),
+                       sa.Column('changeid', sa.Integer, primary_key=True),
+                       sa.Column('author', sa.String(256), nullable=False),
+                       sa.Column('comments', sa.String(1024), nullable=False),
+                       sa.Column('is_dir', sa.SmallInteger, nullable=False),
+                       sa.Column('branch', sa.String(256)),
+                       sa.Column('revision', sa.String(256)),
+                       sa.Column('revlink', sa.String(256)),
+                       sa.Column('when_timestamp', sa.Integer, nullable=False),
+                       sa.Column('category', sa.String(256)),
+                       sa.Column('repository', sa.String(length=512), nullable=False,
+                                 server_default=''),
+                       sa.Column('project', sa.String(length=512), nullable=False,
+                                 server_default=''),
+                       )
+    changeset.alter_column(
         sa.Column('author', sa.String(256), nullable=False),
-        sa.Column('comments', sa.String(1024), nullable=False),
-        sa.Column('is_dir', sa.SmallInteger, nullable=False),
+        table=changes,
+        metadata=metadata,
+        engine=migrate_engine)
+    changeset.alter_column(
         sa.Column('branch', sa.String(256)),
-        sa.Column('revision', sa.String(256)),
-        sa.Column('revlink', sa.String(256)),
-        sa.Column('when_timestamp', sa.Integer, nullable=False),
-        sa.Column('category', sa.String(256)),
-        sa.Column('repository', sa.String(length=512), nullable=False,
-            server_default=''),
-        sa.Column('project', sa.String(length=512), nullable=False,
-            server_default=''),
-    )
-    changeset.alter_column(
-            sa.Column('author', sa.String(256), nullable=False),
-            table=changes,
-            metadata=metadata,
-            engine=migrate_engine)
-    changeset.alter_column(
-            sa.Column('branch', sa.String(256)),
-            table=changes,
-            metadata=metadata,
-            engine=migrate_engine)
+        table=changes,
+        metadata=metadata,
+        engine=migrate_engine)

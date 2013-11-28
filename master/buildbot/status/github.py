@@ -23,8 +23,9 @@ from zope.interface import implements
 
 from buildbot.interfaces import IStatusReceiver
 from buildbot.process.properties import Interpolate
-from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.status.base import StatusReceiverMultiService
+from buildbot.status.builder import FAILURE
+from buildbot.status.builder import SUCCESS
 
 
 class GitHubStatus(StatusReceiverMultiService):
@@ -102,7 +103,7 @@ class GitHubStatus(StatusReceiverMultiService):
                 startTime).isoformat(' '),
             'endDateTime': 'In progress',
             'duration': 'In progress',
-            })
+        })
         result = yield self._sendGitHubStatus(status)
         defer.returnValue(result)
 
@@ -139,7 +140,7 @@ class GitHubStatus(StatusReceiverMultiService):
             'endDateTime': datetime.datetime.fromtimestamp(
                 endTime).isoformat(' '),
             'duration': duration,
-            })
+        })
 
         result = yield self._sendGitHubStatus(status)
         defer.returnValue(result)
@@ -180,7 +181,7 @@ class GitHubStatus(StatusReceiverMultiService):
             build.render(self._repoOwner),
             build.render(self._repoName),
             build.render(self._sha),
-            ])
+        ])
 
         if not repoOwner or not repoName:
             defer.returnValue({})
@@ -206,8 +207,8 @@ class GitHubStatus(StatusReceiverMultiService):
         # We explicitly map success and failure. Any other BuildBot status
         # is converted to `error`.
         state_map = {
-          SUCCESS: 'success',
-          FAILURE: 'failure',
+            SUCCESS: 'success',
+            FAILURE: 'failure',
         }
 
         try:
@@ -227,16 +228,16 @@ class GitHubStatus(StatusReceiverMultiService):
             state=status['state'].encode('utf-8'),
             target_url=status['targetURL'].encode('utf-8'),
             description=status['description'].encode('utf-8'),
-            )
+        )
 
         success_message = (
             'Status "%(state)s" sent for '
             '%(repoOwner)s/%(repoName)s at %(sha)s.'
-            ) % status
+        ) % status
         error_message = (
             'Fail to send status "%(state)s" for '
             '%(repoOwner)s/%(repoName)s at %(sha)s.'
-            ) % status
+        ) % status
         d.addCallback(lambda result: log.msg(success_message))
         d.addErrback(lambda failure: log.err(failure, error_message))
         return d

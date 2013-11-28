@@ -15,10 +15,12 @@
 
 from __future__ import with_statement
 
-import os
 import copy
+import os
 import stat
-from twisted.python import usage, runtime
+
+from twisted.python import runtime
+from twisted.python import usage
 
 
 def isBuildmasterDir(dir):
@@ -30,7 +32,7 @@ def isBuildmasterDir(dir):
         contents = open(buildbot_tac).read()
     except IOError, exception:
         print_error("error reading '%s': %s" %
-                       (buildbot_tac, exception.strerror))
+                    (buildbot_tac, exception.strerror))
         return False
 
     if "Application('buildmaster')" not in contents:
@@ -39,12 +41,13 @@ def isBuildmasterDir(dir):
 
     return True
 
+
 def getConfigFileFromTac(basedir):
     # execute the .tac file to see if its configfile location exists
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
         # don't mess with the global namespace, but set __file__ for relocatable buildmasters
-        tacGlobals = {'__file__' : tacFile}
+        tacGlobals = {'__file__': tacFile}
         execfile(tacFile, tacGlobals)
         return tacGlobals.get("configfile", "master.cfg")
     else:

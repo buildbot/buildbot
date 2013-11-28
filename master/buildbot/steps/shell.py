@@ -14,17 +14,22 @@
 # Copyright Buildbot Team Members
 
 
-import re
 import inspect
-from twisted.python import log, failure
-from twisted.spread import pb
+import re
+
+from buildbot import config
+from buildbot.process import buildstep
+from buildbot.status.logfile import STDERR
+from buildbot.status.logfile import STDOUT
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.util import flatten
+from twisted.python import failure
+from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
-from buildbot.process import buildstep
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
-from buildbot.status.logfile import STDOUT, STDERR
-from buildbot import config
-from buildbot.util import flatten
+from twisted.spread import pb
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -32,7 +37,9 @@ from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
+
 class ShellCommand(buildstep.LoggingBuildStep):
+
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method, or customize
@@ -69,11 +76,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
     """
 
     name = "shell"
-    renderables = buildstep.LoggingBuildStep.renderables + [
-                   'slaveEnvironment', 'remote_kwargs', 'command',
-                   'description', 'descriptionDone', 'descriptionSuffix']
+    renderables = [
+        'slaveEnvironment', 'remote_kwargs', 'command',
+        'description', 'descriptionDone', 'descriptionSuffix',
+        'haltOnFailure', 'flunkOnFailure']
 
-    command = None # set this to a command, or set in kwargs
+    command = None  # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
     #               will be merged with any logfiles= argument passed in
     #               to __init__
@@ -129,7 +137,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                          + ', '.join(invalid_args))
 
         # everything left over goes to the RemoteShellCommand
-        kwargs['workdir'] = workdir # including a copy of 'workdir'
+        kwargs['workdir'] = workdir  # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
 
@@ -190,8 +198,10 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             try:
                 len(words)
-            except AttributeError:
+            except (AttributeError, TypeError):
                 # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
                 return ["???"]
 
             # flatten any nested lists
@@ -199,7 +209,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             # strip instances and other detritus (which can happen if a
             # description is requested before rendering)
-            words = [ w for w in words if isinstance(w, (str, unicode)) ]
+            words = [w for w in words if isinstance(w, (str, unicode))]
 
             if len(words) < 1:
                 return ["???"]
@@ -216,7 +226,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment
         # This can be set from a Builder-level environment, or from earlier
-        # BuildSteps. The latter method is deprecated and superceded by
+        # BuildSteps. The latter method is deprecated and superseded by
         # BuildProperties.
         # Environment variables passed in by a BuildStep override
         # those passed in at the Builder level.
@@ -241,12 +251,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
-        
+
         # check for the interruptSignal flag
         if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
             warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
-        
+
         return kwargs
 
     def start(self):
@@ -262,7 +272,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.setupEnvironment(cmd)
 
         self.startCommand(cmd, warnings)
-
 
 
 class TreeSize(ShellCommand):
@@ -283,7 +292,7 @@ class TreeSize(ShellCommand):
         if cmd.didFail():
             return FAILURE
         if self.kib is None:
-            return WARNINGS # not sure how 'du' could fail, but whatever
+            return WARNINGS  # not sure how 'du' could fail, but whatever
         return SUCCESS
 
     def getText(self, cmd, results):
@@ -291,9 +300,10 @@ class TreeSize(ShellCommand):
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
 
+
 class SetPropertyFromCommand(ShellCommand):
     name = "setproperty"
-    renderables = [ 'property' ]
+    renderables = ['property']
 
     def __init__(self, property=None, extract_fn=None, strip=True, **kwargs):
         self.property = property
@@ -313,30 +323,31 @@ class SetPropertyFromCommand(ShellCommand):
             if cmd.didFail():
                 return
             result = cmd.logs['stdio'].getText()
-            if self.strip: result = result.strip()
+            if self.strip:
+                result = result.strip()
             propname = self.property
             self.setProperty(propname, result, "SetProperty Step")
             self.property_changes[propname] = result
         else:
             log = cmd.logs['stdio']
             new_props = self.extract_fn(cmd.rc,
-                    ''.join(log.getChunks([STDOUT], onlyText=True)),
-                    ''.join(log.getChunks([STDERR], onlyText=True)))
-            for k,v in new_props.items():
+                                        ''.join(log.getChunks([STDOUT], onlyText=True)),
+                                        ''.join(log.getChunks([STDERR], onlyText=True)))
+            for k, v in new_props.items():
                 self.setProperty(k, v, "SetProperty Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
         if self.property_changes:
-            props_set = [ "%s: %r" % (k,v)
-                          for k,v in self.property_changes.items() ]
+            props_set = ["%s: %r" % (k, v)
+                         for k, v in self.property_changes.items()]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def getText(self, cmd, results):
         if len(self.property_changes) > 1:
-            return [ "%d properties set" % len(self.property_changes) ]
+            return ["%d properties set" % len(self.property_changes)]
         elif len(self.property_changes) == 1:
-            return [ "property '%s' set" % self.property_changes.keys()[0] ]
+            return ["property '%s' set" % self.property_changes.keys()[0]]
         else:
             # let ShellCommand describe
             return ShellCommand.getText(self, cmd, results)
@@ -344,8 +355,8 @@ class SetPropertyFromCommand(ShellCommand):
 
 SetProperty = SetPropertyFromCommand
 deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
-        "It has been renamed to SetPropertyFromCommand",
-        "buildbot.steps.shell", "SetProperty")
+                          "It has been renamed to SetPropertyFromCommand",
+                          "buildbot.steps.shell", "SetProperty")
 
 
 class Configure(ShellCommand):
@@ -357,13 +368,16 @@ class Configure(ShellCommand):
     descriptionDone = ["configure"]
     command = ["./configure"]
 
+
 class StringFileWriter(pb.Referenceable):
+
     """
     FileWriter class that just puts received data into a buffer.
 
     Used to upload a file from slave for inline processing rather than
     writing into a file on master.
     """
+
     def __init__(self):
         self.buffer = ""
 
@@ -373,13 +387,14 @@ class StringFileWriter(pb.Referenceable):
     def remote_close(self):
         pass
 
+
 class WarningCountingShellCommand(ShellCommand):
-    renderables = [ 'suppressionFile' ]
+    renderables = ['suppressionFile']
 
     warnCount = 0
     warningPattern = '.*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory " 
+    directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
@@ -436,9 +451,9 @@ class WarningCountingShellCommand(ShellCommand):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe != None and isinstance(fileRe, basestring):
+            if fileRe is not None and isinstance(fileRe, basestring):
                 fileRe = re.compile(fileRe)
-            if warnRe != None and isinstance(warnRe, basestring):
+            if warnRe is not None and isinstance(warnRe, basestring):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -454,7 +469,7 @@ class WarningCountingShellCommand(ShellCommand):
         of warningPattern match."""
         file = match.group(1)
         lineNo = match.group(2)
-        if lineNo != None:
+        if lineNo is not None:
             lineNo = int(lineNo)
         text = match.group(3)
         return (file, lineNo, text)
@@ -464,19 +479,19 @@ class WarningCountingShellCommand(ShellCommand):
             (file, lineNo, text) = self.warningExtractor(self, line, match)
             lineNo = lineNo and int(lineNo)
 
-            if file != None and file != "" and self.directoryStack:
+            if file is not None and file != "" and self.directoryStack:
                 currentDirectory = '/'.join(self.directoryStack)
-                if currentDirectory != None and currentDirectory != "":
+                if currentDirectory is not None and currentDirectory != "":
                     file = "%s/%s" % (currentDirectory, file)
 
             # Skip adding the warning if any suppression matches.
             for fileRe, warnRe, start, end in self.suppressions:
-                if not (file == None or fileRe == None or fileRe.match(file)):
+                if not (file is None or fileRe is None or fileRe.match(file)):
                     continue
-                if not (warnRe == None or warnRe.search(text)):
+                if not (warnRe is None or warnRe.search(text)):
                     continue
-                if not ((start == None and end == None) or
-                        (lineNo != None and start <= lineNo and end >= lineNo)):
+                if not ((start is None and end is None) or
+                        (lineNo is not None and start <= lineNo and end >= lineNo)):
                     continue
                 return
 
@@ -484,7 +499,7 @@ class WarningCountingShellCommand(ShellCommand):
         self.warnCount += 1
 
     def start(self):
-        if self.suppressionFile == None:
+        if self.suppressionFile is None:
             return ShellCommand.start(self)
 
         self.myFileWriter = StringFileWriter()
@@ -494,8 +509,8 @@ class WarningCountingShellCommand(ShellCommand):
             'workdir': self.getWorkdir(),
             'writer': self.myFileWriter,
             'maxsize': None,
-            'blocksize': 32*1024,
-            }
+            'blocksize': 32 * 1024,
+        }
         cmd = buildstep.RemoteCommand('uploadFile', args, ignore_updates=True)
         d = self.runCommand(cmd)
         d.addCallback(self.uploadDone)
@@ -512,11 +527,11 @@ class WarningCountingShellCommand(ShellCommand):
             match = self.suppressionLineRe.match(line)
             if (match):
                 file, test, start, end = match.groups()
-                if (end != None):
+                if (end is not None):
                     end = int(end)
-                if (start != None):
+                if (start is not None):
                     start = int(start)
-                    if end == None:
+                    if end is None:
                         end = start
                 list.append((file, test, start, end))
 
@@ -539,12 +554,12 @@ class WarningCountingShellCommand(ShellCommand):
             wre = re.compile(wre)
 
         directoryEnterRe = self.directoryEnterPattern
-        if (directoryEnterRe != None
+        if (directoryEnterRe is not None
                 and isinstance(directoryEnterRe, basestring)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
-        if (directoryLeaveRe != None
+        if (directoryLeaveRe is not None
                 and isinstance(directoryLeaveRe, basestring)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
@@ -562,7 +577,7 @@ class WarningCountingShellCommand(ShellCommand):
                     continue
             if (directoryLeaveRe and
                 self.directoryStack and
-                directoryLeaveRe.search(line)):
+                    directoryLeaveRe.search(line)):
                     self.directoryStack.pop()
                     continue
 
@@ -574,7 +589,7 @@ class WarningCountingShellCommand(ShellCommand):
         # available
         if self.warnCount:
             self.addCompleteLog("warnings (%d)" % self.warnCount,
-                    "\n".join(warnings) + "\n")
+                                "\n".join(warnings) + "\n")
 
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
@@ -582,10 +597,9 @@ class WarningCountingShellCommand(ShellCommand):
         old_count = self.getProperty("warnings-count", 0)
         self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
-
     def evaluateCommand(self, cmd):
-        if ( cmd.didFail() or
-           ( self.maxWarnCount != None and self.warnCount > self.maxWarnCount ) ):
+        if (cmd.didFail() or
+           (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount)):
             return FAILURE
         if self.warnCount:
             return WARNINGS
@@ -600,6 +614,7 @@ class Compile(WarningCountingShellCommand):
     description = ["compiling"]
     descriptionDone = ["compile"]
     command = ["make", "all"]
+
 
 class Test(WarningCountingShellCommand):
 
@@ -626,7 +641,7 @@ class Test(WarningCountingShellCommand):
     def describe(self, done=False):
         description = WarningCountingShellCommand.describe(self, done)
         if done:
-            description = description[:] # make a private copy
+            description = description[:]  # make a private copy
             if self.step_status.hasStatistic('tests-total'):
                 total = self.step_status.getStatistic("tests-total", 0)
                 failed = self.step_status.getStatistic("tests-failed", 0)
@@ -645,16 +660,17 @@ class Test(WarningCountingShellCommand):
                     description.append('%d failed' % failed)
         return description
 
+
 class PerlModuleTest(Test):
-    command=["prove", "--lib", "lib", "-r", "t"]
+    command = ["prove", "--lib", "lib", "-r", "t"]
     total = 0
 
     def evaluateCommand(self, cmd):
         # Get stdio, stripping pesky newlines etc.
         lines = map(
-            lambda line : line.replace('\r\n','').replace('\r','').replace('\n',''),
+            lambda line: line.replace('\r\n', '').replace('\r', '').replace('\n', ''),
             self.getLog('stdio').readlines()
-            )
+        )
 
         total = 0
         passed = 0
@@ -682,7 +698,7 @@ class PerlModuleTest(Test):
                 if line[2]:
                     total = int(line[2])
 
-        else: # Nope, it's the old version
+        else:  # Nope, it's the old version
             re_test_result = re.compile(r"^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
 
             mos = map(lambda line: re_test_result.search(line), lines)

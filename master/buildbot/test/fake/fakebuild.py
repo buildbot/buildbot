@@ -15,9 +15,11 @@
 
 import mock
 import posixpath
-from twisted.python import components
-from buildbot.process import properties
+
 from buildbot import interfaces
+from buildbot.process import properties
+from twisted.python import components
+
 
 class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
 
@@ -29,8 +31,8 @@ class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
         return []
 
 components.registerAdapter(
-        lambda build_status : build_status.properties,
-        FakeBuildStatus, interfaces.IProperties)
+    lambda build_status: build_status.properties,
+    FakeBuildStatus, interfaces.IProperties)
 
 
 class FakeBuild(properties.PropertiesMixin):
@@ -53,5 +55,5 @@ class FakeBuild(properties.PropertiesMixin):
 
 
 components.registerAdapter(
-        lambda build : build.build_status.properties,
-        FakeBuild, interfaces.IProperties)
+    lambda build: build.build_status.properties,
+    FakeBuild, interfaces.IProperties)

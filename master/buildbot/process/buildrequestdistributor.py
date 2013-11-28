@@ -14,16 +14,17 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.application import service
+from twisted.internet import defer
 from twisted.python import log
 from twisted.python.failure import Failure
-from twisted.internet import defer
-from twisted.application import service
 
+from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
-from buildbot.db.buildrequests import AlreadyClaimedError
 
 import random
+
 
 class BuildChooserBase(object):
     #
@@ -65,7 +66,6 @@ class BuildChooserBase(object):
 
         defer.returnValue((slave, breqs))
 
-
     # Must be implemented by subclass
     def popNextBuild(self):
         # Pick the next (slave, breq) pair; note this is pre-merge, so
@@ -79,9 +79,7 @@ class BuildChooserBase(object):
         # original breq as well!)
         raise NotImplementedError("Subclasses must implement this!")
 
-
     # - Helper functions that are generally useful to all subclasses -
-
     @defer.inlineCallbacks
     def _fetchUnclaimedBrdicts(self):
         # Sets up a cache of all the unclaimed brdicts. The cache is
@@ -91,9 +89,9 @@ class BuildChooserBase(object):
 
         if self.unclaimedBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed=False)
+                buildername=self.bldr.name, claimed=False)
             # sort by submitted_at, so the first is the oldest
-            brdicts.sort(key=lambda brd : brd['submitted_at'])
+            brdicts.sort(key=lambda brd: brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
         defer.returnValue(self.unclaimedBrdicts)
 
@@ -140,7 +138,8 @@ class BuildChooserBase(object):
         # Retrieve the list of BuildRequest objects for all unclaimed builds
         return defer.gatherResults([
             self._getBuildRequestForBrdict(brdict)
-              for brdict in self.unclaimedBrdicts ])
+            for brdict in self.unclaimedBrdicts])
+
 
 class BasicBuildChooser(BuildChooserBase):
     # BasicBuildChooser generates build pairs via the configuration points:
@@ -170,7 +169,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
-            self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
+            self.nextSlave = lambda _, slaves: random.choice(slaves) if slaves else None
 
         self.slavepool = self.bldr.getAvailableSlaves()
 
@@ -189,7 +188,7 @@ class BasicBuildChooser(BuildChooserBase):
     def popNextBuild(self):
         nextBuild = (None, None)
 
-        while 1:
+        while True:
             #  1. pick a slave
             slave = yield self._popNextSlave()
             if not slave:
@@ -227,7 +226,7 @@ class BasicBuildChooser(BuildChooserBase):
 
     @defer.inlineCallbacks
     def mergeRequests(self, breq):
-        mergedRequests = [ breq ]
+        mergedRequests = [breq]
 
         # short circuit if there is no merging to do
         if not self.mergeRequestsFn or not self.unclaimedBrdicts:
@@ -244,7 +243,6 @@ class BasicBuildChooser(BuildChooserBase):
                 mergedRequests.append(req)
 
         defer.returnValue(mergedRequests)
-
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
@@ -318,6 +316,7 @@ class BasicBuildChooser(BuildChooserBase):
 
 
 class BuildRequestDistributor(service.Service):
+
     """
     Special-purpose class to handle distributing build requests to builders by
     calling their C{maybeStartBuild} method.
@@ -374,6 +373,7 @@ class BuildRequestDistributor(service.Service):
 
         d = self._maybeStartBuildsOn(new_builders)
         self._pendingMSBOCalls.append(d)
+
         @d.addBoth
         def remove(x):
             self._pendingMSBOCalls.remove(d)
@@ -399,7 +399,7 @@ class BuildRequestDistributor(service.Service):
                 # then sort the new, expanded set of builders
                 self._pending_builders = \
                     yield self._sortBuilders(
-                            list(existing_pending | new_builders))
+                        list(existing_pending | new_builders))
 
                 # start the activity loop, if we aren't already
                 # working on that.
@@ -410,7 +410,7 @@ class BuildRequestDistributor(service.Service):
                         "while attempting to start builds on %s" % self.name)
 
         return self.pending_builders_lock.run(
-                resetPendingBuildersList, new_builders)
+            resetPendingBuildersList, new_builders)
 
     @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):
@@ -418,25 +418,28 @@ class BuildRequestDistributor(service.Service):
         timer.start()
         # perform an asynchronous schwarzian transform, transforming None
         # into sys.maxint so that it sorts to the end
+
         def xform(bldr):
-            d = defer.maybeDeferred(lambda :
-                    bldr.getOldestRequestTime())
-            d.addCallback(lambda time :
-                (((time is None) and None or time),bldr))
+            d = defer.maybeDeferred(lambda:
+                                    bldr.getOldestRequestTime())
+            d.addCallback(lambda time:
+                          (((time is None) and None or time), bldr))
             return d
         xformed = yield defer.gatherResults(
-                [ xform(bldr) for bldr in builders ])
+            [xform(bldr) for bldr in builders])
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
-        def nonecmp(a,b):
-            if a[0] is None: return 1
-            if b[0] is None: return -1
-            return cmp(a,b)
+        def nonecmp(a, b):
+            if a[0] is None:
+                return 1
+            if b[0] is None:
+                return -1
+            return cmp(a, b)
         xformed.sort(cmp=nonecmp)
 
         # and reverse the transform
-        rv = [ xf[1] for xf in xformed ]
+        rv = [xf[1] for xf in xformed]
         timer.stop()
         defer.returnValue(rv)
 
@@ -448,9 +451,9 @@ class BuildRequestDistributor(service.Service):
 
         # convert builder names to builders
         builders_dict = self.botmaster.builders
-        builders = [ builders_dict.get(n)
-                     for n in buildernames
-                     if n in builders_dict ]
+        builders = [builders_dict.get(n)
+                    for n in buildernames
+                    if n in builders_dict]
 
         # find a sorting function
         sorter = self.master.config.prioritizeBuilders
@@ -459,13 +462,13 @@ class BuildRequestDistributor(service.Service):
 
         # run it
         try:
-            builders = yield defer.maybeDeferred(lambda :
-                    sorter(self.master, builders))
+            builders = yield defer.maybeDeferred(lambda:
+                                                 sorter(self.master, builders))
         except Exception:
             log.err(Failure(), "prioritizing builders; order unspecified")
 
         # and return the names
-        rv = [ b.name for b in builders ]
+        rv = [b.name for b in builders]
         timer.stop()
         defer.returnValue(rv)
 
@@ -476,7 +479,7 @@ class BuildRequestDistributor(service.Service):
         timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
         timer.start()
 
-        while 1:
+        while True:
             yield self.activity_lock.acquire()
 
             # lock pending_builders, pop an element from it, and release
@@ -514,13 +517,13 @@ class BuildRequestDistributor(service.Service):
 
         bc = self.createBuildChooser(bldr, self.master)
 
-        while 1:
+        while True:
             slave, breqs = yield bc.chooseNextBuild()
             if not slave or not breqs:
                 break
 
             # claim brid's
-            brids = [ br.id for br in breqs ]
+            brids = [br.id for br in breqs]
             try:
                 yield self.master.db.buildrequests.claimBuildRequests(brids)
             except AlreadyClaimedError:
@@ -543,4 +546,4 @@ class BuildRequestDistributor(service.Service):
 
     def _quiet(self):
         # shim for tests
-        pass # pragma: no cover
+        pass  # pragma: no cover

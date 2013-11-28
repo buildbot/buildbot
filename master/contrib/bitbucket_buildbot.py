@@ -12,15 +12,17 @@ bitbucket_buildbot.py is based on github_buildbot.py
 """
 
 import logging
-from optparse import OptionParser
 import sys
 import tempfile
 import traceback
 
-from twisted.web import server, resource
+from optparse import OptionParser
+
+from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
-from twisted.cred import credentials
+from twisted.web import resource
+from twisted.web import server
 
 try:
     import json
@@ -29,6 +31,7 @@ except ImportError:
 
 
 class BitBucketBuildBot(resource.Resource):
+
     """
     BitBucketBuildBot creates the webserver that responds to the
     BitBucket POST Service Hook.
@@ -69,12 +72,12 @@ class BitBucketBuildBot(resource.Resource):
             repo_url = 'ssh://hg@%s%s' % (
                 self.bitbucket,
                 payload['repository']['absolute_url'],
-                )
+            )
         else:
             repo_url = 'http://%s%s' % (
                 self.bitbucket,
                 payload['repository']['absolute_url'],
-                )
+            )
         changes = []
         for commit in payload['commits']:
             files = [file_info['file'] for file_info in commit['files']]
@@ -82,7 +85,7 @@ class BitBucketBuildBot(resource.Resource):
                 self.bitbucket,
                 payload['repository']['absolute_url'],
                 commit['node'],
-                )
+            )
             change = {
                 'revision': commit['node'],
                 'revlink': revlink,
@@ -91,7 +94,7 @@ class BitBucketBuildBot(resource.Resource):
                 'files': files,
                 'repository': repo_url,
                 'properties': dict(),
-                }
+            }
             changes.append(change)
         # Submit the changes, if any
         if not changes:
@@ -102,7 +105,7 @@ class BitBucketBuildBot(resource.Resource):
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
-        logging.debug('Trying to connect to: %s:%d'%(host,port))
+        logging.debug('Trying to connect to: %s:%d' % (host, port))
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
@@ -112,7 +115,7 @@ class BitBucketBuildBot(resource.Resource):
         If connection is failed.  Logs the error.
         """
         logging.error("Could not connect to master: %s"
-                % error.getErrorMessage())
+                      % error.getErrorMessage())
         return error
 
     def addChange(self, dummy, remote, changei, src='hg'):
@@ -160,7 +163,7 @@ def main():
         "-l", "--log",
         help="The absolute path, including filename, to save the log to"
         " [default: %default]",
-        default = tempfile.gettempdir() + "/bitbucket_buildbot.log",
+        default=tempfile.gettempdir() + "/bitbucket_buildbot.log",
         dest="log")
     parser.add_option(
         "-L", "--level",
@@ -177,7 +180,7 @@ def main():
         dest='private',
         default=False,
         action='store_true',
-        )
+    )
     (options, _) = parser.parse_args()
     # Set up logging.
     levels = {
@@ -186,7 +189,7 @@ def main():
         'warn': logging.WARNING,
         'error': logging.ERROR,
         'fatal': logging.FATAL,
-        }
+    }
     filename = options.log
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     logging.basicConfig(filename=filename, format=log_format,

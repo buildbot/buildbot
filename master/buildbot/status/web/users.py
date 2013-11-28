@@ -14,10 +14,14 @@
 # Copyright Buildbot Team Members
 
 import urllib
+
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_root
 from twisted.internet import defer
 from twisted.web.util import redirectTo
-from buildbot.status.web.base import HtmlResource, path_to_authzfail, \
-    path_to_root, ActionResource
+
 
 class UsersActionResource(ActionResource):
 
@@ -34,19 +38,23 @@ class UsersActionResource(ActionResource):
         defer.returnValue(path_to_root(req) + "users")
 
 # /users/$uid
+
+
 class OneUserResource(HtmlResource):
     addSlash = False
+
     def __init__(self, uid):
         HtmlResource.__init__(self)
         self.uid = int(uid)
 
-    def getPageTitle (self, req):
+    def getPageTitle(self, req):
         return "Buildbot User: %s" % self.uid
 
     def content(self, request, ctx):
         status = self.getStatus(request)
 
         d = status.master.db.users.getUser(self.uid)
+
         def cb(usdict):
             ctx['user_identifier'] = usdict['identifier']
             user = ctx['user'] = {}
@@ -61,6 +69,8 @@ class OneUserResource(HtmlResource):
         return d
 
 # /users
+
+
 class UsersResource(HtmlResource):
     pageTitle = "Users"
     addSlash = True
@@ -86,5 +96,5 @@ class UsersResource(HtmlResource):
         for user in users:
             user['user_link'] = req.childLink(urllib.quote(str(user['uid']), ''))
         template = req.site.buildbot_service.templates.get_template(
-                                                              "users.html")
+            "users.html")
         defer.returnValue(template.render(**ctx))

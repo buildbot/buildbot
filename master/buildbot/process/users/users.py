@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 import os
-from twisted.python import log
+
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.util import flatten
 
@@ -28,6 +29,7 @@ except ImportError:
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
+
 
 def createUserObject(master, author, src=None):
     """
@@ -56,9 +58,9 @@ def createUserObject(master, author, src=None):
         return defer.succeed(None)
 
     return master.db.users.findUserByAttr(
-            identifier=usdict['identifier'],
-            attr_type=usdict['attr_type'],
-            attr_data=usdict['attr_data'])
+        identifier=usdict['identifier'],
+        attr_type=usdict['attr_type'],
+        attr_data=usdict['attr_data'])
 
 
 def _extractContact(usdict, contact_types, uid):
@@ -73,6 +75,7 @@ def _extractContact(usdict, contact_types, uid):
         log.msg(format="Unable to find any of %(contact_types)r for uid: %(uid)r",
                 contact_types=contact_types, uid=uid)
     return contact
+
 
 def getUserContact(master, contact_types, uid):
     """
@@ -96,20 +99,24 @@ def getUserContact(master, contact_types, uid):
     d.addCallback(_extractContact, contact_types, uid)
     return d
 
+
 def _filter(contacts):
     def notNone(c):
         return c is not None
     return filter(notNone, contacts)
+
 
 def getUsersContacts(master, contact_types, uids):
     d = defer.gatherResults([getUserContact(master, contact_types, uid) for uid in uids])
     d.addCallback(_filter)
     return d
 
+
 def getChangeContacts(master, change, contact_types):
     d = master.db.changes.getChangeUids(change.number)
     d.addCallback(lambda uids: getUsersContacts(master, contact_types, uids))
     return d
+
 
 def getSourceStampContacts(master, ss, contact_types):
     dl = [getChangeContacts(master, change, contact_types) for change in ss.changes]
@@ -122,6 +129,7 @@ def getSourceStampContacts(master, ss, contact_types):
     d.addCallback(flatten)
     return d
 
+
 def getBuildContacts(master, build, contact_types):
     dl = []
     ss_list = build.getSourceStamps()
@@ -129,6 +137,7 @@ def getBuildContacts(master, build, contact_types):
         dl.append(getSourceStampContacts(master, ss, contact_types))
     d = defer.gatherResults(dl)
     d.addCallback(flatten)
+
     @d.addCallback
     def addOwners(recipients):
         dl = []
@@ -141,6 +150,7 @@ def getBuildContacts(master, build, contact_types):
         d.addCallback(lambda owners: recipients + owners)
         return d
     return d
+
 
 def encrypt(passwd):
     """
@@ -161,6 +171,7 @@ def encrypt(passwd):
     m.update(passwd + salt)
     crypted = salt + m.hexdigest()
     return crypted
+
 
 def check_passwd(guess, passwd):
     """

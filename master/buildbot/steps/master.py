@@ -13,26 +13,32 @@
 #
 # Copyright Buildbot Team Members
 
-import os, types, re
-from twisted.python import runtime
-from twisted.internet import reactor
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import SUCCESS, FAILURE
-from twisted.internet import error
-from twisted.internet.protocol import ProcessProtocol
+import os
 import pprint
+import re
+import types
+
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.internet.protocol import ProcessProtocol
+from twisted.python import runtime
+
 
 class MasterShellCommand(BuildStep):
+
     """
     Run a shell command locally - on the buildmaster.  The shell command
     COMMAND is specified just as for a RemoteShellCommand.  Note that extra
     logfiles are not supported.
     """
-    name='MasterShellCommand'
-    description='Running'
-    descriptionDone='Ran'
+    name = 'MasterShellCommand'
+    description = 'Running'
+    descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = [ 'command', 'env', 'description', 'descriptionDone', 'descriptionSuffix' ]
+    renderables = ['command', 'env', 'description', 'descriptionDone', 'descriptionSuffix']
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -42,7 +48,7 @@ class MasterShellCommand(BuildStep):
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
-        self.command=command
+        self.command = command
         if description:
             self.description = description
         if isinstance(self.description, str):
@@ -55,12 +61,13 @@ class MasterShellCommand(BuildStep):
             self.descriptionSuffix = descriptionSuffix
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
-        self.env=env
-        self.path=path
-        self.usePTY=usePTY
+        self.env = env
+        self.path = path
+        self.usePTY = usePTY
         self.interruptSignal = interruptSignal
 
     class LocalPP(ProcessProtocol):
+
         def __init__(self, step):
             self.step = step
 
@@ -82,18 +89,20 @@ class MasterShellCommand(BuildStep):
         command = self.command
         # set up argv
         if type(command) in types.StringTypes:
-            if runtime.platformType  == 'win32':
-                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c']
+            if runtime.platformType == 'win32':
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                if '/c' not in argv:
+                    argv += ['/c']
                 argv += [command]
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
                 argv = ['/bin/sh', '-c', command]
         else:
-            if runtime.platformType  == 'win32':
-                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c']
+            if runtime.platformType == 'win32':
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                if '/c' not in argv:
+                    argv += ['/c']
                 argv += list(command)
             else:
                 argv = command
@@ -125,6 +134,7 @@ class MasterShellCommand(BuildStep):
 
             # do substitution on variable values matching pattern: ${name}
             p = re.compile(r'\${([0-9a-zA-Z_]*)}')
+
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
@@ -132,14 +142,14 @@ class MasterShellCommand(BuildStep):
                 if v is not None:
                     if not isinstance(v, basestring):
                         raise RuntimeError("'env' values must be strings or "
-                                "lists; key '%s' is incorrect" % (key,))
+                                           "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
         stdio_log.addHeader(" env: %r\n" % (env,))
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                path=self.path, usePTY=self.usePTY, env=env )
+                                            path=self.path, usePTY=self.usePTY, env=env)
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):
@@ -165,7 +175,7 @@ class MasterShellCommand(BuildStep):
     def interrupt(self, reason):
         try:
             self.process.signalProcess(self.interruptSignal)
-        except KeyError: # Process not started yet
+        except KeyError:  # Process not started yet
             pass
         except error.ProcessExitedAlready:
             pass
@@ -173,10 +183,10 @@ class MasterShellCommand(BuildStep):
 
 
 class SetProperty(BuildStep):
-    name='SetProperty'
-    description=['Setting']
-    descriptionDone=['Set']
-    renderables = [ 'value' ]
+    name = 'SetProperty'
+    description = ['Setting']
+    descriptionDone = ['Set']
+    renderables = ['value']
 
     def __init__(self, property, value, **kwargs):
         BuildStep.__init__(self, **kwargs)
@@ -191,9 +201,9 @@ class SetProperty(BuildStep):
 
 
 class LogRenderable(BuildStep):
-    name='LogRenderable'
-    description=['Logging']
-    descriptionDone=['Logged']
+    name = 'LogRenderable'
+    description = ['Logging']
+    descriptionDone = ['Logged']
     renderables = ['content']
 
     def __init__(self, content, **kwargs):

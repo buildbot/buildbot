@@ -14,7 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from migrate import changeset
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -22,19 +24,17 @@ def upgrade(migrate_engine):
 
     # Specify what the new table should look like
     schedulers = sa.Table("schedulers", metadata,
-        # unique ID for scheduler
-        sa.Column('schedulerid', sa.Integer, primary_key=True), # TODO: rename to id
-        # scheduler's name in master.cfg
-        sa.Column('name', sa.String(128), nullable=False),
-        # scheduler's class name, basically representing a "type" for the state
-        sa.Column('class_name', sa.String(128), nullable=False),
-    )
+                          # unique ID for scheduler
+                          sa.Column('schedulerid', sa.Integer, primary_key=True),  # TODO: rename to id
+                          # scheduler's name in master.cfg
+                          sa.Column('name', sa.String(128), nullable=False),
+                          # scheduler's class name, basically representing a "type" for the state
+                          sa.Column('class_name', sa.String(128), nullable=False),
+                          )
 
     # Now drop column
     changeset.drop_column(
-            sa.Column('state', sa.String(128), nullable=False),
-            table=schedulers,
-            metadata=metadata,
-            engine=migrate_engine)
-
-
+        sa.Column('state', sa.String(128), nullable=False),
+        table=schedulers,
+        metadata=metadata,
+        engine=migrate_engine)

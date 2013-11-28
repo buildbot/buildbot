@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
@@ -27,10 +28,10 @@ def upgrade(migrate_engine):
         defaults['server_default'] = sa.DefaultClause('')
 
     patches = sa.Table('patches', metadata, autoload=True)
-    patch_author= sa.Column('patch_author', sa.Text, nullable=False,
-                            **defaults)
+    patch_author = sa.Column('patch_author', sa.Text, nullable=False,
+                             **defaults)
     patch_author.create(patches, populate_default=True)
-    
-    patch_author= sa.Column('patch_comment', sa.Text, nullable=False,
-                            **defaults)
+
+    patch_author = sa.Column('patch_comment', sa.Text, nullable=False,
+                             **defaults)
     patch_author.create(patches, populate_default=True)

@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.enterprise import adbapi
+
 from buildbot.steps import mtrlogobserver
+from twisted.enterprise import adbapi
+from twisted.trial import unittest
 
 
 class TestEqConnectionPool(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestEqConnectionPool(unittest.TestCase):
                                                "host",
                                                "buildbot",
                                                "password",
-                                                "db")
+                                               "db")
         self.assertTrue(pool == pool)
 
     def testEqSameArgs(self):

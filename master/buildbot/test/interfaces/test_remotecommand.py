@@ -14,66 +14,72 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process import buildstep
-from buildbot.test.util import interfaces
-from buildbot.test.fake import remotecommand
-from twisted.trial import unittest
 from buildbot.status.results import SUCCESS
+from buildbot.test.fake import remotecommand
+from buildbot.test.util import interfaces
+from twisted.trial import unittest
 
 # NOTE:
 #
 # This interface is considered private to Buildbot and may change without
 # warning in future versions.
 
+
 class Tests(interfaces.InterfaceTests):
 
     remoteCommandClass = None
 
     def makeRemoteCommand(self):
-        return self.remoteCommandClass('ping', {'arg':'val'})
+        return self.remoteCommandClass('ping', {'arg': 'val'})
 
     def test_signature_RemoteCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
-                collectStdout=False, collectStderr=False,
-                decodeRC={0:SUCCESS}):
+                     collectStdout=False, collectStderr=False,
+                     decodeRC={0: SUCCESS}):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
-                want_stderr=1, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={},
-                usePTY="slave-config", logEnviron=True, collectStdout=False,
-                collectStderr=False, interruptSignal=None, initialStdin=None,
-                decodeRC={0:SUCCESS}):
+                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
+                     usePTY="slave-config", logEnviron=True, collectStdout=False,
+                     collectStderr=False, interruptSignal=None, initialStdin=None,
+                     decodeRC={0: SUCCESS}):
             pass
 
     def test_signature_run(self):
         cmd = self.makeRemoteCommand()
+
         @self.assertArgSpecMatches(cmd.run)
         def run(self, step, remote):
             pass
 
     def test_signature_useLog(self):
         cmd = self.makeRemoteCommand()
+
         @self.assertArgSpecMatches(cmd.useLog)
         def useLog(self, log, closeWhenFinished=False, logfileName=None):
             pass
 
     def test_signature_useLogDelayed(self):
         cmd = self.makeRemoteCommand()
+
         @self.assertArgSpecMatches(cmd.useLogDelayed)
         def useLogDelayed(self, logfileName, activateCallBack,
-                closeWhenFinished=False):
+                          closeWhenFinished=False):
             pass
 
     def test_signature_interrupt(self):
         cmd = self.makeRemoteCommand()
+
         @self.assertArgSpecMatches(cmd.interrupt)
         def useLogDelayed(self, why):
             pass
 
     def test_signature_didFail(self):
         cmd = self.makeRemoteCommand()
+
         @self.assertArgSpecMatches(cmd.didFail)
         def useLogDelayed(self):
             pass

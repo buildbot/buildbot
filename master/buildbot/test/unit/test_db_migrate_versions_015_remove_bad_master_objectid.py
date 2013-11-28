@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import migration
 import sqlalchemy as sa
+
+from buildbot.test.util import migration
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -28,42 +30,42 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     def create_tables_thd(self, conn):
         metadata = sa.MetaData()
         self.objects = sa.Table("objects", metadata,
-            sa.Column("id", sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(128), nullable=False),
-            sa.Column('class_name', sa.String(128), nullable=False),
-            sa.UniqueConstraint('name', 'class_name', name='object_identity'),
-        )
+                                sa.Column("id", sa.Integer, primary_key=True),
+                                sa.Column('name', sa.String(128), nullable=False),
+                                sa.Column('class_name', sa.String(128), nullable=False),
+                                sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+                                )
         self.object_state = sa.Table("object_state", metadata,
-            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
-                nullable=False),
-            sa.Column("name", sa.String(length=256), nullable=False),
-            sa.Column("value_json", sa.Text, nullable=False),
-            sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
-        )
+                                     sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                                               nullable=False),
+                                     sa.Column("name", sa.String(length=256), nullable=False),
+                                     sa.Column("value_json", sa.Text, nullable=False),
+                                     sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
+                                     )
         self.objects.create(bind=conn)
         self.object_state.create(bind=conn)
 
     def insert_old_obj(self, conn):
         conn.execute(self.objects.insert(),
-                id=21,
-                name='master',
-                class_name='buildbot.master.BuildMaster')
+                     id=21,
+                     name='master',
+                     class_name='buildbot.master.BuildMaster')
         conn.execute(self.object_state.insert(),
-                objectid=21,
-                name='last_processed_change',
-                value_json='938')
+                     objectid=21,
+                     name='last_processed_change',
+                     value_json='938')
 
     def insert_new_objs(self, conn, count):
-        for id in range(50, 50+count):
+        for id in range(50, 50 + count):
             conn.execute(self.objects.insert(),
-                    id=id,
-                    name='some_hostname:/base/dir/%d' % id,
-                    class_name='BuildMaster')
+                         id=id,
+                         name='some_hostname:/base/dir/%d' % id,
+                         class_name='BuildMaster')
             # (this id would be referenced from buildrequests, but that table
             # doesn't change)
 
     def assertObjectState_thd(self, conn, exp_objects=[],
-                            exp_object_state=[]):
+                              exp_object_state=[]):
         tbl = self.objects
         res = conn.execute(tbl.select(order_by=tbl.c.id))
         got_objects = res.fetchall()
@@ -74,8 +76,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         got_object_state = res.fetchall()
 
         self.assertEqual(
-                dict(objects=exp_objects, object_state=exp_object_state),
-                dict(objects=got_objects, object_state=got_object_state))
+            dict(objects=exp_objects, object_state=exp_object_state),
+            dict(objects=got_objects, object_state=got_object_state))
 
     # tests
 
@@ -137,4 +139,3 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             ])
 
         return self.do_test_migration(14, 15, setup_thd, verify_thd)
-

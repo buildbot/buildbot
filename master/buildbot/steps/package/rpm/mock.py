@@ -19,9 +19,10 @@ Steps and objects related to mock building.
 
 import re
 
-from buildbot.steps.shell import ShellCommand
-from buildbot.process import buildstep
 from buildbot import config
+from buildbot.process import buildstep
+from buildbot.steps.shell import ShellCommand
+
 
 class MockStateObserver(buildstep.LogLineObserver):
     _line_re = re.compile(r'^.*State Changed: (.*)$')
@@ -31,12 +32,14 @@ class MockStateObserver(buildstep.LogLineObserver):
         if m:
             state = m.group(1)
             if not state == 'end':
-                self.step.descriptionSuffix = ["[%s]"%m.group(1)]
+                self.step.descriptionSuffix = ["[%s]" % m.group(1)]
             else:
                 self.step.descriptionSuffix = None
             self.step.step_status.setText(self.step.describe(False))
 
+
 class Mock(ShellCommand):
+
     """Add the mock logfiles and clean them if they already exist. Add support
     for the root and resultdir parameter of mock."""
 
@@ -73,7 +76,6 @@ class Mock(ShellCommand):
         if not self.root:
             config.error("You must specify a mock root")
 
-
         self.command = ['mock', '--root', self.root]
         if self.resultdir:
             self.command += ['--resultdir', self.resultdir]
@@ -91,20 +93,23 @@ class Mock(ShellCommand):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 
-                map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
-                self.mock_logfiles)})
+        cmd = buildstep.RemoteCommand('rmdir', {'dir':
+                                                map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
+                                                    self.mock_logfiles)})
         d = self.runCommand(cmd)
+
         def removeDone(cmd):
             ShellCommand.start(self)
         d.addCallback(removeDone)
         d.addErrback(self.failed)
 
+
 class MockBuildSRPM(Mock):
+
     """Build a srpm within a mock. Requires a spec file and a sources dir."""
-    
+
     name = "mockbuildsrpm"
-    
+
     description = ["mock buildsrpm"]
     descriptionDone = ["mock buildsrpm"]
 
@@ -117,7 +122,7 @@ class MockBuildSRPM(Mock):
                  **kwargs):
         """
         Creates the MockBuildSRPM object.
-        
+
         @type spec: str
         @param spec: the path of the specfiles.
         @type sources: str
@@ -145,20 +150,22 @@ class MockBuildSRPM(Mock):
         if m:
             self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
 
+
 class MockRebuild(Mock):
+
     """Rebuild a srpm within a mock. Requires a srpm file."""
-    
+
     name = "mock"
-    
+
     description = ["mock rebuilding srpm"]
     descriptionDone = ["mock rebuild srpm"]
-    
+
     srpm = None
 
     def __init__(self, srpm=None, **kwargs):
         """
         Creates the MockRebuildRPM object.
-        
+
         @type srpm: str
         @param srpm: the path of the srpm file.
         @type kwargs: dict
@@ -170,5 +177,5 @@ class MockRebuild(Mock):
 
         if not self.srpm:
             config.error("You must specify a srpm")
-        
+
         self.command += ['--rebuild', self.srpm]

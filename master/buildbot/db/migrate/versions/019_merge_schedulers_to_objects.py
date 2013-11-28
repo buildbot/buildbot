@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
@@ -27,24 +28,24 @@ def upgrade(migrate_engine):
     # drop all tables.  Schedulers will re-populate on startup
 
     scheduler_changes_tbl = sa.Table('scheduler_changes', metadata,
-        sa.Column('schedulerid', sa.Integer),
-        # ...
-    )
+                                     sa.Column('schedulerid', sa.Integer),
+                                     # ...
+                                     )
     scheduler_changes_tbl.drop()
     metadata.remove(scheduler_changes_tbl)
 
     scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets',
-                                            metadata,
-        sa.Column('buildsetid', sa.Integer),
-        # ...
-    )
+                                                metadata,
+                                                sa.Column('buildsetid', sa.Integer),
+                                                # ...
+                                                )
     scheduler_upstream_buildsets_tbl.drop()
     metadata.remove(scheduler_upstream_buildsets_tbl)
 
     schedulers_tbl = sa.Table("schedulers", metadata,
-        sa.Column('schedulerid', sa.Integer),
-        # ...
-    )
+                              sa.Column('schedulerid', sa.Integer),
+                              # ...
+                              )
     schedulers_tbl.drop()
     metadata.remove(schedulers_tbl)
 
@@ -52,24 +53,23 @@ def upgrade(migrate_engine):
     # scheduler_changes is -- along with its indexes
 
     scheduler_changes_tbl = sa.Table('scheduler_changes', metadata,
-        sa.Column('objectid', sa.Integer,
-            sa.ForeignKey('objects.id')),
-        sa.Column('changeid', sa.Integer,
-            sa.ForeignKey('changes.changeid')),
-        sa.Column('important', sa.Integer),
-    )
+                                     sa.Column('objectid', sa.Integer,
+                                               sa.ForeignKey('objects.id')),
+                                     sa.Column('changeid', sa.Integer,
+                                               sa.ForeignKey('changes.changeid')),
+                                     sa.Column('important', sa.Integer),
+                                     )
     scheduler_changes_tbl.create()
 
     idx = sa.Index('scheduler_changes_objectid',
-            scheduler_changes_tbl.c.objectid)
+                   scheduler_changes_tbl.c.objectid)
     idx.create()
 
     idx = sa.Index('scheduler_changes_changeid',
-            scheduler_changes_tbl.c.changeid)
+                   scheduler_changes_tbl.c.changeid)
     idx.create()
 
     idx = sa.Index('scheduler_changes_unique',
-            scheduler_changes_tbl.c.objectid,
-            scheduler_changes_tbl.c.changeid, unique=True)
+                   scheduler_changes_tbl.c.objectid,
+                   scheduler_changes_tbl.c.changeid, unique=True)
     idx.create()
-

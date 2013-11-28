@@ -20,8 +20,8 @@ from buildbot.buildslave.ec2 import (
     EC2LatentBuildSlave)
 
 deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
-        "It has been moved to buildbot.buildslave.ec2",
-        "buildbot.libvirtbuildslave", "EC2LatentBuildSlave")
+                          "It has been moved to buildbot.buildslave.ec2",
+                          "buildbot.libvirtbuildslave", "EC2LatentBuildSlave")
 
 _hush_pyflakes = [
     EC2LatentBuildSlave]

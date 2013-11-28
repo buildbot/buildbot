@@ -13,27 +13,40 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import mock
-from twisted.trial import unittest
+import re
+
+from buildbot.process import buildstep
+from buildbot.process import properties
+from buildbot.process.buildstep import regex_log_evaluator
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.test.fake import fakebuild
+from buildbot.test.fake import remotecommand
+from buildbot.test.fake import slave
+from buildbot.test.util import compat
+from buildbot.test.util import config
+from buildbot.test.util import steps
+from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.process import buildstep, properties
-from buildbot.process.buildstep import regex_log_evaluator
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
-from buildbot.test.fake import fakebuild, remotecommand, slave
-from buildbot.test.util import config, steps, compat
-from buildbot.util.eventual import eventually
+from twisted.trial import unittest
+
 
 class FakeLogFile:
+
     def __init__(self, text):
         self.text = text
 
     def getText(self):
         return self.text
 
+
 class FakeStepStatus:
     pass
+
 
 class TestRegexLogEvaluator(unittest.TestCase):
 
@@ -49,8 +62,8 @@ class TestRegexLogEvaluator(unittest.TestCase):
         r = [(re.compile("This is"), WARNINGS)]
         new_status = regex_log_evaluator(cmd, step_status, r)
         self.assertEqual(new_status, WARNINGS,
-                "regex_log_evaluator returned %d, expected %d"
-                % (new_status, WARNINGS))
+                         "regex_log_evaluator returned %d, expected %d"
+                         % (new_status, WARNINGS))
 
     def test_multiple_regexes(self):
         cmd = self.makeRemoteCommand(0, "Normal stdout text\nan error")
@@ -59,18 +72,18 @@ class TestRegexLogEvaluator(unittest.TestCase):
              (re.compile("error"), FAILURE)]
         new_status = regex_log_evaluator(cmd, step_status, r)
         self.assertEqual(new_status, FAILURE,
-                "regex_log_evaluator returned %d, expected %d"
-                % (new_status, FAILURE))
+                         "regex_log_evaluator returned %d, expected %d"
+                         % (new_status, FAILURE))
 
     def test_exception_not_in_stdout(self):
         cmd = self.makeRemoteCommand(0,
-                "Completely normal output", "exception output")
+                                     "Completely normal output", "exception output")
         step_status = FakeStepStatus()
         r = [(re.compile("exception"), EXCEPTION)]
         new_status = regex_log_evaluator(cmd, step_status, r)
         self.assertEqual(new_status, EXCEPTION,
-                "regex_log_evaluator returned %d, expected %d"
-                % (new_status, EXCEPTION))
+                         "regex_log_evaluator returned %d, expected %d"
+                         % (new_status, EXCEPTION))
 
     def test_pass_a_string(self):
         cmd = self.makeRemoteCommand(0, "Output", "Some weird stuff on stderr")
@@ -78,13 +91,14 @@ class TestRegexLogEvaluator(unittest.TestCase):
         r = [("weird stuff", WARNINGS)]
         new_status = regex_log_evaluator(cmd, step_status, r)
         self.assertEqual(new_status, WARNINGS,
-                "regex_log_evaluator returned %d, expected %d"
-                % (new_status, WARNINGS))
+                         "regex_log_evaluator returned %d, expected %d"
+                         % (new_status, WARNINGS))
 
 
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
+
         def start(self):
             eventually(self.finished, 0)
 
@@ -109,7 +123,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         a config error.
         """
         self.assertRaisesConfigError("BuildStep name must be a string",
-                lambda: buildstep.BuildStep(name=5))
+                                     lambda: buildstep.BuildStep(name=5))
 
     def test_unexpectedKeywordArgument(self):
         """
@@ -117,8 +131,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         a config error.
         """
         self.assertRaisesConfigError("__init__ got unexpected keyword argument(s) ['oogaBooga']",
-                lambda: buildstep.BuildStep(oogaBooga=5))
-
+                                     lambda: buildstep.BuildStep(oogaBooga=5))
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
@@ -143,7 +156,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         bs.buildslave = slave.FakeSlave()
         bs.remote = 'dummy'
         cmd = buildstep.RemoteShellCommand("build", ["echo", "hello"])
-        cmd.run = lambda self, remote : SUCCESS
+        cmd.run = lambda self, remote: SUCCESS
         bs.runCommand(cmd)
         self.assertEqual(bs.cmd, cmd)
 
@@ -157,6 +170,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_hideStepIf_Callable_False(self):
         called = [False]
+
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
@@ -166,11 +180,12 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self._setupWaterfallTest(shouldHide, False)
 
         d = self.runStep()
-        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        d.addCallback(lambda _: self.assertTrue(called[0]))
         return d
 
     def test_hideStepIf_Callable_True(self):
         called = [False]
+
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
@@ -180,17 +195,18 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self._setupWaterfallTest(shouldHide, True)
 
         d = self.runStep()
-        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        d.addCallback(lambda _: self.assertTrue(called[0]))
         return d
 
     def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
-        self._setupWaterfallTest(lambda : 0/0, False, expectedResult=EXCEPTION)
+        self._setupWaterfallTest(lambda: 0 / 0, False, expectedResult=EXCEPTION)
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
     def test_hideStepIf_Callable_Exception(self):
         called = [False]
+
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
@@ -203,16 +219,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.setupStep(self.FakeBuildStep(hideStepIf=shouldHide,
                                           doStepIf=createException))
         self.expectOutcome(result=EXCEPTION,
-                status_text=['generic', 'exception'])
+                           status_text=['generic', 'exception'])
         self.expectHidden(True)
 
         d = self.runStep()
         d.addErrback(log.err)
-        d.addCallback(lambda _ :
-            self.assertEqual(len(self.flushLoggedErrors(defer.FirstError)), 1))
         d.addCallback(lambda _:
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        d.addCallback(lambda _ : self.assertTrue(called[0]))
+                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+        d.addCallback(lambda _: self.assertTrue(called[0]))
         return d
 
     def test_describe(self):
@@ -252,6 +266,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
+
 class TestLoggingBuildStep(unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
@@ -274,6 +289,7 @@ class TestLoggingBuildStep(unittest.TestCase):
 
     def test_evaluateCommand_log_eval_func(self):
         cmd = self.makeRemoteCommand(0, "Log text")
+
         def eval(cmd, step_status):
             return WARNINGS
         lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
@@ -310,6 +326,7 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(FailingCustomStep(exception=ValueError))
         self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         d = self.runStep()
+
         @d.addCallback
         def cb(_):
             self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
@@ -320,25 +337,25 @@ class TestRemoteShellCommand(unittest.TestCase):
 
     def test_obfuscated_arguments(self):
         command = ["echo",
-            ("obfuscated", "real", "fake"),
-            "test",
-            ("obfuscated", "real2", "fake2"),
-            ("not obfuscated", "a", "b"),
-            ("obfuscated"),  # not obfuscated
-            ("obfuscated", "test"),  # not obfuscated
-            ("obfuscated", "1", "2", "3"),  # not obfuscated)
-            ]
+                   ("obfuscated", "real", "fake"),
+                   "test",
+                   ("obfuscated", "real2", "fake2"),
+                   ("not obfuscated", "a", "b"),
+                   ("obfuscated"),  # not obfuscated
+                   ("obfuscated", "test"),  # not obfuscated
+                   ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                   ]
         cmd = buildstep.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)
         self.assertEqual(cmd.fake_command, ["echo",
-            "fake",
-            "test",
-            "fake2",
-            ("not obfuscated", "a", "b"),
-            ("obfuscated"),  # not obfuscated
-            ("obfuscated", "test"),  # not obfuscated
-            ("obfuscated", "1", "2", "3"),  # not obfuscated)
-            ])
+                                            "fake",
+                                            "test",
+                                            "fake2",
+                                            ("not obfuscated", "a", "b"),
+                                            ("obfuscated"),  # not obfuscated
+                                            ("obfuscated", "test"),  # not obfuscated
+                                            ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                                            ])
 
         command = "echo test"
         cmd = buildstep.RemoteShellCommand("build", command)

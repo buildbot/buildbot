@@ -18,11 +18,14 @@ from __future__ import with_statement
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 
 import os
-from buildbot.steps.shell import ShellCommand
-from buildbot.process import buildstep
+
 from buildbot import config
+from buildbot.process import buildstep
+from buildbot.steps.shell import ShellCommand
+
 
 class RpmBuild(ShellCommand):
+
     """
     RpmBuild build step.
     """
@@ -75,7 +78,7 @@ class RpmBuild(ShellCommand):
             ' --define "_rpmdir %s" --define "_sourcedir %s"'
             ' --define "_specdir %s" --define "_srcrpmdir %s"'
             ' --define "dist %s"' % (topdir, builddir, rpmdir, sourcedir,
-            specdir, srcrpmdir, dist))
+                                     specdir, srcrpmdir, dist))
         self.specfile = specfile
         self.autoRelease = autoRelease
         self.vcsRevision = vcsRevision
@@ -94,14 +97,14 @@ class RpmBuild(ShellCommand):
                 rel = 0
             self.rpmbuild = self.rpmbuild + ' --define "_release %s"' % rel
             with open(relfile, 'w') as rfile:
-                rfile.write(str(rel+1))
+                rfile.write(str(rel + 1))
 
         if self.vcsRevision:
             revision = self.getProperty('got_revision')
             # only do this in the case where there's a single codebase
             if revision and not isinstance(revision, dict):
                 self.rpmbuild = (self.rpmbuild + ' --define "_revision %s"' %
-                                revision)
+                                 revision)
 
         self.rpmbuild = self.rpmbuild + ' -ba %s' % self.specfile
 

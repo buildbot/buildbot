@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+
 class Domain(object):
 
     def __init__(self, name, conn):
@@ -41,7 +42,7 @@ class Connection(object):
         self.domains = {}
 
     def createXML(self, xml, flags):
-        #FIXME: This should really parse the name out of the xml, i guess
+        # FIXME: This should really parse the name out of the xml, i guess
         d = self.fake_add("instance")
         d.running = True
         return d
@@ -63,5 +64,3 @@ class Connection(object):
 
 def open(uri):
     return Connection(uri)
-
-

@@ -13,5 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
+
 class DatabaseNotReadyError(Exception):
     pass

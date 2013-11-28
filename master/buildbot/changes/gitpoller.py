@@ -15,24 +15,28 @@
 
 import os
 import urllib
-from twisted.python import log
-from twisted.internet import defer, utils
 
+from twisted.internet import defer
+from twisted.internet import utils
+from twisted.python import log
+
+from buildbot import config
 from buildbot.changes import base
 from buildbot.util import epoch2datetime
 from buildbot.util.state import StateMixin
-from buildbot import config
+
 
 class GitPoller(base.PollingChangeSource, StateMixin):
+
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
-    
+
     compare_attrs = ["repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
 
     def __init__(self, repourl, branches=None, branch=None,
-                 workdir=None, pollInterval=10*60, 
+                 workdir=None, pollInterval=10 * 60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
@@ -43,9 +47,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             pollInterval = pollinterval
 
         base.PollingChangeSource.__init__(self, name=repourl,
-                pollInterval=pollInterval)
+                                          pollInterval=pollInterval)
 
-        if project is None: project = ''
+        if project is None:
+            project = ''
 
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
@@ -67,9 +72,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
-                    "Instead, only the given branches are downloaded.")
-        
-        if self.workdir == None:
+                         "Instead, only the given branches are downloaded.")
+
+        if self.workdir is None:
             self.workdir = 'gitpoller-work'
 
     def startService(self):
@@ -79,12 +84,13 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             log.msg("gitpoller: using workdir '%s'" % self.workdir)
 
         d = self.getState('lastRev', {})
+
         def setLastRev(lastRev):
             self.lastRev = lastRev
         d.addCallback(setLastRev)
 
         d.addCallback(lambda _:
-                base.PollingChangeSource.startService(self))
+                      base.PollingChangeSource.startService(self))
         d.addErrback(log.err, 'while initializing GitPoller repository')
 
         return d
@@ -94,7 +100,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if not self.master:
             status = "[STOPPED - check log]"
         str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-                % (self.repourl, ', '.join(self.branches), status))
+               % (self.repourl, ', '.join(self.branches), status))
         return str
 
     @defer.inlineCallbacks
@@ -102,40 +108,35 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         yield self._dovccmd('init', ['--bare', self.workdir])
 
         refspecs = [
-                '+%s:%s'% (branch, self._localBranch(branch))
-                for branch in self.branches
-                ]
+            '+%s:%s' % (branch, self._localBranch(branch))
+            for branch in self.branches
+        ]
         yield self._dovccmd('fetch',
-                [self.repourl] + refspecs, path=self.workdir)
+                            [self.repourl] + refspecs, path=self.workdir)
 
         revs = {}
         for branch in self.branches:
             try:
                 revs[branch] = rev = yield self._dovccmd('rev-parse',
-                        [self._localBranch(branch)], path=self.workdir)
+                                                         [self._localBranch(branch)], path=self.workdir)
                 yield self._process_changes(rev, branch)
             except:
                 log.err(_why="trying to poll branch %s of %s"
-                                % (branch, self.repourl))
+                        % (branch, self.repourl))
 
         self.lastRev.update(revs)
         yield self.setState('lastRev', self.lastRev)
 
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
-        d = self._dovccmd('log',  args, path=self.workdir)
-        def process(git_output):
-            git_output = git_output.decode(self.encoding)
-            if len(git_output) == 0:
-                raise EnvironmentError('could not get commit comment for rev')
-            return git_output
-        d.addCallback(process)
+        d = self._dovccmd('log', args, path=self.workdir)
         return d
 
     def _get_commit_timestamp(self, rev):
         # unix timestamp
         args = ['--no-walk', r'--format=%ct', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
+
         def process(git_output):
             if self.usetimestamps:
                 try:
@@ -152,15 +153,17 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     def _get_commit_files(self, rev):
         args = ['--name-only', '--no-walk', r'--format=%n', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
+
         def process(git_output):
             fileList = git_output.split()
             return fileList
         d.addCallback(process)
         return d
-            
+
     def _get_commit_author(self, rev):
         args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
+
         def process(git_output):
             git_output = git_output.decode(self.encoding)
             if len(git_output) == 0:
@@ -189,14 +192,13 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
-
         # process oldest change first
         revList = results.split()
         revList.reverse()
         self.changeCount = len(revList)
-            
+
         log.msg('gitpoller: processing %d changes: %s from "%s"'
-                % (self.changeCount, revList, self.repourl) )
+                % (self.changeCount, revList, self.repourl))
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -209,33 +211,34 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             results = yield dl
 
             # check for failures
-            failures = [ r[1] for r in results if not r[0] ]
+            failures = [r[1] for r in results if not r[0]]
             if failures:
                 # just fail on the first error; they're probably all related!
                 raise failures[0]
 
-            timestamp, author, files, comments = [ r[1] for r in results ]
+            timestamp, author, files, comments = [r[1] for r in results]
             yield self.master.addChange(
-                   author=author,
-                   revision=rev,
-                   files=files,
-                   comments=comments,
-                   when_timestamp=epoch2datetime(timestamp),
-                   branch=branch,
-                   category=self.category,
-                   project=self.project,
-                   repository=self.repourl,
-                   src='git')
+                author=author,
+                revision=rev,
+                files=files,
+                comments=comments,
+                when_timestamp=epoch2datetime(timestamp),
+                branch=branch,
+                category=self.category,
+                project=self.project,
+                repository=self.repourl,
+                src='git')
 
     def _dovccmd(self, command, args, path=None):
         d = utils.getProcessOutputAndValue(self.gitbin,
-                [command] + args, path=path, env=os.environ)
+                                           [command] + args, path=path, env=os.environ)
+
         def _convert_nonzero_to_failure(res):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
             if code != 0:
                 raise EnvironmentError('command on repourl %s failed with exit code %d: %s'
-                        % (self.repourl, code, stderr))
+                                       % (self.repourl, code, stderr))
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure)
         return d

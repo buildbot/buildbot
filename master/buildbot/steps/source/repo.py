@@ -16,12 +16,13 @@
 import re
 import textwrap
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer
+from twisted.internet import reactor
 
 from buildbot import util
+from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
-from buildbot.interfaces import IRenderable
 from zope.interface import implements
 
 
@@ -88,9 +89,10 @@ class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
 
 
 class Repo(Source):
+
     """ Class for Repo with all the smarts """
     name = 'repo'
-    renderables = ["manifestURL", "manifestFile", "tarball", "jobs",
+    renderables = ["manifestURL", "manifestBranch", "manifestFile", "tarball", "jobs",
                    "syncAllBranches", "updateTarballAge", "manifestOverrideUrl",
                    "repoDownloads"]
 
@@ -111,7 +113,7 @@ class Repo(Source):
                  tarball=None,
                  jobs=None,
                  syncAllBranches=False,
-                 updateTarballAge=7*24.0*3600.0,
+                 updateTarballAge=7 * 24.0 * 3600.0,
                  manifestOverrideUrl=None,
                  repoDownloads=None,
                  **kwargs):
@@ -174,8 +176,8 @@ class Repo(Source):
         manifest_related_downloads = []
         for download in self.repoDownloads:
             project, ch_ps = download.split(" ")[-2:]
-            if (self.manifestURL.endswith("/"+project) or
-               self.manifestURL.endswith("/"+project+".git")):
+            if (self.manifestURL.endswith("/" + project) or
+               self.manifestURL.endswith("/" + project + ".git")):
                 ch, ps = map(int, ch_ps.split("/"))
                 branch = "refs/changes/%02d/%d/%d" % (ch % 100, ch, ps)
                 manifest_related_downloads.append(
@@ -188,7 +190,7 @@ class Repo(Source):
         self.manifestDownloads = manifest_related_downloads
 
     def _repoCmd(self, command, abandonOnFailure=True, **kwargs):
-        return self._Cmd(["repo"]+command, abandonOnFailure=abandonOnFailure, **kwargs)
+        return self._Cmd(["repo"] + command, abandonOnFailure=abandonOnFailure, **kwargs)
 
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
@@ -196,7 +198,7 @@ class Repo(Source):
         self.cmd = cmd = buildstep.RemoteShellCommand(workdir, command,
                                                       env=self.env,
                                                       logEnviron=self.logEnviron,
-                                                      timeout=self.timeout,  **kwargs)
+                                                      timeout=self.timeout, **kwargs)
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
@@ -275,7 +277,7 @@ class Repo(Source):
         if self.manifestOverrideUrl:
             self.stdio_log.addHeader("overriding manifest with %s\n" % (self.manifestOverrideUrl))
             local_file = yield self.pathExists(self.build.path_module.join(self.workdir,
-                                                                          self.manifestOverrideUrl))
+                                                                           self.manifestOverrideUrl))
             if local_file:
                 yield self._Cmd(["cp", "-f", self.manifestOverrideUrl, "manifest_override.xml"])
             else:

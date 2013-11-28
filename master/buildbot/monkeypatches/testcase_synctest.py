@@ -13,24 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-import twisted
-from twisted.trial import unittest
 from twisted.python import failure
+from twisted.trial import unittest
 
-def patch_testcase_synctest():
+
+def patch():
     """
     Patch in successResultOf, failureResultOf and assertNoResult for versions
     of twisted that don't support them.
 
     (used for testing only)
     """
-    if twisted.version.major < 13 or (
-        twisted.version.major == 13 and twisted.version.minor == 0):
-        unittest.TestCase.successResultOf = successResultOf
-        unittest.TestCase.failureResultOf = failureResultOf
-        unittest.TestCase.assertNoResult = assertNoResult
+    unittest.TestCase.successResultOf = successResultOf
+    unittest.TestCase.failureResultOf = failureResultOf
+    unittest.TestCase.assertNoResult = assertNoResult
 
-#############################################################################
+#
 # Everything below this line was taken from Twisted, except as annotated.  See
 # https://twistedmatrix.com/trac/browser/trunk/twisted/trial/_synctest.py?rev=37834#L594
 #
@@ -38,9 +36,10 @@ def patch_testcase_synctest():
 #
 #    Author: cyli
 #    Reviewer: tom.prince
-#    Fixes: #6380
+# Fixes: #6380
 #
 #    Allow failureResultOf to take optional expected failure types, so that if an unexpected failure occurs, the failureResultOf assertion will fail.
+
 
 def successResultOf(self, deferred):
     """
@@ -74,7 +73,6 @@ def successResultOf(self, deferred):
                 deferred, result[0].getTraceback()))
     else:
         return result[0]
-
 
 
 def failureResultOf(self, deferred, *expectedExceptionTypes):
@@ -127,7 +125,6 @@ def failureResultOf(self, deferred, *expectedExceptionTypes):
         return result[0]
 
 
-
 def assertNoResult(self, deferred):
     """
     Assert that C{deferred} does not have a result at this point.
@@ -148,6 +145,7 @@ def assertNoResult(self, deferred):
         L{Deferred<twisted.internet.defer.Deferred>} has a result.
     """
     result = []
+
     def cb(res):
         result.append(res)
         return res

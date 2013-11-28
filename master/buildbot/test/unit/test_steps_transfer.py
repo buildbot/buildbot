@@ -15,23 +15,26 @@
 
 from __future__ import with_statement
 
-import tempfile, os
+import os
 import shutil
-import tarfile
 import stat
+import tarfile
+import tempfile
+
 from twisted.trial import unittest
 
 from mock import Mock
 
-from buildbot.process import buildstep
-from buildbot.process.properties import Properties
-from buildbot.util import json
-from buildbot.steps import transfer
-from buildbot.status.results import SUCCESS
 from buildbot import config
 from buildbot import interfaces
+from buildbot.process import buildstep
+from buildbot.process.properties import Properties
+from buildbot.status.results import SUCCESS
+from buildbot.steps import transfer
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.fake.remotecommand import Expect, ExpectRemoteRef
+from buildbot.util import json
 
 
 # Test buildbot.steps.transfer._FileWriter class.
@@ -75,6 +78,8 @@ class TestFileWriter(unittest.TestCase):
         mockedFdopen.assert_called_once_with(7, 'wb')
 
 # Test buildbot.steps.transfer._TransferBuildStep class.
+
+
 class TestTransferBuildStep(unittest.TestCase):
 
     # Test calling checkSlaveVersion() when buildslave have support for
@@ -106,6 +111,7 @@ class TestTransferBuildStep(unittest.TestCase):
 
 
 class TestFileUpload(unittest.TestCase):
+
     def setUp(self):
         fd, self.destfile = tempfile.mkstemp()
         os.close(fd)
@@ -116,8 +122,8 @@ class TestFileUpload(unittest.TestCase):
             os.unlink(self.destfile)
 
     def test_constructor_mode_type(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                transfer.FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          transfer.FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
 
     def testBasic(self):
         s = transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile)
@@ -160,8 +166,8 @@ class TestFileUpload(unittest.TestCase):
         s.buildslave = Mock()
         s.remote = Mock()
         s.start()
-        timestamp = ( os.path.getatime(__file__),
-                      os.path.getmtime(__file__) )
+        timestamp = (os.path.getatime(__file__),
+                     os.path.getmtime(__file__))
 
         for c in s.remote.method_calls:
             name, command, args = c
@@ -179,14 +185,14 @@ class TestFileUpload(unittest.TestCase):
         else:
             self.assert_(False, "No uploadFile command found")
 
-        desttimestamp = ( os.path.getatime(self.destfile),
-                          os.path.getmtime(self.destfile) )
+        desttimestamp = (os.path.getatime(self.destfile),
+                         os.path.getmtime(self.destfile))
 
         timestamp = map(int, timestamp)
         desttimestamp = map(int, desttimestamp)
 
-        self.assertEquals(timestamp[0],desttimestamp[0])
-        self.assertEquals(timestamp[1],desttimestamp[1])
+        self.assertEquals(timestamp[0], desttimestamp[0])
+        self.assertEquals(timestamp[1], desttimestamp[1])
 
     def testURL(self):
         s = transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file")
@@ -218,7 +224,9 @@ class TestFileUpload(unittest.TestCase):
         s.step_status.addURL.assert_called_once_with(
             os.path.basename(self.destfile), "http://server/file")
 
+
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
+
     def setUp(self):
         self.destdir = os.path.abspath('destdir')
         if os.path.exists(self.destdir):
@@ -257,6 +265,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+
 class TestStringDownload(unittest.TestCase):
 
     # check that ConfigErrors is raised on invalid 'mode' argument
@@ -293,7 +302,9 @@ class TestStringDownload(unittest.TestCase):
         else:
             self.assert_(False, "No downloadFile command found")
 
+
 class TestJSONStringDownload(unittest.TestCase):
+
     def testBasic(self):
         msg = dict(message="Hello World")
         s = transfer.JSONStringDownload(msg, "hello.json")
@@ -320,7 +331,9 @@ class TestJSONStringDownload(unittest.TestCase):
         else:
             self.assert_(False, "No downloadFile command found")
 
+
 class TestJSONPropertiesDownload(unittest.TestCase):
+
     def testBasic(self):
         s = transfer.JSONPropertiesDownload("props.json")
         s.build = Mock()

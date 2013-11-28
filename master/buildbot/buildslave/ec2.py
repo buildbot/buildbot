@@ -28,21 +28,24 @@ import time
 import boto
 import boto.ec2
 import boto.exception
-from twisted.internet import defer, threads
+
+from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
 
-from buildbot.buildslave.base import AbstractLatentBuildSlave
 from buildbot import interfaces
+from buildbot.buildslave.base import AbstractLatentBuildSlave
 
 PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
 
+
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = image = None
-    _poll_resolution = 5 # hook point for tests
+    _poll_resolution = 5  # hook point for tests
 
     def __init__(self, name, password, instance_type, ami=None,
                  valid_ami_owners=None, valid_ami_location_regex=None,
@@ -50,8 +53,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
-                 max_builds=None, notify_on_missing=[], missing_timeout=60*20,
-                 build_wait_timeout=60*10, properties={}, locks=None):
+                 max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
+                 build_wait_timeout=60 * 10, properties={}, locks=None):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -102,10 +105,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 secret_identifier = aws_file.readline().strip()
         else:
             assert aws_id_file_path is None, \
-                    'if you supply the identifier and secret_identifier, ' \
-                    'do not specify the aws_id_file_path'
+                'if you supply the identifier and secret_identifier, ' \
+                'do not specify the aws_id_file_path'
             assert secret_identifier is not None, \
-                    'supply both or neither of identifier, secret_identifier'
+                'supply both or neither of identifier, secret_identifier'
 
         region_found = None
 
@@ -117,11 +120,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 if r.name == region:
                     region_found = r
 
-            
             if region_found is not None:
                 self.conn = boto.ec2.connect_to_region(region,
-                                     aws_access_key_id=identifier,
-                                     aws_secret_access_key=secret_identifier)
+                                                       aws_access_key_id=identifier,
+                                                       aws_secret_access_key=secret_identifier)
             else:
                 raise ValueError('The specified region does not exist: {0}'.format(region))
 
@@ -223,12 +225,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             options = [(image.location, image.id, image) for image
                        in self.conn.get_all_images(
-                        owners=self.valid_ami_owners)]
+                           owners=self.valid_ami_owners)]
         options.sort()
         log.msg('sorted images (last is chosen): %s' %
                 (', '.join(
                     ['%s (%s)' % (candidate[-1].id, candidate[-1].location)
-                    for candidate in options])))
+                     for candidate in options])))
         if not options:
             raise ValueError('no available images match constraints')
         return options[-1][-1]
@@ -259,13 +261,13 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration//60,
+                        (self.__class__.__name__, self.slavename, duration // 60,
                          self.instance.id))
             self.instance.update()
         if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
-            minutes = duration//60
-            seconds = duration%60
+            minutes = duration // 60
+            seconds = duration % 60
             log.msg('%s %s instance %s started on %s '
                     'in about %d minutes %d seconds (%s)' %
                     (self.__class__.__name__, self.slavename,
@@ -275,7 +277,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.instance.use_ip(self.elastic_ip)
             return [self.instance.id,
                     image.id,
-                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+                    '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
@@ -315,10 +317,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             if duration % 60 == 0:
                 log.msg(
                     '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.slavename, duration//60,
+                    (self.__class__.__name__, self.slavename, duration // 60,
                      instance.id))
             instance.update()
         log.msg('%s %s instance %s %s '
                 'after about %d minutes %d seconds' %
                 (self.__class__.__name__, self.slavename,
-                 instance.id, goal, duration//60, duration%60))
+                 instance.id, goal, duration // 60, duration % 60))

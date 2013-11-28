@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.util.ansicodes import parse_ansi_sgr
+from twisted.trial import unittest
 
 
 class TestAnsiCodes(unittest.TestCase):

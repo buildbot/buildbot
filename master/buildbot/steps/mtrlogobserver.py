@@ -13,15 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import re
-from twisted.python import log
-from twisted.internet import defer
-from twisted.enterprise import adbapi
+import sys
+
 from buildbot.process.buildstep import LogLineObserver
 from buildbot.steps.shell import Test
+from twisted.enterprise import adbapi
+from twisted.internet import defer
+from twisted.python import log
+
 
 class EqConnectionPool(adbapi.ConnectionPool):
+
     """This class works the same way as
 twisted.enterprise.adbapi.ConnectionPool. But it adds the ability to
 compare connection pools for equality (by comparing the arguments
@@ -35,6 +38,7 @@ is reloaded.
 It also sets some defaults differently from adbapi.ConnectionPool that
 are more suitable for use in MTR.
 """
+
     def __init__(self, *args, **kwargs):
         self._eqKey = (args, kwargs)
         adbapi.ConnectionPool.__init__(self,
@@ -52,6 +56,7 @@ are more suitable for use in MTR.
 
 
 class MtrTestFailData:
+
     def __init__(self, testname, variant, result, info, text, callback):
         self.testname = testname
         self.variant = variant
@@ -61,13 +66,14 @@ class MtrTestFailData:
         self.callback = callback
 
     def add(self, line):
-        self.text+= line
+        self.text += line
 
     def fireCallback(self):
         return self.callback(self.testname, self.variant, self.result, self.info, self.text)
 
 
 class MtrLogObserver(LogLineObserver):
+
     """
     Class implementing a log observer (can be passed to
     BuildStep.addLogObserver().
@@ -100,7 +106,7 @@ class MtrLogObserver(LogLineObserver):
 
     def setLog(self, loog):
         LogLineObserver.setLog(self, loog)
-        d= loog.waitUntilFinished()
+        d = loog.waitUntilFinished()
         d.addCallback(lambda l: self.closeTestFail())
 
     def outLineReceived(self, line):
@@ -113,7 +119,7 @@ class MtrLogObserver(LogLineObserver):
             self.step.setProgress('tests', self.numTests)
 
             if result == "fail":
-                if variant == None:
+                if variant is None:
                     variant = ""
                 else:
                     variant = variant[2:-1]
@@ -133,7 +139,7 @@ class MtrLogObserver(LogLineObserver):
                   stripLine == "Test suite timeout! Terminating..." or
                   stripLine.startswith("mysql-test-run: *** ERROR: Not all tests completed") or
                   (stripLine.startswith("------------------------------------------------------------")
-                   and self.testFail != None)):
+                   and self.testFail is not None)):
                 self.closeTestFail()
 
             else:
@@ -143,11 +149,11 @@ class MtrLogObserver(LogLineObserver):
         self.testFail = MtrTestFailData(testname, variant, result, info, line, self.doCollectTestFail)
 
     def addTestFailOutput(self, line):
-        if self.testFail != None:
+        if self.testFail is not None:
             self.testFail.add(line)
 
     def closeTestFail(self):
-        if self.testFail != None:
+        if self.testFail is not None:
             self.testFail.fireCallback()
             self.testFail = None
 
@@ -168,8 +174,7 @@ class MtrLogObserver(LogLineObserver):
             text = ["testing"]
         if self.testType:
             text.append(self.testType)
-        fails = self.failList[:]
-        fails.sort()
+        fails = sorted(self.failList[:])
         self.addToText(fails, text)
         warns = self.warnList[:]
         warns.sort()
@@ -187,7 +192,7 @@ class MtrLogObserver(LogLineObserver):
         displayTestName = self.strip_re.sub("", testname)
 
         if len(displayTestName) > self.testNameLimit:
-            displayTestName = displayTestName[:(self.testNameLimit-2)] + "..."
+            displayTestName = displayTestName[:(self.testNameLimit - 2)] + "..."
         return displayTestName
 
     def doCollectTestFail(self, testname, variant, result, info, text):
@@ -204,10 +209,13 @@ class MtrLogObserver(LogLineObserver):
     # These two methods are overridden to actually do something with the data.
     def collectTestFail(self, testname, variant, result, info, text):
         pass
+
     def collectWarningTests(self, testList):
         pass
 
+
 class MTR(Test):
+
     """
     Build step that runs mysql-test-run.pl, as used in MySQL, Drizzle,
     MariaDB, etc.
@@ -266,12 +274,12 @@ class MTR(Test):
         dbpool is specified. The test_type string, if specified, will also
         appear on the waterfall page."""
 
-    renderables = [ 'mtr_subdir' ]
+    renderables = ['mtr_subdir']
 
     def __init__(self, dbpool=None, test_type=None, test_info="",
                  description=None, descriptionDone=None,
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
-                 parallel=4, logfiles = {}, lazylogfiles = True,
+                 parallel=4, logfiles={}, lazylogfiles=True,
                  warningPattern="MTR's internal check of the test case '.*' failed",
                  mtr_subdir="mysql-test", **kwargs):
 
@@ -298,8 +306,8 @@ class MTR(Test):
 
     def start(self):
         # Add mysql server logfiles.
-        for mtr in range(0, self.parallel+1):
-            for mysqld in range(1, 4+1):
+        for mtr in range(0, self.parallel + 1):
+            for mysqld in range(1, 4 + 1):
                 if mtr == 0:
                     logname = "mysqld.%d.err" % mysqld
                     filename = "var/log/mysqld.%d.err" % mysqld
@@ -423,8 +431,8 @@ CREATE TABLE IF NOT EXISTS test_warnings(
 INSERT INTO test_run(branch, revision, platform, dt, bbnum, typ, info)
 VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
 """, (self.getProperty("branch"), revision,
-      self.getProperty("buildername"), self.getProperty("buildnumber"),
-      typ, self.test_info))
+            self.getProperty("buildername"), self.getProperty("buildnumber"),
+            typ, self.test_info))
 
         return txn.lastrowid
 
@@ -438,13 +446,14 @@ VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
         log.msg("Error in async insert into database: %s" % err)
 
     class MyMtrLogObserver(MtrLogObserver):
+
         def collectTestFail(self, testname, variant, result, info, text):
             # Insert asynchronously into database.
             dbpool = self.step.dbpool
             run_id = self.step.getProperty("mtr_id")
-            if dbpool == None:
+            if dbpool is None:
                 return defer.succeed(None)
-            if variant == None:
+            if variant is None:
                 variant = ""
             d = self.step.runQueryWithRetry("""
 INSERT INTO test_failure(test_run_id, test_name, test_variant, info_text, failure_text)
@@ -457,7 +466,7 @@ VALUES (%s, %s, %s, %s, %s)
         def collectWarningTests(self, testList):
             # Insert asynchronously into database.
             dbpool = self.step.dbpool
-            if dbpool == None:
+            if dbpool is None:
                 return defer.succeed(None)
             run_id = self.step.getProperty("mtr_id")
             warn_id = self.step.getProperty("mtr_warn_id")

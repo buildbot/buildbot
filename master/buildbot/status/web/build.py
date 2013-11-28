@@ -14,20 +14,32 @@
 # Copyright Buildbot Team Members
 
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.web import html
-from twisted.internet import defer, reactor
-from twisted.web.util import Redirect, DeferredResource
+from twisted.web.util import DeferredResource
+from twisted.web.util import Redirect
 
-import urllib, time
-from twisted.python import log
-from buildbot.status.web.base import HtmlResource, \
-     css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties, ActionResource, path_to_authzfail, \
-     getRequestCharset
-from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
+import time
+import urllib
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import TextParameter
+from buildbot.status.web.base import ActionResource
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import css_classes
+from buildbot.status.web.base import getAndCheckProperties
+from buildbot.status.web.base import getRequestCharset
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
+from buildbot.status.web.base import path_to_slave
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
-from buildbot import util, interfaces
+from twisted.python import log
+
 
 class ForceBuildActionResource(ActionResource):
 
@@ -54,11 +66,11 @@ class ForceBuildActionResource(ActionResource):
             b = self.build_status
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
-            name =authz.getUsernameFull(req)
+            name = authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             comments.decode(getRequestCharset(req))
 
-            reason = self.rebuildString  % {
+            reason = self.rebuildString % {
                 'build_number': b.getNumber(),
                 'owner': b.getInterestedUsers(),
                 'rebuild_owner': name,
@@ -66,10 +78,10 @@ class ForceBuildActionResource(ActionResource):
             }
 
             useSourcestamp = req.args.get("useSourcestamp", None)
-            if useSourcestamp and useSourcestamp==['updated']:
-                absolute=False
+            if useSourcestamp and useSourcestamp == ['updated']:
+                absolute = False
             else:
-                absolute=True
+                absolute = True
 
             msg = ""
             extraProperties = getAndCheckProperties(req)
@@ -80,13 +92,13 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                tup = yield bc.rebuildBuild(b, 
-                    reason=reason, 
-                    extraProperties=extraProperties,
-                    absolute=absolute)
+                tup = yield bc.rebuildBuild(b,
+                                            reason=reason,
+                                            extraProperties=extraProperties,
+                                            absolute=absolute)
                 # rebuildBuild returns None on error (?!)
                 if not tup:
-                    msg = "rebuilding a build failed "+ str(tup)
+                    msg = "rebuilding a build failed " + str(tup)
             # we're at
             # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
             # Where should we send them?
@@ -118,8 +130,8 @@ class StopBuildActionResource(ActionResource):
             return
 
         b = self.build_status
-        log.msg("web stopBuild of build %s:%s" % \
-                    (b.getBuilder().getName(), b.getNumber()))
+        log.msg("web stopBuild of build %s:%s" %
+                (b.getBuilder().getName(), b.getNumber()))
         name = authz.getUsernameFull(req)
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         comments.decode(getRequestCharset(req))
@@ -137,6 +149,8 @@ class StopBuildActionResource(ActionResource):
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
 # /builders/$builder/builds/$buildnum
+
+
 class StatusResourceBuild(HtmlResource):
     addSlash = True
 
@@ -170,7 +184,7 @@ class StatusResourceBuild(HtmlResource):
             if when is not None:
                 cxt['when'] = util.formatInterval(when)
                 cxt['when_time'] = time.strftime("%H:%M:%S",
-                                                time.localtime(time.time() + when))
+                                                 time.localtime(time.time() + when))
 
         else:
             cxt['result_css'] = css_classes[b.getResults()]
@@ -191,7 +205,7 @@ class StatusResourceBuild(HtmlResource):
         cxt['steps'] = []
 
         for s in b.getSteps():
-            step = {'name': s.getName() }
+            step = {'name': s.getName()}
 
             if s.isFinished():
                 if s.isHidden():
@@ -213,18 +227,18 @@ class StatusResourceBuild(HtmlResource):
 
             cxt['steps'].append(step)
 
-            step['link'] = req.childLink("steps/%s" % 
-                                    urllib.quote(s.getName(), safe=''))
+            step['link'] = req.childLink("steps/%s" %
+                                         urllib.quote(s.getName(), safe=''))
             step['text'] = " ".join(s.getText())
-            step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
+            step['urls'] = map(lambda x: dict(url=x[1], logname=x[0]), s.getURLs().items())
 
-            step['logs']= []
+            step['logs'] = []
             for l in s.getLogs():
                 logname = l.getName()
-                step['logs'].append({ 'link': req.childLink("steps/%s/logs/%s" %
-                                           (urllib.quote(s.getName(), safe=''),
-                                            urllib.quote(logname, safe=''))), 
-                                      'name': logname })
+                step['logs'].append({'link': req.childLink("steps/%s/logs/%s" %
+                                                           (urllib.quote(s.getName(), safe=''),
+                                                            urllib.quote(logname, safe=''))),
+                                     'name': logname})
 
         scheduler = b.getProperty("scheduler", None)
         parameters = {}
@@ -240,7 +254,7 @@ class StatusResourceBuild(HtmlResource):
                 cxt_value = unicode(value)
             else:
                 cxt_value = value
-            p = { 'name': name, 'value': cxt_value, 'source': source}
+            p = {'name': name, 'value': cxt_value, 'source': source}
             if len(cxt_value) > 500:
                 p['short_value'] = cxt_value[:500]
             if name in parameters:
@@ -252,7 +266,6 @@ class StatusResourceBuild(HtmlResource):
                 p['label'] = param.label
             ps.append(p)
 
-        
         cxt['responsible_users'] = list(b.getResponsibleUsers())
 
         (start, end) = b.getTimes()
@@ -263,7 +276,7 @@ class StatusResourceBuild(HtmlResource):
         else:
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
-            
+
         has_changes = False
         for ss in sourcestamps:
             has_changes = has_changes or ss.changes
@@ -280,7 +293,7 @@ class StatusResourceBuild(HtmlResource):
             return StopBuildActionResource(self.build_status)
 
         b = self.build_status
-        log.msg("web stopBuild of build %s:%s" % \
+        log.msg("web stopBuild of build %s:%s" %
                 (b.getBuilder().getName(), b.getNumber()))
 
         name = self.getAuthz(req).getUsernameFull(req)
@@ -321,6 +334,8 @@ class StatusResourceBuild(HtmlResource):
         return HtmlResource.getChild(self, path, req)
 
 # /builders/$builder/builds
+
+
 class BuildsResource(HtmlResource):
     addSlash = True
 
@@ -342,4 +357,3 @@ class BuildsResource(HtmlResource):
                 return StatusResourceBuild(build_status)
 
         return HtmlResource.getChild(self, path, req)
-

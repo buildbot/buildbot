@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.web.util import redirectTo
 from twisted.internet import defer
+from twisted.web.util import redirectTo
 
-from buildbot.status.web.base import HtmlResource, path_to_authzfail
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import path_to_authzfail
 from buildbot.util.eventual import eventually
+
 
 class RootPage(HtmlResource):
     pageTitle = "Buildbot"
@@ -27,7 +29,7 @@ class RootPage(HtmlResource):
         status = self.getStatus(request)
 
         res = yield self.getAuthz(request).actionAllowed("cleanShutdown",
-                                                            request)
+                                                         request)
 
         if request.path == '/shutdown':
             if res:
@@ -36,7 +38,7 @@ class RootPage(HtmlResource):
                 return
             else:
                 defer.returnValue(
-                        redirectTo(path_to_authzfail(request), request))
+                    redirectTo(path_to_authzfail(request), request))
                 return
         elif request.path == '/cancel_shutdown':
             if res:
@@ -45,13 +47,13 @@ class RootPage(HtmlResource):
                 return
             else:
                 defer.returnValue(
-                        redirectTo(path_to_authzfail(request), request))
+                    redirectTo(path_to_authzfail(request), request))
                 return
 
         cxt.update(
-                shutting_down = status.shuttingDown,
-                shutdown_url = request.childLink("shutdown"),
-                cancel_shutdown_url = request.childLink("cancel_shutdown"),
-                )
+            shutting_down=status.shuttingDown,
+            shutdown_url=request.childLink("shutdown"),
+            cancel_shutdown_url=request.childLink("cancel_shutdown"),
+        )
         template = request.site.buildbot_service.templates.get_template("root.html")
         defer.returnValue(template.render(**cxt))

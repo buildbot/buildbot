@@ -15,13 +15,18 @@
 
 
 import urllib
-from buildbot.status.web.base import HtmlResource, path_to_builder, \
-     path_to_build, css_classes
-from buildbot.status.web.logs import LogsResource
+
 from buildbot import util
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import css_classes
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
+from buildbot.status.web.logs import LogsResource
 from time import ctime
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
+
+
 class StatusResourceBuildStep(HtmlResource):
     pageTitle = "Build Step"
     addSlash = True
@@ -35,7 +40,7 @@ class StatusResourceBuildStep(HtmlResource):
         s = self.step_status
         b = s.getBuild()
 
-        logs = cxt['logs'] = []        
+        logs = cxt['logs'] = []
         for l in s.getLogs():
             # FIXME: If the step name has a / in it, this is broken
             # either way.  If we quote it but say '/'s are safe,
@@ -44,7 +49,7 @@ class StatusResourceBuildStep(HtmlResource):
             # step name from the log number.
             logs.append({'has_contents': l.hasContents(),
                          'name': l.getName(),
-                         'link': req.childLink("logs/%s" % urllib.quote(l.getName())) })
+                         'link': req.childLink("logs/%s" % urllib.quote(l.getName()))})
 
         stepStatistics = s.getStatistics()
         statistics = cxt['statistics'] = []
@@ -52,7 +57,7 @@ class StatusResourceBuildStep(HtmlResource):
             statistics.append({'name': stat, 'value': stepStatistics[stat]})
 
         start, end = s.getTimes()
-        
+
         if start:
             cxt['start'] = ctime(start)
             if end:
@@ -61,21 +66,20 @@ class StatusResourceBuildStep(HtmlResource):
             else:
                 cxt['end'] = "Not Finished"
                 cxt['elapsed'] = util.formatInterval(util.now() - start)
-                
-        cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
-                        build_link = path_to_build(req, b),
-                        b = b,
-                        s = s,
-                        result_css = css_classes[s.getResults()[0]]))
-        
-        template = req.site.buildbot_service.templates.get_template("buildstep.html");        
+
+        cxt.update(dict(builder_link=path_to_builder(req, b.getBuilder()),
+                        build_link=path_to_build(req, b),
+                        b=b,
+                        s=s,
+                        result_css=css_classes[s.getResults()[0]]))
+
+        template = req.site.buildbot_service.templates.get_template("buildstep.html")
         return template.render(**cxt)
 
     def getChild(self, path, req):
         if path == "logs":
             return LogsResource(self.step_status)
         return HtmlResource.getChild(self, path, req)
-
 
 
 # /builders/$builder/builds/$buildnum/steps

@@ -16,39 +16,42 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
 
-import httplib, urllib
-import optparse
-import textwrap
 import getpass
+import httplib
+import optparse
 import os
+import textwrap
+import urllib
 
 # Find a working json module.  Code is from
 # Paul Wise <pabs@debian.org>:
 #   http://lists.debian.org/debian-python/2010/02/msg00016.html
 try:
-    import json # python 2.6
-    assert json # silence pyflakes
+    import json  # python 2.6
+    assert json  # silence pyflakes
 except ImportError:
-    import simplejson as json # python 2.4 to 2.5
+    import simplejson as json  # python 2.4 to 2.5
 try:
     _tmp = json.loads
 except AttributeError:
     import warnings
     import sys
     warnings.warn("Use simplejson, not the old json module.")
-    sys.modules.pop('json') # get rid of the bad json module
+    sys.modules.pop('json')  # get rid of the bad json module
     import simplejson as json
 
 # Make a dictionary with options from command line
-def buildURL( options ):
+
+
+def buildURL(options):
     urlDict = {}
     if options.author:
         author = options.author
     else:
         author = getpass.getuser()
- 
+
     urlDict['author'] = author
-    
+
     if options.files:
         urlDict['files'] = json.dumps(options.files)
 
@@ -84,16 +87,17 @@ def buildURL( options ):
 
     return urlDict
 
+
 def propertyCB(option, opt, value, parser):
-    pdict=eval(value)
+    pdict = eval(value)
     for key in pdict.keys():
-        parser.values.properties[key]=pdict[key]
+        parser.values.properties[key] = pdict[key]
 
-__version__='0.1'
+__version__ = '0.1'
 
-description=""
+description = ""
 
-usage="""%prog [options]
+usage = """%prog [options]
 
 This script is used to submit a change to the buildbot master using the
 /change_hook web interface. Options are url encoded and submitted
@@ -136,17 +140,17 @@ parser.add_option("-c", "--comments", dest='comments', metavar="COMMENTS",
             """))
 parser.add_option("-R", "--revision", dest='revision', metavar="REVISION",
             help=textwrap.dedent("""\
-            This is the revision of the change. 
+            This is the revision of the change.
             This becomes the Change.revision attribute.
             """))
 parser.add_option("-W", "--when", dest='when', metavar="WHEN",
             help=textwrap.dedent("""\
-            This this the date of the change. 
+            This this the date of the change.
             This becomes the Change.when attribute.
             """))
 parser.add_option("-b", "--branch", dest='branch', metavar="BRANCH",
             help=textwrap.dedent("""\
-            This this the branch of the change. 
+            This this the branch of the change.
             This becomes the Change.branch attribute.
             """))
 parser.add_option("-C", "--category", dest='category', metavar="CAT",
@@ -156,11 +160,11 @@ parser.add_option("-C", "--category", dest='category', metavar="CAT",
             """))
 parser.add_option("--revlink", dest='revlink', metavar="REVLINK",
             help=textwrap.dedent("""\
-            This this the revlink of the change. 
+            This this the revlink of the change.
             This becomes the Change.revlink.
             """))
-parser.add_option("-p", "--property", dest='properties', action="callback", callback=propertyCB, 
-            type="string", metavar="PROP",
+parser.add_option("-p", "--property", dest='properties', action="callback", callback=propertyCB,
+                  type="string", metavar="PROP",
             help=textwrap.dedent("""\
             This adds a single property. This can be specified multiple times.
             The argument is a string representing python dictionary. For example,
@@ -184,13 +188,13 @@ parser.add_option("-v", "--verbose", dest='verbosity', action="count",
             specified twice, it also shows the raw response.
             """))
 parser.add_option("-H", "--host", dest='host', metavar="HOST",
-            default='localhost:8010',
+                  default='localhost:8010',
             help=textwrap.dedent("""\
             Host and optional port of buildbot. For example, bbhost:8010
             Defaults to %default
             """))
 parser.add_option("-u", "--urlpath", dest='urlpath', metavar="URLPATH",
-            default='/change_hook/base',
+                  default='/change_hook/base',
             help=textwrap.dedent("""\
             Path portion of URL. Defaults to %default
             """))
@@ -226,13 +230,12 @@ else:
     conn.request("POST", options.urlpath, params, headers)
     response = conn.getresponse()
     data = response.read()
-    exitCode=0
+    exitCode = 0
     if response.status is not 202:
-        exitCode=1
+        exitCode = 1
     if options.verbosity >= 1:
         print response.status, response.reason
         if options.verbosity >= 2:
             print "Raw response: %s" % (data)
     conn.close()
     os._exit(exitCode)
-

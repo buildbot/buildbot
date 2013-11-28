@@ -13,20 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
 from twisted.trial import unittest
 
-def patch_testcase_patch():
+
+def patch():
     """
     Patch out TestCase.patch to skip the test on version combinations where it
     does not work.
 
     (used for debugging only)
     """
-    # Twisted-9.0.0 and earlier did not have a UnitTest.patch that worked on
-    # Python-2.7
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
-        def nopatch(self, *args):
-            raise unittest.SkipTest('unittest.TestCase.patch is not available')
-        unittest.TestCase.patch = nopatch
+
+    def nopatch(self, *args):
+        raise unittest.SkipTest('unittest.TestCase.patch is not available')
+    unittest.TestCase.patch = nopatch

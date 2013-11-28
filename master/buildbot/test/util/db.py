@@ -15,11 +15,15 @@
 
 import os
 import sqlalchemy as sa
+
+from buildbot.db import enginestrategy
+from buildbot.db import model
+from buildbot.db import pool
 from sqlalchemy.schema import MetaData
+from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.db import model, pool, enginestrategy
+
 
 def skip_for_dialect(dialect):
     """Decorator to skip a test for a particular SQLAlchemy dialect."""
@@ -27,12 +31,14 @@ def skip_for_dialect(dialect):
         def wrap(self, *args, **kwargs):
             if self.db_engine.dialect.name == dialect:
                 raise unittest.SkipTest(
-                        "Not supported on dialect '%s'" % dialect)
+                    "Not supported on dialect '%s'" % dialect)
             return fn(self, *args, **kwargs)
         return wrap
     return dec
 
+
 class RealDatabaseMixin(object):
+
     """
     A class that sets up a real database for testing.  This sets self.db_url to
     the URL for the database.  By default, it specifies an in-memory SQLite
@@ -72,8 +78,8 @@ class RealDatabaseMixin(object):
 
     def __thd_create_tables(self, conn, table_names):
         all_table_names = set(table_names)
-        ordered_tables = [ t for t in model.Model.metadata.sorted_tables
-                        if t.name in all_table_names ]
+        ordered_tables = [t for t in model.Model.metadata.sorted_tables
+                          if t.name in all_table_names]
 
         for tbl in ordered_tables:
             tbl.create(bind=conn, checkfirst=True)
@@ -104,7 +110,7 @@ class RealDatabaseMixin(object):
         self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default)
 
         self.db_engine = enginestrategy.create_engine(self.db_url,
-                                                    basedir=basedir)
+                                                      basedir=basedir)
         # if the caller does not want a pool, we're done.
         if not want_pool:
             return defer.succeed(None)
@@ -113,8 +119,8 @@ class RealDatabaseMixin(object):
 
         log.msg("cleaning database %s" % self.db_url)
         d = self.db_pool.do(self.__thd_clean_database)
-        d.addCallback(lambda _ :
-                self.db_pool.do(self.__thd_create_tables, table_names))
+        d.addCallback(lambda _:
+                      self.db_pool.do(self.__thd_create_tables, table_names))
         return d
 
     def tearDownRealDatabase(self):
@@ -132,13 +138,14 @@ class RealDatabaseMixin(object):
         @returns: Deferred
         """
         # sort the tables by dependency
-        all_table_names = set([ row.table for row in rows ])
-        ordered_tables = [ t for t in model.Model.metadata.sorted_tables
-                           if t.name in all_table_names ]
+        all_table_names = set([row.table for row in rows])
+        ordered_tables = [t for t in model.Model.metadata.sorted_tables
+                          if t.name in all_table_names]
+
         def thd(conn):
             # insert into tables -- in order
             for tbl in ordered_tables:
-                for row in [ r for r in rows if r.table == tbl.name ]:
+                for row in [r for r in rows if r.table == tbl.name]:
                     tbl = model.Model.metadata.tables[row.table]
                     try:
                         tbl.insert(bind=conn).execute(row.values)
@@ -146,4 +153,3 @@ class RealDatabaseMixin(object):
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
         return self.db_pool.do(thd)
-

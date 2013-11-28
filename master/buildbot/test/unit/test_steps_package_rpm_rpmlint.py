@@ -19,6 +19,7 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 from twisted.trial import unittest
 
+
 class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
@@ -31,8 +32,8 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(rpmlint.RpmLint())
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['rpmlint', '-i', '.'])
-            +0)
+                        command=['rpmlint', '-i', '.'])
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
         return self.runStep()
 
@@ -40,8 +41,8 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(rpmlint.RpmLint(fileloc='RESULT'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['rpmlint', '-i', 'RESULT'])
-            +0)
+                        command=['rpmlint', '-i', 'RESULT'])
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
         return self.runStep()
 
@@ -49,8 +50,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(rpmlint.RpmLint(config='foo.cfg'))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
-            +0)
+                        command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
         return self.runStep()
-

@@ -13,19 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import os
 import shutil
-import mock
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import failure
+from twisted.python import log
 from twisted.trial import unittest
-from twisted.internet import defer, reactor, task
-from twisted.python import failure, log
 
-from buildslave.test.util import command, compat
+import buildslave
+
+from buildslave import bot
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
-import buildslave
-from buildslave import bot
+from buildslave.test.util import command
+from buildslave.test.util import compat
+
 
 class TestBot(unittest.TestCase):
 
@@ -43,13 +49,14 @@ class TestBot(unittest.TestCase):
     def tearDown(self):
         d = defer.succeed(None)
         if self.real_bot and self.real_bot.running:
-            d.addCallback(lambda _ : self.real_bot.stopService())
+            d.addCallback(lambda _: self.real_bot.stopService())
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         return d
 
     def test_getCommands(self):
         d = self.bot.callRemote("getCommands")
+
         def check(cmds):
             # just check that 'shell' is present..
             self.assertTrue('shell' in cmds)
@@ -58,6 +65,7 @@ class TestBot(unittest.TestCase):
 
     def test_getVersion(self):
         d = self.bot.callRemote("getVersion")
+
         def check(vers):
             self.assertEqual(vers, buildslave.version)
         d.addCallback(check)
@@ -71,6 +79,7 @@ class TestBot(unittest.TestCase):
         open(os.path.join(infodir, "environ"), "w").write("something else")
 
         d = self.bot.callRemote("getSlaveInfo")
+
         def check(info):
             self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ, system=os.name, basedir=self.basedir))
         d.addCallback(check)
@@ -78,20 +87,23 @@ class TestBot(unittest.TestCase):
 
     def test_getSlaveInfo_nodir(self):
         d = self.bot.callRemote("getSlaveInfo")
+
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ','system','basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir']))
         d.addCallback(check)
         return d
 
     def test_setBuilderList_empty(self):
         d = self.bot.callRemote("setBuilderList", [])
+
         def check(builders):
             self.assertEqual(builders, {})
         d.addCallback(check)
         return d
 
     def test_setBuilderList_single(self):
-        d = self.bot.callRemote("setBuilderList", [ ('mybld', 'myblddir') ])
+        d = self.bot.callRemote("setBuilderList", [('mybld', 'myblddir')])
+
         def check(builders):
             self.assertEqual(builders.keys(), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
@@ -106,7 +118,8 @@ class TestBot(unittest.TestCase):
 
         def add_my(_):
             d = self.bot.callRemote("setBuilderList", [
-                        ('mybld', 'myblddir') ])
+                ('mybld', 'myblddir')])
+
             def check(builders):
                 self.assertEqual(builders.keys(), ['mybld'])
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
@@ -117,7 +130,8 @@ class TestBot(unittest.TestCase):
 
         def add_your(_):
             d = self.bot.callRemote("setBuilderList", [
-                        ('mybld', 'myblddir'), ('yourbld', 'yourblddir') ])
+                ('mybld', 'myblddir'), ('yourbld', 'yourblddir')])
+
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
@@ -131,7 +145,8 @@ class TestBot(unittest.TestCase):
 
         def remove_my(_):
             d = self.bot.callRemote("setBuilderList", [
-                        ('yourbld', 'yourblddir2') ]) # note new builddir
+                ('yourbld', 'yourblddir2')])  # note new builddir
+
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['yourbld']))
                 # note that build dirs are not deleted..
@@ -146,7 +161,8 @@ class TestBot(unittest.TestCase):
 
         def add_and_remove(_):
             d = self.bot.callRemote("setBuilderList", [
-                        ('theirbld', 'theirblddir') ])
+                ('theirbld', 'theirblddir')])
+
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['theirbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
@@ -160,14 +176,17 @@ class TestBot(unittest.TestCase):
 
     def test_shutdown(self):
         d1 = defer.Deferred()
-        self.patch(reactor, "stop", lambda : d1.callback(None))
+        self.patch(reactor, "stop", lambda: d1.callback(None))
         d2 = self.bot.callRemote("shutdown")
         # don't return until both the shutdown method has returned, and
         # reactor.stop has been called
         return defer.gatherResults([d1, d2])
 
+
 class FakeStep(object):
+
     "A fake master-side BuildStep that records its activities."
+
     def __init__(self):
         self.finished_d = defer.Deferred()
         self.actions = []
@@ -185,6 +204,7 @@ class FakeStep(object):
         self.actions.append(["complete", f])
         self.finished_d.callback(None)
 
+
 class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
     @defer.deferredGenerator
@@ -199,7 +219,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
         wfd = defer.waitForDeferred(
-                self.bot.remote_setBuilderList([('sb', 'sb')]))
+            self.bot.remote_setBuilderList([('sb', 'sb')]))
         yield wfd
         builders = wfd.getResult()
         self.sb = FakeRemote(builders['sb'])
@@ -211,7 +231,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         d = defer.succeed(None)
         if self.bot and self.bot.running:
-            d.addCallback(lambda _ : self.bot.stopService())
+            d.addCallback(lambda _: self.bot.stopService())
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         return d
@@ -229,6 +249,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         stop = mock.Mock()
         self.patch(reactor, "stop", stop)
         d = self.sb.callRemote("shutdown")
+
         def check(_):
             self.assertTrue(stop.called)
         d.addCallback(check)
@@ -243,28 +264,30 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
-            Expect([ 'echo', 'hello' ], os.path.join(self.basedir, 'sb', 'workdir'))
-            + { 'hdr' : 'headers' } + { 'stdout' : 'hello\n' } + { 'rc' : 0 }
+            Expect(['echo', 'hello'], os.path.join(self.basedir, 'sb', 'workdir'))
+            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
             + 0,
         )
 
         d = defer.succeed(None)
+
         def do_start(_):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
-                                                command=[ 'echo', 'hello' ],
-                                                workdir='workdir',
-                                            ))
+                                          command=['echo', 'hello'],
+                                          workdir='workdir',
+                                      ))
         d.addCallback(do_start)
-        d.addCallback(lambda _ : st.wait_for_finish())
+        d.addCallback(lambda _: st.wait_for_finish())
+
         def check(_):
             self.assertEqual(st.actions, [
-                         ['update', [[{'hdr': 'headers'}, 0]]],
-                         ['update', [[{'stdout': 'hello\n'}, 0]]],
-                         ['update', [[{'rc': 0}, 0]]],
-                         ['update', [[{'elapsed': 1}, 0]]],
-                         ['complete', None],
-                    ])
+                ['update', [[{'hdr': 'headers'}, 0]]],
+                ['update', [[{'stdout': 'hello\n'}, 0]]],
+                ['update', [[{'rc': 0}, 0]]],
+                ['update', [[{'elapsed': 1}, 0]]],
+                ['complete', None],
+            ])
         d.addCallback(check)
         return d
 
@@ -275,18 +298,19 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to pretend to sleep (it will really just hang forever,
         # except that we interrupt it)
         self.patch_runprocess(
-            Expect([ 'sleep', '10' ], os.path.join(self.basedir, 'sb', 'workdir'))
-            + { 'hdr' : 'headers' }
-            + { 'wait' : True }
+            Expect(['sleep', '10'], os.path.join(self.basedir, 'sb', 'workdir'))
+            + {'hdr': 'headers'}
+            + {'wait': True}
         )
 
         d = defer.succeed(None)
+
         def do_start(_):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
-                                                command=[ 'sleep', '10' ],
-                                                workdir='workdir',
-                                            ))
+                                          command=['sleep', '10'],
+                                          workdir='workdir',
+                                      ))
         d.addCallback(do_start)
 
         # wait a jiffy..
@@ -301,14 +325,15 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             return self.sb.callRemote("interruptCommand", "13", "tl/dr")
         d.addCallback(do_interrupt)
 
-        d.addCallback(lambda _ : st.wait_for_finish())
+        d.addCallback(lambda _: st.wait_for_finish())
+
         def check(_):
             self.assertEqual(st.actions, [
-                         ['update', [[{'hdr': 'headers'}, 0]]],
-                         ['update', [[{'hdr': 'killing'}, 0]]],
-                         ['update', [[{'rc': -1}, 0]]],
-                         ['complete', None],
-                    ])
+                ['update', [[{'hdr': 'headers'}, 0]]],
+                ['update', [[{'hdr': 'killing'}, 0]]],
+                ['update', [[{'rc': -1}, 0]]],
+                ['complete', None],
+            ])
         d.addCallback(check)
         return d
 
@@ -320,21 +345,24 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         st = FakeStep()
 
         # patch the log.err, otherwise trial will think something *actually* failed
-        self.patch(log, "err", lambda f : None)
+        self.patch(log, "err", lambda f: None)
 
         d = defer.succeed(None)
+
         def do_start(_):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
-                                                workdir='workdir',
-                                            ))
+                                          workdir='workdir',
+                                      ))
         d.addCallback(do_start)
-        d.addCallback(lambda _ : st.wait_for_finish())
+        d.addCallback(lambda _: st.wait_for_finish())
+
         def check(_):
             self.assertEqual(st.actions[1][0], 'complete')
             self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
         d.addCallback(check)
         return d
+
 
 class TestBotFactory(unittest.TestCase):
 
@@ -347,6 +375,7 @@ class TestBotFactory(unittest.TestCase):
         clock = self.bf._reactor = task.Clock()
 
         calls = []
+
         def callRemote(method):
             calls.append(clock.seconds())
             self.assertEqual(method, 'keepalive')
@@ -360,14 +389,15 @@ class TestBotFactory(unittest.TestCase):
         self.bf.startTimers()
         clock.callLater(100, self.bf.stopTimers)
 
-        clock.pump(( 1 for _ in xrange(150)))
-        self.assertEqual(calls, [ 35, 70 ])
+        clock.pump((1 for _ in xrange(150)))
+        self.assertEqual(calls, [35, 70])
 
     @compat.usesFlushLoggedErrors
     def test_timers_exception(self):
         clock = self.bf._reactor = task.Clock()
 
         self.bf.perspective = mock.Mock()
+
         def callRemote(method):
             return defer.fail(RuntimeError("oh noes"))
         self.bf.perspective.callRemote = callRemote

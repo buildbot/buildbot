@@ -15,11 +15,16 @@
 
 
 import urllib
-from buildbot.status.web.base import HtmlResource, path_to_builder, \
-     path_to_build, css_classes
+
 from buildbot.status.builder import Results
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import css_classes
+from buildbot.status.web.base import path_to_build
+from buildbot.status.web.base import path_to_builder
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
+
+
 class StatusResourceBuildTest(HtmlResource):
     pageTitle = "Test Result"
     addSlash = True
@@ -40,24 +45,23 @@ class StatusResourceBuildTest(HtmlResource):
                 log = log.decode('utf-8')
             logs.append({'name': lname,
                          'log': log,
-                         'link': req.childLink("logs/%s" % urllib.quote(lname)) })
+                         'link': req.childLink("logs/%s" % urllib.quote(lname))})
 
         cxt['text'] = tr.text
         cxt['result_word'] = Results[tr.getResults()]
-        cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
-                        build_link = path_to_build(req, b),
-                        result_css = css_classes[tr.getResults()],
-                        b = b,
-                        tr = tr))
-        
+        cxt.update(dict(builder_link=path_to_builder(req, b.getBuilder()),
+                        build_link=path_to_build(req, b),
+                        result_css=css_classes[tr.getResults()],
+                        b=b,
+                        tr=tr))
+
         template = req.site.buildbot_service.templates.get_template("testresult.html")
         return template.render(**cxt)
 
     def getChild(self, path, req):
         # if path == "logs":
-        #    return LogsResource(self.step_status) #TODO we need another class
+        # return LogsResource(self.step_status) #TODO we need another class
         return HtmlResource.getChild(self, path, req)
-
 
 
 # /builders/$builder/builds/$buildnum/steps

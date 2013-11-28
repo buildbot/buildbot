@@ -13,27 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot import interfaces
-from buildbot.process.build import Build
-from buildbot.process.properties import Properties
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
-from buildbot.locks import SlaveLock
-from buildbot.process.buildstep import LoggingBuildStep
-from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot import config
+from buildbot import interfaces
+from buildbot.locks import SlaveLock
+from buildbot.process.build import Build
+from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.process.properties import Properties
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.test.fake.fakemaster import FakeBotMaster
+from twisted.internet import defer
+from twisted.trial import unittest
+from zope.interface import implements
 
-from mock import Mock, call
+from mock import Mock
+from mock import call
+
 
 class FakeChange:
     properties = Properties()
-    def __init__(self, number = None):
+
+    def __init__(self, number=None):
         self.number = number
         self.who = "me"
-        
+
+
 class FakeSource:
+
     def __init__(self):
         self.sourcestampsetid = None
         self.changes = []
@@ -48,7 +57,9 @@ class FakeSource:
     def getRepository(self):
         return self.repository
 
+
 class FakeRequest:
+
     def __init__(self):
         self.sources = []
         self.reason = "Because"
@@ -60,7 +71,9 @@ class FakeRequest:
     def mergeReasons(self, others):
         return self.reason
 
+
 class FakeBuildStep:
+
     def __init__(self):
         self.haltOnFailure = False
         self.flunkOnWarnings = False
@@ -70,31 +83,39 @@ class FakeBuildStep:
         self.alwaysRun = False
         self.name = 'fake'
 
+
 class FakeMaster:
+
     def __init__(self):
         self.locks = {}
         self.parent = Mock()
         self.config = config.MasterConfig()
-        
+
     def getLockByID(self, lockid):
         if not lockid in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         return self.locks[lockid]
 
+
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)   
-        
+    implements(interfaces.IProperties)
+
+
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
 
+
 class FakeStepFactory(object):
+
     """Fake step factory that just returns a fixed step object."""
     implements(interfaces.IBuildStepFactory)
+
     def __init__(self, step):
         self.step = step
 
     def buildStep(self):
         return self.step
+
 
 class TestBuild(unittest.TestCase):
 
@@ -111,6 +132,7 @@ class TestBuild(unittest.TestCase):
 
         self.builder = self.createBuilder()
         self.build = Build([r])
+        self.build.master = self.master
         self.build.setBuilder(self.builder)
 
     def createBuilder(self):
@@ -131,8 +153,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                    in step.method_calls)
+        self.assert_(('startStep', (slavebuilder.remote,), {})
+                     in step.method_calls)
 
     def testStopBuild(self):
         b = self.build
@@ -153,7 +175,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(b.result, EXCEPTION)
 
-        self.assert_( ('interrupt', ('stop it',), {}) in step.method_calls)
+        self.assert_(('interrupt', ('stop it',), {}) in step.method_calls)
 
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
@@ -172,28 +194,30 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([
             FakeStepFactory(step1),
             FakeStepFactory(step2),
-            ])
+        ])
 
         slavebuilder = Mock()
 
         def startStep1(*args, **kw):
             # Now interrupt the build
             b.stopBuild("stop it")
-            return defer.succeed( SUCCESS )
+            return defer.succeed(SUCCESS)
         step1.startStep = startStep1
         step1.stepDone.return_value = False
 
         step2Started = [False]
+
         def startStep2(*args, **kw):
             step2Started[0] = True
-            return defer.succeed( SUCCESS )
+            return defer.succeed(SUCCESS)
         step2.startStep = startStep2
         step1.stepDone.return_value = False
 
         d = b.startBuild(FakeBuildStatus(), None, slavebuilder)
+
         def check(ign):
             self.assertEqual(b.result, EXCEPTION)
-            self.assert_( ('interrupt', ('stop it',), {}) in step1.method_calls)
+            self.assert_(('interrupt', ('stop it',), {}) in step1.method_calls)
             self.assert_(step2Started[0])
         d.addCallback(check)
         return d
@@ -234,7 +258,6 @@ class TestBuild(unittest.TestCase):
         self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
         slave_lock_1.release(slavebuilder1, counting_access)
 
-
     def testBuilddirPropType(self):
         import posixpath
 
@@ -257,7 +280,6 @@ class TestBuild(unittest.TestCase):
              call('builddir', expected_path, 'slave')],
             any_order=True)
 
-
     def testBuildLocksAcquired(self):
         b = self.build
 
@@ -268,6 +290,7 @@ class TestBuild(unittest.TestCase):
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder.slave)
+
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)
@@ -283,8 +306,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
         self.assertEqual(b.result, SUCCESS)
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                in step.method_calls)
+        self.assert_(('startStep', (slavebuilder.remote,), {})
+                     in step.method_calls)
         self.assertEquals(claimCount[0], 1)
 
     def testBuildLocksOrder(self):
@@ -305,6 +328,7 @@ class TestBuild(unittest.TestCase):
         l = SlaveLock('lock', 2)
         claimLog = []
         realLock = self.master.botmaster.getLockByID(l).getLock(slave)
+
         def claim(owner, access):
             claimLog.append(owner)
             return realLock.oldClaim(owner, access)
@@ -348,6 +372,7 @@ class TestBuild(unittest.TestCase):
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder.slave)
+
         def claim(owner, access):
             claimCount[0] += 1
             return real_lock.old_claim(owner, access)
@@ -364,8 +389,8 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                    not in step.method_calls)
+        self.assert_(('startStep', (slavebuilder.remote,), {})
+                     not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assert_(b.currentStep is None)
         self.assert_(b._acquiringLock is not None)
@@ -397,11 +422,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                    not in step.method_calls)
+        self.assert_(('startStep', (slavebuilder.remote,), {})
+                     not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, EXCEPTION)
-        self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
@@ -430,11 +455,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assert_( ('startStep', (slavebuilder.remote,), {})
-                                    not in step.method_calls)
+        self.assert_(('startStep', (slavebuilder.remote,), {})
+                     not in step.method_calls)
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, RETRY)
-        self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
         self.build.build_status.setText.assert_called_with(["retry", "lost", "remote"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
@@ -619,6 +644,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(terminate, True)
         self.assertEqual(b.result, RETRY)
 
+
 class TestMultipleSourceStamps(unittest.TestCase):
 
     def setUp(self):
@@ -631,15 +657,15 @@ class TestMultipleSourceStamps(unittest.TestCase):
         s2 = FakeSource()
         s2.repository = "repoB"
         s2.codebase = "B"
-        s2.changes = [FakeChange(12),FakeChange(13)]
+        s2.changes = [FakeChange(12), FakeChange(13)]
         s2.revision = "67890"
         s3 = FakeSource()
         s3.repository = "repoC"
         # no codebase defined
-        s3.changes = [FakeChange(14),FakeChange(15)]
+        s3.changes = [FakeChange(14), FakeChange(15)]
         s3.revision = "111213"
-        r.sources.extend([s1,s2,s3])
-        
+        r.sources.extend([s1, s2, s3])
+
         self.build = Build([r])
 
     def test_buildReturnSourceStamp(self):
@@ -649,8 +675,8 @@ class TestMultipleSourceStamps(unittest.TestCase):
         source1 = self.build.getSourceStamp("A")
         source2 = self.build.getSourceStamp("B")
 
-        self.assertEqual( [source1.repository, source1.revision], ["repoA", "12345"])
-        self.assertEqual( [source2.repository, source2.revision], ["repoB", "67890"])
+        self.assertEqual([source1.repository, source1.revision], ["repoA", "12345"])
+        self.assertEqual([source2.repository, source2.revision], ["repoB", "67890"])
 
     def test_buildReturnSourceStamp_empty_codebase(self):
         """
@@ -659,8 +685,8 @@ class TestMultipleSourceStamps(unittest.TestCase):
         codebase = ''
         source3 = self.build.getSourceStamp(codebase)
         self.assertTrue(source3 is not None)
-        self.assertEqual( [source3.repository, source3.revision], ["repoC", "111213"])
-        
+        self.assertEqual([source3.repository, source3.revision], ["repoC", "111213"])
+
 
 class TestBuildBlameList(unittest.TestCase):
 
@@ -700,11 +726,14 @@ class TestBuildBlameList(unittest.TestCase):
         blamelist = build.blamelist()
         self.assertEqual(blamelist, ['jeff'])
 
+
 class TestSetupProperties_MultipleSources(unittest.TestCase):
+
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
+
     def setUp(self):
         self.props = {}
         r = FakeRequest()
@@ -728,13 +757,13 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         # record properties that will be set
         self.build.build_status.setProperty = self.setProperty
 
-    def setProperty(self, n,v,s, runtime = False):
+    def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
             self.props[s] = {}
         if not self.props[s]:
             self.props[s] = {}
         self.props[s][n] = v
-        
+
     def test_sourcestamp_properties_not_set(self):
         self.build.setupProperties()
         self.assertTrue("codebase" not in self.props["Build"])
@@ -743,11 +772,14 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         self.assertTrue("project" not in self.props["Build"])
         self.assertTrue("repository" not in self.props["Build"])
 
+
 class TestSetupProperties_SingleSource(unittest.TestCase):
+
     """
-    Test that the property values, based on the available requests, are 
+    Test that the property values, based on the available requests, are
     initialized properly
     """
+
     def setUp(self):
         self.props = {}
         r = FakeRequest()
@@ -766,7 +798,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         # record properties that will be set
         self.build.build_status.setProperty = self.setProperty
 
-    def setProperty(self, n,v,s, runtime = False):
+    def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
             self.props[s] = {}
         if not self.props[s]:
@@ -777,17 +809,17 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.build.setupProperties()
         codebase = self.props["Build"]["codebase"]
         self.assertEqual(codebase, "A")
-        
+
     def test_properties_repository(self):
         self.build.setupProperties()
         repository = self.props["Build"]["repository"]
         self.assertEqual(repository, "http://svn-repo-A")
-        
+
     def test_properties_revision(self):
         self.build.setupProperties()
         revision = self.props["Build"]["revision"]
         self.assertEqual(revision, "12345")
-        
+
     def test_properties_branch(self):
         self.build.setupProperties()
         branch = self.props["Build"]["branch"]
@@ -797,8 +829,10 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.build.setupProperties()
         project = self.props["Build"]["project"]
         self.assertEqual(project, '')
-        
+
+
 class TestBuildProperties(unittest.TestCase):
+
     """
     Test that a Build has the necessary L{IProperties} methods, and that they
     properly delegate to the C{build_status} attribute - so really just a test
@@ -828,7 +862,7 @@ class TestBuildProperties(unittest.TestCase):
     def test_setProperty(self):
         self.build.setProperty('n', 'v', 's')
         self.build_status.setProperty.assert_called_with('n', 'v', 's',
-                                                            runtime=True)
+                                                         runtime=True)
 
     def test_hasProperty(self):
         self.build_status.hasProperty.return_value = True

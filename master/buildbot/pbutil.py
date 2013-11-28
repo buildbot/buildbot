@@ -19,18 +19,23 @@
 
 from twisted.spread import pb
 
-from twisted.spread.pb import PBClientFactory
 from twisted.internet import protocol
 from twisted.python import log
+from twisted.spread.pb import PBClientFactory
+
 
 class NewCredPerspective(pb.Avatar):
+
     def attached(self, mind):
         return self
+
     def detached(self, mind):
         pass
 
+
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
+
     """Reconnecting client factory for PB brokers.
 
     Like PBClientFactory, but if the connection fails or is lost, the factory
@@ -90,12 +95,12 @@ class ReconnectingPBClientFactory(PBClientFactory,
     # oldcred methods
 
     def getPerspective(self, *args):
-        raise RuntimeError, "getPerspective is one-shot: use startGettingPerspective instead"
+        raise RuntimeError("getPerspective is one-shot: use startGettingPerspective instead")
 
     def startGettingPerspective(self, username, password, serviceName,
                                 perspectiveName=None, client=None):
         self._doingGetPerspective = True
-        if perspectiveName == None:
+        if perspectiveName is None:
             perspectiveName = username
         self._oldcredArgs = (username, password, serviceName,
                              perspectiveName, client)
@@ -109,11 +114,9 @@ class ReconnectingPBClientFactory(PBClientFactory,
                       serviceName, perspectiveName, client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
-
     # newcred methods
-
     def login(self, *args):
-        raise RuntimeError, "login is one-shot: use startLogin instead"
+        raise RuntimeError("login is one-shot: use startLogin instead")
 
     def startLogin(self, credentials, client=None):
         self._credentials = credentials
@@ -126,9 +129,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
                                  self._credentials.password, self._client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
-
     # methods to override
-
     def gotPerspective(self, perspective):
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
@@ -151,5 +152,5 @@ class ReconnectingPBClientFactory(PBClientFactory,
             # retrying might help here, let clientConnectionLost decide
             return
         # probably authorization
-        self.stopTrying() # logging in harder won't help
+        self.stopTrying()  # logging in harder won't help
         log.err(why)

@@ -13,23 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.db import sourcestampsets
 from buildbot.test.util import connector_component
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class TestSourceStampSetsConnectorComponent(
-            connector_component.ConnectorComponentMixin,
-            unittest.TestCase):
+    connector_component.ConnectorComponentMixin,
+        unittest.TestCase):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=[ 'patches', 'buildsets', 'sourcestamps',
-                'sourcestampsets' ])
+            table_names=['patches', 'buildsets', 'sourcestamps',
+                         'sourcestampsets'])
 
         def finish_setup(_):
             self.db.sourcestampsets = \
-                    sourcestampsets.SourceStampSetsConnectorComponent(self.db)
+                sourcestampsets.SourceStampSetsConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
         return d
@@ -41,19 +42,19 @@ class TestSourceStampSetsConnectorComponent(
     def test_addSourceStampSet_simple(self):
         d = defer.succeed(None)
 
-        d.addCallback(lambda _ :
-            self.db.sourcestampsets.addSourceStampSet())
+        d.addCallback(lambda _:
+                      self.db.sourcestampsets.addSourceStampSet())
 
         def check(sourcestampsetid):
             def thd(conn):
                 # should see one sourcestamp row
                 ssset_tbl = self.db.model.sourcestampsets
                 r = conn.execute(ssset_tbl.select())
-                rows = [ (row.id)
-                         for row in r.fetchall() ]
+                rows = [(row.id)
+                        for row in r.fetchall()]
                 # Test if returned setid is in database
                 self.assertEqual(rows,
-                    [ ( sourcestampsetid) ])
+                                 [(sourcestampsetid)])
                 # Test if returned set id starts with
                 self.assertEqual(sourcestampsetid, 1)
             return self.db.pool.do(thd)

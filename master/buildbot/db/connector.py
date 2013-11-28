@@ -14,13 +14,26 @@
 # Copyright Buildbot Team Members
 
 import textwrap
+
+from buildbot import config
+from buildbot.db import buildrequests
+from buildbot.db import builds
+from buildbot.db import buildsets
+from buildbot.db import buildslaves
+from buildbot.db import changes
+from buildbot.db import enginestrategy
+from buildbot.db import model
+from buildbot.db import pool
+from buildbot.db import schedulers
+from buildbot.db import sourcestamps
+from buildbot.db import sourcestampsets
+from buildbot.db import state
+from buildbot.db import users
+from twisted.application import internet
+from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
-from twisted.application import internet, service
-from buildbot import config
-from buildbot.db import enginestrategy
-from buildbot.db import pool, model, changes, schedulers, sourcestamps, sourcestampsets
-from buildbot.db import state, buildsets, buildrequests, builds, buildslaves, users
+
 
 class DatabaseNotReadyError(Exception):
     pass
@@ -35,6 +48,7 @@ upgrade_message = textwrap.dedent("""\
     to upgrade the database, and try starting the buildmaster again.  You may
     want to make a backup of your buildmaster before doing so.
     """).strip()
+
 
 class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
     # The connection between Buildbot and its backend database.  This is
@@ -59,8 +73,8 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.configured_url = None
 
         # set up components
-        self._engine = None # set up in reconfigService
-        self.pool = None # set up in reconfigService
+        self._engine = None  # set up in reconfigService
+        self.pool = None  # set up in reconfigService
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
@@ -74,9 +88,8 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.users = users.UsersConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
-                self._doCleanup)
+                                                   self._doCleanup)
         self.cleanup_timer.setServiceParent(self)
-
 
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
@@ -85,12 +98,13 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url,
-                                basedir=self.basedir)
+                                                    basedir=self.basedir)
         self.pool = pool.DBThreadPool(self._engine, verbose=verbose)
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
             d = self.model.is_current()
+
             def check_current(res):
                 if not res:
                     for l in upgrade_message.split('\n'):
@@ -102,14 +116,12 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
 
         return d
 
-
     def reconfigService(self, new_config):
         # double-check -- the master ensures this in config checks
         assert self.configured_url == new_config.db['db_url']
 
         return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config)
-
+                                                                 new_config)
 
     def _doCleanup(self):
         """

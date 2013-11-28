@@ -14,14 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from twisted.application import service
-from buildbot.process import debug
+
 from buildbot import config
+from buildbot.process import debug
+from twisted.application import service
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class FakeManhole(service.Service):
     pass
+
 
 class TestDebugServices(unittest.TestCase):
 
@@ -35,7 +38,7 @@ class TestDebugServices(unittest.TestCase):
         self.master.pbmanager = pbmanager = mock.Mock()
         registration = mock.Mock(name='registration')
         registration.unregister = mock.Mock(name='unregister',
-                    side_effect=lambda : defer.succeed(None))
+                                            side_effect=lambda: defer.succeed(None))
         pbmanager.register.return_value = registration
 
         ds = debug.DebugServices(self.master)
@@ -54,10 +57,10 @@ class TestDebugServices(unittest.TestCase):
 
         self.assertTrue(pbmanager.register.called)
         self.assertEqual(pbmanager.register.call_args[0][:3],
-                ('9824', 'debug', 'seeeekrit'))
+                         ('9824', 'debug', 'seeeekrit'))
         factory = pbmanager.register.call_args[0][3]
         self.assertIsInstance(factory(mock.Mock(), mock.Mock()),
-                debug.DebugPerspective)
+                              debug.DebugPerspective)
 
         # change the password, and see it re-register
         self.config.debugPassword = 'lies'
@@ -67,7 +70,7 @@ class TestDebugServices(unittest.TestCase):
         self.assertTrue(registration.unregister.called)
         self.assertTrue(pbmanager.register.called)
         self.assertEqual(pbmanager.register.call_args[0][:3],
-                ('9824', 'debug', 'lies'))
+                         ('9824', 'debug', 'lies'))
 
         # remove the password, and see it unregister
         self.config.debugPassword = None
@@ -134,10 +137,11 @@ class TestDebugPerspective(unittest.TestCase):
         self.assertIdentical(self.persp.attached(mock.Mock()), self.persp)
 
     def test_detached(self):
-        self.persp.detached(mock.Mock()) # just shouldn't crash
+        self.persp.detached(mock.Mock())  # just shouldn't crash
 
     def test_perspective_reload(self):
-        d = defer.maybeDeferred(lambda : self.persp.perspective_reload())
+        d = defer.maybeDeferred(lambda: self.persp.perspective_reload())
+
         def check(_):
             self.master.reconfig.assert_called_with()
         d.addCallback(check)

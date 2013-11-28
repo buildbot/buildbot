@@ -15,11 +15,16 @@
 
 
 import os
-from twisted.trial import unittest
-from buildbot.test.util import dirs
 
-from buildbot.status.persistent_queue import MemoryQueue, DiskQueue, \
-    IQueue, PersistentQueue, WriteFile
+from buildbot.test.util import dirs
+from twisted.trial import unittest
+
+from buildbot.status.persistent_queue import DiskQueue
+from buildbot.status.persistent_queue import IQueue
+from buildbot.status.persistent_queue import MemoryQueue
+from buildbot.status.persistent_queue import PersistentQueue
+from buildbot.status.persistent_queue import WriteFile
+
 
 class test_Queues(dirs.DirsMixin, unittest.TestCase):
 
@@ -36,7 +41,7 @@ class test_Queues(dirs.DirsMixin, unittest.TestCase):
         WriteFile(os.path.join('fake_dir', '5'), 'foo5')
         WriteFile(os.path.join('fake_dir', '8'), 'foo8')
         queue = PersistentQueue(MemoryQueue(3),
-            DiskQueue('fake_dir', 5, pickleFn=str, unpickleFn=str))
+                                DiskQueue('fake_dir', 5, pickleFn=str, unpickleFn=str))
         self.assertEqual(['foo3', 'foo5', 'foo8'], queue.items())
         self.assertEqual(3, queue.nbItems())
         self.assertEqual(['foo3', 'foo5', 'foo8'], queue.popChunk())

@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
@@ -31,7 +32,7 @@ def upgrade(migrate_engine):
         schedulers = sa.Table('schedulers', metadata, autoload=True)
 
         sa.Index('name_and_class',
-                schedulers.c.name, schedulers.c.class_name).create()
+                 schedulers.c.name, schedulers.c.class_name).create()
 
         changes = sa.Table('changes', metadata, autoload=True)
 
@@ -47,11 +48,11 @@ def upgrade(migrate_engine):
 
         objects = sa.Table('objects', metadata, autoload=True)
         sa.Index('object_identity', objects.c.name, objects.c.class_name,
-                unique=True).create()
+                 unique=True).create()
 
         object_state = sa.Table('object_state', metadata, autoload=True)
         sa.Index('name_per_object', object_state.c.objectid,
-                object_state.c.name, unique=True).create()
+                 object_state.c.name, unique=True).create()
 
     # Due to a coding bug in version 012, the users_identifier index is not
     # unique (on any DB).  SQLAlchemy-migrate does not provide an interface to

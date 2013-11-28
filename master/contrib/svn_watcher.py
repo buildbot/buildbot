@@ -4,7 +4,7 @@
 # new revisions. It then uses the 'buildbot sendchange' command to deliver
 # information about the Change to a (remote) buildmaster. It can be run from
 # a cron job on a periodic basis, or can be told (with the 'watch' option) to
-# automatically repeat its check every 10 minutes.  
+# automatically repeat its check every 10 minutes.
 
 # This script does not store any state information, so to avoid spurious
 # changes you must use the 'watch' option and let it run forever.
@@ -20,13 +20,14 @@
 # 22.03.10 by Johnnie Pittman, added support for category and interval
 # options.
 
+import os
 import subprocess
-import xml.dom.minidom
-from xml.parsers.expat import ExpatError
 import sys
 import time
+import xml.dom.minidom
+
 from optparse import OptionParser
-import os
+from xml.parsers.expat import ExpatError
 
 
 if sys.platform == 'win32':
@@ -40,28 +41,28 @@ def getoutput(cmd):
 
 def sendchange_cmd(master, revisionData):
     cmd = [
-        "buildbot", 
+        "buildbot",
         "sendchange",
         "--master=%s" % master,
         "--revision=%s" % revisionData['revision'],
         "--username=%s" % revisionData['author'],
         "--comments=%s" % revisionData['comments'],
         "--vc=%s" % 'svn',
-        ]
+    ]
     if opts.category:
         cmd.append("--category=%s" % opts.category)
     for path in revisionData['paths']:
         cmd.append(path)
-        
 
-    if opts.verbose == True:
+    if opts.verbose:
         print cmd
-        
-    return cmd 
+
+    return cmd
+
 
 def parseChangeXML(raw_xml):
     """Parse the raw xml and return a dict with key pairs set.
-    
+
     Commmand we're parsing:
 
     svn log --non-interactive --xml --verbose --limit=1 <repo url>
@@ -80,9 +81,9 @@ def parseChangeXML(raw_xml):
       </logentry>
      </log>
     """
-    
+
     data = dict()
-    
+
     # parse the xml string and grab the first log entry.
     try:
         doc = xml.dom.minidom.parseString(raw_xml)
@@ -97,22 +98,22 @@ def parseChangeXML(raw_xml):
                               log_entry.getElementsByTagName("author")[0].childNodes])
     data['comments'] = "".join([t.data for t in
                                 log_entry.getElementsByTagName("msg")[0].childNodes])
-    
+
     # grab the appropriate file paths that changed.
     pathlist = log_entry.getElementsByTagName("paths")[0]
     paths = []
     for path in pathlist.getElementsByTagName("path"):
         paths.append("".join([t.data for t in path.childNodes]))
     data['paths'] = paths
-    
+
     return data
 
 
 def checkChanges(repo, master, oldRevision=-1):
     cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
            "--limit=1", repo]
-    
-    if opts.verbose == True:
+
+    if opts.verbose:
         print "Getting last revision of repository: " + repo
 
     if sys.platform == 'win32':
@@ -122,59 +123,61 @@ def checkChanges(repo, master, oldRevision=-1):
     else:
         xml1 = getoutput(cmd)
 
-    if opts.verbose == True:
-        print "XML\n-----------\n"+xml1+"\n\n"
+    if opts.verbose:
+        print "XML\n-----------\n" + xml1 + "\n\n"
 
     revisionData = parseChangeXML(xml1)
 
-    if opts.verbose == True:
+    if opts.verbose:
         print "PATHS"
         print revisionData['paths']
 
-    if  revisionData['revision'] != oldRevision:
-        
+    if revisionData['revision'] != oldRevision:
+
         cmd = sendchange_cmd(master, revisionData)
 
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
-            pretty_time = time.strftime("%H.%M.%S ") 
-            print "%s Revision %s: %s" % (pretty_time, revisionData['revision'], 
+            pretty_time = time.strftime("%H.%M.%S ")
+            print "%s Revision %s: %s" % (pretty_time, revisionData['revision'],
                                           ''.join(f.readlines()))
             f.close()
         else:
             xml1 = getoutput(cmd)
     else:
         pretty_time = time.strftime("%H.%M.%S ")
-        print "%s nothing has changed since revision %s" % (pretty_time, 
+        print "%s nothing has changed since revision %s" % (pretty_time,
                                                             revisionData['revision'])
 
     return revisionData['revision']
 
+
 def build_parser():
     usagestr = "%prog [options] <repo url> <buildbot master:port>"
     parser = OptionParser(usage=usagestr)
-    
+
     parser.add_option(
         "-c", "--category", dest="category", action="store", default="",
         help="""Store a category name to be associated with sendchange msg."""
-        )
+    )
 
     parser.add_option(
         "-i", "--interval", dest="interval", action="store", default=0,
         help="Implies watch option and changes the time in minutes to the value specified.",
-        )
+    )
 
     parser.add_option(
         "-v", "--verbose", dest="verbose", action="store_true", default=False,
         help="Enables more information to be presented on the command line.",
-        )
+    )
 
     parser.add_option(
         "", "--watch", dest="watch", action="store_true", default=False,
         help="Automatically check the repo url every 10 minutes.",
-        )
-    
+    )
+
     return parser
+
 
 def validate_args(args):
     """Validate our arguments and exit if we don't have what we want."""
@@ -186,7 +189,7 @@ def validate_args(args):
         print "\nToo many arguments specified.\n"
         parser.print_help()
         sys.exit(2)
-    
+
 
 if __name__ == '__main__':
 
@@ -210,7 +213,7 @@ if __name__ == '__main__':
     if opts.watch or opts.interval:
         oldRevision = -1
         print "Watching for changes in repo %s for master %s." % (repo_url, bbmaster)
-        while 1:
+        while True:
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)
             except ExpatError:
@@ -222,10 +225,10 @@ if __name__ == '__main__':
                     time.sleep(int(opts.interval) * 60)
                 else:
                     # Check the repository every 10 minutes
-                    time.sleep(10*60)
+                    time.sleep(10 * 60)
             except KeyboardInterrupt:
                 print "\nReceived interrupt via keyboard.  Shutting Down."
                 sys.exit(0)
 
-    # default action if watch isn't specified 
+    # default action if watch isn't specified
     checkChanges(repo_url, bbmaster)

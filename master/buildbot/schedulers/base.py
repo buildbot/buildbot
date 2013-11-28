@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
-from twisted.python import failure, log
-from twisted.application import service
-from twisted.internet import defer
+from buildbot import config
+from buildbot import interfaces
 from buildbot.process.properties import Properties
 from buildbot.util import ComparableMixin
-from buildbot import config, interfaces
 from buildbot.util.state import StateMixin
+from twisted.application import service
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+from zope.interface import implements
+
 
 class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
+
     """
     Base class for all schedulers; this provides the equipment to manage
     reconfigurations and to handle basic scheduler state.  It also provides
@@ -34,12 +38,12 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     implements(interfaces.IScheduler)
 
-    DefaultCodebases = {'':{}}
+    DefaultCodebases = {'': {}}
 
     compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties,
-                 codebases = DefaultCodebases):
+                 codebases=DefaultCodebases):
         """
         Initialize a Scheduler.
 
@@ -78,7 +82,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         if not ok:
             config.error(
                 "The builderNames argument to a scheduler must be a list "
-                  "of Builder names.")
+                "of Builder names.")
 
         self.builderNames = builderNames
         "list of builder names to start in each buildset"
@@ -107,29 +111,26 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             config.error("Codebases cannot be None")
 
         self.codebases = codebases
-        
+
         # internal variables
         self._change_subscription = None
         self._change_consumption_lock = defer.DeferredLock()
 
-    ## service handling
+    # service handling
 
     def startService(self):
         service.MultiService.startService(self)
 
     def findNewSchedulerInstance(self, new_config):
-        return new_config.schedulers[self.name] # should exist!
+        return new_config.schedulers[self.name]  # should exist!
 
     def stopService(self):
         d = defer.maybeDeferred(self._stopConsumingChanges)
-        d.addCallback(lambda _ : service.MultiService.stopService(self))
+        d.addCallback(lambda _: service.MultiService.stopService(self))
         return d
 
-
-    ## status queries
-
+    # status queries
     # TODO: these aren't compatible with distributed schedulers
-
     def listBuilderNames(self):
         "Returns the list of builder names"
         return self.builderNames
@@ -138,7 +139,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         "Returns a list of the next times that builds are scheduled, if known."
         return []
 
-    ## change handling
+    # change handling
 
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
                               onlyImportant=False):
@@ -165,6 +166,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         # register for changes with master
         assert not self._change_subscription
+
         def changeCallback(change):
             # ignore changes delivered while we're not running
             if not self._change_subscription:
@@ -174,8 +176,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 return
             if change.codebase not in self.codebases:
                 log.msg(format='change contains codebase %(codebase)s that is '
-                    'not processed by scheduler %(name)s',
-                    codebase=change.codebase, name=self.name)
+                        'not processed by scheduler %(name)s',
+                        codebase=change.codebase, name=self.name)
                 return
             if fileIsImportant:
                 try:
@@ -225,12 +227,12 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         """
         raise NotImplementedError
 
-    ## starting bulids
+    # starting builds
 
     @defer.inlineCallbacks
     def addBuildsetForLatest(self, reason='', external_idstring=None,
-                        branch=None, repository='', project='',
-                        builderNames=None, properties=None):
+                             branch=None, repository='', project='',
+                             builderNames=None, properties=None):
         """
         Add a buildset for the 'latest' source in the given branch,
         repository, and project.  This will create a relative sourcestamp for
@@ -262,27 +264,26 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             ss_branch = cb_info.get('branch', branch)
             ss_revision = cb_info.get('revision', None)
             yield self.master.db.sourcestamps.addSourceStamp(
-                        codebase=codebase,
-                        repository=ss_repository,
-                        branch=ss_branch,
-                        revision=ss_revision,
-                        project=project,
-                        changeids=set(),
-                        sourcestampsetid=setid)
+                codebase=codebase,
+                repository=ss_repository,
+                branch=ss_branch,
+                revision=ss_revision,
+                project=project,
+                changeids=set(),
+                sourcestampsetid=setid)
 
-        bsid,brids = yield self.addBuildsetForSourceStamp(
-                                setid=setid, reason=reason,
-                                external_idstring=external_idstring,
-                                builderNames=builderNames,
-                                properties=properties)
+        bsid, brids = yield self.addBuildsetForSourceStamp(
+            setid=setid, reason=reason,
+            external_idstring=external_idstring,
+            builderNames=builderNames,
+            properties=properties)
 
-        defer.returnValue((bsid,brids))
-
+        defer.returnValue((bsid, brids))
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStampDetails(self, reason='', external_idstring=None,
-                        branch=None, repository='', project='', revision=None,
-                        builderNames=None, properties=None):
+                                         branch=None, repository='', project='', revision=None,
+                                         builderNames=None, properties=None):
         """
         Given details about the source code to build, create a source stamp and
         then add a buildset for it.
@@ -305,16 +306,15 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
         yield self.master.db.sourcestamps.addSourceStamp(
-                branch=branch, revision=revision, repository=repository,
-                project=project, sourcestampsetid=setid)
+            branch=branch, revision=revision, repository=repository,
+            project=project, sourcestampsetid=setid)
 
         rv = yield self.addBuildsetForSourceStamp(
-                                setid=setid, reason=reason,
-                                external_idstring=external_idstring,
-                                builderNames=builderNames,
-                                properties=properties)
+            setid=setid, reason=reason,
+            external_idstring=external_idstring,
+            builderNames=builderNames,
+            properties=properties)
         defer.returnValue(rv)
-
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
@@ -331,26 +331,26 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             ss = self.codebases[codebase].copy()
              # apply info from passed sourcestamps onto the configured default
              # sourcestamp attributes for this codebase.
-            ss.update(sourcestamps.get(codebase,{}))
+            ss.update(sourcestamps.get(codebase, {}))
 
             # add sourcestamp to the new setid
             yield self.master.db.sourcestamps.addSourceStamp(
-                        codebase=codebase,
-                        repository=ss.get('repository', ''),
-                        branch=ss.get('branch', None),
-                        revision=ss.get('revision', None),
-                        project=ss.get('project', ''),
-                        changeids=[c['number'] for c in ss.get('changes', [])],
-                        patch_body=ss.get('patch_body', None),
-                        patch_level=ss.get('patch_level', None),
-                        patch_author=ss.get('patch_author', None),
-                        patch_comment=ss.get('patch_comment', None),
-                        sourcestampsetid=new_setid)
+                codebase=codebase,
+                repository=ss.get('repository', ''),
+                branch=ss.get('branch', None),
+                revision=ss.get('revision', None),
+                project=ss.get('project', ''),
+                changeids=[c['number'] for c in ss.get('changes', [])],
+                patch_body=ss.get('patch_body', None),
+                patch_level=ss.get('patch_level', None),
+                patch_author=ss.get('patch_author', None),
+                patch_comment=ss.get('patch_comment', None),
+                sourcestampsetid=new_setid)
 
         rv = yield self.addBuildsetForSourceStamp(
-                                setid=new_setid, reason=reason,
-                                properties=properties,
-                                builderNames=builderNames)
+            setid=new_setid, reason=reason,
+            properties=properties,
+            builderNames=builderNames)
 
         defer.returnValue(rv)
 
@@ -361,11 +361,11 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, reason='', external_idstring=None,
-            changeids=[], builderNames=None, properties=None):
+                              changeids=[], builderNames=None, properties=None):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
-            return max(changesByCodebase[codebase],key = lambda change: change["changeid"])
+            return max(changesByCodebase[codebase], key=lambda change: change["changeid"])
 
         # Define setid for this set of changed repositories
         setid = yield self.master.db.sourcestampsets.addSourceStampSet()
@@ -377,7 +377,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
         for codebase in self.codebases:
-            args = {'codebase': codebase, 'sourcestampsetid': setid }
+            args = {'codebase': codebase, 'sourcestampsetid': setid}
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
@@ -388,7 +388,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 args['changeids'] = set()
                 args['project'] = ''
             else:
-                #codebase has changes
+                # codebase has changes
                 args['changeids'] = [c["changeid"] for c in changesByCodebase[codebase]]
                 lastChange = get_last_change_for_codebase(codebase)
                 for key in ['repository', 'branch', 'revision', 'project']:
@@ -397,15 +397,15 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
             yield self.master.db.sourcestamps.addSourceStamp(**args)
 
         # add one buildset, this buildset is connected to the sourcestamps by the setid
-        bsid,brids = yield self.addBuildsetForSourceStamp( setid=setid,
-                            reason=reason, external_idstring=external_idstring,
-                            builderNames=builderNames, properties=properties)
+        bsid, brids = yield self.addBuildsetForSourceStamp(setid=setid,
+                                                           reason=reason, external_idstring=external_idstring,
+                                                           builderNames=builderNames, properties=properties)
 
-        defer.returnValue((bsid,brids))
+        defer.returnValue((bsid, brids))
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
-            properties=None, builderNames=None):
+                                  properties=None, builderNames=None):
         """
         Add a buildset for the given, already-existing sourcestamp.
 
@@ -442,7 +442,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # addBuildset method
         properties_dict = properties.asDict()
 
-        if setid == None:
+        if setid is None:
             if ssid is not None:
                 ssdict = yield self.master.db.sourcestamps.getSourceStamp(ssid)
                 setid = ssdict['sourcestampsetid']
@@ -451,8 +451,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 yield None
 
         rv = yield self.master.addBuildset(sourcestampsetid=setid,
-                            reason=reason, properties=properties_dict,
-                            builderNames=builderNames,
-                            external_idstring=external_idstring)
+                                           reason=reason, properties=properties_dict,
+                                           builderNames=builderNames,
+                                           external_idstring=external_idstring)
         defer.returnValue(rv)
-

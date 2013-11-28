@@ -17,21 +17,25 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
-import re
 import datetime
 import dateutil
-import os
 import exceptions
+import os
+import re
 
+from twisted.internet import defer
+from twisted.internet import utils
 from twisted.python import log
-from twisted.internet import defer, utils
 
 from buildbot import util
 from buildbot.changes import base
 
+
 class P4PollerError(Exception):
+
     """Something went wrong with the poll. This is used as a distinctive
     exception type so that unit tests can detect and ignore it."""
+
 
 def get_simple_split(branchfile):
     """Splits the branchfile argument and assuming branch is
@@ -39,11 +43,14 @@ def get_simple_split(branchfile):
        branch and file else None."""
 
     index = branchfile.find('/')
-    if index == -1: return None, None
+    if index == -1:
+        return None, None
     branch, file = branchfile.split('/', 1)
     return branch, file
 
+
 class P4Source(base.PollingChangeSource, util.ComparableMixin):
+
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
@@ -51,16 +58,16 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "p4bin", "pollInterval"]
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET" , "PATH"]
+                "P4CHARSET", "PATH"]
 
     changes_line_re = re.compile(
-            r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
+        r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
     describe_header_re = re.compile(
-            r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
+        r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
     file_re = re.compile(r"^\.\.\. (?P<path>[^#]+)#\d+ [/\w]+$")
     datefmt = '%Y/%m/%d %H:%M:%S'
 
-    parent = None # filled in when we're added
+    parent = None  # filled in when we're added
     last_change = None
     loop = None
 
@@ -114,7 +121,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             args.extend(['-P', self.p4passwd])
         args.extend(['changes'])
         if self.last_change is not None:
-            args.extend(['%s...@%d,now' % (self.p4base, self.last_change+1)])
+            args.extend(['%s...@%d,now' % (self.p4base, self.last_change + 1)])
         else:
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
 
@@ -124,7 +131,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         changelists = []
         for line in result.split('\n'):
             line = line.strip()
-            if not line: continue
+            if not line:
+                continue
             m = self.changes_line_re.match(line)
             if not m:
                 raise P4PollerError("Unexpected 'p4 changes' output: %r" % result)
@@ -136,7 +144,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                 self.last_change = num
                 return
             changelists.append(num)
-        changelists.reverse() # oldest first
+        changelists.reverse()  # oldest first
 
         # Retrieve each sequentially.
         for num in changelists:
@@ -175,19 +183,21 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             comments = ''
             while not lines[0].startswith('Affected files'):
                 comments += lines.pop(0) + '\n'
-            lines.pop(0) # affected files
+            lines.pop(0)  # affected files
 
-            branch_files = {} # dict for branch mapped to file(s)
+            branch_files = {}  # dict for branch mapped to file(s)
             while lines:
                 line = lines.pop(0).strip()
-                if not line: continue
+                if not line:
+                    continue
                 m = self.file_re.match(line)
                 if not m:
                     raise P4PollerError("Invalid file line: %r" % line)
                 path = m.group('path')
                 if path.startswith(self.p4base):
                     branch, file = self.split_file(path[len(self.p4base):])
-                    if (branch == None and file == None): continue
+                    if (branch is None and file is None):
+                        continue
                     if branch in branch_files:
                         branch_files[branch].append(file)
                     else:
@@ -195,12 +205,12 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
             for branch in branch_files:
                 yield self.master.addChange(
-                       author=who,
-                       files=branch_files[branch],
-                       comments=comments,
-                       revision=str(num),
-                       when_timestamp=when,
-                       branch=branch,
-                       project=self.project)
+                    author=who,
+                    files=branch_files[branch],
+                    comments=comments,
+                    revision=str(num),
+                    when_timestamp=when,
+                    branch=branch,
+                    project=self.project)
 
             self.last_change = num

@@ -155,6 +155,11 @@ Optional Arguments:
     of the autoconf-controlled package, like ``["--without-x"]`` to
     disable windowing support. Defaults to an empty list.
 
+``reconf``
+    use autoreconf to generate the ./configure file, set to True to use a
+    buildbot default autoreconf command, or define the command for the
+    ShellCommand. 
+ 
 ``compile``
     this is a shell command or list of argv values which is used to
     actually compile the tree. It defaults to ``make all``. If set to
@@ -163,6 +168,11 @@ Optional Arguments:
 ``test``
     this is a shell command or list of argv values which is used to run
     the tree's self-tests. It defaults to @code{make check}. If set to
+    None, the test step is skipped.
+
+``distcheck``
+    this is a shell command or list of argv values which is used to run
+    the packaging test. It defaults to @code{make distcheck}. If set to
     None, the test step is skipped.
 
 .. _BasicBuildFactory:

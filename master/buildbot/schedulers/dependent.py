@@ -13,11 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import config
+from buildbot import interfaces
+from buildbot import util
+from buildbot.schedulers import base
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from twisted.internet import defer
 from twisted.python import log
-from buildbot import util, interfaces, config
-from buildbot.status.results import SUCCESS, WARNINGS
-from buildbot.schedulers import base
+
 
 class Dependent(base.BaseScheduler):
 
@@ -41,9 +45,9 @@ class Dependent(base.BaseScheduler):
 
     def startService(self):
         self._buildset_addition_subscr = \
-                self.master.subscribeToBuildsets(self._buildsetAdded)
+            self.master.subscribeToBuildsets(self._buildsetAdded)
         self._buildset_completion_subscr = \
-                self.master.subscribeToBuildsetCompletions(self._buildsetCompleted)
+            self.master.subscribeToBuildsetCompletions(self._buildsetCompleted)
 
         # check for any buildsets completed before we started
         d = self._checkCompletedBuildsets(None, None)
@@ -88,7 +92,7 @@ class Dependent(base.BaseScheduler):
             # build a dependent build if the status is appropriate
             if sub_results in (SUCCESS, WARNINGS):
                 yield self.addBuildsetForSourceStamp(setid=sub_sssetid,
-                                               reason='downstream')
+                                                     reason='downstream')
 
             sub_bsids.append(sub_bsid)
 
@@ -99,7 +103,7 @@ class Dependent(base.BaseScheduler):
     def _updateCachedUpstreamBuilds(self):
         if self._cached_upstream_bsids is None:
             bsids = yield self.master.db.state.getState(self.objectid,
-                                        'upstream_bsids', [])
+                                                        'upstream_bsids', [])
             self._cached_upstream_bsids = bsids
 
     @defer.inlineCallbacks
@@ -118,11 +122,11 @@ class Dependent(base.BaseScheduler):
                 continue
 
             rv.append((bsid, bsdict['sourcestampsetid'], bsdict['complete'],
-                bsdict['results']))
+                       bsdict['results']))
 
         if changed:
             yield self.master.db.state.setState(self.objectid,
-                                'upstream_bsids', self._cached_upstream_bsids)
+                                                'upstream_bsids', self._cached_upstream_bsids)
 
         defer.returnValue(rv)
 
@@ -134,7 +138,7 @@ class Dependent(base.BaseScheduler):
             self._cached_upstream_bsids.append(bsid)
 
             yield self.master.db.state.setState(self.objectid,
-                                'upstream_bsids', self._cached_upstream_bsids)
+                                                'upstream_bsids', self._cached_upstream_bsids)
 
     @defer.inlineCallbacks
     def _removeUpstreamBuildsets(self, bsids):
@@ -144,5 +148,4 @@ class Dependent(base.BaseScheduler):
         self._cached_upstream_bsids = list(old - set(bsids))
 
         yield self.master.db.state.setState(self.objectid,
-                            'upstream_bsids', self._cached_upstream_bsids)
-
+                                            'upstream_bsids', self._cached_upstream_bsids)

@@ -18,27 +18,30 @@ import urllib
 OK, WARNING, CRITICAL, UNKNOWN = range(4)
 STATUS_TEXT = ["OK", "Warning", "Critical", "Unknown"]
 STATUS_CODES = dict(OK=OK, WARNING=WARNING, CRIT=CRITICAL)
+
+
 def exit(level, msg):
     print "%s: %s" % (STATUS_TEXT[level], msg)
     sys.exit(level)
+
 
 def main():
     from optparse import OptionParser
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            hostname=None,
-            httpport=None,
-            url=None,
-            verbosity=0
-            )
+        hostname=None,
+        httpport=None,
+        url=None,
+        verbosity=0
+    )
     parser.add_option("-H", "--host", dest="hostname",
-            help="Hostname")
+                      help="Hostname")
     parser.add_option("-p", "--port", dest="httpport",
-            type="int", help="WebStatus port")
+                      type="int", help="WebStatus port")
     parser.add_option("-u", "--url", dest="url",
-            help="Metrics url")
+                      help="Metrics url")
     parser.add_option("-v", "--verbose", dest="verbosity",
-            action="count", help="Increase verbosity")
+                      action="count", help="Increase verbosity")
     options, args = parser.parse_args()
 
     if options.hostname and options.httpport:

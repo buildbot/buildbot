@@ -1,7 +1,7 @@
 #!/usr/bin/env jython
 
-import sys
 import glob
+import sys
 
 testdir = sys.argv[1]
 
@@ -10,16 +10,16 @@ orderfiles = glob.glob(testdir + '/*.tests')
 # wee. just be glad I didn't make this one gigantic nested listcomp.
 # anyway, this builds a once-nested list of files to test.
 
-#open!
+# open!
 files = [open(fn) for fn in orderfiles]
 
-#create prelim list of lists of files!
+# create prelim list of lists of files!
 files = [f.readlines() for f in files]
 
-#shwack newlines and filter out empties!
+# shwack newlines and filter out empties!
 files = [filter(None, [fn.strip() for fn in fs]) for fs in files]
 
-#prefix with testdir
+# prefix with testdir
 files = [[testdir + '/' + fn.strip() for fn in fs] for fs in files]
 
 print "Will run these tests:", files

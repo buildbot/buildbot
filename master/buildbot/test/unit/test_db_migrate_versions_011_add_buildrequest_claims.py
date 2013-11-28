@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.test.util import migration
 import sqlalchemy as sa
+
+from buildbot.test.util import migration
 from sqlalchemy.engine import reflection
+from twisted.trial import unittest
+
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
@@ -31,56 +33,56 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         self.buildsets = sa.Table('buildsets', metadata,
-            sa.Column('id', sa.Integer,  primary_key=True),
-            sa.Column('external_idstring', sa.String(256)),
-            sa.Column('reason', sa.String(256)),
-            sa.Column('sourcestampid', sa.Integer,
-                nullable=False), # NOTE: foreign key omitted
-            sa.Column('submitted_at', sa.Integer, nullable=False),
-            sa.Column('complete', sa.SmallInteger, nullable=False,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('complete_at', sa.Integer),
-            sa.Column('results', sa.SmallInteger),
-        )
+                                  sa.Column('id', sa.Integer, primary_key=True),
+                                  sa.Column('external_idstring', sa.String(256)),
+                                  sa.Column('reason', sa.String(256)),
+                                  sa.Column('sourcestampid', sa.Integer,
+                                            nullable=False),  # NOTE: foreign key omitted
+                                  sa.Column('submitted_at', sa.Integer, nullable=False),
+                                  sa.Column('complete', sa.SmallInteger, nullable=False,
+                                            server_default=sa.DefaultClause("0")),
+                                  sa.Column('complete_at', sa.Integer),
+                                  sa.Column('results', sa.SmallInteger),
+                                  )
         self.buildsets.create(bind=conn)
 
         self.buildrequests = sa.Table('buildrequests', metadata,
-            sa.Column('id', sa.Integer,  primary_key=True),
-            sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
-                nullable=False),
-            sa.Column('buildername', sa.String(length=256), nullable=False),
-            sa.Column('priority', sa.Integer, nullable=False,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('claimed_at', sa.Integer,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('claimed_by_name', sa.String(length=256)),
-            sa.Column('claimed_by_incarnation', sa.String(length=256)),
-            sa.Column('complete', sa.Integer,
-                server_default=sa.DefaultClause("0")),
-            sa.Column('results', sa.SmallInteger),
-            sa.Column('submitted_at', sa.Integer, nullable=False),
-            sa.Column('complete_at', sa.Integer),
-        )
+                                      sa.Column('id', sa.Integer, primary_key=True),
+                                      sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
+                                                nullable=False),
+                                      sa.Column('buildername', sa.String(length=256), nullable=False),
+                                      sa.Column('priority', sa.Integer, nullable=False,
+                                                server_default=sa.DefaultClause("0")),
+                                      sa.Column('claimed_at', sa.Integer,
+                                                server_default=sa.DefaultClause("0")),
+                                      sa.Column('claimed_by_name', sa.String(length=256)),
+                                      sa.Column('claimed_by_incarnation', sa.String(length=256)),
+                                      sa.Column('complete', sa.Integer,
+                                                server_default=sa.DefaultClause("0")),
+                                      sa.Column('results', sa.SmallInteger),
+                                      sa.Column('submitted_at', sa.Integer, nullable=False),
+                                      sa.Column('complete_at', sa.Integer),
+                                      )
         self.buildrequests.create(bind=conn)
 
         idx = sa.Index('buildrequests_buildsetid',
-                self.buildrequests.c.buildsetid)
+                       self.buildrequests.c.buildsetid)
         idx.create()
 
         idx = sa.Index('buildrequests_buildername',
-                self.buildrequests.c.buildername)
+                       self.buildrequests.c.buildername)
         idx.create()
 
         idx = sa.Index('buildrequests_complete',
-                self.buildrequests.c.complete)
+                       self.buildrequests.c.complete)
         idx.create()
 
         self.objects = sa.Table("objects", metadata,
-            sa.Column("id", sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(128), nullable=False),
-            sa.Column('class_name', sa.String(128), nullable=False),
-            sa.UniqueConstraint('name', 'class_name', name='object_identity'),
-        )
+                                sa.Column("id", sa.Integer, primary_key=True),
+                                sa.Column('name', sa.String(128), nullable=False),
+                                sa.Column('class_name', sa.String(128), nullable=False),
+                                sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+                                )
         self.objects.create(bind=conn)
 
     # tests
@@ -97,7 +99,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 insp = reflection.Inspector.from_engine(conn)
                 indexes = insp.get_indexes('buildrequests')
                 self.assertEqual(
-                    sorted([ i['name'] for i in indexes ]),
+                    sorted([i['name'] for i in indexes]),
                     sorted([
                         'buildrequests_buildername',
                         'buildrequests_buildsetid',

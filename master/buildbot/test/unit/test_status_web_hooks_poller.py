@@ -13,15 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.changes import base
 import buildbot.status.web.change_hook as change_hook
-from buildbot.test.fake.web import FakeRequest
+
+from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
+from buildbot.test.fake.web import FakeRequest
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestPollingChangeHook(unittest.TestCase):
+
     class Subclass(base.PollingChangeSource):
         pollInterval = None
         called = False
@@ -30,7 +32,7 @@ class TestPollingChangeHook(unittest.TestCase):
             self.called = True
 
     def setUpRequest(self, args, options=True):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'poller' : options})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options})
 
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"

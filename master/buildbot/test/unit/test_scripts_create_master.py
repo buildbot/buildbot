@@ -15,21 +15,26 @@
 
 from __future__ import with_statement
 
-import os
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
+import os
+
+from buildbot.db import connector
+from buildbot.db import model
 from buildbot.scripts import create_master
-from buildbot.db import connector, model
-from buildbot.test.util import dirs, misc
+from buildbot.test.util import dirs
+from buildbot.test.util import misc
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 def mkconfig(**kwargs):
     config = dict(force=False, relocatable=False, config='master.cfg',
-            db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
-            quiet=False, **{'no-logrotate':False, 'log-size':'10000000',
-                'log-count':'10'})
+                  db='sqlite:///state.sqlite', basedir=os.path.abspath('basedir'),
+                  quiet=False, **{'no-logrotate': False, 'log-size': 10000000,
+                                  'log-count': 10})
     config.update(kwargs)
     return config
+
 
 class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
@@ -37,7 +42,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         # createMaster is decorated with @in_reactor, so strip that decoration
         # since the master is already running
         self.patch(create_master, 'createMaster',
-                create_master.createMaster._orig)
+                   create_master.createMaster._orig)
         self.setUpStdoutAssertions()
 
     # tests
@@ -45,17 +50,18 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
     def do_test_createMaster(self, config):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
-        functions = [ 'makeBasedir', 'makeTAC', 'makeSampleConfig',
-                      'makePublicHtml', 'makeTemplatesDir', 'createDB' ]
+        functions = ['makeBasedir', 'makeTAC', 'makeSampleConfig',
+                     'makePublicHtml', 'makeTemplatesDir', 'createDB']
         repls = {}
         calls = []
         for fn in functions:
             repl = repls[fn] = mock.Mock(name=fn)
-            repl.side_effect = lambda config, fn=fn : calls.append(fn)
+            repl.side_effect = lambda config, fn=fn: calls.append(fn)
             self.patch(create_master, fn, repl)
-        repls['createDB'].side_effect = (lambda config :
-                            calls.append(fn) or defer.succeed(None))
+        repls['createDB'].side_effect = (lambda config:
+                                         calls.append(fn) or defer.succeed(None))
         d = create_master.createMaster(config)
+
         @d.addCallback
         def check(rc):
             self.assertEqual(rc, 0)
@@ -66,6 +72,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_createMaster_quiet(self):
         d = self.do_test_createMaster(mkconfig(quiet=True))
+
         @d.addCallback
         def check(_):
             self.assertWasQuiet()
@@ -73,10 +80,12 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_createMaster_loud(self):
         d = self.do_test_createMaster(mkconfig(quiet=False))
+
         @d.addCallback
         def check(_):
             self.assertInStdout('buildmaster configured in')
         return d
+
 
 class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
                                 unittest.TestCase):
@@ -91,17 +100,17 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def assertInTacFile(self, str):
         self.assertIn(str,
-                open(os.path.join('test', 'buildbot.tac'), 'rt').read())
+                      open(os.path.join('test', 'buildbot.tac'), 'rt').read())
 
     def assertNotInTacFile(self, str):
         self.assertNotIn(str,
-                open(os.path.join('test', 'buildbot.tac'), 'rt').read())
+                         open(os.path.join('test', 'buildbot.tac'), 'rt').read())
 
     def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite',
-                            verbose=True):
+                      verbose=True):
         # mock out the database setup
         self.db = mock.Mock()
-        self.db.setup.side_effect = lambda *a, **k : defer.succeed(None)
+        self.db.setup.side_effect = lambda *a, **k: defer.succeed(None)
         self.DBConnector = mock.Mock()
         self.DBConnector.return_value = self.db
         self.patch(connector, 'DBConnector', self.DBConnector)
@@ -148,9 +157,34 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_no_logrotate(self):
-        create_master.makeTAC(mkconfig(basedir='test', **{'no-logrotate':True}))
+        create_master.makeTAC(mkconfig(basedir='test', **{'no-logrotate': True}))
         self.assertNotInTacFile("import Log")
         self.assertWasQuiet()
+
+    def test_makeTAC_int_log_count(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-count': 30}))
+        self.assertInTacFile("\nmaxRotatedFiles = 30\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_str_log_count(self):
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-count': '30'}))
+
+    def test_makeTAC_none_log_count(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
+        self.assertInTacFile("\nmaxRotatedFiles = None\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_int_log_size(self):
+        create_master.makeTAC(mkconfig(basedir='test', **{'log-size': 3000}))
+        self.assertInTacFile("\nrotateLength = 3000\n")
+        self.assertWasQuiet()
+
+    def test_makeTAC_str_log_size(self):
+        self.assertRaises(TypeError,
+                          create_master.makeTAC,
+                          mkconfig(basedir='test', **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
@@ -183,7 +217,7 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def test_makeSampleConfig_db(self):
         create_master.makeSampleConfig(mkconfig(basedir='test', db='XXYYZZ',
-                                            quiet=True))
+                                                quiet=True))
         with open(os.path.join('test', 'master.cfg.sample'), 'rt') as f:
             self.assertIn("XXYYZZ", f.read())
         self.assertWasQuiet()
@@ -202,13 +236,13 @@ class TestCreateMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     @defer.inlineCallbacks
     def test_createDB(self):
-        setup = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
+        setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
-        upgrade = mock.Mock(side_effect=lambda **kwargs : defer.succeed(None))
+        upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
         yield create_master.createDB(
-                mkconfig(basedir='test', quiet=True),
-                _noMonkey=True)
+            mkconfig(basedir='test', quiet=True),
+            _noMonkey=True)
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called()
         self.assertWasQuiet()

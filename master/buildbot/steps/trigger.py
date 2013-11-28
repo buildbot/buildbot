@@ -13,24 +13,29 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.interfaces import ITriggerableScheduler
-from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
-from buildbot.process.properties import Properties, Property
-from twisted.python import log
-from twisted.internet import defer
 from buildbot import config
+from buildbot.interfaces import ITriggerableScheduler
+from buildbot.process.buildstep import EXCEPTION
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.process.buildstep import SUCCESS
+from buildbot.process.properties import Properties
+from buildbot.process.properties import Property
+from twisted.internet import defer
+from twisted.python import log
+
 
 class Trigger(LoggingBuildStep):
     name = "trigger"
 
-    renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
-                    'updateSourceStamp', 'alwaysUseLatest' ]
+    renderables = ['set_properties', 'schedulerNames', 'sourceStamps',
+                   'updateSourceStamp', 'alwaysUseLatest']
 
     flunkOnFailure = True
 
-    def __init__(self, schedulerNames=[], sourceStamp = None, sourceStamps = None,
+    def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={}, 
+                 waitForFinish=False, set_properties={},
                  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(
@@ -107,7 +112,7 @@ class Trigger(LoggingBuildStep):
         if self.sourceStamps:
             ss_for_trigger = {}
             for ss in self.sourceStamps:
-                codebase = ss.get('codebase','')
+                codebase = ss.get('codebase', '')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
             return ss_for_trigger
@@ -154,11 +159,13 @@ class Trigger(LoggingBuildStep):
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            if self.ended:
+                return
         else:
             # do something to handle errors
             for d in dl:
                 d.addErrback(log.err,
-                    '(ignored) while invoking Triggerable schedulers:')
+                             '(ignored) while invoking Triggerable schedulers:')
             rclist = None
             self.end(SUCCESS)
             return
@@ -175,7 +182,7 @@ class Trigger(LoggingBuildStep):
                 log.err(results)
                 continue
 
-            if results==FAILURE:
+            if results == FAILURE:
                 was_failure = True
 
         if was_exception:
@@ -187,9 +194,10 @@ class Trigger(LoggingBuildStep):
 
         if brids:
             master = self.build.builder.botmaster.parent
+
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
-                brid_to_bn = dict((_brid,_bn) for _bn,_brid in brids.iteritems())
+                brid_to_bn = dict((_brid, _bn) for _bn, _brid in brids.iteritems())
 
                 for was_cb, builddicts in res:
                     if was_cb:
@@ -198,7 +206,7 @@ class Trigger(LoggingBuildStep):
                             num = build['number']
 
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn,num), url)
+                            self.step_status.addURL("%s #%d" % (bn, num), url)
 
                 return self.end(result)
 

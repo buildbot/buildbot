@@ -14,12 +14,17 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from buildbot import interfaces
 from buildbot.process import buildstep
-from buildbot.test.fake import remotecommand, fakebuild, slave
+from buildbot.test.fake import fakebuild
+from buildbot.test.fake import fakemaster
+from buildbot.test.fake import remotecommand
+from buildbot.test.fake import slave
 
 
 class BuildStepMixin(object):
+
     """
     Support for testing build steps.  This class adds two capabilities:
 
@@ -43,9 +48,9 @@ class BuildStepMixin(object):
         # the fakes can call back to us
         remotecommand.FakeRemoteCommand.testcase = self
         self.patch(buildstep, 'RemoteCommand',
-                remotecommand.FakeRemoteCommand)
+                   remotecommand.FakeRemoteCommand)
         self.patch(buildstep, 'RemoteShellCommand',
-                remotecommand.FakeRemoteShellCommand)
+                   remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
 
     def tearDownBuildStep(self):
@@ -54,7 +59,7 @@ class BuildStepMixin(object):
 
     # utilities
 
-    def setupStep(self, step, slave_version={'*':"99.99"}, slave_env={}):
+    def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={}):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
@@ -73,10 +78,13 @@ class BuildStepMixin(object):
         """
         factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
+        self.master = fakemaster.make_master(testcase=self)
 
         # step.build
 
         b = self.build = fakebuild.FakeBuild()
+        b.master = self.master
+
         def getSlaveVersion(cmd, oldversion):
             if cmd in slave_version:
                 return slave_version[cmd]
@@ -109,7 +117,7 @@ class BuildStepMixin(object):
             ss.status_text = strings
         ss.setText = ss_setText
 
-        ss.getLogs = lambda : ss.logs.values()
+        ss.getLogs = lambda: ss.logs.values()
 
         self.step_statistics = {}
         ss.setStatistic = self.step_statistics.__setitem__
@@ -141,10 +149,15 @@ class BuildStepMixin(object):
         step.addCompleteLog = addCompleteLog
 
         step.logobservers = self.logobservers = {}
+
         def addLogObserver(logname, observer):
             self.logobservers.setdefault(logname, []).append(observer)
             observer.step = step
         step.addLogObserver = addLogObserver
+
+        # add any observers defined in the constructor, before this monkey-patch
+        for n, o in step._pendingLogObservers:
+            addLogObserver(n, o)
 
         # set defaults
 
@@ -194,7 +207,7 @@ class BuildStepMixin(object):
         Expect a logfile with the given contents
         """
         self.exp_logfiles[logfile] = contents
-    
+
     def expectHidden(self, hidden):
         """
         Set whether the step is expected to be hidden.
@@ -210,22 +223,28 @@ class BuildStepMixin(object):
         self.remote = mock.Mock(name="SlaveBuilder(remote)")
         # TODO: self.step.setupProgress()
         d = self.step.startStep(self.remote)
+
         def check(result):
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
             got_outcome = dict(result=result,
-                        status_text=self.step_status.status_text)
-            self.assertEqual(got_outcome, self.exp_outcome, "expected step outcome")
+                               status_text=self.step_status.status_text)
+            self.assertEqual(got_outcome, self.exp_outcome,
+                             "expected step outcome")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
-                        "missing property '%s'" % pn)
-                self.assertEqual(self.properties.getProperty(pn), pv, "property '%s'" % pn)
+                                "missing property '%s'" % pn)
+                self.assertEqual(self.properties.getProperty(pn),
+                                 pv, "property '%s'" % pn)
                 if ps is not None:
-                    self.assertEqual(self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
+                    self.assertEqual(
+                        self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
             for pn in self.exp_missing_properties:
-                self.assertFalse(self.properties.hasProperty(pn), "unexpected property '%s'" % pn)
+                self.assertFalse(self.properties.hasProperty(pn),
+                                 "unexpected property '%s'" % pn)
             for log, contents in self.exp_logfiles.iteritems():
-                self.assertEqual(self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
+                self.assertEqual(
+                    self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
             self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         d.addCallback(check)
         return d
@@ -239,14 +258,14 @@ class BuildStepMixin(object):
 
         if not self.expected_remote_commands:
             self.fail("got command %r when no further commands were expected"
-                    % (got,))
+                      % (got,))
 
         exp = self.expected_remote_commands.pop(0)
 
         # handle any incomparable args
         for arg in exp.incomparable_args:
             self.failUnless(arg in got[1],
-                    "incomparable arg '%s' not received" % (arg,))
+                            "incomparable arg '%s' not received" % (arg,))
             del got[1][arg]
 
         # first check any ExpectedRemoteReference instances
@@ -256,4 +275,3 @@ class BuildStepMixin(object):
         d = exp.runBehaviors(command)
         d.addCallback(lambda _: command)
         return d
-

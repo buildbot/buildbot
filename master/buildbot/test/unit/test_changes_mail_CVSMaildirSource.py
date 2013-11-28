@@ -15,9 +15,10 @@
 
 from twisted.trial import unittest
 
-from email import message_from_string
-from email.Utils import parsedate_tz, mktime_tz
 from buildbot.changes.mail import CVSMaildirSource
+from email import message_from_string
+from email.utils import mktime_tz
+from email.utils import parsedate_tz
 
 #
 # Sample message from CVS version 1.11
@@ -49,7 +50,7 @@ Commented out some stuff.
 # Paths are handled differently by the two versions
 #
 
-cvs1_12_msg="""Date: Wed, 11 Aug 2010 04:56:44 +0000
+cvs1_12_msg = """Date: Wed, 11 Aug 2010 04:56:44 +0000
 From: andy@example.com
 To: buildbot@example.com
 Subject: cvs update for project RaiCore
@@ -70,12 +71,14 @@ Log Message:
 Changes for changes sake
 """
 
+
 class TestCVSMaildirSource(unittest.TestCase):
+
     def test_CVSMaildirSource_create_change_from_cvs1_11msg(self):
         m = message_from_string(cvs1_11_msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            src, chdict = src.parse( m )
+            src, chdict = src.parse(m)
         except:
             self.fail('Failed to get change from email message.')
         self.assertNotEqual(chdict, None)
@@ -97,7 +100,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(cvs1_12_msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            src, chdict = src.parse( m )
+            src, chdict = src.parse(m)
         except:
             self.fail('Failed to get change from email message.')
         self.assertNotEqual(chdict, None)
@@ -121,7 +124,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            assert src.parse( m )[1]
+            assert src.parse(m)[1]
         except ValueError:
             pass
         else:
@@ -133,7 +136,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            assert src.parse( m )[1]
+            assert src.parse(m)[1]
         except ValueError:
             pass
         else:
@@ -146,7 +149,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['branch'], 'Test_Branch')
@@ -156,7 +159,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['category'], 'Test category')
@@ -167,18 +170,18 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['comments'], None)
 
     def test_CVSMaildirSource_create_change_with_no_files(self):
         # A message with no files is likely not for us
-        msg = cvs1_11_msg.replace('Files: base/module/src/make GNUmakefile,1.362,1.363','')
+        msg = cvs1_11_msg.replace('Files: base/module/src/make GNUmakefile,1.362,1.363', '')
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )
+            chdict = src.parse(m)
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict, None)
@@ -188,7 +191,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['project'], None)
@@ -198,17 +201,17 @@ class TestCVSMaildirSource(unittest.TestCase):
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['repository'], None)
 
     def test_CVSMaildirSource_create_change_with_property(self):
         m = message_from_string(cvs1_11_msg)
-        propDict = { 'foo' : 'bar' }
+        propDict = {'foo': 'bar'}
         src = CVSMaildirSource('/dev/null', properties=propDict)
         try:
-            chdict = src.parse( m )[1]
+            chdict = src.parse(m)[1]
         except:
             self.fail('Failed to get change from email message.')
         self.assertEqual(chdict['properties']['foo'], 'bar')

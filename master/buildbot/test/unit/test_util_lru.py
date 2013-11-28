@@ -13,19 +13,26 @@
 #
 # Copyright Buildbot Team Members
 
-import string
-import random
 import gc
-from twisted.trial import unittest
-from twisted.internet import defer, reactor
-from twisted.python import failure
+import random
+import string
+
 from buildbot.util import lru
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 # construct weakref-able objects for particular keys
+
+
 def short(k):
     return set([k.upper() * 3])
+
+
 def long(k):
     return set([k.upper() * 6])
+
 
 class LRUCacheTest(unittest.TestCase):
 
@@ -37,7 +44,7 @@ class LRUCacheTest(unittest.TestCase):
         self.assertFalse(lru.inv_failed, "invariant failed; see logs")
 
     def check_result(self, r, exp, exp_hits=None, exp_misses=None,
-                            exp_refhits=None):
+                     exp_refhits=None):
         self.assertEqual(r, exp)
         if exp_hits is not None:
             self.assertEqual(self.lru.hits, exp_hits)
@@ -145,7 +152,7 @@ class LRUCacheTest(unittest.TestCase):
     def test_all_misses(self):
         for i, c in enumerate(string.lowercase + string.uppercase):
             res = self.lru.get(c)
-            self.check_result(res, short(c), 0, i+1)
+            self.check_result(res, short(c), 0, i + 1)
 
     def test_get_exception(self):
         def fail_miss_fn(k):
@@ -167,7 +174,7 @@ class LRUCacheTest(unittest.TestCase):
         self.lru.miss_fn = long
         for i in xrange(100):
             res = self.lru.get('a')
-            self.check_result(res, short('a'), i+1, 1)
+            self.check_result(res, short('a'), i + 1, 1)
 
     def test_weakrefs(self):
         res_a = self.lru.get('a')
@@ -176,7 +183,7 @@ class LRUCacheTest(unittest.TestCase):
 
         res_b = self.lru.get('b')
         self.check_result(res_b, short('b'))
-        del res_b # discard reference to b
+        del res_b  # discard reference to b
 
         # blow out the cache and the queue
         self.lru.miss_fn = long
@@ -224,6 +231,7 @@ class LRUCacheTest(unittest.TestCase):
 
     def test_miss_fn_returns_none(self):
         calls = []
+
         def none_miss_fn(k):
             calls.append(k)
             return None
@@ -244,7 +252,7 @@ class LRUCacheTest(unittest.TestCase):
         self.assertEqual(self.lru.get('p'), short('p'))
         self.lru.put('q', set(['new-q']))
         self.assertEqual(self.lru.get('p'), set(['PPP']))
-        self.assertEqual(self.lru.get('q'), set(['QQQ'])) # not updated
+        self.assertEqual(self.lru.get('q'), set(['QQQ']))  # not updated
 
 
 class AsyncLRUCacheTest(unittest.TestCase):
@@ -266,7 +274,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         return defer.succeed(None)
 
     def check_result(self, r, exp, exp_hits=None, exp_misses=None,
-                            exp_refhits=None):
+                     exp_refhits=None):
         self.assertEqual(r, exp)
         if exp_hits is not None:
             self.assertEqual(self.lru.hits, exp_hits)
@@ -284,38 +292,38 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         # second time, it should be cached..
         self.lru.miss_fn = self.long_miss_fn
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 1, 1)
         return d
 
     def test_simple_lru_expulsion(self):
         d = defer.succeed(None)
 
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 0, 1)
-        d.addCallback(lambda _ :
-            self.lru.get('b'))
+        d.addCallback(lambda _:
+                      self.lru.get('b'))
         d.addCallback(self.check_result, short('b'), 0, 2)
-        d.addCallback(lambda _ :
-            self.lru.get('c'))
+        d.addCallback(lambda _:
+                      self.lru.get('c'))
         d.addCallback(self.check_result, short('c'), 0, 3)
-        d.addCallback(lambda _ :
-            self.lru.get('d'))
+        d.addCallback(lambda _:
+                      self.lru.get('d'))
         d.addCallback(self.check_result, short('d'), 0, 4)
 
         gc.collect()
 
         # now try 'a' again - it should be a miss
         self.lru.miss_fn = self.long_miss_fn
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, long('a'), 0, 5)
 
         # ..and that expelled B, but C is still in the cache
-        d.addCallback(lambda _ :
-            self.lru.get('c'))
+        d.addCallback(lambda _:
+                      self.lru.get('c'))
         d.addCallback(self.check_result, short('c'), 1, 5)
         return d
 
@@ -323,29 +331,29 @@ class AsyncLRUCacheTest(unittest.TestCase):
         self.lru = lru.AsyncLRUCache(self.short_miss_fn, 1)
         d = defer.succeed(None)
 
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 0, 1)
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 1, 1)
-        d.addCallback(lambda _ :
-            self.lru.get('b'))
+        d.addCallback(lambda _:
+                      self.lru.get('b'))
         d.addCallback(self.check_result, short('b'), 1, 2)
 
         gc.collect()
 
         # now try 'a' again - it should be a miss
         self.lru.miss_fn = self.long_miss_fn
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, long('a'), 1, 3)
 
         gc.collect()
 
         # ..and that expelled B
-        d.addCallback(lambda _ :
-            self.lru.get('b'))
+        d.addCallback(lambda _:
+                      self.lru.get('b'))
         d.addCallback(self.check_result, long('b'), 1, 4)
         return d
 
@@ -359,17 +367,17 @@ class AsyncLRUCacheTest(unittest.TestCase):
         self.lru = lru.AsyncLRUCache(miss_fn, 1)
         d = defer.succeed(None)
 
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 0, 1)
-        d.addCallback(lambda _ :
-            self.lru.get('b'))
+        d.addCallback(lambda _:
+                      self.lru.get('b'))
         d.addCallback(self.check_result, None, 0, 2)
 
         # 'a' was not expelled since 'b' was None
         self.lru.miss_fn = self.long_miss_fn
-        d.addCallback(lambda _ :
-            self.lru.get('a'))
+        d.addCallback(lambda _:
+                      self.lru.get('a'))
         d.addCallback(self.check_result, short('a'), 1, 2)
 
         return d
@@ -403,7 +411,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
     def test_all_misses(self):
         for i, c in enumerate(string.lowercase + string.uppercase):
             res = yield self.lru.get(c)
-            self.check_result(res, short(c), 0, i+1)
+            self.check_result(res, short(c), 0, i + 1)
 
     @defer.inlineCallbacks
     def test_get_exception(self):
@@ -427,7 +435,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         self.lru.miss_fn = self.long_miss_fn
         for i in xrange(100):
             res = yield self.lru.get('a')
-            self.check_result(res, short('a'), i+1, 1)
+            self.check_result(res, short('a'), i + 1, 1)
 
     @defer.inlineCallbacks
     def test_weakrefs(self):
@@ -437,7 +445,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         res_b = yield self.lru.get('b')
         self.check_result(res_b, short('b'))
-        del res_b # discard reference to b
+        del res_b  # discard reference to b
 
         # blow out the cache and the queue
         self.lru.miss_fn = self.long_miss_fn
@@ -463,11 +471,12 @@ class AsyncLRUCacheTest(unittest.TestCase):
     def test_massively_parallel(self):
         chars = list(string.lowercase * 5)
 
-        misses = [ 0 ]
+        misses = [0]
+
         def slow_short_miss_fn(key):
             d = defer.Deferred()
             misses[0] += 1
-            reactor.callLater(0, lambda : d.callback(short(key)))
+            reactor.callLater(0, lambda: d.callback(short(key)))
             return d
         self.lru.miss_fn = slow_short_miss_fn
 
@@ -476,18 +485,19 @@ class AsyncLRUCacheTest(unittest.TestCase):
             return d
         d = defer.gatherResults([
             check(c, self.lru.get(c))
-            for c in chars ])
+            for c in chars])
+
         def post_check(_):
             self.assertEqual(misses[0], 26)
             self.assertEqual(self.lru.misses, 26)
-            self.assertEqual(self.lru.hits, 4*26)
+            self.assertEqual(self.lru.hits, 4 * 26)
         d.addCallback(post_check)
         return d
 
     def test_slow_fetch(self):
         def slower_miss_fn(k):
             d = defer.Deferred()
-            reactor.callLater(0.05, lambda : d.callback(short(k)))
+            reactor.callLater(0.05, lambda: d.callback(short(k)))
             return d
         self.lru.miss_fn = slower_miss_fn
 
@@ -499,10 +509,11 @@ class AsyncLRUCacheTest(unittest.TestCase):
         ds = []
         for i in range(8):
             d = defer.Deferred()
-            reactor.callLater(0.02*i, do_get, d, 'x')
+            reactor.callLater(0.02 * i, do_get, d, 'x')
             ds.append(d)
 
         d = defer.gatherResults(ds)
+
         def check(_):
             self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
         d.addCallback(check)
@@ -512,7 +523,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         def slow_fail_miss_fn(k):
             d = defer.Deferred()
             reactor.callLater(0.05,
-                lambda : d.errback(failure.Failure(RuntimeError("oh noes"))))
+                              lambda: d.errback(failure.Failure(RuntimeError("oh noes"))))
             return d
         self.lru.miss_fn = slow_fail_miss_fn
 
@@ -524,7 +535,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         ds = []
         for i in range(8):
             d = defer.Deferred()
-            reactor.callLater(0.02*i, do_get, d, 'x')
+            reactor.callLater(0.02 * i, do_get, d, 'x')
             ds.append(d)
 
         d = defer.gatherResults(ds)
@@ -558,6 +569,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
     @defer.inlineCallbacks
     def test_miss_fn_returns_none(self):
         calls = []
+
         def none_miss_fn(k):
             calls.append(k)
             return defer.succeed(None)

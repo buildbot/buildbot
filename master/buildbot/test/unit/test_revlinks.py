@@ -13,28 +13,35 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.revlinks import RevlinkMatch, GithubRevlink, SourceforgeGitRevlink, \
-    SourceforgeGitRevlink_AlluraPlatform, GitwebMatch, default_revlink_matcher
+from buildbot.revlinks import GithubRevlink
+from buildbot.revlinks import GitwebMatch
+from buildbot.revlinks import RevlinkMatch
+from buildbot.revlinks import SourceforgeGitRevlink
+from buildbot.revlinks import SourceforgeGitRevlink_AlluraPlatform
+from buildbot.revlinks import default_revlink_matcher
 from twisted.trial import unittest
+
 
 class TestGithubRevlink(unittest.TestCase):
     revision = 'b6874701b54e0043a78882b020afc86033133f91'
     url = 'https://github.com/buildbot/buildbot/commit/b6874701b54e0043a78882b020afc86033133f91'
+
     def testHTTPS(self):
         self.assertEqual(GithubRevlink(self.revision, 'https://github.com/buildbot/buildbot.git'),
-                self.url)
+                         self.url)
 
     def testGIT(self):
         self.assertEqual(GithubRevlink(self.revision, 'git://github.com/buildbot/buildbot.git'),
-                self.url)
+                         self.url)
 
     def testSSH(self):
         self.assertEqual(GithubRevlink(self.revision, 'git@github.com:buildbot/buildbot.git'),
-                self.url)
+                         self.url)
 
     def testSSHuri(self):
         self.assertEqual(GithubRevlink(self.revision, 'ssh://git@github.com/buildbot/buildbot.git'),
-                self.url)
+                         self.url)
+
 
 class TestSourceforgeGitRevlink(unittest.TestCase):
     revision = 'b99c89a2842d386accea8072ae5bb6e24aa7cf29'
@@ -42,15 +49,16 @@ class TestSourceforgeGitRevlink(unittest.TestCase):
 
     def testGIT(self):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'),
-                self.url)
+                         self.url)
 
     def testSSH(self):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'somebody@gemrb.git.sourceforge.net:gitroot/gemrb/gemrb'),
-                self.url)
+                         self.url)
 
     def testSSHuri(self):
         self.assertEqual(SourceforgeGitRevlink(self.revision, 'ssh://somebody@gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'),
-                self.url)
+                         self.url)
+
 
 class TestSourceforgeGitRevlink_AlluraPlatform(unittest.TestCase):
     revision = '6f9b1470bae497c6ce47e4cf8c9195d864d2ba2f'
@@ -58,19 +66,21 @@ class TestSourceforgeGitRevlink_AlluraPlatform(unittest.TestCase):
 
     def testGIT(self):
         self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'git://git.code.sf.net/p/klusters/klusters'),
-                self.url)
+                         self.url)
 
     def testSSHuri(self):
         self.assertEqual(SourceforgeGitRevlink_AlluraPlatform(self.revision, 'ssh://somebody@git.code.sf.net/p/klusters/klusters'),
-                self.url)
+                         self.url)
+
 
 class TestRevlinkMatch(unittest.TestCase):
+
     def testNotmuch(self):
         revision = 'f717d2ece1836c863f9cc02abd1ff2539307cd1d'
         matcher = RevlinkMatch(['git://notmuchmail.org/git/(.*)'],
-                r'http://git.notmuchmail.org/git/\1/commit/%s')
+                               r'http://git.notmuchmail.org/git/\1/commit/%s')
         self.assertEquals(matcher(revision, 'git://notmuchmail.org/git/notmuch'),
-                'http://git.notmuchmail.org/git/notmuch/commit/f717d2ece1836c863f9cc02abd1ff2539307cd1d')
+                          'http://git.notmuchmail.org/git/notmuch/commit/f717d2ece1836c863f9cc02abd1ff2539307cd1d')
 
     def testSingleString(self):
         revision = 'rev'
@@ -87,12 +97,15 @@ class TestRevlinkMatch(unittest.TestCase):
         matcher = RevlinkMatch('([A-Z]*)Z([0-9]*)', r'\2-\1-%s')
         self.assertEquals(matcher(revision, 'ABCZ43'), '43-ABC-rev')
 
+
 class TestGitwebMatch(unittest.TestCase):
+
     def testOrgmode(self):
         revision = '490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8'
         matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
         self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
-                'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
+                          'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
+
 
 class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
     revision = "0"

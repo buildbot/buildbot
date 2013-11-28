@@ -14,13 +14,16 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer, reactor, utils
-from twisted.python import failure
+
 from buildbot import config
+from buildbot.buildslave import libvirt as libvirtbuildslave
 from buildbot.test.fake import libvirt
 from buildbot.test.util import compat
-from buildbot.buildslave import libvirt as libvirtbuildslave
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import utils
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 class TestLibVirtSlave(unittest.TestCase):
@@ -36,7 +39,7 @@ class TestLibVirtSlave(unittest.TestCase):
     def test_constructor_nolibvirt(self):
         self.patch(libvirtbuildslave, "libvirt", None)
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave,
-            'bot', 'pass', None, 'path', 'path')
+                          'bot', 'pass', None, 'path', 'path')
 
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
@@ -61,7 +64,7 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
         self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', None)
         yield bs._find_existing_deferred
@@ -72,7 +75,7 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_prepare_base_image_cheap(self):
         self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
@@ -85,7 +88,7 @@ class TestLibVirtSlave(unittest.TestCase):
     def test_prepare_base_image_full(self):
         pass
         self.patch(utils, "getProcessValue", mock.Mock())
-        utils.getProcessValue.side_effect = lambda x,y: defer.succeed(0)
+        utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
@@ -98,7 +101,7 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_start_instance(self):
         bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
-            xml='<xml/>')
+                                     xml='<xml/>')
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
@@ -113,15 +116,15 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_start_instance_create_fails(self):
         bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
-            xml='<xml/>')
+                                     xml='<xml/>')
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
         self.patch(bs, "_prepare_base_image", prep)
 
         create = mock.Mock()
-        create.side_effect = lambda self : defer.fail(
-                failure.Failure(RuntimeError('oh noes')))
+        create.side_effect = lambda self: defer.fail(
+            failure.Failure(RuntimeError('oh noes')))
         self.patch(libvirtbuildslave.Connection, 'create', create)
 
         yield bs._find_existing_deferred
@@ -193,7 +196,7 @@ class TestWorkQueue(unittest.TestCase):
         def work():
             d = defer.Deferred()
             reactor.callLater(0, d.errback,
-                    failure.Failure(RuntimeError("Test failure")))
+                              failure.Failure(RuntimeError("Test failure")))
             return d
         return work
 
@@ -201,6 +204,7 @@ class TestWorkQueue(unittest.TestCase):
         def shouldnt_get_called(f):
             self.failUnlessEqual(True, False)
         d.addCallback(shouldnt_get_called)
+
         def errback(f):
             #log.msg("errback called?")
             pass
@@ -247,11 +251,12 @@ class TestWorkQueue(unittest.TestCase):
 
     def test_work(self):
         # We want these deferreds to fire in order
-        flags = {1: False, 2: False, 3: False }
+        flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
         # flags[1] shouldnt already be set, either
         d1 = self.queue.execute(self.delayed_success())
+
         def cb1(res):
             self.failUnlessEqual(flags[1], False)
             flags[1] = True
@@ -262,21 +267,22 @@ class TestWorkQueue(unittest.TestCase):
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False
         d2 = self.queue.execute(self.delayed_success())
+
         def cb2(res):
             assert flags[2] == False
             flags[2] = True
-            assert flags[1] == True
+            assert flags[1]
             assert flags[3] == False
         d2.addCallback(cb2)
 
         # When third deferred fires, only flags[3] should be unset
         d3 = self.queue.execute(self.delayed_success())
+
         def cb3(res):
             assert flags[3] == False
             flags[3] = True
-            assert flags[1] == True
-            assert flags[2] == True
+            assert flags[1]
+            assert flags[2]
         d3.addCallback(cb3)
 
         return defer.DeferredList([d1, d2, d3], fireOnOneErrback=True)
-

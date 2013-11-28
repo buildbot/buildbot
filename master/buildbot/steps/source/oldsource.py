@@ -14,14 +14,16 @@
 # Copyright Buildbot Team Members
 
 
-from warnings import warn
-from email.Utils import formatdate
-from twisted.python import log
-from twisted.internet import defer
-from zope.interface import implements
+from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import IRenderable
 from buildbot.process.buildstep import RemoteCommand
-from buildbot.interfaces import BuildSlaveTooOldError, IRenderable
 from buildbot.steps.source.base import Source
+from email.utils import formatdate
+from twisted.internet import defer
+from twisted.python import log
+from warnings import warn
+from zope.interface import implements
+
 
 class _ComputeRepositoryURL(object):
     implements(IRenderable)
@@ -60,6 +62,7 @@ class _ComputeRepositoryURL(object):
 
         d.addCallback(str)
         return d
+
 
 class SlaveSource(Source):
 
@@ -148,11 +151,12 @@ class SlaveSource(Source):
 
 
 class BK(SlaveSource):
+
     """I perform BitKeeper checkout/update operations."""
 
     name = 'bk'
 
-    renderables = [ 'bkurl', 'baseURL' ]
+    renderables = ['bkurl', 'baseURL']
 
     def __init__(self, bkurl=None, baseURL=None,
                  directory=None, extra_args=None, **kwargs):
@@ -176,10 +180,8 @@ class BK(SlaveSource):
         if bkurl and baseURL:
             raise ValueError("you must use exactly one of bkurl and baseURL")
 
-
     def computeSourceRevision(self, changes):
         return changes.revision
-
 
     def startVC(self, branch, revision, patch):
 
@@ -190,7 +192,7 @@ class BK(SlaveSource):
             raise BuildSlaveTooOldError(m)
 
         if self.bkurl:
-            assert not branch # we need baseURL= to use branches
+            assert not branch  # we need baseURL= to use branches
             self.args['bkurl'] = self.bkurl
         else:
             self.args['bkurl'] = self.baseURL + branch
@@ -213,8 +215,8 @@ class BK(SlaveSource):
         self.startCommand(cmd, warnings)
 
 
-
 class CVS(SlaveSource):
+
     """I do CVS checkout/update operations.
 
     Note: if you are doing anonymous/pserver CVS operations, you will need
@@ -225,7 +227,7 @@ class CVS(SlaveSource):
 
     name = "cvs"
 
-    renderables = [ "cvsroot" ]
+    renderables = ["cvsroot"]
 
     #progressMetrics = ('output',)
     #
@@ -242,7 +244,6 @@ class CVS(SlaveSource):
                  checkout_options=[], export_options=[], extra_options=[],
                  login=None,
                  **kwargs):
-
         """
         @type  cvsroot: string
         @param cvsroot: CVS Repository from which the source tree should
@@ -318,9 +319,9 @@ class CVS(SlaveSource):
 
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
-                          'checkout_options':checkout_options,
-                          'export_options':export_options,
-                          'extra_options':extra_options,
+                          'checkout_options': checkout_options,
+                          'export_options': export_options,
+                          'extra_options': extra_options,
                           'login': login,
                           })
 
@@ -343,7 +344,7 @@ class CVS(SlaveSource):
             # either 'update' or 'copy' modes, it is safer to refuse to
             # build, and tell the user they need to upgrade the buildslave.
             if (branch != self.branch
-                and self.args['mode'] in ("update", "copy")):
+                    and self.args['mode'] in ("update", "copy")):
                 m = ("This buildslave (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
@@ -390,19 +391,20 @@ class CVS(SlaveSource):
             elif self.args['mode'] == "copy":
                 self.args['copydir'] = "source"
             self.args['tag'] = self.args['branch']
-            assert not self.args['patch'] # 0.5.0 slave can't do patch
+            assert not self.args['patch']  # 0.5.0 slave can't do patch
 
         cmd = RemoteCommand("cvs", self.args)
         self.startCommand(cmd, warnings)
 
 
 class SVN(SlaveSource):
+
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
     branch_placeholder = '%%BRANCH%%'
 
-    renderables = [ 'svnurl', 'baseURL' ]
+    renderables = ['svnurl', 'baseURL']
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
                  directory=None, username=None, password=None,
@@ -477,7 +479,7 @@ class SVN(SlaveSource):
             # either 'update' or 'copy' modes, it is safer to refuse to
             # build, and tell the user they need to upgrade the buildslave.
             if (self.args['branch'] != self.branch
-                and self.args['mode'] in ("update", "copy")):
+                    and self.args['mode'] in ("update", "copy")):
                 m = ("This buildslave (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
@@ -486,14 +488,14 @@ class SVN(SlaveSource):
                                                    self.args['mode']))
                 raise BuildSlaveTooOldError(m)
 
-        if (self.depth is not None) and self.slaveVersionIsOlderThan("svn","2.9"):
+        if (self.depth is not None) and self.slaveVersionIsOlderThan("svn", "2.9"):
             m = ("This buildslave (%s) does not support svn depth "
-                    "arguments.  Refusing to build. "
-                    "Please upgrade the buildslave." % (self.build.slavename))
+                 "arguments.  Refusing to build. "
+                 "Please upgrade the buildslave." % (self.build.slavename))
             raise BuildSlaveTooOldError(m)
 
         if (self.username is not None or self.password is not None) \
-        and self.slaveVersionIsOlderThan("svn", "2.8"):
+                and self.slaveVersionIsOlderThan("svn", "2.8"):
             m = ("This buildslave (%s) does not support svn usernames "
                  "and passwords.  "
                  "Refusing to build. Please upgrade the buildslave to "
@@ -508,7 +510,7 @@ class SVN(SlaveSource):
             if branch is None:
                 m = ("The SVN source step belonging to builder '%s' does not know "
                      "which branch to work with. This means that the change source "
-                     "did not specify a branch and that defaultBranch is None." \
+                     "did not specify a branch and that defaultBranch is None."
                      % self.build.builder.name)
                 raise RuntimeError(m)
 
@@ -529,7 +531,7 @@ class SVN(SlaveSource):
         self.args['patch'] = patch
         self.args['always_purge'] = self.always_purge
 
-        #Set up depth if specified
+        # Set up depth if specified
         if self.depth is not None:
             self.args['depth'] = self.depth
 
@@ -542,7 +544,7 @@ class SVN(SlaveSource):
             self.args['extra_args'] = self.extra_args
 
         revstuff = []
-        #revstuff.append(self.args['svnurl'])
+        # revstuff.append(self.args['svnurl'])
         if self.args['svnurl'].find('trunk') == -1:
             revstuff.append("[branch]")
         if revision is not None:
@@ -557,6 +559,7 @@ class SVN(SlaveSource):
 
 
 class Darcs(SlaveSource):
+
     """Check out a source tree from a Darcs repository at 'repourl'.
 
     Darcs has no concept of file modes. This means the eXecute-bit will be
@@ -568,7 +571,7 @@ class Darcs(SlaveSource):
 
     name = "darcs"
 
-    renderables = [ 'repourl', 'baseURL' ]
+    renderables = ['repourl', 'baseURL']
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  **kwargs):
@@ -596,7 +599,7 @@ class Darcs(SlaveSource):
         self.branch = defaultBranch
         SlaveSource.__init__(self, **kwargs)
         assert self.args['mode'] != "export", \
-               "Darcs does not have an 'export' mode"
+            "Darcs does not have an 'export' mode"
         if repourl and baseURL:
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -619,7 +622,7 @@ class Darcs(SlaveSource):
             # either 'update' or 'copy' modes, it is safer to refuse to
             # build, and tell the user they need to upgrade the buildslave.
             if (branch != self.branch
-                and self.args['mode'] in ("update", "copy")):
+                    and self.args['mode'] in ("update", "copy")):
                 m = ("This buildslave (%s) does not know about multiple "
                      "branches, and using mode=%s would probably build the "
                      "wrong tree. "
@@ -629,7 +632,7 @@ class Darcs(SlaveSource):
                 raise BuildSlaveTooOldError(m)
 
         if self.repourl:
-            assert not branch # we need baseURL= to use branches
+            assert not branch  # we need baseURL= to use branches
             self.args['repourl'] = self.repourl
         else:
             self.args['repourl'] = self.baseURL + branch
@@ -647,11 +650,12 @@ class Darcs(SlaveSource):
 
 
 class Git(SlaveSource):
+
     """Check out a source tree from a git repository 'repourl'."""
 
     name = "git"
 
-    renderables = [ 'repourl' ]
+    renderables = ['repourl']
 
     def __init__(self, repourl=None,
                  branch="master",
@@ -712,7 +716,7 @@ class Git(SlaveSource):
             # GerritChangeSource
             self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
             self.updateSourceProperty("gerrit_branch",
-                    self.args['gerrit_branch'])
+                                      self.args['gerrit_branch'])
         else:
             try:
                 # forced build
@@ -721,7 +725,7 @@ class Git(SlaveSource):
                     self.args['gerrit_branch'] = "refs/changes/%2.2d/%d/%d" \
                                                  % (int(change[0]) % 100, int(change[0]), int(change[1]))
                     self.updateSourceProperty("gerrit_branch",
-                            self.args['gerrit_branch'])
+                                              self.args['gerrit_branch'])
             except:
                 pass
 
@@ -734,11 +738,12 @@ class Git(SlaveSource):
 
 
 class Repo(SlaveSource):
+
     """Check out a source tree from a repo repository described by manifest."""
 
     name = "repo"
 
-    renderables = [ "manifest_url" ]
+    renderables = ["manifest_url"]
 
     def __init__(self,
                  manifest_url=None,
@@ -781,7 +786,7 @@ class Repo(SlaveSource):
          returns list of repo downloads sent to the buildslave
          """
         import re
-        if s == None:
+        if s is None:
             return []
         re1 = re.compile("repo download ([^ ]+) ([0-9]+/[0-9]+)")
         re2 = re.compile("([^ ]+) ([0-9]+/[0-9]+)")
@@ -806,16 +811,16 @@ class Repo(SlaveSource):
         # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
             if ("event.type" in change.properties and
-                change.properties["event.type"] == "patchset-created"):
-                downloads.append("%s %s/%s"% (change.properties["event.change.project"],
-                                                 change.properties["event.change.number"],
-                                                 change.properties["event.patchSet.number"]))
+                    change.properties["event.type"] == "patchset-created"):
+                downloads.append("%s %s/%s" % (change.properties["event.change.project"],
+                                               change.properties["event.change.number"],
+                                               change.properties["event.patchSet.number"]))
 
         # download patches based on web site forced build properties:
         # "repo_d", "repo_d0", .., "repo_d9"
         # "repo_download", "repo_download0", .., "repo_download9"
-        for propName in ["repo_d"] + ["repo_d%d" % i for i in xrange(0,10)] + \
-          ["repo_download"] + ["repo_download%d" % i for i in xrange(0,10)]:
+        for propName in ["repo_d"] + ["repo_d%d" % i for i in xrange(0, 10)] + \
+                ["repo_download"] + ["repo_download%d" % i for i in xrange(0, 10)]:
             s = self.build.getProperty(propName)
             if s is not None:
                 downloads.extend(self.parseDownloadProperty(s))
@@ -853,7 +858,7 @@ class Repo(SlaveSource):
             repo_downloaded = cmd.updates["repo_downloaded"][-1]
             if repo_downloaded:
                 self.updateSourceProperty("repo_downloaded",
-                        str(repo_downloaded))
+                                          str(repo_downloaded))
             else:
                 repo_downloaded = []
         orig_downloads = self.getProperty("repo_downloads") or []
@@ -862,13 +867,14 @@ class Repo(SlaveSource):
 
 
 class Bzr(SlaveSource):
+
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
 
     """
 
     name = "bzr"
 
-    renderables = [ 'repourl', 'baseURL' ]
+    renderables = ['repourl', 'baseURL']
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  forceSharedRepo=None,
@@ -923,7 +929,7 @@ class Bzr(SlaveSource):
             raise BuildSlaveTooOldError(m)
 
         if self.repourl:
-            assert not branch # we need baseURL= to use branches
+            assert not branch  # we need baseURL= to use branches
             self.args['repourl'] = self.repourl
         else:
             self.args['repourl'] = self.baseURL + branch
@@ -943,11 +949,12 @@ class Bzr(SlaveSource):
 
 
 class Mercurial(SlaveSource):
+
     """Check out a source tree from a mercurial repository 'repourl'."""
 
     name = "hg"
 
-    renderables = [ 'repourl', 'baseURL' ]
+    renderables = ['repourl', 'baseURL']
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
                  branchType='dirname', clobberOnBranchChange=True, **kwargs):
@@ -1037,10 +1044,11 @@ class Mercurial(SlaveSource):
 
 
 class P4(SlaveSource):
+
     """ P4 is a class for accessing perforce revision control"""
     name = "p4"
 
-    renderables = [ 'p4base' ]
+    renderables = ['p4base']
 
     def __init__(self, p4base=None, defaultBranch=None, p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=[], p4line_end='local',
@@ -1112,12 +1120,14 @@ class P4(SlaveSource):
         cmd = RemoteCommand("p4", args)
         self.startCommand(cmd)
 
+
 class Monotone(SlaveSource):
+
     """Check out a source tree from a monotone repository 'repourl'."""
 
     name = "mtn"
 
-    renderables = [ 'repourl' ]
+    renderables = ['repourl']
 
     def __init__(self, repourl=None, branch=None, progress=False, **kwargs):
         """

@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.status import progress
+from twisted.trial import unittest
+
 
 class TestExpectations(unittest.TestCase):
 
@@ -30,7 +31,6 @@ class TestExpectations(unittest.TestCase):
         stepProgress.finish()
         stepProgress.setProgress("metric", 42)
         expectations.update(newProgress)
-
 
     def test_removeOldStep(self):
         """

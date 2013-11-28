@@ -14,12 +14,15 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+
 from sqlalchemy.sql.expression import and_
 
 from buildbot.db import base
 
+
 class UsDict(dict):
     pass
+
 
 class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -34,9 +37,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             self.check_length(tbl_info.c.attr_data, attr_data)
 
             # try to find the user
-            q = sa.select([ tbl_info.c.uid ],
-                        whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                tbl_info.c.attr_data == attr_data))
+            q = sa.select([tbl_info.c.uid],
+                          whereclause=and_(tbl_info.c.attr_type == attr_type,
+                                           tbl_info.c.attr_data == attr_data))
             rows = conn.execute(q).fetchall()
 
             if rows:
@@ -53,8 +56,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 uid = r.inserted_primary_key[0]
 
                 conn.execute(tbl_info.insert(),
-                        dict(uid=uid, attr_type=attr_type,
-                             attr_data=attr_data))
+                             dict(uid=uid, attr_type=attr_type,
+                                  attr_data=attr_data))
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -184,8 +187,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
                 # first update, then insert
                 q = tbl_info.update(
-                        whereclause=(tbl_info.c.uid == uid)
-                                    & (tbl_info.c.attr_type == attr_type))
+                    whereclause=(tbl_info.c.uid == uid)
+                    & (tbl_info.c.attr_type == attr_type))
                 res = conn.execute(q, attr_data=attr_data)
                 if res.rowcount == 0:
                     _race_hook and _race_hook(conn)
@@ -194,9 +197,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     try:
                         q = tbl_info.insert()
                         res = conn.execute(q,
-                                uid=uid,
-                                attr_type=attr_type,
-                                attr_data=attr_data)
+                                           uid=uid,
+                                           attr_type=attr_type,
+                                           attr_data=attr_data)
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         # someone else beat us to the punch inserting this row;
                         # let them win.
@@ -214,8 +217,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     self.db.model.change_users,
                     self.db.model.users_info,
                     self.db.model.users,
-                    ]:
-                conn.execute(tbl.delete(whereclause=(tbl.c.uid==uid)))
+            ]:
+                conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
         d = self.db.pool.do(thd)
         return d
 

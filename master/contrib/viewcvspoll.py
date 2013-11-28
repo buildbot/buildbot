@@ -2,14 +2,14 @@
 
 """Based on the fakechanges.py contrib script"""
 
+import MySQLdb  # @UnresolvedImport
 import os.path
 import time
-import MySQLdb #@UnresolvedImport
 
-from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
+from twisted.spread import pb
 
 
 class ViewCvsPoller:
@@ -20,14 +20,14 @@ class ViewCvsPoller:
             import user
             ret = {}
             for line in open(os.path.join(
-                user.home, ".cvsblamerc")).readlines():
+                    user.home, ".cvsblamerc")).readlines():
                 if line.find("=") != -1:
                     key, val = line.split("=")
                     ret[key.strip()] = val.strip()
             return ret
         # maybe add your own keys here db=xxx, user=xxx, passwd=xxx
         self.cvsdb = MySQLdb.connect("cvs", **_load_rc())
-        #self.last_checkin = "2005-05-11" # for testing
+        # self.last_checkin = "2005-05-11" # for testing
         self.last_checkin = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
     def get_changes(self):
@@ -42,8 +42,8 @@ class ViewCvsPoller:
 ci_when FROM checkins WHERE ci_when>='%s'""" % self.last_checkin)
         last_checkin = None
         for whoid, descid, fileid, dirid, branchid, ci_when in \
-cursor.fetchall():
-            if branchid != 1: # only head
+                cursor.fetchall():
+            if branchid != 1:  # only head
                 continue
             cursor.execute("""SELECT who from people where id=%s""" % whoid)
             who = cursor.fetchone()[0]
@@ -63,7 +63,7 @@ cursor.fetchall():
                 change["who"] = who
                 change["files"].append("%s/%s" % (dirname, filename))
                 change["comments"] = desc
-            if last_checkin == None or ci_when > last_checkin:
+            if last_checkin is None or ci_when > last_checkin:
                 last_checkin = ci_when
         if last_checkin:
             self.last_checkin = last_checkin

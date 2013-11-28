@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-import os, re
+import os
+import re
 
-from twisted.python import log, runtime
+from twisted.python import log
+from twisted.python import runtime
 
-from buildslave.commands.base import SourceBaseCommand, AbandonChain
 from buildslave import runprocess
+from buildslave.commands.base import AbandonChain
+from buildslave.commands.base import SourceBaseCommand
 from buildslave.util import remove_userpassword
 
 
 class Mercurial(SourceBaseCommand):
+
     """Mercurial specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -40,7 +44,7 @@ class Mercurial(SourceBaseCommand):
         self.branchType = args.get('branchType', 'dirname')
         self.stdout = ""
         self.stderr = ""
-        self.clobbercount = 0 # n times we've clobbered
+        self.clobbercount = 0  # n times we've clobbered
 
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self.builder.basedir,
@@ -51,9 +55,9 @@ class Mercurial(SourceBaseCommand):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [hg, 'pull', '--verbose', self.repourl]
         c = runprocess.RunProcess(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, keepStdout=True,
-                         logEnviron=self.logEnviron, usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, keepStdout=True,
+                                  logEnviron=self.logEnviron, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._handleEmptyUpdate)
@@ -61,7 +65,7 @@ class Mercurial(SourceBaseCommand):
         return d
 
     def _handleEmptyUpdate(self, res):
-        if type(res) is int and res == 1:
+        if isinstance(res, int) and res == 1:
             if self.command.stdout.find("no changes found") != -1:
                 # 'hg pull', when it doesn't have anything to do, exits with
                 # rc=1, and there appears to be no way to shut this off. It
@@ -81,9 +85,9 @@ class Mercurial(SourceBaseCommand):
         command.extend([self.repourl, self.srcdir])
 
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, logEnviron=self.logEnviron,
-                         usePTY=False)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                  usePTY=False)
         self.command = c
         cmd1 = c.start()
         cmd1.addCallback(self._update)
@@ -93,7 +97,7 @@ class Mercurial(SourceBaseCommand):
         self.clobbercount += 1
 
         if self.clobbercount > 3:
-            raise Exception, "Too many clobber attempts. Aborting step"
+            raise Exception("Too many clobber attempts. Aborting step")
 
         def _vcfull(res):
             return self.doVCFull()
@@ -108,8 +112,8 @@ class Mercurial(SourceBaseCommand):
         d = os.path.join(self.builder.basedir, self.srcdir)
         purge = [hg, 'purge', '--all']
         purgeCmd = runprocess.RunProcess(self.builder, purge, d,
-                                keepStdout=True, keepStderr=True,
-                                logEnviron=self.logEnviron, usePTY=False)
+                                         keepStdout=True, keepStderr=True,
+                                         logEnviron=self.logEnviron, usePTY=False)
 
         def _clobber(res):
             if res != 0:
@@ -133,14 +137,14 @@ class Mercurial(SourceBaseCommand):
             return res
 
         # compare current branch to update
-        self.update_branch = self.args.get('branch',  'default')
+        self.update_branch = self.args.get('branch', 'default')
 
         d = os.path.join(self.builder.basedir, self.srcdir)
         parentscmd = [hg, 'identify', '--num', '--branch']
         cmd = runprocess.RunProcess(self.builder, parentscmd, d,
-                           sendRC=False, timeout=self.timeout, keepStdout=True,
-                           keepStderr=True, logEnviron=self.logEnviron,
-                           usePTY=False)
+                                    sendRC=False, timeout=self.timeout, keepStdout=True,
+                                    keepStderr=True, logEnviron=self.logEnviron,
+                                    usePTY=False)
 
         self.clobber = None
 
@@ -194,9 +198,9 @@ class Mercurial(SourceBaseCommand):
             hg = self.getCommand('hg')
             parentscmd = [hg, 'paths', 'default']
             cmd2 = runprocess.RunProcess(self.builder, parentscmd, d,
-                               keepStdout=True, keepStderr=True, usePTY=False,
-                               timeout=self.timeout, sendRC=False,
-                               logEnviron=self.logEnviron)
+                                         keepStdout=True, keepStderr=True, usePTY=False,
+                                         timeout=self.timeout, sendRC=False,
+                                         logEnviron=self.logEnviron)
 
             def _parseRepoURL(res):
                 if res == 1:
@@ -213,7 +217,7 @@ class Mercurial(SourceBaseCommand):
 
                 log.msg("Repo cloned from: '%s'" % oldurl)
 
-                if runtime.platformType  == 'win32':
+                if runtime.platformType == 'win32':
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
                 else:
@@ -256,28 +260,29 @@ class Mercurial(SourceBaseCommand):
 
     def _update2(self, res):
         hg = self.getCommand('hg')
-        updatecmd=[hg, 'update', '--clean', '--repository', self.srcdir]
+        updatecmd = [hg, 'update', '--clean', '--repository', self.srcdir]
         if self.args.get('revision'):
             updatecmd.extend(['--rev', self.args['revision']])
         else:
-            updatecmd.extend(['--rev', self.args.get('branch',  'default')])
+            updatecmd.extend(['--rev', self.args.get('branch', 'default')])
         self.command = runprocess.RunProcess(self.builder, updatecmd,
-            self.builder.basedir, sendRC=False,
-            timeout=self.timeout, maxTime=self.maxTime,
-            logEnviron=self.logEnviron, usePTY=False)
+                                             self.builder.basedir, sendRC=False,
+                                             timeout=self.timeout, maxTime=self.maxTime,
+                                             logEnviron=self.logEnviron, usePTY=False)
         return self.command.start()
 
     def parseGotRevision(self):
         hg = self.getCommand('hg')
         # we use 'hg parents' to find out what we wound up with
-        command = [hg, "parents", "--template", "{node}\\n"] # get full rev id
+        command = [hg, "parents", "--template", "{node}\\n"]  # get full rev id
         c = runprocess.RunProcess(self.builder, command,
-                         os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env, timeout=self.timeout,
-                         sendRC=False,
-                         keepStdout=True, usePTY=False,
-                         logEnviron=self.logEnviron)
+                                  os.path.join(self.builder.basedir, self.srcdir),
+                                  environ=self.env, timeout=self.timeout,
+                                  sendRC=False,
+                                  keepStdout=True, usePTY=False,
+                                  logEnviron=self.logEnviron)
         d = c.start()
+
         def _parse(res):
             m = re.search(r'^(\w+)', c.stdout)
             return m.group(1)

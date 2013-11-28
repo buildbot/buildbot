@@ -2,55 +2,18 @@
 show-source = yes
 statistics = yes
 count = yes
-#max-line-length = 80
-exclude = master/contrib/buildbot_json.py
+max-line-length = 100
 
 # List of currently ignored PEP8 issues.  Some of them definetely should be
 # enabled in future.
 #
-# E121 continuation line indentation is not a multiple of four
 # E122 continuation line missing indentation or outdented
-# E123 closing bracket does not match indentation of opening bracket's line
-# E124 closing bracket does not match visual indentation
-# E125 continuation line does not distinguish itself from next logical lin
 # E126 continuation line over-indented for hanging indent
-# E127 continuation line over-indented for visual indent
 # E128 continuation line under-indented for visual indent
-# E201 whitespace after '['
-# E202 whitespace before ']'
-# E203 whitespace before ':'
 # E211 whitespace before '('
-# E221 multiple spaces before operator
-# E222 multiple spaces after operator
-# E225 missing whitespace around operator
-# E226 missing whitespace around arithmetic operator
-# E227 missing whitespace around bitwise or shift operator
-# E228 missing whitespace around modulo operator
-# E231 missing whitespace after ','
-# E241 multiple spaces after ','
-# E251 unexpected spaces around keyword / parameter equals
-# E261 at least two spaces before inline comment
-# E262 inline comment should start with '# '
-# E271 multiple spaces after keyword
-# E272 multiple spaces before keyword
-# E301 expected 1 blank line, found 0
-# E302 expected 2 blank lines, found 1
-# E303 too many blank lines (2)
-# E401 multiple imports on one line
-# E501 line too long (80 > 79 characters)
-# E502 the backslash is redundant between brackets
-# E701 multiple statements on one line (colon)
-# E703 statement ends with a semicolon
+# E501 line too long (102 > 100 characters)
 # E711 comparison to None should be 'if cond is None:'
 # E712 comparison to False should be 'if cond is False:' or 'if not cond:'
 # E721 do not compare types, use 'isinstance()'
-# W191 indentation contains tabs
-# W291 trailing whitespace
-# W292 no newline at end of file
-# W293 blank line contains whitespace
-# W391 blank line at end of file
-# W601 .has_key() is deprecated, use 'in'
-# W602 deprecated form of raising exception
-# W604 backticks are deprecated, use 'repr()'
 
-ignore = E121,E122,E123,E124,E125,E126,E127,E128,E201,E202,E203,E211,E221,E222,E225,E226,E227,E228,E231,E241,E251,E261,E262,E271,E272,E301,E302,E303,E401,E501,E502,E701,E703,E711,E712,E721,W191,W291,W292,W293,W391,W602,W604
+ignore = E122,E126,E128,E211,E501,E711,E712,E721

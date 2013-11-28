@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 import re
-from twisted.python import log
+
 from dateutil.parser import parse as dateparse
+from twisted.python import log
 
 try:
     import json
@@ -68,6 +69,13 @@ def process_change(payload, user, repo, repo_url, project):
             log.msg("Branch `%s' deleted, ignoring" % branch)
         else:
             for commit in payload['commits']:
+                if 'distinct' in commit and not commit['distinct']:
+                    log.msg(
+                        'Commit `%s` is a non-distinct commit, ignoring...' % (
+                            commit['id'])
+                    )
+                    continue
+
                 files = []
                 if 'added' in commit:
                     files.extend(commit['added'])

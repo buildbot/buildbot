@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import buildbot.status.web.change_hook as change_hook
 import calendar
 import mock
-import buildbot.status.web.change_hook as change_hook
+
 from buildbot.test.fake.web import FakeRequest
 
 from twisted.trial import unittest
@@ -62,7 +63,9 @@ gitJsonPayload = """
 }
 """
 
+
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+
     def setUp(self):
         self.changeHook = change_hook.ChangeHookResource(dialects={'gitlab': True})
 

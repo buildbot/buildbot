@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+
 from coverage import coverage
 from coverage.results import Numbers
 from coverage.summary import SummaryReporter
@@ -15,12 +16,15 @@ from twisted.python import usage
 # much of this code was adapted from coverage/summary.py in the 'coverage'
 # distribution, and is used under their BSD license.
 
+
 class Options(usage.Options):
     optParameters = [
         ("sortby", "s", "uncovered", "how to sort: uncovered, covered, name"),
-        ]
+    ]
+
 
 class MyReporter(SummaryReporter):
+
     def report(self, outfile=None, sortby="uncovered"):
         self.find_code_units(None, ["/System", "/Library", "/usr/lib",
                                     "buildbot/test", "simplejson"])
@@ -29,7 +33,7 @@ class MyReporter(SummaryReporter):
         max_name = max([len(cu.name) for cu in self.code_units] + [5])
         fmt_name = "%%- %ds  " % max_name
         fmt_err = "%s   %s: %s\n"
-        header1 = (fmt_name % ""    ) + "     Statements    "
+        header1 = (fmt_name % "") + "     Statements    "
         header2 = (fmt_name % "Name") + " Uncovered  Covered"
         fmt_coverage = fmt_name + "%9d  %7d "
         if self.branches:
@@ -89,7 +93,7 @@ class MyReporter(SummaryReporter):
         lines.sort()
         if sortby in ("uncovered", "covered"):
             lines.reverse()
-        for sortkey,line in lines:
+        for sortkey, line in lines:
             outfile.write(line)
 
         if total.n_files > 1:
@@ -102,6 +106,7 @@ class MyReporter(SummaryReporter):
                 args += ("",)
             outfile.write(fmt_coverage % args)
 
+
 def report(o):
     c = coverage()
     c.load()
@@ -112,6 +117,3 @@ if __name__ == '__main__':
     o = Options()
     o.parseOptions()
     report(o)
-
-
-

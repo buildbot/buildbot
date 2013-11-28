@@ -51,4 +51,3 @@ def getChanges(req, options=None):
         p.doPoll()
 
     return [], None
-

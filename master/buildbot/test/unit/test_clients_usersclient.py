@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.spread import pb
-from twisted.internet import defer, reactor
+
 from buildbot.clients import usersclient
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.spread import pb
+from twisted.trial import unittest
+
 
 class TestUsersClient(unittest.TestCase):
 
@@ -66,7 +69,8 @@ class TestUsersClient(unittest.TestCase):
     def test_usersclient_info(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
         d = uc.send('update', 'bb_user', 'hashed_bb_pass', None,
-                    [{'identifier':'x', 'svn':'x'}])
+                    [{'identifier': 'x', 'svn': 'x'}])
+
         def check(_):
             self.assertProcess('localhost', 1234,
                                dict(op='update', bb_username='bb_user',
@@ -78,6 +82,7 @@ class TestUsersClient(unittest.TestCase):
     def test_usersclient_ids(self):
         uc = usersclient.UsersClient('localhost', "user", "userpw", 1234)
         d = uc.send('remove', None, None, ['x'], None)
+
         def check(_):
             self.assertProcess('localhost', 1234,
                                dict(op='remove', bb_username=None,

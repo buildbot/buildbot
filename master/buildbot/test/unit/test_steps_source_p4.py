@@ -15,17 +15,20 @@
 # Portions Copyright 2013 Bad Dog Consulting
 
 
-import textwrap
 import platform
-from twisted.trial import unittest
-from buildbot.steps.source.p4 import P4
+import textwrap
+
+from buildbot import config
 from buildbot.status.results import SUCCESS
+from buildbot.steps.source.p4 import P4
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot import config
+from twisted.trial import unittest
 
 _is_windows = (platform.system() == 'Windows')
+
 
 class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -113,19 +116,19 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'client', '-i'],
+                                 '-P', 'pass', '-c', 'p4_client1',
+                                 'client', '-i'],
                         initialStdin=client_spec)
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'sync', '//depot...@100'])
+                                 '-P', 'pass', '-c', 'p4_client1',
+                                 'sync', '//depot...@100'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'changes', '-m1', '#have'])
+                                 '-P', 'pass', '-c', 'p4_client1',
+                                 'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -134,7 +137,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
 
-    def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20*60):
+    def _incremental(self, client_stdin='', extra_args=None, workdir='wkdir', timeout=20 * 60):
         if extra_args is None:
             extra_args = []
 
@@ -146,21 +149,21 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'client', '-i'],
+                                 '-P', 'pass', '-c', 'p4_client1',
+                                 'client', '-i'],
                         initialStdin=client_stdin,)
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1']
+                                  '-P', 'pass', '-c', 'p4_client1']
                                  + extra_args + ['sync']))
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-P', 'pass', '-c', 'p4_client1',
-                                       'changes', '-m1', '#have'])
+                                 '-P', 'pass', '-c', 'p4_client1',
+                                 'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -370,7 +373,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass',
-                          timeout=60*60))
+                          timeout=60 * 60))
 
         root_dir = '/home/user/workspace/wkdir'
         if _is_windows:
@@ -392,7 +395,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
-        self._incremental(client_stdin=client_spec, timeout=60*60)
+        self._incremental(client_stdin=client_spec, timeout=60 * 60)
 
     def _full(self, client_stdin='', p4client='p4_client1', p4user='user', workdir='wkdir', extra_args=None):
         if extra_args is None:
@@ -405,15 +408,15 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client, 'client',
-                                       '-i'],
+                                 '-P', 'pass', '-c', p4client, 'client',
+                                 '-i'],
                         initialStdin=client_stdin)
             + 0,
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client]
-                                + extra_args
-                                + ['sync', '#none'])
+                                 '-P', 'pass', '-c', p4client]
+                        + extra_args
+                        + ['sync', '#none'])
             + 0,
 
             Expect('rmdir', {'dir': workdir, 'logEnviron': True})
@@ -421,13 +424,13 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client]
-                                + extra_args + ['sync'])
+                                 '-P', 'pass', '-c', p4client]
+                        + extra_args + ['sync'])
             + 0,
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                       '-P', 'pass', '-c', p4client, 'changes',
-                                       '-m1', '#have'])
+                                 '-P', 'pass', '-c', p4client, 'changes',
+                                 '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -460,7 +463,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         LineEnd:\tlocal
 
         View:
-        \t//depot/trunk/... //p4_client1/...\n'''% root_dir)
+        \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4viewspec(self):

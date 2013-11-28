@@ -15,9 +15,10 @@
 
 from twisted.trial import unittest
 
+from buildslave.commands import shell
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.command import CommandTestMixin
-from buildslave.commands import shell
+
 
 class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
@@ -29,13 +30,13 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
     def test_simple(self):
         self.make_command(shell.SlaveShellCommand, dict(
-            command=[ 'echo', 'hello' ],
+            command=['echo', 'hello'],
             workdir='workdir',
         ))
 
         self.patch_runprocess(
-            Expect([ 'echo', 'hello' ], self.basedir_workdir)
-            + { 'hdr' : 'headers' } + { 'stdout' : 'hello\n' } + { 'rc' : 0 }
+            Expect(['echo', 'hello'], self.basedir_workdir)
+            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
             + 0,
         )
 
@@ -44,8 +45,8 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
         # note that SlaveShellCommand does not add any extra updates of it own
         def check(_):
             self.assertUpdates(
-                    [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
-                    self.builder.show())
+                [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
+                self.builder.show())
         d.addCallback(check)
         return d
 

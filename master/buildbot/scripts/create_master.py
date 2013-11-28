@@ -15,15 +15,17 @@
 
 from __future__ import with_statement
 
-import os
 import jinja2
-from twisted.python import util
-from twisted.internet import defer
-from buildbot.util import in_reactor
-from buildbot.db import connector
-from buildbot.master import BuildMaster
+import os
+
 from buildbot import config as config_module
 from buildbot import monkeypatches
+from buildbot.db import connector
+from buildbot.master import BuildMaster
+from buildbot.util import in_reactor
+from twisted.internet import defer
+from twisted.python import util
+
 
 def makeBasedir(config):
     if os.path.exists(config['basedir']):
@@ -34,13 +36,14 @@ def makeBasedir(config):
         print "mkdir", config['basedir']
     os.mkdir(config['basedir'])
 
+
 def makeTAC(config):
     # render buildbot_tac.tmpl using the config
     loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
     env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
     env.filters['repr'] = repr
     tpl = env.get_template('buildbot_tac.tmpl')
-    cxt = dict((k.replace('-', '_'), v) for k,v in config.iteritems())
+    cxt = dict((k.replace('-', '_'), v) for k, v in config.iteritems())
     contents = tpl.render(cxt)
 
     tacfile = os.path.join(config['basedir'], "buildbot.tac")
@@ -58,6 +61,7 @@ def makeTAC(config):
     with open(tacfile, "wt") as f:
         f.write(contents)
 
+
 def makeSampleConfig(config):
     source = util.sibpath(__file__, "sample.cfg")
     target = os.path.join(config['basedir'], "master.cfg.sample")
@@ -67,17 +71,18 @@ def makeSampleConfig(config):
         config_sample = f.read()
     if config['db']:
         config_sample = config_sample.replace('sqlite:///state.sqlite',
-                                                config['db'])
+                                              config['db'])
     with open(target, "wt") as f:
         f.write(config_sample)
     os.chmod(target, 0600)
 
+
 def makePublicHtml(config):
     files = {
-        'bg_gradient.jpg' : "../status/web/files/bg_gradient.jpg",
-        'default.css' : "../status/web/files/default.css",
-        'robots.txt' : "../status/web/files/robots.txt",
-        'favicon.ico' : "../status/web/files/favicon.ico",
+        'bg_gradient.jpg': "../status/web/files/bg_gradient.jpg",
+        'default.css': "../status/web/files/default.css",
+        'robots.txt': "../status/web/files/robots.txt",
+        'favicon.ico': "../status/web/files/favicon.ico",
     }
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
@@ -95,9 +100,10 @@ def makePublicHtml(config):
             with open(source, "rt") as i:
                 f.write(i.read())
 
+
 def makeTemplatesDir(config):
     files = {
-        'README.txt' : "../status/web/files/templates_readme.txt",
+        'README.txt': "../status/web/files/templates_readme.txt",
     }
     template_dir = os.path.join(config['basedir'], "templates")
     if os.path.exists(template_dir):
@@ -115,10 +121,11 @@ def makeTemplatesDir(config):
             with open(source, "rt") as i:
                 f.write(i.read())
 
+
 @defer.inlineCallbacks
 def createDB(config, _noMonkey=False):
     # apply the db monkeypatches (and others - no harm)
-    if not _noMonkey: # pragma: no cover
+    if not _noMonkey:  # pragma: no cover
         monkeypatches.patch_all()
 
     # create a master with the default configuration, but with db_url

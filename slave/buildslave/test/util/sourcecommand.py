@@ -16,7 +16,9 @@
 from buildslave import runprocess
 from buildslave.test.util import command
 
+
 class SourceCommandTestMixin(command.CommandTestMixin):
+
     """
     Support for testing Source Commands; an extension of CommandTestMixin
     """
@@ -38,6 +40,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
         # is no need to use self.patch() to reverse them
 
         self.sourcedata = initial_sourcedata
+
         def readSourcedata():
             if self.sourcedata is None:
                 raise IOError("File not found")
@@ -54,25 +57,24 @@ class SourceCommandTestMixin(command.CommandTestMixin):
 
         def doClobber(_, dirname):
             r = runprocess.RunProcess(self.builder,
-                [ 'clobber', dirname ],
-                self.builder.basedir)
+                                      ['clobber', dirname],
+                                      self.builder.basedir)
             return r.start()
         cmd.doClobber = doClobber
 
         def doCopy(_):
             r = runprocess.RunProcess(self.builder,
-                [ 'copy', cmd.srcdir, cmd.workdir ],
-                self.builder.basedir)
+                                      ['copy', cmd.srcdir, cmd.workdir],
+                                      self.builder.basedir)
             return r.start()
         cmd.doCopy = doCopy
 
         def setFileContents(filename, contents):
             r = runprocess.RunProcess(self.builder,
-                [ 'setFileContents', filename, contents ],
-                self.builder.basedir)
+                                      ['setFileContents', filename, contents],
+                                      self.builder.basedir)
             return r.start()
         cmd.setFileContents = setFileContents
-
 
     def check_sourcedata(self, _, expected_sourcedata):
         """

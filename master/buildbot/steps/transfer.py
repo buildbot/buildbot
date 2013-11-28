@@ -16,24 +16,29 @@
 from __future__ import with_statement
 
 
-import os.path, tarfile, tempfile
+import os.path
+import tarfile
+import tempfile
 try:
     from cStringIO import StringIO
     assert StringIO
 except ImportError:
     from StringIO import StringIO
-from twisted.spread import pb
-from twisted.python import log
+from buildbot import config
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SKIPPED
+from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
-from buildbot import config
+from twisted.python import log
+from twisted.spread import pb
 
 
 class _FileWriter(pb.Referenceable):
+
     """
     Helper class that acts as a file-object with write access
     """
@@ -68,7 +73,7 @@ class _FileWriter(pb.Referenceable):
             self.fp.write(data)
 
     def remote_utime(self, accessed_modified):
-        os.utime(self.destfile,accessed_modified)
+        os.utime(self.destfile, accessed_modified)
 
     def remote_close(self):
         """
@@ -130,7 +135,9 @@ def _extractall(self, path=".", members=None):
             else:
                 self._dbg(1, "tarfile: %s" % e)
 
+
 class _DirectoryWriter(_FileWriter):
+
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
     step to unpack the archive, once the transfer has completed.
@@ -154,9 +161,9 @@ class _DirectoryWriter(_FileWriter):
 
         # Map configured compression to a TarFile setting
         if self.compress == 'bz2':
-            mode='r|bz2'
+            mode = 'r|bz2'
         elif self.compress == 'gz':
-            mode='r|gz'
+            mode = 'r|gz'
         else:
             mode = 'r'
 
@@ -172,19 +179,21 @@ class _DirectoryWriter(_FileWriter):
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = buildstep.RemoteCommand(remote_command, args,  decodeRC={None:SUCCESS, 0:SUCCESS})
+    self = buildstep.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self
 
+
 class _TransferBuildStep(BuildStep):
+
     """
     Base class for FileUpload and FileDownload to factor out common
     functionality.
     """
     DEFAULT_WORKDIR = "build"           # is this redundant?
 
-    renderables = [ 'workdir' ]
+    renderables = ['workdir']
 
     haltOnFailure = True
     flunkOnFailure = True
@@ -233,10 +242,10 @@ class FileUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest', 'url' ]
+    renderables = ['slavesrc', 'masterdest', 'url']
 
     def __init__(self, slavesrc, masterdest,
-                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
                  keepstamp=False, url=None,
                  **buildstep_kwargs):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
@@ -272,9 +281,9 @@ class FileUpload(_TransferBuildStep):
         # we use maxsize to limit the amount of data on both sides
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
-        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile","2.13"):
+        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.slavename )
+                 "Please upgrade the buildslave." % self.build.slavename)
             raise BuildSlaveTooOldError(m)
 
         # default arguments
@@ -285,10 +294,11 @@ class FileUpload(_TransferBuildStep):
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
-            }
+        }
 
         self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runCommand(self.cmd)
+
         @d.addErrback
         def cancel(res):
             fileWriter.cancel()
@@ -300,10 +310,10 @@ class DirectoryUpload(_TransferBuildStep):
 
     name = 'upload'
 
-    renderables = [ 'slavesrc', 'masterdest', 'url' ]
+    renderables = ['slavesrc', 'masterdest', 'url']
 
     def __init__(self, slavesrc, masterdest,
-                 workdir=None, maxsize=None, blocksize=16*1024,
+                 workdir=None, maxsize=None, blocksize=16 * 1024,
                  compress=None, url=None, **buildstep_kwargs):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
@@ -333,7 +343,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.step_status.setText(['uploading', os.path.basename(source)])
         if self.url is not None:
             self.addURL(os.path.basename(masterdest), self.url)
-        
+
         # we use maxsize to limit the amount of data on both sides
         dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
 
@@ -345,10 +355,11 @@ class DirectoryUpload(_TransferBuildStep):
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'compress': self.compress
-            }
+        }
 
         self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runCommand(self.cmd)
+
         @d.addErrback
         def cancel(res):
             dirWriter.cancel()
@@ -368,6 +379,7 @@ class DirectoryUpload(_TransferBuildStep):
 
 
 class _FileReader(pb.Referenceable):
+
     """
     Helper class that acts as a file-object with read access
     """
@@ -404,10 +416,10 @@ class FileDownload(_TransferBuildStep):
 
     name = 'download'
 
-    renderables = [ 'mastersrc', 'slavedest' ]
+    renderables = ['mastersrc', 'slavedest']
 
     def __init__(self, mastersrc, slavedest,
-                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
                  **buildstep_kwargs):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
@@ -454,20 +466,21 @@ class FileDownload(_TransferBuildStep):
             'blocksize': self.blocksize,
             'workdir': self._getWorkdir(),
             'mode': self.mode,
-            }
+        }
 
         self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
+
 class StringDownload(_TransferBuildStep):
 
     name = 'string_download'
 
-    renderables = [ 'slavedest', 's' ]
+    renderables = ['slavedest', 's']
 
     def __init__(self, s, slavedest,
-                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
                  **buildstep_kwargs):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
@@ -505,11 +518,12 @@ class StringDownload(_TransferBuildStep):
             'blocksize': self.blocksize,
             'workdir': self._getWorkdir(),
             'mode': self.mode,
-            }
+        }
 
         self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
+
 
 class JSONStringDownload(StringDownload):
 
@@ -520,6 +534,7 @@ class JSONStringDownload(StringDownload):
             del buildstep_kwargs['s']
         s = json.dumps(o)
         StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
+
 
 class JSONPropertiesDownload(StringDownload):
 
@@ -538,8 +553,8 @@ class JSONPropertiesDownload(StringDownload):
             props[key] = value
 
         self.s = json.dumps(dict(
-                        properties=props,
-                        sourcestamp=self.build.getSourceStamp().asDict(),
-                    ),
-                )
+            properties=props,
+            sourcestamp=self.build.getSourceStamp().asDict(),
+        ),
+        )
         return self.super_class.start(self)

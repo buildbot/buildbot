@@ -13,10 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import failure
 from twisted.internet import defer
+from twisted.python import failure
+
 
 class Expect:
+
     """
     An expected instantiation of RunProcess.  Usually used within a RunProcess
     expect invocation:
@@ -34,6 +36,7 @@ class Expect:
     Note that the default values are accepted for all keyword arguments if they
     are not omitted.
     """
+
     def __init__(self, command, workdir, **kwargs):
         self.kwargs = dict(command=command, workdir=workdir)
         self.kwargs.update(kwargs)
@@ -45,9 +48,9 @@ class Expect:
         if isinstance(other, dict):
             self.status_updates.append(other)
         elif isinstance(other, int):
-            self.result = ( 'c', other )
+            self.result = ('c', other)
         elif isinstance(other, failure.Failure):
-            self.result = ( 'e', other )
+            self.result = ('e', other)
         else:
             raise ValueError("invalid expectation '%r'" % (other,))
         return self
@@ -57,11 +60,12 @@ class Expect:
         del other_kwargs['command']
         del other_kwargs['workdir']
         return "Command: %s\n  workdir: %s\n  kwargs: %s\n  result: %s\n" % (
-                self.kwargs['command'], self.kwargs['workdir'],
-                other_kwargs, self.result)
+            self.kwargs['command'], self.kwargs['workdir'],
+            other_kwargs, self.result)
 
 
 class FakeRunProcess:
+
     """
     A fake version of L{buildslave.runprocess.RunProcess} which will
     simulate running external processes without actually running them (which is
@@ -100,23 +104,23 @@ class FakeRunProcess:
         # the default values for the constructor kwargs; if we got a default
         # value in **kwargs and didn't expect anything, well count that as OK
         default_values = dict(environ=None,
-                 sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, maxTime=None, sigtermTime=None, initialStdin=None,
-                 keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config")
+                              sendStdout=True, sendStderr=True, sendRC=True,
+                              timeout=None, maxTime=None, sigtermTime=None, initialStdin=None,
+                              keepStdout=False, keepStderr=False,
+                              logEnviron=True, logfiles={}, usePTY="slave-config")
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: %s" % (kwargs,))
         exp = self._exp = self._expectations.pop()
         if exp.kwargs != kwargs:
-            msg = [ ]
+            msg = []
             for key in sorted(list(set(exp.kwargs.keys()) | set(kwargs.keys()))):
                 if key not in exp.kwargs:
                     if key in default_values:
                         if default_values[key] == kwargs[key]:
-                            continue # default values are expected
+                            continue  # default values are expected
                         msg.append('%s: expected default (%r),\n  got %r' %
-                                    (key, default_values[key], kwargs[key]))
+                                   (key, default_values[key], kwargs[key]))
                     else:
                         msg.append('%s: unexpected arg, value = %r' % (key, kwargs[key]))
                 elif key not in kwargs:
@@ -126,7 +130,7 @@ class FakeRunProcess:
             if msg:
                 msg.insert(0, 'did not get expected __init__ arguments for\n '
                               + " ".join(map(repr, kwargs.get('command', ['unknown command']))))
-                self._expectations[:] = [] # don't expect any more instances, since we're failing
+                self._expectations[:] = []  # don't expect any more instances, since we're failing
                 raise AssertionError("\n".join(msg))
 
         self._builder = builder
@@ -159,7 +163,7 @@ class FakeRunProcess:
                     del upd['stderr']
             if 'wait' in upd:
                 finish_immediately = False
-                continue # don't send this update
+                continue  # don't send this update
             if not upd:
                 continue
             self._builder.sendUpdate(upd)
@@ -178,6 +182,6 @@ class FakeRunProcess:
             self.run_deferred.callback(self._exp.result[1])
 
     def kill(self, reason):
-        self._builder.sendUpdate({'hdr' : 'killing'})
-        self._builder.sendUpdate({'rc' : -1})
+        self._builder.sendUpdate({'hdr': 'killing'})
+        self._builder.sendUpdate({'rc': -1})
         self.run_deferred.callback(-1)

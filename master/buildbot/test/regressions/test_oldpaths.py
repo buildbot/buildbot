@@ -15,6 +15,7 @@
 
 from twisted.trial import unittest
 
+
 def deprecatedImport(fn):
     def wrapper(self):
         fn(self)
@@ -26,7 +27,9 @@ def deprecatedImport(fn):
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
     return wrapper
 
+
 class OldImportPaths(unittest.TestCase):
+
     """
     Test that old, deprecated import paths still work.
     """
@@ -116,8 +119,8 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import EXCEPTION, RETRY, Results
         from buildbot.status.builder import worst_status
         # reference the symbols to avoid failure from pyflakes
-        (SUCCESS, WARNINGS, FAILURE, SKIPPED,EXCEPTION, RETRY, Results,
-                worst_status)
+        (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, Results,
+         worst_status)
 
     def test_status_builder_BuildStepStatus(self):
         from buildbot.status.builder import BuildStepStatus
@@ -208,4 +211,3 @@ class OldImportPaths(unittest.TestCase):
     def test_steps_source_BK(self):
         from buildbot.steps.source import BK
         assert BK
-

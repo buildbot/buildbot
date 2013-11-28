@@ -13,15 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+import cStringIO
 import os
 import sys
-import cStringIO
-from twisted.trial import unittest
+
 from buildslave.scripts import base
 from buildslave.test.util import misc
+from twisted.trial import unittest
 
 
 class TestIsBuildslaveDir(misc.FileIOMixin, unittest.TestCase):
+
     """Test buildslave.scripts.base.isBuildslaveDir()"""
 
     def setUp(self):
@@ -35,7 +37,7 @@ class TestIsBuildslaveDir(misc.FileIOMixin, unittest.TestCase):
     def assertReadErrorMessage(self, strerror):
         expected_message = "error reading '%s': %s\n" \
                            "invalid buildslave directory 'testdir'\n" \
-                                            % (self.tac_file_path, strerror)
+            % (self.tac_file_path, strerror)
         self.assertEqual(self.mocked_stdout.getvalue(),
                          expected_message,
                          "unexpected error message on stdout")

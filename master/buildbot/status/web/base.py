@@ -14,39 +14,65 @@
 # Copyright Buildbot Team Members
 
 
-import urlparse, urllib, time, re
-import os, cgi, sys, locale
+import cgi
 import jinja2
-from zope.interface import Interface
-from twisted.internet import defer
-from twisted.web import resource, static, server
-from twisted.web.util import redirectTo
-from twisted.python import log
-from buildbot.status import builder, buildstep, build
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY
-from buildbot import version, util
+import locale
+import os
+import re
+import sys
+import time
+import urllib
+import urlparse
+
+from buildbot import util
+from buildbot import version
 from buildbot.process.properties import Properties
+from buildbot.status import build
+from buildbot.status import builder
+from buildbot.status import buildstep
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web import resource
+from twisted.web import server
+from twisted.web import static
+from twisted.web.util import redirectTo
+from zope.interface import Interface
+
 
 class ITopBox(Interface):
+
     """I represent a box in the top row of the waterfall display: the one
     which shows the status of the last build for each builder."""
+
     def getBox(self, request):
         """Return a Box instance, which can produce a <td> cell.
         """
 
+
 class ICurrentBox(Interface):
+
     """I represent the 'current activity' box, just above the builder name."""
+
     def getBox(self, status):
         """Return a Box instance, which can produce a <td> cell.
         """
 
+
 class IBox(Interface):
+
     """I represent a box in the waterfall display."""
+
     def getBox(self, request):
         """Return a Box instance, which wraps an Event and can produce a <td>
         cell.
         """
+
 
 class IHTMLLog(Interface):
     pass
@@ -87,6 +113,7 @@ def getAndCheckProperties(req):
 
     return properties
 
+
 def build_get_class(b):
     """
     Return the class to use for a finished build or buildstep,
@@ -102,12 +129,13 @@ def build_get_class(b):
         if isinstance(result, tuple):
             result = result[0]
     else:
-        raise TypeError, "%r is not a BuildStatus or BuildStepStatus" % b
+        raise TypeError("%r is not a BuildStatus or BuildStepStatus" % b)
 
-    if result == None:
+    if result is None:
         # FIXME: this happens when a buildstep is running ?
         return "running"
     return builder.Results[result]
+
 
 def path_to_root(request):
     # /waterfall : ['waterfall'] -> './'
@@ -121,33 +149,41 @@ def path_to_root(request):
     root = "../" * segs if segs else './'
     return root
 
+
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
 
+
 def path_to_authzfail(request):
     return path_to_root(request) + "authzfail"
+
 
 def path_to_builder(request, builderstatus):
     return (path_to_root(request) +
             "builders/" +
             urllib.quote(builderstatus.getName(), safe=''))
 
+
 def path_to_build(request, buildstatus):
     return (path_to_builder(request, buildstatus.getBuilder()) +
             "/builds/%d" % buildstatus.getNumber())
 
+
 def path_to_step(request, stepstatus):
     return (path_to_build(request, stepstatus.getBuild()) +
             "/steps/%s" % urllib.quote(stepstatus.getName(), safe=''))
+
 
 def path_to_slave(request, slave):
     return (path_to_root(request) +
             "buildslaves/" +
             urllib.quote(slave.getName(), safe=''))
 
+
 def path_to_change(request, change):
     return (path_to_root(request) +
             "changes/%s" % change.number)
+
 
 def path_always_viewable(request):
     """
@@ -163,6 +199,7 @@ class Box:
     # lack, and it has a base URL to which each File's name is relative.
     # Events don't know about HTML.
     spacer = False
+
     def __init__(self, text=[], class_=None, urlbase=None,
                  **parms):
         self.text = text
@@ -183,11 +220,12 @@ class Box:
         if not text and self.show_idle:
             text = ["[idle]"]
         props['class'] = self.class_
-        props['text'] = text;
+        props['text'] = text
         return props
 
 
 class AccessorMixin(object):
+
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()
 
@@ -202,6 +240,7 @@ class AccessorMixin(object):
 
 
 class ContextMixin(AccessorMixin):
+
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
@@ -210,24 +249,25 @@ class ContextMixin(AccessorMixin):
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
             locale_tz = unicode(time.tzname[time.localtime()[-1]])
-        return dict(title_url = status.getTitleURL(),
-                    title = status.getTitle(),
-                    stylesheet = rootpath + 'default.css',
-                    path_to_root = rootpath,
-                    version = version,
-                    time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())),
-                    tz = locale_tz,
-                    metatags = [],
-                    pageTitle = self.getPageTitle(request),
-                    welcomeurl = rootpath,
-                    authz = self.getAuthz(request),
-                    request = request,
-                    alert_msg = request.args.get("alert_msg", [""])[0],
+        return dict(title_url=status.getTitleURL(),
+                    title=status.getTitle(),
+                    stylesheet=rootpath + 'default.css',
+                    path_to_root=rootpath,
+                    version=version,
+                    time=time.strftime("%a %d %b %Y %H:%M:%S",
+                                       time.localtime(util.now())),
+                    tz=locale_tz,
+                    metatags=[],
+                    pageTitle=self.getPageTitle(request),
+                    welcomeurl=rootpath,
+                    authz=self.getAuthz(request),
+                    request=request,
+                    alert_msg=request.args.get("alert_msg", [""])[0],
                     )
 
 
 class ActionResource(resource.Resource, AccessorMixin):
+
     """A resource that performs some action, then redirects to a new URL."""
 
     isLeaf = 1
@@ -261,9 +301,9 @@ class ActionResource(resource.Resource, AccessorMixin):
             if isinstance(url, tuple):
                 url, alert_msg = url
                 if alert_msg:
-                    url += "?alert_msg="+urllib.quote(alert_msg, safe='')
+                    url += "?alert_msg=" + urllib.quote(alert_msg, safe='')
             request.redirect(url)
-            request.write("see <a href='%s'>%s</a>" % (url,url))
+            request.write("see <a href='%s'>%s</a>" % (url, url))
             try:
                 request.finish()
             except RuntimeError:
@@ -274,21 +314,21 @@ class ActionResource(resource.Resource, AccessorMixin):
 
         def fail(f):
             request.processingFailed(f)
-            return None # processingFailed will log this for us
+            return None  # processingFailed will log this for us
         d.addErrback(fail)
         return server.NOT_DONE_YET
+
 
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
     pageTitle = "Buildbot"
-    addSlash = False # adapted from Nevow
+    addSlash = False  # adapted from Nevow
 
     def getChild(self, path, request):
         if self.addSlash and path == "" and len(request.postpath) == 0:
             return self
         return resource.Resource.getChild(self, path, request)
-
 
     def content(self, req, context):
         """
@@ -371,24 +411,30 @@ class HtmlResource(resource.Resource, ContextMixin):
                 # this occurs when the client has already disconnected; ignore
                 # it (see #2027)
                 log.msg("http client disconnected before results were sent")
+
         def fail(f):
             request.processingFailed(f)
-            return None # processingFailed will log this for us
+            return None  # processingFailed will log this for us
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
 
+
 class StaticHTML(HtmlResource):
+
     def __init__(self, body, pageTitle):
         HtmlResource.__init__(self)
         self.bodyHTML = body
         self.pageTitle = pageTitle
+
     def content(self, request, cxt):
         cxt['content'] = self.bodyHTML
         cxt['pageTitle'] = self.pageTitle
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
+
 class DirectoryLister(static.DirectoryLister, ContextMixin):
+
     """This variant of the static.DirectoryLister uses a template
     for rendering."""
 
@@ -398,8 +444,7 @@ class DirectoryLister(static.DirectoryLister, ContextMixin):
         cxt = self.getContext(request)
 
         if self.dirs is None:
-            directory = os.listdir(self.path)
-            directory.sort()
+            directory = sorted(os.listdir(self.path))
         else:
             directory = self.dirs
 
@@ -414,23 +459,26 @@ class DirectoryLister(static.DirectoryLister, ContextMixin):
             data = data.encode("utf-8")
         return data
 
+
 class StaticFile(static.File):
+
     """This class adds support for templated directory
     views."""
 
     def directoryListing(self):
         return DirectoryLister(self.path,
-                                self.listNames(),
-                                self.contentTypes,
-                                self.contentEncodings,
-                                self.defaultType)
+                               self.listNames(),
+                               self.contentTypes,
+                               self.contentEncodings,
+                               self.defaultType)
 
 
 MINUTE = 60
-HOUR = 60*MINUTE
-DAY = 24*HOUR
-WEEK = 7*DAY
-MONTH = 30*DAY
+HOUR = 60 * MINUTE
+DAY = 24 * HOUR
+WEEK = 7 * DAY
+MONTH = 30 * DAY
+
 
 def plural(word, words, num):
     if int(num) == 1:
@@ -438,16 +486,17 @@ def plural(word, words, num):
     else:
         return "%d %s" % (num, words)
 
+
 def abbreviate_age(age):
     if age <= 90:
         return "%s ago" % plural("second", "seconds", age)
-    if age < 90*MINUTE:
+    if age < 90 * MINUTE:
         return "about %s ago" % plural("minute", "minutes", age / MINUTE)
     if age < DAY:
         return "about %s ago" % plural("hour", "hours", age / HOUR)
-    if age < 2*WEEK:
+    if age < 2 * WEEK:
         return "about %s ago" % plural("day", "days", age / DAY)
-    if age < 2*MONTH:
+    if age < 2 * MONTH:
         return "about %s ago" % plural("week", "weeks", age / WEEK)
     return "a long time ago"
 
@@ -461,12 +510,12 @@ class BuildLineMixin:
 
         if not ss_list:
             return [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'unknown'
             }]
-        
-        if len(ss_list)==1:
+
+        if len(ss_list) == 1:
             return [{
                 'repo': ss_list[0].repository,
                 'codebase': ss_list[0].codebase,
@@ -500,7 +549,7 @@ class BuildLineMixin:
         # if all sourcestamps were empty, then this is a "most recent" kind of build
         if not rev_list:
             rev_list = [{
-                'repo': 'unknown, no information in build', 
+                'repo': 'unknown, no information in build',
                 'codebase': '',
                 'rev': 'most recent'
             }]
@@ -514,7 +563,7 @@ class BuildLineMixin:
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         css_class = css_classes.get(results, "")
-        
+
         rev_list = self.get_rev_list(build)
 
         values = {'class': css_class,
@@ -534,6 +583,7 @@ class BuildLineMixin:
                   }
         return values
 
+
 def map_branches(branches):
     # when the query args say "trunk", present that to things like
     # IBuilderStatus.generateFinishedBuilds as None, since that's the
@@ -548,7 +598,8 @@ def map_branches(branches):
 # jinja utilities
 
 def createJinjaEnv(revlink=None, changecommentlink=None,
-                     repositories=None, projects=None, jinja_loaders=None):
+                   repositories=None, projects=None, jinja_loaders=None,
+                   basedir='.'):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
 
@@ -581,22 +632,23 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
                              trim_blocks=True,
                              undefined=AlmostStrictUndefined)
 
-    env.install_null_translations() # needed until we have a proper i18n backend
+    env.install_null_translations()  # needed until we have a proper i18n backend
 
-    env.tests['mapping'] = lambda obj : isinstance(obj, dict)
+    env.tests['mapping'] = lambda obj: isinstance(obj, dict)
 
     env.filters.update(dict(
-        urlencode = urllib.quote,
-        email = emailfilter,
-        user = userfilter,
-        shortrev = shortrevfilter(revlink, env),
-        revlink = revlinkfilter(revlink, env),
-        changecomment = changelinkfilter(changecommentlink),
-        repolink = dictlinkfilter(repositories),
-        projectlink = dictlinkfilter(projects)
-        ))
+        urlencode=urllib.quote,
+        email=emailfilter,
+        user=userfilter,
+        shortrev=shortrevfilter(revlink, env),
+        revlink=revlinkfilter(revlink, env),
+        changecomment=changelinkfilter(changecommentlink),
+        repolink=dictlinkfilter(repositories),
+        projectlink=dictlinkfilter(projects)
+    ))
 
     return env
+
 
 def emailfilter(value):
     ''' Escape & obfuscate e-mail addresses
@@ -623,7 +675,8 @@ def userfilter(value):
         email = emailfilter(m.group(2))
         return jinja2.Markup('<div class="user">%s<div class="email">%s</div></div>' % (user, email))
     else:
-        return emailfilter(value) # filter for emails here for safety
+        return emailfilter(value)  # filter for emails here for safety
+
 
 def _revlinkcfg(replace, templates):
     '''Helper function that returns suitable macros and functions
@@ -631,14 +684,14 @@ def _revlinkcfg(replace, templates):
 '''
 
     assert not replace or callable(replace) or isinstance(replace, dict) or \
-           isinstance(replace, str) or isinstance(replace, unicode)
+        isinstance(replace, str) or isinstance(replace, unicode)
 
     if not replace:
         return lambda rev, repo: None
     else:
         if callable(replace):
-            return  lambda rev, repo: replace(rev, repo)
-        elif isinstance(replace, dict): # TODO: test for [] instead
+            return lambda rev, repo: replace(rev, repo)
+        elif isinstance(replace, dict):  # TODO: test for [] instead
             def filter(rev, repo):
                 url = replace.get(repo)
                 if url:
@@ -690,7 +743,7 @@ def shortrevfilter(replace, templates):
         rev = unicode(rev)
         url = url_f(rev, repo)
         rev = jinja2.escape(rev)
-        shortrev = rev[:12] # TODO: customize this depending on vc type
+        shortrev = rev[:12]  # TODO: customize this depending on vc type
 
         if shortrev == rev:
             if url:
@@ -772,6 +825,7 @@ def changelinkfilter(changelink):
 
         def replacement_unmatched(text):
             return jinja2.escape(text)
+
         def replacement_matched(mo):
             # expand things *after* application of the regular expressions
             url = jinja2.escape(mo.expand(url_replace))
@@ -851,16 +905,21 @@ def dictlinkfilter(links):
 
     return filter
 
+
 class AlmostStrictUndefined(jinja2.StrictUndefined):
+
     ''' An undefined that allows boolean testing but
         fails properly on every other use.
 
         Much better than the default Undefined, but not
         fully as strict as StrictUndefined '''
+
     def __nonzero__(self):
         return False
 
 _charsetRe = re.compile('charset=([^;]*)', re.I)
+
+
 def getRequestCharset(req):
     """Get the charset for an x-www-form-urlencoded request"""
     # per http://stackoverflow.com/questions/708915/detecting-the-character-encoding-of-an-http-post-request
@@ -869,4 +928,4 @@ def getRequestCharset(req):
         mo = _charsetRe.search(hdr)
         if mo:
             return mo.group(1).strip()
-    return 'utf-8' # reasonable guess, works for ascii
+    return 'utf-8'  # reasonable guess, works for ascii

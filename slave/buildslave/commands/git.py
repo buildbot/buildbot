@@ -17,12 +17,13 @@ import os
 
 from twisted.internet import defer
 
-from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 from buildslave.commands.base import AbandonChain
+from buildslave.commands.base import SourceBaseCommand
 
 
 class Git(SourceBaseCommand):
+
     """Git specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
@@ -66,9 +67,9 @@ class Git(SourceBaseCommand):
     def _dovccmd(self, command, cb=None, stopOnFail=True, **kwargs):
         git = self.getCommand("git")
         c = runprocess.RunProcess(self.builder, [git] + command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, logEnviron=self.logEnviron,
-                         usePTY=False, **kwargs)
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                  usePTY=False, **kwargs)
         self.command = c
         d = c.start()
         if cb:
@@ -109,7 +110,7 @@ class Git(SourceBaseCommand):
         # For further information about this, see the commit message
         command = ['branch', '-M', self.branch]
         return self._dovccmd(command, self._initSubmodules, False)
-        
+
     def _didFetch(self, res):
         if self.revision:
             head = self.revision
@@ -156,7 +157,7 @@ class Git(SourceBaseCommand):
         if self.args.get('progress'):
             command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
-                                        % (branch, self.repourl)})
+                         % (branch, self.repourl)})
         return self._dovccmd(command, self._didFetch, keepStderr=True)
 
     def _didClean(self, dummy):
@@ -196,9 +197,9 @@ class Git(SourceBaseCommand):
                 cmd.extend(['--reference', self.reference])
             cmd.extend([self.repourl, self._fullSrcdir()])
             c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
-                             sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, logEnviron=self.logEnviron,
-                             usePTY=False)
+                                      sendRC=False, timeout=self.timeout,
+                                      maxTime=self.maxTime, logEnviron=self.logEnviron,
+                                      usePTY=False)
             self.command = c
             cmdexec = c.start()
             cmdexec.addCallback(self._didInit)
@@ -209,10 +210,10 @@ class Git(SourceBaseCommand):
 
     def parseGotRevision(self):
         command = ['rev-parse', 'HEAD']
+
         def _parse(res):
             hash = self.command.stdout.strip()
             if len(hash) != 40:
                 return None
             return hash
         return self._dovccmd(command, _parse, keepStdout=True)
-

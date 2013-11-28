@@ -14,21 +14,24 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot.steps.source import oldsource
 
+
 class SlaveSource(unittest.TestCase):
 
     def doCommandCompleteTest(self,
-            cmdHasGotRevision=True,
-            cmdGotRevision='rev',
-            initialPropertyValue=None,
-            expectedPropertyValue=None,
-            expectSetProperty=True):
+                              cmdHasGotRevision=True,
+                              cmdGotRevision='rev',
+                              initialPropertyValue=None,
+                              expectedPropertyValue=None,
+                              expectSetProperty=True):
 
         # set up a step with getProperty and setProperty
         step = oldsource.SlaveSource(codebase='foo')
+
         def getProperty(prop, default=None):
             self.assert_(prop == 'got_revision')
             if initialPropertyValue is None:
@@ -42,7 +45,7 @@ class SlaveSource(unittest.TestCase):
 
         def updateSourceProperty(prop, value):
             self.failUnlessEqual((prop, value),
-                    ('got_revision', expectedPropertyValue))
+                                 ('got_revision', expectedPropertyValue))
             self.propSet = True
         step.updateSourceProperty = updateSourceProperty
 
@@ -50,7 +53,7 @@ class SlaveSource(unittest.TestCase):
         cmd = mock.Mock()
         cmd.updates = dict()
         if cmdHasGotRevision:
-            cmd.updates['got_revision'] = [ cmdGotRevision ]
+            cmd.updates['got_revision'] = [cmdGotRevision]
 
         # run the method and ensure it set something; the set asserts the
         # value is correct
@@ -60,15 +63,14 @@ class SlaveSource(unittest.TestCase):
 
     def test_commandComplete_got_revision(self):
         self.doCommandCompleteTest(
-                expectedPropertyValue='rev')
+            expectedPropertyValue='rev')
 
     def test_commandComplete_no_got_revision(self):
         self.doCommandCompleteTest(
-                cmdHasGotRevision=False,
-                expectSetProperty=False)
+            cmdHasGotRevision=False,
+            expectSetProperty=False)
 
     def test_commandComplete_None_got_revision(self):
         self.doCommandCompleteTest(
-                cmdGotRevision=None,
-                expectSetProperty=False)
-
+            cmdGotRevision=None,
+            expectSetProperty=False)

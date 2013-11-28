@@ -13,14 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.steps.source import gerrit
 from buildbot.status.results import SUCCESS
-from buildbot.test.util import config, sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot.steps.source import gerrit
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import config
+from buildbot.test.util import sourcesteps
+from twisted.trial import unittest
+
 
 class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
-    
+
     def setUp(self):
         return self.setUpSourceStep()
 
@@ -29,21 +32,22 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
 
     def test_mode_full_clean(self):
         self.setupStep(
-                gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
-                                    mode='full', method='clean'))
+            gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
+                          mode='full', method='clean'))
         self.build.setProperty("event.patchSet.ref", "gerrit_branch")
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                              stdout='git version 1.7.5')
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('stat', dict(file='wkdir/.git',
-                                logEnviron=True))
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -62,7 +66,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
-                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -71,21 +75,22 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
 
     def test_mode_full_clean_force_build(self):
         self.setupStep(
-                gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
-                                    mode='full', method='clean'))
+            gerrit.Gerrit(repourl='http://github.com/buildbot/buildbot.git',
+                          mode='full', method='clean'))
         self.build.setProperty("gerrit_change", "1234/567")
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
             + ExpectShell.log('stdio',
-                stdout='git version 1.7.5')
+                              stdout='git version 1.7.5')
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
             + 1,
-            Expect('stat', dict(file='wkdir/.git',
-                                logEnviron=True))
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
@@ -104,7 +109,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
-                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])

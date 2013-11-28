@@ -14,15 +14,20 @@
 # Copyright Buildbot Team Members
 
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.process.users import manager, manual
+
 from buildbot import config
+from buildbot.process.users import manager
+from buildbot.process.users import manual
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class FakeUserManager(manual.UsersBase):
     pass
 
+
 class TestUserManager(unittest.TestCase):
+
     def setUp(self):
         self.master = mock.Mock()
         self.umm = manager.UserManagerManager(self.master)
@@ -37,7 +42,7 @@ class TestUserManager(unittest.TestCase):
     def test_reconfigService(self):
         # add a user manager
         um1 = FakeUserManager()
-        self.config.user_managers = [ um1 ]
+        self.config.user_managers = [um1]
 
         yield self.umm.reconfigService(self.config)
 
@@ -45,7 +50,7 @@ class TestUserManager(unittest.TestCase):
         self.assertIdentical(um1.master, self.master)
 
         # and back to nothing
-        self.config.user_managers = [ ]
+        self.config.user_managers = []
         yield self.umm.reconfigService(self.config)
 
         self.assertIdentical(um1.master, None)

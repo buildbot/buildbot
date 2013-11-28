@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+
 def upgrade(migrate_engine):
 
     metadata = sa.MetaData()
@@ -23,12 +24,11 @@ def upgrade(migrate_engine):
     sourcestamps_table = sa.Table('sourcestamps', metadata, autoload=True)
     changes_table = sa.Table('changes', metadata, autoload=True)
 
-    
     # Add codebase to tables
-    ss_codebase = sa.Column('codebase', sa.String(length=256), nullable=False, 
-        server_default=sa.DefaultClause(""))
+    ss_codebase = sa.Column('codebase', sa.String(length=256), nullable=False,
+                            server_default=sa.DefaultClause(""))
     ss_codebase.create(sourcestamps_table)
 
     c_codebase = sa.Column('codebase', sa.String(length=256), nullable=False,
-        server_default=sa.DefaultClause(""))
+                           server_default=sa.DefaultClause(""))
     c_codebase.create(changes_table)

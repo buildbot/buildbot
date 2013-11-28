@@ -40,12 +40,12 @@
 # 4) an executable script named 'buildshim' at the top of the project
 # which holds all knowledge of how to run the project's build system.
 # For Makefile-driven projects, buildshim might be
-#   #!/bin/sh
+# !/bin/sh
 #   case $1 in
 #   compile) make -j4;;
 #   esac
 # For debian package projects, buildshim might be
-#   #!/bin/sh
+# !/bin/sh
 #   case $1 in
 #   install_deps) sudo mk-build-deps -i;;
 #   package) debuild;;
@@ -84,29 +84,35 @@
 # A variant of this script has been deployed in our shop for
 # about six months, and has proven quite useful.
 
-from buildbot.buildslave import BuildSlave
-from buildbot.changes.gitpoller import GitPoller
-from buildbot.changes import filter
-from buildbot.config import BuilderConfig
-from buildbot.process.factory import BuildFactory
-from buildbot.process.properties import WithProperties
-from buildbot.schedulers.basic import SingleBranchScheduler
-from buildbot.schedulers.forcesched import ForceScheduler, FixedParameter, StringParameter
-from buildbot.schedulers import triggerable
-from buildbot.status import html
-from buildbot.status.mail import MailNotifier
-from buildbot.status.web import authz, auth
-from buildbot.steps import trigger
-from buildbot.steps.shell import ShellCommand
-from buildbot.steps.source.git import Git
-from twisted.python import log
 import json
 import os
 import random
 import re
 import socket
 
+from buildbot.buildslave import BuildSlave
+from buildbot.changes import filter
+from buildbot.changes.gitpoller import GitPoller
+from buildbot.config import BuilderConfig
+from buildbot.process.factory import BuildFactory
+from buildbot.process.properties import WithProperties
+from buildbot.schedulers import triggerable
+from buildbot.schedulers.basic import SingleBranchScheduler
+from buildbot.schedulers.forcesched import FixedParameter
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.schedulers.forcesched import StringParameter
+from buildbot.status import html
+from buildbot.status.mail import MailNotifier
+from buildbot.status.web import auth
+from buildbot.status.web import authz
+from buildbot.steps import trigger
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.source.git import Git
+from twisted.python import log
+
+
 class SimpleConfig(dict):
+
     """A buildbot master with a web status page and a 'force build' button,
     which reads public configuration from 'master.json'
     and secrets from a different json file (default ~/myconfig.json).
@@ -166,7 +172,7 @@ class SimpleConfig(dict):
                  homepage,
                  secretsfile="~/myconfig.json",
                  *args, **kwargs):
-        dict.__init__(self,*args,**kwargs)
+        dict.__init__(self, *args, **kwargs)
 
         # Find the directory containing this .py file
         thisfile = __file__
@@ -190,7 +196,7 @@ class SimpleConfig(dict):
         # way too slow and don't mind missing a tag
         self['mergeRequests'] = False
 
-        ####### PORT NUMBERS
+        # PORT NUMBERS
         # It's hard to keep port numbers straight for multiple projects,
         # so let's assign each project a slot number,
         # and use 8010 + slotnum for the http port,
@@ -200,48 +206,48 @@ class SimpleConfig(dict):
         self.__http_port = 8010 + slot
         self['slavePortnum'] = 9010 + slot
 
-        ####### SECRETS
+        # SECRETS
         # Avoid checking secrets into git by keeping them in a json file.
         try:
             s = json.load(open(os.path.expanduser(secretsfile)))
-            self.__auth = auth.BasicAuth([(s["webuser"].encode('ascii','ignore'),s["webpass"].encode('ascii','ignore'))])
+            self.__auth = auth.BasicAuth([(s["webuser"].encode('ascii', 'ignore'), s["webpass"].encode('ascii', 'ignore'))])
             # For the moment, all slaves have same password
-            self.slavepass = s["slavepass"].encode('ascii','ignore')
+            self.slavepass = s["slavepass"].encode('ascii', 'ignore')
         except:
             exit("%s must be a json file containing webuser, webpass, and slavepass; ascii only, no commas in quotes" % secretsfile)
 
-        ####### STATUS TARGETS
+        # STATUS TARGETS
         self['status'] = []
-        authz_cfg=authz.Authz(
+        authz_cfg = authz.Authz(
             # change any of these to True to enable; see the manual for more
             # options
             auth=self.__auth,
-            gracefulShutdown = False,
-            forceBuild = 'auth',
-            forceAllBuilds = True,
-            pingBuilder = True,
-            stopBuild = True,
-            stopAllBuilds = True,
-            cancelPendingBuild = True,
+            gracefulShutdown=False,
+            forceBuild='auth',
+            forceAllBuilds=True,
+            pingBuilder=True,
+            stopBuild=True,
+            stopAllBuilds=True,
+            cancelPendingBuild=True,
         )
         # Need order_console_by_time for git or hg or any vcs that doesn't have numbered changesets
         self['status'].append(
             html.WebStatus(http_port=self.__http_port, authz=authz_cfg, order_console_by_time=True))
 
         self['status'].append(
-            MailNotifier( fromaddr = "buildbot@example.com",
-                          mode = ('problem'),
-                          sendToInterestedUsers = True,
-                          extraRecipients = [ 'buildteam@example.com' ] ))
+            MailNotifier(fromaddr="buildbot@example.com",
+                         mode=('problem'),
+                         sendToInterestedUsers=True,
+                         extraRecipients=['buildteam@example.com']))
 
-        ####### DB URL
+        # DB URL
         self['db'] = {
             # This specifies what database buildbot uses to store its state.
             # This default is ok for all but the largest installations.
-            'db_url' : "sqlite:///state.sqlite",
+            'db_url': "sqlite:///state.sqlite",
         }
 
-        ####### PROJECT IDENTITY
+        # PROJECT IDENTITY
         # the 'title' string will appear at the top of this buildbot
         # installation's html.WebStatus home page (linked to the
         # 'titleURL') and is embedded in the title of the waterfall HTML page.
@@ -258,16 +264,16 @@ class SimpleConfig(dict):
 
         self['buildbotURL'] = "http://" + socket.gethostname() + ":%d/" % self.__http_port
 
-        ####### SLAVES
+        # SLAVES
         self._os2slaves = {}
         self['slaves'] = []
         slaveconfigs = masterjson["slaves"]
         for slaveconfig in slaveconfigs:
-            sname = slaveconfig["name"].encode('ascii','ignore')
-            sos = slaveconfig["os"].encode('ascii','ignore')
+            sname = slaveconfig["name"].encode('ascii', 'ignore')
+            sos = slaveconfig["os"].encode('ascii', 'ignore')
             # Restrict to a single build at a time because our buildshims
             # typically assume they have total control of machine, and use sudo apt-get, etc. with abandon.
-            s = BuildSlave(sname, self.slavepass, max_builds=1, properties = props)
+            s = BuildSlave(sname, self.slavepass, max_builds=1, properties=props)
             self['slaves'].append(s)
             if sos not in self._os2slaves:
                 self._os2slaves[sos] = []
@@ -280,7 +286,7 @@ class SimpleConfig(dict):
 
         # Righty-o, wire 'em all up
         for project in masterjson["projects"]:
-            self.addSimpleProject(project["name"].encode('ascii','ignore'), project["category"].encode('ascii','ignore'), project["repourl"].encode('ascii','ignore'), project["builders"])
+            self.addSimpleProject(project["name"].encode('ascii', 'ignore'), project["category"].encode('ascii', 'ignore'), project["repourl"].encode('ascii', 'ignore'), project["builders"])
 
     def addSimpleBuilder(self, name, buildername, category, repourl, builderconfig, sos, sbranch, bparams):
         """Private.
@@ -289,7 +295,7 @@ class SimpleConfig(dict):
         """
 
         factory = BuildFactory()
-        factory.addStep(Git(repourl=repourl, mode='full', submodules=True, method='copy', branch=sbranch, getDescription={'tags':True}))
+        factory.addStep(Git(repourl=repourl, mode='full', submodules=True, method='copy', branch=sbranch, getDescription={'tags': True}))
         if "tag" in builderconfig and not(builderconfig["tag"] is None):
             stag = builderconfig["tag"].encode('ascii', 'ignore')
             factory.addStep(ShellCommand(
@@ -305,12 +311,11 @@ class SimpleConfig(dict):
 
         self['builders'].append(
             BuilderConfig(name=buildername,
-              slavenames=self._os2slaves[sos],
-              factory=factory,
-              category=category))
+                          slavenames=self._os2slaves[sos],
+                          factory=factory,
+                          category=category))
 
         return factory
-
 
     def addSimpleProject(self, name, category, repourl, builderconfigs):
         """Private.
@@ -318,16 +323,16 @@ class SimpleConfig(dict):
 
         """
 
-        ####### FACTORIES
+        # FACTORIES
         # FIXME: get list of steps from buildshim here
         #factory = BuildFactory()
         # check out the source
         # This fails with git-1.8 and up unless you specify the branch, so do this down lower where we now the branch
         #factory.addStep(Git(repourl=repourl, mode='full', method='copy'))
-        #for step in ["patch", "install_deps", "configure", "compile", "check", "package", "upload", "uninstall_deps"]:
+        # for step in ["patch", "install_deps", "configure", "compile", "check", "package", "upload", "uninstall_deps"]:
         #    factory.addStep(ShellCommand(command=["../../srclink/" + name + "/buildshim", step], description=step))
 
-        ####### BUILDERS AND SCHEDULERS
+        # BUILDERS AND SCHEDULERS
         # For each builder in config file, see what OS they want to
         # run on, and assign them to suitable slaves.
         # Also create a force scheduler that knows about all the builders.
@@ -336,26 +341,26 @@ class SimpleConfig(dict):
         for builderconfig in builderconfigs:
             bparams = ''
             if "params" in builderconfig:
-                bparams = builderconfig["params"].encode('ascii','ignore')
+                bparams = builderconfig["params"].encode('ascii', 'ignore')
             bsuffix = ''
             if "suffix" in builderconfig:
-                bsuffix = builderconfig["suffix"].encode('ascii','ignore')
-            sbranch = builderconfig["branch"].encode('ascii','ignore')
+                bsuffix = builderconfig["suffix"].encode('ascii', 'ignore')
+            sbranch = builderconfig["branch"].encode('ascii', 'ignore')
             if sbranch not in branchnames:
                 branchnames.append(sbranch)
-            sosses = builderconfig["os"].encode('ascii','ignore').split('>')
+            sosses = builderconfig["os"].encode('ascii', 'ignore').split('>')
             sosses.reverse()
 
             # The first OS in the list triggers when there's a source change
             sos = sosses.pop()
-            buildername = name+'-'+sos+'-'+sbranch+bsuffix
+            buildername = name + '-' + sos + '-' + sbranch + bsuffix
 
             factory = self.addSimpleBuilder(name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
             self['schedulers'].append(
                 SingleBranchScheduler(
                     name=buildername,
                     change_filter=filter.ChangeFilter(branch=sbranch, repository=repourl),
-                    treeStableTimer=1*60, # Set this just high enough so you don't swamp the slaves, or to None if you don't want changes batched
+                    treeStableTimer=1 * 60,  # Set this just high enough so you don't swamp the slaves, or to None if you don't want changes batched
                     builderNames=[buildername]))
             buildernames.append(buildername)
 
@@ -364,7 +369,7 @@ class SimpleConfig(dict):
                 prev_factory = factory
                 prev_buildername = buildername
                 sos = sosses.pop()
-                buildername = name+'-'+sos+'-'+sbranch+bsuffix
+                buildername = name + '-' + sos + '-' + sbranch + bsuffix
                 factory = self.addSimpleBuilder(name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
                 self['schedulers'].append(
                     triggerable.Triggerable(
@@ -374,7 +379,7 @@ class SimpleConfig(dict):
 
         self['schedulers'].append(
             ForceScheduler(
-                name=name+"-force",
+                name=name + "-force",
                 builderNames=buildernames,
                 branch=FixedParameter(name="branch", default=""),
                 revision=FixedParameter(name="revision", default=""),
@@ -383,7 +388,7 @@ class SimpleConfig(dict):
                 properties=[],
             ))
 
-        ####### CHANGESOURCES
+        # CHANGESOURCES
         # It's a git git git git git world
         already = False
         for cs in self['change_source']:
@@ -395,4 +400,4 @@ class SimpleConfig(dict):
                 # Fuzz the interval to avoid slamming the git server and hitting the MaxStartups or MaxSessions limits
                 # If you hit them, twistd.log will have lots of "ssh_exchange_identification: Connection closed by remote host" errors
                 # See http://trac.buildbot.net/ticket/2480
-                GitPoller(repourl,  branches=branchnames, workdir='gitpoller-workdir-'+name, pollinterval=60 + random.uniform(-10, 10)))
+                GitPoller(repourl, branches=branchnames, workdir='gitpoller-workdir-' + name, pollinterval=60 + random.uniform(-10, 10)))

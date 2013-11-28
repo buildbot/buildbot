@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-from buildbot.steps.package.rpm import mock
-from buildbot.status.results import SUCCESS
-from buildbot.test.util import steps
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot import config
+from buildbot.status.results import SUCCESS
+from buildbot.steps.package.rpm import mock
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import steps
+from twisted.trial import unittest
+
 
 class TestMock(steps.BuildStepMixin, unittest.TestCase):
 
@@ -29,8 +31,8 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_root(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                mock.Mock())
+        self.assertRaises(config.ConfigErrors, lambda:
+                          mock.Mock())
 
     def test_class_attrs(self):
         step = self.setupStep(mock.Mock(root='TESTROOT'))
@@ -43,11 +45,11 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
                                      'build/state.log']})
             + 0,
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                    command=['mock', '--root', 'TESTROOT'],
-                    logfiles={'build.log': 'build.log',
-                              'root.log': 'root.log',
-                              'state.log': 'state.log'})
-            +0)
+                        command=['mock', '--root', 'TESTROOT'],
+                        logfiles={'build.log': 'build.log',
+                                  'root.log': 'root.log',
+                                  'state.log': 'state.log'})
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=["'mock", '--root', "...'"])
         return self.runStep()
 
@@ -64,10 +66,9 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
                         logfiles={'build.log': 'RESULT/build.log',
                                   'root.log': 'RESULT/root.log',
                                   'state.log': 'RESULT/state.log'})
-            +0)
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=["'mock", '--root', "...'"])
         return self.runStep()
-
 
 
 class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
@@ -79,50 +80,51 @@ class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_spec(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                mock.MockBuildSRPM(root='TESTROOT'))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          mock.MockBuildSRPM(root='TESTROOT'))
 
     def test_success(self):
         self.setupStep(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
         self.expectCommands(
-                Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
-                                         'build/state.log']})
-                + 0,
-                ExpectShell(workdir='wkdir', usePTY='slave-config',
-                            command=['mock', '--root', 'TESTROOT',
-                                     '--buildsrpm', '--spec', 'foo.spec',
-                                     '--sources', '.'],
-                            logfiles={'build.log': 'build.log',
-                                      'root.log': 'root.log',
-                                      'state.log': 'state.log'},)
-                +0)
+            Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
+                                     'build/state.log']})
+            + 0,
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['mock', '--root', 'TESTROOT',
+                                 '--buildsrpm', '--spec', 'foo.spec',
+                                 '--sources', '.'],
+                        logfiles={'build.log': 'build.log',
+                                  'root.log': 'root.log',
+                                  'state.log': 'state.log'},)
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['mock buildsrpm'])
         return self.runStep()
+
 
 class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
-    
+
     def tearDown(self):
         return self.tearDownBuildStep()
 
     def test_no_srpm(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                mock.MockRebuild(root='TESTROOT'))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          mock.MockRebuild(root='TESTROOT'))
 
     def test_success(self):
         self.setupStep(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))
         self.expectCommands(
-                Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
-                                         'build/state.log']})
-                + 0,
-                ExpectShell(workdir='wkdir', usePTY='slave-config',
-                            command=['mock', '--root', 'TESTROOT',
-                                     '--rebuild', 'foo.src.rpm'],
-                            logfiles={'build.log': 'build.log',
-                                      'root.log': 'root.log',
-                                      'state.log': 'state.log'},)
-                +0)
+            Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
+                                     'build/state.log']})
+            + 0,
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['mock', '--root', 'TESTROOT',
+                                 '--rebuild', 'foo.src.rpm'],
+                        logfiles={'build.log': 'build.log',
+                                  'root.log': 'root.log',
+                                  'state.log': 'state.log'},)
+            + 0)
         self.expectOutcome(result=SUCCESS, status_text=['mock rebuild srpm'])
         return self.runStep()

@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-from migrate.changeset import constraint
+
 from buildbot.util import sautils
+from migrate.changeset import constraint
+
 
 def upgrade(migrate_engine):
 
@@ -28,8 +30,8 @@ def upgrade(migrate_engine):
     # Create the sourcestampset table
     # that defines a sourcestampset
     sourcestampsets_table = sa.Table("sourcestampsets", metadata,
-        sa.Column("id", sa.Integer, primary_key=True),
-    )
+                                     sa.Column("id", sa.Integer, primary_key=True),
+                                     )
     sourcestampsets_table.create()
 
     # All current sourcestampid's are migrated to sourcestampsetid

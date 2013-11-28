@@ -16,14 +16,17 @@
 
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
+import gtk.glade  # @UnresolvedImport
+import re
+
+from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import util
 from twisted.spread import pb
-from twisted.cred import credentials
-import gtk.glade #@UnresolvedImport
-import re
+
 
 class DebugWidget:
+
     def __init__(self, master="localhost:8007", passwd="debugpw"):
         self.connected = 0
         try:
@@ -74,6 +77,7 @@ class DebugWidget:
             d = f.login(creds)
             reactor.connectTCP(self.host, int(self.port), f)
             d.addCallbacks(self.connect_complete, self.connect_failed)
+
     def connect_complete(self, ref):
         self.connectbutton.set_label("Disconnect")
         self.connectlabel.set_text("Connected")
@@ -81,9 +85,11 @@ class DebugWidget:
         self.remote = ref
         self.remote.callRemote("print", "hello cleveland")
         self.remote.notifyOnDisconnect(self.disconnected)
+
     def connect_failed(self, why):
         self.connectlabel.set_text("Failed")
         print why
+
     def disconnected(self, ref):
         self.connectbutton.set_label("Connect")
         self.connectlabel.set_text("Disconnected")
@@ -95,9 +101,11 @@ class DebugWidget:
             return
         d = self.remote.callRemote("reload")
         d.addErrback(self.err)
+
     def do_rebuild(self, widget):
         print "Not yet implemented"
         return
+
     def do_poke_irc(self, widget):
         if not self.remote:
             return
@@ -167,7 +175,7 @@ class DebugWidget:
             if revision == '':
                 revision = None
 
-        kwargs = { 'revision': revision, 'who': who }
+        kwargs = {'revision': revision, 'who': who}
         if branch:
             kwargs['branch'] = branch
         d = self.remote.callRemote("fakeChange", filename, **kwargs)
@@ -179,6 +187,7 @@ class DebugWidget:
         name = self.buildname.get_text()
         d = self.remote.callRemote("setCurrentState", name, state)
         d.addErrback(self.err)
+
     def err(self, failure):
         print "received error:", failure
 

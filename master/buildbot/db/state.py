@@ -13,16 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import json
 import sqlalchemy as sa
 import sqlalchemy.exc
+
 from buildbot.db import base
+from buildbot.util import json
+
 
 class _IdNotFoundError(Exception):
-    pass # used internally
+    pass  # used internally
+
 
 class ObjDict(dict):
     pass
+
 
 class StateConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -30,11 +34,12 @@ class StateConnectorComponent(base.DBConnectorComponent):
     def getObjectId(self, name, class_name):
         # defer to a cached method that only takes one parameter (a tuple)
         return self._getObjectId((name, class_name)
-                ).addCallback(lambda objdict : objdict['id'])
+                                 ).addCallback(lambda objdict: objdict['id'])
 
     @base.cached('objectids')
     def _getObjectId(self, name_class_name_tuple):
         name, class_name = name_class_name_tuple
+
         def thd(conn):
             objects_tbl = self.db.model.objects
 
@@ -42,9 +47,9 @@ class StateConnectorComponent(base.DBConnectorComponent):
             self.check_length(objects_tbl.c.class_name, class_name)
 
             def select():
-                q = sa.select([ objects_tbl.c.id ],
-                        whereclause=((objects_tbl.c.name == name)
-                                   & (objects_tbl.c.class_name == class_name)))
+                q = sa.select([objects_tbl.c.id],
+                              whereclause=((objects_tbl.c.name == name)
+                                           & (objects_tbl.c.class_name == class_name)))
                 res = conn.execute(q)
                 row = res.fetchone()
                 res.close()
@@ -78,14 +83,16 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    class Thunk: pass
+    class Thunk:
+        pass
+
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             object_state_tbl = self.db.model.object_state
 
-            q = sa.select([ object_state_tbl.c.value_json ],
-                    whereclause=((object_state_tbl.c.objectid == objectid)
-                               & (object_state_tbl.c.name == name)))
+            q = sa.select([object_state_tbl.c.value_json],
+                          whereclause=((object_state_tbl.c.objectid == objectid)
+                                       & (object_state_tbl.c.name == name)))
             res = conn.execute(q)
             row = res.fetchone()
             res.close()
@@ -93,7 +100,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
             if not row:
                 if default is self.Thunk:
                     raise KeyError("no such state value '%s' for object %d" %
-                                    (name, objectid))
+                                   (name, objectid))
                 return default
             try:
                 return json.loads(row.value_json)
@@ -115,8 +122,8 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
             def update():
                 q = object_state_tbl.update(
-                        whereclause=((object_state_tbl.c.objectid == objectid)
-                                & (object_state_tbl.c.name == name)))
+                    whereclause=((object_state_tbl.c.objectid == objectid)
+                                 & (object_state_tbl.c.name == name)))
                 res = conn.execute(q, value_json=value_json)
 
                 # check whether that worked
@@ -124,9 +131,9 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
             def insert():
                 conn.execute(object_state_tbl.insert(),
-                                   objectid=objectid,
-                                   name=name,
-                                   value_json=value_json)
+                             objectid=objectid,
+                             name=name,
+                             value_json=value_json)
 
             # try updating; if that fails, try inserting; if that fails, then
             # we raced with another instance to insert, so let that instance
@@ -140,7 +147,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
             try:
                 insert()
             except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
-                pass # someone beat us to it - oh well
+                pass  # someone beat us to it - oh well
 
         return self.db.pool.do(thd)
 
@@ -148,4 +155,3 @@ class StateConnectorComponent(base.DBConnectorComponent):
         # called so tests can simulate another process inserting a database row
         # at an inopportune moment
         pass
-

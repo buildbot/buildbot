@@ -15,7 +15,10 @@
 
 from __future__ import with_statement
 
-from buildbot.scripts import base, stop, start
+from buildbot.scripts import base
+from buildbot.scripts import start
+from buildbot.scripts import stop
+
 
 def restart(config):
     basedir = config['basedir']

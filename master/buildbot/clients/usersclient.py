@@ -16,11 +16,13 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
-from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
+from twisted.spread import pb
+
 
 class UsersClient(object):
+
     """
     Client set up in buildbot.scripts.runner to send `buildbot user` args
     over a PB connection to perspective_commandline that will execute the
@@ -41,6 +43,7 @@ class UsersClient(object):
         def call_commandline(remote):
             d = remote.callRemote("commandline", op, bb_username,
                                   bb_password, ids, info)
+
             def returnAndLose(res):
                 remote.broker.transport.loseConnection()
                 return res

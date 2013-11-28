@@ -17,13 +17,16 @@ from __future__ import with_statement
 
 
 import os
-import signal
 import platform
+import signal
+
 from twisted.internet import reactor
 
-from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
-     ReconfigError
+from buildbot.scripts.logwatcher import BuildmasterTimeoutError
+from buildbot.scripts.logwatcher import LogWatcher
+from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.util import in_reactor
+
 
 class Reconfigurator:
 
@@ -54,7 +57,7 @@ class Reconfigurator:
         lw = LogWatcher(os.path.join(basedir, "twistd.log"))
         d = lw.start()
         d.addCallbacks(self.success, self.failure)
-        d.addBoth(lambda _ : self.rc)
+        d.addBoth(lambda _: self.rc)
         return d
 
     def sighup(self):
@@ -83,6 +86,7 @@ correct them, then try 'buildbot reconfig' again.
             self.sighup()
         else:
             print "Error while following twistd.log: %s" % why
+
 
 @in_reactor
 def reconfig(config):

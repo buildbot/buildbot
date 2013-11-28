@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import types
 import time
+import types
+
 
 def remove_userpassword(url):
     if '@' not in url:
@@ -35,8 +36,11 @@ def now(_reactor=None):
     else:
         return time.time()
 
+
 class Obfuscated:
+
     """An obfuscated string in a command"""
+
     def __init__(self, real, fake):
         self.real = real
         self.fake = fake
@@ -45,12 +49,12 @@ class Obfuscated:
         return self.fake
 
     def __repr__(self):
-        return `self.fake`
+        return repr(self.fake)
 
     def __eq__(self, other):
         return other.__class__ is self.__class__ and \
-                    other.real == self.real and \
-                    other.fake == self.fake
+            other.real == self.real and \
+            other.fake == self.fake
 
     @staticmethod
     def to_text(s):
@@ -62,7 +66,7 @@ class Obfuscated:
     @staticmethod
     def get_real(command):
         rv = command
-        if type(command) == types.ListType:
+        if isinstance(command, types.ListType):
             rv = []
             for elt in command:
                 if isinstance(elt, Obfuscated):
@@ -74,7 +78,7 @@ class Obfuscated:
     @staticmethod
     def get_fake(command):
         rv = command
-        if type(command) == types.ListType:
+        if isinstance(command, types.ListType):
             rv = []
             for elt in command:
                 if isinstance(elt, Obfuscated):
@@ -82,4 +86,3 @@ class Obfuscated:
                 else:
                     rv.append(Obfuscated.to_text(elt))
         return rv
-

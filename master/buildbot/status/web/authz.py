@@ -13,39 +13,42 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from buildbot.status.web.auth import IAuth
 from buildbot.status.web.session import SessionManager
+from twisted.internet import defer
 
-COOKIE_KEY="BuildBotSession"
+COOKIE_KEY = "BuildBotSession"
+
+
 class Authz(object):
+
     """Decide who can do what."""
 
     knownActions = [
-    # If you add a new action here, be sure to also update the documentation
-    # at docs/manual/cfg-statustargets.rst.
-            'view',
-            'gracefulShutdown',
-            'forceBuild',
-            'forceAllBuilds',
-            'pingBuilder',
-            'stopBuild',
-            'stopAllBuilds',
-            'cancelPendingBuild',
-            'cancelAllPendingBuilds',
-            'stopChange',
-            'cleanShutdown',
-            'showUsersPage',
-            'pauseSlave',
+        # If you add a new action here, be sure to also update the documentation
+        # at docs/manual/cfg-statustargets.rst.
+        'view',
+        'gracefulShutdown',
+        'forceBuild',
+        'forceAllBuilds',
+        'pingBuilder',
+        'stopBuild',
+        'stopAllBuilds',
+        'cancelPendingBuild',
+        'cancelAllPendingBuilds',
+        'stopChange',
+        'cleanShutdown',
+        'showUsersPage',
+        'pauseSlave',
     ]
 
     def __init__(self,
-            default_action=False,
-            auth=None,
-            useHttpHeader=False,
-            httpLoginUrl=False,
-            view=True,
-            **kwargs):
+                 default_action=False,
+                 auth=None,
+                 useHttpHeader=False,
+                 httpLoginUrl=False,
+                 view=True,
+                 **kwargs):
         self.auth = auth
         if auth:
             assert IAuth.providedBy(auth)
@@ -53,7 +56,7 @@ class Authz(object):
         self.useHttpHeader = useHttpHeader
         self.httpLoginUrl = httpLoginUrl
 
-        self.config = dict( (a, default_action) for a in self.knownActions )
+        self.config = dict((a, default_action) for a in self.knownActions)
         self.config['view'] = view
         for act in self.knownActions:
             if act in kwargs:
@@ -69,15 +72,15 @@ class Authz(object):
             cookie = request.received_cookies[COOKIE_KEY]
             return self.sessions.get(cookie)
         return None
-            
+
     def authenticated(self, request):
         if self.useHttpHeader:
             return request.getUser() != ''
-        return self.session(request) != None
+        return self.session(request) is not None
 
     def getUserInfo(self, user):
         if self.useHttpHeader:
-            return dict(userName=user, fullName=user, email=user, groups=[ user ])
+            return dict(userName=user, fullName=user, email=user, groups=[user])
         s = self.sessions.getUser(user)
         if s:
             return s.infos
@@ -106,10 +109,9 @@ class Authz(object):
             return request.getUser()
         s = self.session(request)
         if s:
-            return "%(fullName)s <%(email)s>"%(s.infos)
+            return "%(fullName)s <%(email)s>" % (s.infos)
         else:
             return request.args.get("username", ["<unknown>"])[0]
-
 
     def getPassword(self, request):
         if self.useHttpHeader:
@@ -135,6 +137,7 @@ class Authz(object):
             if cfg == 'auth' or callable(cfg):
                 if not self.auth:
                     return defer.succeed(False)
+
                 def check_authenticate(res):
                     if callable(cfg) and not cfg(self.getUsername(request), *args):
                         return False
@@ -147,7 +150,7 @@ class Authz(object):
                 elif passwd != "<no-password>":
                     def check_login(cookie):
                         ret = False
-                        if type(cookie) is str:
+                        if isinstance(cookie, str):
                             ret = check_authenticate(None)
                             self.sessions.remove(cookie)
                         return ret
@@ -170,11 +173,12 @@ class Authz(object):
         if not self.auth:
             return defer.succeed(False)
         d = defer.maybeDeferred(self.auth.authenticate, user, passwd)
+
         def check_authenticate(res):
             if res:
                 cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
-                request.received_cookies = {COOKIE_KEY:cookie}
+                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(), path="/")
+                request.received_cookies = {COOKIE_KEY: cookie}
                 return cookie
             else:
                 return False

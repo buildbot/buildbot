@@ -19,15 +19,17 @@ library to populate parameters from and rpmspec file into a memory structure
 """
 
 import re
+
 from buildbot.steps.shell import ShellCommand
 
 
 class RpmSpec(ShellCommand):
+
     """
     read parameters out of an rpm spec file
     """
 
-    #initialize spec info vars and get them from the spec file
+    # initialize spec info vars and get them from the spec file
     n_regex = re.compile(r'^Name:[ ]*([^\s]*)')
     v_regex = re.compile(r'^Version:[ ]*([0-9\.]*)')
 

@@ -17,20 +17,26 @@
 Support for running 'shell commands'
 """
 
-import sys
 import os
-import signal
-import types
 import re
-import subprocess
-import traceback
+import signal
 import stat
+import subprocess
+import sys
+import traceback
+import types
+
 from collections import deque
 from tempfile import NamedTemporaryFile
 
-from twisted.python import runtime, log
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import log
+from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
-from twisted.internet import reactor, defer, protocol, task, error
 
 from buildslave import util
 from buildslave.exceptions import AbandonChain
@@ -38,12 +44,13 @@ from buildslave.exceptions import AbandonChain
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
 
+
 def shell_quote(cmd_list):
     # attempt to quote cmd_list such that a shell will properly re-interpret
     # it.  The pipes module is only available on UNIX, and Windows "shell"
     # quoting is indescribably convoluted - so much so that it's not clear it's
     # reversible.  Also, the quote function is undocumented (although it looks
-    # like it will be documentd soon: http://bugs.python.org/issue9723).
+    # like it will be documented soon: http://bugs.python.org/issue9723).
     # Finally, it has a nasty bug in some versions where an empty string is not
     # quoted.
     #
@@ -51,14 +58,16 @@ def shell_quote(cmd_list):
     #  - use pipes.quote on UNIX, handling '' as a special case
     #  - use Python's repr() on Windows, as a best effort
     if runtime.platformType == 'win32':
-        return " ".join([ `e` for e in cmd_list ])
+        return " ".join([repr(e) for e in cmd_list])
     else:
         import pipes
+
         def quote(e):
             if not e:
                 return '""'
             return pipes.quote(e)
-        return " ".join([ quote(e) for e in cmd_list ])
+        return " ".join([quote(e) for e in cmd_list])
+
 
 class LogFileWatcher:
     POLL_INTERVAL = 2
@@ -106,13 +115,13 @@ class LogFileWatcher:
         if not self.started:
             s = self.statFile()
             if s == self.old_logfile_stats:
-                return # not started yet
+                return  # not started yet
             if not s:
                 # the file was there, but now it's deleted. Forget about the
                 # initial state, clearly the process has deleted the logfile
                 # in preparation for creating a new one.
                 self.old_logfile_stats = None
-                return # no file to work with
+                return  # no file to work with
             self.f = open(self.logfile, "rb")
             # if we only want new lines, seek to
             # where we stat'd so we only find new
@@ -130,6 +139,7 @@ class LogFileWatcher:
 
 if runtime.platformType == 'posix':
     class ProcGroupProcess(Process):
+
         """Simple subclass of Process to also make the spawned process a process
         group leader, so we can kill all members of the process group."""
 
@@ -166,9 +176,11 @@ class RunProcessPP(protocol.ProcessProtocol):
             self.transport.pgid = self.transport.pid
 
         if self.pending_stdin:
-            if self.debug: log.msg(" writing to stdin")
+            if self.debug:
+                log.msg(" writing to stdin")
             self.transport.write(self.pending_stdin)
-        if self.debug: log.msg(" closing stdin")
+        if self.debug:
+            log.msg(" closing stdin")
         self.transport.closeStdin()
 
     def outReceived(self, data):
@@ -204,6 +216,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 
 
 class RunProcess:
+
     """
     This is a helper class, used by slave commands to run programs in a child
     shell.
@@ -212,11 +225,11 @@ class RunProcess:
     notreally = False
     BACKUP_TIMEOUT = 5
     interruptSignal = "KILL"
-    CHUNK_LIMIT = 128*1024
+    CHUNK_LIMIT = 128 * 1024
 
     # Don't send any data until at least BUFFER_SIZE bytes have been collected
     # or BUFFER_TIMEOUT elapsed
-    BUFFER_SIZE = 64*1024
+    BUFFER_SIZE = 64 * 1024
     BUFFER_TIMEOUT = 5
 
     # For sending elapsed time:
@@ -255,7 +268,7 @@ class RunProcess:
 
         self.builder = builder
         if isinstance(command, list):
-            command = [util.Obfuscated(w[1], w[2]) 
+            command = [util.Obfuscated(w[1], w[2])
                        if (isinstance(w, tuple) and len(w) == 3 and w[0] == 'obfuscated')
                        else w for w in command]
         # We need to take unicode commands and arguments and encode them using
@@ -268,6 +281,7 @@ class RunProcess:
         # spawnProcess which checks that arguments are regular strings or
         # unicode strings that can be encoded as ascii (which generates a
         # warning).
+
         def to_str(cmd):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
@@ -303,6 +317,7 @@ class RunProcess:
 
             # do substitution on variable values matching pattern: ${name}
             p = re.compile(r'\${([0-9a-zA-Z_]*)}')
+
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
@@ -314,11 +329,11 @@ class RunProcess:
                 if v is not None:
                     if not isinstance(v, basestring):
                         raise RuntimeError("'env' values must be strings or "
-                                "lists; key '%s' is incorrect" % (key,))
+                                           "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, v)
 
             self.environ = newenv
-        else: # not environ
+        else:  # not environ
             self.environ = os.environ.copy()
         self.initialStdin = initialStdin
         self.logEnviron = logEnviron
@@ -358,13 +373,13 @@ class RunProcess:
         self.useProcGroup = useProcGroup
 
         self.logFileWatchers = []
-        for name,filevalue in self.logfiles.items():
+        for name, filevalue in self.logfiles.items():
             filename = filevalue
             follow = False
 
             # check for a dictionary of options
             # filename is required, others are optional
-            if type(filevalue) == dict:
+            if isinstance(filevalue, dict):
                 filename = filevalue['filename']
                 follow = filevalue.get('follow', False)
 
@@ -405,8 +420,8 @@ class RunProcess:
             os.makedirs(self.workdir)
         log.msg("RunProcess._startCommand")
         if self.notreally:
-            self._addToBuffers('header', "command '%s' in dir %s" % \
-                             (self.fake_command, self.workdir))
+            self._addToBuffers('header', "command '%s' in dir %s" %
+                               (self.fake_command, self.workdir))
             self._addToBuffers('header', "(not really)\n")
             self.finished(None, 0)
             return
@@ -415,9 +430,10 @@ class RunProcess:
 
         self.using_comspec = False
         if type(self.command) in types.StringTypes:
-            if runtime.platformType  == 'win32':
-                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c']
+            if runtime.platformType == 'win32':
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                if '/c' not in argv:
+                    argv += ['/c']
                 argv += [self.command]
                 self.using_comspec = True
             else:
@@ -433,8 +449,9 @@ class RunProcess:
             # handle path searching, etc.
             if runtime.platformType == 'win32' and not \
                     (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
-                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c']
+                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                if '/c' not in argv:
+                    argv += ['/c']
                 argv += list(self.command)
                 self.using_comspec = True
             else:
@@ -451,7 +468,7 @@ class RunProcess:
         # self.stdin is handled in RunProcessPP.connectionMade
 
         log.msg(" " + display)
-        self._addToBuffers('header', display+"\n")
+        self._addToBuffers('header', display + "\n")
 
         # then comes the secondary information
         msg = " in dir %s" % (self.workdir,)
@@ -468,22 +485,21 @@ class RunProcess:
                 unit = "secs"
             msg += " (maxTime %d %s)" % (self.maxTime, unit)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg+"\n")
+        self._addToBuffers('header', msg + "\n")
 
         msg = " watching logfiles %s" % (self.logfiles,)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg+"\n")
+        self._addToBuffers('header', msg + "\n")
 
         # then the obfuscated command array for resolving unambiguity
         msg = " argv: %s" % (self.fake_command,)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg+"\n")
+        self._addToBuffers('header', msg + "\n")
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
             msg = " environment:\n"
-            env_names = self.environ.keys()
-            env_names.sort()
+            env_names = sorted(self.environ.keys())
             for name in env_names:
                 msg += "  %s=%s\n" % (name, self.environ[name])
             log.msg(" environment: %s" % (self.environ,))
@@ -492,11 +508,11 @@ class RunProcess:
         if self.initialStdin:
             msg = " writing %d bytes to stdin" % len(self.initialStdin)
             log.msg(" " + msg)
-            self._addToBuffers('header', msg+"\n")
+            self._addToBuffers('header', msg + "\n")
 
         msg = " using PTY: %s" % bool(self.usePTY)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg+"\n")
+        self._addToBuffers('header', msg + "\n")
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called
@@ -508,10 +524,10 @@ class RunProcess:
         # start the process
 
         self.process = self._spawnProcess(
-                                 self.pp, argv[0], argv,
-                                 self.environ,
-                                 self.workdir,
-                                 usePTY=self.usePTY)
+            self.pp, argv[0], argv,
+            self.environ,
+            self.workdir,
+            usePTY=self.usePTY)
 
         # set up timeouts
 
@@ -525,7 +541,7 @@ class RunProcess:
             w.start()
 
     def _spawnProcess(self, processProtocol, executable, args=(), env={},
-            path=None, uid=None, gid=None, usePTY=False, childFDs=None):
+                      path=None, uid=None, gid=None, usePTY=False, childFDs=None):
         """private implementation of reactor.spawnProcess, to allow use of
         L{ProcGroupProcess}"""
 
@@ -533,7 +549,7 @@ class RunProcess:
         if runtime.platformType == 'posix':
             if self.useProcGroup and not usePTY:
                 return ProcGroupProcess(reactor, executable, args, env, path,
-                                    processProtocol, uid, gid, childFDs)
+                                        processProtocol, uid, gid, childFDs)
 
         # fall back
         if self.using_comspec:
@@ -544,27 +560,28 @@ class RunProcess:
                                         path, usePTY=usePTY)
 
     def _spawnAsBatch(self, processProtocol, executable, args, env,
-            path, usePTY):
+                      path, usePTY):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
 
-        tf = NamedTemporaryFile(dir='.',suffix=".bat",delete=False)
-        #echo off hides this cheat from the log files.
-        tf.write( "@echo off\n" )
+        tf = NamedTemporaryFile(dir='.', suffix=".bat", delete=False)
+        # echo off hides this cheat from the log files.
+        tf.write("@echo off\n")
         if type(self.command) in types.StringTypes:
-            tf.write( self.command )
+            tf.write(self.command)
         else:
             def maybe_escape_pipes(arg):
                 if arg != '|':
-                    return arg.replace('|','^|')
+                    return arg.replace('|', '^|')
                 else:
                     return '|'
             cmd = [maybe_escape_pipes(arg) for arg in self.command]
-            tf.write( quoteArguments(cmd) )
+            tf.write(quoteArguments(cmd))
         tf.close()
 
-        argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-        if '/c' not in argv: argv += ['/c']
+        argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+        if '/c' not in argv:
+            argv += ['/c']
         argv += [tf.name]
 
         def unlink_temp(result):
@@ -582,7 +599,7 @@ class RunProcess:
         """
         LIMIT = self.CHUNK_LIMIT
         for i in range(0, len(data), LIMIT):
-            yield data[i:i+LIMIT]
+            yield data[i:i + LIMIT]
 
     def _collapseMsg(self, msg):
         """
@@ -644,7 +661,8 @@ class RunProcess:
             # Chunkify the log data to make sure we're not sending more than
             # CHUNK_LIMIT at a time
             for chunk in self._chunkForSend(data):
-                if len(chunk) == 0: continue
+                if len(chunk) == 0:
+                    continue
                 logdata.append(chunk)
                 msg_size += len(chunk)
                 if msg_size >= self.CHUNK_LIMIT:
@@ -698,14 +716,14 @@ class RunProcess:
             self.ioTimeoutTimer.reset(self.timeout)
 
     def addLogfile(self, name, data):
-        self._addToBuffers( ('log', name), data)
+        self._addToBuffers(('log', name), data)
 
         if self.ioTimeoutTimer:
             self.ioTimeoutTimer.reset(self.timeout)
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
-        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
+        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig, rc, self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates
             w.stop()
@@ -752,8 +770,8 @@ class RunProcess:
         try:
             os.kill(pid, 0)
         except OSError:
-            return True # dead
-        return False # alive
+            return True  # dead
+        return False  # alive
 
     def checkProcess(self):
         if not self.isDead():
@@ -776,13 +794,13 @@ class RunProcess:
             # finished ought to be called momentarily. Just in case it doesn't,
             # set a timer which will abandon the command.
             self.killTimer = self._reactor.callLater(self.BACKUP_TIMEOUT,
-                                       self.doBackupTimeout)
+                                                     self.doBackupTimeout)
 
     def sendSig(self, interruptSignal):
         hit = 0
         # try signalling the process group
         if not hit and self.useProcGroup and runtime.platformType == "posix":
-            sig = getattr(signal, "SIG"+ interruptSignal, None)
+            sig = getattr(signal, "SIG" + interruptSignal, None)
 
             if sig is None:
                 log.msg("signal module is missing SIG%s" % interruptSignal)
@@ -792,7 +810,7 @@ class RunProcess:
                 log.msg("self.process has no pgid")
             else:
                 log.msg("trying to kill process group %d" %
-                                                (self.process.pgid,))
+                        (self.process.pgid,))
                 try:
                     os.kill(-self.process.pgid, sig)
                     log.msg(" signal %s sent successfully" % sig)
@@ -806,7 +824,7 @@ class RunProcess:
                     pass
 
         elif runtime.platformType == "win32":
-            if interruptSignal == None:
+            if interruptSignal is None:
                 log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
                 if interruptSignal == "TERM":

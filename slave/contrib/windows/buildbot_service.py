@@ -63,14 +63,14 @@
 
 # Written by Mark Hammond, 2006.
 
-import sys
 import os
+import sys
 import threading
 
 import pywintypes
-import winerror
-import win32con
+import servicemanager
 import win32api
+import win32con
 import win32event
 import win32file
 import win32pipe
@@ -78,7 +78,7 @@ import win32process
 import win32security
 import win32service
 import win32serviceutil
-import servicemanager
+import winerror
 
 # Are we running in a py2exe environment?
 is_frozen = hasattr(sys, "frozen")
@@ -177,7 +177,7 @@ class BBService(win32serviceutil.ServiceFramework):
             save_dirs = True
         else:
             dir_string = win32serviceutil.GetServiceCustomOption(self,
-                                                            "directories")
+                                                                 "directories")
             save_dirs = False
 
         if not dir_string:
@@ -230,7 +230,7 @@ class BBService(win32serviceutil.ServiceFramework):
             hstop = self.hWaitStop
 
             cmd = '%s --spawn %d start --nodaemon %s' % (self.runner_prefix, hstop, bbdir)
-            #print "cmd is", cmd
+            # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
 
@@ -238,7 +238,7 @@ class BBService(win32serviceutil.ServiceFramework):
             handles = [self.hWaitStop] + [i[1] for i in child_infos]
 
             rc = win32event.WaitForMultipleObjects(handles,
-                                                   0, # bWaitAll
+                                                   0,  # bWaitAll
                                                    win32event.INFINITE)
             if rc == win32event.WAIT_OBJECT_0:
                 # user sent a stop service request
@@ -248,7 +248,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 # and forget the process.
                 index = rc - win32event.WAIT_OBJECT_0 - 1
                 bbdir, dead_handle, dead_thread, output_blocks = \
-                                                        child_infos[index]
+                    child_infos[index]
                 status = win32process.GetExitCodeProcess(dead_handle)
                 output = "".join(output_blocks)
                 if not output:
@@ -271,7 +271,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # The child processes should have also seen our stop signal
         # so wait for them to terminate.
         for bbdir, h, t, output in child_infos:
-            for i in range(10): # 30 seconds to shutdown...
+            for i in range(10):  # 30 seconds to shutdown...
                 self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
                 rc = win32event.WaitForSingleObject(h, 3000)
                 if rc == win32event.WAIT_OBJECT_0:
@@ -282,7 +282,7 @@ class BBService(win32serviceutil.ServiceFramework):
 
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
             # If necessary, kill it
-            if win32process.GetExitCodeProcess(h)==win32con.STILL_ACTIVE:
+            if win32process.GetExitCodeProcess(h) == win32con.STILL_ACTIVE:
                 self.warning("BuildBot process at %r failed to terminate - "
                              "killing it" % (bbdir, ))
                 win32api.TerminateProcess(h, 3)
@@ -354,7 +354,7 @@ class BBService(win32serviceutil.ServiceFramework):
         pid = win32api.GetCurrentProcess()
         # This one is duplicated as inheritable.
         hErrWrite = win32api.DuplicateHandle(pid, hOutWrite, pid, 0, 1,
-                                       win32con.DUPLICATE_SAME_ACCESS)
+                                             win32con.DUPLICATE_SAME_ACCESS)
 
         # These are non-inheritable duplicates.
         hOutRead = self.dup(hOutReadTemp)
@@ -366,7 +366,7 @@ class BBService(win32serviceutil.ServiceFramework):
         si.hStdOutput = hOutWrite
         si.hStdError = hErrWrite
         si.dwFlags = win32process.STARTF_USESTDHANDLES | \
-                     win32process.STARTF_USESHOWWINDOW
+            win32process.STARTF_USESHOWWINDOW
         si.wShowWindow = win32con.SW_HIDE
 
         # pass True to allow handles to be inherited.  Inheritance is
@@ -387,7 +387,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # start a thread collecting output
         blocks = []
         t = threading.Thread(target=self.redirectCaptureThread,
-                             args = (hOutRead, blocks))
+                             args=(hOutRead, blocks))
         t.start()
         return info[0], t, blocks
 
@@ -397,7 +397,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # never referenced until the thread dies - so no need for locks
         # around self.captured_blocks.
         #self.info("Redirect thread starting")
-        while 1:
+        while True:
             try:
                 ec, data = win32file.ReadFile(handle, CHILDCAPTURE_BLOCK_SIZE)
             except pywintypes.error, err:
@@ -485,12 +485,12 @@ def CustomInstall(opts):
 
 
 def _RunChild(runfn):
-    del sys.argv[1] # The --spawn arg.
+    del sys.argv[1]  # The --spawn arg.
     # Create a new thread that just waits for the event to be signalled.
     t = threading.Thread(target=_WaitForShutdown,
-                         args = (int(sys.argv[1]), )
+                         args=(int(sys.argv[1]), )
                          )
-    del sys.argv[1] # The stop handle
+    del sys.argv[1]  # The stop handle
     # This child process will be sent a console handler notification as
     # users log off, or as the system shuts down.  We want to ignore these
     # signals as the service parent is responsible for our shutdown.
@@ -501,7 +501,7 @@ def _RunChild(runfn):
         # key in!
         return True
     win32api.SetConsoleCtrlHandler(ConsoleHandler, True)
-    t.setDaemon(True) # we don't want to wait for this to stop!
+    t.setDaemon(True)  # we don't want to wait for this to stop!
     t.start()
     if hasattr(sys, "frozen"):
         # py2exe sets this env vars that may screw our child process - reset
@@ -518,6 +518,7 @@ def _WaitForShutdown(h):
 
     from twisted.internet import reactor
     reactor.callLater(0, reactor.stop)
+
 
 def DetermineRunner(bbdir):
     '''Checks if the given directory is a buildslave or a master and returns the
@@ -543,7 +544,7 @@ def DetermineRunner(bbdir):
 
 
 def HandleCommandLine():
-    if len(sys.argv)>1 and sys.argv[1] == "--spawn":
+    if len(sys.argv) > 1 and sys.argv[1] == "--spawn":
         # Special command-line created by the service to execute the
         # child-process.
         # First arg is the handle to wait on

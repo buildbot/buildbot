@@ -19,22 +19,23 @@
 # but "the rest" is pretty minimal
 
 from buildbot.util import json
-    
+
+
 def getChanges(request, options=None):
         """
         Consumes a naive build notification (the default for now)
         basically, set POST variables to match commit object parameters:
         revision, revlink, comments, branch, who, files, links
-        
+
         files, links and properties will be de-json'd, the rest are interpreted as strings
         """
-        
-        def firstOrNothing( value ):
+
+        def firstOrNothing(value):
             """
             Small helper function to return the first value (if value is a list)
             or return the whole thing otherwise
             """
-            if ( type(value) == type([])):
+            if (isinstance(value, type([]))):
                 return value[0]
             else:
                 return value
@@ -44,37 +45,34 @@ def getChanges(request, options=None):
         # first, convert files, links and properties
         files = None
         if args.get('files'):
-            files = json.loads( args.get('files')[0] )
+            files = json.loads(args.get('files')[0])
         else:
             files = []
 
         properties = None
         if args.get('properties'):
-            properties = json.loads( args.get('properties')[0] )
+            properties = json.loads(args.get('properties')[0])
         else:
             properties = {}
-            
+
         revision = firstOrNothing(args.get('revision'))
-        when     = firstOrNothing(args.get('when'))
+        when = firstOrNothing(args.get('when'))
         if when is not None:
             when = float(when)
         author = firstOrNothing(args.get('author'))
         if not author:
             author = firstOrNothing(args.get('who'))
         comments = firstOrNothing(args.get('comments'))
-        isdir = firstOrNothing(args.get('isdir',0))
+        isdir = firstOrNothing(args.get('isdir', 0))
         branch = firstOrNothing(args.get('branch'))
         category = firstOrNothing(args.get('category'))
         revlink = firstOrNothing(args.get('revlink'))
         repository = firstOrNothing(args.get('repository'))
         project = firstOrNothing(args.get('project'))
-              
+
         chdict = dict(author=author, files=files, comments=comments,
-                isdir=isdir, revision=revision, when=when,
-                branch=branch, category=category, revlink=revlink,
-                properties=properties, repository=repository,
-                project=project)
-        return ([ chdict ], None)
-
-
-
+                      isdir=isdir, revision=revision, when=when,
+                      branch=branch, category=category, revlink=revlink,
+                      properties=properties, repository=repository,
+                      project=project)
+        return ([chdict], None)

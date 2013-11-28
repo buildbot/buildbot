@@ -13,18 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
-## Source step code for Monotone
+# Source step code for Monotone
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet import defer, reactor
 
-from buildbot.process import buildstep
-from buildbot.steps.source.base import Source
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
+from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS
+from buildbot.steps.source.base import Source
+
 
 class Monotone(Source):
+
     """ Class for Monotone with all smarts """
 
     name = 'monotone'
@@ -51,9 +54,9 @@ class Monotone(Source):
             errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
-        
+
         if self.mode == 'full':
-            if self.method == None:
+            if self.method is None:
                 self.method = 'copy'
             elif self.method not in self.possible_methods:
                 errors.append("Invalid method for mode == %s" % (self.mode))
@@ -72,6 +75,7 @@ class Monotone(Source):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkMonotone()
+
         def checkInstall(monotoneInstalled):
             if not monotoneInstalled:
                 raise BuildSlaveTooOldError("Monotone is not installed on slave")
@@ -79,6 +83,7 @@ class Monotone(Source):
         d.addCallback(checkInstall)
         d.addCallback(lambda _: self._checkDb())
         d.addCallback(lambda _: self.sourcedirIsPatched())
+
         def checkPatched(patched):
             if patched:
                 return self.clean()
@@ -119,7 +124,6 @@ class Monotone(Source):
         else:
             raise ValueError("Unknown method, check your configuration")
 
-
     @defer.inlineCallbacks
     def incremental(self):
         updatable = yield self._sourcedirIsUpdatable()
@@ -140,22 +144,24 @@ class Monotone(Source):
     def copy(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
                                                 'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout,})
+                                                'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
+
         def copy(_):
             cmd = buildstep.RemoteCommand('cpdir',
                                           {'fromdir': 'source',
-                                           'todir':'build',
+                                           'todir': 'build',
                                            'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout,})
+                                           'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
         d.addCallback(copy)
+
         def resetWorkdir(_):
             self.workdir = 'build'
             return 0
@@ -170,6 +176,7 @@ class Monotone(Source):
                                            timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluate(cmd):
             if cmd.rc != 0:
                 return False
@@ -188,7 +195,7 @@ class Monotone(Source):
             if len(stdout) == 0:
                 continue
             for filename in stdout.strip().split('\n'):
-                filename = self.workdir+'/'+str(filename)
+                filename = self.workdir + '/' + str(filename)
                 files.append(filename)
 
         if len(files) == 0:
@@ -258,14 +265,15 @@ class Monotone(Source):
             abandonOnFailure = True
 
         d = self._clone(abandonOnFailure)
+
         def _retry(res):
             if self.stopped or res == 0:
                 return res
             delay, repeats = self.retry
             if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds" 
-                    % (repeats, delay))
-                self.retry = (delay, repeats-1)
+                log.msg("Checkout failed, trying %d more times after %d seconds"
+                        % (repeats, delay))
+                self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self.runRmdir(self.workdir))
                 df.addCallback(lambda _: self.runRmdir(self.databasename))
@@ -288,7 +296,7 @@ class Monotone(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
                  abandonOnFailure=True, wkdir=None):
         if not command:
             raise ValueError("No command specified")
@@ -302,6 +310,7 @@ class Monotone(Source):
                                            decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
@@ -315,6 +324,7 @@ class Monotone(Source):
 
     def _checkDb(self):
         d = self._dovccmd(['mtn', 'db', 'info', '--db', self.database], collectStdout=True)
+
         def checkInfo(stdout):
             if stdout.find("does not exist") > 0:
                 log.msg("Database does not exist")
@@ -333,6 +343,7 @@ class Monotone(Source):
 
     def _sourcedirIsUpdatable(self):
         d = self.pathExists(self.build.path_module.join(self.workdir, '_MTN'))
+
         def cont(res):
             if res:
                 d.addCallback(lambda _: self.pathExists('db.mtn'))
@@ -343,10 +354,11 @@ class Monotone(Source):
 
     def finish(self, res):
         d = defer.succeed(res)
+
         def _gotResults(results):
             self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " % \
-                        (self.cmd))
+            log.msg("Closing log, sending result of the command %s " %
+                    (self.cmd))
             return results
         d.addCallback(_gotResults)
         d.addCallbacks(self.finished, self.checkDisconnect)

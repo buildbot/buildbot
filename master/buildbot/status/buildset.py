@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
 from buildbot import interfaces
 from buildbot.status.buildrequest import BuildRequestStatus
+from zope.interface import implements
+
 
 class BuildSetStatus:
     implements(interfaces.IBuildSetStatus)
@@ -44,18 +45,20 @@ class BuildSetStatus:
         # returns a Deferred; undocumented method that may be removed
         # without warning
         d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+
         def get_objects(brdicts):
             return dict([
                 (brd['buildername'], BuildRequestStatus(brd['buildername'],
-                                            brd['brid'], self.status))
-                for brd in brdicts ])
+                                                        brd['brid'], self.status))
+                for brd in brdicts])
         d.addCallback(get_objects)
         return d
 
     def getBuilderNames(self):
         d = self.master.db.buildrequests.getBuildRequests(bsid=self.id)
+
         def get_names(brdicts):
-            return sorted([ brd['buildername'] for brd in brdicts ])
+            return sorted([brd['buildername'] for brd in brdicts])
         d.addCallback(get_names)
         return d
 

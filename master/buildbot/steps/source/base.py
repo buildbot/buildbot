@@ -14,17 +14,20 @@
 # Copyright Buildbot Team Members
 
 
-import os
 import StringIO
+import os
 
-from twisted.python import log
+from buildbot.process import buildstep
 from buildbot.process.buildstep import LoggingBuildStep
-from buildbot.status.builder import SKIPPED, FAILURE
+from buildbot.status.builder import FAILURE
+from buildbot.status.builder import SKIPPED
 from buildbot.steps.slave import CompositeStepMixin
 from buildbot.steps.transfer import _FileReader
-from buildbot.process import buildstep
+from twisted.python import log
+
 
 class Source(LoggingBuildStep, CompositeStepMixin):
+
     """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
@@ -32,23 +35,22 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = LoggingBuildStep.renderables + [
-                     'description', 'descriptionDone', 'descriptionSuffix',
-                     'workdir' ]
+    renderables = ['description', 'descriptionDone', 'descriptionSuffix',
+                   'workdir']
 
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
-    descriptionSuffix = None # extra information to append to suffix
+    description = None  # set this to a list of short strings to override
+    descriptionDone = None  # alternate description when the step is complete
+    descriptionSuffix = None  # extra information to append to suffix
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
     flunkOnFailure = True
     notReally = False
 
-    branch = None # the default branch, should be set in __init__
+    branch = None  # the default branch, should be set in __init__
 
     def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
-                 timeout=20*60, retry=None, env=None, logEnviron=True,
+                 timeout=20 * 60, retry=None, env=None, logEnviron=True,
                  description=None, descriptionDone=None, descriptionSuffix=None,
                  codebase='', **kwargs):
         """
@@ -136,7 +138,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         if descriptionSuffix:
             self.descriptionSuffix = descriptionSuffix
         else:
-            self.descriptionSuffix = self.codebase or None # want None in lieu of ''
+            self.descriptionSuffix = self.codebase or None  # want None in lieu of ''
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
@@ -151,15 +153,15 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         if self.codebase != '':
             assert not isinstance(self.getProperty(name, None), str), \
-             "Sourcestep %s has a codebase, other sourcesteps don't" \
-             % self.name
+                "Sourcestep %s has a codebase, other sourcesteps don't" \
+                % self.name
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
             LoggingBuildStep.setProperty(self, name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
-             "Sourcestep %s does not have a codebase, other sourcesteps do" \
-             % self.name
+                "Sourcestep %s does not have a codebase, other sourcesteps do" \
+                % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
 
     def setStepStatus(self, step_status):
@@ -195,6 +197,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+
         def evaluateCommand(_):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
@@ -220,29 +223,31 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 'slavedest': filename,
                 'maxsize': None,
                 'reader': filereader,
-                'blocksize': 16*1024,
+                'blocksize': 16 * 1024,
                 'workdir': self.workdir,
-                'mode' : None
-                }
+                'mode': None
+            }
             cmd = buildstep.RemoteCommand('downloadFile', args)
             cmd.useLog(self.stdio_log, False)
             log.msg("Downloading file: %s" % (filename))
             d = self.runCommand(cmd)
+
             def evaluateCommand(_):
                 if cmd.didFail():
                     raise buildstep.BuildStepFailed()
                 return cmd.rc
-                
+
             d.addCallback(evaluateCommand)
             return d
 
         d = _downloadFile(diff, ".buildbot-diff")
-        d.addCallback(lambda _ : _downloadFile("patched\n", ".buildbot-patched"))
+        d.addCallback(lambda _: _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
         cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
-                                                'logEnviron':self.logEnviron})
+                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d.addCallback(lambda _: self.runCommand(cmd))
+
         def evaluateCommand(cmd):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
@@ -253,13 +258,13 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     def sourcedirIsPatched(self):
         d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
-        
+
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
             self.step_status.setText(["fake", self.name, "successful"])
             self.addCompleteLog("log",
-                                "Faked %s checkout/update 'successful'\n" \
+                                "Faked %s checkout/update 'successful'\n"
                                 % self.name)
             return SKIPPED
 
@@ -289,9 +294,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                     self.addCompleteLog("patch", patch[1])
             else:
                 log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
-                self.step_status.setText(["Codebase", '%s' % self.codebase ,"not", "in", "build" ])
+                self.step_status.setText(["Codebase", '%s' % self.codebase, "not", "in", "build"])
                 self.addCompleteLog("log",
-                                    "No sourcestamp found in build for codebase '%s'" \
+                                    "No sourcestamp found in build for codebase '%s'"
                                     % self.codebase)
                 self.finished(FAILURE)
                 return FAILURE
@@ -302,4 +307,3 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             patch = None
 
         self.startVC(branch, revision, patch)
-

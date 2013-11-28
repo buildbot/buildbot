@@ -20,17 +20,23 @@
 # relative to the top of the maildir (so it will look like "new/blahblah").
 
 import os
-from twisted.python import log, runtime
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
+
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.python import runtime
 dnotify = None
 try:
     import dnotify
 except:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
 
+
 class NoSuchMaildir(Exception):
     pass
+
 
 class MaildirService(service.MultiService):
     pollinterval = 10  # only used if we don't have DNotify
@@ -73,7 +79,6 @@ class MaildirService(service.MultiService):
             self.timerService.setServiceParent(self)
         self.poll()
 
-
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
 
@@ -87,7 +92,6 @@ class MaildirService(service.MultiService):
         # easier to just wait a second before yanking the message out of new/
 
         reactor.callLater(0.1, self.poll)
-
 
     def stopService(self):
         if self.dnotify:

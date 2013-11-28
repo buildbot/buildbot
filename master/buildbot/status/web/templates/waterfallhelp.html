@@ -103,6 +103,8 @@ the Categories you are interested in here.</p>
 
 <h2>Limiting the Builds that are Displayed</h2>
 
+<h3>Filter on commiters</h3>
+
 <p>By adding one or more <tt>committer=</tt> arguments, the display will be
 limited to showing builds that were started by the given committer.  If no
 <tt>committer=</tt> arguments are provided, all builds will be displayed.</p>
@@ -118,6 +120,29 @@ Erase the text from these "Show Committer:" boxes to remove that filter.
       <tr>
         <td>
           Show Committer: <input type="text" name="committer" value="{{ cn }}">
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+<h3>Filter on projects</h3>
+
+<p>By adding one or more <tt>project=</tt> arguments, the display
+will be limited to showing builds that were started for the given project.
+If no <tt>project=</tt> arguments are provided, all builds will be displayed.</p>
+
+<p>To view a Waterfall page with only a subset of Builds displayed, select
+the projects your are interested in here.</p>
+
+Erase the text from these "Show Project:" boxes to remove that filter.
+
+{% if projects %}
+  <table>
+    {% for cn in projects %}
+      <tr>
+        <td>
+          Show Project: <input type="text" name="project" value="{{ cn }}">
         </td>
       </tr>
     {% endfor %}

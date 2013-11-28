@@ -16,6 +16,7 @@
 import calendar
 
 import buildbot.status.web.change_hook as change_hook
+
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.util import compat
 
@@ -62,6 +63,7 @@ gitJsonPayload = r"""
 
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
+
     def setUp(self):
         dialects = {'gitorious': True}
         self.changeHook = change_hook.ChangeHookResource(dialects=dialects)

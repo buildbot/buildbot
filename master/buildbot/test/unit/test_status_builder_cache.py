@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 import os
+
+from buildbot.status import builder
+from buildbot.status import master
+from buildbot.test.fake import fakemaster
 from mock import Mock
 from twisted.trial import unittest
-from buildbot.status import builder, master
-from buildbot.test.fake import fakemaster
+
 
 class TestBuildStatus(unittest.TestCase):
 
@@ -27,7 +30,7 @@ class TestBuildStatus(unittest.TestCase):
     def setupBuilder(self, buildername, category=None, description=None):
         m = fakemaster.make_master()
         b = builder.BuilderStatus(buildername=buildername, category=category,
-                                    master=m, description=description)
+                                  master=m, description=description)
         # Awkwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())
         os.mkdir(b.basedir)
@@ -69,5 +72,5 @@ class TestBuildStatus(unittest.TestCase):
             self.assertEqual(build2.number, build.number)
             self.assertEqual(build2.getProperty('propkey'),
                              'propval%d' % build.number)
-            self.assertEqual(b.buildCache.hits, hits+1)
+            self.assertEqual(b.buildCache.hits, hits + 1)
             hits = hits + 1

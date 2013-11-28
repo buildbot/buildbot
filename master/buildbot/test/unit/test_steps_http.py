@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SUCCESS
+from buildbot.steps import http
+from buildbot.test.util import steps
 from twisted.internet import reactor
 from twisted.trial import unittest
-from twisted.web.server import Site
 from twisted.web.resource import Resource
-from buildbot.test.util import steps
-from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.steps import http
+from twisted.web.server import Site
 try:
     import txrequests
     assert txrequests
@@ -30,8 +31,11 @@ except ImportError:
 
 # We use twisted's internal webserver instead of mocking requests
 # to be sure we use the correct requests interfaces
+
+
 class TestPage(Resource):
     isLeaf = True
+
     def render_GET(self, request):
         if request.uri == "/404":
             request.setResponseCode(404)
@@ -40,9 +44,11 @@ class TestPage(Resource):
             return "".join(request.requestHeaders.getRawHeaders("X-Test"))
         return "OK"
 
+
 class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
 
-    timeout = 3 # those tests should not run long
+    timeout = 3  # those tests should not run long
+
     def setUp(self):
         if txrequests is None:
             raise unittest.SkipTest("Need to install txrequests to test http steps")
@@ -59,7 +65,7 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         http.closeSession()
         d = self.listener.stopListening()
-        d.addBoth(lambda x:self.tearDownBuildStep())
+        d.addBoth(lambda x: self.tearDownBuildStep())
         return d
 
     def getURL(self, path=""):

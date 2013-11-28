@@ -15,12 +15,15 @@
 
 import re
 
+
 class RevlinkMatch(object):
+
     def __init__(self, repo_urls, revlink):
         if isinstance(repo_urls, str) or isinstance(repo_urls, unicode):
-            repo_urls = [ repo_urls ]
+            repo_urls = [repo_urls]
         self.repo_urls = map(re.compile, repo_urls)
         self.revlink = revlink
+
     def __call__(self, rev, repo):
         for url in self.repo_urls:
             m = url.match(repo)
@@ -28,37 +31,42 @@ class RevlinkMatch(object):
                 return m.expand(self.revlink) % rev
 
 GithubRevlink = RevlinkMatch(
-        repo_urls = [ r'https://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
-            r'git://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
-            r'git@github.com:([^/]*)/([^/]*?)(?:\.git)?$',
-            r'ssh://git@github.com/([^/]*)/([^/]*?)(?:\.git)?$'
-            ],
-        revlink = r'https://github.com/\1/\2/commit/%s')
+    repo_urls=[r'https://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
+               r'git://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
+               r'git@github.com:([^/]*)/([^/]*?)(?:\.git)?$',
+               r'ssh://git@github.com/([^/]*)/([^/]*?)(?:\.git)?$'
+               ],
+    revlink=r'https://github.com/\1/\2/commit/%s')
+
 
 class GitwebMatch(RevlinkMatch):
+
     def __init__(self, repo_urls, revlink):
-        RevlinkMatch.__init__(self, repo_urls = repo_urls, revlink = revlink + r'?p=\g<repo>;a=commit;h=%s')
+        RevlinkMatch.__init__(self, repo_urls=repo_urls, revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
 
 SourceforgeGitRevlink = GitwebMatch(
-        repo_urls = [ r'^git://([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
-            r'[^@]*@([^.]*).git.sourceforge.net:gitroot/(?P<repo>.*)$',
-            r'ssh://(?:[^@]*@)?([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
-            ],
-        revlink = r'http://\1.git.sourceforge.net/git/gitweb.cgi')
+    repo_urls=[r'^git://([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
+               r'[^@]*@([^.]*).git.sourceforge.net:gitroot/(?P<repo>.*)$',
+               r'ssh://(?:[^@]*@)?([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
+               ],
+    revlink=r'http://\1.git.sourceforge.net/git/gitweb.cgi')
 
 # SourceForge recently upgraded to another platform called Allura
 # See introduction: https://sourceforge.net/p/forge/documentation/Classic%20vs%20New%20SourceForge%20projects/
 # And as reference: https://sourceforge.net/p/forge/community-docs/SVN%20and%20project%20upgrades/
 SourceforgeGitRevlink_AlluraPlatform = RevlinkMatch(
-        repo_urls = [ r'git://git.code.sf.net/p/(?P<repo>.*)$',
-            r'http://git.code.sf.net/p/(?P<repo>.*)$',
-            r'ssh://(?:[^@]*@)?git.code.sf.net/p/(?P<repo>.*)$'
-            ],
-        revlink = r'https://sourceforge.net/p/\1/ci/%s/')
+    repo_urls=[r'git://git.code.sf.net/p/(?P<repo>.*)$',
+               r'http://git.code.sf.net/p/(?P<repo>.*)$',
+               r'ssh://(?:[^@]*@)?git.code.sf.net/p/(?P<repo>.*)$'
+               ],
+    revlink=r'https://sourceforge.net/p/\1/ci/%s/')
+
 
 class RevlinkMultiplexer(object):
+
     def __init__(self, *revlinks):
         self.revlinks = revlinks
+
     def __call__(self, rev, repo):
         for revlink in self.revlinks:
             url = revlink(rev, repo)
@@ -66,5 +74,5 @@ class RevlinkMultiplexer(object):
                 return url
 
 default_revlink_matcher = RevlinkMultiplexer(GithubRevlink,
-        SourceforgeGitRevlink,
-        SourceforgeGitRevlink_AlluraPlatform)
+                                             SourceforgeGitRevlink,
+                                             SourceforgeGitRevlink_AlluraPlatform)

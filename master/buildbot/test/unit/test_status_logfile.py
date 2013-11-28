@@ -15,21 +15,25 @@
 
 from __future__ import with_statement
 
-import os
-import cStringIO, cPickle
+import cPickle
+import cStringIO
 import mock
-from twisted.trial import unittest
-from twisted.internet import defer
+import os
+
+from buildbot import config
 from buildbot.status import logfile
 from buildbot.test.util import dirs
-from buildbot import config
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class TestLogFileProducer(unittest.TestCase):
+
     def make_static_logfile(self, contents):
         "make a fake logfile with the given contents"
         lf = mock.Mock()
-        lf.getFile = lambda : cStringIO.StringIO(contents)
-        lf.waitUntilFinished = lambda : defer.succeed(None) # already finished
+        lf.getFile = lambda: cStringIO.StringIO(contents)
+        lf.waitUntilFinished = lambda: defer.succeed(None)  # already finished
         lf.runEntries = []
         return lf
 
@@ -37,16 +41,17 @@ class TestLogFileProducer(unittest.TestCase):
         lf = self.make_static_logfile("13:0hello world!,")
         lfp = logfile.LogFileProducer(lf, mock.Mock())
         chunks = list(lfp.getChunks())
-        self.assertEqual(chunks, [ (0, 'hello world!') ])
+        self.assertEqual(chunks, [(0, 'hello world!')])
 
     def test_getChunks_static_multichannel(self):
         lf = self.make_static_logfile("2:0a,3:1xx,2:0c,")
         lfp = logfile.LogFileProducer(lf, mock.Mock())
         chunks = list(lfp.getChunks())
-        self.assertEqual(chunks, [ (0, 'a'), (1, 'xx'), (0, 'c') ])
+        self.assertEqual(chunks, [(0, 'a'), (1, 'xx'), (0, 'c')])
 
     # Remainder of LogFileProduer has a wacky interface that's not
     # well-defined, so it's not tested yet
+
 
 class TestLogFile(unittest.TestCase, dirs.DirsMixin):
 
@@ -63,7 +68,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
             try:
                 self.logfile.openfile.close()
             except:
-                pass # oh well, we tried
+                pass  # oh well, we tried
         self.tearDownDirs()
 
     def pickle_and_restore(self):
@@ -79,14 +84,14 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
             try:
                 self.logfile.openfile.close()
             except:
-                pass # oh well, we tried
+                pass  # oh well, we tried
         os.unlink(os.path.join('basedir', '123-stdio'))
 
     # tests
 
     def test_getFilename(self):
         self.assertEqual(self.logfile.getFilename(),
-                os.path.abspath(os.path.join('basedir', '123-stdio')))
+                         os.path.abspath(os.path.join('basedir', '123-stdio')))
 
     def test_hasContents_yes(self):
         self.assertTrue(self.logfile.hasContents())
@@ -130,8 +135,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_waitUntilFinished(self):
         state = []
         d = self.logfile.waitUntilFinished()
-        d.addCallback(lambda _ : state.append('called'))
-        self.assertEqual(state, []) # not called yet
+        d.addCallback(lambda _: state.append('called'))
+        self.assertEqual(state, [])  # not called yet
         self.logfile.finish()
         self.assertEqual(state, ['called'])
 
@@ -166,9 +171,10 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         # ..and compressed
         self.config.logCompressionMethod = 'bz2'
         d = self.logfile.compressLog()
+
         def check(_):
             self.assertTrue(
-                    os.path.exists(os.path.join(self.basedir, '123-stdio.bz2')))
+                os.path.exists(os.path.join(self.basedir, '123-stdio.bz2')))
             fp = self.logfile.getFile()
             fp.seek(0, 0)
             self.assertEqual(fp.read(), '13:0hello, world,')
@@ -189,7 +195,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
 
     def test_addEntry_run(self):
         # test that addEntry is calling merge() correctly
-        return self.do_test_addEntry([ (0, c) for c in 'hello, world' ],
+        return self.do_test_addEntry([(0, c) for c in 'hello, world'],
                                      '13:0hello, world,')
 
     def test_addEntry_multichan(self):
@@ -198,97 +204,97 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
 
     def test_addEntry_length(self):
         self.do_test_addEntry([(1, 'x'), (2, 'y')],
-                                     '2:1x,2:2y,')
+                              '2:1x,2:2y,')
         self.assertEqual(self.logfile.length, 2)
 
     def test_addEntry_unicode(self):
         return self.do_test_addEntry([(1, u'\N{SNOWMAN}')],
-                                     '4:1\xe2\x98\x83,') # utf-8 encoded
+                                     '4:1\xe2\x98\x83,')  # utf-8 encoded
 
     def test_addEntry_logMaxSize(self):
-        self.config.logMaxSize = 10 # not evenly divisible by chunk size
-        return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
-            '11:0abcdefabcd,'
-            '64:2\nOutput exceeded 10 bytes, remaining output has been '
-            'truncated\n,')
+        self.config.logMaxSize = 10  # not evenly divisible by chunk size
+        return self.do_test_addEntry([(0, 'abcdef')] * 10,
+                                     '11:0abcdefabcd,'
+                                     '64:2\nOutput exceeded 10 bytes, remaining output has been '
+                                     'truncated\n,')
 
     def test_addEntry_logMaxSize_ignores_header(self):
         self.config.logMaxSize = 10
-        return self.do_test_addEntry([(logfile.HEADER, 'abcdef')] * 10 ,
-            '61:2' + 'abcdef'*10 + ',')
+        return self.do_test_addEntry([(logfile.HEADER, 'abcdef')] * 10,
+                                     '61:2' + 'abcdef' * 10 + ',')
 
     def test_addEntry_logMaxSize_divisor(self):
-        self.config.logMaxSize = 12 # evenly divisible by chunk size
-        return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
-            '13:0abcdefabcdef,'
-            '64:2\nOutput exceeded 12 bytes, remaining output has been '
-            'truncated\n,')
+        self.config.logMaxSize = 12  # evenly divisible by chunk size
+        return self.do_test_addEntry([(0, 'abcdef')] * 10,
+                                     '13:0abcdefabcdef,'
+                                     '64:2\nOutput exceeded 12 bytes, remaining output has been '
+                                     'truncated\n,')
 
     def test_addEntry_logMaxTailSize(self):
         self.config.logMaxSize = 10
         self.config.logMaxTailSize = 14
-        return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
-            '11:0abcdefabcd,'
-            '64:2\nOutput exceeded 10 bytes, remaining output has been '
-            'truncated\n,'
-            # NOTE: this gets too few bytes; this is OK for now, and
-            # easier than subdividing chunks in the tail tracking
-            '31:2\nFinal 12 bytes follow below:\n,'
-            '13:0abcdefabcdef,')
+        return self.do_test_addEntry([(0, 'abcdef')] * 10,
+                                     '11:0abcdefabcd,'
+                                     '64:2\nOutput exceeded 10 bytes, remaining output has been '
+                                     'truncated\n,'
+                                     # NOTE: this gets too few bytes; this is OK for now, and
+                                     # easier than subdividing chunks in the tail tracking
+                                     '31:2\nFinal 12 bytes follow below:\n,'
+                                     '13:0abcdefabcdef,')
 
     def test_addEntry_logMaxTailSize_divisor(self):
         self.config.logMaxSize = 10
         self.config.logMaxTailSize = 12
-        return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
-            '11:0abcdefabcd,'
-            '64:2\nOutput exceeded 10 bytes, remaining output has been '
-            'truncated\n,'
-            '31:2\nFinal 12 bytes follow below:\n,'
-            '13:0abcdefabcdef,')
+        return self.do_test_addEntry([(0, 'abcdef')] * 10,
+                                     '11:0abcdefabcd,'
+                                     '64:2\nOutput exceeded 10 bytes, remaining output has been '
+                                     'truncated\n,'
+                                     '31:2\nFinal 12 bytes follow below:\n,'
+                                     '13:0abcdefabcdef,')
 
     # TODO: test that head and tail don't discriminate between stderr and stdout
 
     def test_addEntry_chunkSize(self):
         self.logfile.chunkSize = 11
-        return self.do_test_addEntry([(0, 'abcdef')] * 10 ,
-            # note that this doesn't re-chunk everything; just shrinks
-            # chunks that will exceed the maximum size
-            '12:0abcdefabcde,2:0f,' * 5)
+        return self.do_test_addEntry([(0, 'abcdef')] * 10,
+                                     # note that this doesn't re-chunk everything; just shrinks
+                                     # chunks that will exceed the maximum size
+                                     '12:0abcdefabcde,2:0f,' * 5)
 
     def test_addEntry_big_channel(self):
         # channels larger than one digit are not allowed
         self.assertRaises(AssertionError,
-                lambda : self.do_test_addEntry([(9999, 'x')], ''))
+                          lambda: self.do_test_addEntry([(9999, 'x')], ''))
 
     def test_addEntry_finished(self):
         self.logfile.finish()
         self.assertRaises(AssertionError,
-                lambda : self.do_test_addEntry([(0, 'x')], ''))
+                          lambda: self.do_test_addEntry([(0, 'x')], ''))
 
     def test_addEntry_merge_exception(self):
         def fail():
             raise RuntimeError("FAIL")
         self.patch(self.logfile, '_merge', fail)
         self.assertRaises(RuntimeError,
-                lambda : self.do_test_addEntry([(0, 'x')], ''))
+                          lambda: self.do_test_addEntry([(0, 'x')], ''))
 
     def test_addEntry_watchers(self):
         watcher = mock.Mock(name='watcher')
         self.logfile.watchers.append(watcher)
         self.do_test_addEntry([(0, 'x')], '2:0x,')
         watcher.logChunk.assert_called_with(self.build_step_status.build,
-                self.build_step_status, self.logfile, 0, 'x')
+                                            self.build_step_status, self.logfile, 0, 'x')
 
     def test_addEntry_watchers_logMaxSize(self):
         watcher = mock.Mock(name='watcher')
         self.logfile.watchers.append(watcher)
         self.config.logMaxSize = 10
         self.do_test_addEntry([(0, 'x')] * 15,
-                '11:0xxxxxxxxxx,'
-                '64:2\nOutput exceeded 10 bytes, remaining output has been '
-                'truncated\n,')
-        logChunk_chunks = [ tuple(args[0][3:])
-                            for args in watcher.logChunk.call_args_list ]
+                              '11:0xxxxxxxxxx,'
+                              '64:2\nOutput exceeded 10 bytes, remaining output has been '
+                              'truncated\n,')
+        logChunk_chunks = [tuple(args[0][3:])
+                           for args in watcher.logChunk.call_args_list]
         self.assertEqual(logChunk_chunks, [(0, 'x')] * 15)
 
     def test_addStdout(self):
@@ -313,6 +319,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.openfile.write('xyz' * 1000)
         self.logfile.finish()
         d = self.logfile.compressLog()
+
         def check(_):
             st = os.stat(self.logfile.getFilename() + ext)
             if expect_comp:
@@ -333,4 +340,3 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_compressLog_none(self):
         self.config.logCompressionMethod = None
         return self.do_test_compressLog('', expect_comp=False)
-

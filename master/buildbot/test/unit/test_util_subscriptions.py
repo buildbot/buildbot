@@ -15,8 +15,9 @@
 
 from twisted.trial import unittest
 
-from buildbot.util import subscription
 from buildbot.test.util import compat
+from buildbot.util import subscription
+
 
 class subscriptions(unittest.TestCase):
 
@@ -28,6 +29,7 @@ class subscriptions(unittest.TestCase):
 
     def test_subscribe_unsubscribe(self):
         state = []
+
         def cb(*args, **kwargs):
             state.append((args, kwargs))
 
@@ -38,7 +40,7 @@ class subscriptions(unittest.TestCase):
 
         # deliver
         self.subpt.deliver(1, 2, a=3, b=4)
-        self.assertEqual(state, [((1,2), dict(a=3, b=4))])
+        self.assertEqual(state, [((1, 2), dict(a=3, b=4))])
         state.pop()
 
         # unsubscribe

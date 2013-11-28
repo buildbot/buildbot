@@ -15,16 +15,23 @@
 
 import re
 import textwrap
-from twisted.trial import unittest
-from buildbot.steps import shell
-from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
-from buildbot.status.results import EXCEPTION
-from buildbot.test.util import steps, compat
-from buildbot.test.util import config as configmixin
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
-from buildbot.test.fake.remotecommand import ExpectRemoteRef
+
 from buildbot import config
 from buildbot.process import properties
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.steps import shell
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectRemoteRef
+from buildbot.test.fake.remotecommand import ExpectShell
+from buildbot.test.util import compat
+from buildbot.test.util import config as configmixin
+from buildbot.test.util import steps
+from twisted.trial import unittest
+
 
 class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
 
@@ -36,22 +43,22 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_doStepIf_False(self):
         self.setupStep(
-                shell.ShellCommand(command="echo hello", doStepIf=False))
+            shell.ShellCommand(command="echo hello", doStepIf=False))
         self.expectOutcome(result=SKIPPED,
-                status_text=["'echo", "hello'", "skipped"])
+                           status_text=["'echo", "hello'", "skipped"])
         return self.runStep()
 
     def test_constructor_args_strings(self):
         step = shell.ShellCommand(workdir='build', command="echo hello",
-                usePTY=False, description="echoing",
-                descriptionDone="echoed")
+                                  usePTY=False, description="echoing",
+                                  descriptionDone="echoed")
         self.assertEqual(step.description, ['echoing'])
         self.assertEqual(step.descriptionDone, ['echoed'])
 
     def test_constructor_args_lists(self):
         step = shell.ShellCommand(workdir='build', command="echo hello",
-                usePTY=False, description=["echoing"],
-                descriptionDone=["echoed"])
+                                  usePTY=False, description=["echoing"],
+                                  descriptionDone=["echoed"])
         self.assertEqual(step.description, ['echoing'])
         self.assertEqual(step.descriptionDone, ['echoed'])
 
@@ -59,7 +66,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         # this is an ugly way to define an API, but for now check that
         # the RemoteCommand arguments are properly passed on
         step = shell.ShellCommand(workdir='build', command="echo hello",
-                want_stdout=0, logEnviron=False)
+                                  want_stdout=0, logEnviron=False)
         self.assertEqual(step.remote_kwargs, dict(want_stdout=0,
                          logEnviron=False, workdir='build',
                          usePTY='slave-config'))
@@ -67,81 +74,81 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
         self.assertRaisesConfigError(
-                    "Invalid argument(s) passed to RemoteShellCommand: ",
-                    lambda: shell.ShellCommand('build', "echo Hello World",
-                            wrongArg1=1, wrongArg2='two'))
+            "Invalid argument(s) passed to RemoteShellCommand: ",
+            lambda: shell.ShellCommand('build', "echo Hello World",
+                                       wrongArg1=1, wrongArg2='two'))
 
     def test_describe_no_command(self):
         step = shell.ShellCommand(workdir='build')
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???'],)*2)
+                         (['???'],) * 2)
 
     def test_describe_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
         step = shell.ShellCommand(workdir='build', command=' ')
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???'],)*2)
+                         (['???'],) * 2)
 
     def test_describe_from_short_command(self):
         step = shell.ShellCommand(workdir='build', command="true")
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'true'"],)*2)
+                         (["'true'"],) * 2)
 
     def test_describe_from_short_command_list(self):
         step = shell.ShellCommand(workdir='build', command=["true"])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'true'"],)*2)
+                         (["'true'"],) * 2)
 
     def test_describe_from_med_command(self):
         step = shell.ShellCommand(command="echo hello")
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'echo", "hello'"],)*2)
+                         (["'echo", "hello'"],) * 2)
 
     def test_describe_from_med_command_list(self):
         step = shell.ShellCommand(command=["echo", "hello"])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'echo", "hello'"],)*2)
+                         (["'echo", "hello'"],) * 2)
 
     def test_describe_from_long_command(self):
         step = shell.ShellCommand(command="this is a long command")
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_long_command_list(self):
         step = shell.ShellCommand(command="this is a long command".split())
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list(self):
         step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_tuples(self):
         step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list_empty(self):
         step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list_deep(self):
         step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'this", "is", "...'"],)*2)
+                         (["'this", "is", "...'"],) * 2)
 
     def test_describe_custom(self):
         step = shell.ShellCommand(command="echo hello",
-                        description=["echoing"], descriptionDone=["echoed"])
+                                  description=["echoing"], descriptionDone=["echoed"])
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
 
     def test_describe_with_suffix(self):
         step = shell.ShellCommand(command="echo hello", descriptionSuffix="suffix")
         self.assertEqual((step.describe(), step.describe(done=True)),
-                        (["'echo", "hello'", 'suffix'],)*2)
+                         (["'echo", "hello'", 'suffix'],) * 2)
 
     def test_describe_custom_with_suffix(self):
         step = shell.ShellCommand(command="echo hello",
@@ -153,33 +160,37 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_describe_no_command_with_suffix(self):
         step = shell.ShellCommand(workdir='build', descriptionSuffix="suffix")
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???', 'suffix'],)*2)
+                         (['???', 'suffix'],) * 2)
 
     def test_describe_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???'],)*2)
+                         (['???'],) * 2)
+
+    def test_describe_unrendered_custom_new_style_class_rendarable(self):
+        step = shell.ShellCommand(command=object())
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],) * 2)
+
+    def test_describe_unrendered_custom_old_style_class_rendarable(self):
+        class C:
+            pass
+        step = shell.ShellCommand(command=C())
+        self.assertEqual((step.describe(), step.describe(done=True)),
+                         (['???'],) * 2)
 
     def test_describe_unrendered_WithProperties_list(self):
         step = shell.ShellCommand(
-                command=[ 'x', properties.WithProperties(''), 'y' ])
+            command=['x', properties.WithProperties(''), 'y'])
         self.assertEqual((step.describe(), step.describe(done=True)),
-                         (["'x", "y'"],)*2)
-
-    @compat.usesFlushLoggedErrors
-    def test_describe_fail(self):
-        step = shell.ShellCommand(command=object())
-        self.assertEqual((step.describe(), step.describe(done=True)),
-                         (['???'],)*2)
-        # (describe is called twice, so two exceptions)
-        self.assertEqual(len(self.flushLoggedErrors(TypeError)), 2)
+                         (["'x", "y'"],) * 2)
 
     def test_run_simple(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build', command="echo hello"))
+            shell.ShellCommand(workdir='build', command="echo hello"))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                         usePTY="slave-config")
+                        usePTY="slave-config")
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
@@ -187,8 +198,8 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_run_list(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build',
-                    command=['trial', '-b', '-B', 'buildbot.test']))
+            shell.ShellCommand(workdir='build',
+                               command=['trial', '-b', '-B', 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'],
@@ -196,74 +207,74 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["'trial", "-b", "...'"])
+                           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_nested_description(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build',
-                         command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
-                         description=properties.FlattenList(['test', ['done']])))
+            shell.ShellCommand(workdir='build',
+                               command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
+                               description=properties.FlattenList(['test', ['done']])))
         self.expectCommands(
             ExpectShell(workdir='build',
-                         command=['trial', '-b', '-B', 'buildbot.test'],
-                         usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'],
+                        usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
-           status_text=['test', 'done'])
+        self.expectOutcome(result=SUCCESS,
+                           status_text=['test', 'done'])
         return self.runStep()
 
     def test_run_nested_command(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build',
-                         command=['trial', ['-b', '-B'], 'buildbot.test']))
+            shell.ShellCommand(workdir='build',
+                               command=['trial', ['-b', '-B'], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                         command=['trial', '-b', '-B', 'buildbot.test'],
-                         usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'],
+                        usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
-           status_text=["'trial", "-b", "...'"])
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_nested_deeply_command(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build',
-                         command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
+            shell.ShellCommand(workdir='build',
+                               command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                         command=['trial', '-b', '-B', 'buildbot.test'],
-                         usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'],
+                        usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
-           status_text=["'trial", "-b", "...'"])
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_nested_empty_command(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build',
-                         command=['trial', [], '-b', [], 'buildbot.test']))
+            shell.ShellCommand(workdir='build',
+                               command=['trial', [], '-b', [], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                         command=['trial', '-b', 'buildbot.test'],
-                         usePTY="slave-config")
+                        command=['trial', '-b', 'buildbot.test'],
+                        usePTY="slave-config")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, 
-           status_text=["'trial", "-b", "...'"])
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["'trial", "-b", "...'"])
         return self.runStep()
 
     def test_run_env(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build', command="echo hello"),
-                slave_env=dict(DEF='HERE'))
+            shell.ShellCommand(workdir='build', command="echo hello"),
+            slave_env=dict(DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                         usePTY="slave-config",
-                         env=dict(DEF='HERE'))
+                        usePTY="slave-config",
+                        env=dict(DEF='HERE'))
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
@@ -271,13 +282,13 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_run_env_override(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build', env={'ABC':'123'},
-                                   command="echo hello"),
-                slave_env=dict(ABC='XXX', DEF='HERE'))
+            shell.ShellCommand(workdir='build', env={'ABC': '123'},
+                               command="echo hello"),
+            slave_env=dict(ABC='XXX', DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                         usePTY="slave-config",
-                         env=dict(ABC='123', DEF='HERE'))
+                        usePTY="slave-config",
+                        env=dict(ABC='123', DEF='HERE'))
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
@@ -285,11 +296,11 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_run_usePTY(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build', command="echo hello",
-                                   usePTY=False))
+            shell.ShellCommand(workdir='build', command="echo hello",
+                               usePTY=False))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                         usePTY=False)
+                        usePTY=False)
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
@@ -297,9 +308,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_run_usePTY_old_slave(self):
         self.setupStep(
-                shell.ShellCommand(workdir='build', command="echo hello",
-                                   usePTY=True),
-                slave_version=dict(shell='1.1'))
+            shell.ShellCommand(workdir='build', command="echo hello",
+                               usePTY=True),
+            slave_version=dict(shell='1.1'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
             + 0
@@ -307,24 +318,23 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.expectOutcome(result=SUCCESS, status_text=["'echo", "hello'"])
         return self.runStep()
 
-    def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text = ["warnings"]):
+    def test_run_decodeRC(self, rc=1, results=WARNINGS, extra_text=["warnings"]):
         self.setupStep(
-                shell.ShellCommand(workdir='build', command="echo hello",
-                decodeRC={1:WARNINGS}))
+            shell.ShellCommand(workdir='build', command="echo hello",
+                               decodeRC={1: WARNINGS}))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                         usePTY="slave-config")
+                        usePTY="slave-config")
             + rc
         )
-        self.expectOutcome(result=results, status_text=["'echo", "hello'"]+extra_text)
+        self.expectOutcome(result=results, status_text=["'echo", "hello'"] + extra_text)
         return self.runStep()
 
     def test_run_decodeRC_defaults(self):
-        return  self.test_run_decodeRC(2, FAILURE,extra_text=["failed"])
+        return self.test_run_decodeRC(2, FAILURE, extra_text=["failed"])
 
     def test_run_decodeRC_defaults_0_is_failure(self):
-        return  self.test_run_decodeRC(0, FAILURE,extra_text=["failed"])
-
+        return self.test_run_decodeRC(0, FAILURE, extra_text=["failed"])
 
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
@@ -344,7 +354,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["treesize", "9292 KiB"])
+                           status_text=["treesize", "9292 KiB"])
         self.expectProperty('tree-size-KiB', 9292)
         return self.runStep()
 
@@ -357,7 +367,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=WARNINGS,
-                status_text=["treesize", "unknown"])
+                           status_text=["treesize", "unknown"])
         return self.runStep()
 
     def test_run_failed(self):
@@ -369,8 +379,9 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                status_text=["treesize", "unknown"])
+                           status_text=["treesize", "unknown"])
         return self.runStep()
+
 
 class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -381,8 +392,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_constructor_conflict(self):
-        self.assertRaises(config.ConfigErrors, lambda :
-                shell.SetPropertyFromCommand(property='foo', extract_fn=lambda : None))
+        self.assertRaises(config.ConfigErrors, lambda:
+                          shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None))
 
     def test_run_property(self):
         self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd"))
@@ -393,14 +404,14 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["property 'res' set"])
-        self.expectProperty("res", "abcdef") # note: stripped
+                           status_text=["property 'res' set"])
+        self.expectProperty("res", "abcdef")  # note: stripped
         self.expectLogfile('property changes', r"res: 'abcdef'")
         return self.runStep()
 
     def test_run_property_no_strip(self):
         self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd",
-                                         strip=False))
+                                                    strip=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
@@ -408,7 +419,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["property 'res' set"])
+                           status_text=["property 'res' set"])
         self.expectProperty("res", "\n\nabcdef\n")
         self.expectLogfile('property changes', r"res: '\n\nabcdef\n'")
         return self.runStep()
@@ -422,7 +433,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                status_text=["'blarg'", "failed"])
+                           status_text=["'blarg'", "failed"])
         self.expectNoProperty("res")
         return self.runStep()
 
@@ -440,7 +451,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["2 properties set"])
+                           status_text=["2 properties set"])
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         self.expectProperty("a", 1)
         self.expectProperty("b", 2)
@@ -458,7 +469,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway
         self.expectOutcome(result=FAILURE,
-                status_text=["2 properties set"])
+                           status_text=["2 properties set"])
         self.expectLogfile('property changes', 'a: 1\nb: 2')
         return self.runStep()
 
@@ -474,7 +485,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=FAILURE,
-                status_text=["'cmd'", "failed"])
+                           status_text=["'cmd'", "failed"])
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
@@ -489,13 +500,15 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
-                status_text=["setproperty", "exception"])
+                           status_text=["setproperty", "exception"])
         d = self.runStep()
-        d.addCallback(lambda _ :
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+        d.addCallback(lambda _:
+                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
 
+
 class SetPropertyDeprecation(unittest.TestCase):
+
     """
     Tests for L{shell.SetProperty}
     """
@@ -509,9 +522,9 @@ class SetPropertyDeprecation(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertIdentical(warnings[0]['category'], DeprecationWarning)
         self.assertEqual(warnings[0]['message'],
-                "buildbot.steps.shell.SetProperty was deprecated in Buildbot 0.8.8: "
-                "It has been renamed to SetPropertyFromCommand"
-                )
+                         "buildbot.steps.shell.SetProperty was deprecated in Buildbot 0.8.8: "
+                         "It has been renamed to SetPropertyFromCommand"
+                         )
 
 
 class Configure(unittest.TestCase):
@@ -520,6 +533,7 @@ class Configure(unittest.TestCase):
         # nothing too exciting here, but at least make sure the class is present
         step = shell.Configure()
         self.assertEqual(step.command, ['./configure'])
+
 
 class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -531,7 +545,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_no_warnings(self):
         self.setupStep(shell.WarningCountingShellCommand(workdir='w',
-                                    command=['make']))
+                                                         command=['make']))
         self.expectCommands(
             ExpectShell(workdir='w', usePTY='slave-config',
                         command=["make"])
@@ -548,7 +562,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=["make"])
             + ExpectShell.log('stdio',
-                    stdout='normal: foo\nwarning: blarg!\nalso normal')
+                              stdout='normal: foo\nwarning: blarg!\nalso normal')
             + 0
         )
         self.expectOutcome(result=WARNINGS, status_text=["'make'", "warnings"])
@@ -558,12 +572,12 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_custom_pattern(self):
         self.setupStep(shell.WarningCountingShellCommand(command=['make'],
-                            warningPattern=r"scary:.*"))
+                                                         warningPattern=r"scary:.*"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=["make"])
             + ExpectShell.log('stdio',
-                stdout='scary: foo\nwarning: bar\nscary: bar')
+                              stdout='scary: foo\nwarning: bar\nscary: bar')
             + 0
         )
         self.expectOutcome(result=WARNINGS, status_text=["'make'", "warnings"])
@@ -573,7 +587,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_maxWarnCount(self):
         self.setupStep(shell.WarningCountingShellCommand(command=['make'],
-            maxWarnCount=9))
+                                                         maxWarnCount=9))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=["make"])
@@ -598,8 +612,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def do_test_suppressions(self, step, supps_file='', stdout='',
-                                exp_warning_count=0, exp_warning_log='',
-                                exp_exception=False):
+                             exp_warning_count=0, exp_warning_log='',
+                             exp_exception=False):
         self.setupStep(step)
 
         # Invoke the expected callbacks for the suppression file upload.  Note
@@ -613,8 +627,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             # step will first get the remote suppressions file
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                            slavesrc='supps', workdir='wkdir',
-                            writer=ExpectRemoteRef(shell.StringFileWriter)))
+                                      slavesrc='supps', workdir='wkdir',
+                                      writer=ExpectRemoteRef(shell.StringFileWriter)))
             + Expect.behavior(upload_behavior),
 
             # and then run the command
@@ -625,22 +639,22 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
-                                status_text=["shell", "exception"])
+                               status_text=["shell", "exception"])
         else:
             if exp_warning_count != 0:
                 self.expectOutcome(result=WARNINGS,
-                                status_text=["'make'", "warnings"])
+                                   status_text=["'make'", "warnings"])
                 self.expectLogfile("warnings (%d)" % exp_warning_count,
-                                exp_warning_log)
+                                   exp_warning_log)
             else:
                 self.expectOutcome(result=SUCCESS,
-                                status_text=["'make'"])
+                                   status_text=["'make'"])
             self.expectProperty("warnings-count", exp_warning_count)
         return self.runStep()
 
     def test_suppressions(self):
         step = shell.WarningCountingShellCommand(command=['make'],
-                                suppressionFile='supps')
+                                                 suppressionFile='supps')
         supps_file = textwrap.dedent("""\
             # example suppressions file
 
@@ -668,8 +682,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         def warningExtractor(step, line, match):
             return line.split(':', 2)
         step = shell.WarningCountingShellCommand(command=['make'],
-                                suppressionFile='supps',
-                                warningExtractor=warningExtractor)
+                                                 suppressionFile='supps',
+                                                 warningExtractor=warningExtractor)
         supps_file = textwrap.dedent("""\
             # these should be suppressed:
             amar-src/amar.c : XXX
@@ -701,10 +715,10 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         def warningExtractor(step, line, match):
             return line.split(':', 2)
         step = shell.WarningCountingShellCommand(command=['make'],
-                                suppressionFile='supps',
-                                warningExtractor=warningExtractor,
-                                directoryEnterPattern="^IN: (.*)",
-                                directoryLeavePattern="^OUT:")
+                                                 suppressionFile='supps',
+                                                 warningExtractor=warningExtractor,
+                                                 directoryEnterPattern="^IN: (.*)",
+                                                 directoryLeavePattern="^OUT:")
         supps_file = "dir1/dir2/abc.c : .*"
         stdout = textwrap.dedent(u"""\
             IN: dir1
@@ -719,8 +733,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         def warningExtractor(step, line, match):
             return line.split(':', 2)
         step = shell.WarningCountingShellCommand(command=['make'],
-                                suppressionFile='supps',
-                                warningExtractor=warningExtractor)
+                                                 suppressionFile='supps',
+                                                 warningExtractor=warningExtractor)
         supps_file = "abc.c:.*:100-199\ndef.c:.*:22"
         stdout = textwrap.dedent(u"""\
             abc.c:99: warning: seen 1
@@ -740,19 +754,20 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         def warningExtractor(step, line, match):
             raise RuntimeError("oh noes")
         step = shell.WarningCountingShellCommand(command=['make'],
-                                suppressionFile='supps',
-                                warningExtractor=warningExtractor)
-        supps_file = 'x:y' # need at least one supp to trigger warningExtractor
+                                                 suppressionFile='supps',
+                                                 warningExtractor=warningExtractor)
+        supps_file = 'x:y'  # need at least one supp to trigger warningExtractor
         stdout = "abc.c:99: warning: seen 1"
         d = self.do_test_suppressions(step, supps_file, stdout,
-                                         exp_exception=True)
-        d.addCallback(lambda _ :
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
+                                      exp_exception=True)
+        d.addCallback(lambda _:
+                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
 
     def test_suppressions_addSuppression(self):
         # call addSuppression "manually" from a subclass
         class MyWCSC(shell.WarningCountingShellCommand):
+
             def start(self):
                 self.addSuppression([('.*', '.*unseen.*', None, None)])
                 return shell.WarningCountingShellCommand.start(self)
@@ -760,7 +775,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         def warningExtractor(step, line, match):
             return line.split(':', 2)
         step = MyWCSC(command=['make'], suppressionFile='supps',
-                        warningExtractor=warningExtractor)
+                      warningExtractor=warningExtractor)
         stdout = textwrap.dedent(u"""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
@@ -779,7 +794,8 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         line, pat, exp_file, exp_lineNo, exp_text = \
             ('foo:123:text', '(.*):(.*):(.*)', 'foo', 123, 'text')
         self.assertEqual(we(step, line, re.match(pat, line)),
-                (exp_file, exp_lineNo, exp_text))
+                         (exp_file, exp_lineNo, exp_text))
+
 
 class Compile(steps.BuildStepMixin, unittest.TestCase):
 
@@ -800,6 +816,7 @@ class Compile(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.descriptionDone, ["compile"])
         self.assertEqual(step.command, ["make", "all"])
 
+
 class Test(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
@@ -812,18 +829,18 @@ class Test(steps.BuildStepMixin, unittest.TestCase):
         step = self.setupStep(shell.Test())
         step.setTestResults(total=10, failed=3, passed=5, warnings=3)
         self.assertEqual(self.step_statistics, {
-            'tests-total' : 10,
-            'tests-failed' : 3,
-            'tests-passed' : 5,
-            'tests-warnings' : 3,
+            'tests-total': 10,
+            'tests-failed': 3,
+            'tests-passed': 5,
+            'tests-warnings': 3,
         })
         # ensure that they're additive
         step.setTestResults(total=1, failed=2, passed=3, warnings=4)
         self.assertEqual(self.step_statistics, {
-            'tests-total' : 11,
-            'tests-failed' : 5,
-            'tests-passed' : 8,
-            'tests-warnings' : 7,
+            'tests-total': 11,
+            'tests-failed': 5,
+            'tests-passed': 8,
+            'tests-warnings': 7,
         })
 
     def test_describe_not_done(self):
@@ -836,8 +853,8 @@ class Test(steps.BuildStepMixin, unittest.TestCase):
         self.step_statistics['tests-failed'] = 10
         self.step_statistics['tests-passed'] = 20
         self.step_statistics['tests-warnings'] = 30
-        self.assertEqual(step.describe(done=True), [ 'test', '93 tests',
-                '20 passed', '30 warnings', '10 failed'])
+        self.assertEqual(step.describe(done=True), ['test', '93 tests',
+                                                    '20 passed', '30 warnings', '10 failed'])
 
     def test_describe_done_no_total(self):
         step = self.setupStep(shell.Test())
@@ -846,6 +863,5 @@ class Test(steps.BuildStepMixin, unittest.TestCase):
         self.step_statistics['tests-passed'] = 20
         self.step_statistics['tests-warnings'] = 30
         # describe calculates 60 = 10+20+30
-        self.assertEqual(step.describe(done=True), [ 'test', '60 tests',
-                '20 passed', '30 warnings', '10 failed'])
-
+        self.assertEqual(step.describe(done=True), ['test', '60 tests',
+                                                    '20 passed', '30 warnings', '10 failed'])

@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from buildbot.util import sautils
+from twisted.trial import unittest
+
 
 class SAVersion(unittest.TestCase):
 
     def test_sa_version(self):
-        self.failUnless(sautils.sa_version() > (0,5,0))
+        self.failUnless(sautils.sa_version() > (0, 5, 0))

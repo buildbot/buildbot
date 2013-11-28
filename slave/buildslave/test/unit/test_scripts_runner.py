@@ -13,16 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 import os
 import sys
-import mock
-from twisted.trial import unittest
-from twisted.python import usage, log
+
 from buildslave.scripts import runner
 from buildslave.test.util import misc
+from twisted.python import log
+from twisted.python import usage
+from twisted.trial import unittest
 
 
 class OptionsMixin(object):
+
     def assertOptions(self, opts, exp):
         got = dict([(k, opts[k]) for k in exp])
         if got != exp:
@@ -33,7 +36,9 @@ class OptionsMixin(object):
                                (k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
+
 class BaseDirTestsMixin:
+
     """
     Common tests for Options classes with 'basedir' parameter
     """
@@ -46,11 +51,11 @@ class BaseDirTestsMixin:
     options_class = None
 
     def setUp(self):
-        self.patch(os, "getcwd", lambda : self.GETCWD_PATH)
+        self.patch(os, "getcwd", lambda: self.GETCWD_PATH)
         self.patch(os.path, "abspath", lambda path: self.ABSPATH_PREFIX + path)
 
     def parse(self, *args):
-        assert self.options_class != None
+        assert self.options_class is not None
 
         opts = self.options_class()
         opts.parseOptions(args)
@@ -75,6 +80,7 @@ class BaseDirTestsMixin:
 
 
 class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.MakerBase class.
     """
@@ -82,6 +88,7 @@ class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.StopOptions class.
     """
@@ -93,6 +100,7 @@ class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.StartOptions class.
     """
@@ -110,6 +118,7 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.RestartOptions class.
     """
@@ -127,6 +136,7 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.UpgradeSlaveOptions class.
     """
@@ -138,6 +148,7 @@ class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
 
 
 class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.CreateSlaveOptions class.
     """
@@ -179,20 +190,20 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                           "--maxdelay=3", "--log-size=2", "--log-count=1",
                           "--allow-shutdown=file", *self.req_args)
         self.assertOptions(opts,
-                           {"force"          : True,
-                            "relocatable"    : True,
-                            "no-logrotate"   : True,
-                            "usepty"         : 0,
-                            "umask"          : "022",
-                            "maxdelay"       : 3,
-                            "log-size"       : 2,
-                            "log-count"      : "1",
-                            "allow-shutdown" : "file",
-                            "basedir"        : "bdir",
-                            "host"           : "mstr",
-                            "port"           : 5678,
-                            "name"           : "name",
-                            "passwd"         : "pswd"})
+                           {"force": True,
+                            "relocatable": True,
+                            "no-logrotate": True,
+                            "usepty": 0,
+                            "umask": "022",
+                            "maxdelay": 3,
+                            "log-size": 2,
+                            "log-count": "1",
+                            "allow-shutdown": "file",
+                            "basedir": "bdir",
+                            "host": "mstr",
+                            "port": 5678,
+                            "name": "name",
+                            "passwd": "pswd"})
 
     def test_master_url(self):
         self.assertRaisesRegexp(usage.UsageError,
@@ -221,18 +232,18 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
     def test_inv_log_count(self):
         self.assertRaisesRegexp(usage.UsageError,
-                        "log-count parameter needs to be an number or None",
-                        self.parse, "--log-count=X", *self.req_args)
+                                "log-count parameter needs to be an number or None",
+                                self.parse, "--log-count=X", *self.req_args)
 
     def test_inv_umask(self):
         self.assertRaisesRegexp(usage.UsageError,
-                        "umask parameter needs to be an number or None",
-                        self.parse, "--umask=X", *self.req_args)
+                                "umask parameter needs to be an number or None",
+                                self.parse, "--umask=X", *self.req_args)
 
     def test_inv_allow_shutdown(self):
         self.assertRaisesRegexp(usage.UsageError,
-                    "allow-shutdown needs to be one of 'signal' or 'file'",
-                    self.parse, "--allow-shutdown=X", *self.req_args)
+                                "allow-shutdown needs to be one of 'signal' or 'file'",
+                                self.parse, "--allow-shutdown=X", *self.req_args)
 
     def test_too_few_args(self):
         self.assertRaisesRegexp(usage.UsageError,
@@ -271,7 +282,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
         """
         opts = runner.CreateSlaveOptions()
         self.assertRaisesRegexp(usage.UsageError,
-                                "invalid master port 'apple', "\
+                                "invalid master port 'apple', "
                                 "needs to be an number",
                                 opts.validateMasterArgument, "host:apple")
 
@@ -287,9 +298,11 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
 
 class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.Options class.
     """
+
     def setUp(self):
         self.setUpStdoutAssertions()
 
@@ -317,7 +330,9 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 # used by TestRun.test_run_good to patch in a callback
 functionPlaceholder = None
 
+
 class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
+
     """
     Test buildslave.scripts.runner.run()
     """
@@ -330,6 +345,7 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
         optFlags = [["test-opt", None, None]]
 
     class TestOptions(usage.Options):
+
         """
         Option class that emulates usage error. The 'suboptions' flag
         enables emulation of usage error in a sub-option.
@@ -353,10 +369,10 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # patch runner module to use our test subcommand class
         self.patch(runner.Options, 'subCommands',
-            [['test', None, self.TestSubCommand, None ]])
+                   [['test', None, self.TestSubCommand, None]])
 
         # trace calls to subcommand function
-        subcommand_func = mock.Mock(return_value = 42)
+        subcommand_func = mock.Mock(return_value=42)
         self.patch(sys.modules[__name__],
                    "functionPlaceholder",
                    subcommand_func)

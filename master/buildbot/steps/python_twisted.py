@@ -16,9 +16,13 @@
 
 from twisted.python import log
 
+from buildbot.process.buildstep import LogLineObserver
+from buildbot.process.buildstep import OutputProgressObserver
 from buildbot.status import testresult
-from buildbot.status.results import SUCCESS, FAILURE, WARNINGS, SKIPPED
-from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
+from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
 try:
@@ -30,7 +34,9 @@ import re
 
 # BuildSteps that are specific to the Twisted source tree
 
+
 class HLint(ShellCommand):
+
     """I run a 'lint' checker over a set of .xhtml files. Any deviations
     from recommended style is flagged and put in the output log.
 
@@ -56,8 +62,7 @@ class HLint(ShellCommand):
             if f.endswith(".xhtml") and not f.startswith("sandbox/"):
                 htmlFiles[f] = 1
         # remove duplicates
-        hlintTargets = htmlFiles.keys()
-        hlintTargets.sort()
+        hlintTargets = sorted(htmlFiles.keys())
         if not hlintTargets:
             return SKIPPED
         self.hlintFiles = hlintTargets
@@ -68,7 +73,7 @@ class HLint(ShellCommand):
         self.setCommand(c)
 
         # add an extra log file to show the .html files we're checking
-        self.addCompleteLog("files", "\n".join(self.hlintFiles)+"\n")
+        self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
         ShellCommand.start(self)
 
@@ -78,7 +83,7 @@ class HLint(ShellCommand):
         # mostly exists to give the user an idea of how long the step will
         # take anyway).
         lines = cmd.logs['stdio'].getText().split("\n")
-        warningLines = filter(lambda line:':' in line, lines)
+        warningLines = filter(lambda line: ':' in line, lines)
         if warningLines:
             self.addCompleteLog("warnings", "".join(warningLines))
         warnings = len(warningLines)
@@ -98,13 +103,14 @@ class HLint(ShellCommand):
         return ["%d hlin%s" % (self.warnings,
                                self.warnings == 1 and 't' or 'ts')]
 
+
 def countFailedTests(output):
     # start scanning 10kb from the end, because there might be a few kb of
     # import exception tracebacks between the total/time line and the errors
     # line
     chunk = output[-10000:]
     lines = chunk.split("\n")
-    lines.pop() # blank line at end
+    lines.pop()  # blank line at end
     # lines[-3] is "Ran NN tests in 0.242s"
     # lines[-2] is blank
     # lines[-1] is 'OK' or 'FAILED (failures=1, errors=12)'
@@ -124,24 +130,30 @@ def countFailedTests(output):
             res['total'] = int(out.group(1))
         if (l.startswith("OK") or
             l.startswith("FAILED ") or
-            l.startswith("PASSED")):
+                l.startswith("PASSED")):
             # the extra space on FAILED_ is to distinguish the overall
             # status from an individual test which failed. The lack of a
             # space on the OK is because it may be printed without any
             # additional text (if there are no skips,etc)
             out = re.search(r'failures=(\d+)', l)
-            if out: res['failures'] = int(out.group(1))
+            if out:
+                res['failures'] = int(out.group(1))
             out = re.search(r'errors=(\d+)', l)
-            if out: res['errors'] = int(out.group(1))
+            if out:
+                res['errors'] = int(out.group(1))
             out = re.search(r'skips=(\d+)', l)
-            if out: res['skips'] = int(out.group(1))
+            if out:
+                res['skips'] = int(out.group(1))
             out = re.search(r'expectedFailures=(\d+)', l)
-            if out: res['expectedFailures'] = int(out.group(1))
+            if out:
+                res['expectedFailures'] = int(out.group(1))
             out = re.search(r'unexpectedSuccesses=(\d+)', l)
-            if out: res['unexpectedSuccesses'] = int(out.group(1))
+            if out:
+                res['unexpectedSuccesses'] = int(out.group(1))
             # successes= is a Twisted-2.0 addition, and is not currently used
             out = re.search(r'successes=(\d+)', l)
-            if out: res['successes'] = int(out.group(1))
+            if out:
+                res['successes'] = int(out.group(1))
 
     return res
 
@@ -174,9 +186,11 @@ class TrialTestCaseCounter(LogLineObserver):
             self.step.setProgress('tests', self.numTests)
 
 
-UNSPECIFIED=() # since None is a valid choice
+UNSPECIFIED = ()  # since None is a valid choice
+
 
 class Trial(ShellCommand):
+
     """
     There are some class attributes which may be usefully overridden
     by subclasses. 'trialMode' and 'trialArgs' can influence the trial
@@ -186,7 +200,7 @@ class Trial(ShellCommand):
     name = "trial"
     progressMetrics = ('output', 'tests', 'test.log')
     # note: the slash only works on unix buildslaves, of course, but we have
-    # no way to know what the buildslave uses as a separator. 
+    # no way to know what the buildslave uses as a separator.
     # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
@@ -195,16 +209,16 @@ class Trial(ShellCommand):
     flunkOnFailure = True
     python = None
     trial = "trial"
-    trialMode = ["--reporter=bwverbose"] # requires Twisted-2.1.0 or newer
+    trialMode = ["--reporter=bwverbose"]  # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs = []
     jobs = None
-    testpath = UNSPECIFIED # required (but can be None)
-    testChanges = False # TODO: needs better name
+    testpath = UNSPECIFIED  # required (but can be None)
+    testChanges = False  # TODO: needs better name
     recurse = False
     reactor = None
     randomly = False
-    tests = None # required
+    tests = None  # required
 
     def __init__(self, reactor=UNSPECIFIED, python=None, trial=None,
                  testpath=UNSPECIFIED,
@@ -296,7 +310,7 @@ class Trial(ShellCommand):
         if python:
             self.python = python
         if self.python is not None:
-            if type(self.python) is str:
+            if isinstance(self.python, str):
                 self.python = [self.python]
             for s in self.python:
                 if " " in s:
@@ -330,11 +344,11 @@ class Trial(ShellCommand):
 
         if tests is not None:
             self.tests = tests
-        if type(self.tests) is str:
+        if isinstance(self.tests, str):
             self.tests = [self.tests]
         if testChanges is not None:
             self.testChanges = testChanges
-            #self.recurse = True  # not sure this is necessary
+            # self.recurse = True  # not sure this is necessary
 
         if not self.testChanges and self.tests is None:
             raise ValueError("Must either set testChanges= or provide tests=")
@@ -372,13 +386,13 @@ class Trial(ShellCommand):
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
-        if self.testpath != None:
+        if self.testpath is not None:
             e = cmd.args['env']
             if e is None:
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
-                #this bit produces a list, which can be used
-                #by buildslave.runprocess.RunProcess
+                # this bit produces a list, which can be used
+                # by buildslave.runprocess.RunProcess
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]
@@ -418,7 +432,6 @@ class Trial(ShellCommand):
 
         ShellCommand.start(self)
 
-
     def commandComplete(self, cmd):
         # figure out all status, then let the various hook functions return
         # different pieces of it
@@ -430,7 +443,7 @@ class Trial(ShellCommand):
 
         total = counts['total']
         failures, errors = counts['failures'], counts['errors']
-        parsed = (total != None)
+        parsed = (total is not None)
         text = []
         text2 = ""
 
@@ -438,7 +451,7 @@ class Trial(ShellCommand):
             if parsed:
                 results = SUCCESS
                 if total:
-                    text += ["%d %s" % \
+                    text += ["%d %s" %
                              (total,
                               total == 1 and "test" or "tests"),
                              "passed"]
@@ -454,11 +467,11 @@ class Trial(ShellCommand):
             if parsed:
                 text.append("tests")
                 if failures:
-                    text.append("%d %s" % \
+                    text.append("%d %s" %
                                 (failures,
                                  failures == 1 and "failure" or "failures"))
                 if errors:
-                    text.append("%d %s" % \
+                    text.append("%d %s" %
                                 (errors,
                                  errors == 1 and "error" or "errors"))
                 count = failures + errors
@@ -468,15 +481,15 @@ class Trial(ShellCommand):
                 text2 = "tests"
 
         if counts['skips']:
-            text.append("%d %s" %  \
+            text.append("%d %s" %
                         (counts['skips'],
                          counts['skips'] == 1 and "skip" or "skips"))
         if counts['expectedFailures']:
-            text.append("%d %s" %  \
+            text.append("%d %s" %
                         (counts['expectedFailures'],
                          counts['expectedFailures'] == 1 and "todo"
                          or "todos"))
-            if 0: # TODO
+            if 0:  # TODO
                 results = WARNINGS
                 if not text2:
                     text2 = "todo"
@@ -499,7 +512,6 @@ class Trial(ShellCommand):
         self.text = text
         self.text2 = [text2]
 
-
     def rtext(self, fmt='%s'):
         if self.reactor:
             rtext = fmt % self.reactor
@@ -510,7 +522,7 @@ class Trial(ShellCommand):
         if self.reactor is not None:
             testname = (self.reactor,) + testname
         tr = testresult.TestResult(testname, results, text, logs={'log': tlog})
-        #self.step_status.build.addTestResult(tr)
+        # self.step_status.build.addTestResult(tr)
         self.build.build_status.addTestResult(tr)
 
     def createSummary(self, loog):
@@ -518,16 +530,16 @@ class Trial(ShellCommand):
         problems = ""
         sio = StringIO.StringIO(output)
         warnings = {}
-        while 1:
+        while True:
             line = sio.readline()
             if line == "":
                 break
             if line.find(" exceptions.DeprecationWarning: ") != -1:
                 # no source
-                warning = line # TODO: consider stripping basedir prefix here
+                warning = line  # TODO: consider stripping basedir prefix here
                 warnings[warning] = warnings.get(warning, 0) + 1
             elif (line.find(" DeprecationWarning: ") != -1 or
-                line.find(" UserWarning: ") != -1):
+                  line.find(" UserWarning: ") != -1):
                 # next line is the source
                 warning = line + sio.readline()
                 warnings[warning] = warnings.get(warning, 0) + 1
@@ -544,11 +556,11 @@ class Trial(ShellCommand):
             self.addCompleteLog("problems", problems)
             # now parse the problems for per-test results
             pio = StringIO.StringIO(problems)
-            pio.readline() # eat the first separator line
+            pio.readline()  # eat the first separator line
             testname = None
             done = False
             while not done:
-                while 1:
+                while True:
                     line = pio.readline()
                     if line == "":
                         done = True
@@ -577,7 +589,7 @@ class Trial(ShellCommand):
                                    'UNEXPECTED SUCCESS': WARNINGS,
                                    'FAILURE': FAILURE,
                                    'ERROR': FAILURE,
-                                   'SUCCESS': SUCCESS, # not reported
+                                   'SUCCESS': SUCCESS,  # not reported
                                    }.get(result, WARNINGS)
                         text = result.lower().split()
                         loog = line
@@ -591,8 +603,7 @@ class Trial(ShellCommand):
                     testname = None
 
         if warnings:
-            lines = warnings.keys()
-            lines.sort()
+            lines = sorted(warnings.keys())
             self.addCompleteLog("warnings", "".join(lines))
 
     def evaluateCommand(self, cmd):
@@ -600,6 +611,7 @@ class Trial(ShellCommand):
 
     def getText(self, cmd, results):
         return self.text
+
     def getText2(self, cmd, results):
         return self.text2
 

@@ -7,9 +7,11 @@
 # -*- coding: utf-8 -*-
 
 import re
-from time import time, mktime
+
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from time import mktime
+from time import time
 
 search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
 only_int_re = re.compile(r'^\d+$')
@@ -33,16 +35,16 @@ class croniter(object):
     )
 
     ALPHACONV = (
-        { },
-        { },
-        { },
-        { 'jan':1, 'feb':2, 'mar':3, 'apr':4,  'may':5,  'jun':6,
-          'jul':7, 'aug':8, 'sep':9, 'oct':10, 'nov':11, 'dec':12 },
-        { 'sun':0, 'mon':1, 'tue':2, 'wed':3, 'thu':4, 'fri':5, 'sat':0 },
-        { }
+        {},
+        {},
+        {},
+        {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+         'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12},
+        {'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 0},
+        {}
     )
 
-    LOWMAP = ( 
+    LOWMAP = (
         {},
         {},
         {0: 1},
@@ -53,7 +55,7 @@ class croniter(object):
 
     bad_length = 'Exactly 5 or 6 columns has to be specified for iterator' \
                  'expression.'
-    
+
     def __init__(self, expr_format, start_time=time()):
         if isinstance(start_time, datetime):
             start_time = mktime(start_time.timetuple())
@@ -74,7 +76,7 @@ class croniter(object):
                 e = e_list.pop()
                 t = re.sub(r'^\*(/.+)$', r'%d-%d\1' % (self.RANGES[i][0],
                                                        self.RANGES[i][1]),
-                                                       str(e))
+                           str(e))
                 m = search_re.search(t)
 
                 if m:
@@ -87,16 +89,16 @@ class croniter(object):
                         high = self.ALPHACONV[i][high.lower()]
 
                     if (not low or not high or int(low) > int(high)
-                        or not only_int_re.search(str(step))):
-                        raise ValueError("[%s] is not acceptable" %expr_format)
+                            or not only_int_re.search(str(step))):
+                        raise ValueError("[%s] is not acceptable" % expr_format)
 
-                    for j in xrange(int(low), int(high)+1):
+                    for j in xrange(int(low), int(high) + 1):
                         if j % int(step) == 0:
                             e_list.append(j)
                 else:
                     if not star_or_int_re.search(t):
                         t = self.ALPHACONV[i][t.lower()]
-            
+
                     try:
                         t = int(t)
                     except:
@@ -108,7 +110,7 @@ class croniter(object):
                     if t != '*' and (int(t) < self.RANGES[i][0] or
                                      int(t) > self.RANGES[i][1]):
                         raise ValueError("[%s] is not acceptable, out of range" % expr_format)
-                    
+
                     res.append(t)
 
             res.sort()
@@ -125,7 +127,7 @@ class croniter(object):
         expanded = self.expanded[:]
 
         if ret_type not in (float, datetime):
-            raise TypeError("Invalid ret_type, only 'float' or 'datetime' " \
+            raise TypeError("Invalid ret_type, only 'float' or 'datetime' "
                             "is acceptable.")
 
         if expanded[2][0] != '*' and expanded[4][0] != '*':
@@ -147,7 +149,7 @@ class croniter(object):
         if ret_type == datetime:
             result = datetime.fromtimestamp(result)
         return result
-    
+
     def _calc(self, now, expanded, is_prev):
         if is_prev:
             nearest_diff_method = self._get_prev_nearest_diff
@@ -155,7 +157,7 @@ class croniter(object):
         else:
             nearest_diff_method = self._get_next_nearest_diff
             sign = 1
-            
+
         offset = len(expanded) == 6 and 1 or 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
@@ -167,12 +169,12 @@ class croniter(object):
             if expanded[3][0] != '*':
                 diff_month = nearest_diff_method(d.month, expanded[3], 12)
                 days = DAYS[month - 1]
-                if month == 2 and self.is_leap(year) == True:
+                if month == 2 and self.is_leap(year):
                     days += 1
 
                 reset_day = days if is_prev else 1
 
-                if diff_month != None and diff_month != 0:
+                if diff_month is not None and diff_month != 0:
                     if is_prev:
                         d += relativedelta(months=diff_month)
                     else:
@@ -184,12 +186,12 @@ class croniter(object):
         def proc_day_of_month(d):
             if expanded[2][0] != '*':
                 days = DAYS[month - 1]
-                if month == 2 and self.is_leap(year) == True:
+                if month == 2 and self.is_leap(year):
                     days += 1
 
                 diff_day = nearest_diff_method(d.day, expanded[2], days)
 
-                if diff_day != None and diff_day != 0:
+                if diff_day is not None and diff_day != 0:
                     if is_prev:
                         d += relativedelta(days=diff_day)
                     else:
@@ -200,7 +202,7 @@ class croniter(object):
         def proc_day_of_week(d):
             if expanded[4][0] != '*':
                 diff_day_of_week = nearest_diff_method(d.isoweekday() % 7, expanded[4], 7)
-                if diff_day_of_week != None and diff_day_of_week != 0:
+                if diff_day_of_week is not None and diff_day_of_week != 0:
                     if is_prev:
                         d += relativedelta(days=diff_day_of_week)
                     else:
@@ -211,22 +213,22 @@ class croniter(object):
         def proc_hour(d):
             if expanded[1][0] != '*':
                 diff_hour = nearest_diff_method(d.hour, expanded[1], 24)
-                if diff_hour != None and diff_hour != 0:
+                if diff_hour is not None and diff_hour != 0:
                     if is_prev:
-                        d += relativedelta(hours = diff_hour)
+                        d += relativedelta(hours=diff_hour)
                     else:
-                        d += relativedelta(hours = diff_hour, minute=0, second=0)
+                        d += relativedelta(hours=diff_hour, minute=0, second=0)
                     return True, d
             return False, d
 
         def proc_minute(d):
             if expanded[0][0] != '*':
                 diff_min = nearest_diff_method(d.minute, expanded[0], 60)
-                if diff_min != None and diff_min != 0:
+                if diff_min is not None and diff_min != 0:
                     if is_prev:
-                        d += relativedelta(minutes = diff_min)
+                        d += relativedelta(minutes=diff_min)
                     else:
-                        d += relativedelta(minutes = diff_min, second=0)
+                        d += relativedelta(minutes=diff_min, second=0)
                     return True, d
             return False, d
 
@@ -234,11 +236,11 @@ class croniter(object):
             if len(expanded) == 6:
                 if expanded[5][0] != '*':
                     diff_sec = nearest_diff_method(d.second, expanded[5], 60)
-                    if diff_sec != None and diff_sec != 0:
-                        d += relativedelta(seconds = diff_sec)                        
+                    if diff_sec is not None and diff_sec != 0:
+                        d += relativedelta(seconds=diff_sec)
                         return True, d
             else:
-                d += relativedelta(second = 0)
+                d += relativedelta(second=0)
             return False, d
 
         if is_prev:
@@ -246,7 +248,7 @@ class croniter(object):
                      proc_minute,
                      proc_hour,
                      proc_day_of_week,
-                     proc_day_of_month,                     
+                     proc_day_of_month,
                      proc_month]
         else:
             procs = [proc_month,

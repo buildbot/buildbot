@@ -13,16 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
-from copy import deepcopy
 import re
 
-from twisted.trial import unittest
-from twisted.internet import defer
-from twisted.web import client
+from copy import deepcopy
+
+from buildbot.changes.bonsaipoller import BonsaiParser
+from buildbot.changes.bonsaipoller import BonsaiPoller
+from buildbot.changes.bonsaipoller import BonsaiResult
+from buildbot.changes.bonsaipoller import CiNode
+from buildbot.changes.bonsaipoller import EmptyResult
+from buildbot.changes.bonsaipoller import FileNode
+from buildbot.changes.bonsaipoller import InvalidResultError
 from buildbot.test.util import changesource
 from buildbot.util import epoch2datetime
-from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
-     BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
+from twisted.internet import defer
+from twisted.trial import unittest
+from twisted.web import client
 
 log1 = "Add Bug 338541a"
 who1 = "sar@gmail.com"
@@ -46,7 +52,7 @@ file5 = "mozilla/xpcom/threads/test.cpp"
 
 nodes = []
 files = []
-files.append(FileNode(rev1,file1))
+files.append(FileNode(rev1, file1))
 nodes.append(CiNode(log1, who1, date1, files))
 
 files = []
@@ -94,7 +100,7 @@ missingFilenameResult = deepcopy(goodUnparsedResult)
 missingFilenameResult = missingFilenameResult.replace(file2, "")
 
 duplicateLogResult = deepcopy(goodUnparsedResult)
-duplicateLogResult = re.sub(r"<log>"+log1+"</log>",
+duplicateLogResult = re.sub(r"<log>" + log1 + "</log>",
                             "<log>blah</log><log>blah</log>",
                             duplicateLogResult)
 
@@ -107,21 +113,21 @@ missingCiResult = deepcopy(goodUnparsedResult)
 r = re.compile(r"<ci.*</ci>", re.DOTALL | re.MULTILINE)
 missingCiResult = re.sub(r, "", missingCiResult)
 
-badResultMsgs = { 'badUnparsedResult':
-    "BonsaiParser did not raise an exception when given a bad query",
-                  'invalidDateResult':
-    "BonsaiParser did not raise an exception when given an invalid date",
-                  'missingRevisionResult':
-    "BonsaiParser did not raise an exception when a revision was missing",
-                  'missingFilenameResult':
-    "BonsaiParser did not raise an exception when a filename was missing",
-                  'duplicateLogResult':
-    "BonsaiParser did not raise an exception when there was two <log> tags",
-                  'duplicateFilesResult':
-    "BonsaiParser did not raise an exception when there was two <files> tags",
-                  'missingCiResult':
-    "BonsaiParser did not raise an exception when there was no <ci> tags"
-}
+badResultMsgs = {'badUnparsedResult':
+                 "BonsaiParser did not raise an exception when given a bad query",
+                 'invalidDateResult':
+                 "BonsaiParser did not raise an exception when given an invalid date",
+                 'missingRevisionResult':
+                 "BonsaiParser did not raise an exception when a revision was missing",
+                 'missingFilenameResult':
+                 "BonsaiParser did not raise an exception when a filename was missing",
+                 'duplicateLogResult':
+                 "BonsaiParser did not raise an exception when there was two <log> tags",
+                 'duplicateFilesResult':
+                 "BonsaiParser did not raise an exception when there was two <files> tags",
+                 'missingCiResult':
+                 "BonsaiParser did not raise an exception when there was no <ci> tags"
+                 }
 
 noCheckinMsgResult = """\
 <?xml version="1.0"?>
@@ -148,13 +154,15 @@ noCheckinMsgResult = """\
 """
 
 noCheckinMsgRef = [dict(filename="first/file.ext",
-                     revision="1.1"),
-                dict(filename="second/file.ext",
-                     revision="1.2"),
-                dict(filename="third/file.ext",
-                     revision="1.3")]
+                        revision="1.1"),
+                   dict(filename="second/file.ext",
+                        revision="1.2"),
+                   dict(filename="third/file.ext",
+                        revision="1.3")]
+
 
 class TestBonsaiParser(unittest.TestCase):
+
     def testFullyFormedResult(self):
         br = BonsaiParser(goodUnparsedResult)
         result = br.getData()
@@ -162,7 +170,7 @@ class TestBonsaiParser(unittest.TestCase):
         self.failUnless(isinstance(result, BonsaiResult))
         # test for successful parsing
         self.failUnlessEqual(goodParsedResult, result,
-            "BonsaiParser did not return the expected BonsaiResult")
+                             "BonsaiParser did not return the expected BonsaiResult")
 
     def testBadUnparsedResult(self):
         try:
@@ -219,12 +227,15 @@ class TestBonsaiParser(unittest.TestCase):
             self.failUnlessEqual(file.filename, ref['filename'])
             self.failUnlessEqual(file.revision, ref['revision'])
 
+
 class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
+
     def setUp(self):
         d = self.setUpChangeSource()
+
         def create_poller(_):
             self.attachChangeSource(BonsaiPoller('http://bonsai.mozilla.org',
-                                       'all', 'seamonkey'))
+                                                 'all', 'seamonkey'))
         d.addCallback(create_poller)
         return d
 
@@ -235,6 +246,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
         """Install a fake getPage that puts the requested URL in C{self.getPage_got_url}
         and return C{result}"""
         self.getPage_got_url = None
+
         def fake(url, timeout=None):
             self.getPage_got_url = url
             return defer.succeed(result)
@@ -250,6 +262,7 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
         # that the poll operation catches the exception correctly
         self.fakeGetPage(badUnparsedResult)
         d = self.changesource.poll()
+
         def check(_):
             self.assertEqual(len(self.changes_added), 0)
         d.addCallback(check)
@@ -258,26 +271,27 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
     def test_poll_good(self):
         self.fakeGetPage(goodUnparsedResult)
         d = self.changesource.poll()
+
         def check(_):
             self.assertEqual(len(self.changes_added), 3)
             self.assertEqual(self.changes_added[0]['author'], who1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                                            epoch2datetime(date1))
+                             epoch2datetime(date1))
             self.assertEqual(self.changes_added[0]['comments'], log1)
             self.assertEqual(self.changes_added[0]['branch'], 'seamonkey')
             self.assertEqual(self.changes_added[0]['files'],
-                    [ '%s (revision %s)' % (file1, rev1) ])
+                             ['%s (revision %s)' % (file1, rev1)])
             self.assertEqual(self.changes_added[1]['author'], who2)
             self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                            epoch2datetime(date2))
+                             epoch2datetime(date2))
             self.assertEqual(self.changes_added[1]['comments'], log2)
             self.assertEqual(self.changes_added[1]['files'],
-                    [ '%s (revision %s)' % (file2, rev2),
-                      '%s (revision %s)' % (file3, rev3) ])
+                             ['%s (revision %s)' % (file2, rev2),
+                              '%s (revision %s)' % (file3, rev3)])
             self.assertEqual(self.changes_added[2]['author'], who3)
             self.assertEqual(self.changes_added[2]['comments'], log3)
             self.assertEqual(self.changes_added[2]['when_timestamp'],
-                                            epoch2datetime(date3))
+                             epoch2datetime(date3))
             self.assertEqual(self.changes_added[2]['files'], [])
         d.addCallback(check)
         return d

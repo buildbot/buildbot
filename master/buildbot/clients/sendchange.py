@@ -14,12 +14,14 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
+from twisted.spread import pb
+
 
 class Sender:
-    def __init__(self, master, auth=('change','changepw'), encoding='utf8'):
+
+    def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
         self.username, self.password = auth
         self.host, self.port = master.split(":")
         self.port = int(self.port)
@@ -39,11 +41,11 @@ class Sender:
             change['codebase'] = codebase
 
         for key in change:
-            if type(change[key]) == str:
+            if isinstance(change[key], str):
                 change[key] = change[key].decode(self.encoding, 'replace')
         change['files'] = list(change['files'])
         for i, file in enumerate(change.get('files', [])):
-            if type(file) == str:
+            if isinstance(file, str):
                 change['files'][i] = file.decode(self.encoding, 'replace')
 
         f = pb.PBClientFactory()

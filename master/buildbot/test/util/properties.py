@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
 from buildbot.interfaces import IRenderable
+from zope.interface import implements
+
 
 class ConstantRenderable(object):
     implements(IRenderable)
+
     def __init__(self, value):
         self.value = value
+
     def getRenderingFor(self, props):
         return self.value

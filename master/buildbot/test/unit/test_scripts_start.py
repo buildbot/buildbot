@@ -15,28 +15,33 @@
 
 from __future__ import with_statement
 
+import os
+import sys
 import time
-import os, sys
 import twisted
-from twisted.python import versions
-from twisted.internet.utils import getProcessOutputAndValue
-from twisted.trial import unittest
+
 from buildbot.scripts import start
-from buildbot.test.util import dirs, misc, compat
+from buildbot.test.util import compat
+from buildbot.test.util import dirs
+from buildbot.test.util import misc
+from twisted.internet.utils import getProcessOutputAndValue
+from twisted.python import versions
+from twisted.trial import unittest
+
 
 def mkconfig(**kwargs):
     config = {
-            'quiet': False,
-            'basedir': os.path.abspath('basedir'),
-            'nodaemon': False,
-            }
+        'quiet': False,
+        'basedir': os.path.abspath('basedir'),
+        'nodaemon': False,
+    }
     config.update(kwargs)
     return config
 
 fake_master_tac = """\
 from twisted.application import service
-from twisted.python import log
 from twisted.internet import reactor
+from twisted.python import log
 application = service.Application('highscore')
 class App(service.Service):
     def startService(self):
@@ -47,6 +52,7 @@ app = App()
 app.setServiceParent(application)
 # isBuildmasterDir wants to see this -> Application('buildmaster')
 """
+
 
 class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -66,16 +72,17 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertInStdout('invalid buildmaster directory')
 
     def runStart(self, **config):
-        args=[
-                '-c',
-                'from buildbot.scripts.start import start; start(%r)' % (mkconfig(**config),),
-                ]
+        args = [
+            '-c',
+            'from buildbot.scripts.start import start; start(%r)' % (mkconfig(**config),),
+        ]
         env = os.environ.copy()
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
     def test_start_no_daemon(self):
         d = self.runStart(nodaemon=True)
+
         @d.addCallback
         def cb(res):
             self.assertEquals(res, ('', '', 0))
@@ -84,6 +91,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_start_quiet(self):
         d = self.runStart(quiet=True)
+
         @d.addCallback
         def cb(res):
             self.assertEquals(res, ('', '', 0))
@@ -93,8 +101,10 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     @compat.skipUnlessPlatformIs('posix')
     def test_start(self):
         d = self.runStart()
+
         @d.addCallback
-        def cb((out, err, rc)):
+        def cb(xxx_todo_changeme):
+            (out, err, rc) = xxx_todo_changeme
             self.assertEqual((rc, err), (0, ''))
             self.assertSubstring('BuildMaster is running', out)
 

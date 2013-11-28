@@ -18,35 +18,44 @@ from twisted.trial import unittest
 from twisted.internet import defer
 
 from buildbot.interfaces import IRenderable
-from buildbot.process.properties import Properties, WithProperties
+from buildbot.process.properties import Properties
+from buildbot.process.properties import WithProperties
 from buildbot.steps.source.oldsource import _ComputeRepositoryURL
 
 
 class SourceStamp(object):
     repository = "test"
 
+
 class Build(object):
     s = SourceStamp()
-    props = Properties(foo = "bar")
+    props = Properties(foo="bar")
+
     def getSourceStamp(self, codebase):
         assert codebase == ''
         return self.s
+
     def getProperties(self):
         return self.props
+
     def render(self, value):
         self.props.build = self
         return defer.maybeDeferred(IRenderable(value).getRenderingFor, self.props)
 
+
 class FakeStep(object):
     codebase = ''
 
+
 class RepoURL(unittest.TestCase):
+
     def setUp(self):
         self.build = Build()
 
     def test_backward_compatibility(self):
         url = _ComputeRepositoryURL(FakeStep(), "repourl")
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "repourl")
@@ -55,6 +64,7 @@ class RepoURL(unittest.TestCase):
     def test_format_string(self):
         url = _ComputeRepositoryURL(FakeStep(), "http://server/%s")
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "http://server/test")
@@ -65,6 +75,7 @@ class RepoURL(unittest.TestCase):
         dict['test'] = "ssh://server/testrepository"
         url = _ComputeRepositoryURL(FakeStep(), dict)
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "ssh://server/testrepository")
@@ -74,6 +85,7 @@ class RepoURL(unittest.TestCase):
         func = lambda x: x[::-1]
         url = _ComputeRepositoryURL(FakeStep(), func)
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "tset")
@@ -82,6 +94,7 @@ class RepoURL(unittest.TestCase):
     def test_backward_compatibility_render(self):
         url = _ComputeRepositoryURL(FakeStep(), WithProperties("repourl%(foo)s"))
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "repourlbar")
@@ -91,15 +104,17 @@ class RepoURL(unittest.TestCase):
         d = dict(test=WithProperties("repourl%(foo)s"))
         url = _ComputeRepositoryURL(FakeStep(), d)
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "repourlbar")
         return d
 
     def test_callable_render(self):
-        func = lambda x: WithProperties(x+"%(foo)s")
+        func = lambda x: WithProperties(x + "%(foo)s")
         url = _ComputeRepositoryURL(FakeStep(), func)
         d = self.build.render(url)
+
         @d.addCallback
         def callback(res):
             self.assertEquals(res, "testbar")

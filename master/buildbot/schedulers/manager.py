@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.application import service
-from twisted.python import log, reflect
+from buildbot import config
+from buildbot import util
 from buildbot.process import metrics
-from buildbot import config, util
+from twisted.application import service
+from twisted.internet import defer
+from twisted.python import log
+from twisted.python import reflect
+
 
 class SchedulerManager(config.ReconfigurableServiceMixin,
                        service.MultiService):
+
     def __init__(self, master):
         service.MultiService.__init__(self)
         self.setName('scheduler_manager')
@@ -62,8 +66,8 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
         for sch_name in removed_names:
             log.msg("removing scheduler '%s'" % (sch_name,))
             sch = old_by_name[sch_name]
-            yield defer.maybeDeferred(lambda :
-                        sch.disownServiceParent())
+            yield defer.maybeDeferred(lambda:
+                                      sch.disownServiceParent())
             sch.master = None
 
         # .. then additions
@@ -76,7 +80,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
             class_name = '%s.%s' % (sch.__class__.__module__,
                                     sch.__class__.__name__)
             objectid = yield self.master.db.state.getObjectId(
-                                    sch.name, class_name)
+                sch.name, class_name)
 
             # set up the scheduler
             sch.objectid = objectid
@@ -86,10 +90,10 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
             sch.setServiceParent(self)
 
         metrics.MetricCountEvent.log("num_schedulers", len(list(self)),
-                                    absolute=True)
+                                     absolute=True)
 
         # reconfig any newly-added schedulers, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                        new_config)
+                                                                new_config)
 
         timer.stop()

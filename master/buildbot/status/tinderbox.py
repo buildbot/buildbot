@@ -14,23 +14,32 @@
 # Copyright Buildbot Team Members
 
 
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.utils import formatdate
 
-from zope.interface import implements
 from twisted.internet import defer
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.status import mail
-from buildbot.status.results import SUCCESS, WARNINGS, EXCEPTION, RETRY
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import RETRY
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import WithProperties
 
-import gzip, bz2, base64, re, cStringIO
+import base64
+import bz2
+import cStringIO
+import gzip
+import re
 
 # TODO: docs, maybe a test of some sort just to make sure it actually imports
 # and can format email without raising an exception.
 
+
 class TinderboxMailNotifier(mail.MailNotifier):
+
     """This is a Tinderbox status notifier. It can send e-mail to a number of
     different tinderboxes or people. E-mails are sent at the beginning and
     upon completion of each build. It can be configured to send out e-mails
@@ -135,7 +144,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
         self.logCompression = logCompression
         self.errorparser = errorparser
         self.useChangeTime = useChangeTime
-        assert columnName is None or type(columnName) is str \
+        assert columnName is None or isinstance(columnName, str) \
             or isinstance(columnName, WithProperties), \
             "columnName must be None, a string, or a WithProperties instance"
         self.columnName = columnName
@@ -143,10 +152,10 @@ class TinderboxMailNotifier(mail.MailNotifier):
     def buildStarted(self, name, build):
         builder = build.getBuilder()
         if self.builders is not None and name not in self.builders:
-            return # ignore this Build
+            return  # ignore this Build
         if self.categories is not None and \
                 builder.category not in self.categories:
-            return # ignore this build
+            return  # ignore this build
         self.buildMessage(name, build, "building")
 
     @defer.inlineCallbacks
@@ -188,7 +197,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             res += "busted"
             text += res
 
-        text += "\n";
+        text += "\n"
 
         if self.columnName is None:
             # use the builder name
@@ -265,9 +274,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
         m.set_payload(text)
 
         m['Date'] = formatdate(localtime=True)
-        m['Subject'] = self.subject % { 'result': res,
-                                        'builder': name,
-                                        }
+        m['Subject'] = self.subject % {'result': res,
+                                       'builder': name,
+                                       }
         m['From'] = self.fromaddr
         # m['To'] is added later
 

@@ -25,6 +25,7 @@ from buildbot.status import results
 
 
 class PngStatusResource(resource.Resource):
+
     """Describe a single builder result as a PNG image
     """
 

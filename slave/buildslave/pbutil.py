@@ -19,13 +19,16 @@
 
 from twisted.spread import pb
 
-from twisted.spread.pb import PBClientFactory
-from twisted.internet import protocol, reactor
-from twisted.python import log
 from twisted.cred import error
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread.pb import PBClientFactory
+
 
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
+
     """Reconnecting client factory for PB brokers.
 
     Like PBClientFactory, but if the connection fails or is lost, the factory
@@ -78,7 +81,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
     # newcred methods
 
     def login(self, *args):
-        raise RuntimeError, "login is one-shot: use startLogin instead"
+        raise RuntimeError("login is one-shot: use startLogin instead")
 
     def startLogin(self, credentials, client=None):
         self._credentials = credentials
@@ -89,12 +92,13 @@ class ReconnectingPBClientFactory(PBClientFactory,
         d = self._cbSendUsername(root, self._credentials.username,
                                  self._credentials.password, self._client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
-                errbackArgs=(broker,))
+                       errbackArgs=(broker,))
 
     # timer for hung connections
 
     def startHungConnectionTimer(self, connector):
         self.stopHungConnectionTimer()
+
         def hungConnection():
             log.msg("connection attempt timed out (is the port number correct?)")
             self.hungConnectionTimer = None

@@ -15,9 +15,11 @@
 
 import sys
 import traceback
-from twisted.internet import defer
+
 from buildbot.clients import sendchange as sendchange_client
 from buildbot.util import in_reactor
+from twisted.internet import defer
+
 
 @in_reactor
 @defer.inlineCallbacks
@@ -42,9 +44,9 @@ def sendchange(config):
     s = sendchange_client.Sender(master, auth, encoding=encoding)
     try:
         yield s.send(branch, revision, comments, files, who=who,
-                category=category, when=when, properties=properties,
-                repository=repository, vc=vc, project=project, revlink=revlink,
-                codebase=codebase)
+                     category=category, when=when, properties=properties,
+                     repository=repository, vc=vc, project=project, revlink=revlink,
+                     codebase=codebase)
     except:
         print "change not sent:"
         traceback.print_exc(file=sys.stdout)

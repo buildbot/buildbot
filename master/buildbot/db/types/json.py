@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 
 from buildbot.util import json
-from sqlalchemy.types import TypeDecorator, Text
+from sqlalchemy.types import Text
+from sqlalchemy.types import TypeDecorator
+
 
 class JsonObject(TypeDecorator):
+
     """Represents an immutable json-encoded string."""
 
     impl = Text

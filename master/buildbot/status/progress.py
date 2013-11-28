@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import reactor
-from twisted.spread import pb
-from twisted.python import log
 from buildbot import util
 from collections import defaultdict
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+
 
 class StepProgress:
+
     """I keep track of how much progress a single BuildStep has made.
 
     Progress is measured along various axes. Time consumed is one that is
@@ -63,7 +65,8 @@ class StepProgress:
         self.buildProgress.newExpectations()
 
     def start(self):
-        if self.debug: print "StepProgress.start[%s]" % self.name
+        if self.debug:
+            print "StepProgress.start[%s]" % self.name
         self.startTime = util.now()
 
     def setProgress(self, metric, value):
@@ -80,19 +83,20 @@ class StepProgress:
         """This stops the 'time' metric and marks the step as finished
         overall. It should be called after the last .setProgress has been
         done for each axis."""
-        if self.debug: print "StepProgress.finish[%s]" % self.name
+        if self.debug:
+            print "StepProgress.finish[%s]" % self.name
         self.stopTime = util.now()
         self.buildProgress.stepFinished(self.name)
 
     def totalTime(self):
-        if self.startTime != None and self.stopTime != None:
+        if self.startTime is not None and self.stopTime is not None:
             return self.stopTime - self.startTime
 
     def remaining(self):
-        if self.startTime == None:
+        if self.startTime is None:
             return self.expectedTime
-        if self.stopTime != None:
-            return 0 # already finished
+        if self.stopTime is not None:
+            return 0  # already finished
         # TODO: replace this with cleverness that graphs each metric vs.
         # time, then finds the inverse function. Will probably need to save
         # a timestamp with each setProgress update, when finished, go back
@@ -109,31 +113,34 @@ class StepProgress:
         percentages = []
         for metric, value in self.progress.items():
             expectation = self.expectations[metric]
-            if value != None and expectation != None:
+            if value is not None and expectation is not None:
                 p = 1.0 * value / expectation
                 percentages.append(p)
         if percentages:
-            avg = reduce(lambda x,y: x+y, percentages) / len(percentages)
+            avg = reduce(lambda x, y: x + y, percentages) / len(percentages)
             if avg > 1.0:
                 # overdue
                 avg = 1.0
             if avg < 0.0:
                 avg = 0.0
-        if percentages and self.expectedTime != None:
+        if percentages and self.expectedTime is not None:
             return self.expectedTime - (avg * self.expectedTime)
         if self.expectedTime is not None:
             # fall back to pure time
             return self.expectedTime - (util.now() - self.startTime)
-        return None # no idea
+        return None  # no idea
 
 
 class WatcherState:
+
     def __init__(self, interval):
         self.interval = interval
         self.timer = None
         self.needUpdate = 0
 
+
 class BuildProgress(pb.Referenceable):
+
     """I keep track of overall build progress. I hold a list of StepProgress
     objects.
     """
@@ -159,37 +166,37 @@ class BuildProgress(pb.Referenceable):
         """Call this when one of the steps has changed its expectations.
         This should trigger us to update our ETA value and notify any
         subscribers."""
-        pass # subscribers are not implemented: they just poll
+        pass  # subscribers are not implemented: they just poll
 
     def stepFinished(self, stepname):
         assert(stepname not in self.finishedSteps)
         self.finishedSteps.append(stepname)
         if len(self.finishedSteps) == len(self.steps.keys()):
             self.sendLastUpdates()
-            
+
     def newProgress(self):
         r = self.remaining()
         if self.debug:
             print " remaining:", r
-        if r != None:
+        if r is not None:
             self.sendAllUpdates()
-        
+
     def remaining(self):
         # sum eta of all steps
         sum = 0
         for name, step in self.steps.items():
             rem = step.remaining()
-            if rem == None:
-                return None # not sure
+            if rem is None:
+                return None  # not sure
             sum += rem
         return sum
+
     def eta(self):
         left = self.remaining()
-        if left == None:
-            return None # not sure
+        if left is None:
+            return None  # not sure
         done = util.now() + left
         return done
-
 
     def remote_subscribe(self, remote, interval=5):
         # [interval, timer, needUpdate]
@@ -199,12 +206,14 @@ class BuildProgress(pb.Referenceable):
         self.updateWatcher(remote)
         self.startTimer(remote)
         log.msg("BuildProgress.remote_subscribe(%s)" % remote)
+
     def remote_unsubscribe(self, remote):
         # TODO: this doesn't work. I think 'remote' will always be different
         # than the object that appeared in _subscribe.
         log.msg("BuildProgress.remote_unsubscribe(%s)" % remote)
         self.removeWatcher(remote)
-        #remote.dontNotifyOnDisconnect(self.removeWatcher)
+        # remote.dontNotifyOnDisconnect(self.removeWatcher)
+
     def removeWatcher(self, remote):
         #log.msg("removeWatcher(%s)" % remote)
         try:
@@ -215,9 +224,11 @@ class BuildProgress(pb.Referenceable):
         except KeyError:
             log.msg("Weird, removeWatcher on non-existent subscriber:",
                     remote)
+
     def sendAllUpdates(self):
         for r in self.watchers.keys():
             self.updateWatcher(r)
+
     def updateWatcher(self, remote):
         # an update wants to go to this watcher. Send it if we can, otherwise
         # queue it for later
@@ -229,13 +240,15 @@ class BuildProgress(pb.Referenceable):
         else:
             # timer is running, just mark as needing an update
             w.needUpdate = 1
+
     def startTimer(self, remote):
         w = self.watchers[remote]
         timer = reactor.callLater(w.interval, self.watcherTimeout, remote)
         w.timer = timer
+
     def sendUpdate(self, remote, last=0):
         self.watchers[remote].needUpdate = 0
-        #text = self.asText() # TODO: not text, duh
+        # text = self.asText() # TODO: not text, duh
         try:
             remote.callRemote("progress", self.remaining())
             if last:
@@ -247,17 +260,18 @@ class BuildProgress(pb.Referenceable):
     def watcherTimeout(self, remote):
         w = self.watchers.get(remote, None)
         if not w:
-            return # went away
+            return  # went away
         w.timer = None
         if w.needUpdate:
             self.sendUpdate(remote)
             self.startTimer(remote)
+
     def sendLastUpdates(self):
         for remote in self.watchers.keys():
             self.sendUpdate(remote, 1)
             self.removeWatcher(remote)
 
-        
+
 class Expectations:
     debug = False
     # decay=1.0 ignores all but the last build
@@ -296,7 +310,7 @@ class Expectations:
         for name, stepprogress in buildprogress.steps.items():
             old = self.times.get(name)
             current = stepprogress.totalTime()
-            if current == None:
+            if current is None:
                 log.msg("Expectations.update: current[%s] was None!" % name)
                 continue
             new = self.wavg(old, current)
@@ -304,7 +318,7 @@ class Expectations:
             if self.debug:
                 print "new expected time[%s] = %s, old %s, cur %s" % \
                       (name, new, old, current)
-            
+
             for metric, current in stepprogress.progress.items():
                 old = self.steps[name].get(metric)
                 new = self.wavg(old, current)
@@ -316,7 +330,7 @@ class Expectations:
     def expectedBuildTime(self):
         if None in self.times.values():
             return None
-        #return sum(self.times.values())
+        # return sum(self.times.values())
         # python-2.2 doesn't have 'sum'. TODO: drop python-2.2 support
         s = 0
         for v in self.times.values():

@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 
 import os
-import sys
 import shutil
+import sys
 
-from twisted.internet import threads, defer
-from twisted.python import runtime, log
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
+from twisted.python import runtime
 
 from buildslave import runprocess
-from buildslave.commands import base, utils
+from buildslave.commands import base
+from buildslave.commands import utils
+
 
 class MakeDirectory(base.Command):
 
@@ -40,13 +44,13 @@ class MakeDirectory(base.Command):
         except:
             self.sendStatus({'rc': 1})
 
+
 class RemoveDirectory(base.Command):
 
     header = "rmdir"
 
-    def setup(self,args):
-        self.logEnviron = args.get('logEnviron',True)
-
+    def setup(self, args):
+        self.logEnviron = args.get('logEnviron', True)
 
     @defer.deferredGenerator
     def start(self):
@@ -58,7 +62,7 @@ class RemoveDirectory(base.Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.rc = 0
-        if type(dirnames) is list:
+        if isinstance(dirnames, list):
             assert len(dirnames) != 0
             for dirname in dirnames:
                 wfd = defer.waitForDeferred(self.removeSingleDir(dirname))
@@ -80,22 +84,24 @@ class RemoveDirectory(base.Command):
         self.dir = os.path.join(self.builder.basedir, dirname)
         if runtime.platformType != "posix":
             d = threads.deferToThread(utils.rmdirRecursive, self.dir)
+
             def cb(_):
-                return 0 # rc=0
+                return 0  # rc=0
+
             def eb(f):
-                self.sendStatus({'header' : 'exception from rmdirRecursive\n' + f.getTraceback()})
-                return -1 # rc=-1
+                self.sendStatus({'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
+                return -1  # rc=-1
             d.addCallbacks(cb, eb)
         else:
             d = self._clobber(None)
 
         return d
 
-    def _clobber(self, dummy, chmodDone = False):
+    def _clobber(self, dummy, chmodDone=False):
         command = ["rm", "-rf", self.dir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         logEnviron=self.logEnviron, usePTY=False)
+                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+                                  logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -121,23 +127,24 @@ class RemoveDirectory(base.Command):
             # directory for which it doesn't have permission, before changing that
             # permission) by running 'find' instead
             command = ["find", os.path.join(self.builder.basedir, self.dir),
-                                '-exec', 'chmod', 'u+rwx', '{}', ';' ]
+                       '-exec', 'chmod', 'u+rwx', '{}', ';']
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         logEnviron=self.logEnviron, usePTY=False)
+                                  sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+                                  logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
         d = c.start()
         d.addCallback(lambda dummy: self._clobber(dummy, True))
         return d
 
+
 class CopyDirectory(base.Command):
 
     header = "cpdir"
 
-    def setup(self,args):
-        self.logEnviron = args.get('logEnviron',True)
-        
+    def setup(self, args):
+        self.logEnviron = args.get('logEnviron', True)
+
     def start(self):
         args = self.args
         # args['todir'] is relative to Builder directory, and is required.
@@ -153,15 +160,18 @@ class CopyDirectory(base.Command):
 
         if runtime.platformType != "posix":
             d = threads.deferToThread(shutil.copytree, fromdir, todir)
+
             def cb(_):
-                return 0 # rc=0
+                return 0  # rc=0
+
             def eb(f):
-                self.sendStatus({'header' : 'exception from copytree\n' + f.getTraceback()})
-                return -1 # rc=-1
+                self.sendStatus({'header': 'exception from copytree\n' + f.getTraceback()})
+                return -1  # rc=-1
             d.addCallbacks(cb, eb)
+
             @d.addCallback
             def send_rc(rc):
-                self.sendStatus({'rc' : rc})
+                self.sendStatus({'rc': rc})
         else:
             if not os.path.exists(os.path.dirname(todir)):
                 os.makedirs(os.path.dirname(todir))
@@ -171,14 +181,15 @@ class CopyDirectory(base.Command):
 
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                             sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                             logEnviron=self.logEnviron, usePTY=False)
+                                      sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
+                                      logEnviron=self.logEnviron, usePTY=False)
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
 
             d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
+
 
 class StatFile(base.Command):
 
@@ -193,6 +204,22 @@ class StatFile(base.Command):
         try:
             stat = os.stat(filename)
             self.sendStatus({'stat': tuple(stat)})
+            self.sendStatus({'rc': 0})
+        except:
+            self.sendStatus({'rc': 1})
+
+
+class ListDir(base.Command):
+
+    header = "listdir"
+
+    def start(self):
+        args = self.args
+        assert args['dir'] is not None
+        directory = os.path.join(self.builder.basedir, args['dir'])
+        try:
+            files = os.listdir(directory)
+            self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
         except:
             self.sendStatus({'rc': 1})

@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import sys
-import mock
-import errno
-import shutil
 import __builtin__
 import cStringIO
+import errno
+import mock
+import os
+import shutil
+import sys
+
 from buildslave.scripts import base
 
 
@@ -33,6 +34,7 @@ def nl(s):
 
 
 class BasedirMixin(object):
+
     """Mix this in and call setUpBasedir and tearDownBasedir to set up
     a clean basedir with a name given in self.basedir."""
 
@@ -47,15 +49,18 @@ class BasedirMixin(object):
 
 
 class IsBuildslaveDirMixin:
+
     """
     Mixin for setting up mocked base.isBuildslaveDir() function
     """
+
     def setupUpIsBuildslaveDir(self, return_value):
         self.isBuildslaveDir = mock.Mock(return_value=return_value)
         self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
 
 
 class PatcherMixin(object):
+
     """
     Mix this in to get a few special-cased patching methods
     """
@@ -73,10 +78,12 @@ class PatcherMixin(object):
 
 
 class FileIOMixin:
+
     """
     Mixin for patching open(), read() and write() to simulate successful
     I/O operations and various I/O errors.
     """
+
     def setUpOpen(self, file_contents="dummy-contents"):
         """
         patch open() to return file object with provided contents.
@@ -139,9 +146,11 @@ class FileIOMixin:
 
 
 class StdoutAssertionsMixin(object):
+
     """
     Mix this in to be able to assert on stdout during the test
     """
+
     def setUpStdoutAssertions(self):
         self.stdout = cStringIO.StringIO()
         self.patch(sys, 'stdout', self.stdout)

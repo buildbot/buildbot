@@ -16,12 +16,15 @@
 from __future__ import with_statement
 
 import os
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.util import maildir
+
 from buildbot.test.util import dirs
+from buildbot.util import maildir
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
+
     def setUp(self):
         self.maildir = os.path.abspath("maildir")
         self.newdir = os.path.join(self.maildir, "new")
@@ -47,32 +50,36 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         yield self.svc.stopService()
         self.assertEqual(len(list(self.svc)), 0)
 
-
     def test_messageReceived(self):
         self.svc = maildir.MaildirService(self.maildir)
 
         # add a fake messageReceived method
         messagesReceived = []
+
         def messageReceived(filename):
             messagesReceived.append(filename)
             return defer.succeed(None)
         self.svc.messageReceived = messageReceived
         d = defer.maybeDeferred(self.svc.startService)
+
         def check_empty(_):
             self.assertEqual(messagesReceived, [])
         d.addCallback(check_empty)
+
         def add_msg(_):
             tmpfile = os.path.join(self.tmpdir, "newmsg")
             newfile = os.path.join(self.newdir, "newmsg")
             open(tmpfile, "w").close()
             os.rename(tmpfile, newfile)
         d.addCallback(add_msg)
+
         def trigger(_):
             # TODO: can we wait for a dnotify somehow, if enabled?
             return self.svc.poll()
         d.addCallback(trigger)
+
         def check_nonempty(_):
-            self.assertEqual(messagesReceived, [ 'newmsg' ])
+            self.assertEqual(messagesReceived, ['newmsg'])
         d.addCallback(check_nonempty)
         return d
 
@@ -83,6 +90,6 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         open(tmpfile, "w").close()
         os.rename(tmpfile, newfile)
         self.svc.moveToCurDir("newmsg")
-        self.assertEqual([ os.path.exists(os.path.join(d, "newmsg"))
-                           for d in (self.newdir, self.curdir, self.tmpdir) ],
-                         [ False, True, False ])
+        self.assertEqual([os.path.exists(os.path.join(d, "newmsg"))
+                          for d in (self.newdir, self.curdir, self.tmpdir)],
+                         [False, True, False])
