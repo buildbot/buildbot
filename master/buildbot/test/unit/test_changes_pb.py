@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import changesource
@@ -46,7 +47,7 @@ class TestPBChangeSource(
         return d
 
     def test_registration_no_slaveport(self):
-        return self._test_registration(None,
+        return self._test_registration(None, exp_ConfigErrors=True,
                                        user='alice', passwd='sekrit')
 
     def test_registration_global_slaveport(self):
@@ -62,7 +63,7 @@ class TestPBChangeSource(
                                        slavePort='9939')
 
     def test_registration_no_userpass_no_global(self):
-        return self._test_registration(None)
+        return self._test_registration(None, exp_ConfigErrors=True)
 
     def test_no_registration_if_master_already_claimed(self):
         # claim the CS on another master...
@@ -90,19 +91,26 @@ class TestPBChangeSource(
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
-    def _test_registration(self, exp_registration, slavePort=None,
-                           **constr_kwargs):
-        config = mock.Mock()
-        config.protocols = {'pb': {'port': slavePort}}
+    def _test_registration(self, exp_registration, exp_ConfigErrors=False,
+                           slavePort=None, **constr_kwargs):
+        cfg = mock.Mock()
+        cfg.protocols = {'pb': {'port': slavePort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
 
         self.startChangeSource()
-        yield self.changesource.reconfigService(config)
+        if exp_ConfigErrors:
+            # if it's not registered, it should raise a ConfigError.
+            try:
+                yield self.changesource.reconfigService(cfg)
+            except config.ConfigErrors:
+                pass
+            else:
+                self.fail("Expected ConfigErrors")
+        else:
+            yield self.changesource.reconfigService(cfg)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
-        else:
-            self.assertNotRegistered()
 
         yield self.stopChangeSource()
 

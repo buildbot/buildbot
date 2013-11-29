@@ -157,7 +157,7 @@ class Connection(base.Connection, pb.Avatar):
         d.addCallback(cache_builders)
         return d
 
-    def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
+    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startCommand',
                                        remoteCommand, commandId, commandName, args

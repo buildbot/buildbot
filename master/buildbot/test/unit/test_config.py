@@ -55,7 +55,6 @@ global_defaults = dict(
     mergeRequests=None,
     prioritizeBuilders=None,
     protocols={},
-    slavePortnum=None,
     multiMaster=False,
     debugPassword=None,
     manhole=None,
@@ -1031,11 +1030,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_horizons()
 
         self.assertConfigError(self.errors, "logHorizon must be less")
-
-    def test_check_ports_slavePortnum_set(self):
-        self.cfg.slavePortnum = 10
-        self.cfg.check_ports()
-        self.assertNoConfigErrors(self.errors)
 
     def test_check_ports_protocols_set(self):
         self.cfg.protocols = {"pb": {"port": 10}}

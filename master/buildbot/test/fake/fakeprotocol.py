@@ -41,8 +41,8 @@ class FakeConnection(base.Connection):
         self.builders = dict((b, False) for b in builders)
         return defer.succeed(None)
 
-    def startCommands(self, remoteCommand, builderName, commandId, commandName, args):
-        self.remoteCalls.append(('startCommands', remoteCommand, builderName,
+    def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
+        self.remoteCalls.append(('remoteStartCommand', remoteCommand, builderName,
                                  commandId, commandName, args))
         return defer.succeed(None)
 

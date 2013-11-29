@@ -174,7 +174,7 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(conn.builders, builders)
         self.mind.callRemote.assert_called_with('setBuilderList', builders)
 
-    def test_startCommands(self):
+    def test_remoteStartCommand(self):
         builders = ['builder']
         ret_val = {'builder': mock.Mock()}
         self.mind.callRemote.return_value = defer.succeed(ret_val)
@@ -184,7 +184,7 @@ class TestConnection(unittest.TestCase):
         RCInstance, builder_name, commandID = None, "builder", None
         remote_command, args = "command", "args"
 
-        conn.startCommands(RCInstance, builder_name, commandID, remote_command, args)
+        conn.remoteStartCommand(RCInstance, builder_name, commandID, remote_command, args)
 
         ret_val['builder'].callRemote.assert_called_with('startCommand',
                                                          RCInstance, commandID, remote_command, args)
