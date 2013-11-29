@@ -29,7 +29,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process.properties import Properties
-from buildbot.status.results import SUCCESS, SKIPPED
+from buildbot.status.results import SUCCESS, SKIPPED, FAILURE
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
@@ -50,7 +50,7 @@ def uploadString(string, timestamp=None):
 
 
 def uploadTarFile(filename, **members):
-    def behaviour(command):
+    def behavior(command):
         f = StringIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
         for name, content in members.iteritems():
@@ -58,7 +58,7 @@ def uploadTarFile(filename, **members):
         writer = command.args['writer']
         writer.remote_write(f.getvalue())
         writer.remote_unpack()
-    return behaviour
+    return behavior
 
 
 # Test buildbot.steps.transfer._FileWriter class.
@@ -147,7 +147,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             os.unlink(self.destfile)
         return self.tearDownBuildStep()
 
-    def test_constructor_mode_type(self):
+    def testConstructorModeType(self):
         self.assertRaises(config.ConfigErrors, lambda:
                           transfer.FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
 
@@ -222,6 +222,21 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 os.path.basename(self.destfile), "http://server/file")
         return d
 
+    def testFailure(self):
+        self.setupStep(
+            transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
+
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + 1)
+
+        self.expectOutcome(result=FAILURE, status_text=["uploading", "srcfile"])
+        d = self.runStep()
+        return d
+
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
 
@@ -251,6 +266,21 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(result=SUCCESS, status_text=["uploading", "srcdir"])
+        d = self.runStep()
+        return d
+
+    def testFailure(self):
+        self.setupStep(
+            transfer.DirectoryUpload(slavesrc="srcdir", masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('uploadDirectory', dict(
+                slavesrc="srcdir", workdir='wkdir',
+                blocksize=16384, compress=None, maxsize=None,
+                writer=ExpectRemoteRef(transfer._DirectoryWriter)))
+            + 1)
+
+        self.expectOutcome(result=FAILURE, status_text=["uploading", "srcdir"])
         d = self.runStep()
         return d
 
@@ -347,6 +377,25 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(result=SUCCESS, status_text=["uploading", "2 files"])
+        d = self.runStep()
+        return d
+
+    def testFailure(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
+
+        self.expectCommands(
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + 1)
+
+        self.expectOutcome(result=FAILURE, status_text=["uploading", "2 files"])
         d = self.runStep()
         return d
 
