@@ -472,8 +472,9 @@ class MultipleFileUpload(_TransferBuildStep):
 
         @d.addCallback
         def uploadDone(result):
-            self.uploadDone(result, source, masterdest)
-            return result
+            d = defer.maybeDeferred(self.uploadDone, result, source, masterdest)
+            d.addCallback(lambda _: result)
+            return d
 
         return d
 
@@ -512,8 +513,9 @@ class MultipleFileUpload(_TransferBuildStep):
 
         @d.addCallback
         def allUploadsDone(result):
-            self.allUploadsDone(result, sources, masterdest)
-            return result
+            d = defer.maybeDeferred(self.allUploadsDone, result, sources, masterdest)
+            d.addCallback(lambda _: result)
+            return d
 
         log.msg("MultipleFileUpload started, from slave %r to master %r"
                 % (sources, masterdest))
