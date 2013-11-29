@@ -97,7 +97,8 @@ class _FileWriter(pb.Referenceable):
         fp = getattr(self, "fp", None)
         if fp:
             fp.close()
-            os.unlink(self.destfile)
+            if self.destfile and os.path.exists(self.destfile):
+                os.unlink(self.destfile)
             if self.tmpname and os.path.exists(self.tmpname):
                 os.unlink(self.tmpname)
 
