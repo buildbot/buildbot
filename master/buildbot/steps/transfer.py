@@ -436,7 +436,7 @@ class MultipleFileUpload(_TransferBuildStep):
         return self.runUploadCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, self.mode)
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
 
         args = {
             'slavesrc': source,
@@ -470,7 +470,19 @@ class MultipleFileUpload(_TransferBuildStep):
             else:
                 return defer.fail('%r is neither a regular file, nor a directory' % source)
 
+        @d.addCallback
+        def uploadDone(result):
+            self.uploadDone(result, source, masterdest)
+            return result
+
         return d
+
+    def uploadDone(self, result, source, masterdest):
+        pass
+
+    def allUploadsDone(self, result, sources, masterdest):
+        if self.url is not None:
+            self.addURL(os.path.basename(masterdest), self.url)
 
     def start(self):
         self.checkSlaveVersion("uploadDirectory")
@@ -498,13 +510,16 @@ class MultipleFileUpload(_TransferBuildStep):
 
         d = uploadSources()
 
+        @d.addCallback
+        def allUploadsDone(result):
+            self.allUploadsDone(result, sources, masterdest)
+            return result
+
         log.msg("MultipleFileUpload started, from slave %r to master %r"
                 % (sources, masterdest))
 
         nsrcs = len(sources)
         self.step_status.setText(['uploading', '%d %s' % (nsrcs, 'file' if nsrcs == 1 else 'files')])
-        if self.url is not None:
-            self.addURL(os.path.basename(masterdest), self.url)
 
         d.addCallback(self.finished).addErrback(self.failed)
 
