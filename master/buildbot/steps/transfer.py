@@ -222,22 +222,29 @@ class _TransferBuildStep(BuildStep):
             workdir = self.workdir
         return workdir
 
+    def runTransferCommand(self, cmd, writer=None):
+        # Run a transfer step, add a callback to extract the command status,
+        # add an error handler that cancels the writer.
+        self.cmd = cmd
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def checkResult(_):
+            return FAILURE if cmd.didFail() else SUCCESS
+
+        @d.addErrback
+        def cancel(res):
+            if writer:
+                writer.cancel()
+            return res
+
+        return d
+
     def interrupt(self, reason):
         self.addCompleteLog('interrupt', str(reason))
         if self.cmd:
             d = self.cmd.interrupt(reason)
             return d
-
-    def finished(self, result):
-        # Subclasses may choose to skip a transfer. In those cases, self.cmd
-        # will be None, and we should just let BuildStep.finished() handle
-        # the rest
-        if result == SKIPPED:
-            return BuildStep.finished(self, SKIPPED)
-
-        if self.cmd.didFail():
-            return BuildStep.finished(self, FAILURE)
-        return BuildStep.finished(self, SUCCESS)
 
 
 class FileUpload(_TransferBuildStep):
@@ -298,13 +305,8 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        d = self.runCommand(self.cmd)
-
-        @d.addErrback
-        def cancel(res):
-            fileWriter.cancel()
-            return res
+        cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
+        d = self.runTransferCommand(cmd, fileWriter)
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -359,25 +361,9 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        d = self.runCommand(self.cmd)
-
-        @d.addErrback
-        def cancel(res):
-            dirWriter.cancel()
-            return res
+        cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
+        d = self.runTransferCommand(cmd, dirWriter)
         d.addCallback(self.finished).addErrback(self.failed)
-
-    def finished(self, result):
-        # Subclasses may choose to skip a transfer. In those cases, self.cmd
-        # will be None, and we should just let BuildStep.finished() handle
-        # the rest
-        if result == SKIPPED:
-            return BuildStep.finished(self, SKIPPED)
-
-        if self.cmd.didFail():
-            return BuildStep.finished(self, FAILURE)
-        return BuildStep.finished(self, SUCCESS)
 
 
 class MultipleFileUpload(_TransferBuildStep):
@@ -406,20 +392,6 @@ class MultipleFileUpload(_TransferBuildStep):
         self.keepstamp = keepstamp
         self.url = url
 
-    def runUploadCommand(self, cmd, writer):
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def checkResult(_):
-            return FAILURE if cmd.didFail() else SUCCESS
-
-        @d.addErrback
-        def cancel(res):
-            writer.cancel()
-            return res
-
-        return d
-
     def uploadFile(self, source, masterdest):
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
@@ -433,7 +405,7 @@ class MultipleFileUpload(_TransferBuildStep):
         }
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        return self.runUploadCommand(cmd, fileWriter)
+        return self.runTransferCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
         dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
@@ -448,7 +420,7 @@ class MultipleFileUpload(_TransferBuildStep):
         }
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        return self.runUploadCommand(cmd, dirWriter)
+        return self.runTransferCommand(cmd, dirWriter)
 
     def startUpload(self, source, destdir):
         masterdest = os.path.join(destdir, os.path.basename(source))
@@ -619,8 +591,8 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runCommand(self.cmd)
+        cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
+        d = self.runTransferCommand(cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -671,8 +643,8 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runCommand(self.cmd)
+        cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
+        d = self.runTransferCommand(cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
 
