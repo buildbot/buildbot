@@ -399,6 +399,51 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    def testSubclass(self):
+        class CustomStep(transfer.MultipleFileUpload):
+            uploadDone = Mock(return_value=None)
+            allUploadsDone = Mock(return_value=None)
+
+        step = CustomStep(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir)
+        self.setupStep(step)
+
+        self.expectCommands(
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                slavesrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(transfer._FileWriter)))
+            + Expect.behavior(uploadString('test'))
+            + 0,
+            Expect('stat', dict(file="srcdir",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFDIR, 99, 99])
+            + 0,
+            Expect('uploadDirectory', dict(
+                slavesrc="srcdir", workdir='wkdir',
+                blocksize=16384, compress=None, maxsize=None,
+                writer=ExpectRemoteRef(transfer._DirectoryWriter)))
+            + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
+            + 0)
+
+        self.expectOutcome(result=SUCCESS, status_text=["uploading", "2 files"])
+
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+           self.assertEquals(step.uploadDone.call_count, 2)
+           self.assertEquals(step.uploadDone.call_args_list[0], ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
+           self.assertEquals(step.uploadDone.call_args_list[1], ((SUCCESS, 'srcdir',  os.path.join(self.destdir, 'srcdir')), {}))
+           self.assertEquals(step.allUploadsDone.call_count, 1)
+           self.assertEquals(step.allUploadsDone.call_args_list[0], ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
+           return res
+
+        return d
+
 
 class TestStringDownload(unittest.TestCase):
 
