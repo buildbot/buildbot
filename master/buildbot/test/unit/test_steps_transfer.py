@@ -22,7 +22,6 @@ import tarfile
 import tempfile
 
 from twisted.trial import unittest
-from twisted.python import failure
 
 from mock import Mock
 
@@ -67,7 +66,7 @@ class UploadError(object):
 
     def __init__(self, behavior):
         self.behavior = behavior
-        self.writer   = None
+        self.writer = None
 
     def __call__(self, command):
         self.writer = command.args['writer']
@@ -529,12 +528,15 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-           self.assertEquals(step.uploadDone.call_count, 2)
-           self.assertEquals(step.uploadDone.call_args_list[0], ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
-           self.assertEquals(step.uploadDone.call_args_list[1], ((SUCCESS, 'srcdir',  os.path.join(self.destdir, 'srcdir')), {}))
-           self.assertEquals(step.allUploadsDone.call_count, 1)
-           self.assertEquals(step.allUploadsDone.call_args_list[0], ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
-           return res
+            self.assertEquals(step.uploadDone.call_count, 2)
+            self.assertEquals(step.uploadDone.call_args_list[0],
+                ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
+            self.assertEquals(step.uploadDone.call_args_list[1],
+                ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
+            self.assertEquals(step.allUploadsDone.call_count, 1)
+            self.assertEquals(step.allUploadsDone.call_args_list[0],
+                ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
+            return res
 
         return d
 
