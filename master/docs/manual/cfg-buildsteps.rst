@@ -2845,6 +2845,39 @@ list, or something that can be rendered as a list.::
                                  masterdest="~/public_html",
                                  url="~buildbot"))
 
+The ``url=`` parameter, can be used to specify a link to be displayed in the
+HTML status of the step.
+
+The way URLs are added to the step can be customized by extending the
+:bb:step:`MultipleFileUpload` class. the `allUploadsDone` method is called
+after all files have been uploaded and sets the URL. The `uploadDone` method
+is called once for each uploaded file and can be used to create file-specific
+links.::
+
+    from buildbot.steps.transfer import MultipleFileUpload
+    import os.path
+
+    class CustomFileUpload(MultipleFileUpload):
+        linkTypes = ('.html', '.txt')
+
+        def linkFile(self, basename):
+            name, ext = os.path.splitext(basename)
+            return ext in self.linkTypes
+
+        def uploadDone(self, result, source, masterdest):
+            if self.url:
+                basename = os.path.basename(source)
+                if self.linkFile(basename):
+                    self.addURL(self.url + '/' + basename, basename)
+
+        def allUploadsDone(self, result, sources, masterdest):
+            if self.url:
+                notLinked = filter(lambda src: not self.linkFile(src), sources)
+                numFiles = len(notLinked)
+                if numFiles:
+                    self.addURL(self.url, '... %d more' % numFiles)
+
+
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
