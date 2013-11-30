@@ -2821,6 +2821,63 @@ The optional ``compress`` argument can be given as ``'gz'`` or
           master as originally on the slave, see :option:`buildslave
           create-slave --umask` to change the default one.
 
+.. bb:step:: MultipleFileUpload
+
+Transferring Multiple Files At Once
++++++++++++++++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.transfer.MultipleFileUpload
+
+In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps
+there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files
+(and directories) in a single :class:`BuildStep`.
+The step supports all arguments that are supported by :bb:step:`FileUpload` and
+:bb:step:`DirectoryUpload`, but instead of a the single ``slavesrc`` parameter
+it takes a (plural) ``slavesrcs`` parameter. This parameter should either be a
+list, or something that can be rendered as a list.::
+
+    from buildbot.steps.shell import ShellCommand, Test
+    from buildbot.steps.transfer import MultipleFileUpload
+
+    f.addStep(ShellCommand(command=["make", "test"]))
+    f.addStep(ShellCommand(command=["make", "docs"]))
+    f.addStep(MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+                                 masterdest="~/public_html",
+                                 url="~buildbot"))
+
+The ``url=`` parameter, can be used to specify a link to be displayed in the
+HTML status of the step.
+
+The way URLs are added to the step can be customized by extending the
+:bb:step:`MultipleFileUpload` class. the `allUploadsDone` method is called
+after all files have been uploaded and sets the URL. The `uploadDone` method
+is called once for each uploaded file and can be used to create file-specific
+links.::
+
+    from buildbot.steps.transfer import MultipleFileUpload
+    import os.path
+
+    class CustomFileUpload(MultipleFileUpload):
+        linkTypes = ('.html', '.txt')
+
+        def linkFile(self, basename):
+            name, ext = os.path.splitext(basename)
+            return ext in self.linkTypes
+
+        def uploadDone(self, result, source, masterdest):
+            if self.url:
+                basename = os.path.basename(source)
+                if self.linkFile(basename):
+                    self.addURL(self.url + '/' + basename, basename)
+
+        def allUploadsDone(self, result, sources, masterdest):
+            if self.url:
+                notLinked = filter(lambda src: not self.linkFile(src), sources)
+                numFiles = len(notLinked)
+                if numFiles:
+                    self.addURL(self.url, '... %d more' % numFiles)
+
+
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
