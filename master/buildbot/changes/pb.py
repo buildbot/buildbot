@@ -128,14 +128,17 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             d += " (prefix '%s')" % self.prefix
         return d
 
-    @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def _calculatePort(self, cfg):
         # calculate the new port, defaulting to the slave's PB port if
         # none was specified
         port = self.port
         if port is None:
-            port = new_config.protocols.get('pb', {}).get('port')
+            port = cfg.protocols.get('pb', {}).get('port')
+        return port
 
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no "
                          "slave port configured")
@@ -149,7 +152,8 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             self, new_config)
 
     def activate(self):
-        self._register(self.port)
+        port = self._calculatePort(self.master.config)
+        self._register(port)
         return defer.succeed(None)
 
     def deactivate(self):
