@@ -99,6 +99,32 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):
+    changeEvent = {
+        'author': u'warner',
+        'branch': u'warnerdb',
+        'category': u'devel',
+        'codebase': u'',
+        'comments': u'fix whitespace',
+        'changeid': 500,
+        'files': [u'master/buildbot/__init__.py'],
+        'project': u'Buildbot',
+        'properties': {u'foo': (20, u'Change')},
+        'repository': u'git://warner',
+        'revision': u'0e92a098b',
+        'revlink': u'http://warner/0e92a098b',
+        'when_timestamp': 256738404,
+        'sourcestamp': {
+            'branch': u'warnerdb',
+            'codebase': u'',
+            'patch': None,
+            'project': u'Buildbot',
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'created_at': 10000000,
+            'ssid': 100,
+        },
+        # uid
+    }
 
     def setUp(self):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
@@ -144,32 +170,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       when_timestamp=256738404,
                       properties={u'foo': 20})
         expectedRoutingKey = ('change', '500', 'new')
-        expectedMessage = {
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'codebase': u'',
-            'comments': u'fix whitespace',
-            'changeid': 500,
-            'files': [u'master/buildbot/__init__.py'],
-            'project': u'Buildbot',
-            'properties': {u'foo': (20, u'Change')},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'http://warner/0e92a098b',
-            'when_timestamp': 256738404,
-            'sourcestamp': {
-                'branch': u'warnerdb',
-                'codebase': u'',
-                'patch': None,
-                'project': u'Buildbot',
-                'repository': u'git://warner',
-                'revision': u'0e92a098b',
-                'created_at': 10000000,
-                'ssid': 100,
-            },
-            # uid
-        }
+        expectedMessage = self.changeEvent
         expectedRow = fakedb.Change(
             changeid=500,
             author='warner',
