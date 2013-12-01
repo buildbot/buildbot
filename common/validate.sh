@@ -76,7 +76,6 @@ check_relnotes() {
         return 0
     fi
 }
-
 run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
@@ -96,8 +95,8 @@ fi
 
 # get a list of changed files, used below; this uses a tempfile to work around
 # shell behavior when piping to 'while'
-tempfile=$(mktemp)
-trap 'rm -f ${tempfile}' 1 2 3 15
+tempfile=$(mktemp -t bbvalidate)
+trap "rm -f ${tempfile}" 1 2 3 15
 git diff --name-only $REVRANGE | grep '\.py$' | grep -v '\(^master/\(contrib\|docs\)\|/setup\.py\)' > ${tempfile}
 py_files=()
 while read line; do
@@ -109,9 +108,11 @@ git log "$REVRANGE" --pretty=oneline || exit 1
 
 if $slow; then
     status "running 'setup.py develop' for www"
-    (cd www; python setup.py develop 2>&1 >/dev/null) || not_ok "www/setup.py failed"
+    (cd www; python setup.py develop 2>&1 >/dev/null    ) || not_ok "www/setup.py failed"
     status "running 'grunt ci' for www"
-    (cd www; node_modules/.bin/grunt ci 2>&1 >/dev/null) || not_ok "grunt ci failed"
+    LOG=/dev/null
+    if [[ `uname` == "Darwin" ]] ;then LOG=/dev/stdout; fi  # grunt >/dev/null hangs on osx ?!
+    (cd www; node_modules/.bin/grunt --no-color ci 2>&1  >$LOG ) || not_ok "grunt ci failed"
 fi
 if $slow; then
     status "running tests"

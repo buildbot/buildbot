@@ -75,6 +75,15 @@ class FakeRequest(object):
     def processingFailed(self, f):
         self.deferred.errback(f)
 
+    def notifyFinish(self):
+        d = defer.Deferred()
+
+        @self.deferred.addBoth
+        def finished(res):
+            d.callback(res)
+            return res
+        return d
+
 
 class RequiresWwwMixin(object):
     # mix this into a TestCase to skip if buildbot-www is not installed
@@ -116,7 +125,9 @@ class WwwTestMixin(RequiresWwwMixin):
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
-            return defer.succeed(rv)
+            if rv is not None:
+                request.write(rv)
+            request.finish()
         return request.deferred
 
     def render_control_resource(self, rsrc, path='/', params={},
