@@ -52,16 +52,26 @@ class ResourceType(unittest.TestCase):
     def test_produceEvent(self):
         cls = self.makeResourceTypeSubclass(
             name='singular',
-            keyFields=('fooid', 'barid'))
+            eventPathPatterns="/foo/:fooid/bar/:barid")
         master = fakemaster.make_master(testcase=self, wantMq=True)
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
         inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
                           'tested')
         master.mq.assertProductions([
-            (('singular', '10', '20', 'tested'), dict(fooid=10, barid='20'))
+            (('foo', '10','bar', '20', 'tested'), dict(fooid=10, barid='20'))
         ])
 
+    def test_compilePatterns(self):
+        class MyResourceType(base.ResourceType):
+            eventPathPatterns = """
+                /builder/:builderid/build/:number
+                /build/:buildid
+            """
+        master = fakemaster.make_master(testcase=self, wantMq=True)
+        master.mq.verifyMessages = False  # since this is a pretend message
+        inst = MyResourceType(master)
+        self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 

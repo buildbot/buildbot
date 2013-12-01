@@ -81,7 +81,9 @@ class Change(base.ResourceType):
     name = "change"
     plural = "changes"
     endpoints = [ChangeEndpoint, ChangesEndpoint]
-    keyFields = ['changeid']
+    eventPathPatterns = """
+        /change/:changeid
+    """
 
     class EntityType(types.Entity):
         changeid = types.Integer()

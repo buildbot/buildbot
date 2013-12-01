@@ -477,7 +477,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             bsid=bsid,
             complete_at=complete_at_epoch,
             results=cumulative_results)
-        self.mq.produce(('buildset', str(bsid), 'complete'), msg)
+        self.master.data.produceEvent('buildset', 'complete', msg)
 
     # state maintenance (private)
     def getObjectId(self):

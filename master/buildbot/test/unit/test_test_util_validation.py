@@ -163,7 +163,6 @@ class VerifyDict(unittest.TestCase):
 
     def test_MessageValidator(self):
         self.doValidationTest(validation.MessageValidator(
-            keyFields=['xid', 'yid'],
             events=['started', 'stopped'],
             messageValidator=validation.DictValidator(
                 a=validation.BooleanValidator(),
@@ -175,17 +174,11 @@ class VerifyDict(unittest.TestCase):
             ], bad=[
                 # routingKey is not a tuple
                 ('thing', {}),
-                # routingKey has wrong length
-                (('thing', '1', 'started'),
-                 {'xid': 1, 'yid': 2, 'a': True}),
                 # routingKey has wrong event
                 (('thing', '1', '2', 'exploded'),
                  {'xid': 1, 'yid': 2, 'a': True}),
                 # routingKey element has wrong type
                 (('thing', 1, 2, 'started'),
-                 {'xid': 1, 'yid': 2, 'a': True}),
-                # routingKey element doesn't match message
-                (('thing', '99', '99', 'started'),
                  {'xid': 1, 'yid': 2, 'a': True}),
                 # routingKey element isn't in message
                 (('thing', '1', '2', 'started'),

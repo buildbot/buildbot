@@ -195,7 +195,9 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def _buildRequestMessage(self, brid, bsid, builderid, buildername):
         return (
-            ('buildrequest', str(bsid), str(builderid), str(brid), 'new'),
+            ('buildset', str(bsid),
+             'builder', str(builderid),
+             'buildrequest', str(brid), 'new'),
             dict(brid=brid, bsid=bsid, builderid=builderid,
                  buildername=buildername))
 

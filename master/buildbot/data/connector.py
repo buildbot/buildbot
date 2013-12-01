@@ -106,6 +106,9 @@ class DataConnector(service.AsyncService):
         except KeyError:
             raise exceptions.InvalidPathError
 
+    def getResource(self, name):
+        return getattr(self.rtypes, name)
+
     @defer.inlineCallbacks
     def get(self, path, filters=None, fields=None, order=None,
             limit=None, offset=None):
@@ -124,6 +127,10 @@ class DataConnector(service.AsyncService):
     def control(self, action, args, path):
         endpoint, kwargs = self.getEndpoint(path)
         return endpoint.control(action, args, kwargs)
+
+    def produceEvent(self, rtype, msg, event):
+        rsrc = self.getResource(rtype)
+        return rsrc.produceEvent(msg, event)
 
     def allEndpoints(self):
         """return the full spec of the connector as a list of dicts

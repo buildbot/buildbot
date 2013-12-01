@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import copy
+
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import datetime2epoch
@@ -63,6 +65,17 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue((yield self.db2data(dbdict))
                           if dbdict else None)
 
+    def startConsuming(self, callback, options, kwargs):
+        builderid = kwargs.get('builderid')
+        number = kwargs.get('number')
+        buildid = kwargs.get('buildid')
+        if builderid is not None:
+            return self.master.mq.startConsuming(callback,
+                                                 ('builder', builderid, 'build', number, None))
+        else:
+            return self.master.mq.startConsuming(callback,
+                                                 ('build', buildid, None))
+
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -83,8 +96,17 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             [(yield self.db2data(dbdict)) for dbdict in builds])
 
     def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('build', None, None, None))
+        builderid = kwargs.get('builderid')
+        buildrequestid = kwargs.get('buildrequestid')
+        if builderid is not None:
+            return self.master.mq.startConsuming(callback,
+                                                 ('builder', builderid, 'build', None))
+        elif buildrequestid is not None:
+            return self.master.mq.startConsuming(callback,
+                                                 ('buildrequest', buildrequestid, 'build', None))
+        else:
+            return self.master.mq.startConsuming(callback,
+                                                 ('build', None))
 
 
 class Build(base.ResourceType):
@@ -93,7 +115,10 @@ class Build(base.ResourceType):
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
     keyFields = ['builderid', 'buildid']
-
+    eventPathPatterns = """
+        /builder/:builderid/build/:number
+        /build/:buildid
+    """
     class EntityType(types.Entity):
         buildid = types.Integer()
         number = types.Integer()
@@ -113,21 +138,38 @@ class Build(base.ResourceType):
         link = types.Link()
     entityType = EntityType(name)
 
+    @defer.inlineCallbacks
+    def generateEvent(self, _id, event):
+        # get the build and munge the result for the notification
+        build = yield self.master.data.get(('build', str(_id)))
+        self.produceEvent(build, event)
+
     @base.updateMethod
+    @defer.inlineCallbacks
     def newBuild(self, builderid, buildrequestid, buildslaveid):
-        return self.master.db.builds.addBuild(
+        res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,
             buildslaveid=buildslaveid,
             masterid=self.master.masterid,
             state_strings=[u'starting'])
+        if res is not None:
+            _id, number = res
+            yield self.generateEvent(_id, "new")
+        defer.returnValue(res)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def setBuildStateStrings(self, buildid, state_strings):
-        return self.master.db.builds.setBuildStateStrings(
+        res = yield self.master.db.builds.setBuildStateStrings(
             buildid=buildid, state_strings=state_strings)
+        yield self.generateEvent(buildid, "update")
+        defer.returnValue(res)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def finishBuild(self, buildid, results):
-        return self.master.db.builds.finishBuild(
+        res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
+        yield self.generateEvent(buildid, "update")
+        defer.returnValue(res)

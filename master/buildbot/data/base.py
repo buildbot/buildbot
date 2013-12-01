@@ -15,6 +15,7 @@
 
 import UserList
 import urllib
+import copy
 
 from buildbot.data import exceptions
 from twisted.internet import defer
@@ -24,9 +25,23 @@ class ResourceType(object):
     name = None
     endpoints = []
     keyFields = []
-
+    eventPathPatterns = ""
     def __init__(self, master):
         self.master = master
+        self.compileEventPathPatterns()
+
+    def compileEventPathPatterns(self):
+        """compile event patterns to get a list of dict formatable strings"""
+        pathPatterns = self.eventPathPatterns
+        pathPatterns = pathPatterns.split()
+        for i, pp in enumerate(pathPatterns):
+            for path in pp.split('/')[1:]:
+                if path.startswith(":"):
+                    pp = pp.replace(path, "{" + path[1:] + "}")
+            if pp.startswith("/"):
+                pp = pp[1:]
+            pathPatterns[i] = pp
+        self.eventPaths = pathPatterns
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
@@ -37,11 +52,22 @@ class ResourceType(object):
             endpoints[i] = ep(self, self.master)
         return endpoints
 
+    @staticmethod
+    def sanitizeMessage(msg):
+        msg = copy.deepcopy(msg)
+        for k, v in msg.items():
+            if isinstance(v, Link):
+                del msg[k]
+        return msg
+
     def produceEvent(self, msg, event):
-        routingKey = (self.name,) \
-            + tuple(str(msg[k]) for k in self.keyFields) \
-            + (event,)
-        self.master.mq.produce(routingKey, msg)
+        """produce events to the various endpoints defined in eventPathPatterns"""
+        if msg is not None:
+            msg = self.sanitizeMessage(msg)
+            for path in self.eventPaths:
+                path = path.format(**msg)
+                routingKey = tuple(path.split("/"))+ (event,)
+                self.master.mq.produce(routingKey, msg)
 
 
 class Endpoint(object):

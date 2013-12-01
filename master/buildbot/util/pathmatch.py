@@ -15,7 +15,7 @@
 
 import re
 
-_ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
+_ident_re = re.compile('^[a-zA-Z_-][.a-zA-Z0-9_-]*$')
 
 
 def ident(x):
@@ -38,7 +38,7 @@ class Matcher(object):
     def __repr__(self):
         return '<Matcher %r>' % (self._patterns,)
 
-    path_elt_re = re.compile('^(.?):([a-z0-9_]+)$')
+    path_elt_re = re.compile('^(.?):([a-z0-9_.]+)$')
     type_fns = dict(n=int, i=ident)
 
     def __getitem__(self, path):

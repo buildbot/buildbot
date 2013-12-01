@@ -525,8 +525,9 @@ class BuildRequestDistributor(service.AsyncService):
             for brid in brids:
                 # TODO: inefficient..
                 brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
-                key = ('buildrequest', str(brdict['buildsetid']),
-                       str(-1), str(brdict['brid']), 'claimed')
+                key = ('buildset', str(brdict['buildsetid']),
+                       'builder', str(-1),
+                       'buildrequest', str(brdict['brid']), 'claimed')
                 msg = dict(
                     bsid=brdict['buildsetid'],
                     brid=brdict['brid'],
@@ -547,8 +548,9 @@ class BuildRequestDistributor(service.AsyncService):
                     bsid = breq.bsid
                     buildername = ascii2unicode(breq.buildername)
                     brid = breq.id
-                    key = ('buildrequest', str(bsid), str(-1),
-                           str(brid), 'unclaimed')
+                    key = ('buildset', str(brdict['buildsetid']),
+                           'builder', str(-1),
+                           'buildrequest', str(brdict['brid']), 'unclaimed')
                     msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                                builderid=-1)
                     self.master.mq.produce(key, msg)

@@ -30,12 +30,11 @@ Logchunks
     These are specified as query parameters via the REST interface, or as arguments to the :py:meth:`~buildbot.data.connector.DataConnector.get` method in Python.
     The result will begin with line ``offset`` (so the resulting ``firstline`` will be equal to the given ``offset``), and will contain up to ``limit`` lines.
 
-    .. todo::
+    .. note::
 
-        .. bb:event:: build.$buildid.step.$number.log.$logid.logchunk.new
+        .. bb:event:: *.logchunk.new
 
-            A new chunk has been added to the end of the indicated log.
-            The message body does not have a ``content`` key, but does havea ``lastline`` key.
+            There will be no new chunk event, the log rtype will be updated when new chunk is created, and the ui will call the data api to get actual data. This avoids to flood the mq with logchunk data.
 
     .. bb:rpath:: /log/:logid/content
 
