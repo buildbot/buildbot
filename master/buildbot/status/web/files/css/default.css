@@ -3837,7 +3837,7 @@ div.column-1.inner-1 {
 */
 @font-face {
   font-family: "katana_icons";
-  src: url(/../fonts/katana_icons/katana_icons.eot) format('embedded-opentype'), url(/../fonts/katana_icons/katana_icons.ttf) format('truetype');
+  src: url(/../fonts/katana_icons/katana_icons.eot?cachebusting=1) format('embedded-opentype'), url(/../fonts/katana_icons/katana_icons.ttf?cachebusting=1) format('truetype');
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\0000310}}

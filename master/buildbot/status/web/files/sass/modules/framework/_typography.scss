@@ -5,7 +5,7 @@
 * @author Simon Holm
 */
 
-@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot", "/../fonts/katana_icons/katana_icons.ttf"));
+@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot?cachebusting=1", "/../fonts/katana_icons/katana_icons.ttf?cachebusting=1"));
 
 .main-head {
     font-size: 25px;
@@ -15,7 +15,7 @@
 	    font-weight: normal;
 	}
 }
-
+ 
 .small-head {
 	font-size:14px;
 	font-weight:bold;	
