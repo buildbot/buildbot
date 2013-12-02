@@ -38,6 +38,7 @@
     {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
       <div class="divider"></div>
   {% endif %}
+
 {% else %}
 
   <h2 class="head-2">
@@ -48,18 +49,6 @@
     {{ b.getText()|join(' ')|capitalize }}
   </span>
    
-<div class="divider"></div>
-<h2 class="head-2">
-  BuildSlave
-</h2>
-  
-{% if slave_url %}  
-  <a class="small-head" href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
-{% else %}
-  {{ b.getSlavename()|e }} 
-{% endif %}
-
-
   <div class="divider"></div>
 
   {% if b.getTestResults() %}
@@ -75,7 +64,16 @@
     <div class="divider"></div>
 {% endif %}
 
-
+<h2 class="head-2">
+  BuildSlave
+</h2>
+  
+{% if slave_url %}  
+  <a class="small-head" href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+{% else %}
+  {{ b.getSlavename()|e }} 
+{% endif %}
+<div class="divider"></div>
 
 <h2 class="head-2">
   Timing
@@ -304,6 +302,7 @@ SourceStamps
 <ol class="step-list">
 {% for s in steps %}
 
+
   <li class="status-{{ s.css_class }}">
     
     <div class="index-count">
@@ -351,7 +350,9 @@ SourceStamps
         
       </ul>  
     {% endif %}
+  
   </li>
+  
 {% endfor %}
 </ol>
 

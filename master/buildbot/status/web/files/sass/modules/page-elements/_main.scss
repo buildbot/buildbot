@@ -410,6 +410,7 @@ div.last {
 			content:"Running";
 			padding-left: 5px;		
 		}
+		/*
 		&:before {
 			font-size: 11px;
 			font-family: katana_icons;
@@ -420,6 +421,7 @@ div.last {
 			animation: spin 2s infinite linear;  
 			display: inline-block;
 		}
+		*/
 	}
 	.waiting {
 		&:before {
