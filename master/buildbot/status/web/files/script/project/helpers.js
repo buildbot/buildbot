@@ -220,7 +220,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			if (artifactJS.length > 0) {
 				showArtifactsJS
 				.removeClass('no-artifacts')
-				.addClass('more-info', 'mod-1', 'popup-btn-js-2')
+				.addClass('more-info mod-1 popup-btn-js-2')
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')

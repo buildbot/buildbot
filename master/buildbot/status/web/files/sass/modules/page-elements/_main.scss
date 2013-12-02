@@ -396,6 +396,7 @@ div.last {
 		background-color:#eee;
 		&:after {
 			content:"Not started";
+			color: #999;
 		}
 	}
 	.retry:before {
@@ -443,6 +444,13 @@ div.last {
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
+    	&.status-not_started {
+    		.step-head,
+    		.index-count,
+    		span {
+    			color:#ddd;
+    		}
+    	}
 	}
 	&> li {
 		border-bottom:1px dotted #ccc;

@@ -303,7 +303,7 @@ SourceStamps
 <ol class="step-list">
 {% for s in steps %}
 
-  <li>
+  <li class="status-{{ s.css_class }}">
     
     <div class="index-count">
          {{  loop.index }}
@@ -315,37 +315,41 @@ SourceStamps
     <a class="step-head" href="{{ s.link }}">
       {{ s.name }}
     </a>
-  
-    <p>
-      <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
-    </p>
-    {% if s.logs %}
-      <div class="logs-txt">
-            Logs
-      </div>
-    {% endif %}
-    <ul class="log-list">
+    {% if s.css_class != 'not_started' %}
+        <p>
+          <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
+        </p>
       
-      {% for l in s.logs %}
-        <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
-      {% else %}
-        <li>
-          <span>
-            no logs
-          </span>
-        </li>
-      {% endfor %}
 
-      {% for u in s.urls %}
-       {% if 'results' in u.keys() %}
-        <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+      {% if s.logs %} 
+        <div class="logs-txt">
+              Logs
+        </div>
+      {% endif %}
+      <ul class="log-list">
+        
+        {% for l in s.logs %}
+          <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
         {% else %}
-        <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
-        {% endif %}
-      {% endfor %}
-      
-    </ul>  
-    
+       
+            <li>
+              <span>
+                no logs
+              </span>
+            </li>
+  
+        {% endfor %}
+
+        {% for u in s.urls %}
+         {% if 'results' in u.keys() %}
+          <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+          {% else %}
+          <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+          {% endif %}
+        {% endfor %}
+        
+      </ul>  
+    {% endif %}
   </li>
 {% endfor %}
 </ol>
