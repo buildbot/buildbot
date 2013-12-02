@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import types
 from buildbot.changes import gerritchangesource
 from buildbot.test.util import changesource
 from buildbot.util import json
@@ -116,5 +117,24 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             'somehost', 'some_choosy_user')
         d = s.lineReceived(json.dumps(self.change_merged_event))
         check = lambda _: self.failUnlessEqual(len(self.changes_added), 0)
+        d.addCallback(check)
+        return d
+
+    def test_custom_handler(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user',
+            handled_events=["change-merged"])
+
+        def custom_handler(self, properties, event):
+            event['change']['project'] = "world"
+            return self.addChangeFromEvent(properties, event)
+        # Patches class to not bother with the inheritance
+        s.eventReceived_change_merged = types.MethodType(custom_handler, s)
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+
+        def check(_):
+            self.failUnlessEqual(len(self.changes_added), 1)
+            c = self.changes_added[0]
+            self.failUnlessEqual(c['project'], "world")
         d.addCallback(check)
         return d
