@@ -1209,7 +1209,8 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
    the username to use to connect to gerrit
 
 ``identity_file``
-   ssh identity file to for authentication (optional)
+   ssh identity file to for authentication (optional) 
+   pay attention to the `ssh passphrase`
 
 ``handled_events``
    event to be handled (optional)
