@@ -1213,7 +1213,7 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
 ``handled_events``
    event to be handled (optional)
-   by default processes `patchset-created` ad `ref-updated`
+   by default processes `patchset-created` and `ref-updated`
 
 By default this class adds a change to the buildbot system for each of the following events:
 
