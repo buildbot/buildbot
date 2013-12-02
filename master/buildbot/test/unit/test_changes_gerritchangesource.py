@@ -28,8 +28,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def tearDown(self):
         return self.tearDownChangeSource()
 
-    def newChangeSource(self, host, user):
-        s = gerritchangesource.GerritChangeSource(host, user)
+    def newChangeSource(self, host, user, *args, **kwargs):
+        s = gerritchangesource.GerritChangeSource(
+            host, user, *args, **kwargs)
         self.attachChangeSource(s)
         return s
 
@@ -49,7 +50,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'author': u'Dustin <dustin@mozilla.com>',
                        'comments': u'fix 1234',
                        'project': u'pr',
-                       'branch': u'br/4321',
+                       'branch': u'br',
                        'revlink': u'http://buildbot.net',
                        'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
                                       u'event.change.subject': u'fix 1234',
@@ -83,5 +84,37 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             c = self.changes_added[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
+        d.addCallback(check)
+        return d
+
+    change_merged_event = {
+        "type": "change-merged",
+        "change": {
+            "branch": "br",
+            "project": "pr",
+            "number": "4321",
+            "owner": {"name": "Chuck", "email": "chuck@norris.com"},
+            "url": "http://buildbot.net",
+            "subject": "fix 1234"},
+        "patchSet": {"revision": "abcdefj", "number": "13"}
+    }
+
+    def test_handled_events_filter_true(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user', handled_events=["change-merged"])
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+
+        def check(_):
+            self.failUnlessEqual(len(self.changes_added), 1)
+            c = self.changes_added[0]
+            self.assertEquals(c["category"], "change-merged")
+        d.addCallback(check)
+        return d
+
+    def test_handled_events_filter_false(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user')
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+        check = lambda _: self.failUnlessEqual(len(self.changes_added), 0)
         d.addCallback(check)
         return d
