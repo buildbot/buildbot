@@ -107,7 +107,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         def check(_):
             self.failUnlessEqual(len(self.changes_added), 1)
             c = self.changes_added[0]
-            self.assertEquals(c["category"], "change-merged")
+            self.failUnlessEqual(c["category"], "change-merged")
         d.addCallback(check)
         return d
 
