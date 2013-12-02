@@ -512,9 +512,6 @@ class Builder(config.ReconfigurableServiceMixin,
         # there is no sense continuing
         available_slavebuilders = [ sb for sb in self.slaves
                                     if sb.isAvailable() ]
-        if not available_slavebuilders:
-            self.updateBigStatus()
-            return
 
         # now, get the available build requests
         unclaimed_requests = \
@@ -587,6 +584,10 @@ class Builder(config.ReconfigurableServiceMixin,
                     continue
 
             # if couldn't been merge try starting a new build, choose a slave (using nextSlave)
+            if not available_slavebuilders:
+                self.updateBigStatus()
+                break
+
             slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:
@@ -694,8 +695,24 @@ class Builder(config.ReconfigurableServiceMixin,
 
         return mergeRequests_fn
 
+    def getBoolProperty(self, req1, name):
+        property = req1.properties.getProperty(name, False)
+        if type(property) != bool:
+            property = (property.lower() == "true")
+        return property
+
+    def propertiesMatch(self, req1, req2):
+        if self.getBoolProperty(req1, "force_rebuild") != self.getBoolProperty(req2, "force_rebuild"):
+            return False
+        return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
+
     def _defaultMergeRequestFn(self, req1, req2):
-        return req1.canBeMergedWith(req2)
+        print "\n calling _defaultMergeRequestFn %s, %s \n" % (req1.properties, req2.properties)
+        print "\n property  %s \n" % req1.properties.getProperty("force_rebuild", False)
+        if (self.propertiesMatch(req1,req2)):
+        #print "\n properties  %s, %s \n" % req1.getProperty("force_rebuild", False)
+            return req1.canBeMergedWith(req2)
+        return False
 
     @defer.inlineCallbacks
     def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
