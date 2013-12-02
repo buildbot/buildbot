@@ -293,7 +293,7 @@ class BuilderStatus(styles.Versioned):
             build_sourcestamps = build.getSourceStamps()
             foundcodebases = []
             for ss in build_sourcestamps:
-                if ss.codebase in codebases.keys() and ss.branch in codebases[ss.codebase]:
+                if ss.codebase in codebases.keys() and ss.branch == codebases[ss.codebase]:
                     foundcodebases.append(ss)
             return len(foundcodebases) == len(build_sourcestamps)
 
