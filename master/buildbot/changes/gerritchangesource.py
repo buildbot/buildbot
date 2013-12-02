@@ -87,11 +87,11 @@ class GerritChangeSource(base.ChangeSource):
             # last line is either empty or incomplete
             self.data = lines.pop(-1)
             for line in lines:
-                log.msg("gerrit: %s" % (line,))
+                log.msg("gerrit: %s" % line)
                 yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
-            log.msg("gerrit stderr: %s" % (data,))
+            log.msg("gerrit stderr: %s" % data)
 
         def processEnded(self, status_object):
             self.change_source.streamProcessStopped()
@@ -100,24 +100,24 @@ class GerritChangeSource(base.ChangeSource):
         try:
             event = json.loads(line.decode('utf-8'))
         except ValueError:
-            msg = "bad json line: {0}"
-            log.msg(msg.fromat(line))
+            msg = "bad json line: %s"
+            log.msg(msg % line)
             return defer.succeed(None)
 
         if not(isinstance(event, MutableMapping) and "type" in event):
-            msg = "no type in event {0}"
-            log.msg(msg.format(line))
+            msg = "no type in event %s"
+            log.msg(msg % line)
             return defer.succeed(None)
 
         if not (event['type'] in self.handled_events):
-            msg = "the event type '{0}' is not setup to handle"
-            log.msg(msg.format(event['type']))
+            msg = "the event type '%s' is not setup to handle"
+            log.msg(msg % event['type'])
             return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
             for k, v in event.items():
-                name = "{0}.{1}".format(base, k)
+                name = "%s.%s" % (base, k)
                 if isinstance(v, MutableMapping):
                     flatten(properties, name, v)
                 else:  # already there
@@ -146,15 +146,15 @@ class GerritChangeSource(base.ChangeSource):
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
             return self.addChange({
-                'author': "{0} <{1}>".format(
+                'author': "%s <%s>" % (
                     event_change["owner"]["name"],
                     event_change["owner"]["email"]),
                 'project': event_change["project"],
-                'repository': "ssh://{0}@{1}:{2}/{3}".format(
+                'repository': "ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
-                'branch': "{0}/{1}".format(
-                    event_change["branch"], event_change["number"]),
+                'branch': "%" % (
+                    event_change["branch"]),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],
@@ -213,7 +213,7 @@ class GerritChangeSource(base.ChangeSource):
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
-        uri = "{0}@{1}".format(self.username, self.gerritserver)
+        uri = "%s@%s" % (self.username, self.gerritserver)
         args = [uri, "-p", str(self.gerritport)]
         if self.identity_file is not None:
             args = args + ['-i', self.identity_file]
@@ -238,5 +238,5 @@ class GerritChangeSource(base.ChangeSource):
         if not self.process:
             status = "[NOT CONNECTED - check log]"
         msg = ("GerritChangeSource watching the remote "
-               "Gerrit repository {0}@{1} {2}")
-        return msg.format(self.username, self.gerritserver, status)
+               "Gerrit repository %s@%s %s")
+        return msg % (self.username, self.gerritserver, status)
