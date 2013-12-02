@@ -17,6 +17,7 @@ import datetime
 import mock
 
 from buildbot.data import buildrequests
+from buildbot.data import resultspec
 from buildbot.data.base import Link
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -145,6 +146,57 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def testGetUnknownBuilderid(self):
         buildrequests = yield self.callGet(('builder', 79, 'buildrequest'))
         self.assertEqual(buildrequests, [])
+
+    @defer.inlineCallbacks
+    def testGetNoFilters(self):
+        getBuildRequestsMock = mock.Mock(return_value={})
+        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        yield self.callGet(('buildrequest',))
+        getBuildRequestsMock.assert_called_with(
+            buildername=None,
+            complete=None,
+            claimed=None,
+            bsid=None,
+            branch=None,
+            repository=None)
+
+    @defer.inlineCallbacks
+    def testGetFilters(self):
+        getBuildRequestsMock = mock.Mock(return_value={})
+        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        f1 = resultspec.Filter('complete', 'eq', [False])
+        f2 = resultspec.Filter('claimed', 'eq', [True])
+        f3 = resultspec.Filter('bsid', 'eq', [55])
+        f4 = resultspec.Filter('branch', 'eq', ['mybranch'])
+        f5 = resultspec.Filter('repository', 'eq', ['myrepo'])
+        yield self.callGet(
+            ('buildrequest',),
+            resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
+        getBuildRequestsMock.assert_called_with(
+            buildername=None,
+            complete=False,
+            claimed=True,
+            bsid=55,
+            branch='mybranch',
+            repository='myrepo')
+
+    @defer.inlineCallbacks
+    def testGetClaimedByMasterIdFilters(self):
+        getBuildRequestsMock = mock.Mock(return_value={})
+        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        f1 = resultspec.Filter('claimed', 'eq', [True])
+        f2 = resultspec.Filter('claimed_by_masterid', 'eq',
+                               [fakedb.FakeBuildRequestsComponent.MASTER_ID])
+        yield self.callGet(
+            ('buildrequest',),
+            resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
+        getBuildRequestsMock.assert_called_with(
+            buildername=None,
+            complete=None,
+            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
+            bsid=None,
+            branch=None,
+            repository=None)
 
 
 class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):

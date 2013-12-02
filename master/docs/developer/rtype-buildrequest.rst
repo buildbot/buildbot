@@ -39,6 +39,15 @@ Endpoints
 
     This path lists buildrequests, sorted by ID.
 
+        :opt complete: if true, only returns completed buildsets;
+                       if false, only returns incomplete buildsets
+        :opt claimed: if true, only returns the claimed buildrequests;
+                      if false, only returns unclaimed builds
+        :opt claimed_by_masterid: only returns buildrequests claimed by this master instance
+        :opt bsid: only returns buildrequests contained by this buildset ID
+        :opt branch: only returns buildrequests on this branch
+        :opt repository: only returns buildrequests on this repository
+
 .. bb:rpath:: /buildrequest/:buildrequestid
 
     :pathkey integer buildrequestid: the ID of the buildrequest
@@ -57,11 +66,15 @@ Endpoints
 
     This path lists buildrequests performed for the identified builder, sorted by ID.
 
+        :opt this endpoint supports same options as /buildrequest
+
 .. bb:rpath:: /builder/:builderid/buildrequest
 
     :pathkey integer builderid: the id of the builder
 
     This path lists buildrequests performed for the identified builder, sorted by ID.
+
+        :opt this endpoint supports same options as /buildrequest
 
 .. todo::
     May need to define additional useful collection endpoints like e.g:

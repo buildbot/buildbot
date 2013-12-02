@@ -1474,14 +1474,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             else:
                 br.claimed_at = None
             if claimed is not None:
-                if claimed == "mine":
-                    if not claim_row or claim_row.masterid != self.MASTER_ID:
-                        continue
-                elif claimed:
-                    if not claim_row:
-                        continue
+                if isinstance(claimed, bool):
+                    if claimed:
+                        if not claim_row:
+                            continue
+                    else:
+                        if br.complete or claim_row:
+                            continue
                 else:
-                    if br.complete or claim_row:
+                    if not claim_row or claim_row.masterid != claimed:
                         continue
             if bsid is not None:
                 if br.buildsetid != bsid:

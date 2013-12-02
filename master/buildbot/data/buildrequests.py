@@ -90,15 +90,25 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
                 defer.returnValue([])
         else:
             buildername = None
+        complete = resultSpec.popBooleanFilter('complete')
+        claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')
+        if claimed_by_masterid:
+            # claimed_by_masterid takes precedence over 'claimed' filter
+            # (no need to check consistency with 'claimed' filter even if
+            # 'claimed'=False with 'claimed_by_masterid' set, doesn't make sense)
+            claimed = claimed_by_masterid
+        else:
+            claimed = resultSpec.popBooleanFilter('claimed')
+        bsid = resultSpec.popBooleanFilter('bsid')
+        branch = resultSpec.popBooleanFilter('branch')
+        repository = resultSpec.popBooleanFilter('repository')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             buildername=buildername,
-            # TODO: support other filters in this endpoint
-            # complete=None,
-            # claimed=None,
-            # bsid=None,
-            # branch=None,
-            # repository=None
-            )
+            complete=complete,
+            claimed=claimed,
+            bsid=bsid,
+            branch=branch,
+            repository=repository)
         if buildrequests:
 
             @defer.inlineCallbacks

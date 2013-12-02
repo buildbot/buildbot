@@ -79,16 +79,17 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select([reqs_tbl, claims_tbl]).select_from(from_clause)
             if claimed is not None:
-                if not claimed:
-                    q = q.where(
-                        (claims_tbl.c.claimed_at == None) &
-                        (reqs_tbl.c.complete == 0))
-                elif claimed == "mine":
-                    q = q.where(
-                        (claims_tbl.c.masterid == self.db.master.masterid))
+                if isinstance(claimed, bool):
+                    if not claimed:
+                        q = q.where(
+                            (claims_tbl.c.claimed_at == None) &
+                            (reqs_tbl.c.complete == 0))
+                    else:
+                        q = q.where(
+                            (claims_tbl.c.claimed_at != None))
                 else:
                     q = q.where(
-                        (claims_tbl.c.claimed_at != None))
+                        (claims_tbl.c.masterid == claimed))
             if buildername is not None:
                 q = q.where(reqs_tbl.c.buildername == buildername)
             if complete is not None:

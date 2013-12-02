@@ -124,7 +124,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_getBuildRequests_claimed_mine(self):
         return self.do_test_getBuildRequests_claim_args(
-            claimed="mine",
+            claimed=self.MASTER_ID,
             expected=[50])
 
     def test_getBuildRequests_claimed_true(self):
@@ -278,7 +278,8 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(buildername="bbb",
-                                                             claimed="mine", complete=True, bsid=self.BSID))
+                                                             claimed=self.MASTER_ID,
+                                                             complete=True, bsid=self.BSID))
 
         def check(brlist):
             self.assertEqual([br['brid'] for br in brlist], [44])
@@ -349,7 +350,8 @@ class Tests(interfaces.InterfaceTests):
         d = self.insertTestData(rows)
         d.addCallback(lambda _:
                       self.db.buildrequests.claimBuildRequests(brids=brids,
-                                                               claimed_at=claimed_at, _reactor=clock))
+                                                               claimed_at=claimed_at,
+                                                               _reactor=clock))
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
 
@@ -541,7 +543,8 @@ class Tests(interfaces.InterfaceTests):
         d = self.insertTestData(rows)
         d.addCallback(lambda _:
                       self.db.buildrequests.completeBuildRequests(brids=brids,
-                                                                  results=7, complete_at=complete_at,
+                                                                  results=7,
+                                                                  complete_at=complete_at,
                                                                   _reactor=clock))
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
