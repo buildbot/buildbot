@@ -1169,7 +1169,7 @@ transform:rotate(360deg)}
 	    &.not-valid {
     		border: 1px solid #E42323;
 		}
-	}
+	} 
 	input[type="checkbox"] {
 	    float: left;
 	    margin-left: 83px;
@@ -1183,8 +1183,9 @@ transform:rotate(360deg)}
 	    @include border-radius( 4px);
 	    color: #FFFFFF;
 	    font-size: 10px;
-	    margin: 0 0 0 14px;
+	    margin: 0 4px 11px 14px;
 	    padding: 7px 11px 6px;
+	    float: right;
 	    @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
 	    text-transform: uppercase;
 	    clear: both;

@@ -85,7 +85,11 @@
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
 
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
-    {% if f.fullName and '_branch' in f.fullName %}
+    {% if f.fullName and 'username' in f.fullName %}
+      <span class="label">{{f.label}}</span>
+       <input type='text' size='{{f.size}}' name="usernamedisabled" id="usernameDisabled" disabled />
+       <input type="hidden" name="{{f.fullName}}" id="usernameHidden" />
+    {% elif f.fullName and '_branch' in f.fullName %}
         <span class="label">{{f.label}}</span>
         {% if request.args|length > 0 and f.fullName in request.args.keys() %}
             <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>

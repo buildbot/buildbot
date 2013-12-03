@@ -1,4 +1,4 @@
-define(['jquery'], function ($) {
+define(['jquery', 'helpers'], function ($, helpers) {
 
     "use strict";
     var popup;
@@ -95,6 +95,7 @@ define(['jquery'], function ($) {
 				var rtUpdate = $(this).attr('data-rt_update');
 
 				$('body').append(preloader).show();
+				// get currentpage with url parameters
 				$.ajax({
 						url:'',
 						cache: false,
@@ -190,22 +191,20 @@ define(['jquery'], function ($) {
 			function htmlModule (htmlChunk) {
 
 				if (htmlChunk == 'isForm') {
-					var mib3 = ""
-					mib3 += '<div class="more-info-box remove-js">';
-					mib3 += '<span class="close-btn"></span>';
-					mib3 +=	'<h3>Run custom build</h3>';
-					// Insert when the backend is ready mib3 +=	'<ul class="tabs-list"><li class="selected">General</li><li>Dependencies</li><li>Slaves</li></ul>';
-					mib3 += '<div id="content1"></div></div>';
-					var mib4 = $(mib3);
+					var mib3 = 
+					$('<div class="more-info-box remove-js">' +
+					'<span class="close-btn"></span>' +
+					'<h3>Run custom build</h3>' +
+					'<div id="content1"></div></div>');
+					
 				} else {
-					var mib3 = ""
-					mib3 += '<div class="more-info-box remove-js">';
-					mib3 += '<span class="close-btn"></span>';
-					mib3 +=	'<h3>Buildslaves</h3>';
-					mib3 += '<div id="content1"></div></div>';
-					var mib4 = $(mib3);
+					var mib3 =
+					$('<div class="more-info-box remove-js">' + 
+					'<span class="close-btn"></span>' + 
+					'<h3>Buildslaves</h3>' + 
+					'<div id="content1"></div></div>');			
 				}
-				return mib4;
+				return mib3;
 			}
 
 			// tab list for custom build
@@ -225,33 +224,42 @@ define(['jquery'], function ($) {
 				});
 			}
 			
-			// custom build on builder and builders
+			// custom buildpopup on builder and builders
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
 				var datab = $(this).attr('data-b');
 				var dataindexb = $(this).attr('data-indexb');
 				var rtUpdate = $(this).attr('data-rt_update');
 				var htmlChunk = $(this).attr('data-htmlchunk'); 
-				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+				var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 				$('body').append(preloader).show();
 				var mib3 = htmlModule (htmlChunk);
-				$(mib3).appendTo('body');
-
+				mib3.appendTo($('body'));
+				
+				// get currentpage with url parameters
 				$.get('', {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb}).done(function(data) {
+					var formContainer = $('#content1');
+					preloader.remove();
+					$(data).appendTo(formContainer);
 
-					$('#bowlG').remove();
-					$(data).appendTo($('#content1'));
-					$(mib3).center().fadeIn('fast');
+					
+					// Insert full name from cookie
+					
+					$("#usernameDisabled, #usernameHidden", formContainer)
+					.val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+					
+
+					mib3.center().fadeIn('fast');
 					
 					$(window).resize(function() {
-						$(mib3).center();
+						mib3.center();
 					});
-					customTabs();
+					// customTabs();
 					$(document, '.close-btn').bind('click touchstart', function(e){
 				
 					    if (!$(e.target).closest(mib3).length || $(e.target).closest('.close-btn').length) {
 					        	        	
-					        $(mib3).remove();
+					        mib3.remove();
 					        	
 					        $(this).unbind(e);
 					    }
@@ -260,9 +268,7 @@ define(['jquery'], function ($) {
 				});
 
 			});
-			
-			
-
+		
 		}
 	}
 	 return popup;
