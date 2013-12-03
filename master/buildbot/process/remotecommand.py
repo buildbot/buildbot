@@ -85,7 +85,6 @@ class RemoteCommand(pb.Referenceable):
         return self.deferred
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
-        print log
         assert interfaces.ILogFile.providedBy(log)
         if not logfileName:
             logfileName = log.getName()
