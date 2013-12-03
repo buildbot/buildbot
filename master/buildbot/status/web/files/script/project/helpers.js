@@ -6,6 +6,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
     helpers = {
         init: function () {
 
+        	// insert codebase and branch on the builders page
         	if ($('.builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
         		
@@ -23,17 +24,18 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 
 					$(parsedUrl).each(function(i){
 
-						// split key an value
+						// split key and value
 						var eqSplit = this.split( "=");
 
 						if (eqSplit[0].indexOf('_branch') > 0) {
 								
-							// seperate branch and 
+							// seperate branch
 							var codeBases = this.split('_branch')[0];
+							// remove the ? from the first codebase value
 							if (i == 0) {
 								codeBases = this.replace('?', '').split('_branch')[0];
 							}
-
+							
 							var branches = this.split('=')[1];
 
 							$('tr.codebase').append('<td>' + codeBases + '</td>');
@@ -154,6 +156,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				}
 			});
 
+			// tooltip used on the builddetailpage
 			function toolTip(ellipsis) {
 				$(ellipsis).parent().hover(function(){
 					
@@ -199,14 +202,19 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				var dataindexb = $(this).prev().attr('data-indexb');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
+				// get the current url with parameters append the form to the DOM and submit it
 				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
 					$('#bowlG').remove();
-					$('<div/>').addClass('formCont').hide().appendTo('body');		
-					$(data).appendTo('.formCont');
-					$('.formCont .command_forcebuild .grey-btn').trigger('click');
+					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
+					
+					// Add the value from the cookie to the disabled and hidden field
+					$("#usernameDisabled, #usernameHidden", formContainer)
+					.val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+
+					$('.command_forcebuild', formContainer).submit();
 				});
-			});
-			
+			});			
+
 		}, summaryArtifactTests: function () {
 			// for the builddetailpage
 
@@ -251,6 +259,14 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				testlistResultJS.append($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
+		}, setCookie: function (name, value) {
+			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 		
+			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 
+
+		}, getCookie: function (name) { // get cookie values
+		  	var re = new RegExp(name + "=([^;]+)"); 
+		  	var value = re.exec(document.cookie); 
+		  	return (value != null) ? unescape(value[1]) : ''; 
 		}
 	};
 
