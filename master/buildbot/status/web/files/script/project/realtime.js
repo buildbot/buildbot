@@ -3,13 +3,14 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
     var realtime;
     
     realtime = {
-        init: function () {
-	        // creating a new websocket
+        init: function (whichPage) {
+        	
+	        // Creating a new websocket
 	                
-	                
-	         window.sock = null;
+	        // Global websocketvariabel        
+	        window.sock = null;
 
-	         var wsuri;
+	        var wsuri;
 
 	        var realTimeServer =  $('body').attr('data-realTimeServer');
 	         
@@ -26,6 +27,7 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             window.location = "http://autobahn.ws/unsupportedbrowser";
 	         }
 
+	         // if the socket connection is success
 	         if (sock) {
 	             sock.onopen = function() {
 		             // get the json url to parse
@@ -34,51 +36,48 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	         	    log("Connected to " + wsuri);
 	             }
 
+	             // when the connection closes
 	             sock.onclose = function(e) {
 	                 log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
 	                 sock = null;
 	                 console.log('closed')
 	             }
 
+	             // when the client recieves a message
 	             sock.onmessage = function(e) {
-
 	         		log(e.data);
 	             }
 	         }
 	        
+	        // send a message to the server
 	         function broadcast(msg) {
 	             if (sock) {
 	             	sock.send(msg);
 	            	 //log("Sent: " + msg);
 	             }		         
-	         };
+	         };	        
 
-	        // For the build detailpage
-			
-	        if (helpers.getCurrentPage() === '#builddetail_page') {
-	        	var stepList = $('#stepList > li');
-	        }
-	       // console.log(cachedHtml())
-	        if (helpers.getCurrentPage() === '#builders_page') {	        	
-	        	var tableRowList = $('.tablesorter-js tbody > tr');
-
-	        }
-
-	        function log(m) {
-	        	
-				if ($('#tb-root').length != 0) {
+	        function returnCurrentPage(m) {
+	        	if ($('#tb-root').length != 0) {
 					// For the frontpage
-					realtimePages.frontPage(m);
+					return realtimePages.frontPage(m);
 				}
 				if (helpers.getCurrentPage() === '#builddetail_page') {
-					// For the builddetailpage
 					
-					realtimePages.buildDetail(m, stepList);
+					// For the builddetailpage
+					var stepList = $('#stepList > li');					
+					return realtimePages.buildDetail(m, stepList);
 				}
 				if (helpers.getCurrentPage() === '#builders_page') {
-					realtimePages.buildersPage(m);	
+					var tableRowList = $('.tablesorter-js tbody > tr');
+					return realtimePages.buildersPage(m);	
 				}
+	        }
 
+	        // send messages from the server to be parsed
+	        
+	        function log(m) {	
+				returnCurrentPage(m)
 	        };
         }
     };

@@ -160,6 +160,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
 	        }
         },
         frontPage: function(m){
+        	console.log('frontpage');
         	function sumVal(arr) {
 	          var sum = 0;
 	          $.each(arr,function() {

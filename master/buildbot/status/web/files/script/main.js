@@ -31,7 +31,7 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        });
 		}
  	
-		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {
+		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {			
 			require(['realtime', 'jqache'],
 	        function(realtime) {
 	        	realtime.init();
