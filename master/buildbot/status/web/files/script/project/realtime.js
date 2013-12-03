@@ -60,17 +60,18 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	        function returnCurrentPage(m) {
 	        	if ($('#tb-root').length != 0) {
 					// For the frontpage
-					return realtimePages.frontPage(m);
+					realtimePages.frontPage(m);
 				}
 				if (helpers.getCurrentPage() === '#builddetail_page') {
 					
 					// For the builddetailpage
 					var stepList = $('#stepList > li');					
-					return realtimePages.buildDetail(m, stepList);
+					realtimePages.buildDetail(m, stepList);
 				}
 				if (helpers.getCurrentPage() === '#builders_page') {
+					// for the builderspage
 					var tableRowList = $('.tablesorter-js tbody > tr');
-					return realtimePages.buildersPage(m);	
+					realtimePages.buildersPage(m);	
 				}
 	        }
 
