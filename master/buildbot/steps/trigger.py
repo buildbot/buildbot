@@ -154,7 +154,7 @@ class Trigger(LoggingBuildStep):
             log.msg("Warning: check self.build.requests type expecting a list, trigger.py \n%s" % e.message)
 
         for sch in triggered_schedulers:
-            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredbybrid=triggeredbybrid))
+            dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set, triggeredbybrid=triggeredbybrid, reason=self.build.build_status.getReason()))
             triggered_names.append("'%s'" % sch.name)
         self.step_status.setText(['Triggered:'] + triggered_names)
 
