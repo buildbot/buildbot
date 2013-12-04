@@ -6,6 +6,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
     helpers = {
         init: function () {
 
+        	// insert codebase and branch on the builders page
         	if ($('.builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
         		
@@ -23,17 +24,18 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 
 					$(parsedUrl).each(function(i){
 
-						// split key an value
+						// split key and value
 						var eqSplit = this.split( "=");
 
 						if (eqSplit[0].indexOf('_branch') > 0) {
 								
-							// seperate branch and 
+							// seperate branch
 							var codeBases = this.split('_branch')[0];
+							// remove the ? from the first codebase value
 							if (i == 0) {
 								codeBases = this.replace('?', '').split('_branch')[0];
 							}
-
+							
 							var branches = this.split('=')[1];
 
 							$('tr.codebase').append('<td>' + codeBases + '</td>');
@@ -101,9 +103,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				});
 			}
 			
-        // submenu overflow on small screens
-        
-
+       		// submenu overflow on small screens
 
 	        var isMediumScreen = screenSize.isMediumScreen();
 	                
@@ -156,6 +156,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				}
 			});
 
+			// tooltip used on the builddetailpage
 			function toolTip(ellipsis) {
 				$(ellipsis).parent().hover(function(){
 					
@@ -176,7 +177,6 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.tool-tip').remove();
 					$(this).unbind(e);
 				});
-
 			}
 				
 			toolTip('.ellipsis-js');
@@ -202,14 +202,73 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				var dataindexb = $(this).prev().attr('data-indexb');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 				$('body').append(preloader).show();
+				// get the current url with parameters append the form to the DOM and submit it
 				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
 					$('#bowlG').remove();
-					$('<div/>').addClass('formCont').hide().appendTo('body')		
-					$(data).appendTo('.formCont')
-					$('.formCont .command_forcebuild .grey-btn').trigger('click');
+					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
+					
+					// Add the value from the cookie to the disabled and hidden field
+					$("#usernameDisabled, #usernameHidden", formContainer)
+					.val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+
+					$('.command_forcebuild', formContainer).submit();
 				});
+			});			
+			$("#buildForm .full-name-js").val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+
+		}, summaryArtifactTests: function () {
+			// for the builddetailpage
+
+			// Artifacts produced in the buildsteplist
+			var artifactJS = $('li.artifact-js').clone();
+			
+			// Link to hold the number of artifacts
+			var showArtifactsJS = $('#showArtifactsJS');
+
+			// update the popup container if there are artifacts
+			if (artifactJS.length > 0) {
+				showArtifactsJS
+				.removeClass('no-artifacts')
+				.addClass('more-info mod-1 popup-btn-js-2')
+				.text('(' + artifactJS.length + ') Artifacts ')
+				.next()
+				.find('.builders-list')
+				.append(artifactJS);
+			} else {
+				showArtifactsJS.text('No Artifacts');
+			}
+
+			// Testreport and testresult
+			var sLogs = $('.s-logs-js').clone();
+
+			// Container to display the testresults
+			var testlistResultJS = $('#testsListJS');
+
+			var alist = [];
+			
+			$(sLogs).each(function() {	
+				// filter the test results by xml and html file
+				var str = $(this).text().split('.').pop();
+				
+				if (str === 'xml' || str === 'html') {
+					alist.push($(this));
+				}
 			});
-	
+						
+			// Show the testresultlinks in the top if there are any
+			if (alist.length > 0) { 
+				testlistResultJS.append($('<li>Test Results</li>'));
+				testlistResultJS.append(alist);
+			}
+
+		}, setCookie: function (name, value) {
+			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 		
+			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 
+
+		}, getCookie: function (name) { // get cookie values
+		  	var re = new RegExp(name + "=([^;]+)"); 
+		  	var value = re.exec(document.cookie); 
+		  	return (value != null) ? unescape(value[1]) : ''; 
 		}
 	};
 

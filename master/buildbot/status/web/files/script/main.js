@@ -20,7 +20,14 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 
 	$(document).ready(function() {
 
-		setCurrentItem.init();
+		// Extend the expirationdate for the first and last name cookies
+		helpers.setCookie("firstName", helpers.getCookie("firstName"));
+		helpers.setCookie("lastName", helpers.getCookie("lastName"));
+		
+		// Redirect to loginpage if missing first or last name cookie
+		if(helpers.getCookie("lastName") === '' || helpers.getCookie("firstName") === '') {	  				
+			window.location = "/login";
+		}
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -46,10 +53,17 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 			        selectors.init();
 		    });
 		}
+		if ($('#builddetail_page').length > 0) {
+			helpers.summaryArtifactTests();
+		}
 		
+		// set class on the curret item menu
+		setCurrentItem.init();
+		// get scripts for general popups
 		popup.init();
+		// get scripts for the projects dropdown
 		projectDropDown.init();
-		
+		// get all common scripts
 		helpers.init();	
 
 	});

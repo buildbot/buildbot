@@ -175,7 +175,7 @@
     border-top: 1px solid #FFFFFF;
     @include pie-clearfix;
 	margin-bottom:22px;
-	&.root {
+	&#frontpage_page {
 		height: 39px;
 	}
 }

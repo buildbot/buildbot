@@ -4,7 +4,6 @@
   {% import 'submenu.html' as submenu %}
   {% from 'build_line.html' import build_table %}
   {% from "box_macros.html" import box %}
-  {% from 'static.html' import force_build_static %}
 
   {% block submenu %}
     {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}

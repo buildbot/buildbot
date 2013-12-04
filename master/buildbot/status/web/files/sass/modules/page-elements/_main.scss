@@ -388,14 +388,15 @@ div.last {
 	    font-size: 33px;
 	    font-weight: bold;
 	    margin-left: -57px;
-	    margin-top: -10px;
+	    margin-top: -5px;
 	    min-width: 32px;
 	    text-align: right;
     }
 	.not_started {
 		background-color:#eee;
-		&:before {
+		&:after {
 			content:"Not started";
+			color: #999;
 		}
 	}
 	.retry:before {
@@ -405,9 +406,22 @@ div.last {
 		content:"Success";	
 	}
 	.running {
-		&:before {
-			content:"Running";		
+		&:after {
+			content:"Running";
+			padding-left: 5px;		
 		}
+		/*
+		&:before {
+			font-size: 11px;
+			font-family: katana_icons;
+			content: "";
+			-moz-animation: spin 2s infinite linear;
+			-o-animation: spin 2s infinite linear;
+			-webkit-animation: spin 2s infinite linear;
+			animation: spin 2s infinite linear;  
+			display: inline-block;
+		}
+		*/
 	}
 	.waiting {
 		&:before {
@@ -432,6 +446,13 @@ div.last {
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
+    	&.status-not_started {
+    		.step-head,
+    		.index-count,
+    		span {
+    			color:#ddd;
+    		}
+    	}
 	}
 	&> li {
 		border-bottom:1px dotted #ccc;
@@ -444,9 +465,11 @@ div.last {
 	}
 	
 	.result {
-		padding: 2px 7px;
 		float: right;
 		display: inline-block;
+		font-weight: bold;
+    	padding: 5px 9px 4px;
+    	text-transform: uppercase;
 	}	
 	p {
 		margin:0 60px 11px 0;
@@ -459,6 +482,35 @@ div.last {
 		}
 	}
 }
+
+// artifact links
+.builders-list .artifact-js {
+	font-size:14px;
+	font-weight:bold;
+	line-height: 24px;
+}
+
+// test report and result links
+.tests-summary-list {
+	 margin: 3px 5px 0 0;
+	 
+	li {
+		float: left;
+		margin-right: 10px;
+		&:first-child {
+			margin-right: 5px;
+			font-weight: bold;
+		}
+
+		a {
+			font-weight: bold;	
+		}
+	}
+}
+a.no-artifacts {
+		color:#444;
+		cursor:text;
+	}
 
 .logs-txt {
 	display:block;
@@ -479,6 +531,8 @@ div.last {
 		list-style:none;
 		padding:0;
 		margin:0 0 1px;
+		font-weight: bold;
+    	line-height: 16px;
 	}
 	.urls-mod {margin:5px 0;}
 	.log-list-success a:before {
@@ -980,7 +1034,85 @@ transform:rotate(0deg)}
 transform:rotate(360deg)}
 
 } 
+/*
+   For spinners
+*/
+@mixin animateicon($selector) {
+@-moz-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+}
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-webkit-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
 
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-o-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@-ms-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+@keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -moz-transform: rotate(359deg);
+    -o-transform: rotate(359deg);
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
 .shake { 
 	 @include animate (shake);
 }
@@ -1033,7 +1165,7 @@ transform:rotate(360deg)}
 }
 
 // user login
-
+ 
 
 .auth {
 	margin: 25px 25px 25px 6px;
@@ -1054,7 +1186,7 @@ transform:rotate(360deg)}
 	    &.not-valid {
     		border: 1px solid #E42323;
 		}
-	}
+	} 
 	input[type="checkbox"] {
 	    float: left;
 	    margin-left: 83px;
@@ -1068,8 +1200,9 @@ transform:rotate(360deg)}
 	    @include border-radius( 4px);
 	    color: #FFFFFF;
 	    font-size: 10px;
-	    margin: 0 0 0 14px;
+	    margin: 0 4px 11px 14px;
 	    padding: 7px 11px 6px;
+	    float: right;
 	    @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
 	    text-transform: uppercase;
 	    clear: both;

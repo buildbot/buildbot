@@ -47,3 +47,7 @@ master/buildbot/status/web/files/testfail.xml
 master/buildbot/status/web/files/test2.xml
 
 master/buildbot/status/web/files/node_modules/grunt-usemin/node_modules/.bin/lodash
+
+master/buildbot/status/web/files/test3.xml
+
+master/buildbot/status/web/files/test.xml

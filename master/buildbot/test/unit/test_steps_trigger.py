@@ -37,7 +37,7 @@ class FakeTriggerable(object):
     def __init__(self, name):
         self.name = name
 
-    def trigger(self, sourcestamps = None, set_props=None, triggeredbybrid=None):
+    def trigger(self, sourcestamps = None, set_props=None, triggeredbybrid=None, reason=None):
         self.triggered_with = (sourcestamps, set_props.properties)
         d = defer.Deferred()
         if self.exception:

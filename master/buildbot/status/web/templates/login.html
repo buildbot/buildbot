@@ -8,50 +8,40 @@
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
+
     <script type="text/javascript" src="/script/login.js"></script>
  </head>
  <body class="interface">
- 	<div class="login-box more-info-box more-info-box-js">
+ 	<div id="login_page" class="login-box more-info-box more-info-box-js">
  		<h1 class="logo">
-            <a href="/">
-              <span>K</span>atana
-            </a>
-         </h1>
+      <a href="/">
+        <span>K</span>atana
+      </a>
+   </h1>
 
-         <!--
- 			<h3>Login to Katana</h3>
- 		-->
  		<p class="login-welcome-txt">
-				Welcome to Unity's BuildServer! Have fun
-			</p>
+			Welcome to Unity's BuildServer! Have fun
+		</p>
 		<div class="auth">    
-			
-          {% if authz.authenticated(request) %}
-            {{ authz.getUsernameHTML(request) }}
-            |<a href="{{ path_to_root }}logout">Logout</a>
-            {% elif authz.useHttpHeader and authz.httpLoginUrl %}
-            <a href="{{ authz.httpLoginUrl }}">Login</a>
-            {% elif authz.auth %}
-            <form id="loginForm" method="post" name="login" action="{{ path_to_root }}login">
-            <label for="username">
-            	Username
-            </label>
-            <input class="defaultText" id="username" type="text"  name="username" />
-            <div class="clear"></div>
-            <label for="password">
-            	Password
-            </label>
-            
-            <input id="password" class="defaultText" autocomplete="off" type="password" name="password" />
-            <div class="clear"></div>
-            <input id="remember" type="checkbox" name="remember" checked="" value="true" />
-            <label for="remember" class="checkbox-label">
-            	Remember me
-            </label>
-            
-            <input type="submit" value="login" id="submitLogin" />
+
+            <form id="loginForm" method="post" name="login" action="/">
+                <label for="firstName">
+                	First name
+                </label>
+                <input class="defaultText" id="firstName" type="text"  name="firstname" />
+                <div class="clear"></div>
+
+                <label for="lastName">
+                	Last name
+                </label>
+                
+                <input id="lastName" class="defaultText" type="text" name="lastname" />
+                <div class="clear"></div>
+                
+                
+                <input type="submit" value="login" id="submitLogin" />
             </form>
-          {% endif %}
+          
         </div>
  	</div>
  </body>
