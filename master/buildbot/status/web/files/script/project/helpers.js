@@ -214,6 +214,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.command_forcebuild', formContainer).submit();
 				});
 			});			
+			$("#buildForm .full-name-js").val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
 
 		}, summaryArtifactTests: function () {
 			// for the builddetailpage
@@ -259,6 +260,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				testlistResultJS.append($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
+
 		}, setCookie: function (name, value) {
 			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 		
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 

@@ -45,7 +45,7 @@
 
 {% macro stop_build(stop_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
   {% if not short %}
-    <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
+    <form id="buildForm" method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
         {% if on_all %}
@@ -72,7 +72,8 @@
       {% if not short %}
         <div class="row">
           <span class="label">Reason:</span>
-          <input type="text" name="comments"/>
+          <input class="full-name-js" type="text" name="fullName" disabled/>
+          <input class="full-name-js" type="hidden" name="comments"/>
         </div>
       {% endif %}
 
@@ -301,7 +302,7 @@
 {% endmacro %}
 
 {% macro rebuild_build(rebuild_url, authz, exactly, ss) %}
- <form method="post" action="{{ rebuild_url }}" class="command rebuild">
+ <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
 
     {% if exactly %}
       <p>This tree was built from a specific set of
@@ -327,7 +328,8 @@
   {% endif %}
    <div class="row">
      <span class="label">Reason for re-running build:</span>
-     <input type='text' name='comments' />
+     <input class="full-name-js" type='text' name='FullName' disabled />
+     <input class="full-name-js" type='hidden' name='comments' />
      <input class="grey-btn" type="submit" value="Rebuild" />
    </div>
    
