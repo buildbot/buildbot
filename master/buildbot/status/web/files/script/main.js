@@ -25,7 +25,7 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 		helpers.setCookie("fullName", helpers.getCookie("fullName"));
 		
 		// Redirect to loginpage if missing first or last name cookie
-		if(helpers.getCookie("fullName") === '' || helpers.getCookie("fullName") === '') {	  				
+		if(helpers.getCookie("fullName") === '') {	  				
 			window.location = "/login";
 		}
 		
