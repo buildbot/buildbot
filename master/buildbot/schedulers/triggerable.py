@@ -43,7 +43,7 @@ class Triggerable(base.BaseScheduler):
             m = user_regex.search(reason)
             if m:
                 user = m.group(1)
-                self.reason = "Build caused "+ user + " " + self.reason
+                self.reason = "Build caused " + user + " " + self.reason
 
     def trigger(self, sourcestamps = None, set_props=None, triggeredbybrid=None, reason=None):
         """Trigger this scheduler with the optional given list of sourcestamps

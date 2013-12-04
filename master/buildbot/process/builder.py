@@ -707,10 +707,7 @@ class Builder(config.ReconfigurableServiceMixin,
         return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
 
     def _defaultMergeRequestFn(self, req1, req2):
-        print "\n calling _defaultMergeRequestFn %s, %s \n" % (req1.properties, req2.properties)
-        print "\n property  %s \n" % req1.properties.getProperty("force_rebuild", False)
-        if (self.propertiesMatch(req1,req2)):
-        #print "\n properties  %s, %s \n" % req1.getProperty("force_rebuild", False)
+        if self.propertiesMatch(req1,req2):
             return req1.canBeMergedWith(req2)
         return False
 
