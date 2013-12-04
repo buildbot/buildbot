@@ -1123,8 +1123,8 @@ transform:rotate(360deg)}
 	&.more-info-box {
 		display: block;
 	    float: none;
-	    padding: 44px 19px 16px 38px;
-	    width: 298px;
+	    padding: 44px 38px 16px 38px;
+	    width: 314px;
 		h3 {
 			display: block;	
 		}
@@ -1135,7 +1135,7 @@ transform:rotate(360deg)}
 		    margin-bottom: 15px;
 		    clear: both;
 		}
-	}
+	} 
 	h1.logo a {
 			opacity: 1;
 		   	color: #445873;
@@ -1168,10 +1168,9 @@ transform:rotate(360deg)}
  
 
 .auth {
-	margin: 25px 25px 25px 6px;
+	margin: 25px 0;
 	
-	input[type="text"],
-	input[type="password"] {
+	input[type="text"] {
 	    border: 1px solid #ccc;
 	    @include border-radius(4px);
 	    @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset, 1px 1px 0px #fff);
@@ -1180,9 +1179,8 @@ transform:rotate(360deg)}
 	    font-size: 15px;
 	    line-height: 13px;
 	    padding: 9px 13px 8px;
-	    width: 150px;
+	    width: 205px;
 	    float: left;
-	    margin-bottom:15px;
 	    &.not-valid {
     		border: 1px solid #E42323;
 		}
@@ -1200,8 +1198,8 @@ transform:rotate(360deg)}
 	    @include border-radius( 4px);
 	    color: #FFFFFF;
 	    font-size: 10px;
-	    margin: 0 4px 11px 14px;
-	    padding: 7px 11px 6px;
+	    margin: 3px 0 0 0;
+	    padding: 8px 11px;
 	    float: right;
 	    @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
 	    text-transform: uppercase;
@@ -1211,15 +1209,13 @@ transform:rotate(360deg)}
 	    	@include bgimage(linear-gradient(top , #1057AD 0%, #4E98D5 100%));
 	    }
 	}
-	input:first-child {
-		margin-right: 10px;
-	}
+	
 	label {
 	 float: left;
 	 font-size: 14px;
 	 font-weight: bold;
 	 padding-top: 8px;
-	 width: 84px;
+	 width: 60px;
 	 @include text-shadow(0 1px 0 #FFFFFF);
 		 &.checkbox-label {
 		 	font-size: 11px;
