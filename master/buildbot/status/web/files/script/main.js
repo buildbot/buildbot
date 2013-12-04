@@ -20,12 +20,12 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 
 	$(document).ready(function() {
 
+		
 		// Extend the expirationdate for the first and last name cookies
-		helpers.setCookie("firstName", helpers.getCookie("firstName"));
-		helpers.setCookie("lastName", helpers.getCookie("lastName"));
+		helpers.setCookie("fullName", helpers.getCookie("fullName"));
 		
 		// Redirect to loginpage if missing first or last name cookie
-		if(helpers.getCookie("lastName") === '' || helpers.getCookie("firstName") === '') {	  				
+		if(helpers.getCookie("fullName") === '' || helpers.getCookie("fullName") === '') {	  				
 			window.location = "/login";
 		}
 		

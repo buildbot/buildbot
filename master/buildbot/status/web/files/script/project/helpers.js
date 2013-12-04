@@ -209,12 +209,12 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					
 					// Add the value from the cookie to the disabled and hidden field
 					$("#usernameDisabled, #usernameHidden", formContainer)
-					.val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+					.val(helpers.getCookie("fullName"));
 
 					$('.command_forcebuild', formContainer).submit();
 				});
 			});			
-			$("#buildForm .full-name-js").val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+			$("#buildForm .full-name-js").val(helpers.getCookie("fullName"));
 
 		}, summaryArtifactTests: function () {
 			// for the builddetailpage

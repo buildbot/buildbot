@@ -246,7 +246,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
 					// Insert full name from cookie
 					
 					$("#usernameDisabled, #usernameHidden", formContainer)
-					.val(helpers.getCookie("firstName") + ' ' + helpers.getCookie("lastName"));
+					.val(helpers.getCookie("fullName"));
 					
 
 					mib3.center().fadeIn('fast');
