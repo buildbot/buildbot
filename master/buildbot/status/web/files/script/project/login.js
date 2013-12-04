@@ -63,7 +63,7 @@ $(document).ready(function() {
 	function errorMessage(error) {
 		if (error === true && $('.error-input').length === 0) {
 			$('.login-welcome-txt', loginBox).hide();
-			$(form).prepend('<div class="error-input">Fill in your first and last name before submitting</div>');
+			$(form).prepend('<div class="error-input">Fill in your username and password before submitting</div>');
 			shake(loginBox);
 		} else if (error === true && $('.error-input').length > 0) {
 			shake(loginBox);
