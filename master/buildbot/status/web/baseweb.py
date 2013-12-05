@@ -337,7 +337,7 @@ class WebStatus(service.MultiService):
         if change_hook_auth is not None:
             self.change_hook_auth = []
             for checker in change_hook_auth:
-                if isinstance(checker, str):
+                if isinstance(checker, str) or isinstance(checker, unicode):
                     try:
                         checker = strcred.makeChecker(checker)
                     except Exception, error:
