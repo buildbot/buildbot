@@ -35,15 +35,15 @@ class AuthenticateActionResource(ActionResource):
         username = req.args.get("username", [None])[0]
         password = req.args.get("password", [None])[0]
 
-        # TODO: we should read this value from configuration
-        ldap_config = 'my_ldap_server'
-        l = ldap.initialize(ldap_config)
+        master = req.site.buildbot_service.master
+        ldap_config = master.config.ldap
+        l = ldap.initialize(ldap_config['ldap_server'])
         try:
-            token = l.simple_bind_s("uid=%s,cn=users,dc=unity3d,dc=com" % username, password)
+            token = l.simple_bind_s("uid=%s,cn=users,%s" % (username, ldap_config['ldap_base_dn']), password)
             dn = l.whoami_s()
             attrs = ["cn"]
             filter_str = "uid=%s" % username
-            ldap_result = l.search_s("dc=unity3d,dc=com", ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attrs)
+            ldap_result = l.search_s(ldap_config['ldap_base_dn'], ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attrs)
             fullname = username
             if ldap_result > 0 and ldap_result[0] > 1 and 'cn' in ldap_result[0][1].keys():
                 fullname = ldap_result[0][1]['cn'][0]
