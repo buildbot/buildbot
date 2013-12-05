@@ -19,13 +19,12 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	'use strict';
 
 	$(document).ready(function() {
-
 		
 		// Extend the expirationdate for the first and last name cookies
-		helpers.setCookie("fullName", helpers.getCookie("fullName"));
-		
-		// Redirect to loginpage if missing first or last name cookie
-		if(helpers.getCookie("fullName") === '') {	  				
+		helpers.setCookie("userName", helpers.getCookie("userName"));
+
+		// Redirect to loginpage if missing usernamecookie
+		if(helpers.getCookie("userName") === '') {	  				
 			window.location = "/login";
 		}
 		
@@ -42,7 +41,6 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        function(dotdotdot) {
 	        	$(".ellipsis-js").dotdotdot();
 	        });
-			
 		}
 
 		// codebases combobox selector

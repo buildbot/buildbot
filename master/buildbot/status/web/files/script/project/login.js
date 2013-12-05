@@ -45,7 +45,7 @@ $(document).ready(function() {
 	function validatelogin(form, e) {		
 		var error = false;
 		$(allInputs).each(function() {		
-		console.log($(this).val())		
+			
 			if ($(this).val() === '') {
 				 e.preventDefault();
 				 $(this).addClass('not-valid');
@@ -81,16 +81,19 @@ $(document).ready(function() {
 			element.removeClass('shake');
 		}
 	}
-
+	var delimiter = "---";
+	var values = form.children("input[name='username']").val() + delimiter + $('#rememberMe').is(':checked');
+	console.log(values)
 	// set cookie
 	var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
 	function setCookie(name, value) { 
-		document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 
+		var expire = $('#rememberMe').is(':checked') === true? 	expiry.toGMTString() : '';
+		document.cookie=name + values +"; path=/; expires=" + expire; 
 	}
 
 	// store cookie values from form
 	function storeValues(form) {					
-		setCookie("fullName", form.children("input[name='fullname']").val()); 					
+		setCookie("userName", form.children("input[name='username']").val()); 					
 		return true;
 	}
 	 
@@ -100,10 +103,11 @@ $(document).ready(function() {
 	  	var value = re.exec(document.cookie); 
 	  	return (value != null) ? unescape(value[1]) : null; 
 	}
-
-	// set cookie values in form
-	if(fullName = getCookie("fullName")) {	  	
-		$(form).children("input[name='fullname']").val(fullName);
+	var sname = getCookie("userName").split(delimiter)[1]
+console.log(sname)
+	// set cookie values in form	 
+	if(userName = getCookie("userName")) {
+		$(form).children("input[name='username']").val(getCookie("userName"));
 	} 
 
 });

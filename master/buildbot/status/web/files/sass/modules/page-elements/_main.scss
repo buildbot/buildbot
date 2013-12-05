@@ -1190,10 +1190,9 @@ transform:rotate(360deg)}
 	} 
 	input[type="checkbox"] {
 	    float: left;
-	    margin-left: 83px;
 	    margin-right: 9px;
-	    margin-top: 6px;
-	}
+	    margin-top: 12px;
+	} 
 	input[type="submit"] {
 		@include bgimage(linear-gradient(top , #0A3569 0%, #417FB1 100%));
 		@include box-shadow(1px 1px 0px #fff);
@@ -1218,12 +1217,12 @@ transform:rotate(360deg)}
 	 font-size: 14px;
 	 font-weight: bold;
 	 padding-top: 8px;
-	 width: 60px;
+	 
 	 @include text-shadow(0 1px 0 #FFFFFF);
 		 &.checkbox-label {
 		 	font-size: 11px;
 		    font-weight: normal;
-		    margin-top: -2px;
+		    margin-top: 3px;
 		}
 	}
 }

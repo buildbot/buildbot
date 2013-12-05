@@ -65,7 +65,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			helpers.setFullName($("#buildForm .full-name-js"));
 
 		}, setFullName: function(el) {
-				el.val(helpers.getCookie("fullName"));
+				el.val(helpers.getCookie("userName"));
 			
 		},runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
