@@ -288,15 +288,55 @@ Message API
 -----------
 
 Currently messages are implemented with two protocols: WebSockets and `server sent event <http://en.wikipedia.org/wiki/Server-sent_events>`_.
-This will likely change or be supplemented with other mechanisms before release.
+This may be supplemented with other mechanisms before release.
+
+WebSocket
+~~~~~~~~~
 
 WebSocket is a protocol for arbitrary messaging to and from browser.
-As an HTTP extension, the protocol is not yet well supported by all HTTP proxy technologies, and thus not well suited for enterprise.
-Only one WebSocket connection is needed per browser.
+As an HTTP extension, the protocol is not yet well supported by all HTTP proxy technologies. Although, it has been reported to work well used behind the https protocol. Only one WebSocket connection is needed per browser.
 
-SSE is a simpler protocol than WebSockets and is more REST compliant.
-It uses the chunk-encoding HTTP feature to stream the events.
-It may use one connection to server per event type.
+Client can connect using url ``ws[s]://<BB_BASE_URL>/ws``
+
+The client can control which kind of messages he will receive using following message, encoded in json:
+
+ * startConsuming: {'req': 'startConsuming', 'options': {}, 'path': ['change']}
+   startConsuming events that match ``path``.
+
+ * stopConsuming: {'req': 'stopConsuming', 'path': ['change']}
+   stopConsuming events that match ``path``
+
+Client will receive events as websocket frames encoded in json with following format:
+
+   {'key':key, 'message':message}
+
+Server Sent Events
+~~~~~~~~~~~~~~~~~~
+
+SSE is a simpler protocol than WebSockets and is more REST compliant. It uses the chunk-encoding HTTP feature to stream the events. SSE also does not works well behind enterprise proxy, unless you use the https protocol
+
+Client can connect using following endpoints
+
+ * ``http[s]://<BB_BASE_URL>/sse/listen/<path>``: Start listening to events on the http connection. Optionally setup a first event filter on ``<path>``. The first message send is a handshake, giving a uuid that can be used to add or remove event filters.
+ * ``http[s]://<BB_BASE_URL>/sse/add/<uuid>/<path>``: Configure a sse session to add an event filter
+ * ``http[s]://<BB_BASE_URL>/sse/remote/<uuid>/<path>``: Configure a sse session to remove an event filter
+
+Note that if a load balancer is setup as a front end to buildbot web masters, the load balancer must be configured to always use the same master given a client ip address for /sse endpoint.
+
+Client will receive events as sse events, encoded with following format:
+
+.. code-block:: none
+
+  event: event
+  data: {'key': <key>, 'message': <message>}
+
+The first event received is a handshake, and is used to inform the client about uuid to use for configuring additional event filters
+
+.. code-block:: none
+
+  event: handshake
+  data: <uuid>
+
 
 JavaScript Application
 ----------------------
