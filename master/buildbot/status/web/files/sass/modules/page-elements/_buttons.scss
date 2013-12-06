@@ -99,14 +99,11 @@ a.grey-btn,
     top: -6px;
 }
 
-
-
-@include breakpoint($bkpt-small) {
-    .codebases .grey-btn {
-        //float:left;   
-    }
-    .grey-btn + .dataTables_wrapper {
-        margin-right: 0;
+.rebuild, 
+.cancelbuild,
+.stopbuild {
+    .grey-btn {
+        padding: 5px 9px;
     }
 }
 
@@ -182,4 +179,13 @@ a.grey-btn,
     content: "✖";
     font-size: 20px;
     text-shadow: 1px 1px 1px #FFFFFF;
+}
+
+@include breakpoint($bkpt-small) {
+    .codebases .grey-btn {
+        //float:left;   
+    }
+    .grey-btn + .dataTables_wrapper {
+        margin-right: 0;
+    }
 }
