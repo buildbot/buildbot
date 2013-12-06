@@ -32,14 +32,14 @@ class Triggerable(base.BaseScheduler):
                                     **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
-        self.reason = "Triggerable(%s)" % name
+        self.trigger_reason = "Triggerable(%s)" % name
         # loop for polling the db
         self.db_loop = None
 
     def updateReason(self, reason):
+        self.reason = self.trigger_reason
         user_regex = re.compile(r"(by '.*':)")
-        userfound = user_regex.search(self.reason)
-        if reason is not None and not userfound:
+        if reason is not None:
             m = user_regex.search(reason)
             if m:
                 user = m.group(1)
