@@ -8,7 +8,7 @@
         a(href="#/builders/{{builder.id}}")
           | {{builder.name}}
       li.pull-right(ng-repeat='sch in forceschedulers')
-        a.btn.btn-default(href="#/builders/{{builder.id}}/force/{{sch.name}}", ng-init="sch.toggle=false") {{sch.name}}
+        forcedialogbutton.btn.btn-default(scheduler="{{ sch.name }}", builder="{{builder.id}}") {{sch.name}}
   .row
     table.table.table-hover.table-striped.table-condensed
       tr
