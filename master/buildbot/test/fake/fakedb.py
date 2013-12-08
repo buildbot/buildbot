@@ -866,7 +866,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
 
     def getBuildslaves(self):
         return defer.succeed([{
-                    'name':    s['name'],
+                    'name': s['name'],
                     'slaveid': s['slaveid'],
         } for s in self.buildslaves])
 

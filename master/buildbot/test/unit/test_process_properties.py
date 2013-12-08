@@ -774,7 +774,7 @@ class TestInterpolateSlaveInfo(unittest.TestCase):
     def setUp(self):
         self.props = Properties()
         self.build = FakeBuild(self.props)
-        
+
         # this is a bit ugly... but we dont really have fakes for all this yet:
         self.build.slavebuilder = mock.Mock()
         self.build.slavebuilder.slave.slave_status.getInfoAsDict.return_value = {
@@ -790,14 +790,14 @@ class TestInterpolateSlaveInfo(unittest.TestCase):
         command = Interpolate("echo %(slave:admin)s")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
-                             "echo TheAdmin")
+                      "echo TheAdmin")
         return d
 
     def test_slaveinfo_colon_minus(self):
         command = Interpolate("echo buildby-%(slave:missing_key:-blddef)s")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
-                             "echo buildby-blddef")
+                      "echo buildby-blddef")
         return d
 
 

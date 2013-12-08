@@ -283,7 +283,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_startService_setSlaveInfo_UpdatesDb(self):
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={ 
+            fakedb.Buildslave(name='bot', info={
                 'admin': 'TheAdmin',
                 'host': 'TheHost',
                 'access_uri': 'TheURI',
@@ -296,17 +296,17 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         # change a value
         slave.slave_status.updateInfo(key='new-value')
-        self.clock.pump([0]) # we overrode the reactor, so gotta force the calls
+        self.clock.pump([0])  # we overrode the reactor, so gotta force the calls
         yield eventual.flushEventualQueue()
 
         # and the db is updated too:
         slave_db = yield self.master.db.buildslaves.getBuildslaveByName("bot")
-        
+
         self.assertEqual(slave_db['slaveinfo']['admin'], 'TheAdmin')
         self.assertEqual(slave_db['slaveinfo']['host'], 'TheHost')
         self.assertEqual(slave_db['slaveinfo']['access_uri'], 'TheURI')
         self.assertEqual(slave_db['slaveinfo']['version'], 'TheVersion')
-        self.assertEqual(slave_db['slaveinfo']['key'], 'new-value' )
+        self.assertEqual(slave_db['slaveinfo']['key'], 'new-value')
 
     def createRemoteBot(self):
         class Bot():
@@ -459,7 +459,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
         self.assertEqual(slave.slave_status.getInfo('key'), 'value')
 
-        self.clock.pump([0]) # we overrode the reactor, so gotta force the calls
+        self.clock.pump([0])  # we overrode the reactor, so gotta force the calls
         yield eventual.flushEventualQueue()
 
         # and the db is updated too:

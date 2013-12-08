@@ -145,7 +145,7 @@ class SlaveStatus:
         for k, v in new_values.iteritems():
             if k not in self.info:
                 break
-            if self.info[k]!=v:
+            if self.info[k] != v:
                 break
         else:
             # nothing changed so just bail now
@@ -162,7 +162,7 @@ class SlaveStatus:
     def addInfoWatcher(self, watcher):
         if not watcher in self.info_change_callbacks:
             self.info_change_callbacks.append(watcher)
-            
+
     def removeInfoWatcher(self, watcher):
         if watcher in self.info_change_callbacks:
             self.info_change_callbacks.remove(watcher)

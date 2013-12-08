@@ -17,6 +17,7 @@ from twisted.trial import unittest
 from buildbot.status import slave
 from buildbot.util import eventual
 
+
 class TestSlaveStatus(unittest.TestCase):
 
     SLAVE_NAME = 'slavename'
@@ -44,6 +45,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(graceful):
             callbacks.append(graceful)
         s.addGracefulWatcher(callback)
@@ -60,6 +62,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(graceful):
             callbacks.append(graceful)
         s.addGracefulWatcher(callback)
@@ -84,6 +87,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(graceful):
             callbacks.append(graceful)
 
@@ -219,6 +223,7 @@ class TestSlaveStatus(unittest.TestCase):
         s.updateInfo(key=FIRST_VALUE)
 
         callbacks = []
+
         def callback(info):
             callbacks.append(info)
         s.addInfoWatcher(callback)
@@ -238,6 +243,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(info):
             callbacks.append(info)
         s.addInfoWatcher(callback)
@@ -248,7 +254,7 @@ class TestSlaveStatus(unittest.TestCase):
 
         @d.addCallback
         def check(_):
-            self.assertEqual(callbacks, [{ 'key': 'value' }])
+            self.assertEqual(callbacks, [{'key': 'value'}])
 
         return d
 
@@ -256,6 +262,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(info):
             callbacks.append(info)
         s.addInfoWatcher(callback)
@@ -266,7 +273,7 @@ class TestSlaveStatus(unittest.TestCase):
 
         @d.addCallback
         def check(_):
-            self.assertEqual(callbacks, [{ 'key': 'value', 'key2': 'value2' }])
+            self.assertEqual(callbacks, [{'key': 'value', 'key2': 'value2'}])
 
         return d
 
@@ -280,6 +287,7 @@ class TestSlaveStatus(unittest.TestCase):
         s = self.makeStatus()
 
         callbacks = []
+
         def callback(info):
             callbacks.append(info)
 
@@ -296,7 +304,7 @@ class TestSlaveStatus(unittest.TestCase):
             self.assertEqual(callbacks, [])
 
         return d
-        
+
     def test_asDict(self):
         s = self.makeStatus()
 
@@ -316,11 +324,11 @@ class TestSlaveStatus(unittest.TestCase):
             'runningBuilds': [],
             'name': self.SLAVE_NAME,
             'connected': False,
-            'info': { 
+            'info': {
                 'host': 'TheHost',
                 'version': 'TheVersion',
                 'access_uri': 'TheUri',
                 'admin': 'TheAdmin',
-                'key': 'value' 
+                'key': 'value'
             },
         })

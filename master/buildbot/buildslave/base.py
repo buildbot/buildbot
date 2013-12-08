@@ -175,7 +175,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         """One of the locks for this slave was released; try scheduling
         builds."""
         if not self.botmaster:
-            return # oh well..
+            return  # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def _saveSlaveInfoDict(self, slaveinfo):
