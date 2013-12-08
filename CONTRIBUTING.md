@@ -5,6 +5,15 @@ Thank you for contributing to Buildbot!
 
 What appears below is just a quick summary.  See http://trac.buildbot.net/wiki/Development for the full story.
 
+Issues, Bugs, Tickets
+---------------------
+
+*We do not use the GitHub Issue Tracker for bugs*
+
+Please file tickets for any bugs you discover at http://trac.buildbot.net.
+
+The GitHub Issue Tracker is enabled only because it is a more usable interface for pull requests.
+
 Patches
 -------
 
