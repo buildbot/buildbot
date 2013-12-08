@@ -166,7 +166,6 @@ class TestSlaveStatus(unittest.TestCase):
     def test_updateInfo_None(self):
         s = self.makeStatus()
 
-        KEY = 'key'
         VALUE = None
         s.updateInfo(key=VALUE)
 
@@ -189,16 +188,6 @@ class TestSlaveStatus(unittest.TestCase):
 
         # tuples become lists due to JSON restriction
         self.assertEqual(s.getInfo('key'), list(VALUE))
-
-    def test_updateInfo_None(self):
-        s = self.makeStatus()
-
-        VALUE = None
-        s.updateInfo(key=VALUE)
-
-        # tuples become lists due to JSON restriction
-        self.assertEqual(s.hasInfo('key'), True)
-        self.assertEqual(s.getInfo('key'), VALUE)
 
     def test_updateInfo_set_raises(self):
         s = self.makeStatus()
