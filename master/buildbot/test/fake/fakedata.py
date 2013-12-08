@@ -283,6 +283,10 @@ class FakeUpdates(object):
             buildslaveid=buildslaveid,
             masterid=masterid)
 
+    def __getattr__(self, name):
+        import traceback
+        traceback.print_stack()
+
 
 class FakeDataConnector(object):
     # FakeDataConnector delegates to the real DataConnector so it can get all

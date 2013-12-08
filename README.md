@@ -129,6 +129,7 @@ For each resource type, we'll need the following (based on "Adding Resource Type
 * Appropriate update methods, with unit tests
 * Docs for those update methods
 * Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
+* event generation is done in the data layer, and not in the process layer, as far as possible
 
 ### Other Resource-Type Related Tasks ###
 

@@ -110,14 +110,17 @@ Within the buildmaster process, the root of the data API is available at `self.m
         The callback interface is the same as that of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
         The ``path`` argument is automatically translated into an appropriate topic.
 
-    .. py:method:: produceEvent(rtype, event, msg)
+    .. py:method:: produceEvent(rtype, msg, event)
 
         :param rtype: the name identifying a resource type
-        :param event: the event to produce
         :param msg: a dictionary describing the msg to send
+        :param event: the event to produce
 
-        This method implements the production of an event, if event is needed outside of an update function.
-        It ensures the event is sent to the routingkeys specified by eventPathPatterns
+        This method implements the production of an event, for the rtype identified by its name string
+        Usually, this is the role of the data layer to produce the events inside the update methods
+        For the potencial use cases where it would make sense to solely produce and event, and not update
+        data, please use this API, rather than directly call mq.
+        It ensures the event is sent to all the routingkeys specified by eventPathPatterns
 
     .. py:method:: control(action, args, kwargs)
 
@@ -272,7 +275,7 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 
         In the example above, a call to ``produceEvent({ 'pubid' : 10, 'name' : 'Winchester' }, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
 
-        Several paths can be send in order to be consistent with rest endpoints.
+        Several paths can be specified in order to be consistent with rest endpoints.
 
     .. py:attribute:: entityType
 

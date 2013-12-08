@@ -59,7 +59,7 @@ class ResourceType(unittest.TestCase):
         inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
                           'tested')
         master.mq.assertProductions([
-            (('foo', '10','bar', '20', 'tested'), dict(fooid=10, barid='20'))
+            (('foo', '10', 'bar', '20', 'tested'), dict(fooid=10, barid='20'))
         ])
 
     def test_compilePatterns(self):
@@ -72,6 +72,7 @@ class ResourceType(unittest.TestCase):
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = MyResourceType(master)
         self.assertEqual(inst.eventPaths, ['builder/{builderid}/build/{number}', 'build/{buildid}'])
+
 
 class Endpoint(endpoint.EndpointMixin, unittest.TestCase):
 

@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 import UserList
-import urllib
 import copy
+import re
+import urllib
 
 from buildbot.data import exceptions
 from twisted.internet import defer
@@ -26,18 +27,19 @@ class ResourceType(object):
     endpoints = []
     keyFields = []
     eventPathPatterns = ""
+
     def __init__(self, master):
         self.master = master
         self.compileEventPathPatterns()
 
     def compileEventPathPatterns(self):
-        """compile event patterns to get a list of dict formatable strings"""
+        # We'll run a single format, and then split the string
+        # to get the final event path tuple
         pathPatterns = self.eventPathPatterns
         pathPatterns = pathPatterns.split()
+        identifiers = re.compile(r':([^/]*)')
         for i, pp in enumerate(pathPatterns):
-            for path in pp.split('/')[1:]:
-                if path.startswith(":"):
-                    pp = pp.replace(path, "{" + path[1:] + "}")
+            pp = identifiers.sub(r'{\1}', pp)
             if pp.startswith("/"):
                 pp = pp[1:]
             pathPatterns[i] = pp
@@ -61,12 +63,11 @@ class ResourceType(object):
         return msg
 
     def produceEvent(self, msg, event):
-        """produce events to the various endpoints defined in eventPathPatterns"""
         if msg is not None:
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
                 path = path.format(**msg)
-                routingKey = tuple(path.split("/"))+ (event,)
+                routingKey = tuple(path.split("/")) + (event,)
                 self.master.mq.produce(routingKey, msg)
 
 

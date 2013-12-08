@@ -106,7 +106,7 @@ class DataConnector(service.AsyncService):
         except KeyError:
             raise exceptions.InvalidPathError
 
-    def getResource(self, name):
+    def getResourceType(self, name):
         return getattr(self.rtypes, name)
 
     @defer.inlineCallbacks
@@ -129,7 +129,8 @@ class DataConnector(service.AsyncService):
         return endpoint.control(action, args, kwargs)
 
     def produceEvent(self, rtype, msg, event):
-        rsrc = self.getResource(rtype)
+        # warning, this is temporary api, until all code is migrated to data api
+        rsrc = self.getResourceType(rtype)
         return rsrc.produceEvent(msg, event)
 
     def allEndpoints(self):

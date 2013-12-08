@@ -123,16 +123,16 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Build(interfaces.InterfaceTests, unittest.TestCase):
     new_build_event = {'builderid': 10,
-       'buildid': 100,
-       'buildrequestid': 13,
-       'buildslaveid': 20,
-       'complete': False,
-       'complete_at': None,
-       'masterid': 824,
-       'number': 1,
-       'results': None,
-       'started_at': 1,
-       'state_strings': [u'starting']}
+                       'buildid': 100,
+                       'buildrequestid': 13,
+                       'buildslaveid': 20,
+                       'complete': False,
+                       'complete_at': None,
+                       'masterid': 824,
+                       'number': 1,
+                       'results': None,
+                       'started_at': 1,
+                       'state_strings': [u'starting']}
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -142,7 +142,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
                             exp_kwargs=None, *args, **kwargs):
-        rv = (1,2)
+        rv = (1, 2)
         m = mock.Mock(return_value=defer.succeed(rv))
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
@@ -152,10 +152,9 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_event(self, method, exp_events=[],
                       *args, **kwargs):
-        self.patch(reactor, "seconds", lambda:1)
+        self.patch(reactor, "seconds", lambda: 1)
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)
-
 
     def test_signature_newBuild(self):
         @self.assertArgSpecMatches(
@@ -175,7 +174,8 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_event(self.rtype.newBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
                                   exp_events=[(('builder', '10', 'build', '1', 'new'), self.new_build_event),
-                                               (('build', '100', 'new'), self.new_build_event)])
+                                 (('build', '100', 'new'), self.new_build_event)])
+
     def test_signature_setBuildStateStrings(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.setBuildStateStrings,  # fake

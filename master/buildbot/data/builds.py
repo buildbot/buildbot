@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import copy
-
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import datetime2epoch
@@ -119,6 +117,7 @@ class Build(base.ResourceType):
         /builder/:builderid/build/:number
         /build/:buildid
     """
+
     class EntityType(types.Entity):
         buildid = types.Integer()
         number = types.Integer()

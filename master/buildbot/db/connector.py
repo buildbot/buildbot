@@ -25,6 +25,7 @@ from buildbot.db import changes
 from buildbot.db import changesources
 from buildbot.db import enginestrategy
 from buildbot.db import exceptions
+from buildbot.db import logs
 from buildbot.db import masters
 from buildbot.db import model
 from buildbot.db import pool
@@ -33,7 +34,6 @@ from buildbot.db import sourcestamps
 from buildbot.db import state
 from buildbot.db import steps
 from buildbot.db import users
-from buildbot.db import logs
 from buildbot.util import service
 from twisted.application import internet
 from twisted.internet import defer
