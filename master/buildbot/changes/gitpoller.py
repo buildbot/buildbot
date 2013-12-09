@@ -15,6 +15,7 @@
 
 import os
 import urllib
+import itertools
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -155,7 +156,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d = self._dovccmd('log', args, path=self.workdir)
 
         def process(git_output):
-            fileList = git_output.split()
+            fileList = [file for file in itertools.ifilter(lambda s: len(s), git_output.splitlines())]
             return fileList
         d.addCallback(process)
         return d
