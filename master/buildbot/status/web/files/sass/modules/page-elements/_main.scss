@@ -1861,7 +1861,7 @@ disabled look for disabled choices in the results dropdown
   border-color: #c30000;
   font-size: 20px;
 }
- 
+  
 form.command_forcebuild {
 	width: 320px;
 	clear:both;
@@ -1891,6 +1891,7 @@ form.command_forcebuild .force-nested > .label {
 }
 
 @include breakpoint($bkpt-small) {
+	.auth-user {display:none;}
 	form.command_forcebuild {
 		width: auto;
 	}
