@@ -21,7 +21,6 @@
     
     {% endblock %} 
 
-
     <script type="text/javascript">
       var require = {
           baseUrl: "/prod/script/",
@@ -31,9 +30,8 @@
 
     </script>
 
-      <script src="/script/require.js"></script>
+    <script src="/script/require.js"></script>
 
- 
   </head>
   <body class="interface katana-main">
    
@@ -43,6 +41,13 @@
           
         <nav class="top-menu-container">
           <div class="container-inner">
+            <div class="auth-user">
+              Logged in as 
+              <span id="authUserName"></span>
+              <a id="authUserBtn" href="/login">
+                Log out
+              </a>
+            </div>
           <h1 class="logo">
             <a href="/">
               <span>K</span>atana
