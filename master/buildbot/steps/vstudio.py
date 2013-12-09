@@ -388,6 +388,7 @@ VS2013 = VC12
 
 class MsBuild4(VisualStudio):
     platform = None
+    vcenv_bat = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
 
     def __init__(self, platform, **kwargs):
         self.platform = platform
@@ -395,7 +396,7 @@ class MsBuild4(VisualStudio):
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
-        cmd.args['env']['VCENV_BAT'] = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+        cmd.args['env']['VCENV_BAT'] = self.vcenv_bat
 
     def describe(self, done=False):
         rv = []
@@ -432,7 +433,4 @@ MsBuild = MsBuild4
 
 
 class MsBuild12(MsBuild4):
-
-    def setupEnvironment(self, cmd):
-        VisualStudio.setupEnvironment(self, cmd)
-        cmd.args['env']['VCENV_BAT'] = "\"${VS120COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+    vcenv_bat = "\"${VS120COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
