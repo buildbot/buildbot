@@ -2,6 +2,7 @@ from buildbot.status.web.base import HtmlResource, ActionResource, \
     path_to_login, path_to_authenticate
 import ldap
 import urllib
+from twisted.python import log
 
 NOT_AUTORIZED = "?autorized=False"
 
@@ -49,8 +50,9 @@ class AuthenticateActionResource(ActionResource):
                 fullname = ldap_result[0][1]['cn'][0]
             l.unbind()
             if dn:
-                print 'ok', dn
+                log.msg('ok', dn)
         except Exception, e:
+            log.msg('Error while authenticating: %r' % e)
             return path_to_login(req) + NOT_AUTORIZED
 
         return path_to_login(req) + self.authorized(urllib.quote(fullname))
