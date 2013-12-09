@@ -571,14 +571,19 @@ class Builder(config.ReconfigurableServiceMixin,
                 if finished_br:
                     merged_brids = yield self.master.db.buildrequests.getRequestsCompatibleToMerge(self.name, brdict['startbrid'], brids)
                     merged_brdicts = []
+                    merged_breqs = []
                     for br in brdicts:
-                        if (br['brid'] in merged_brids):
+                        if br['brid'] in merged_brids:
                             merged_brdicts.append(br)
+
+                    for brobj in breqs:
+                        if brobj.id in merged_brids:
+                            merged_breqs.append(brobj)
 
                     try:
                         print "\n -- Merge finished resquest %s, %s --\n" % (finished_br, merged_brids)
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
-                        # pass requests object yield self._maybeBuildsetsComplete(merged_brids)
+                        yield self._maybeBuildsetsComplete(merged_breqs)
                         self.removeFromUnclaimRequestsList(merged_brdicts, unclaimed_requests)
                     except:
                         unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
