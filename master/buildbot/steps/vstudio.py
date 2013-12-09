@@ -386,7 +386,7 @@ class VC12(VC11):
 VS2013 = VC12
 
 
-class MsBuild(VisualStudio):
+class MsBuild4(VisualStudio):
     platform = None
 
     def __init__(self, platform, **kwargs):
@@ -428,8 +428,10 @@ class MsBuild(VisualStudio):
 
         return VisualStudio.start(self)
 
+MsBuild = MsBuild4
 
-class MsBuild12(MsBuild):
+
+class MsBuild12(MsBuild4):
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
