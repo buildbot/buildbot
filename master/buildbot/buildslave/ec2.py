@@ -57,7 +57,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None,
-                 spot_instance=False, max_spot_price=1.6):
+                 spot_instance=False, max_spot_price=1.6, volumes=[]):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -93,6 +93,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.user_data = user_data
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
+        self.volumes = volumes
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier')
@@ -280,6 +281,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.output = self.instance = None
         return threads.deferToThread(
             self._stop_instance, instance, fast)
+        
+    def _attach_volumes(self):
+        for volume_id, mount_point in self.volumes:
+            self.conn.attach_volume(volume_id, self.instance.id, mount_point)
+            log.msg('Attaching EBS volume %s to %s.' %
+                    (volume_id, mount_point))
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
@@ -321,7 +328,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             if price.instance_type == self.instance_type:
                 price_sum += price.price
                 price_count += 1
-        target_price = ( price_sum / price_count ) * 1.1
+        if price_count == 0:
+            target_price = 0.02
+        else:
+            target_price = ( price_sum / price_count ) * 1.1
         if target_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.2f exceeds '
                     'configured maximum of %0.2f' %
@@ -363,6 +373,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             if self.elastic_ip is not None:
                 self.instance.use_ip(self.elastic_ip)
             start_time = '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)
+            if len(self.volumes) > 0:
+                self._attach_volumes()
             return self.instance.id, image.id, start_time
         else:
             return None, None, None

@@ -164,6 +164,7 @@ Features
 * Added zsh and bash tab-completions support for 'buildslave' command.
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug: `751`)
+* Added spot instance support to EC2LatentBuildSlave.
 
 Fixes
 ~~~~~
