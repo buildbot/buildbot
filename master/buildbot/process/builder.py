@@ -578,6 +578,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     try:
                         print "\n -- Merge finished resquest %s, %s --\n" % (finished_br, merged_brids)
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
+                        # pass requests object yield self._maybeBuildsetsComplete(merged_brids)
                         self.removeFromUnclaimRequestsList(merged_brdicts, unclaimed_requests)
                     except:
                         unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
