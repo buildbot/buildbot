@@ -20,6 +20,9 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    });
 			*/
 
+			// Authorize on every page
+			helpers.authorizeUser();
+
         	// insert codebase and branch on the builders page
         	if ($('#builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
@@ -67,6 +70,26 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			$('#authUserBtn').click(function(e){
 				helpers.eraseCookie('fullName','','eraseCookie');				
 			});
+
+		}, authorizeUser: function() {
+
+			// the current url
+			var url = window.location;
+				
+			// Does the url have 'user' and 'authorized' ? get the fullname
+			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {				
+				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
+				// set the cookie with the full name on first visit
+				helpers.setCookie("fullName", fullNameLdap);
+			} else {
+				// Extend the expiration date
+				helpers.setCookie("fullName", helpers.getCookie("fullName"));
+			}
+
+			// Redirect to loginpage if missing namecookie
+			if(helpers.getCookie("fullName") === '') {	  				
+				window.location = "/login";
+			}
 
 		}, setFullName: function(el) {			
 			var valOrTxt = el.is('input')? 'val' : 'text';			

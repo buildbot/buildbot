@@ -16,23 +16,11 @@ $(document).ready(function() {
 				var authorizedLdap = url.search.split('&').slice(0)[0].split('=')[1].toLowerCase();
 			} 
 
-			// Does the url have 'user' ? get the fullname
-			if (url.search.match(/user/)) {
-				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
-			}
-
 			// give error message if user or pasword is incorrect
 			if (authorizedLdap === 'false') {
 				errorMessage(true, 'incorrect'); 
-			} else if (authorizedLdap === 'true') {
-				
-				// set the cookie containing the full name
-				storeValues(); 
-				window.location = "/";
-			}
-		
+			} 
 	
-	// redirect if authenticated
 
 	jQuery.fn.center = function() {
 	  this.css("position", "absolute");
@@ -118,31 +106,5 @@ $(document).ready(function() {
 			element.removeClass('shake');
 		}
 	}
-
-	//var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
-	// uncommented until I know why expiry crash
-	function setCookie(name, value) { 								
-		document.cookie=name + "=" + escape(value) + "; path=/"; 
-	}
-	
-	// store cookie values from form
-	function storeValues(form) {
-		setCookie("fullName", fullNameLdap);
-		return true;
-	}
-	 
-	//get cookie values
-	function getCookie(name) { 
-	  	var re = new RegExp(name + "=([^;]+)"); 
-	  	var value = re.exec(document.cookie); 
-	  	return (value != null) ? unescape(value[1]) : null; 
-	}
-
-	// set cookie values in form	 
-	/*
-	if(userName = getCookie("fullName")) {
-		$(form).children("input[name='username']").val(getCookie("userName"));
-	} 
-	*/
 
 });

@@ -20,13 +20,6 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 
 	$(document).ready(function() {
 		
-		// Extend the expirationdate for the first and last name cookies
-		helpers.setCookie("fullName", helpers.getCookie("fullName"));
-
-		// Redirect to loginpage if missing usernamecookie
-		if(helpers.getCookie("fullName") === '') {	  				
-			window.location = "/login";
-		}
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
