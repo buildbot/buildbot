@@ -110,6 +110,9 @@ div.welcome-txt {
 }
 
 .step-head {
+	position: relative;
+	display:block;
+	margin-bottom:3px;
 	font-size:14px;
 	font-weight:bold;
 }

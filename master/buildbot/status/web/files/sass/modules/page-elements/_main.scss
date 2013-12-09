@@ -5,120 +5,15 @@
 * @author Simon Holm
 */
   
-.success {
-	background-color: #DDE6D6;
-}
- 
-.table-1 .success {
-	border-top:1px solid #fff;
-}
 
-.table-1 tr .success:first-child {
-	border-top:none;
-}
-
-.failure {
-	background-color: #EFCFCF;
-	border-top:1px solid #fff;
-}
-
-.warnings {
-	color: #FFFFFF;
-	background-color: #fa3;
-	border-color: #C29D46;
-}
-
-.skipped {
-	background: #CBDCE6;
-	border-top: 1px solid #FFFFFF;
-}
-
-.exception,.retry {
-	background-color: #DDD7DD;
-	border-top: 1px solid #FFFFFF;
-}
-
-.start {
-	color: #000;
-	background-color: #ccc;
-	border-color: #ccc;
-}
-
-.running,.waiting,td.building, .current-step {
-	background-color: #FCFACB;
-	border-top:1px solid #fff;
-}
-
-.offline,td.offline {
-    background-color: #E7E7E7;
-    @include text-shadow(0 1px 0 #fff);
-}
-
-.idle,td.idle {
-    background-color: #F5F5F5;
-    @include text-shadow(0 1px 0 #fff);
-}
- 
-.table-1 .offline,
-.table-1 .idle  {
-	border-top: 1px solid #FFFFFF;
-}
-
+// used on status messages together with the color class
 .result {
 	padding: 4px 9px;
 	display:inline-block;
 }
 
-.chrome.win .grey-btn.var-1:after {
-	content:"";	
-}
-// utilities
 
-.m-bottom15 {
-	margin-bottom:15px;
-}
-
-.m-bottom10 {
-	margin-bottom:10px;
-}
-
-.m-right10 {
-	margin-right:10px;
-}
-
-.fi {
-	margin-bottom:3px;	
-}
-
-.pos-relative {
-	position:relative;
-}
-
-div.last {
-	margin-right: 0;
-}
-
-.clear {clear: both;}
-
-.divider {
- 	background-color: #E5E5E5;
-    height: 1px;
-    margin: 20px 0;
-    overflow: hidden;
-}
-
-.step-head {
-	position: relative;
-	display:block;
-	margin-bottom:3px;
-	/*
-	&:before {
-	    left: -36px;
-	    position: absolute;
-	    top: -8px;
-	}*/
-}
-
+// used for hidden html in the forcebuild dialogue. See forms.html
 .content-blocks {
 	margin-bottom:15px;	
 }
@@ -129,6 +24,8 @@ div.last {
 		width: 100%;
 	}
 }
+
+
 .slaves-block {
 	display:none;
     background: none repeat scroll 0 0 #FFF;
@@ -140,6 +37,7 @@ div.last {
    		margin-top: 4px;
     }
 }
+/*
 .selected-forcebuild-btn {
 	margin-bottom:10px;
 	@include border-radius(7px);
@@ -154,7 +52,7 @@ div.last {
 		color:#999;
 	}
 }
-
+*/
 .txt-cont {
 	padding-right:10px;	
 	display:table-cell;
@@ -162,12 +60,13 @@ div.last {
 	vertical-align: middle;
 }
 
-.notimpl {color:#838383 !important;}
+// For ajax content
 #content {
 	min-height: 89px;
     position: relative;
 }
 
+// preloader
 #bowlG{
 height: 100%;
 left: 0;
@@ -185,6 +84,7 @@ height:30px;
 border:3px solid #BBBBBB;
 @include border-radius(30px);
 @include box-shadow(1px 1px 1px #fff);
+ 
 }
 
 .ball_holderG{
@@ -193,29 +93,36 @@ width:8px;
 height:30px;
 left:11px;
 top:0px;
+
 -moz-animation-name:ball_moveG;
 -moz-animation-duration:1s;
 -moz-animation-iteration-count:infinite;
 -moz-animation-timing-function:linear;
+
 -webkit-animation-name:ball_moveG;
 -webkit-animation-duration:1.3s;
 -webkit-animation-iteration-count:infinite;
 -webkit-animation-timing-function:linear;
+
 -ms-animation-name:ball_moveG;
 -ms-animation-duration:1.3s;
 -ms-animation-iteration-count:infinite;
 -ms-animation-timing-function:linear;
+
 -o-animation-name:ball_moveG;
 -o-animation-duration:1.3s;
 -o-animation-iteration-count:infinite;
 -o-animation-timing-function:linear;
+
 animation-name:ball_moveG;
 animation-duration:1.3s;
 animation-iteration-count:infinite;
 animation-timing-function:linear;
+
 }
 
 .ballG{
+	 
 position:absolute;
 left:0px;
 top:-7px;
@@ -225,139 +132,16 @@ background: #BBBBBB;
 @include border-radius(10px);
 }
 
-@keyframes ball_moveG {
-	0%{
--moz-transform:rotate(0deg)}
-
-100%{
--moz-transform:rotate(360deg)}	
-}
-
-@-moz-keyframes ball_moveG{
-0%{
--moz-transform:rotate(0deg)}
-
-100%{
--moz-transform:rotate(360deg)}
-
-}
-
-@-webkit-keyframes ball_moveG{
-0%{
--webkit-transform:rotate(0deg)}
-
-100%{
--webkit-transform:rotate(360deg)}
-
-}
-
-@-ms-keyframes ball_moveG{
-0%{
--ms-transform:rotate(0deg)}
-
-100%{
--ms-transform:rotate(360deg)}
-
-}
-
-@-o-keyframes ball_moveG{
-0%{
--o-transform:rotate(0deg)}
-
-100%{
--o-transform:rotate(360deg)}
-
-}
-
-@keyframes ball_moveG{
-0%{
-transform:rotate(0deg)}
-
-100%{
-transform:rotate(360deg)}
-
-} 
-/*
-   For spinners
-*/
-@mixin animateicon($selector) {
-@-moz-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-}
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-@-webkit-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-@-o-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-@-ms-keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-@keyframes spin {
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-.shake { 
-	 @include animate (shake);
+.shake {
+  -webkit-animation-name: shake;
+  -moz-animation-name: shake;
+  -o-animation-name: shake;
+  animation-name: shake;
+  -webkit-animation-duration:1s;
+  -moz-animation-duration:1s;
+  -ms-animation-duration:1s;
+  -o-animation-duration:1s;
+  animation-duration:1s;
 }
 
 // login box

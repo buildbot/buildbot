@@ -12,9 +12,52 @@
 * @section      Framework
 * @author       Simon Holm
 */
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000319}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000321}}
 .fl-left {
   float: left;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000325}}
+.m-bottom15 {
+  margin-bottom: 15px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000329}}
+.m-bottom10 {
+  margin-bottom: 10px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000333}}
+.m-right10 {
+  margin-right: 10px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000337}}
+.fi {
+  margin-bottom: 3px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000341}}
+.pos-relative {
+  position: relative;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000345}}
+div.last {
+  margin-right: 0;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000349}}
+.clear {
+  clear: both;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_framework\.scss}line{font-family:\0000351}}
+.divider {
+  background-color: #E5E5E5;
+  height: 1px;
+  margin: 20px 0;
+  overflow: hidden;
 }
 
 /* normalize.css v2.1.2 | MIT License | git.io/normalize */
@@ -423,3227 +466,143 @@ table {
   border-spacing: 0;
 }
 
-@-webkit-keyframes fadeIn {
-  /* line 10, ../sass/modules/framework/_animate.sass */
+@keyframes ball_moveG {
+  /* line 6, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 0;
+    -moz-transform: rotate(0deg);
   }
 
-  /* line 12, ../sass/modules/framework/_animate.sass */
+  /* line 9, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 1;
+    -moz-transform: rotate(360deg);
   }
 }
 
-@-webkit-keyframes fadeOut {
-  /* line 16, ../sass/modules/framework/_animate.sass */
+@-moz-keyframes ball_moveG {
+  /* line 14, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 1;
+    -moz-transform: rotate(0deg);
   }
 
-  /* line 18, ../sass/modules/framework/_animate.sass */
+  /* line 17, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 0;
+    -moz-transform: rotate(360deg);
   }
 }
 
-@-webkit-keyframes fadeInUp {
-  /* line 22, ../sass/modules/framework/_animate.sass */
+@-webkit-keyframes ball_moveG {
+  /* line 23, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 0;
-    -webkit-transform: translateY(20px);
+    -webkit-transform: rotate(0deg);
   }
 
-  /* line 25, ../sass/modules/framework/_animate.sass */
+  /* line 26, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
+    -webkit-transform: rotate(360deg);
   }
 }
 
-@-webkit-keyframes fadeOutUp {
-  /* line 30, ../sass/modules/framework/_animate.sass */
+@-ms-keyframes ball_moveG {
+  /* line 32, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
+    -ms-transform: rotate(0deg);
   }
 
-  /* line 33, ../sass/modules/framework/_animate.sass */
+  /* line 35, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 0;
-    -webkit-transform: translateY(-20px);
+    -ms-transform: rotate(360deg);
   }
 }
 
-@-webkit-keyframes fadeInDown {
-  /* line 38, ../sass/modules/framework/_animate.sass */
+@-o-keyframes ball_moveG {
+  /* line 41, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 0;
-    -webkit-transform: translateY(-20px);
+    -o-transform: rotate(0deg);
   }
 
-  /* line 41, ../sass/modules/framework/_animate.sass */
+  /* line 44, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
+    -o-transform: rotate(360deg);
   }
 }
 
-@-webkit-keyframes fadeOutDown {
-  /* line 46, ../sass/modules/framework/_animate.sass */
+@keyframes ball_moveG {
+  /* line 50, ../sass/modules/framework/_animate.scss */
   0% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
+    transform: rotate(0deg);
   }
 
-  /* line 49, ../sass/modules/framework/_animate.sass */
+  /* line 53, ../sass/modules/framework/_animate.scss */
   100% {
-    opacity: 0;
-    -webkit-transform: translateY(20px);
-  }
-}
-
-@-webkit-keyframes fadeInRight {
-  /* line 54, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(20px);
-  }
-
-  /* line 57, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes fadeOutLeft {
-  /* line 62, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 65, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(-20px);
-  }
-}
-
-@-webkit-keyframes fadeInLeft {
-  /* line 70, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(-20px);
-  }
-
-  /* line 73, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes fadeOutRight {
-  /* line 78, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 81, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(20px);
-  }
-}
-
-@-webkit-keyframes fadeInUpBig {
-  /* line 86, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateY(2000px);
-  }
-
-  /* line 89, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-  }
-}
-
-@-webkit-keyframes fadeOutUpBig {
-  /* line 94, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 97, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateY(-2000px);
-  }
-}
-
-@-webkit-keyframes fadeInDownBig {
-  /* line 102, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateY(-2000px);
-  }
-
-  /* line 105, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-  }
-}
-
-@-webkit-keyframes fadeOutDownBig {
-  /* line 110, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 113, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateY(2000px);
-  }
-}
-
-@-webkit-keyframes fadeInRightBig {
-  /* line 118, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(2000px);
-  }
-
-  /* line 121, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes fadeOutLeftBig {
-  /* line 126, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 129, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(-2000px);
-  }
-}
-
-@-webkit-keyframes fadeInLeftBig {
-  /* line 134, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(-2000px);
-  }
-
-  /* line 137, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes fadeOutRightBig {
-  /* line 142, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 145, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(2000px);
-  }
-}
-
-@-webkit-keyframes bounceIn {
-  /* line 150, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: scale(0.3);
-  }
-
-  /* line 153, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -webkit-transform: scale(1.05);
-  }
-
-  /* line 156, ../sass/modules/framework/_animate.sass */
-  70% {
-    -webkit-transform: scale(0.9);
-  }
-
-  /* line 158, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: scale(1);
-  }
-}
-
-@-webkit-keyframes bounceInDown {
-  /* line 162, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateY(-2000px);
-  }
-
-  /* line 165, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -webkit-transform: translateY(30px);
-  }
-
-  /* line 168, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateY(-10px);
-  }
-
-  /* line 170, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateY(0);
-  }
-}
-
-@-webkit-keyframes bounceInUp {
-  /* line 174, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateY(2000px);
-  }
-
-  /* line 177, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -webkit-transform: translateY(-30px);
-  }
-
-  /* line 180, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateY(10px);
-  }
-
-  /* line 182, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateY(0);
-  }
-}
-
-@-webkit-keyframes bounceInRight {
-  /* line 186, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(2000px);
-  }
-
-  /* line 189, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -webkit-transform: translateX(-30px);
-  }
-
-  /* line 192, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateX(10px);
-  }
-
-  /* line 194, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes bounceInLeft {
-  /* line 198, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -webkit-transform: translateX(-2000px);
-  }
-
-  /* line 201, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -webkit-transform: translateX(30px);
-  }
-
-  /* line 204, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateX(-10px);
-  }
-
-  /* line 206, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes bounceOut {
-  /* line 210, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: scale(1);
-  }
-
-  /* line 212, ../sass/modules/framework/_animate.sass */
-  25% {
-    -webkit-transform: scale(0.95);
-  }
-
-  /* line 214, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -webkit-transform: scale(1.1);
-  }
-
-  /* line 217, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: scale(0.3);
-  }
-}
-
-@-webkit-keyframes bounceOutUp {
-  /* line 222, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 224, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -webkit-transform: translateY(20px);
-  }
-
-  /* line 227, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateY(-2000px);
-  }
-}
-
-@-webkit-keyframes bounceOutDown {
-  /* line 232, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 234, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -webkit-transform: translateY(-20px);
-  }
-
-  /* line 237, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateY(2000px);
-  }
-}
-
-@-webkit-keyframes bounceOutLeft {
-  /* line 242, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 244, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -webkit-transform: translateX(20px);
-  }
-
-  /* line 247, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(-2000px);
-  }
-}
-
-@-webkit-keyframes bounceOutRight {
-  /* line 252, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: translateX(0);
-  }
-
-  /* line 254, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -webkit-transform: translateX(-20px);
-  }
-
-  /* line 257, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -webkit-transform: translateX(2000px);
-  }
-}
-
-@-webkit-keyframes flash {
-  /* line 262, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 264, ../sass/modules/framework/_animate.sass */
-  25% {
-    opacity: 0;
-  }
-
-  /* line 266, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-  }
-
-  /* line 268, ../sass/modules/framework/_animate.sass */
-  75% {
-    opacity: 0;
-  }
-
-  /* line 270, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes bounce {
-  /* line 274, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 276, ../sass/modules/framework/_animate.sass */
-  20% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 278, ../sass/modules/framework/_animate.sass */
-  40% {
-    -webkit-transform: translateY(-30px);
-  }
-
-  /* line 280, ../sass/modules/framework/_animate.sass */
-  50% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 282, ../sass/modules/framework/_animate.sass */
-  60% {
-    -webkit-transform: translateY(-15px);
-  }
-
-  /* line 284, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateY(0);
-  }
-
-  /* line 286, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateY(0);
+    transform: rotate(360deg);
   }
 }
 
 @-webkit-keyframes shake {
-  /* line 290, ../sass/modules/framework/_animate.sass */
-  0% {
+  /* line 60, ../sass/modules/framework/_animate.scss */
+  0%, 100% {
     -webkit-transform: translateX(0);
   }
 
-  /* line 292, ../sass/modules/framework/_animate.sass */
-  10% {
+  /* line 62, ../sass/modules/framework/_animate.scss */
+  10%, 30%, 50%, 70%, 90% {
     -webkit-transform: translateX(-10px);
   }
 
-  /* line 294, ../sass/modules/framework/_animate.sass */
-  20% {
+  /* line 65, ../sass/modules/framework/_animate.scss */
+  20%, 40%, 60%, 80% {
     -webkit-transform: translateX(10px);
-  }
-
-  /* line 296, ../sass/modules/framework/_animate.sass */
-  30% {
-    -webkit-transform: translateX(-10px);
-  }
-
-  /* line 298, ../sass/modules/framework/_animate.sass */
-  40% {
-    -webkit-transform: translateX(10px);
-  }
-
-  /* line 300, ../sass/modules/framework/_animate.sass */
-  50% {
-    -webkit-transform: translateX(-10px);
-  }
-
-  /* line 302, ../sass/modules/framework/_animate.sass */
-  60% {
-    -webkit-transform: translateX(10px);
-  }
-
-  /* line 304, ../sass/modules/framework/_animate.sass */
-  70% {
-    -webkit-transform: translateX(-10px);
-  }
-
-  /* line 306, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: translateX(10px);
-  }
-
-  /* line 308, ../sass/modules/framework/_animate.sass */
-  90% {
-    -webkit-transform: translateX(-10px);
-  }
-
-  /* line 310, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: translateX(0);
-  }
-}
-
-@-webkit-keyframes rotateInDownLeft {
-  /* line 314, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 318, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes rotateInUpLeft {
-  /* line 324, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 328, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes rotateInUpRight {
-  /* line 334, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 338, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes rotateInDownRight {
-  /* line 344, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 348, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes rotateOutDownLeft {
-  /* line 354, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 358, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes rotateOutUpLeft {
-  /* line 364, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 368, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: left bottom;
-    -webkit-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes rotateOutDownRight {
-  /* line 374, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 378, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes rotateOutUpRight {
-  /* line 384, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 388, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: right bottom;
-    -webkit-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes rotateIn {
-  /* line 394, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: center center;
-    -webkit-transform: rotate(-200deg);
-    opacity: 0;
-  }
-
-  /* line 398, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: center center;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes rotateOut {
-  /* line 404, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform-origin: center center;
-    -webkit-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 408, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform-origin: center center;
-    -webkit-transform: rotate(200deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes tada {
-  /* line 414, ../sass/modules/framework/_animate.sass */
-  0% {
-    -webkit-transform: scale(1);
-  }
-
-  /* line 416, ../sass/modules/framework/_animate.sass */
-  10% {
-    -webkit-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 418, ../sass/modules/framework/_animate.sass */
-  20% {
-    -webkit-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 420, ../sass/modules/framework/_animate.sass */
-  30% {
-    -webkit-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 422, ../sass/modules/framework/_animate.sass */
-  40% {
-    -webkit-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 424, ../sass/modules/framework/_animate.sass */
-  50% {
-    -webkit-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 426, ../sass/modules/framework/_animate.sass */
-  60% {
-    -webkit-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 428, ../sass/modules/framework/_animate.sass */
-  70% {
-    -webkit-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 430, ../sass/modules/framework/_animate.sass */
-  80% {
-    -webkit-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 432, ../sass/modules/framework/_animate.sass */
-  90% {
-    -webkit-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 434, ../sass/modules/framework/_animate.sass */
-  100% {
-    -webkit-transform: scale(1) rotate(0);
-  }
-}
-
-@-moz-keyframes fadeIn {
-  /* line 438, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-  }
-
-  /* line 440, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes fadeOut {
-  /* line 444, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 446, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes fadeInUp {
-  /* line 450, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(20px);
-  }
-
-  /* line 453, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes fadeOutUp {
-  /* line 458, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-
-  /* line 461, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(-20px);
-  }
-}
-
-@-moz-keyframes fadeInDown {
-  /* line 466, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(-20px);
-  }
-
-  /* line 469, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes fadeOutDown {
-  /* line 474, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-
-  /* line 477, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(20px);
-  }
-}
-
-@-moz-keyframes fadeInRight {
-  /* line 482, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(20px);
-  }
-
-  /* line 485, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes fadeOutLeft {
-  /* line 490, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-
-  /* line 493, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(-20px);
-  }
-}
-
-@-moz-keyframes fadeInLeft {
-  /* line 498, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(-20px);
-  }
-
-  /* line 501, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes fadeOutRight {
-  /* line 506, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-
-  /* line 509, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(20px);
-  }
-}
-
-@-moz-keyframes fadeInUpBig {
-  /* line 514, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(2000px);
-  }
-
-  /* line 517, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes fadeOutUpBig {
-  /* line 522, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-
-  /* line 525, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(-2000px);
-  }
-}
-
-@-moz-keyframes fadeInDownBig {
-  /* line 530, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(-2000px);
-  }
-
-  /* line 533, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes fadeOutDownBig {
-  /* line 538, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateY(0);
-  }
-
-  /* line 541, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(2000px);
-  }
-}
-
-@-moz-keyframes fadeInRightBig {
-  /* line 546, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(2000px);
-  }
-
-  /* line 549, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes fadeOutLeftBig {
-  /* line 554, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-
-  /* line 557, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(-2000px);
-  }
-}
-
-@-moz-keyframes fadeInLeftBig {
-  /* line 562, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(-2000px);
-  }
-
-  /* line 565, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes fadeOutRightBig {
-  /* line 570, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -moz-transform: translateX(0);
-  }
-
-  /* line 573, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(2000px);
-  }
-}
-
-@-moz-keyframes bounceIn {
-  /* line 578, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: scale(0.3);
-  }
-
-  /* line 581, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -moz-transform: scale(1.05);
-  }
-
-  /* line 584, ../sass/modules/framework/_animate.sass */
-  70% {
-    -moz-transform: scale(0.9);
-  }
-
-  /* line 586, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: scale(1);
-  }
-}
-
-@-moz-keyframes bounceInDown {
-  /* line 590, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(-2000px);
-  }
-
-  /* line 593, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -moz-transform: translateY(30px);
-  }
-
-  /* line 596, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateY(-10px);
-  }
-
-  /* line 598, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes bounceInUp {
-  /* line 602, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateY(2000px);
-  }
-
-  /* line 605, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -moz-transform: translateY(-30px);
-  }
-
-  /* line 608, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateY(10px);
-  }
-
-  /* line 610, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateY(0);
-  }
-}
-
-@-moz-keyframes bounceInRight {
-  /* line 614, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(2000px);
-  }
-
-  /* line 617, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -moz-transform: translateX(-30px);
-  }
-
-  /* line 620, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateX(10px);
-  }
-
-  /* line 622, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes bounceInLeft {
-  /* line 626, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -moz-transform: translateX(-2000px);
-  }
-
-  /* line 629, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -moz-transform: translateX(30px);
-  }
-
-  /* line 632, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateX(-10px);
-  }
-
-  /* line 634, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes bounceOut {
-  /* line 638, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: scale(1);
-  }
-
-  /* line 640, ../sass/modules/framework/_animate.sass */
-  25% {
-    -moz-transform: scale(0.95);
-  }
-
-  /* line 642, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -moz-transform: scale(1.1);
-  }
-
-  /* line 645, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: scale(0.3);
-  }
-}
-
-@-moz-keyframes bounceOutUp {
-  /* line 650, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 652, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -moz-transform: translateY(20px);
-  }
-
-  /* line 655, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(-2000px);
-  }
-}
-
-@-moz-keyframes bounceOutDown {
-  /* line 660, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 662, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -moz-transform: translateY(-20px);
-  }
-
-  /* line 665, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateY(2000px);
-  }
-}
-
-@-moz-keyframes bounceOutLeft {
-  /* line 670, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: translateX(0);
-  }
-
-  /* line 672, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -moz-transform: translateX(20px);
-  }
-
-  /* line 675, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(-2000px);
-  }
-}
-
-@-moz-keyframes bounceOutRight {
-  /* line 680, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: translateX(0);
-  }
-
-  /* line 682, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -moz-transform: translateX(-20px);
-  }
-
-  /* line 685, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -moz-transform: translateX(2000px);
-  }
-}
-
-@-moz-keyframes flash {
-  /* line 690, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 692, ../sass/modules/framework/_animate.sass */
-  25% {
-    opacity: 0;
-  }
-
-  /* line 694, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-  }
-
-  /* line 696, ../sass/modules/framework/_animate.sass */
-  75% {
-    opacity: 0;
-  }
-
-  /* line 698, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes bounce {
-  /* line 702, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 704, ../sass/modules/framework/_animate.sass */
-  20% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 706, ../sass/modules/framework/_animate.sass */
-  40% {
-    -moz-transform: translateY(-30px);
-  }
-
-  /* line 708, ../sass/modules/framework/_animate.sass */
-  50% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 710, ../sass/modules/framework/_animate.sass */
-  60% {
-    -moz-transform: translateY(-15px);
-  }
-
-  /* line 712, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateY(0);
-  }
-
-  /* line 714, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateY(0);
   }
 }
 
 @-moz-keyframes shake {
-  /* line 718, ../sass/modules/framework/_animate.sass */
-  0% {
+  /* line 71, ../sass/modules/framework/_animate.scss */
+  0%, 100% {
     -moz-transform: translateX(0);
   }
 
-  /* line 720, ../sass/modules/framework/_animate.sass */
-  10% {
+  /* line 72, ../sass/modules/framework/_animate.scss */
+  10%, 30%, 50%, 70%, 90% {
     -moz-transform: translateX(-10px);
   }
 
-  /* line 722, ../sass/modules/framework/_animate.sass */
-  20% {
+  /* line 73, ../sass/modules/framework/_animate.scss */
+  20%, 40%, 60%, 80% {
     -moz-transform: translateX(10px);
   }
-
-  /* line 724, ../sass/modules/framework/_animate.sass */
-  30% {
-    -moz-transform: translateX(-10px);
-  }
-
-  /* line 726, ../sass/modules/framework/_animate.sass */
-  40% {
-    -moz-transform: translateX(10px);
-  }
-
-  /* line 728, ../sass/modules/framework/_animate.sass */
-  50% {
-    -moz-transform: translateX(-10px);
-  }
-
-  /* line 730, ../sass/modules/framework/_animate.sass */
-  60% {
-    -moz-transform: translateX(10px);
-  }
-
-  /* line 732, ../sass/modules/framework/_animate.sass */
-  70% {
-    -moz-transform: translateX(-10px);
-  }
-
-  /* line 734, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: translateX(10px);
-  }
-
-  /* line 736, ../sass/modules/framework/_animate.sass */
-  90% {
-    -moz-transform: translateX(-10px);
-  }
-
-  /* line 738, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: translateX(0);
-  }
-}
-
-@-moz-keyframes rotateInDownLeft {
-  /* line 742, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 746, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes rotateInUpLeft {
-  /* line 752, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 756, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes rotateInUpRight {
-  /* line 762, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 766, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes rotateInDownRight {
-  /* line 772, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 776, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes rotateOutDownLeft {
-  /* line 782, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 786, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes rotateOutUpLeft {
-  /* line 792, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 796, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: left bottom;
-    -moz-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes rotateOutDownRight {
-  /* line 802, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 806, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes rotateOutUpRight {
-  /* line 812, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 816, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: right bottom;
-    -moz-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes rotateIn {
-  /* line 822, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: center center;
-    -moz-transform: rotate(-200deg);
-    opacity: 0;
-  }
-
-  /* line 826, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: center center;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-moz-keyframes rotateOut {
-  /* line 832, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform-origin: center center;
-    -moz-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 836, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform-origin: center center;
-    -moz-transform: rotate(200deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes tada {
-  /* line 842, ../sass/modules/framework/_animate.sass */
-  0% {
-    -moz-transform: scale(1);
-  }
-
-  /* line 844, ../sass/modules/framework/_animate.sass */
-  10% {
-    -moz-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 846, ../sass/modules/framework/_animate.sass */
-  20% {
-    -moz-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 848, ../sass/modules/framework/_animate.sass */
-  30% {
-    -moz-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 850, ../sass/modules/framework/_animate.sass */
-  40% {
-    -moz-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 852, ../sass/modules/framework/_animate.sass */
-  50% {
-    -moz-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 854, ../sass/modules/framework/_animate.sass */
-  60% {
-    -moz-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 856, ../sass/modules/framework/_animate.sass */
-  70% {
-    -moz-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 858, ../sass/modules/framework/_animate.sass */
-  80% {
-    -moz-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 860, ../sass/modules/framework/_animate.sass */
-  90% {
-    -moz-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 862, ../sass/modules/framework/_animate.sass */
-  100% {
-    -moz-transform: scale(1) rotate(0);
-  }
-}
-
-@-ms-keyframes fadeIn {
-  /* line 866, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-  }
-
-  /* line 868, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes fadeOut {
-  /* line 872, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 874, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes fadeInUp {
-  /* line 878, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(20px);
-  }
-
-  /* line 881, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes fadeOutUp {
-  /* line 886, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-
-  /* line 889, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(-20px);
-  }
-}
-
-@-ms-keyframes fadeInDown {
-  /* line 894, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(-20px);
-  }
-
-  /* line 897, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes fadeOutDown {
-  /* line 902, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-
-  /* line 905, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(20px);
-  }
-}
-
-@-ms-keyframes fadeInRight {
-  /* line 910, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(20px);
-  }
-
-  /* line 913, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes fadeOutLeft {
-  /* line 918, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-
-  /* line 921, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(-20px);
-  }
-}
-
-@-ms-keyframes fadeInLeft {
-  /* line 926, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(-20px);
-  }
-
-  /* line 929, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes fadeOutRight {
-  /* line 934, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-
-  /* line 937, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(20px);
-  }
-}
-
-@-ms-keyframes fadeInUpBig {
-  /* line 942, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(2000px);
-  }
-
-  /* line 945, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes fadeOutUpBig {
-  /* line 950, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-
-  /* line 953, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(-2000px);
-  }
-}
-
-@-ms-keyframes fadeInDownBig {
-  /* line 958, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(-2000px);
-  }
-
-  /* line 961, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes fadeOutDownBig {
-  /* line 966, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateY(0);
-  }
-
-  /* line 969, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(2000px);
-  }
-}
-
-@-ms-keyframes fadeInRightBig {
-  /* line 974, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(2000px);
-  }
-
-  /* line 977, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes fadeOutLeftBig {
-  /* line 982, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-
-  /* line 985, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(-2000px);
-  }
-}
-
-@-ms-keyframes fadeInLeftBig {
-  /* line 990, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(-2000px);
-  }
-
-  /* line 993, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes fadeOutRightBig {
-  /* line 998, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    -ms-transform: translateX(0);
-  }
-
-  /* line 1001, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(2000px);
-  }
-}
-
-@-ms-keyframes bounceIn {
-  /* line 1006, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: scale(0.3);
-  }
-
-  /* line 1009, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -ms-transform: scale(1.05);
-  }
-
-  /* line 1012, ../sass/modules/framework/_animate.sass */
-  70% {
-    -ms-transform: scale(0.9);
-  }
-
-  /* line 1014, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: scale(1);
-  }
-}
-
-@-ms-keyframes bounceInDown {
-  /* line 1018, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(-2000px);
-  }
-
-  /* line 1021, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -ms-transform: translateY(30px);
-  }
-
-  /* line 1024, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateY(-10px);
-  }
-
-  /* line 1026, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes bounceInUp {
-  /* line 1030, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateY(2000px);
-  }
-
-  /* line 1033, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -ms-transform: translateY(-30px);
-  }
-
-  /* line 1036, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateY(10px);
-  }
-
-  /* line 1038, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes bounceInRight {
-  /* line 1042, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(2000px);
-  }
-
-  /* line 1045, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -ms-transform: translateX(-30px);
-  }
-
-  /* line 1048, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateX(10px);
-  }
-
-  /* line 1050, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes bounceInLeft {
-  /* line 1054, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    -ms-transform: translateX(-2000px);
-  }
-
-  /* line 1057, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    -ms-transform: translateX(30px);
-  }
-
-  /* line 1060, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1062, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes bounceOut {
-  /* line 1066, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: scale(1);
-  }
-
-  /* line 1068, ../sass/modules/framework/_animate.sass */
-  25% {
-    -ms-transform: scale(0.95);
-  }
-
-  /* line 1070, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    -ms-transform: scale(1.1);
-  }
-
-  /* line 1073, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: scale(0.3);
-  }
-}
-
-@-ms-keyframes bounceOutUp {
-  /* line 1078, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1080, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -ms-transform: translateY(20px);
-  }
-
-  /* line 1083, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(-2000px);
-  }
-}
-
-@-ms-keyframes bounceOutDown {
-  /* line 1088, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1090, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -ms-transform: translateY(-20px);
-  }
-
-  /* line 1093, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateY(2000px);
-  }
-}
-
-@-ms-keyframes bounceOutLeft {
-  /* line 1098, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateX(0);
-  }
-
-  /* line 1100, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -ms-transform: translateX(20px);
-  }
-
-  /* line 1103, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(-2000px);
-  }
-}
-
-@-ms-keyframes bounceOutRight {
-  /* line 1108, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateX(0);
-  }
-
-  /* line 1110, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    -ms-transform: translateX(-20px);
-  }
-
-  /* line 1113, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    -ms-transform: translateX(2000px);
-  }
-}
-
-@-ms-keyframes flash {
-  /* line 1118, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 1120, ../sass/modules/framework/_animate.sass */
-  25% {
-    opacity: 0;
-  }
-
-  /* line 1122, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-  }
-
-  /* line 1124, ../sass/modules/framework/_animate.sass */
-  75% {
-    opacity: 0;
-  }
-
-  /* line 1126, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes bounce {
-  /* line 1130, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1132, ../sass/modules/framework/_animate.sass */
-  20% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1134, ../sass/modules/framework/_animate.sass */
-  40% {
-    -ms-transform: translateY(-30px);
-  }
-
-  /* line 1136, ../sass/modules/framework/_animate.sass */
-  50% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1138, ../sass/modules/framework/_animate.sass */
-  60% {
-    -ms-transform: translateY(-15px);
-  }
-
-  /* line 1140, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateY(0);
-  }
-
-  /* line 1142, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateY(0);
-  }
-}
-
-@-ms-keyframes shake {
-  /* line 1146, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: translateX(0);
-  }
-
-  /* line 1148, ../sass/modules/framework/_animate.sass */
-  10% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1150, ../sass/modules/framework/_animate.sass */
-  20% {
-    -ms-transform: translateX(10px);
-  }
-
-  /* line 1152, ../sass/modules/framework/_animate.sass */
-  30% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1154, ../sass/modules/framework/_animate.sass */
-  40% {
-    -ms-transform: translateX(10px);
-  }
-
-  /* line 1156, ../sass/modules/framework/_animate.sass */
-  50% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1158, ../sass/modules/framework/_animate.sass */
-  60% {
-    -ms-transform: translateX(10px);
-  }
-
-  /* line 1160, ../sass/modules/framework/_animate.sass */
-  70% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1162, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: translateX(10px);
-  }
-
-  /* line 1164, ../sass/modules/framework/_animate.sass */
-  90% {
-    -ms-transform: translateX(-10px);
-  }
-
-  /* line 1166, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: translateX(0);
-  }
-}
-
-@-ms-keyframes rotateInDownLeft {
-  /* line 1170, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 1174, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes rotateInUpLeft {
-  /* line 1180, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 1184, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes rotateInUpRight {
-  /* line 1190, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 1194, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes rotateInDownRight {
-  /* line 1200, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 1204, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes rotateOutDownLeft {
-  /* line 1210, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1214, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes rotateOutUpLeft {
-  /* line 1220, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1224, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: left bottom;
-    -ms-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes rotateOutDownRight {
-  /* line 1230, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1234, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes rotateOutUpRight {
-  /* line 1240, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1244, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: right bottom;
-    -ms-transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes rotateIn {
-  /* line 1250, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: center center;
-    -ms-transform: rotate(-200deg);
-    opacity: 0;
-  }
-
-  /* line 1254, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: center center;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@-ms-keyframes rotateOut {
-  /* line 1260, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform-origin: center center;
-    -ms-transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1264, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform-origin: center center;
-    -ms-transform: rotate(200deg);
-    opacity: 0;
-  }
-}
-
-@-ms-keyframes tada {
-  /* line 1270, ../sass/modules/framework/_animate.sass */
-  0% {
-    -ms-transform: scale(1);
-  }
-
-  /* line 1272, ../sass/modules/framework/_animate.sass */
-  10% {
-    -ms-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 1274, ../sass/modules/framework/_animate.sass */
-  20% {
-    -ms-transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 1276, ../sass/modules/framework/_animate.sass */
-  30% {
-    -ms-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1278, ../sass/modules/framework/_animate.sass */
-  40% {
-    -ms-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1280, ../sass/modules/framework/_animate.sass */
-  50% {
-    -ms-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1282, ../sass/modules/framework/_animate.sass */
-  60% {
-    -ms-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1284, ../sass/modules/framework/_animate.sass */
-  70% {
-    -ms-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1286, ../sass/modules/framework/_animate.sass */
-  80% {
-    -ms-transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1288, ../sass/modules/framework/_animate.sass */
-  90% {
-    -ms-transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1290, ../sass/modules/framework/_animate.sass */
-  100% {
-    -ms-transform: scale(1) rotate(0);
-  }
-}
-
-@keyframes fadeIn {
-  /* line 1294, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-  }
-
-  /* line 1296, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  /* line 1300, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 1302, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes fadeInUp {
-  /* line 1306, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  /* line 1309, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOutUp {
-  /* line 1314, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* line 1317, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes fadeInDown {
-  /* line 1322, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-
-  /* line 1325, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOutDown {
-  /* line 1330, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* line 1333, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-}
-
-@keyframes fadeInRight {
-  /* line 1338, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  /* line 1341, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeOutLeft {
-  /* line 1346, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  /* line 1349, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-}
-
-@keyframes fadeInLeft {
-  /* line 1354, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-
-  /* line 1357, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeOutRight {
-  /* line 1362, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  /* line 1365, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-}
-
-@keyframes fadeInUpBig {
-  /* line 1370, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(2000px);
-  }
-
-  /* line 1373, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOutUpBig {
-  /* line 1378, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* line 1381, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(-2000px);
-  }
-}
-
-@keyframes fadeInDownBig {
-  /* line 1386, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(-2000px);
-  }
-
-  /* line 1389, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeOutDownBig {
-  /* line 1394, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* line 1397, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(2000px);
-  }
-}
-
-@keyframes fadeInRightBig {
-  /* line 1402, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(2000px);
-  }
-
-  /* line 1405, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeOutLeftBig {
-  /* line 1410, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  /* line 1413, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(-2000px);
-  }
-}
-
-@keyframes fadeInLeftBig {
-  /* line 1418, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(-2000px);
-  }
-
-  /* line 1421, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeOutRightBig {
-  /* line 1426, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  /* line 1429, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(2000px);
-  }
-}
-
-@keyframes bounceIn {
-  /* line 1434, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-
-  /* line 1437, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-
-  /* line 1440, ../sass/modules/framework/_animate.sass */
-  70% {
-    transform: scale(0.9);
-  }
-
-  /* line 1442, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes bounceInDown {
-  /* line 1446, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(-2000px);
-  }
-
-  /* line 1449, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    transform: translateY(30px);
-  }
-
-  /* line 1452, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateY(-10px);
-  }
-
-  /* line 1454, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes bounceInUp {
-  /* line 1458, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateY(2000px);
-  }
-
-  /* line 1461, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    transform: translateY(-30px);
-  }
-
-  /* line 1464, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateY(10px);
-  }
-
-  /* line 1466, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes bounceInRight {
-  /* line 1470, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(2000px);
-  }
-
-  /* line 1473, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    transform: translateX(-30px);
-  }
-
-  /* line 1476, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateX(10px);
-  }
-
-  /* line 1478, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateX(0);
-  }
 }
-
-@keyframes bounceInLeft {
-  /* line 1482, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 0;
-    transform: translateX(-2000px);
-  }
-
-  /* line 1485, ../sass/modules/framework/_animate.sass */
-  60% {
-    opacity: 1;
-    transform: translateX(30px);
-  }
-
-  /* line 1488, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateX(-10px);
-  }
-
-  /* line 1490, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes bounceOut {
-  /* line 1494, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: scale(1);
-  }
-
-  /* line 1496, ../sass/modules/framework/_animate.sass */
-  25% {
-    transform: scale(0.95);
-  }
-
-  /* line 1498, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-
-  /* line 1501, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-}
-
-@keyframes bounceOutUp {
-  /* line 1506, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: translateY(0);
-  }
-
-  /* line 1508, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    transform: translateY(20px);
-  }
-
-  /* line 1511, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(-2000px);
-  }
-}
-
-@keyframes bounceOutDown {
-  /* line 1516, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: translateY(0);
-  }
-
-  /* line 1518, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    transform: translateY(-20px);
-  }
-
-  /* line 1521, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateY(2000px);
-  }
-}
-
-@keyframes bounceOutLeft {
-  /* line 1526, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: translateX(0);
-  }
-
-  /* line 1528, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    transform: translateX(20px);
-  }
-
-  /* line 1531, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(-2000px);
-  }
-}
-
-@keyframes bounceOutRight {
-  /* line 1536, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: translateX(0);
-  }
-
-  /* line 1538, ../sass/modules/framework/_animate.sass */
-  20% {
-    opacity: 1;
-    transform: translateX(-20px);
-  }
-
-  /* line 1541, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 0;
-    transform: translateX(2000px);
-  }
-}
-
-@keyframes flash {
-  /* line 1546, ../sass/modules/framework/_animate.sass */
-  0% {
-    opacity: 1;
-  }
-
-  /* line 1548, ../sass/modules/framework/_animate.sass */
-  25% {
-    opacity: 0;
-  }
-
-  /* line 1550, ../sass/modules/framework/_animate.sass */
-  50% {
-    opacity: 1;
-  }
-
-  /* line 1552, ../sass/modules/framework/_animate.sass */
-  75% {
-    opacity: 0;
-  }
-
-  /* line 1554, ../sass/modules/framework/_animate.sass */
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes bounce {
-  /* line 1558, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: translateY(0);
-  }
-
-  /* line 1560, ../sass/modules/framework/_animate.sass */
-  20% {
-    transform: translateY(0);
-  }
-
-  /* line 1562, ../sass/modules/framework/_animate.sass */
-  40% {
-    transform: translateY(-30px);
-  }
-
-  /* line 1564, ../sass/modules/framework/_animate.sass */
-  50% {
-    transform: translateY(0);
-  }
 
-  /* line 1566, ../sass/modules/framework/_animate.sass */
-  60% {
-    transform: translateY(-15px);
+@-o-keyframes shake {
+  /* line 77, ../sass/modules/framework/_animate.scss */
+  0%, 100% {
+    -o-transform: translateX(0);
   }
 
-  /* line 1568, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateY(0);
+  /* line 78, ../sass/modules/framework/_animate.scss */
+  10%, 30%, 50%, 70%, 90% {
+    -o-transform: translateX(-10px);
   }
 
-  /* line 1570, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateY(0);
+  /* line 79, ../sass/modules/framework/_animate.scss */
+  20%, 40%, 60%, 80% {
+    -o-transform: translateX(10px);
   }
 }
 
 @keyframes shake {
-  /* line 1574, ../sass/modules/framework/_animate.sass */
-  0% {
+  /* line 83, ../sass/modules/framework/_animate.scss */
+  0%, 100% {
     transform: translateX(0);
   }
 
-  /* line 1576, ../sass/modules/framework/_animate.sass */
-  10% {
+  /* line 84, ../sass/modules/framework/_animate.scss */
+  10%, 30%, 50%, 70%, 90% {
     transform: translateX(-10px);
   }
 
-  /* line 1578, ../sass/modules/framework/_animate.sass */
-  20% {
+  /* line 85, ../sass/modules/framework/_animate.scss */
+  20%, 40%, 60%, 80% {
     transform: translateX(10px);
-  }
-
-  /* line 1580, ../sass/modules/framework/_animate.sass */
-  30% {
-    transform: translateX(-10px);
-  }
-
-  /* line 1582, ../sass/modules/framework/_animate.sass */
-  40% {
-    transform: translateX(10px);
-  }
-
-  /* line 1584, ../sass/modules/framework/_animate.sass */
-  50% {
-    transform: translateX(-10px);
-  }
-
-  /* line 1586, ../sass/modules/framework/_animate.sass */
-  60% {
-    transform: translateX(10px);
-  }
-
-  /* line 1588, ../sass/modules/framework/_animate.sass */
-  70% {
-    transform: translateX(-10px);
-  }
-
-  /* line 1590, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: translateX(10px);
-  }
-
-  /* line 1592, ../sass/modules/framework/_animate.sass */
-  90% {
-    transform: translateX(-10px);
-  }
-
-  /* line 1594, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes rotateInDownLeft {
-  /* line 1598, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: left bottom;
-    transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 1602, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: left bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rotateInUpLeft {
-  /* line 1608, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: left bottom;
-    transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 1612, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: left bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rotateInUpRight {
-  /* line 1618, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: right bottom;
-    transform: rotate(-90deg);
-    opacity: 0;
-  }
-
-  /* line 1622, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: right bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rotateInDownRight {
-  /* line 1628, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: right bottom;
-    transform: rotate(90deg);
-    opacity: 0;
-  }
-
-  /* line 1632, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: right bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rotateOutDownLeft {
-  /* line 1638, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: left bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1642, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: left bottom;
-    transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@keyframes rotateOutUpLeft {
-  /* line 1648, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: left bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1652, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: left bottom;
-    transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@keyframes rotateOutDownRight {
-  /* line 1658, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: right bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1662, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: right bottom;
-    transform: rotate(-90deg);
-    opacity: 0;
-  }
-}
-
-@keyframes rotateOutUpRight {
-  /* line 1668, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: right bottom;
-    transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1672, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: right bottom;
-    transform: rotate(90deg);
-    opacity: 0;
-  }
-}
-
-@keyframes rotateIn {
-  /* line 1678, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: center center;
-    transform: rotate(-200deg);
-    opacity: 0;
-  }
-
-  /* line 1682, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: center center;
-    transform: rotate(0);
-    opacity: 1;
-  }
-}
-
-@keyframes rotateOut {
-  /* line 1688, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform-origin: center center;
-    transform: rotate(0);
-    opacity: 1;
-  }
-
-  /* line 1692, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform-origin: center center;
-    transform: rotate(200deg);
-    opacity: 0;
-  }
-}
-
-@keyframes tada {
-  /* line 1698, ../sass/modules/framework/_animate.sass */
-  0% {
-    transform: scale(1);
-  }
-
-  /* line 1700, ../sass/modules/framework/_animate.sass */
-  10% {
-    transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 1702, ../sass/modules/framework/_animate.sass */
-  20% {
-    transform: scale(0.9) rotate(-3deg);
-  }
-
-  /* line 1704, ../sass/modules/framework/_animate.sass */
-  30% {
-    transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1706, ../sass/modules/framework/_animate.sass */
-  40% {
-    transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1708, ../sass/modules/framework/_animate.sass */
-  50% {
-    transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1710, ../sass/modules/framework/_animate.sass */
-  60% {
-    transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1712, ../sass/modules/framework/_animate.sass */
-  70% {
-    transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1714, ../sass/modules/framework/_animate.sass */
-  80% {
-    transform: scale(1.1) rotate(-3deg);
-  }
-
-  /* line 1716, ../sass/modules/framework/_animate.sass */
-  90% {
-    transform: scale(1.1) rotate(3deg);
-  }
-
-  /* line 1718, ../sass/modules/framework/_animate.sass */
-  100% {
-    transform: scale(1) rotate(0);
   }
 }
 
@@ -3653,6 +612,82 @@ table {
 * @section framework
 * @author Sumon Holm
 */
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000322}}
+.notimpl {
+  color: #838383 !important;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000325}}
+.success {
+  background-color: #DDE6D6;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000329}}
+.table-1 .success {
+  border-top: 1px solid #fff;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000333}}
+.table-1 tr .success:first-child {
+  border-top: none;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000337}}
+.failure {
+  background-color: #EFCFCF;
+  border-top: 1px solid #fff;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000342}}
+.warnings {
+  color: #FFFFFF;
+  background-color: #fa3;
+  border-color: #C29D46;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000348}}
+.skipped {
+  background: #CBDCE6;
+  border-top: 1px solid #FFFFFF;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000353}}
+.exception, .retry {
+  background-color: #DDD7DD;
+  border-top: 1px solid #FFFFFF;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000358}}
+.start {
+  color: #000;
+  background-color: #ccc;
+  border-color: #ccc;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000364}}
+.running, .waiting, td.building, .current-step {
+  background-color: #FCFACB;
+  border-top: 1px solid #fff;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000369}}
+.offline, td.offline {
+  background-color: #E7E7E7;
+  text-shadow: 0 1px 0 white;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000374}}
+.idle, td.idle {
+  background-color: #F5F5F5;
+  text-shadow: 0 1px 0 white;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/_base\.scss}line{font-family:\0000380}}
+.table-1 .offline,
+.table-1 .idle {
+  border-top: 1px solid #FFFFFF;
+}
+
 /**
 * Grid implementation.
 * Unity3d
@@ -3960,36 +995,39 @@ div.welcome-txt ul li {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003112}}
 .step-head {
+  position: relative;
+  display: block;
+  margin-bottom: 3px;
   font-size: 14px;
   font-weight: bold;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003117}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003120}}
 .logs-txt {
   font-weight: bold;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003121}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003124}}
 .small-txt {
   color: #838383;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003125}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003128}}
 .pr-small-head {
   margin: 0 0 2px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003129}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003132}}
 .more-info {
   font-weight: bold;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003133}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003136}}
 .mod-1.more-info:after {
   margin-left: 3px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003137}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003140}}
 .more-info:after {
   font-family: "katana_icons";
   content: "";
@@ -4008,17 +1046,17 @@ div.welcome-txt ul li {
   }*/
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003156}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003159}}
 .more-info.before:before {
   content: "▼";
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003160}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003163}}
 .more-info.before:after {
   content: "";
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003164}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/framework\/_typography\.scss}line{font-family:\00003167}}
 .dropdown-info:after {
   content: "▼";
 }
@@ -4579,6 +1617,11 @@ a.grey-btn:hover,
 }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000380}}
+.chrome.win .grey-btn.var-1:after {
+  content: "";
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000384}}
 .grey-btn.var-2 {
   font-size: 9px;
   padding: 7px 8px;
@@ -4588,21 +1631,21 @@ a.grey-btn:hover,
   z-index: 1;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000389}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000393}}
 .grey-btn.var-3 {
   font-size: 9px;
   padding: 7px 8px;
   position: relative;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\0000396}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003100}}
 .codebases .blue-btn {
   position: absolute;
   right: 0;
   top: -6px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003105}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003109}}
 .rebuild .grey-btn,
 .cancelbuild .grey-btn,
 .stopbuild .grey-btn {
@@ -4627,23 +1670,23 @@ a.grey-btn:hover,
         }
     }
 */
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003129}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003133}}
 .delete-icon {
   display: inline-block;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003131}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003135}}
 .delete-icon:before {
   font-family: "katana_icons";
   content: "";
   font-size: 16px;
   color: #2B6194;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003137}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003141}}
 .delete-icon:hover:before {
   color: #ccc;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003142}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003146}}
 #submitBtn {
   padding: 9px 9px 8px 34px;
   -webkit-box-shadow: 1px 1px 0 white;
@@ -4651,7 +1694,7 @@ a.grey-btn:hover,
   box-shadow: 1px 1px 0 white;
   border-bottom: 1px solid #ccc;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003146}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003150}}
 #submitBtn:after {
   color: #2B6194;
   font-family: katana_icons;
@@ -4662,23 +1705,23 @@ a.grey-btn:hover,
   top: 5px;
   line-height: 19px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003156}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003160}}
 #submitBtn:hover:after {
   color: #A4A4A4;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003161}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003165}}
 .run-build {
   margin-left: 3px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003163}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003167}}
 .run-build:after {
   font-family: katana_icons;
   content: "";
   font-size: 14px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003170}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003174}}
 .close-btn {
   position: absolute;
   right: 10px;
@@ -4686,7 +1729,7 @@ a.grey-btn:hover,
   cursor: pointer;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003177}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003181}}
 .close-btn:after {
   color: #333333;
   content: "✖";
@@ -4695,7 +1738,7 @@ a.grey-btn:hover,
 }
 
 @media (min-width: 0) and (max-width: 570px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003188}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003192}}
   .grey-btn + .dataTables_wrapper {
     margin-right: 0;
   }
@@ -6243,159 +3286,27 @@ div.force-text .label {
 * @section page-elements
 * @author Simon Holm
 */
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\000038}}
-.success {
-  background-color: #DDE6D6;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000312}}
-.table-1 .success {
-  border-top: 1px solid #fff;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000316}}
-.table-1 tr .success:first-child {
-  border-top: none;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000320}}
-.failure {
-  background-color: #EFCFCF;
-  border-top: 1px solid #fff;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000325}}
-.warnings {
-  color: #FFFFFF;
-  background-color: #fa3;
-  border-color: #C29D46;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000331}}
-.skipped {
-  background: #CBDCE6;
-  border-top: 1px solid #FFFFFF;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000336}}
-.exception, .retry {
-  background-color: #DDD7DD;
-  border-top: 1px solid #FFFFFF;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000341}}
-.start {
-  color: #000;
-  background-color: #ccc;
-  border-color: #ccc;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000347}}
-.running, .waiting, td.building, .current-step {
-  background-color: #FCFACB;
-  border-top: 1px solid #fff;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000352}}
-.offline, td.offline {
-  background-color: #E7E7E7;
-  text-shadow: 0 1px 0 white;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000357}}
-.idle, td.idle {
-  background-color: #F5F5F5;
-  text-shadow: 0 1px 0 white;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000363}}
-.table-1 .offline,
-.table-1 .idle {
-  border-top: 1px solid #FFFFFF;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000367}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000310}}
 .result {
   padding: 4px 9px;
   display: inline-block;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000372}}
-.chrome.win .grey-btn.var-1:after {
-  content: "";
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000377}}
-.m-bottom15 {
-  margin-bottom: 15px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000381}}
-.m-bottom10 {
-  margin-bottom: 10px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000385}}
-.m-right10 {
-  margin-right: 10px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000389}}
-.fi {
-  margin-bottom: 3px;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000393}}
-.pos-relative {
-  position: relative;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000397}}
-div.last {
-  margin-right: 0;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003101}}
-.clear {
-  clear: both;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003103}}
-.divider {
-  background-color: #E5E5E5;
-  height: 1px;
-  margin: 20px 0;
-  overflow: hidden;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003110}}
-.step-head {
-  position: relative;
-  display: block;
-  margin-bottom: 3px;
-  /*
-  &:before {
-      left: -36px;
-      position: absolute;
-      top: -8px;
-  }*/
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003122}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000317}}
 .content-blocks {
   margin-bottom: 15px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003126}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000321}}
 .dependencies {
   display: none;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003128}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000323}}
 .dependencies select {
   width: 100%;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003132}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000329}}
 .slaves-block {
   display: none;
   background: none repeat scroll 0 0 #FFF;
@@ -6410,33 +3321,28 @@ div.last {
   box-shadow: 1px 1px 1px white;
   padding: 12px 12px 8px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003139}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000336}}
 .slaves-block select {
   margin-top: 4px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003143}}
+/*
 .selected-forcebuild-btn {
-  margin-bottom: 10px;
-  -webkit-border-radius: 7px;
-  -moz-border-radius: 7px;
-  -ms-border-radius: 7px;
-  -o-border-radius: 7px;
-  border-radius: 7px;
-  background-color: #fff;
-  border: 1px solid #CCCCCC;
-  color: inherit;
-  cursor: pointer;
-  padding: 5px 12px 7px;
-  font-weight: bold;
-  display: block;
+	margin-bottom:10px;
+	@include border-radius(7px);
+	background-color: #fff;
+	border: 1px solid #CCCCCC;
+	color: inherit;
+	cursor: pointer;
+	padding: 5px 12px 7px;
+	font-weight: bold;
+	display:block;
+	&:hover {
+		color:#999;
+	}
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003153}}
-.selected-forcebuild-btn:hover {
-  color: #999;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003158}}
+*/
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000356}}
 .txt-cont {
   padding-right: 10px;
   display: table-cell;
@@ -6444,18 +3350,13 @@ div.last {
   vertical-align: middle;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003165}}
-.notimpl {
-  color: #838383 !important;
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003166}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000364}}
 #content {
   min-height: 89px;
   position: relative;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003171}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000370}}
 #bowlG {
   height: 100%;
   left: 0;
@@ -6464,7 +3365,7 @@ div.last {
   width: 100%;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003179}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000378}}
 #bowl_ringG {
   left: 50%;
   top: 50%;
@@ -6482,7 +3383,7 @@ div.last {
   box-shadow: 1px 1px 1px white;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003190}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\0000390}}
 .ball_holderG {
   position: absolute;
   width: 8px;
@@ -6511,7 +3412,7 @@ div.last {
   animation-timing-function: linear;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003218}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003124}}
 .ballG {
   position: absolute;
   left: 0px;
@@ -6526,174 +3427,31 @@ div.last {
   border-radius: 10px;
 }
 
-@keyframes ball_moveG {
-  /* line 229, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-
-  /* line 232, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(360deg);
-  }
-}
-
-@-moz-keyframes ball_moveG {
-  /* line 237, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-
-  /* line 240, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(360deg);
-  }
-}
-
-@-webkit-keyframes ball_moveG {
-  /* line 246, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-
-  /* line 249, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -webkit-transform: rotate(360deg);
-  }
-}
-
-@-ms-keyframes ball_moveG {
-  /* line 255, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -ms-transform: rotate(0deg);
-  }
-
-  /* line 258, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -ms-transform: rotate(360deg);
-  }
-}
-
-@-o-keyframes ball_moveG {
-  /* line 264, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -o-transform: rotate(0deg);
-  }
-
-  /* line 267, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -o-transform: rotate(360deg);
-  }
-}
-
-@keyframes ball_moveG {
-  /* line 273, ../sass/modules/page-elements/_main.scss */
-  0% {
-    transform: rotate(0deg);
-  }
-
-  /* line 276, ../sass/modules/page-elements/_main.scss */
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/*
-   For spinners
-*/
-@-webkit-keyframes spin {
-  /* line 300, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  /* line 307, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
-@-o-keyframes spin {
-  /* line 315, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  /* line 322, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
-@-ms-keyframes spin {
-  /* line 330, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  /* line 337, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
-@keyframes spin {
-  /* line 345, ../sass/modules/page-elements/_main.scss */
-  0% {
-    -moz-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-
-  /* line 352, ../sass/modules/page-elements/_main.scss */
-  100% {
-    -moz-transform: rotate(359deg);
-    -o-transform: rotate(359deg);
-    -webkit-transform: rotate(359deg);
-    transform: rotate(359deg);
-  }
-}
-
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003359}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003135}}
 .shake {
-  -webkit-animation: shake 1s 0.2s ease both;
-  -moz-animation: shake 1s 0.2s ease both;
-  -ms-animation: shake 1s 0.2s ease both;
-  -o-animation: shake 1s 0.2s ease both;
-  animation: shake 1s 0.2s ease both;
+  -webkit-animation-name: shake;
+  -moz-animation-name: shake;
+  -o-animation-name: shake;
+  animation-name: shake;
+  -webkit-animation-duration: 1s;
+  -moz-animation-duration: 1s;
+  -ms-animation-duration: 1s;
+  -o-animation-duration: 1s;
+  animation-duration: 1s;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003366}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003150}}
 .login-box.more-info-box {
   display: block;
   float: none;
   padding: 44px 38px 16px 38px;
   width: 314px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003371}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003155}}
 .login-box.more-info-box h3 {
   display: block;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003374}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003158}}
 .login-box.more-info-box .login-welcome-txt {
   text-shadow: 0 1px 0 white;
   color: #666666;
@@ -6701,7 +3459,7 @@ div.last {
   margin-bottom: 15px;
   clear: both;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003382}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003166}}
 .login-box h1.logo a {
   opacity: 1;
   color: #445873;
@@ -6712,41 +3470,41 @@ div.last {
   padding: 0;
   margin-right: 14px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003391}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003175}}
 .login-box h1.logo a span {
   font-size: 0.8em;
   color: #445873;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003395}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003179}}
 .login-box h1.logo a:hover {
   opacity: 0.5;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003399}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003183}}
 .login-box .error-input {
   font-size: 14px;
   font-weight: normal;
   text-shadow: 0 1px 0 white;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003406}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003190}}
 .log-in-txt {
   font-size: 12px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003413}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003197}}
 .content-holder {
   white-space: pre;
   font-family: "helvetica neue",sans-serif;
   font-size: 12px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003419}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003203}}
 body.log.interface {
   background: #FFFFFF;
   padding: 20px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003426}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003210}}
 .ellipsis {
   max-height: 45px;
   max-width: 300px;
@@ -6755,19 +3513,19 @@ body.log.interface {
   position: relative;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003434}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003218}}
 .revision.ellipsis {
   height: auto;
   display: block;
   overflow: hidden;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003440}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003224}}
 .full {
   display: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003442}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003226}}
 .tool-tip {
   display: none;
   background-color: rgba(238, 238, 238, 0.89);
@@ -6791,30 +3549,30 @@ body.log.interface {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.12);
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003459}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003243}}
 .codebase-change-txt {
   color: #666;
   text-shadow: 0 1px 0 white;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003464}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003248}}
 .rootSummary {
   font-size: 14px;
   list-style-type: none;
   margin: 13px 0 0;
   padding: 0;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003469}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003253}}
 .rootSummary li {
   margin: 0 0 15px 0;
   list-style: none;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003473}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003257}}
 .rootSummary li span {
   font-weight: bold;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003479}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003263}}
 .summary-circles span {
   background-color: #EEF0F5;
   -webkit-border-radius: 24px;
@@ -6833,7 +3591,7 @@ body.log.interface {
   text-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003492}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003276}}
 .alert {
   color: #c30000;
   background-color: #f2dcdc;
@@ -6846,12 +3604,12 @@ body.log.interface {
 }
 
 @media (min-width: 0) and (max-width: 570px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003505}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003289}}
   .ellipsis {
     max-width: 100px;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003508}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003292}}
   .tool-tip {
     max-width: 175px;
   }
