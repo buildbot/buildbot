@@ -43,7 +43,6 @@ TERMINATED = 'terminated'
 SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
 FULFILLED = 'fulfilled'
 
-
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = image = None
