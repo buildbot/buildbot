@@ -81,6 +81,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
 				// set the cookie with the full name on first visit
 				helpers.setCookie("fullName", fullNameLdap);
+				window.location = "/";
 			} else if (helpers.getCookie("fullName") === '') {
 				// Redirect to loginpage if missing namecookie
 				window.location = "/login";
