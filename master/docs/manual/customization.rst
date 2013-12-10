@@ -814,7 +814,7 @@ messages that might get displayed as the test runs.
 
 Each time it identifies a test has been completed, it increments its
 counter and delivers the new progress value to the step with
-@code{self.step.setProgress}. This class is specifically measuring
+``self.step.setProgress``. This class is specifically measuring
 progress along the `tests` metric, in units of test cases (as
 opposed to other kinds of progress like the `output` metric, which
 measures in units of bytes). The Progress-tracking code uses each
@@ -856,6 +856,18 @@ instances for the current step are interpolated before the ``start`` method
 begins.
 
 .. index:: links, BuildStep URLs, addURL
+
+Using Statistics
+~~~~~~~~~~~~~~~~
+
+Statistics can be generated for each step, and then summarized across all steps in a build.
+For example, a test step might set its ``warnings`` statistic to the number of warnings observed.
+The build could then sum the ``warnings`` on all steps to get a total number of warnings.
+
+Statistics are set and retrieved with the :py:meth:`~buildbot.process.buildstep.BuildStep.setStatistic` and:py:meth:`~buildbot.process.buildstep.BuildStep.getStatistic` methods.
+The :py:meth:`~buildbot.process.buildstep.BuildStep.hasStatistic` method determines whether a statistic exists.
+
+The Build method :py:meth:`~buildbot.process.build.Build.getSummaryStatistic` can be used to aggregate over all steps in a Build.
 
 BuildStep URLs
 ~~~~~~~~~~~~~~

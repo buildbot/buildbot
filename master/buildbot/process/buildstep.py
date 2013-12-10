@@ -243,6 +243,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self._acquiringLock = None
         self.stopped = False
         self.master = None
+        self.statistics = {}
 
         self._start_unhandled_deferreds = None
 
@@ -330,7 +331,7 @@ class BuildStep(object, properties.PropertiesMixin):
             if self.stopped:
                 raise BuildStepCancelled
 
-            # ste up progress
+            # set up progress
             if self.progress:
                 self.progress.start()
 
@@ -444,6 +445,11 @@ class BuildStep(object, properties.PropertiesMixin):
             # the monkey patches will stash their deferreds on the unhandled list
             self.step_status.setText = self.step_status.old_setText
             self.step_status.setText2 = self.step_status.old_setText2
+
+            # and monkey-patch in support for old statistics functions
+            self.step_status.setStatistic = self.setStatistic
+            self.step_status.getStatistic = self.getStatistic
+            self.step_status.hasStatistic = self.hasStatistic
 
             results = yield self.start()
             if results == SKIPPED:
@@ -580,6 +586,19 @@ class BuildStep(object, properties.PropertiesMixin):
         command.buildslave = self.buildslave
         d = command.run(self, self.remote, self.build.builder.name)
         return d
+
+    def hasStatistic(self, name):
+        return name in self.statistics
+
+    def getStatistic(self, name, default=None):
+        return self.statistics.get(name, default)
+
+    def getStatistics(self):
+        return self.statistics.copy()
+
+    def setStatistic(self, name, value):
+        self.statistics[name] = value
+
 
 components.registerAdapter(
     BuildStep._getStepFactory,

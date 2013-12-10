@@ -127,6 +127,11 @@ class BuildStepMixin(object):
 
         ss.getLogs = lambda: ss.logs.values()
 
+        self.step_statistics = {}
+        self.step.setStatistic = self.step_statistics.__setitem__
+        self.step.getStatistic = self.step_statistics.get
+        self.step.hasStatistic = self.step_statistics.__contains__
+
         self.step.setStepStatus(ss)
 
         # step overrides

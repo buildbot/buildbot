@@ -313,6 +313,30 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
+    def test_hasStatistic(self):
+        step = buildstep.BuildStep()
+        self.assertFalse(step.hasStatistic('rbi'))
+        step.setStatistic('rbi', 13)
+        self.assertTrue(step.hasStatistic('rbi'))
+
+    def test_setStatistic(self):
+        step = buildstep.BuildStep()
+        step.setStatistic('rbi', 13)
+        self.assertEqual(step.getStatistic('rbi'), 13)
+
+    def test_getStatistic(self):
+        step = buildstep.BuildStep()
+        self.assertEqual(step.getStatistic('rbi', 99), 99)
+        self.assertEqual(step.getStatistic('rbi'), None)
+        step.setStatistic('rbi', 13)
+        self.assertEqual(step.getStatistic('rbi'), 13)
+
+    def test_getStatistics(self):
+        step = buildstep.BuildStep()
+        step.setStatistic('rbi', 13)
+        step.setStatistic('ba', 0.298)
+        self.assertEqual(step.getStatistics(), {'rbi': 13, 'ba': 0.298})
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 

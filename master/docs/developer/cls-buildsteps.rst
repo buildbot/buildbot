@@ -237,6 +237,30 @@ BuildStep
             In relatively rare circumstances, steps are described before they have started.
             Ideally, unit tests should be used to ensure that this method is resilient.
 
+    Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
+    Note that statistics are not preserved after a build is complete.
+
+    .. py:method:: hasStatistic(stat)
+
+        :param string stat: name of the statistic
+        :returns: True if the statistic exists on this step
+
+    .. py:method:: getStatistic(stat, default=None)
+
+        :param string stat: name of the statistic
+        :param default: default value if the statistic does not exist
+        :returns: value of the statistic, or the default value
+
+    .. py:method:: getStatistics()
+
+        :returns: a dictionary of all statistics for this step
+
+    .. py:method:: setStatistic(stat, value)
+
+        :param string stat: name of the statistic
+        :param value: value to assign to the statistic
+        :returns: value of the statistic
+
     Build steps support progress metrics - values that increase roughly linearly during the execution of the step, and can thus be used to calculate an expected completion time for a running step.
     A metric may be a count of lines logged, tests executed, or files compiled.
     The build mechanics will take care of translating this progress information into an ETA for the user.
