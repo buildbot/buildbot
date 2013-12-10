@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import re
 
 from twisted.internet import defer
 from twisted.python import log
@@ -142,6 +143,9 @@ def getBuildContacts(master, build, contact_types):
     def addOwners(recipients):
         dl = []
         for owner in build.getInterestedUsers():
+            def strip_email(owner):
+                return re.sub('^(.+) <.+>$', '\\1', owner)
+            owner = strip_email(owner)
             d = master.db.users.getUserByUsername(owner)
             d.addCallback(_extractContact, contact_types, owner)
             dl.append(d)
