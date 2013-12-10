@@ -57,7 +57,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None,
-                 spot_instance=False, max_spot_price=1.6, volumes=[]):
+                 spot_instance=False, max_spot_price=1.6, volumes=[],
+                 placement=None):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -94,6 +95,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
         self.volumes = volumes
+        if None not in [placement, region]:
+            self.placement = '%s%s' % (region, placement)
+        else:
+            self.placement = None
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier')
@@ -259,7 +264,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         image = self.get_image()
         reservation = image.run(
             key_name=self.keypair_name, security_groups=[self.security_name],
-            instance_type=self.instance_type, user_data=self.user_data)
+            instance_type=self.instance_type, user_data=self.user_data,
+            placement=self.placement)
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(reservation, image)
         if None not in [instance_id, image_id, start_time]:
@@ -283,10 +289,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             self._stop_instance, instance, fast)
         
     def _attach_volumes(self):
-        for volume_id, mount_point in self.volumes:
-            self.conn.attach_volume(volume_id, self.instance.id, mount_point)
+        for volume_id, device_node in self.volumes:
+            self.conn.attach_volume(volume_id, self.instance.id, device_node)
             log.msg('Attaching EBS volume %s to %s.' %
-                    (volume_id, mount_point))
+                    (volume_id, device_node))
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
@@ -321,7 +327,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
         spot_prices = self.conn.get_spot_price_history(start_time=spot_history_starttime, 
-                                                       product_description='Linux/UNIX (Amazon VPC)')
+                                                       product_description='Linux/UNIX (Amazon VPC)',
+                                                       availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
         for price in spot_prices:
@@ -341,7 +348,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name, 
                                                         security_groups=[self.security_name],
                                                         instance_type=self.instance_type, 
-                                                        user_data=self.user_data)
+                                                        user_data=self.user_data,
+                                                        placement=self.placement)
         request = self._wait_for_request(reservations[0])
         instance_id = request.instance_id
         reservations = self.conn.get_all_instances(instance_ids=[instance_id])
