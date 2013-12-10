@@ -1,4 +1,27 @@
 $(document).ready(function() {
+
+		// variables for elements
+		var loginBox = $('.login-box');
+		var form = $('#loginForm');
+		var excludeFields = ':button, :hidden, :checkbox, :submit';
+		var allInputs = $('input', form).not(excludeFields);
+
+		
+			// the current url
+			var url = window.location;
+
+			// Does the url have 'authorized' ? 
+				
+			if (url.search.match(/autorized=/)) {		
+				var authorizedLdap = url.search.split('&').slice(0)[0].split('=')[1].toLowerCase();
+			} 
+
+			// give error message if user or pasword is incorrect
+			if (authorizedLdap === 'false') {
+				errorMessage(true, 'incorrect'); 
+			} 
+	
+
 	jQuery.fn.center = function() {
 	  this.css("position", "absolute");
 	  this.css("top", ($(window).height() - this.outerHeight()) / 2 + $(window).scrollTop() + "px");
@@ -12,11 +35,7 @@ $(document).ready(function() {
 
 	$('.more-info-box-js').center();
 
-	// variables for elements
-	var loginBox = $('.login-box');
-	var form = $('#loginForm');
-	var excludeFields = ':button, :hidden, :checkbox, :submit';
-	var allInputs = $('input', form).not(excludeFields);
+	
 
 
 	// Mark input field red if empty on focus out
@@ -37,40 +56,46 @@ $(document).ready(function() {
 	$(form).submit(function(e) {
 		var value = $('#loginForm');
 
-		validatelogin(value, e);	
+		validateloginFields(value, e);	
 
 	});
 
 	// validate the log in form
-	function validatelogin(form, e) {		
+	function validateloginFields(form, e) {		
 		var error = false;
 		$(allInputs).each(function() {		
-		console.log($(this).val())		
+			
 			if ($(this).val() === '') {
 				 e.preventDefault();
 				 $(this).addClass('not-valid');
 				 error = true;
 			}
 		});
-		if (error === false) {
-			
-			storeValues(form);
-		}
+		
+		// display error message if there is an error
 		errorMessage(error)
 	}
 
 	// Display errormessage
-	function errorMessage(error) {
+	function errorMessage(error, errorMsg) {
+		var errorMsg = errorMsg === ''? "Fill in your username and password before submitting" : "Incorrect username or password";
+		
 		if (error === true && $('.error-input').length === 0) {
 			$('.login-welcome-txt', loginBox).hide();
-			$(form).prepend('<div class="error-input">Fill in your first and last name before submitting</div>');
+			$(form).prepend('<div class="error-input">'+errorMsg+'</div>');
 			shake(loginBox);
+			
 		} else if (error === true && $('.error-input').length > 0) {
+			errorMsg = 'Fill in your username and password before submitting';
+			$('.error-input', form).remove();
+			$(form).prepend('<div class="error-input">'+errorMsg+'</div>');
 			shake(loginBox);
+			
 		} else {
 			shake(loginBox, 'remove');
 		}
 	}
+
 
 	// Shake the box if not validating
 	function shake(element, rm) {
@@ -81,29 +106,5 @@ $(document).ready(function() {
 			element.removeClass('shake');
 		}
 	}
-
-	// set cookie
-	var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
-	function setCookie(name, value) { 
-		document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 
-	}
-
-	// store cookie values from form
-	function storeValues(form) {					
-		setCookie("fullName", form.children("input[name='fullname']").val()); 					
-		return true;
-	}
-	 
-	//get cookie values
-	function getCookie(name) { 
-	  	var re = new RegExp(name + "=([^;]+)"); 
-	  	var value = re.exec(document.cookie); 
-	  	return (value != null) ? unescape(value[1]) : null; 
-	}
-
-	// set cookie values in form
-	if(fullName = getCookie("fullName")) {	  	
-		$(form).children("input[name='fullname']").val(fullName);
-	} 
 
 });

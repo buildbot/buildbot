@@ -37,22 +37,8 @@
    		margin-top: 4px;
     }
 }
-/*
-.selected-forcebuild-btn {
-	margin-bottom:10px;
-	@include border-radius(7px);
-	background-color: #fff;
-	border: 1px solid #CCCCCC;
-	color: inherit;
-	cursor: pointer;
-	padding: 5px 12px 7px;
-	font-weight: bold;
-	display:block;
-	&:hover {
-		color:#999;
-	}
-}
-*/
+
+// On 'cancel builds' dialogue
 .txt-cont {
 	padding-right:10px;	
 	display:table-cell;
@@ -67,6 +53,8 @@
 }
 
 // preloader
+
+
 #bowlG{
 height: 100%;
 left: 0;
@@ -87,6 +75,7 @@ border:3px solid #BBBBBB;
  
 }
 
+// rotate ring with ball effect
 .ball_holderG{
 position:absolute;
 width:8px;
@@ -122,7 +111,6 @@ animation-timing-function:linear;
 }
 
 .ballG{
-	 
 position:absolute;
 left:0px;
 top:-7px;
@@ -132,6 +120,7 @@ background: #BBBBBB;
 @include border-radius(10px);
 }
 
+// shake effect
 .shake {
   -webkit-animation-name: shake;
   -moz-animation-name: shake;
@@ -150,8 +139,8 @@ background: #BBBBBB;
 	&.more-info-box {
 		display: block;
 	    float: none;
-	    padding: 44px 38px 16px 38px;
-	    width: 314px;
+	    padding: 44px 12px 16px 33px;
+	    width: 200px;
 		h3 {
 			display: block;	
 		}
@@ -184,14 +173,13 @@ background: #BBBBBB;
 		font-size: 14px;
 		font-weight: normal;
 		@include text-shadow(0 1px 0 #FFFFFF);
+		margin-right: 22px;
 	}
 }
 
 .log-in-txt {
 	font-size:12px;
 }
-
-
 
 // buildlog
 .content-holder {
@@ -206,7 +194,7 @@ body.log.interface {
 }
  
 
-
+// Ellipsis and tooltip start
 .ellipsis {
 	max-height:45px;
 	max-width:300px;
@@ -240,11 +228,16 @@ body.log.interface {
 	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
 }
 
+// Ellipsis and tooltip end
+
+
 .codebase-change-txt {
 	color:#666;
 	@include text-shadow(0 1px 0 #FFF);
 }
 
+
+// summary on frontpage start
 .rootSummary {
     font-size: 14px;
     list-style-type: none;
@@ -259,7 +252,7 @@ body.log.interface {
 		}
 	}
 }
-
+ 
 .summary-circles span {
 	background-color: #EEF0F5;
 	//@include bgimage (linear-gradient(top, #3A669A 0%, #6AA1CD 100%));
@@ -273,6 +266,10 @@ body.log.interface {
 	text-align:center;
 }
 
+// summary on frontpage end
+
+
+// alert message from buildbot
 .alert {
   color: #c30000;
   background-color: #f2dcdc;
@@ -284,8 +281,30 @@ body.log.interface {
   font-size: 20px;
 }
  
-@include breakpoint($bkpt-small) {
+.footer {
+	background: none repeat scroll 0 0 #FFFFFF;
+    border-top: 2px solid #E3E3E3;
+    color: #B7B7B7;
+    font-size: 9px;
+    padding: 20px 0;
+    text-align: center;
+    margin-top: 45px;
+}
 
+.auth-user {
+	float: right;
+    font-size: 10px;
+    margin-top: 16px;
+    text-shadow: 0 1px 0 #FFFFFF;
+    span,
+    a {
+    	font-weight: bold;
+	}
+}
+
+@include breakpoint($bkpt-small) {
+	.auth-user {display:none;}
+	
 	.ellipsis {
 		max-width:100px;
 	}	

@@ -14,20 +14,12 @@ require.config({
 	}
 });
 
-require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'], 
-	function($,setCurrentItem, popup, screenSize, projectDropDown, helpers ) {
+require(['jquery','popup','screensize','projectdropdown','helpers'], 
+	function($, popup, screenSize, projectDropDown, helpers ) {
 	'use strict';
 
 	$(document).ready(function() {
-
 		
-		// Extend the expirationdate for the first and last name cookies
-		helpers.setCookie("fullName", helpers.getCookie("fullName"));
-		
-		// Redirect to loginpage if missing first or last name cookie
-		if(helpers.getCookie("fullName") === '') {	  				
-			window.location = "/login";
-		}
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -42,7 +34,6 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        function(dotdotdot) {
 	        	$(".ellipsis-js").dotdotdot();
 	        });
-			
 		}
 
 		// codebases combobox selector
@@ -56,9 +47,7 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 		if ($('#builddetail_page').length > 0) {
 			helpers.summaryArtifactTests();
 		}
-		
-		// set class on the curret item menu
-		setCurrentItem.init();
+				
 		// get scripts for general popups
 		popup.init();
 		// get scripts for the projects dropdown

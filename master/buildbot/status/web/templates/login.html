@@ -3,13 +3,13 @@
   <head>
  	<meta charset="utf-8">
  	<title>Katana - login</title>
-    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
+    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
 
-    <script type="text/javascript" src="/script/project/login.js"></script>
+    <script type="text/javascript" src="/prod/script/project/login.js"></script>
  </head>
  <body class="interface">
  	<div id="login_page" class="login-box more-info-box more-info-box-js">
@@ -20,22 +20,30 @@
    </h1>
 
  		<p class="login-welcome-txt">
-			Welcome to Unity's BuildServer. Fill in your first and last name.
+			Welcome to Unity's BuildServer. Fill in your username and password.
 		</p>
 		<div class="auth">    
 
-            <form id="loginForm" method="post" name="login" action="/">
-            <input type="submit" value="submit" id="submitLogin" />
-                
 
-            <input class="defaultText" id="fullName" placeholder="E.g. Guido Rossum" type="text"  name="fullname" />
+
+            <form id="loginForm" method="post" name="login" action="{{ authenticate_url }}">
+
+            
                 
+            
+            <input class="defaultText" id="userName" placeholder="Your username" type="text"  name="username" />
+            
+            <input class="defaultText" id="passWord" placeholder="Your password" type="password"  name="password" />    
 
                 
                 
                 <div class="clear"></div>
-                
-                
+                <input type="submit" value="login" id="submitLogin" />    
+                <!--
+              <input type="checkbox" id="rememberMe" />      
+                <label class="checkbox-label" for="rememberMe">Remember me</label>
+              -->
+              
 
             </form>
           

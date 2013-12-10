@@ -146,7 +146,6 @@
 		&:after {
 			font-family: katana_icons;
 			color:#444;
-			//content: "";
 			padding-left: 5px;
 		}
 	}
@@ -201,7 +200,7 @@ table.codebase-branch-table {
 
 
 @include breakpoint($bkpt-small) {
-
+	.border-table-holder {display:none;}
 	.more-info-box {
 		 min-width:inherit;
 		 width: 80%;

@@ -71,8 +71,6 @@
 
       {% if not short %}
         <div class="row">
-          <span class="label">Reason:</span>
-          <input class="full-name-js" type="text" name="fullName" disabled/>
           <input class="full-name-js" type="hidden" name="comments"/>
         </div>
       {% endif %}
@@ -327,8 +325,7 @@
         push the 'Force Build' button</p>
   {% endif %}
    <div class="row">
-     <span class="label">Reason for re-running build:</span>
-     <input class="full-name-js" type='text' name='FullName' disabled />
+     
      <input class="full-name-js" type='hidden' name='comments' />
      <input class="grey-btn" type="submit" value="Rebuild" />
    </div>

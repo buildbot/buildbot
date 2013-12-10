@@ -77,8 +77,6 @@ div.column-1 {
 		background: none;	
 	}
 }
-
-.m-top20 {margin-top:20px;}
  
 @include breakpoint($bkpt-small) {
 	.container-inner {
