@@ -1230,18 +1230,25 @@ By default this class adds a change to the buildbot system for each of the follo
     of event can lead to a complete rebuild of the project, and upload
     binaries to an incremental build results server.
 
-But you can manually specify which handle Events:
+But you can specify how to handle Events:
 
-``any event containing bb::change and bb:patchSet``
-   Any event containing bb:`change` and bb:`patchSet`
-   universal collector can be processed unless you explicitly 
-   specify processing them in handle_events parameter.
-   (see `gerrit stream events man page <http://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-stream-events.html>`_)
+* Any event with change and patchSet will 
+  be processed by universal collector by default.
 
-``any event with its own handler function``
-   In heir class :bb:chsrc:`GerritChangeSource`
-   can override processing functions needed the events.
-   The eigenfunctions processing will always be more important than universal.
+* In case you've specified processing function for the given kind of events, 
+  all events of this kind will be processed only by this function, bypassing universal collector.
+
+An example::
+
+    from buildbot.changes.gerritchangesource import GerritChangeSource
+    class MyGerritChangeSource(GerritChangeSource):
+        """Custom GerritChangeSource
+        """
+        def eventReceived_patchset_created(self, properties, event):
+            """Handler events without properties
+            """
+            properties = {}
+            self.addChangeFromEvent(properties, event)
 
 This class will populate the property list of the triggered build with the info
 received from Gerrit server in JSON format.
