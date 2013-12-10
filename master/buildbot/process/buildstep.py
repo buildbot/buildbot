@@ -389,14 +389,12 @@ class BuildStep(object, properties.PropertiesMixin):
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
+            descr = self.describe(True)
             if results == CANCELLED:
-                yield self.setStateStrings(self.describe(True) + ["cancelled"])
+                yield self.setStateStrings(descr + ["cancelled"])
             else:
-                # leave RETRY as-is, but change anything else to EXCEPTION
-                if results != RETRY:
-                    results = EXCEPTION
-                yield self.setStateStrings(self.describe(True) +
-                                           ["interrupted"])
+                results = EXCEPTION
+                yield self.setStateStrings(descr + ["interrupted"])
 
         if self.progress:
             self.progress.finish()

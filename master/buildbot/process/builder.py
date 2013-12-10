@@ -520,9 +520,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 builderid=builderid,
                 complete_at=complete_at_epoch,
                 results=results)
-            # TODO: when buildrequests are defined in the data API
-            (key, msg)
-            #self.master.mq.produce(key, msg)
+            # TODO: actually send when buildrequests are defined in the data
+            # API
+            log.msg("would send %s message with body %r, but buildrequests "
+                    "aren't defined yet" % (key, msg))
 
         # check for completed buildsets -- one call for each build request with
         # a unique bsid

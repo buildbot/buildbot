@@ -83,7 +83,7 @@ However, this compatibility is accomplished through some ugly hacks that may not
 All custom steps should be rewritten in the new style as soon as possible.
 
 Buildbot distinguishes new-style from old-style steps by the presence of a :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
-If this method is present, then the step is as a new-style step.
+If this method is present, then the step is a new-style step.
 
 Summary of Changes
 ++++++++++++++++++
@@ -91,7 +91,7 @@ Summary of Changes
  * New-style steps have a ``run`` method that is simpler to implement than the old ``start`` method.
  * Many methods are now asynchronous (return Deferreds), as they perform operations on the database.
  * Logs are now implemented by a completely different class.
-   This class supports the same log-writing methods (``addStder`` and so on), although they are now asynchronous.
+   This class supports the same log-writing methods (``addStderr`` and so on), although they are now asynchronous.
    However, it does not support log-reading methods such as ``getText``.
    It was never advisable to handle logs as enormous strings.
    New-style steps should, instead, use a LogObserver or fetch log lines bit by bit using :bb:rtype:`logchunk`.
@@ -154,7 +154,7 @@ Syntactically, ``inlineCallbacks`` makes the change fairly simple::
         for m in self.MESSAGES:
             if counts[m]:
                 yield self.addCompleteLog(m, "".join(summaries[m]))
-            yield self.setProperty("count-%s" % m, counts[m], "counter")
+            self.setProperty("count-%s" % m, counts[m], "counter")
 
 However, this method's callers must now handle the Deferred that it returns.
 All methods that can be overridden in custom steps can return a Deferred.
