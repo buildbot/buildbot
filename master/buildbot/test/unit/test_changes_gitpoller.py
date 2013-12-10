@@ -120,10 +120,11 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         return defer.DeferredList([self._test_get_commit_comments(commentStr) for commentStr in comments])
 
     def test_get_commit_files(self):
-        filesStr = 'file1\nfile2'
+        filesStr = '\n\nfile1\nfile2\n"\146ile_octal"\nfile space'
+        filesRes = ['file1', 'file2', 'file_octal', 'file space']
         return self._perform_git_output_test(self.poller._get_commit_files,
                                              ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
-                                             filesStr, filesStr.split(), emptyRaisesException=False)
+                                             filesStr, filesRes, emptyRaisesException=False)
 
     def test_get_commit_files_with_space_in_changed_files(self):
         filesStr = 'normal_directory/file1\ndirectory with space/file2'
