@@ -125,6 +125,16 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
                                              ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
                                              filesStr, filesStr.split(), emptyRaisesException=False)
 
+    def test_get_commit_files_with_space_in_changed_files(self):
+        filesStr = 'normal_directory/file1\ndirectory with space/file2'
+        return self._perform_git_output_test(
+            self.poller._get_commit_files,
+            ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
+            filesStr,
+            filter(lambda x: x.strip(), filesStr.splitlines(), ),
+            emptyRaisesException=False,
+        )
+
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
