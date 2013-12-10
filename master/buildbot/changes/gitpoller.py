@@ -155,7 +155,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d = self._dovccmd('log', args, path=self.workdir)
 
         def process(git_output):
-            fileList = git_output.split()
+            fileList = []
+            for line in git_output.splitlines():
+                if len(line.strip())!=0:
+                    fileList.append(line)
             return fileList
         d.addCallback(process)
         return d
