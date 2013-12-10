@@ -68,7 +68,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
 		
 			$('#authUserBtn').click(function(e){
-				helpers.eraseCookie('fullName','','eraseCookie');				
+				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
 
 		}, authorizeUser: function() {
@@ -80,19 +80,19 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {				
 				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
 				// set the cookie with the full name on first visit
-				helpers.setCookie("fullName", fullNameLdap);
+				helpers.setCookie("fullName1", fullNameLdap);
 				window.location = "/";
-			} else if (helpers.getCookie("fullName") === '') {
+			} else if (helpers.getCookie("fullName1") === '') {
 				// Redirect to loginpage if missing namecookie
 				window.location = "/login";
 			} else {
 				// Extend the expiration date
-				helpers.setCookie("fullName", helpers.getCookie("fullName"));
+				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
 			}
 
 		}, setFullName: function(el) {			
 			var valOrTxt;
-			var cookieVal = helpers.getCookie("fullName");
+			var cookieVal = helpers.getCookie("fullName1");
 
 			// Loop through all elements that needs fullname 
 			el.each(function(){
