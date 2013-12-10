@@ -91,8 +91,15 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			}
 
 		}, setFullName: function(el) {			
-			var valOrTxt = el.is('input')? 'val' : 'text';			
-			el[valOrTxt](helpers.getCookie("fullName"));
+			var valOrTxt;
+			var cookieVal = helpers.getCookie("fullName");
+
+			// Loop through all elements that needs fullname 
+			el.each(function(){
+				// check if it is an input field or not
+				valOrTxt = $(this).is('input')? 'val' : 'text';				
+				$(this)[valOrTxt](cookieVal);
+			});
 			
 		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
