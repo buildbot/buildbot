@@ -19,15 +19,7 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	'use strict';
 
 	$(document).ready(function() {
-
 		
-		// Extend the expirationdate for the first and last name cookies
-		helpers.setCookie("fullName", helpers.getCookie("fullName"));
-		
-		// Redirect to loginpage if missing first or last name cookie
-		if(helpers.getCookie("fullName") === '') {	  				
-			window.location = "/login";
-		}
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -42,7 +34,6 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        function(dotdotdot) {
 	        	$(".ellipsis-js").dotdotdot();
 	        });
-			
 		}
 
 		// codebases combobox selector

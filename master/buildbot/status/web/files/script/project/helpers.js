@@ -20,6 +20,9 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    });
 			*/
 
+			// Authorize on every page
+			helpers.authorizeUser();
+
         	// insert codebase and branch on the builders page
         	if ($('#builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
@@ -61,13 +64,44 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			helpers.runIndividualBuild();
 			
 			
-			// Set the full name from a cookie. Used on 
-			helpers.setFullName($("#buildForm .full-name-js"));
+			// Set the full name from a cookie. Used on buildersform and username in the header
+			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
+		
+			$('#authUserBtn').click(function(e){
+				helpers.eraseCookie('fullName1','','eraseCookie');				
+			});
 
-		}, setFullName: function(el) {
-				el.val(helpers.getCookie("fullName"));
+		}, authorizeUser: function() {
+
+			// the current url
+			var url = window.location;
+				
+			// Does the url have 'user' and 'authorized' ? get the fullname
+			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {				
+				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
+				// set the cookie with the full name on first visit
+				helpers.setCookie("fullName1", fullNameLdap);
+				window.location = "/";
+			} else if (helpers.getCookie("fullName1") === '') {
+				// Redirect to loginpage if missing namecookie
+				window.location = "/login";
+			} else {
+				// Extend the expiration date
+				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
+			}
+
+		}, setFullName: function(el) {			
+			var valOrTxt;
+			var cookieVal = helpers.getCookie("fullName1");
+
+			// Loop through all elements that needs fullname 
+			el.each(function(){
+				// check if it is an input field or not
+				valOrTxt = $(this).is('input')? 'val' : 'text';				
+				$(this)[valOrTxt](cookieVal);
+			});
 			
-		},runIndividualBuild: function() { // trigger individual builds
+		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
 
 				$('.remove-js').remove();
@@ -264,14 +298,25 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				testlistResultJS.append(alist);
 			}
 
-		}, setCookie: function (name, value) { // renew the expirationdate on the cookie
-			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 		
-			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiry.toGMTString(); 
+		}, setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
+
+			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
+			
+			if (eraseCookie === undefined) {
+				var expiredate = expiry.toGMTString();
+			} else {
+				var expiredate = 'Thu, 01 Jan 1970 00:00:00 GMT;';
+			}
+			//var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
+			
+			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
 
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 
 		  	return (value != null) ? unescape(value[1]) : ''; 
+		}, eraseCookie: function (name, value, eraseCookie) {
+    		helpers.setCookie(name, value, eraseCookie);
 		}
 	};
 

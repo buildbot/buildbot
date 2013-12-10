@@ -76,6 +76,11 @@ class MasterConfig(object):
         self.debugPassword = None
         self.manhole = None
 
+        self.ldap = dict(
+            ldap_server = 'my_ldap_server',
+            ldap_base_dn = 'DC=example,DC=com'
+        )
+
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
             revision=re.compile(r'^[ \w\.\-\/]*$'),
@@ -103,7 +108,7 @@ class MasterConfig(object):
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
+        'db', "db_poll_interval", "db_url", "ldap", "ldap_server", "ldap_base_dn", "debugPassword", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logHorizon",
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
@@ -190,6 +195,7 @@ class MasterConfig(object):
         # and defer the rest to sub-functions, for code clarity
         config.load_global(filename, config_dict, errors)
         config.load_validation(filename, config_dict, errors)
+        config.load_ldap(filename, config_dict, errors)
         config.load_db(filename, config_dict, errors)
         config.load_metrics(filename, config_dict, errors)
         config.load_caches(filename, config_dict, errors)
@@ -347,6 +353,16 @@ class MasterConfig(object):
         else:
             self.db['db_poll_interval'] = db_poll_interval
 
+    def load_ldap(self, filename, config_dict, errors):
+        if 'ldap' in config_dict:
+            ldap = config_dict['ldap']
+            if set(ldap.keys()) > set(['ldap_server', 'ldap_base_dn']):
+                errors.addError("unrecognized keys in c['ldap']")
+            self.ldap.update(ldap)
+        if 'server' in config_dict:
+            self.ldap['ldap_server'] = config_dict['ldap_server']
+        if 'ldap_dc' in config_dict:
+            self.ldap['ldap_base_dn'] = config_dict["ldap_base_dn"]
 
     def load_metrics(self, filename, config_dict, errors):
         # we don't try to validate metrics keys
