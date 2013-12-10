@@ -175,6 +175,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                     # when adding, we update the user after the first attr
                     once_through = False
                     for attr in user:
+                        result = None
                         if op == 'update' or once_through:
                             if uid:
                                 result = yield self.master.db.users.updateUser(
