@@ -108,6 +108,7 @@ Here are the remaining bits:
 * rewrite steps to new style
   * but not ShellCommand, yet, since user classes derive from it
   * merge rewrites to master
+  * remove `step_status` for statistics
 
 ## Data API ##
 

@@ -209,8 +209,8 @@ Again, set the status in ``evaluateCommand`` if the default implementation is in
 The ``self.step_status.setText`` and ``setText2`` methods have been removed.
 Replace them with asynchronous calls to ``self.setStatusStrings``.
 
-Support for statistics has been removed, so the ``setStatistic``, ``getStatistic``, and ``getSummaryStatistic`` methods no longer exist.
-Replace any use of statistics with properties.
+Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects.
+Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.
 
 The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
 Instead, users should implement a custom step with a LogObserver.

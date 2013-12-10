@@ -164,21 +164,21 @@ class VisualStudio(ShellCommand):
     def describe(self, done=False):
         description = ShellCommand.describe(self, done)
         if done:
-            description.append('%d projects' % self.getProperty('projects', 0))
-            description.append('%d files' % self.getProperty('files', 0))
-            warnings = self.getProperty('warnings', 0)
+            description.append('%d projects' % self.step_status.getStatistic('projects', 0))
+            description.append('%d files' % self.step_status.getStatistic('files', 0))
+            warnings = self.step_status.getStatistic('warnings', 0)
             if warnings > 0:
                 description.append('%d warnings' % warnings)
-            errors = self.getProperty('errors', 0)
+            errors = self.step_status.getStatistic('errors', 0)
             if errors > 0:
                 description.append('%d errors' % errors)
         return description
 
     def createSummary(self, log):
-        self.setProperty('projects', self.logobserver.nbProjects, 'Visual Studio')
-        self.setProperty('files', self.logobserver.nbFiles, 'Visual Studio')
-        self.setProperty('warnings', self.logobserver.nbWarnings, 'Visual Studio')
-        self.setProperty('errors', self.logobserver.nbErrors, 'Visual Studio')
+        self.step_status.setStatistic('projects', self.logobserver.nbProjects)
+        self.step_status.setStatistic('files', self.logobserver.nbFiles)
+        self.step_status.setStatistic('warnings', self.logobserver.nbWarnings)
+        self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
         if cmd.didFail():

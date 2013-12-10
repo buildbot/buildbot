@@ -74,6 +74,8 @@ class Build(properties.PropertiesMixin):
     set_runtime_properties = True
     subs = None
 
+    _sentinel = []  # used as a sentinel to indicate unspecified initial_value
+
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
@@ -314,6 +316,7 @@ class Build(properties.PropertiesMixin):
         # create the actual BuildSteps. If there are any name collisions, we
         # add a count to the loser until it is unique.
         self.steps = []
+        self.executedSteps = []
         self.stepStatuses = {}
         stepnames = {}
         sps = []
@@ -406,6 +409,7 @@ class Build(properties.PropertiesMixin):
             s = None
         if not s:
             return self.allStepsDone()
+        self.executedSteps.append(s)
         self.currentStep = s
         d = defer.maybeDeferred(s.startStep, self.conn)
         d.addCallback(self._stepDone, s)
@@ -572,6 +576,16 @@ class Build(properties.PropertiesMixin):
             else:
                 # This should only happen if we've been interrupted
                 assert self.stopped
+
+    def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
+        step_stats_list = [
+            st.getStatistic(name)
+            for st in self.executedSteps
+            if st.hasStatistic(name)]
+        if initial_value is self._sentinel:
+            return reduce(summary_fn, step_stats_list)
+        else:
+            return reduce(summary_fn, step_stats_list, initial_value)
 
     # IBuildControl
 
