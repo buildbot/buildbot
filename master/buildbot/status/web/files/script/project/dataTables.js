@@ -5,10 +5,12 @@ define(['jquery', 'datatables-plugin'], function ($) {
     dataTables = {
         init: function (m) {
 
- // Colums with sorting 
-	        (function($) {
+ 			// Colums with sorting 
 				var colList = [];
-				$('.tablesorter-js > thead th').each(function(i){
+				var tablesorterEl = $('.tablesorter-js');
+
+				// Select which columns not to sort
+				$('> thead th', tablesorterEl).each(function(i){
 					
 					if (!$(this).hasClass('no-tablesorter-js')) {
 						colList.push(null);
@@ -18,7 +20,7 @@ define(['jquery', 'datatables-plugin'], function ($) {
 				});
 				
 				// sort and filter tabless		
-				 var oTable = $('.tablesorter-js').dataTable({
+				 var oTable = tablesorterEl.dataTable({
 					"bPaginate": false,
 					"bLengthChange": false,
 					"bFilter": true,
@@ -27,6 +29,7 @@ define(['jquery', 'datatables-plugin'], function ($) {
 					"bAutoWidth": false,
 					"bRetrieve": false,
 					"asSorting": true,
+					"bServerSide": false,
 					"bSearchable": true,
 					"aaSorting": [],
 					"aoColumns": colList,					
@@ -36,15 +39,10 @@ define(['jquery', 'datatables-plugin'], function ($) {
 					"bStateSave": true
 				});
 
-				if ($('.tablesorter-js').length) {
-					$('#filterTableInput').focus();
-
-					$('#filterTableInput').keydown(function(event) {
-						oTable.fnFilter($(this).val());
-					});
-				}
-
-			})(jQuery);
+				// Set the marquee in the input field on load adn listen for key event
+				$('#filterTableInput').focus().keydown(function(event) {
+					oTable.fnFilter($(this).val());
+				});;
 		}
 	}
 	return dataTables;
