@@ -20,8 +20,8 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake import remotecommand
 from buildbot.test.fake import logfile
+from buildbot.test.fake import remotecommand
 from buildbot.test.fake import slave
 from twisted.internet import defer
 
@@ -121,6 +121,7 @@ class BuildStepMixin(object):
         def ss_setText(strings):
             ss.status_text = strings
         ss.old_setText = ss_setText
+
         def ss_setText2(strings):
             ss.status_text2 = strings
         ss.old_setText2 = ss_setText2
@@ -165,7 +166,8 @@ class BuildStepMixin(object):
             observer.step = step
         step.addLogObserver = addLogObserver
 
-        # add any observers defined in the constructor, before this monkey-patch
+        # add any observers defined in the constructor, before this
+        # monkey-patch
         for n, o in step._pendingLogObservers:
             addLogObserver(n, o)
 

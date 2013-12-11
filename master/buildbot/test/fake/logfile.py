@@ -83,7 +83,7 @@ class FakeLogFile(object):
             self.stderr += stderr
             self.chunks.append((STDERR, stderr))
 
-    ## removed methods, here temporarily
+    # removed methods, here temporarily
 
     def readlines(self):
         warnings.warn("step uses removed LogFile method `readlines`")

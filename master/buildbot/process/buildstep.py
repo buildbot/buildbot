@@ -18,8 +18,8 @@ import re
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
-from twisted.python import log
 from twisted.python import failure
+from twisted.python import log
 from twisted.python import util as twutil
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
@@ -150,20 +150,20 @@ class SyncWriteOnlyLogFileWrapper(object):
         return self.name
 
     def addStdout(self, data):
-        self._delay(lambda : self.asyncLogfile.addStdout(data))
+        self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        self._delay(lambda : self.asyncLogfile.addStderr(data))
+        self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        self._delay(lambda : self.asyncLogfile.addHeader(data))
+        self._delay(lambda: self.asyncLogfile.addHeader(data))
 
     def finish(self):
-        self._delay(lambda : self.asyncLogfile.finish())
+        self._delay(lambda: self.asyncLogfile.finish())
 
     def unwrap(self):
         d = defer.Deferred()
-        self._delay(lambda : d.callback(self.asyncLogfile))
+        self._delay(lambda: d.callback(self.asyncLogfile))
         return d
 
 
@@ -442,7 +442,8 @@ class BuildStep(object, properties.PropertiesMixin):
         try:
             # monkey-patch self.step_status.{setText,setText2} back into
             # existence for old steps; when these write to the data API,
-            # the monkey patches will stash their deferreds on the unhandled list
+            # the monkey patches will stash their deferreds on the unhandled
+            # list
             self.step_status.setText = self.step_status.old_setText
             self.step_status.setText2 = self.step_status.old_setText2
 

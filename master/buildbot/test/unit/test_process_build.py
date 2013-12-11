@@ -19,7 +19,8 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.locks import SlaveLock
 from buildbot.process.build import Build
-from buildbot.process.buildstep import BuildStep, LoggingBuildStep
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.properties import Properties
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION

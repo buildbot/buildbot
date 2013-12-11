@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.fake import logfile
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
+from buildbot.test.fake import logfile
 from twisted.internet import defer
 from twisted.python import failure
 

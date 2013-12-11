@@ -55,7 +55,8 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
     def doStuff(self):
         try:
             self.addURL('bookmark', 'http://foo')
-            self.addHTMLLog('compl.html', "<blink>A very short logfile</blink>\n")
+            self.addHTMLLog('compl.html',
+                            "<blink>A very short logfile</blink>\n")
 
             self.step_status.setText(['text'])
             self.step_status.setText2(['text2'])
@@ -84,6 +85,7 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
 class FailingCustomStep(buildstep.LoggingBuildStep):
 
     flunkOnFailure = True
+
     def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
         buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
         self.exception = exception
@@ -177,12 +179,12 @@ class RunSteps(unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertEqual(bs.getResults(), results.EXCEPTION)
 
-
     @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):
         self.factory.addStep(FailingCustomStep())
         bs = yield self.do_test_step()
-        self.assertEqual(bs.getResults(), results.FAILURE) #, status_text=["generic"])
+        # , status_text=["generic"])
+        self.assertEqual(bs.getResults(), results.FAILURE)
 
     @defer.inlineCallbacks
     def test_step_raising_exception_in_start(self):

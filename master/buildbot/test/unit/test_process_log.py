@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from buildbot.process import log
 from buildbot.status import logfile
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import interfaces
 from buildbot.test.fake import logfile as fakelogfile
+from buildbot.test.util import interfaces
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -155,7 +156,7 @@ class Tests(unittest.TestCase):
         self.assertTrue(d.called)
 
 
-class TestInterface(interfaces.InterfaceTests):
+class InterfaceTests(interfaces.InterfaceTests):
 
     # for compatibility between old-style and new-style tests, both
     # buildbot.status.logfile.LogFile and buildbot.process.log.StreamLog must
@@ -236,7 +237,7 @@ class TestInterface(interfaces.InterfaceTests):
         self.failIf(hasattr(self.log, 'getChunks'))
 
 
-class TestStatusInterface(unittest.TestCase, TestInterface):
+class TestStatusItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
         step = mock.Mock(name='step')
@@ -244,13 +245,13 @@ class TestStatusInterface(unittest.TestCase, TestInterface):
         self.log = logfile.LogFile(step, 'stdio', 'stdio')
 
 
-class TestProcessInterface(unittest.TestCase, TestInterface):
+class TestProcessItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
         self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101)
 
 
-class TestFakeLogFile(unittest.TestCase, TestInterface):
+class TestFakeLogFile(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
         step = mock.Mock(name='fake step')
@@ -262,17 +263,21 @@ class TestFakeLogFile(unittest.TestCase, TestInterface):
     # to use LogObservers, etc.
 
     def test_signature_hasContents_removed(self):
-        TestInterface.test_signature_hasContents_removed(self)
+        InterfaceTests.test_signature_hasContents_removed(self)
     test_signature_hasContents_removed.todo = "not removed yet"
+
     def test_signature_getText_removed(self):
-        TestInterface.test_signature_getText_removed(self)
+        InterfaceTests.test_signature_getText_removed(self)
     test_signature_getText_removed.todo = "not removed yet"
+
     def test_signature_readlines_removed(self):
-        TestInterface.test_signature_readlines_removed(self)
+        InterfaceTests.test_signature_readlines_removed(self)
     test_signature_readlines_removed.todo = "not removed yet"
+
     def test_signature_getTextWithHeaders_removed(self):
-        TestInterface.test_signature_getTextWithHeaders_removed(self)
+        InterfaceTests.test_signature_getTextWithHeaders_removed(self)
     test_signature_getTextWithHeaders_removed.todo = "not removed yet"
+
     def test_signature_getChunks_removed(self):
-        TestInterface.test_signature_getChunks_removed(self)
+        InterfaceTests.test_signature_getChunks_removed(self)
     test_signature_getChunks_removed.todo = "not removed yet"
