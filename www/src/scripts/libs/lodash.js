@@ -1,1 +1,1 @@
-../../../bower_components/lodash/lodash.js
+../../../bower_components/lodash/dist/lodash.js
