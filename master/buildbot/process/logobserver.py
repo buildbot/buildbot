@@ -25,7 +25,6 @@ class LogObserver:
         self.step = step
 
     def setLog(self, loog):
-        assert interfaces.IStatusLog.providedBy(loog)
         loog.subscribe(self, True)
 
     def logChunk(self, build, step, log, channel, text):

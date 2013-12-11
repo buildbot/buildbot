@@ -26,7 +26,12 @@ class FakeConnection(base.Connection):
         self.builders = {}  # { name : isBusy }
 
         # users of the fake can add to this as desired
-        self.info = {'slave_commands': [], 'version': '0.8.2'}
+        self.info = {
+            'slave_commands': [],
+            'version': '0.8.2',
+            'basedir': '/sl',
+            'system': 'nt',
+        }
 
     def remotePrint(self, message):
         self.remoteCalls.append(('remotePrint', message))

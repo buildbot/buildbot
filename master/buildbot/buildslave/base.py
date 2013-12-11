@@ -366,7 +366,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         log.msg("bot attached")
         self.messageReceivedFromSlave()
         self.stopMissingTimer()
-        self.botmaster.master.status.slaveConnected(self.slavename)
+        self.master.status.slaveConnected(self.slavename)
         yield self.updateSlave()
         yield self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
@@ -382,7 +382,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        self.botmaster.master.status.slaveDisconnected(self.slavename)
+        self.master.status.slaveDisconnected(self.slavename)
         self.releaseLocks()
 
     def disconnect(self):

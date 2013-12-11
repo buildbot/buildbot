@@ -11,6 +11,7 @@ The sections contained here document classes that can be used or subclassed.
 .. toctree::
     :maxdepth: 1
 
+    cls-build
     cls-buildfactory
     cls-remotecommands
     cls-buildsteps
@@ -21,6 +22,7 @@ The sections contained here document classes that can be used or subclassed.
     cls-resultspec
     cls-protocols
     cls-bslavemanager
+    cls-log
 
 .. todo::
 

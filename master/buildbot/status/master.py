@@ -189,24 +189,6 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 change = thing
                 return "%schanges/%d" % (prefix, change.number)
 
-        if interfaces.IStatusLog.providedBy(thing):
-            loog = thing
-            step = loog.getStep()
-            build = step.getBuild()
-            bldr = build.getBuilder()
-
-            logs = step.getLogs()
-            for i in range(len(logs)):
-                if loog is logs[i]:
-                    break
-            else:
-                return None
-            return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
-                urllib.quote(bldr.getName(), safe=''),
-                build.getNumber(),
-                urllib.quote(step.getName(), safe=''),
-                urllib.quote(loog.getName(), safe=''))
-
     def getChangeSources(self):
         return list(self.master.change_svc)
 
