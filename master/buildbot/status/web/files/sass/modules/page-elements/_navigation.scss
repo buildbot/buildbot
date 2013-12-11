@@ -175,7 +175,8 @@
     border-top: 1px solid #FFFFFF;
     @include pie-clearfix;
 	margin-bottom:22px;
-	&#frontpage_page {
+	&.frontpage,
+	&.jsonhelp {
 		height: 39px;
 	}
 }

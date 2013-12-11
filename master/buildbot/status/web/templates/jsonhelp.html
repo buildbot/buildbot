@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
 {% block submenu %}
-  <nav class="sub-menu-container root">
-  </nav>
+    {{submenu.buildsubmenu(active_page="jsonhelp",builderName='', buildNumber='', stepName='', pathNum='', codebasesPath='', buildersPath='', builderPath='', buildPath='')}}
 {% endblock %}
 
 {% block content %}
