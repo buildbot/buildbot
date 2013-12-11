@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import operator
+
 from buildbot import config
 from buildbot import interfaces
 from buildbot.locks import SlaveLock
 from buildbot.process.build import Build
-from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.process.buildstep import BuildStep, LoggingBuildStep
 from buildbot.process.properties import Properties
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
@@ -133,7 +135,7 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
-        self.slave = slave.FakeSlave()
+        self.slave = slave.FakeSlave(self.master)
         self.builder = self.createBuilder()
         self.build = Build([r])
         self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)
@@ -635,6 +637,21 @@ class TestBuild(unittest.TestCase):
         terminate = b.stepDone(EXCEPTION, step)
         self.assertEqual(terminate, True)
         self.assertEqual(b.result, RETRY)
+
+    def test_getSummaryStatistic(self):
+        b = self.build
+
+        b.executedSteps = [
+            BuildStep(),
+            BuildStep(),
+            BuildStep()
+        ]
+        b.executedSteps[0].setStatistic('casualties', 7)
+        b.executedSteps[2].setStatistic('casualties', 4)
+
+        add = operator.add
+        self.assertEqual(b.getSummaryStatistic('casualties', add), 11)
+        self.assertEqual(b.getSummaryStatistic('casualties', add, 10), 21)
 
 
 class TestMultipleSourceStamps(unittest.TestCase):

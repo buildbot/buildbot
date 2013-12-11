@@ -42,6 +42,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
             variables=["one", "two", "three", "five", "six"],
             source="me"))
         self.buildslave.slave_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}
+        self.buildslave.slave_system = 'linux'
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")

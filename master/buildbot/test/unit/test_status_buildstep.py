@@ -65,6 +65,4 @@ class TestBuildStepStatus(unittest.TestCase):
         bss1.addLog('log_1')
         self.assertEquals(
             bss1.asDict()['logs'],
-            [['log_1', ('http://localhost:8080/builders/builder_1/'
-                        'builds/0/steps/step_1/logs/log_1')]]
-        )
+            [['log_1', None]])

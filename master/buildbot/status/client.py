@@ -368,9 +368,6 @@ class RemoteLog(pb.Referenceable):
     def remote_getTextWithHeaders(self):
         return self.l.getTextWithHeaders()
 
-    def remote_getChunks(self):
-        return self.l.getChunks()
-    # TODO: subscription interface
 
 components.registerAdapter(RemoteLog, logfile.LogFile, IRemote)
 # TODO: something similar for builder.HTMLLogfile ?

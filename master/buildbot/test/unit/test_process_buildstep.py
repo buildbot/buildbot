@@ -22,6 +22,7 @@ from buildbot.process import remotecommand
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakebuild
@@ -29,6 +30,7 @@ from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import slave
 from buildbot.test.util import compat
 from buildbot.test.util import config
+from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
@@ -103,6 +105,11 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def start(self):
             eventually(self.finished, 0)
 
+    class SkippingBuildStep(buildstep.BuildStep):
+
+        def start(self):
+            return SKIPPED
+
     def setUp(self):
         return self.setUpBuildStep()
 
@@ -154,7 +161,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = slave.FakeSlave()
+        bs.buildslave = slave.FakeSlave(master=None)  # master is not used here
         bs.remote = 'dummy'
         bs.build = fakebuild.FakeBuild()
         bs.build.builder.name = 'fake'
@@ -162,6 +169,43 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         cmd.run = lambda self, remote, builder_name: SUCCESS
         bs.runCommand(cmd)
         self.assertEqual(bs.cmd, cmd)
+
+    @defer.inlineCallbacks
+    def test_start_returns_SKIPPED(self):
+        self.setupStep(self.SkippingBuildStep())
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_false(self):
+        self.setupStep(self.FakeBuildStep(doStepIf=False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_returns_false(self):
+        self.setupStep(self.FakeBuildStep(doStepIf=lambda step: False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_returns_deferred_false(self):
+        self.setupStep(self.FakeBuildStep(
+            doStepIf=lambda step: defer.succeed(False)))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
 
     def test_hideStepIf_False(self):
         self._setupWaterfallTest(False, False)
@@ -269,6 +313,30 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
+    def test_hasStatistic(self):
+        step = buildstep.BuildStep()
+        self.assertFalse(step.hasStatistic('rbi'))
+        step.setStatistic('rbi', 13)
+        self.assertTrue(step.hasStatistic('rbi'))
+
+    def test_setStatistic(self):
+        step = buildstep.BuildStep()
+        step.setStatistic('rbi', 13)
+        self.assertEqual(step.getStatistic('rbi'), 13)
+
+    def test_getStatistic(self):
+        step = buildstep.BuildStep()
+        self.assertEqual(step.getStatistic('rbi', 99), 99)
+        self.assertEqual(step.getStatistic('rbi'), None)
+        step.setStatistic('rbi', 13)
+        self.assertEqual(step.getStatistic('rbi'), 13)
+
+    def test_getStatistics(self):
+        step = buildstep.BuildStep()
+        step.setStatistic('rbi', 13)
+        step.setStatistic('ba', 0.298)
+        self.assertEqual(step.getStatistics(), {'rbi': 13, 'ba': 0.298})
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
@@ -300,37 +368,161 @@ class TestLoggingBuildStep(unittest.TestCase):
         self.assertEqual(status, WARNINGS, "evaluateCommand didn't call log_eval_func or overrode its results")
 
 
-class FailingCustomStep(buildstep.LoggingBuildStep):
+class InterfaceTests(interfaces.InterfaceTests):
 
-    def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
-        buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
-        self.exception = exception
+    # ensure that steps.BuildStepMixin creates a convincing facsimile of the
+    # real BuildStep
 
-    @defer.inlineCallbacks
-    def start(self):
-        yield defer.succeed(None)
-        raise self.exception()
+    def test_signature_attributes(self):
+        for attr in [
+            'name',
+            'description',
+            'descriptionDone',
+            'descriptionSuffix',
+            'locks',
+            'progressMetrics',
+            'useProgress',
+            'doStepIf',
+            'hideStepIf',
+            'haltOnFailure',
+            'flunkOnWarnings',
+            'flunkOnFailure',
+            'warnOnWarnings',
+            'warnOnFailure',
+            'alwaysRun',
+            'build',
+            'buildslave',
+            'step_status',
+            'progress',
+            'stopped',
+        ]:
+            self.failUnless(hasattr(self.step, attr))
+
+    def test_signature_setBuild(self):
+        @self.assertArgSpecMatches(self.step.setBuild)
+        def setBuild(self, build):
+            pass
+
+    def test_signature_setBuildSlave(self):
+        @self.assertArgSpecMatches(self.step.setBuildSlave)
+        def setBuildSlave(self, buildslave):
+            pass
+
+    def test_signature_setDefaultWorkdir(self):
+        @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
+        def setDefaultWorkdir(self, workdir):
+            pass
+
+    def test_signature_setStepStatus(self):
+        @self.assertArgSpecMatches(self.step.setStepStatus)
+        def setStepStatus(self, step_status):
+            pass
+
+    def test_signature_setupProgress(self):
+        @self.assertArgSpecMatches(self.step.setupProgress)
+        def setupProgress(self):
+            pass
+
+    def test_signature_startStep(self):
+        @self.assertArgSpecMatches(self.step.startStep)
+        def startStep(self, remote):
+            pass
+
+    def test_signature_run(self):
+        @self.assertArgSpecMatches(self.step.run)
+        def run(self):
+            pass
+
+    def test_signature_start(self):
+        @self.assertArgSpecMatches(self.step.start)
+        def start(self):
+            pass
+
+    def test_signature_finished(self):
+        @self.assertArgSpecMatches(self.step.finished)
+        def finished(self, results):
+            pass
+
+    def test_signature_failed(self):
+        @self.assertArgSpecMatches(self.step.failed)
+        def failed(self, why):
+            pass
+
+    def test_signature_interrupt(self):
+        @self.assertArgSpecMatches(self.step.interrupt)
+        def interrupt(self, reason):
+            pass
+
+    def test_signature_describe(self):
+        @self.assertArgSpecMatches(self.step.describe)
+        def describe(self, done=False):
+            pass
+
+    def test_signature_setProgress(self):
+        @self.assertArgSpecMatches(self.step.setProgress)
+        def setProgress(self, metric, value):
+            pass
+
+    def test_signature_slaveVersion(self):
+        @self.assertArgSpecMatches(self.step.slaveVersion)
+        def slaveVersion(self, command, oldversion=None):
+            pass
+
+    def test_signature_slaveVersionIsOlderThan(self):
+        @self.assertArgSpecMatches(self.step.slaveVersionIsOlderThan)
+        def slaveVersionIsOlderThan(self, command, minversion):
+            pass
+
+    def test_signature_getSlaveName(self):
+        @self.assertArgSpecMatches(self.step.getSlaveName)
+        def getSlaveName(self):
+            pass
+
+    def test_signature_runCommand(self):
+        @self.assertArgSpecMatches(self.step.runCommand)
+        def runCommand(self, command):
+            pass
+
+    def test_signature_addURL(self):
+        @self.assertArgSpecMatches(self.step.addURL)
+        def addURL(self, name, url):
+            pass
+
+    def test_signature_addLog(self):
+        @self.assertArgSpecMatches(self.step.addLog)
+        def addLog(self, name, type='s'):
+            pass
+
+    def test_signature_getLog(self):
+        @self.assertArgSpecMatches(self.step.getLog)
+        def getLog(self, name):
+            pass
+
+    def test_signature_addCompleteLog(self):
+        @self.assertArgSpecMatches(self.step.addCompleteLog)
+        def addCompleteLog(self, name, text):
+            pass
+
+    def test_signature_addHTMLLog(self):
+        @self.assertArgSpecMatches(self.step.addHTMLLog)
+        def addHTMLLog(self, name, html):
+            pass
+
+    def test_signature_addLogObserver(self):
+        @self.assertArgSpecMatches(self.step.addLogObserver)
+        def addLogObserver(self, logname, observer):
+            pass
 
 
-class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
+class TestFakeInterface(unittest.TestCase,
+        steps.BuildStepMixin, InterfaceTests):
 
     def setUp(self):
-        return self.setUpBuildStep()
+        self.setupStep(buildstep.BuildStep())
 
-    def tearDown(self):
-        return self.tearDownBuildStep()
 
-    def test_step_raising_buildstepfailed_in_start(self):
-        self.setupStep(FailingCustomStep())
-        self.expectOutcome(result=FAILURE, status_text=["generic"])
-        return self.runStep()
+class TestRealInterface(unittest.TestCase,
+                 InterfaceTests):
 
-    def test_step_raising_exception_in_start(self):
-        self.setupStep(FailingCustomStep(exception=ValueError))
-        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
-        d = self.runStep()
-
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
-        return d
+    def setUp(self):
+        self.step = buildstep.BuildStep()

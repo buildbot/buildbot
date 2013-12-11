@@ -18,33 +18,126 @@ import mock
 from buildbot import config
 from buildbot import locks
 from buildbot.buildslave import base
+from buildbot.test.fake import botmaster
 from buildbot.test.fake import bslavemanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
-from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.test.fake import slave
+from buildbot.test.util import interfaces
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
 
 
-class TestAbstractBuildSlave(unittest.TestCase):
+class ConcreteBuildSlave(base.AbstractBuildSlave):
+    pass
 
-    class ConcreteBuildSlave(base.AbstractBuildSlave):
-        pass
+
+class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
+
+    def test_attr_slavename(self):
+        self.failUnless(hasattr(self.sl, 'slavename'))
+
+    def test_attr_properties(self):
+        self.failUnless(hasattr(self.sl, 'properties'))
+
+    @defer.inlineCallbacks
+    def test_attr_slave_basedir(self):
+        yield self.callAttached()
+        self.assertIsInstance(self.sl.slave_basedir, str)
+
+    @defer.inlineCallbacks
+    def test_attr_path_module(self):
+        yield self.callAttached()
+        self.failUnless(hasattr(self.sl, 'path_module'))
+
+    @defer.inlineCallbacks
+    def test_attr_slave_system(self):
+        yield self.callAttached()
+        self.failUnless(hasattr(self.sl, 'slave_system'))
+
+    def test_signature_acquireLocks(self):
+        @self.assertArgSpecMatches(self.sl.acquireLocks)
+        def acquireLocks(self):
+            pass
+
+    def test_signature_releaseLocks(self):
+        @self.assertArgSpecMatches(self.sl.releaseLocks)
+        def releaseLocks(self):
+            pass
+
+    def test_signature_attached(self):
+        @self.assertArgSpecMatches(self.sl.attached)
+        def attached(self, conn):
+            pass
+
+    def test_signature_detached(self):
+        @self.assertArgSpecMatches(self.sl.detached)
+        def detached(self):
+            pass
+
+    def test_signature_addSlaveBuilder(self):
+        @self.assertArgSpecMatches(self.sl.addSlaveBuilder)
+        def addSlaveBuilder(self, sb):
+            pass
+
+    def test_signature_removeSlaveBuilder(self):
+        @self.assertArgSpecMatches(self.sl.removeSlaveBuilder)
+        def removeSlaveBuilder(self, sb):
+            pass
+
+    def test_signature_buildFinished(self):
+        @self.assertArgSpecMatches(self.sl.buildFinished)
+        def buildFinished(self, sb):
+            pass
+
+    def test_signature_canStartBuild(self):
+        @self.assertArgSpecMatches(self.sl.canStartBuild)
+        def canStartBuild(self):
+            pass
+
+
+class RealBuildSlaveInterface(unittest.TestCase, BuildSlaveInterfaceTests):
+
+    def setUp(self):
+        self.sl = ConcreteBuildSlave('sl', 'pa')
+
+    def callAttached(self):
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self.botmaster = botmaster.FakeBotMaster(self.master)
+        self.master.botmaster = self.botmaster
+        self.sl.master = self.master
+        self.sl.botmaster = self.botmaster
+        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
+        return self.sl.attached(self.conn)
+
+
+class FakeBuildSlaveInterface(unittest.TestCase, BuildSlaveInterfaceTests):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self)
+        self.sl = slave.FakeSlave(self.master)
+
+    def callAttached(self):
+        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
+        return self.sl.attached(self.conn)
+
+
+class TestAbstractBuildSlave(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
-        self.botmaster = FakeBotMaster(self.master)
+        self.botmaster = botmaster.FakeBotMaster(self.master)
 
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
     def createBuildslave(self, name='bot', password='pass', attached=False, **kwargs):
-        slave = self.ConcreteBuildSlave(name, password, **kwargs)
+        slave = ConcreteBuildSlave(name, password, **kwargs)
         slave.master = self.master
         slave.botmaster = self.botmaster
         if attached:
@@ -52,7 +145,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         return slave
 
     def test_constructor_minimal(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass')
+        bs = ConcreteBuildSlave('bot', 'pass')
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.max_builds, None)
@@ -63,12 +156,12 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     max_builds=2,
-                                     notify_on_missing=['me@me.com'],
-                                     missing_timeout=120,
-                                     properties={'a': 'b'},
-                                     locks=[lock1, lock2])
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                max_builds=2,
+                                notify_on_missing=['me@me.com'],
+                                missing_timeout=120,
+                                properties={'a': 'b'},
+                                locks=[lock1, lock2])
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
@@ -77,15 +170,15 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.access, [lock1, lock2])
 
     def test_constructor_notify_on_missing_not_list(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     notify_on_missing='foo@foo.com')
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                notify_on_missing='foo@foo.com')
         # turned into a list:
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
     def test_constructor_notify_on_missing_not_string(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                          self.ConcreteBuildSlave('bot', 'pass',
-                                                  notify_on_missing=['a@b.com', 13]))
+                          ConcreteBuildSlave('bot', 'pass',
+                                             notify_on_missing=['a@b.com', 13]))
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
@@ -102,16 +195,16 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = self.ConcreteBuildSlave('bot', 'pass',
-                                      max_builds=2,
-                                      notify_on_missing=['me@me.com'],
-                                      missing_timeout=120,
-                                      properties={'a': 'b'})
-        new = self.ConcreteBuildSlave('bot', 'pass',
-                                      max_builds=3,
-                                      notify_on_missing=['her@me.com'],
-                                      missing_timeout=121,
-                                      properties={'a': 'c'})
+        old = ConcreteBuildSlave('bot', 'pass',
+                                 max_builds=2,
+                                 notify_on_missing=['me@me.com'],
+                                 missing_timeout=120,
+                                 properties={'a': 'b'})
+        new = ConcreteBuildSlave('bot', 'pass',
+                                 max_builds=3,
+                                 notify_on_missing=['her@me.com'],
+                                 missing_timeout=121,
+                                 properties={'a': 'c'})
 
         old.updateSlave = mock.Mock(side_effect=lambda: defer.succeed(None))
 
@@ -126,13 +219,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
-        old = self.ConcreteBuildSlave('bot', 'pass')
+        old = ConcreteBuildSlave('bot', 'pass')
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
-        old = self.ConcreteBuildSlave('bot', 'pass')
+        old = ConcreteBuildSlave('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
                                            existingRegistration=False)
         self.assertIn('bot', self.master.buildslaves.registrations)
@@ -163,31 +256,31 @@ class TestAbstractBuildSlave(unittest.TestCase):
     # in both the initial config and a reconfiguration.
 
     def test_startMissingTimer_no_parent(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     notify_on_missing=['abc'],
-                                     missing_timeout=10)
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                notify_on_missing=['abc'],
+                                missing_timeout=10)
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_timeout(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     notify_on_missing=['abc'],
-                                     missing_timeout=0)
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                notify_on_missing=['abc'],
+                                missing_timeout=0)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_notify(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     missing_timeout=3600)
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                missing_timeout=3600)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_missing_timer(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass',
-                                     notify_on_missing=['abc'],
-                                     missing_timeout=100)
+        bs = ConcreteBuildSlave('bot', 'pass',
+                                notify_on_missing=['abc'],
+                                missing_timeout=100)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertNotEqual(bs.missing_timer, None)
@@ -196,11 +289,11 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_setServiceParent_started(self):
         master = self.master
-        botmaster = FakeBotMaster(master)
-        botmaster.startService()
-        bs = self.ConcreteBuildSlave('bot', 'pass')
-        bs.setServiceParent(botmaster)
-        self.assertEqual(bs.botmaster, botmaster)
+        bm = botmaster.FakeBotMaster(master)
+        bm.startService()
+        bs = ConcreteBuildSlave('bot', 'pass')
+        bs.setServiceParent(bm)
+        self.assertEqual(bs.botmaster, bm)
         self.assertEqual(bs.master, master)
 
     def test_setServiceParent_masterLocks(self):
@@ -208,22 +301,22 @@ class TestAbstractBuildSlave(unittest.TestCase):
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        botmaster = FakeBotMaster(master)
-        botmaster.startService()
+        bm = botmaster.FakeBotMaster(master)
+        bm.startService()
         lock = locks.MasterLock('masterlock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(botmaster)
+        bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
+        bs.setServiceParent(bm)
 
     def test_setServiceParent_slaveLocks(self):
         """
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        botmaster = FakeBotMaster(master)
-        botmaster.startService()
+        bm = botmaster.FakeBotMaster(master)
+        bm.startService()
         lock = locks.SlaveLock('lock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(botmaster)
+        bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
+        bs.setServiceParent(bm)
 
     @defer.inlineCallbacks
     def test_startService_getSlaveInfo_empty(self):
