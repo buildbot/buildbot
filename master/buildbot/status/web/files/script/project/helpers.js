@@ -407,34 +407,37 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
 
 		    
-			if (helpers.getCurrentPage() === '#builders_page') {
+			if (helpers.getCurrentPage() === 'builders') {
 				var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/';
 			}
 
-		    if (helpers.getCurrentPage() === '#builddetail_page') {
+		    if (helpers.getCurrentPage() === 'builddetail') {
 
 		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
 		    }
 		    
 		    return fullUrl;
         }, getCurrentPage: function (isRealTime) {
-        	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page')];
+        	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
         	var currentPage = [$('#builddetail_page')];
+        	
         	var isRealTimePage = false;
+        	var currentPageNoHash;
 
         	$.each(currentPage, function(key, value) {
+
         		if (value.length === 1) {
         			isRealTimePage = true;
-        			currentPage = value;
+        			currentPage = value;        			
+        			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];
         		}
 			});
-			
+
         	if (isRealTime) {
 				return isRealTimePage;
 			} else {
-				return currentPage.selector;
-			}
-        
+				return currentPageNoHash;
+			} 
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 

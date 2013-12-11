@@ -1,11 +1,10 @@
 define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePages, helpers) {
          "use strict";
-    var realtime;
+    var rtBuildDetail;
     
-    realtime = {
-        init: function (whichPage) {
-        	
-	        // Creating a new websocket
+    rtBuildDetail = {
+        init: function () {
+        	// Creating a new websocket
 	                
 	        // Global websocketvariabel        
 	        window.sock = null;
@@ -57,30 +56,12 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             }		         
 	         };	        
 
-	        function returnCurrentPage(m) {
-	        	if ($('#tb-root').length != 0) {
-					// For the frontpage
-					realtimePages.frontPage(m);
-				}
-				if (helpers.getCurrentPage() === '#builddetail_page') {
-					
-					// For the builddetailpage
-					var stepList = $('#stepList > li');					
-					realtimePages.buildDetail(m, stepList);
-				}
-				if (helpers.getCurrentPage() === '#builders_page') {
-					// for the builderspage
-					var tableRowList = $('.tablesorter-js tbody > tr');
-					realtimePages.buildersPage(m);	
-				}
-	        }
-
 	        // send messages from the server to be parsed
-	        
-	        function log(m) {	
-				returnCurrentPage(m)
+	        var stepList = $('#stepList > li');
+	        function log(m) {							
+				realtimePages.buildDetail(m, stepList);
 	        };
         }
-    };
-   return realtime
+    }
+    return rtBuildDetail;
 });

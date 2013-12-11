@@ -11,17 +11,26 @@ require.config({
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup',
-		'realtime': 'project/realtime',
+		'realtimerouting': 'project/realtimeRouting',
+		'rtbuilddetail': 'project/rtBuildDetail',
+		'rtbuilders': 'project/rtBuilders',
+		'rtfrontpage': 'project/rtFrontpage',
 		'jqache': 'plugins/jqache-0-1-1-min'
 	}
 });
 
-require(['jquery','popup','screensize','projectdropdown','helpers'], 
-	function($, popup, screenSize, projectDropDown, helpers ) {
+require(['jquery','helpers','popup','screensize','projectdropdown'], 
+	function($, helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
 
 	$(document).ready(function() {
 		
+		// get all common scripts
+		helpers.init();			
+		// get scripts for general popups
+		popup.init();
+		// get scripts for the projects dropdown
+		projectDropDown.init();
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -30,10 +39,10 @@ require(['jquery','popup','screensize','projectdropdown','helpers'],
 	        });
 		}
  	
-		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {			
-			require(['realtime', 'jqache'],
-	        function(realtime) {
-	        	realtime.init();
+		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {						
+			require(['realtimerouting', 'jqache'],
+	        function(realtimeRouting) {
+	        	realtimeRouting.init();
 	        });
 		}
 
@@ -56,13 +65,8 @@ require(['jquery','popup','screensize','projectdropdown','helpers'],
 		if ($('#builddetail_page').length > 0) {
 			helpers.summaryArtifactTests();
 		}
-				
-		// get scripts for general popups
-		popup.init();
-		// get scripts for the projects dropdown
-		projectDropDown.init();
-		// get all common scripts
-		helpers.init();	
+		
+		
 
 	});
 });
