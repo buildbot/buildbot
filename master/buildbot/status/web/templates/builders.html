@@ -90,8 +90,13 @@
       </td>
       {% if b.build_url %}
         <td class="status-build-js {{ b.build_css_class }} ">
-            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+          <span class="hide">
             {{ b.build_text }}
+          </span>
+            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+            
+            {{ b.build_text }}
+          
         </td>
       {% else %}
         <td class="LastBuild small-txt">

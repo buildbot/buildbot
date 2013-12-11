@@ -29,7 +29,7 @@ define(['jquery', 'datatables-plugin'], function ($) {
 					"asSorting": true,
 					"bSearchable": true,
 					"aaSorting": [],
-					"aoColumns": colList,
+					"aoColumns": colList,					
 					"oLanguage": {
 					 	"sSearch": ""
 					 },
