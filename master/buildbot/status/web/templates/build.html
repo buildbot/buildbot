@@ -39,7 +39,9 @@
     {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
       <div class="divider"></div>
   {% endif %}
+
 {% else %}
+
   <h2 class="head-2">
     Results
   </h2>
@@ -55,12 +57,31 @@
   {% endif %}
 {% endif %}
 
-{% if authz.advertiseAction('forceBuild', request) %}
+{% if authz.advertiseAction('forceBuild', request) and b.isFinished() %}
   <h2 class="head-2">
     Resubmit Build
   </h2>
   {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0]) }}
+    <div class="divider"></div>
 {% endif %}
+
+<h2 class="head-2">
+  BuildSlave
+</h2>
+  
+{% if slave_url %}  
+  <a class="small-head" href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+{% else %}
+  {{ b.getSlavename()|e }} 
+{% endif %}
+<div class="divider"></div>
+
+<h2 class="head-2">
+  Reason
+</h2>
+<p>
+{{ b.getReason()|e }}
+</p>
 
 <div class="divider"></div>
 
@@ -158,27 +179,6 @@ SourceStamps
  # that doesn't take up quite so much vertical space
  #}
 
-<h2 class="head-2">
-  BuildSlave
-</h2>
-  
-{% if slave_url %}  
-  <a href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
-{% else %}
-  {{ b.getSlavename()|e }} 
-{% endif %}
-
-<div class="divider"></div>
-
-<h2 class="head-2">
-  Reason
-</h2>
-<p>
-{{ b.getReason()|e }}
-</p>
-
-</div>
-<div class="column-2 last">
 
 <ul class="btn-list horisontal">
   <li>
@@ -267,6 +267,26 @@ SourceStamps
 </ul>
 
 
+
+</div>
+<div class="column-2 last">
+
+
+ <div class="clear"></div>
+
+  <a id="showArtifactsJS" class="no-artifacts" href="#"> 
+  </a>
+  <div class="more-info-box more-info-box-js">
+    <a class="close-btn" href="#"> </a>
+    
+    <ul class="builders-list">
+    </ul>
+  </div>
+
+<ul id="testsListJS" class="tests-summary-list">
+</ul>
+
+<div class="clear"></div>
 <div class="divider"></div>
 
 <h2 class="head-2">
@@ -285,7 +305,8 @@ SourceStamps
 <ol id="stepList" class="step-list">
 {% for s in steps %}
 
-  <li>
+
+  <li class="status-{{ s.css_class }}">
     
     <div class="index-count">
          {{  loop.index }}
@@ -297,36 +318,47 @@ SourceStamps
     <a class="step-head" href="{{ s.link }}">
       {{ s.name }}
     </a>
-  
-    <p>
-      <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
-    </p>
-    
-      <div class="logs-txt">
-        {% if s.logs %}
-            Logs
-        {% else %}
-          no logs
-        {% endif %}
-      </div>
-    
-    <ul class="log-list log-list-js">
-      
-      {% for l in s.logs %}
-        <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
-      {% endfor %}
-    
-      {% for u in s.urls %}
-       {% if 'results' in u.keys() %}
-        <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
-        {% else %}
-        <li><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
-        {% endif %}
-      {% endfor %}
 
-    </ul>  
+    {% if s.css_class != 'not_started' %}
+    {% endif %}
+
     
+        <p>
+          <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
+        </p>
+
+      {% if s.logs %} 
+        <div class="logs-txt">
+          Logs
+        </div>
+      {% endif %}
+      <ul class="log-list log-list-js">
+        
+        {% for l in s.logs %}
+          <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
+        {% else %}
+       
+            <li>
+              <span>
+                no logs
+              </span>
+            </li>
+  
+        {% endfor %}
+
+        {% for u in s.urls %}
+         {% if 'results' in u.keys() %}
+          <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+          {% else %}
+          <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
+          {% endif %}
+        {% endfor %}
+        
+      </ul>  
+    
+  
   </li>
+  
 {% endfor %}
 </ol>
 

@@ -45,7 +45,7 @@
 
 {% macro stop_build(stop_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
   {% if not short %}
-    <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
+    <form id="buildForm" method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
         {% if on_all %}
@@ -71,8 +71,7 @@
 
       {% if not short %}
         <div class="row">
-          <span class="label">Reason:</span>
-          <input type="text" name="comments"/>
+          <input class="full-name-js" type="hidden" name="comments"/>
         </div>
       {% endif %}
 
@@ -85,7 +84,11 @@
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
 
     <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
-    {% if f.fullName and '_branch' in f.fullName %}
+    {% if f.fullName and 'username' in f.fullName %}
+      <span class="label">{{f.label}}</span>
+       <input type='text' size='{{f.size}}' name="usernamedisabled" id="usernameDisabled" disabled />
+       <input type="hidden" name="{{f.fullName}}" id="usernameHidden" />
+    {% elif f.fullName and '_branch' in f.fullName %}
         <span class="label">{{f.label}}</span>
         {% if request.args|length > 0 and f.fullName in request.args.keys() %}
             <span class="label">{{ ' '.join(request.args[f.fullName])}}</span>
@@ -297,7 +300,7 @@
 {% endmacro %}
 
 {% macro rebuild_build(rebuild_url, authz, exactly, ss) %}
- <form method="post" action="{{ rebuild_url }}" class="command rebuild">
+ <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
 
     {% if exactly %}
       <p>This tree was built from a specific set of
@@ -322,8 +325,8 @@
         push the 'Force Build' button</p>
   {% endif %}
    <div class="row">
-     <span class="label">Reason for re-running build:</span>
-     <input type='text' name='comments' />
+     
+     <input class="full-name-js" type='hidden' name='comments' />
      <input class="grey-btn" type="submit" value="Rebuild" />
    </div>
    

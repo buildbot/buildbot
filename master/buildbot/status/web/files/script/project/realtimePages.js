@@ -91,14 +91,15 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		          							$('.s-text-js',stepList).eq(i-1).html(value.text.join(' '));
 		          							// update result class
 			          						$('.s-result-js',stepList).eq(i-1).removeClass().addClass('running result s-result-js');	
+			          						$(stepList).eq(i-1).removeClass().addClass('status-running');
 			          						
 			              				} else if (isFinished) {
 			              					
 			              					// Apply the updates from the finished state before applying finished class
 			              					
 			              					$('.update-time-js',stepList).eq(i-1).html(helpers.getTime(startTime, endTime));
-			              					$('.s-result-js',stepList).eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              				
-			              					$(stepList).eq(i-1).addClass('finished');
+			              					$('.s-result-js',stepList).eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              							              					
+			              					$(stepList).eq(i-1).removeClass().addClass('finished status-'+resultsClass);
 			              					
 			              				}
 			              				

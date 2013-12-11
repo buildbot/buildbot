@@ -283,9 +283,17 @@
 				
 			<span>
 				<xsl:attribute name="class">case-names</xsl:attribute>
-				<xsl:call-template name="GetLastSegment">
-					<xsl:with-param name="value" select="./@name" />
-				</xsl:call-template>
+					<xsl:choose>
+						<xsl:when test="translate($result, $ucletters, $lcletters) = 'failure'">
+							<xsl:value-of select="@name"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:call-template name="GetLastSegment">
+								<xsl:with-param name="value" select="./@name" />
+							</xsl:call-template>
+							<xsl:value-of select="translate($result, $ucletters, $lcletters)"/>
+						</xsl:otherwise>
+					</xsl:choose>
 			</span>
 				
 		</td>
@@ -299,7 +307,6 @@
 		    <xsl:call-template name="display-time">
 		        <xsl:with-param name="value" select="@time"/>
 		    </xsl:call-template>	
-		   
 		</td>
 	</tr>
 

@@ -58,7 +58,7 @@ class ForceBuildActionResource(ActionResource):
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             comments.decode(getRequestCharset(req))
             reason = ("The web-page 'rebuild' button was pressed by "
-                      "'%s': %s\n" % (name, comments))
+                      "'%s':\n" % (comments))
             msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:

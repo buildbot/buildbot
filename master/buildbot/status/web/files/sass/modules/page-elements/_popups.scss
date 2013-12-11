@@ -1,0 +1,44 @@
+// more info box
+.more-info-box {
+	z-index:1;
+  	border: 1px solid #FFFFFF;
+    display: none;
+    padding: 23px 20px 23px 20px;
+    text-align: left;
+    min-width:280px;
+    overflow-y: auto; 
+	z-index:200;
+	float:left;
+	color:#333;
+    @include text-shadow(0 1px 0 #FFFFFF);
+	@include border-radius(8px);
+    @include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
+    @include bgimage(linear-gradient(top, rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+    text-align:left;
+    p {
+    	margin-bottom: 10px;
+    	margin-top: 0;
+    }
+    
+    h4 {
+		display: inline-block;
+	    margin: 0 0 13px 0 ;
+	    padding:0;
+	    &.last {
+			margin-bottom:5px;
+	    }
+    }
+    h3 {
+		display: inline-block;
+	    font-size: 16px;
+	    font-weight: bold;
+	    margin: 0 0 19px;
+	    padding: 0;	  ;
+	    .dropdown & {
+    		margin: 34px 0 -33px;
+    		display: block;
+    	}
+    }
+
+}
+

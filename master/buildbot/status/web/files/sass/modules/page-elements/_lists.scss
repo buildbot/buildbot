@@ -1,0 +1,367 @@
+.step-list {
+	@include pie-clearfix;
+	//counter-reset: li; /* Initiate a counter */
+	list-style: none outside none;
+	margin: 0;
+    padding: 0;
+    .index-count {
+    	color: #666666;
+	    float: left;
+	    font-size: 33px;
+	    font-weight: bold;
+	    margin-left: -57px;
+	    margin-top: -5px;
+	    min-width: 32px;
+	    text-align: right;
+    }
+	.not_started {
+		background-color:#eee;
+		&:after {
+			content:"Not started";
+			color: #999;
+		}
+	}
+	.retry:before {
+		content:"Retry";	
+	} 
+	.success:before {
+		content:"Success";	
+	}
+	.running {
+		&:after {
+			content:"Running";
+			padding-left: 5px;		
+		}
+		/*
+		&:before {
+			font-size: 11px;
+			font-family: katana_icons;
+			content: "";
+			-moz-animation: spin 2s infinite linear;
+			-o-animation: spin 2s infinite linear;
+			-webkit-animation: spin 2s infinite linear;
+			animation: spin 2s infinite linear;  
+			display: inline-block;
+		}
+		*/
+	}
+	.waiting {
+		&:before {
+			content:"Waiting for locks";		
+		}
+	}
+	.failure {
+		&:before {
+			content:"Failed";				
+		}
+	}
+	.skipped {
+		&:before {
+			content:"Skipped";				
+		}	
+	}
+	.exception {
+		&:before {
+			content:"Exception";				
+		}	
+	}
+	li {
+	   	margin-bottom: 14px;
+    	padding-bottom: 15px;
+    	&.status-not_started {
+    		.step-head,
+    		.index-count,
+    		span {
+    			color:#ddd;
+    		}
+    	}
+	}
+	&> li {
+		border-bottom:1px dotted #ccc;
+		margin-left: 47px;
+	    padding-left: 0;
+	    padding-right: 0;
+		&:first-child {
+    		padding-top: 15px;
+		}
+	}
+	
+	.result {
+		float: right;
+		display: inline-block;
+		font-weight: bold;
+    	padding: 5px 9px 4px;
+    	text-transform: uppercase;
+	}	
+	p {
+		margin:0 60px 11px 0;
+		color: #666;
+		&> span { 
+			color: #666666;
+		    display: block;
+		    font-weight: bold;
+		    padding-top: 3px;
+		}
+	}
+}
+
+// artifact links
+.builders-list .artifact-js {
+	font-size:14px;
+	font-weight:bold;
+	line-height: 24px;
+}
+
+// test report and result links
+.tests-summary-list {
+	 margin: 3px 5px 0 0;
+	 
+	li {
+		float: left;
+		margin-right: 10px;
+		&:first-child {
+			margin-right: 5px;
+			font-weight: bold;
+		}
+
+		a {
+			font-weight: bold;	
+		}
+	}
+}
+a.no-artifacts {
+		color:#444;
+		cursor:text;
+	}
+
+.logs-txt {
+	display:block;
+	margin-bottom:3px;
+}
+
+.log-list {
+	list-style:none;
+	padding:0;
+	margin:0;
+	@include pie-clearfix;
+	span {
+	    color: #999999;
+	    display: block;
+	    margin-top: -2px;
+	}
+	li {
+		list-style:none;
+		padding:0;
+		margin:0 0 1px;
+		font-weight: bold;
+    	line-height: 16px;
+	}
+	.urls-mod {margin:5px 0;}
+	.log-list-success a:before {
+	    background-color: #DDE6D6;
+	    color: #444;
+	    content: "";
+        margin-right:4px;
+    	padding: 0 7px;
+	}
+	.log-list-failure a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#EFCFCF;
+	}
+	.log-list-skipped a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#CBDCE6;
+	}
+	.log-list-warnings a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#FFAA33;
+	}
+	.log-list-exception a:before,
+	.log-list-retry a:before {
+		color: #444;
+	    content: "";
+        margin-right: 4px;
+    	padding: 0 7px;
+		background-color:#DDD7DD;
+	}
+}
+
+.force-list,
+.force-bool {
+		display:block;
+		overflow: auto;
+	.label {
+		display:block;
+		float:left;
+		font-weight:bold;
+		width: 84px;
+		color: #333;
+	}
+	.select {
+		display:block;
+		float:left;
+	}
+}
+
+div.force-text {
+	clear: both;
+    margin-bottom: 11px;
+    @include pie-clearfix;
+	input[type="text"] {
+		border: 1px solid #CCC;
+	    @include border-radius(4px);
+	    color: #666;
+	    display: block;
+	    float: left;
+	    padding: 7px;		
+	    width: 220px;
+	}
+	.label {
+		display:block;
+		float:left;
+		font-weight:bold;
+		width: 84px;
+		color: #333;
+		margin-top: 6px;
+	}	
+}
+
+.builders-list,
+.builders-list li {
+	margin:0;
+	padding:0;
+	list-style:none;
+	line-height: 19px;
+}
+
+.tabs-list {
+	li {
+		float:left;
+		@include border-radius(7px);
+		background-color: #FFFFFF;
+	    border: 1px solid #CCCCCC;
+	    @include border-radius(7px);
+	    cursor: pointer;
+	    display: block;
+	    font-size: 11px;
+	    font-weight: bold;
+	    margin-bottom: 16px;
+	    margin-right: 7px;
+	    padding: 5px 10px 6px;
+	    &.selected {
+	    	background-color: #eee;
+	    }
+	}
+}
+
+.list {
+	margin:0;
+	padding:0;
+	list-style:none;
+	> ul {
+		margin:0;
+		padding:0;
+		list-style:none;
+	}
+	> li {
+		margin:0 0 10px 0;
+		padding:0;
+		list-style:none;
+	}
+}
+
+.pending-job-list { 
+	list-style:none;
+    margin: 0;
+    padding: 0;
+    background-color:#F4F4F4;
+    border: 1px solid #D9D9D9;
+    padding: 11px;
+    @include border-radius (7px);
+    .more-info-box & {
+		background-color: #FFF;
+	    padding: 21px;
+	    width: 345px;
+    	li {
+    		padding: 15px 0;
+    		border-top:1px solid #e5e5e5;
+    	}
+    }
+    li {
+		width: 100%;
+		display:table;
+		padding: 8px 0;
+    	@include pie-clearfix;
+    	input {
+			vertical-align: text-top;
+    	}
+    	form {
+    		display:table-cell;
+    		vertical-align: middle;    	
+    		text-align: right;
+    	}
+    	&:first-child {
+    	 	border-top:none;
+    	 	padding-top:0;
+    	}
+    	&:last-child {
+    		padding-bottom:0;
+    	}
+	
+    }
+}
+
+.curent-job-list {
+	margin:0;
+	padding:0;
+	list-style:none;
+	li {
+		margin:0 0 10px 0;
+		padding:0;
+		list-style:none;	
+	}
+}
+
+.btn-list {
+	list-style:none;
+	padding:0;
+	margin:0;
+	display:inline-block;
+	li {
+		list-style:none;
+		padding:0;
+		margin:0;
+		margin-bottom:15px;
+	}
+	&.horisontal li {
+		float: left;
+		margin:0 15px 0 0;
+	}
+}
+
+.codebases-list {
+	color:#666;
+	margin-bottom:5px;
+	li {
+		margin-bottom:3px;
+	}
+}
+
+@include breakpoint($bkpt-small) {
+	.step-list {
+		.result {
+			clear: both;
+		    float: none;
+		    margin-bottom: 14px;
+		}
+	}
+}

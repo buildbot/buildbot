@@ -1,5 +1,5 @@
 /**
-* Mixins for browser alignment
+* 
 * 
 * Unity3d
 *
@@ -14,4 +14,51 @@
 	#{$bgImage}:-o-#{$selector};
 	#{$bgImage}:-ms-#{$selector};
 	#{$bgImage}:$selector;
+}
+
+// utilities
+
+.fl-left {
+	float:left;
+}
+
+.fl-right {
+	float:right;
+}
+
+.m-bottom15 {
+	margin-bottom:15px;
+}
+
+.m-bottom10 {
+	margin-bottom:10px;
+}
+
+.m-right10 {
+	margin-right:10px;
+}
+
+.m-top20 {
+	margin-top:20px;
+}
+
+.fi {
+	margin-bottom:3px;	
+}
+
+.pos-relative {
+	position:relative;
+}
+
+div.last {
+	margin-right: 0;
+}
+
+.clear {clear: both;}
+
+.divider {
+ 	background-color: #E5E5E5;
+    height: 1px;
+    margin: 20px 0;
+    overflow: hidden;
 }

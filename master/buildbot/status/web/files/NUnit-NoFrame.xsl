@@ -28,8 +28,13 @@
 		<HEAD>
 			<title>Katana test results</title>
 			<link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'/>
-			<link rel="stylesheet" href="/prod/css/default.css?cachebust=1" type="text/css" />
-			<link rel="stylesheet" href="/prod/css/log.css?cachebust=1" type="text/css" />
+			<link rel="stylesheet" type="text/css" > 
+			 	<xsl:attribute name="href">/prod/css/default.css?cachebust=<xsl:value-of select="cache" /></xsl:attribute>
+			</link>
+			<link rel="stylesheet" type="text/css" > 
+			 	<xsl:attribute name="href">/prod/css/log.css?cachebust=<xsl:value-of select="cache" /></xsl:attribute>
+			</link>
+			
 		</HEAD>
 		<body class="interface log-main">
 			
@@ -65,7 +70,7 @@
 			<script type="text/javascript">
 			      var require = {
 			          baseUrl: "/prod/script/testresults",
-			          urlArgs : "cachebust=1",
+			          urlArgs : "cachebust=<xsl:value-of select="cache" />",
 			          deps : ['testresults-main']
 			      };
 			</script>

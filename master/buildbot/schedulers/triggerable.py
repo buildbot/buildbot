@@ -20,6 +20,7 @@ from twisted.internet import defer, task
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+import re
 
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
@@ -31,11 +32,20 @@ class Triggerable(base.BaseScheduler):
                                     **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
-        self.reason = "Triggerable(%s)" % name
+        self.trigger_reason = "Triggerable(%s)" % name
         # loop for polling the db
         self.db_loop = None
 
-    def trigger(self, sourcestamps = None, set_props=None, triggeredbybrid=None):
+    def updateReason(self, reason):
+        self.reason = self.trigger_reason
+        user_regex = re.compile(r"(by '.*':)")
+        if reason is not None:
+            m = user_regex.search(reason)
+            if m:
+                user = m.group(1)
+                self.reason = "Build caused "+ user + " " + self.reason
+
+    def trigger(self, sourcestamps = None, set_props=None, triggeredbybrid=None, reason=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns a deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
@@ -46,6 +56,8 @@ class Triggerable(base.BaseScheduler):
             props.updateFromProperties(set_props)
 
         self.triggeredbybrid = triggeredbybrid
+
+        self.updateReason(reason)
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of

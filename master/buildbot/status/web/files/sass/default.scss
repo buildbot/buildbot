@@ -20,7 +20,7 @@
 @import "modules/framework/framework";
 @import "modules/framework/normalize";
 @import "modules/framework/animate";
-@import "modules/base"; // old vars.scss
+@import "modules/base"; 
 @import "modules/framework/grid";
 
 // ---------------------------------------------------------------------------
@@ -32,10 +32,13 @@
 // ---------------------------------------------------------------------------
 // Modules
 
-@import "modules/page-elements/siteheader";
-@import "modules/page-elements/sitefooter";
 @import "modules/page-elements/navigation";
 @import "modules/page-elements/buttons";
+@import "modules/page-elements/tables";
+@import "modules/page-elements/forms";
+@import "modules/page-elements/search-drop-down";
+@import "modules/page-elements/lists";
+@import "modules/page-elements/popups";
 @import "modules/page-elements/main";
 
 // ---------------------------------------------------------------------------

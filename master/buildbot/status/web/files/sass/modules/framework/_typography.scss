@@ -5,9 +5,33 @@
 * @author Simon Holm
 */
 
-@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot", "/../fonts/katana_icons/katana_icons.ttf"));
+@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot?cachebusting=1", "/../fonts/katana_icons/katana_icons.ttf?cachebusting=1"));
+
+
+
+// Typography
+
+.small-head {
+	display:inline-block;
+	margin-top:0;
+	margin-bottom:5px;
+	font-size:14px;
+	font-weight:bold;	
+}
+
+.logo {
+    margin: 0;
+    padding: 0;
+}
+
+.small-head-2 {
+	padding:0;
+	margin:10px 0 10px 0;
+}
 
 .main-head {
+	margin: 34px 0 17px;
+    float: left;
     font-size: 25px;
     @include text-shadow(1px 1px 0 #FFF);
     span {
@@ -16,12 +40,9 @@
 	}
 }
 
-.small-head {
-	font-size:14px;
-	font-weight:bold;	
-}
-
 .head-2 {
+	margin:0 0 10px 0 ;
+	padding:0;
 	font-size:18px;
 }
 
@@ -99,6 +120,9 @@ div.welcome-txt {
 }
 
 .step-head {
+	position: relative;
+	display:block;
+	margin-bottom:3px;
 	font-size:14px;
 	font-weight:bold;
 }
@@ -113,4 +137,43 @@ div.welcome-txt {
 
 .pr-small-head {
 	margin: 0 0 2px;
+}
+
+.more-info {
+	font-weight:bold;
+}
+
+.mod-1.more-info:after {
+	margin-left:3px;
+}
+
+.more-info:after {
+    font-family: "katana_icons";
+    content: "";
+    display: inline-block;
+    padding: 0;
+    font-weight:normal;
+    font-size: 16px;
+     position: relative;
+
+    /*    
+    .chrome.win & {
+    	content: "▾";
+    	@include transform (none);
+    	font-size: 18px;
+    	line-height: 13px;
+    	padding: 2px 5px 4px;
+    }*/
+}
+
+.more-info.before:before {
+	content:"▼";	
+}
+
+.more-info.before:after {
+	content:"";		
+}
+
+.dropdown-info:after {
+	content: "▼";
 }

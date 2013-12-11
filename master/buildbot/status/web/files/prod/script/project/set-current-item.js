@@ -1,1 +1,0 @@
-define(["jquery"],function(e){var t;return t={init:function(){var t=window.location.pathname.split("/");e(".top-menu a").each(function(n){var r=this.href.split("/");(this.id==t[1].trim().toLowerCase()||this.id=="home"&&t[1].trim().toLowerCase().length===0)&&e(this).parent().addClass("selected")})}},t});

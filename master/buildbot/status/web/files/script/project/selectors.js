@@ -6,7 +6,30 @@ define(['jquery', 'select2'], function ($) {
 	selectors = {
 
 		//Set the highest with on both selectors
-		getMaxChildWidth: function(sel) {
+		init: function () {
+				
+			$("select.select-tools-js").select2({
+				width: selectors.getMaxChildWidth(".select-tools-js")
+			});
+			
+			$('.show-common').click(function(){
+				//$('#branchTxt').fadeOut('fast');
+				var commonContainer = $(this).next('.select2-container');
+				
+				$(commonContainer).show(0,function(){
+					$(this).select2('open');	
+				});
+			});
+			$('#commonBranch_select').on("select2-close", function() {
+				$('.common-branch-select').hide();
+			});	
+			$("#commonBranch_select").select2({
+				placeholder: "Common branches"
+			});
+
+			selectors.clickSort('#select2-drop .select2-results');
+
+		}, getMaxChildWidth: function(sel) {
 			    var max = 80;
 			    $(sel).each(function(){
 			        var c_width = $(this).width();
@@ -74,31 +97,6 @@ define(['jquery', 'select2'], function ($) {
 			    }).appendTo(selector);
 			});
 			
-		},
-								
-		init: function () {
-				
-			$("select.select-tools-js").select2({
-				width: selectors.getMaxChildWidth(".select-tools-js")
-			});
-			
-			$('.show-common').click(function(){
-				//$('#branchTxt').fadeOut('fast');
-				var commonContainer = $(this).next('.select2-container');
-				
-				$(commonContainer).show(0,function(){
-					$(this).select2('open');	
-				});
-			});
-			$('#commonBranch_select').on("select2-close", function() {
-				$('.common-branch-select').hide();
-			});	
-			$("#commonBranch_select").select2({
-				placeholder: "Common branches"
-			});
-
-			selectors.clickSort('#select2-drop .select2-results');
-
 		}
 	}	
 	return selectors;

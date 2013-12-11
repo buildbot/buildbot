@@ -16,13 +16,12 @@ require.config({
 	}
 });
 
-require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'], 
-	function($,setCurrentItem, popup, screenSize, projectDropDown, helpers ) {
+require(['jquery','popup','screensize','projectdropdown','helpers'], 
+	function($, popup, screenSize, projectDropDown, helpers ) {
 	'use strict';
 
 	$(document).ready(function() {
-
-		setCurrentItem.init();
+		
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -44,7 +43,6 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 	        function(dotdotdot) {
 	        	$(".ellipsis-js").dotdotdot();
 	        });
-			
 		}
 
 		// codebases combobox selector
@@ -55,10 +53,15 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 			        selectors.init();
 		    });
 		}
-		
+		if ($('#builddetail_page').length > 0) {
+			helpers.summaryArtifactTests();
+		}
+				
+		// get scripts for general popups
 		popup.init();
+		// get scripts for the projects dropdown
 		projectDropDown.init();
-		
+		// get all common scripts
 		helpers.init();	
 
 	});

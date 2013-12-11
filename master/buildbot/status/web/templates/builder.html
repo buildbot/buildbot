@@ -107,7 +107,7 @@
 <ul class="btn-list horisontal">
   <li>
     
-     <a href="#" title="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">Build slaves
+     <a href="#" title="Build slaves" data-popuptitle="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">Build slaves
     </a>
 
      
@@ -115,7 +115,7 @@
   <li>
 
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-        <a href="#" title="Run custom build" data-htmlchunk="isForm" data-rt_update="extforms" class="ajaxbtn more-info">Run build
+        <a href="#" title="Run custom build" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" class="ajaxbtn more-info">Run build
         </a>
       {% endif %}          
         

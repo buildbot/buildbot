@@ -3,55 +3,52 @@
   <head>
  	<meta charset="utf-8">
  	<title>Katana - login</title>
-    <link rel="stylesheet" href="/css/default.css" type="text/css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
     <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/script/libs/jQuery-2-0-3.js"></script>
-    <script type="text/javascript" src="/script/login.js"></script>
+    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
+
+    <script type="text/javascript" src="/prod/script/project/login.js"></script>
+
  </head>
  <body class="interface">
- 	<div class="login-box more-info-box more-info-box-js">
+ 	<div id="login_page" class="login-box more-info-box more-info-box-js">
  		<h1 class="logo">
-            <a href="/">
-              <span>K</span>atana
-            </a>
-         </h1>
+      <a href="/">
+        <span>K</span>atana
+      </a>
+   </h1>
 
-         <!--
- 			<h3>Login to Katana</h3>
- 		-->
  		<p class="login-welcome-txt">
-				Welcome to Unity's BuildServer! Have fun
-			</p>
+			Welcome to Unity's BuildServer. Fill in your username and password.
+		</p>
 		<div class="auth">    
-			
-          {% if authz.authenticated(request) %}
-            {{ authz.getUsernameHTML(request) }}
-            |<a href="{{ path_to_root }}logout">Logout</a>
-            {% elif authz.useHttpHeader and authz.httpLoginUrl %}
-            <a href="{{ authz.httpLoginUrl }}">Login</a>
-            {% elif authz.auth %}
-            <form id="loginForm" method="post" name="login" action="{{ path_to_root }}login">
-            <label for="username">
-            	Username
-            </label>
-            <input class="defaultText" id="username" type="text"  name="username" />
-            <div class="clear"></div>
-            <label for="password">
-            	Password
-            </label>
+
+
+
+            <form id="loginForm" method="post" name="login" action="{{ authenticate_url }}">
+
             
-            <input id="password" class="defaultText" autocomplete="off" type="password" name="password" />
-            <div class="clear"></div>
-            <input id="remember" type="checkbox" name="remember" checked="" value="true" />
-            <label for="remember" class="checkbox-label">
-            	Remember me
-            </label>
+                
             
-            <input type="submit" value="login" id="submitLogin" />
+            <input class="defaultText" id="userName" placeholder="Your username" type="text"  name="username" />
+            
+            <input class="defaultText" id="passWord" placeholder="Your password" type="password"  name="password" />    
+
+                
+                
+                <div class="clear"></div>
+                <input type="submit" value="login" id="submitLogin" />    
+                <!--
+              <input type="checkbox" id="rememberMe" />      
+                <label class="checkbox-label" for="rememberMe">Remember me</label>
+              -->
+              
+
             </form>
-          {% endif %}
+          
         </div>
  	</div>
  </body>
