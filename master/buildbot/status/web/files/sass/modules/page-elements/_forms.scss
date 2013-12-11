@@ -108,7 +108,8 @@ form.command_forcebuild .force-nested > .label {
 .auth {
     margin: 25px 0;
     
-    input[type="text"] {
+    input[type="text"],
+    input[type="password"] {
         border: 1px solid #ccc;
         @include border-radius(4px);
         @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset, 1px 1px 0px #fff);
@@ -117,8 +118,9 @@ form.command_forcebuild .force-nested > .label {
         font-size: 15px;
         line-height: 13px;
         padding: 9px 13px 8px;
-        width: 205px;
+        width: 231px;
         float: left;
+        margin-bottom: 15px;
         &.not-valid {
             border: 1px solid #E42323;
         }
@@ -136,7 +138,7 @@ form.command_forcebuild .force-nested > .label {
         @include border-radius( 4px);
         color: #FFFFFF;
         font-size: 10px;
-        margin: 3px 0 0 0;
+        margin: 3px 22px 0;
         padding: 8px 11px;
         float: right;
         @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));

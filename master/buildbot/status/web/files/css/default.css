@@ -2192,8 +2192,9 @@ form.command_forcebuild .force-nested > .label {
 .auth {
   margin: 25px 0;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003111}}
-.auth input[type="text"] {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003112}}
+.auth input[type="text"],
+.auth input[type="password"] {
   border: 1px solid #ccc;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -2208,21 +2209,23 @@ form.command_forcebuild .force-nested > .label {
   font-size: 15px;
   line-height: 13px;
   padding: 9px 13px 8px;
-  width: 205px;
+  width: 231px;
   float: left;
+  margin-bottom: 15px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003122}}
-.auth input[type="text"].not-valid {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003124}}
+.auth input[type="text"].not-valid,
+.auth input[type="password"].not-valid {
   border: 1px solid #E42323;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003126}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003128}}
 .auth input[type="checkbox"] {
   float: left;
   margin-left: 83px;
   margin-right: 9px;
   margin-top: 6px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003132}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003134}}
 .auth input[type="submit"] {
   background-image: -moz-linear-gradient(top, #0a3569 0%, #417fb1 100%);
   background-image: -webkit-linear-gradient(top, #0a3569 0%, #417fb1 100%);
@@ -2240,7 +2243,7 @@ form.command_forcebuild .force-nested > .label {
   border-radius: 4px;
   color: #FFFFFF;
   font-size: 10px;
-  margin: 3px 0 0 0;
+  margin: 3px 22px 0;
   padding: 8px 11px;
   float: right;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.59);
@@ -2248,7 +2251,7 @@ form.command_forcebuild .force-nested > .label {
   clear: both;
   letter-spacing: 0.8px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003146}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003148}}
 .auth input[type="submit"]:hover {
   background-image: -moz-linear-gradient(top, #1057ad 0%, #4e98d5 100%);
   background-image: -webkit-linear-gradient(top, #1057ad 0%, #4e98d5 100%);
@@ -2256,7 +2259,7 @@ form.command_forcebuild .force-nested > .label {
   background-image: -ms-linear-gradient(top, #1057ad 0%, #4e98d5 100%);
   background-image: linear-gradient(top, #1057ad 0%, #4e98d5 100%);
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003151}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003153}}
 .auth label {
   float: left;
   font-size: 14px;
@@ -2265,7 +2268,7 @@ form.command_forcebuild .force-nested > .label {
   width: 60px;
   text-shadow: 0 1px 0 white;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003158}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003160}}
 .auth label.checkbox-label {
   font-size: 11px;
   font-weight: normal;
@@ -2273,12 +2276,12 @@ form.command_forcebuild .force-nested > .label {
 }
 
 @media (min-width: 0) and (max-width: 570px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003168}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003170}}
   .filter-table-input label input {
     width: 67px;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003172}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\00003174}}
   form.command_forcebuild {
     width: auto;
   }
@@ -3408,7 +3411,7 @@ div.force-text .label {
 .login-box.more-info-box {
   display: block;
   float: none;
-  padding: 44px 12px 16px 33px;
+  padding: 44px 12px 23px 33px;
   width: 200px;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_main\.scss}line{font-family:\00003144}}
