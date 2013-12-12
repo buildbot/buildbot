@@ -28,6 +28,7 @@ from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
+
 from buildbot.db import buildrequests
 import sys
 
@@ -473,7 +474,7 @@ class Builder(config.ReconfigurableServiceMixin,
             if self._defaultMergeRequestFn(b.requests[0], brobj):
                 yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
                 b.requests = b.requests + breqs
-                print "\n -- merge with building resquests %s, %s --\n" % (b.requests[0].id, brids)
+                log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
                 defer.returnValue(True)
                 return
         defer.returnValue(False)
@@ -565,7 +566,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 continue
 
             # merge with compatible finished build in the same chain
-            if brdict['startbrid'] is not None:
+            if 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
                 # check if can be merged with finished build
                 finished_br = yield self.master.db.buildrequests.findCompatibleFinishedBuildRequest(self.name, brdict['startbrid'])
                 if finished_br:
@@ -581,7 +582,7 @@ class Builder(config.ReconfigurableServiceMixin,
                             merged_breqs.append(brobj)
 
                     try:
-                        print "\n -- Merge finished resquest %s, %s --\n" % (finished_br, merged_brids)
+                        log.msg("merge finished buildresquest %s with %s" % (finished_br, merged_brids))
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
                         yield self._maybeBuildsetsComplete(merged_breqs)
                         self.removeFromUnclaimRequestsList(merged_brdicts, unclaimed_requests)
@@ -605,9 +606,9 @@ class Builder(config.ReconfigurableServiceMixin,
                 break
 
             try:
-                print "\n -- Merge pending br %s --\n" % (brids)
                 yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
-                print "\n -- Merge pending br1 %s, br2 %s --\n" % (brids[0], brids[1:])
+                if len (brids) > 1:
+                    log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 
             except:
                 # one or more of the build requests was already claimed;
