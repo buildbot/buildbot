@@ -79,16 +79,17 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select([reqs_tbl, claims_tbl]).select_from(from_clause)
             if claimed is not None:
-                if not claimed:
-                    q = q.where(
-                        (claims_tbl.c.claimed_at == None) &
-                        (reqs_tbl.c.complete == 0))
-                elif claimed == "mine":
-                    q = q.where(
-                        (claims_tbl.c.masterid == self.db.master.masterid))
+                if isinstance(claimed, bool):
+                    if not claimed:
+                        q = q.where(
+                            (claims_tbl.c.claimed_at == None) &
+                            (reqs_tbl.c.complete == 0))
+                    else:
+                        q = q.where(
+                            (claims_tbl.c.claimed_at != None))
                 else:
                     q = q.where(
-                        (claims_tbl.c.claimed_at != None))
+                        (claims_tbl.c.masterid == claimed))
             if buildername is not None:
                 q = q.where(reqs_tbl.c.buildername == buildername)
             if complete is not None:
@@ -201,7 +202,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # the update here is simple, but a number of conditions are
             # attached to ensure that we do not update a row inappropriately,
             # Note that checking that the request is mine would require a
-            # subquery, so for efficiency that is not checed.
+            # subquery, so for efficiency that is not checked.
 
             reqs_tbl = self.db.model.buildrequests
 
@@ -253,24 +254,27 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         d.addCallback(log_nonzero_count)
         return d
 
-    def _brdictFromRow(self, row, master_masterid):
-        claimed = mine = False
+    @staticmethod
+    def _brdictFromRow(row, master_masterid):
+        claimed = False
+        claimed_by_masterid = None
         claimed_at = None
         if row.claimed_at is not None:
             claimed_at = row.claimed_at
             claimed = True
-            mine = row.masterid == master_masterid
+            claimed_by_masterid = row.masterid
 
         def mkdt(epoch):
             if epoch:
                 return epoch2datetime(epoch)
         submitted_at = mkdt(row.submitted_at)
         complete_at = mkdt(row.complete_at)
-        claimed_at = mkdt(row.claimed_at)
+        claimed_at = mkdt(claimed_at)
 
         return BrDict(brid=row.id, buildsetid=row.buildsetid,
                       buildername=row.buildername, priority=row.priority,
-                      claimed=claimed, claimed_at=claimed_at, mine=mine,
+                      claimed=claimed, claimed_at=claimed_at,
+                      claimed_by_masterid=claimed_by_masterid,
                       complete=bool(row.complete), results=row.results,
                       submitted_at=submitted_at, complete_at=complete_at,
                       waited_for=bool(row.waited_for))
