@@ -517,6 +517,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
+            req_tbl = self.db.model.buildrequests
 
             # we'll need to batch the brids into groups of 100, so that the
             # parameter lists supported by the DBAPI aren't exhausted
@@ -532,6 +533,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                             (claims_tbl.c.brid.in_(batch))
                             & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
+
+                    q = req_tbl.update(req_tbl.c.id.in_(batch))
+                    conn.execute(q, mergebrid=None)
                 except:
                     transaction.rollback()
                     raise

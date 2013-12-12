@@ -302,11 +302,14 @@ class Builder(config.ReconfigurableServiceMixin,
         # update the big status accordingly
         self.updateBigStatus()
 
-        try:
-            ready = yield slavebuilder.prepare(self.builder_status, build)
-        except:
-            log.err(failure.Failure(), 'while preparing slavebuilder:')
-            ready = False
+        #check slave is still available
+        ready = slavebuilder in self.getAvailableSlaveBuilders()
+        if ready:
+            try:
+                ready = yield slavebuilder.prepare(self.builder_status, build)
+            except:
+                log.err(failure.Failure(), 'while preparing slavebuilder:')
+                ready = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns false then we don't start a new build.
@@ -496,6 +499,10 @@ class Builder(config.ReconfigurableServiceMixin,
         return
 
     # Build Creation
+    def getAvailableSlaveBuilders(self):
+        return [sb for sb in self.slaves
+                if sb.isAvailable()]
+
     @defer.inlineCallbacks
     def maybeStartBuild(self):
         # This method is called by the botmaster whenever this builder should
@@ -511,8 +518,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # Check for available slaves.  If there are no available slaves, then
         # there is no sense continuing
-        available_slavebuilders = [ sb for sb in self.slaves
-                                    if sb.isAvailable() ]
+        available_slavebuilders = self.getAvailableSlaveBuilders()
 
         # now, get the available build requests
         unclaimed_requests = \
@@ -600,8 +606,8 @@ class Builder(config.ReconfigurableServiceMixin,
             if not slavebuilder:
                 break
 
-            if slavebuilder not in available_slavebuilders:
-                log.msg(("nextSlave chose a nonexistent slave for builder "
+            if slavebuilder not in self.getAvailableSlaveBuilders():
+                log.msg(("nextSlave chose a nonexistent or unavailable slave for builder "
                          "'%s'; cannot start build") % self.name)
                 break
 
