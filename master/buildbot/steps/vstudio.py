@@ -379,8 +379,16 @@ class VC11(VC10):
 VS2012 = VC11
 
 
-class MsBuild(VisualStudio):
+# VC12 doesn't look like it needs extra stuff.
+class VC12(VC11):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 12.0'
+
+VS2013 = VC12
+
+
+class MsBuild4(VisualStudio):
     platform = None
+    vcenv_bat = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
 
     def __init__(self, platform, **kwargs):
         self.platform = platform
@@ -388,7 +396,7 @@ class MsBuild(VisualStudio):
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
-        cmd.args['env']['VCENV_BAT'] = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+        cmd.args['env']['VCENV_BAT'] = self.vcenv_bat
 
     def describe(self, done=False):
         rv = []
@@ -420,3 +428,9 @@ class MsBuild(VisualStudio):
         self.setCommand(command)
 
         return VisualStudio.start(self)
+
+MsBuild = MsBuild4
+
+
+class MsBuild12(MsBuild4):
+    vcenv_bat = "\"${VS120COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""

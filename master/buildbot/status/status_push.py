@@ -217,6 +217,7 @@ class StatusPush(StatusReceiverMultiService):
         """Unsubscribe from watched builders"""
         for w in self.watched:
             w.unsubscribe(self)
+        self.status.unsubscribe(self)
         return StatusReceiverMultiService.disownServiceParent(self)
 
     @defer.inlineCallbacks

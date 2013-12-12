@@ -129,6 +129,8 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+
 Fixes
 ~~~~~
 
