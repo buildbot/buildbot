@@ -9,7 +9,7 @@ History and Motivation
 One of the goals of the 'nine' project is to rework Buildbot's web services to use a more modern, consistent design and implement UI features in client-side JavaScript instead of server-side Python.
 
 The rationale behind this is that a client side UI relieves pressure on the server while being more responsive for the user.
-The web server only concentrates on serving data via a REST interface wrappgin the the :ref:`Data_API`.
+The web server only concentrates on serving data via a REST interface wrapping the :ref:`Data_API`.
 This removes a lot of sources of latency where, in previous versions, long synchronous calculations were made on the server to generate complex pages.
 
 Another big advantage is live updates of status pages, without having to poll or reload.

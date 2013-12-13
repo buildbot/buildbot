@@ -109,7 +109,7 @@ buildrequests
         returns ``None`` if there is no such buildrequest.  Note that build
         requests are not cached, as the values in the database are not fixed.
 
-    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None))
+    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None)
 
         :param buildername: limit results to buildrequests for this builder
         :type buildername: string
