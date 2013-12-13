@@ -18,6 +18,7 @@ import sys
 from buildbot import config
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
+from buildbot.status import mail
 from buildbot.status.mail import MailNotifier
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
@@ -876,3 +877,70 @@ def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
     unibody = u'Unicode body with non-ascii (%s).' % funny_chars
     msg_dict = dict(body=unibody, type='plain')
     return msg_dict
+
+
+# Test buildbot.status.mail._defaultMessageIntro() function
+class TestDefaultMessageIntro(unittest.TestCase):
+    # Set-up a mocked build status object.
+    # If previousBuildResult is specified, create a mocked previous
+    # build with the specified build result.
+    def setUpBuild(self, previousBuildResult=None):
+        prev_build = None
+        if previousBuildResult is not None:
+            prev_build = Mock()
+            prev_build.getResults = Mock(return_value=previousBuildResult)
+
+        build = Mock()
+        build.getPreviousBuild = Mock(return_value=prev_build)
+
+        return build
+
+    def testFailureChangeModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("change", FAILURE, build))
+
+    def testFailureChangeModeNewResult(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a new failure",
+                         mail._defaultMessageIntro("change", FAILURE, build))
+
+    def testFailureProblemModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testFailureProblemModeNewFailure(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a new failure",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testFailureProblemModeOldFailure(self):
+        build = self.setUpBuild(FAILURE)
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testWarnings(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a problem in the build",
+                         mail._defaultMessageIntro("all", WARNINGS, build))
+
+    def testSuccessChangeModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a passing build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testSuccessChangeModeNewSuccess(self):
+        build = self.setUpBuild(FAILURE)
+        self.assertEqual("The Buildbot has detected a restored build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testSuccessChangeModeSuccessAgain(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a passing build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testException(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a build exception",
+                         mail._defaultMessageIntro("all", EXCEPTION, build))

@@ -92,29 +92,34 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
+def _defaultMessageIntro(mode, results, build):
+    prev = build.getPreviousBuild()
+
+    if results == FAILURE:
+        if "change" in mode and prev and prev.getResults() != results or \
+                "problem" in mode and prev and prev.getResults() != FAILURE:
+            text = "The Buildbot has detected a new failure"
+        else:
+            text = "The Buildbot has detected a failed build"
+    elif results == WARNINGS:
+        text = "The Buildbot has detected a problem in the build"
+    elif results == SUCCESS:
+        if "change" in mode and prev and prev.getResults() != results:
+            text = "The Buildbot has detected a restored build"
+        else:
+            text = "The Buildbot has detected a passing build"
+    elif results == EXCEPTION:
+        text = "The Buildbot has detected a build exception"
+
+    return text
+
+
 def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
     ss_list = build.getSourceStamps()
 
-    prev = build.getPreviousBuild()
-
-    text = ""
-    if results == FAILURE:
-        if "change" in mode and prev and prev.getResults() != results or \
-                "problem" in mode and prev and prev.getResults() != FAILURE:
-            text += "The Buildbot has detected a new failure"
-        else:
-            text += "The Buildbot has detected a failed build"
-    elif results == WARNINGS:
-        text += "The Buildbot has detected a problem in the build"
-    elif results == SUCCESS:
-        if "change" in mode and prev and prev.getResults() != results:
-            text += "The Buildbot has detected a restored build"
-        else:
-            text += "The Buildbot has detected a passing build"
-    elif results == EXCEPTION:
-        text += "The Buildbot has detected a build exception"
+    text = _defaultMessageIntro(mode, results, build)
 
     projects = []
     if ss_list:
