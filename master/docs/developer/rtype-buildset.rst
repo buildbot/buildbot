@@ -15,7 +15,7 @@ Buildsets
 
     A buildset gathers build requests that were scheduled at the same time, and which share a source stamp, properties, and so on.
 
-    .. todo:
+    .. todo::
         Currently buildset properties aren't available in this resource type
 
     .. bb:event:: buildset.$bsid.new
@@ -32,7 +32,7 @@ Buildsets
 
         This path lists buildsets, sorted by ID.
 
-        .. todo:
+        .. todo::
             Consuming from this path selects :bb:event:`buildset.$bsid.new` and :bb:event:`buildset.$bsid.complete` events.
 
     .. bb:rpath:: /buildset/:bsid
@@ -41,7 +41,7 @@ Buildsets
 
         This path selects a specific buildset, identified by ID.
 
-        .. todo:
+        .. todo::
             Consuming from this path selects and :bb:event:`buildset.$bsid.complete` events for this buildset.
 
 Update Methods
