@@ -107,12 +107,13 @@ class Triggerable(base.BaseScheduler):
             self._bsc_subscription.unsubscribe()
             self._bsc_subscription = None
 
-        if self._waiters and not self.db_loop:
+        if self._waiters and (not self.db_loop or not self.db_loop.running):
             if (self.master.configured_poll_interval):
                 self.db_loop = task.LoopingCall(self.pollDatabaseBuildSets)
                 self.db_loop.start(self.master.configured_poll_interval)
         elif not self._waiters and self.db_loop:
-                self.db_loop.stop()
+                if self.db_loop.running:
+                    self.db_loop.stop()
                 self.db_loop = None
 
     # poll database for buildset completion
