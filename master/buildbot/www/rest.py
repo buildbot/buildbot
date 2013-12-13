@@ -279,7 +279,7 @@ class V2RootResource(resource.Resource):
 
         # for singular endpoints, only allow fields
         if not endpoint.isCollection:
-            if rspec.filters or rspec.limit or rspec.offset:
+            if rspec.filters:
                 raise BadRequest("this is not a collection")
 
         return rspec

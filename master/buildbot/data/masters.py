@@ -87,7 +87,9 @@ class Master(base.ResourceType):
     name = "master"
     plural = "masters"
     endpoints = [MasterEndpoint, MastersEndpoint]
-    keyFields = ['masterid']
+    eventPathPatterns = """
+        /master/:masterid
+    """
 
     class EntityType(types.Entity):
         masterid = types.Integer()

@@ -204,7 +204,7 @@ class FakeUpdates(object):
     def setBuildStateStrings(self, buildid, state_strings):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())
-        validation.verifyType(self.t, 'state_strings', state_strings,
+        validation.verifyType(self.testcase, 'state_strings', state_strings,
                               validation.ListValidator(validation.StringValidator()))
         return defer.succeed(None)
 
@@ -282,6 +282,10 @@ class FakeUpdates(object):
         return self.master.db.buildslaves.buildslaveDisconnected(
             buildslaveid=buildslaveid,
             masterid=masterid)
+
+    def __getattr__(self, name):
+        import traceback
+        traceback.print_stack()
 
 
 class FakeDataConnector(object):

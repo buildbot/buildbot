@@ -260,8 +260,7 @@ class MessageValidator(Validator):
 
     routingKeyValidator = TupleValidator(BinaryValidator())
 
-    def __init__(self, keyFields, events, messageValidator):
-        self.keyFields = keyFields
+    def __init__(self, events, messageValidator):
         self.events = set(events)
         self.messageValidator = messageValidator
 
@@ -279,16 +278,6 @@ class MessageValidator(Validator):
             event = routingKey[-1]
             if event not in self.events:
                 yield "routing key event %r is not valid" % (event,)
-            if len(routingKey) != len(self.keyFields) + 2:
-                yield "routing key length is wrong"
-            for i, f in enumerate(self.keyFields):
-                j = i + 1
-                pfx = "routingKey[%d]" % (j,)
-                if f not in message:
-                    yield "%s: no field '%s in message" % (pfx, f)
-                elif str(message[f]) != routingKey[j]:
-                    yield ("%s: routing key value for %s (%s) does not match "
-                           "message (%s)" % (pfx, f, routingKey[j], message[f]))
 
         for msg in self.messageValidator.validate("%s message" % routingKey[0],
                                                   message):
@@ -327,7 +316,6 @@ dbdict = {}
 message['master'] = Selector()
 message['master'].add(None,
                       MessageValidator(
-                          keyFields=['masterid'],
                           events=['started', 'stopped'],
                           messageValidator=DictValidator(
                               masterid=IntValidator(),
@@ -388,7 +376,6 @@ dbdict['ssdict'] = DictValidator(
 message['builder'] = Selector()
 message['builder'].add(None,
                        MessageValidator(
-                           keyFields=['builderid'],
                            events=['started', 'stopped'],
                            messageValidator=DictValidator(
                                builderid=IntValidator(),
@@ -428,13 +415,11 @@ _buildset = dict(
     complete_at=NoneOk(IntValidator()),
     results=NoneOk(IntValidator()),
 )
-_buildsetKeyFields = ['bsid']
 _buildsetEvents = ['new', 'complete']
 
 message['buildset'] = Selector()
 message['buildset'].add(lambda k: k[-1] == 'new',
                         MessageValidator(
-                            keyFields=_buildsetKeyFields,
                             events=_buildsetEvents,
                             messageValidator=DictValidator(
                                 scheduler=StringValidator(),  # only for 'new'
@@ -446,7 +431,6 @@ message['buildset'].add(lambda k: k[-1] == 'new',
                             )))
 message['buildset'].add(None,
                         MessageValidator(
-                            keyFields=_buildsetKeyFields,
                             events=_buildsetEvents,
                             messageValidator=DictValidator(
                                 sourcestamps=ListValidator(
@@ -472,7 +456,6 @@ dbdict['bsdict'] = DictValidator(
 message['buildrequest'] = Selector()
 message['buildrequest'].add(None,
                             MessageValidator(
-                                keyFields=['bsid', 'builderid', 'brid'],
                                 events=['new', 'claimed', 'unclaimed'],
                                 messageValidator=DictValidator(
                                     # TODO: probably wrong!
@@ -487,7 +470,6 @@ message['buildrequest'].add(None,
 message['change'] = Selector()
 message['change'].add(None,
                       MessageValidator(
-                          keyFields=['changeid'],
                           events=['new'],
                           messageValidator=DictValidator(
                               changeid=IntValidator(),
@@ -557,13 +539,11 @@ _build = dict(
     state_strings=ListValidator(StringValidator()),
     results=NoneOk(IntValidator()),
 )
-_buildKeyFields = ['builderid', 'buildid']
 _buildEvents = ['new', 'complete']
 
 message['build'] = Selector()
 message['build'].add(None,
                      MessageValidator(
-                         keyFields=_buildKeyFields,
                          events=_buildEvents,
                          messageValidator=DictValidator(
                              **_build
@@ -596,13 +576,11 @@ _step = dict(
     results=NoneOk(IntValidator()),
     urls=ListValidator(StringValidator()),
 )
-_stepKeyFields = ['buildid', 'stepid']
 _stepEvents = ['new', 'complete']
 
 message['step'] = Selector()
 message['step'].add(None,
                     MessageValidator(
-                        keyFields=_stepKeyFields,
                         events=_stepEvents,
                         messageValidator=DictValidator(
                             **_step
@@ -629,7 +607,6 @@ _log = dict(
     complete=BooleanValidator(),
     num_lines=IntValidator(),
     type=IdentifierValidator(1))
-_logKeyFields = ['stepid', 'logid']
 _logEvents = ['new', 'complete', 'appended']
 
 # message['log']
@@ -658,7 +635,9 @@ def _verify(testcase, validator, name, object):
 def verifyMessage(testcase, routingKey, message_):
     # the validator is a Selector wrapping a MessageValidator, so we need to
     # pass (arg, (routingKey, message)), where the routing key is the arg
-    _verify(testcase, message[routingKey[0]], '',
+    # the "type" of the message is identified by last path name
+    # -1 being the event, and -2 the id.
+    _verify(testcase, message[routingKey[-3]], '',
             (routingKey, (routingKey, message_)))
 
 

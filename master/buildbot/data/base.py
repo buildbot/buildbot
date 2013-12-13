@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import UserList
+import copy
+import re
 import urllib
 
 from buildbot.data import exceptions
@@ -24,9 +26,24 @@ class ResourceType(object):
     name = None
     endpoints = []
     keyFields = []
+    eventPathPatterns = ""
 
     def __init__(self, master):
         self.master = master
+        self.compileEventPathPatterns()
+
+    def compileEventPathPatterns(self):
+        # We'll run a single format, and then split the string
+        # to get the final event path tuple
+        pathPatterns = self.eventPathPatterns
+        pathPatterns = pathPatterns.split()
+        identifiers = re.compile(r':([^/]*)')
+        for i, pp in enumerate(pathPatterns):
+            pp = identifiers.sub(r'{\1}', pp)
+            if pp.startswith("/"):
+                pp = pp[1:]
+            pathPatterns[i] = pp
+        self.eventPaths = pathPatterns
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
@@ -37,11 +54,21 @@ class ResourceType(object):
             endpoints[i] = ep(self, self.master)
         return endpoints
 
+    @staticmethod
+    def sanitizeMessage(msg):
+        msg = copy.deepcopy(msg)
+        for k, v in msg.items():
+            if isinstance(v, Link):
+                del msg[k]
+        return msg
+
     def produceEvent(self, msg, event):
-        routingKey = (self.name,) \
-            + tuple(str(msg[k]) for k in self.keyFields) \
-            + (event,)
-        self.master.mq.produce(routingKey, msg)
+        if msg is not None:
+            msg = self.sanitizeMessage(msg)
+            for path in self.eventPaths:
+                path = path.format(**msg)
+                routingKey = tuple(path.split("/")) + (event,)
+                self.master.mq.produce(routingKey, msg)
 
 
 class Endpoint(object):

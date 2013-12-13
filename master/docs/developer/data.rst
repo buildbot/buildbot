@@ -110,6 +110,18 @@ Within the buildmaster process, the root of the data API is available at `self.m
         The callback interface is the same as that of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
         The ``path`` argument is automatically translated into an appropriate topic.
 
+    .. py:method:: produceEvent(rtype, msg, event)
+
+        :param rtype: the name identifying a resource type
+        :param msg: a dictionary describing the msg to send
+        :param event: the event to produce
+
+        This method implements the production of an event, for the rtype identified by its name string
+        Usually, this is the role of the data layer to produce the events inside the update methods
+        For the potencial use cases where it would make sense to solely produce and event, and not update
+        data, please use this API, rather than directly call mq.
+        It ensures the event is sent to all the routingkeys specified by eventPathPatterns
+
     .. py:method:: control(action, args, kwargs)
 
         :param action: a short string naming the action to perform
@@ -253,13 +265,17 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 
         Subclasses should set this to a list of endpoint classes for this resource type.
 
-    .. py:attribute:: keyFields
+    .. py:attribute:: eventPathPatterns
 
-        :type: list
+        :type: str
 
-        This attribute should list the message fields whose values will comprise the fields in the message routing key between the type and the event.
+        This attribute should list the message routes where events should be sent, encoded as a REST like endpoint:
+
+        ``pub/:pubid``
 
         In the example above, a call to ``produceEvent({ 'pubid' : 10, 'name' : 'Winchester' }, 'opened')`` would result in a message with routing key ``('pub', '10', 'opened')``.
+
+        Several paths can be specified in order to be consistent with rest endpoints.
 
     .. py:attribute:: entityType
 
@@ -386,7 +402,6 @@ Message types are defined in :bb:src:`master/buildbot/test/util/validation.py`, 
 This is a dictionary of ``MessageValidator`` objects, one for each message type.
 The message type is determined from the first atom of its routing key.
 The ``events`` dictionary lists the possible last atoms of the routing key.
-The ``keyFields`` argument lists the message fields whose values will comprise the fields in the message routing key between the type and the event.
 It should be identical to the attribute of the ResourceType with the same name.
 
 Adding Update Methods

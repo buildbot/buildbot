@@ -25,6 +25,7 @@ from buildbot.db import changes
 from buildbot.db import changesources
 from buildbot.db import enginestrategy
 from buildbot.db import exceptions
+from buildbot.db import logs
 from buildbot.db import masters
 from buildbot.db import model
 from buildbot.db import pool
@@ -89,6 +90,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)
         self.steps = steps.StepsConnectorComponent(self)
+        self.logs = logs.LogsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
