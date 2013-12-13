@@ -18,7 +18,9 @@ import types
 from buildbot.data import connector
 from buildbot.test.util import validation
 from buildbot.util import json
+
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import failure
 
 
@@ -139,6 +141,36 @@ class FakeUpdates(object):
 
     def maybeBuildsetComplete(self, bsid):
         self.maybeBuildsetCompleteCalls += 1
+        return defer.succeed(None)
+
+    def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
+        validation.verifyType(self.testcase, 'brids', brids,
+                              validation.ListValidator(validation.IntValidator()))
+        validation.verifyType(self.testcase, 'claimed_at', claimed_at,
+                              validation.NoneOk(validation.DateTimeValidator()))
+        return defer.succeed(True)
+
+    def reclaimBuildRequests(self, brids, _reactor=reactor):
+        validation.verifyType(self.testcase, 'brids', brids,
+                              validation.ListValidator(validation.IntValidator()))
+        return defer.succeed(True)
+
+    def unclaimBuildRequests(self, brids):
+        validation.verifyType(self.testcase, 'brids', brids,
+                              validation.ListValidator(validation.IntValidator()))
+        return defer.succeed(None)
+
+    def completeBuildRequests(self, brids, results, complete_at=None, _reactor=reactor):
+        validation.verifyType(self.testcase, 'brids', brids,
+                              validation.ListValidator(validation.IntValidator()))
+        validation.verifyType(self.testcase, 'results', results,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'complete_at', complete_at,
+                              validation.NoneOk(validation.DateTimeValidator()))
+        return defer.succeed(True)
+
+    def unclaimExpiredRequests(self, old, _reactor=reactor):
+        validation.verifyType(self.testcase, "old", old, validation.IntValidator())
         return defer.succeed(None)
 
     def updateBuilderList(self, masterid, builderNames):

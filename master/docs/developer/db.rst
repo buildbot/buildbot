@@ -96,7 +96,7 @@ buildrequests
     * ``priority``
     * ``claimed`` (boolean, true if the request is claimed)
     * ``claimed_at`` (datetime object, time this request was last claimed)
-    * ``mine`` (boolean, true if the request is claimed by this master)
+    * ``claimed_by_masterid`` (integer, the id of the master that claimed this buildrequest)
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
 
@@ -128,8 +128,8 @@ buildrequests
 
         The ``claimed`` parameter can be ``None`` (the default) to ignore the
         claimed status of requests; ``True`` to return only claimed builds,
-        ``False`` to return only unclaimed builds, or ``"mine"`` to return only
-        builds claimed by this master instance.  A request is considered
+        ``False`` to return only unclaimed builds, or a ``master ID`` to return only
+        builds claimed by a particular master instance.  A request is considered
         unclaimed if its ``claimed_at`` column is either NULL or 0, and it is
         not complete.  If ``bsid`` is specified, then only build requests for
         that buildset will be returned.

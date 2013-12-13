@@ -586,6 +586,7 @@ All strings in the data model are unicode strings.
     rtype-scheduler
     rtype-forcescheduler
     rtype-build
+    rtype-buildrequest
     rtype-step
     rtype-log
     rtype-logchunk
