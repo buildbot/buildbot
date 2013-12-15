@@ -486,6 +486,10 @@ class BuildStep(object, properties.PropertiesMixin):
             "failed() can only be called from old steps implementing start()"
         self._start_deferred.errback(why)
 
+    def isNewStyle(self):
+        # **temporary** method until new-style steps are the only supported style
+        return self.run.__func__ is not BuildStep.run.__func__
+
     def start(self):
         raise NotImplementedError("your subclass must implement run()")
 
