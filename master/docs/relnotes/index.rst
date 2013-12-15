@@ -131,6 +131,8 @@ Features
 
 * Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
 
+* The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
+
 Fixes
 ~~~~~
 
