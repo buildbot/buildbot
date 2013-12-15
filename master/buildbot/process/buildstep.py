@@ -209,7 +209,8 @@ class BuildStep(object, properties.PropertiesMixin):
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
-        self.deferred = defer.Deferred()
+        isNew = self.isNewStyle()
+
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
                       for access in self.locks]
@@ -223,6 +224,8 @@ class BuildStep(object, properties.PropertiesMixin):
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
+
+        self.deferred = defer.Deferred()
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
@@ -263,7 +266,11 @@ class BuildStep(object, properties.PropertiesMixin):
 
             try:
                 if doStep:
-                    result = yield defer.maybeDeferred(self.start)
+                    if isNew:
+                        result = yield self.run()
+                        self.finished(result)
+                    else:
+                        result = yield self.start()
                     if result == SKIPPED:
                         doStep = False
             except Exception:
@@ -312,10 +319,12 @@ class BuildStep(object, properties.PropertiesMixin):
 
 
     def run(self):
-        pass
+        # new-style tests override this, by definition.
+        # old-style tests don't call it.
+        raise NotImplementedError
 
     def start(self):
-        raise NotImplementedError("your subclass must implement this method")
+        raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
         self.stopped = True
