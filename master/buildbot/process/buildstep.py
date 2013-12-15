@@ -306,6 +306,14 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.setWaitingForLocks(False)
         return defer.succeed(None)
 
+    def isNewStyle(self):
+        # **temporary** method until new-style steps are the only supported style
+        return self.run.__func__ is not BuildStep.run.__func__
+
+
+    def run(self):
+        pass
+
     def start(self):
         raise NotImplementedError("your subclass must implement this method")
 

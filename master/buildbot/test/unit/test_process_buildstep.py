@@ -50,6 +50,18 @@ class FakeStepStatus:
     pass
 
 
+class OldStyleStep(buildstep.BuildStep):
+
+    def start(self):
+        pass
+
+
+class NewStyleStep(buildstep.BuildStep):
+
+    def run(self):
+        pass
+
+
 class TestRegexLogEvaluator(unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
@@ -267,6 +279,10 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.expectOutcome(result=SUCCESS, status_text=["generic"])
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
+
+    def test_isNewStyle(self):
+        self.assertFalse(OldStyleStep().isNewStyle())
+        self.assertTrue(NewStyleStep().isNewStyle())
 
 
 class TestLoggingBuildStep(unittest.TestCase):
