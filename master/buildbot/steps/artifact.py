@@ -316,13 +316,23 @@ class AcquireBuildLocks(LoggingBuildStep):
     description="Acquiring builder locks..."
     descriptionDone="Builder locks acquired."
 
-    def __init__(self, hideStepIf = True, **kwargs):
-        LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, **kwargs)
+    def __init__(self, hideStepIf = True, locks=None, resumeBuild=False, **kwargs):
+        self.resumeBuild = resumeBuild
+        self.initialLocks = locks
+        LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
 
+    @defer.inlineCallbacks
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build."])
+        available_slavebuilders = self.build.builder.getAvailableSlaveBuilders()
+
+        if self.resumeBuild and len(available_slavebuilders) > 1 and self.build.slavebuilder not in available_slavebuilders:
+            slavebuilder = yield self.build.builder._chooseSlave(available_slavebuilders)
+            self.build.setupSlaveBuilder(slavebuilder)
+            # Acquire lock
+            self.locks = self.setStepLocks(self.initialLocks)
+
         self.build.locks = self.locks
-        # Acquire lock
         if self.build.slavebuilder.state == IDLE:
             self.build.slavebuilder.state = BUILDING
         if self.build.builder.builder_status.currentBigState == "idle":
