@@ -82,7 +82,7 @@ class BuildStepMixin(object):
         """
         factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
-        self.master = fakemaster.make_master(testcase=self)
+        self.master = fakemaster.make_master(wantData=True, testcase=self)
 
         # step.build
 
@@ -108,7 +108,6 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.master = fakemaster.make_master(testcase=self)
         self.buildslave = step.buildslave = slave.FakeSlave(self.master)
 
         # step.step_status

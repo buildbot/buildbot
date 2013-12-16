@@ -146,8 +146,8 @@ class RunSteps(unittest.TestCase):
         bfd = defer.Deferred()
         old_buildFinished = self.builder.buildFinished
 
-        def buildFinished(build, sb, bids):
-            old_buildFinished(build, sb, bids)
+        def buildFinished(*args):
+            old_buildFinished(*args)
             bfd.callback(None)
         self.builder.buildFinished = buildFinished
 

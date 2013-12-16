@@ -27,6 +27,10 @@ class FakeSlave(object):
         self.master = master
         self.conn = fakeprotocol.FakeConnection(master, self)
         self.properties = properties.Properties()
+        self.buildslaveid = 383
+
+    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
+        pass
 
     def acquireLocks(self):
         pass
