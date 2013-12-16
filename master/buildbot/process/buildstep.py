@@ -287,6 +287,8 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def setupProgress(self):
         if self.useProgress:
+            # XXX this uses self.name, but the name may change when the
+            # step is started..
             sp = progress.StepProgress(self.name, self.progressMetrics)
             self.progress = sp
             self.step_status.setProgress(sp)
@@ -305,6 +307,15 @@ class BuildStep(object, properties.PropertiesMixin):
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
+
+        # create and start the step, noting that the name may be altered to
+        # ensure uniqueness
+        # XXX self.number != self.step_status.number..
+        self.stepid, self.number, self.name = yield self.master.data.updates.newStep(
+            buildid=self.build.buildid,
+            name=util.ascii2unicode(self.name))
+        yield self.master.data.updates.startStep(self.stepid)
+
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
                       for access in self.locks]

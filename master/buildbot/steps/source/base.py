@@ -105,7 +105,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         self.codebase = codebase
         if self.codebase:
-            self.name = ' '.join((self.name, self.codebase))
+            self.name = '-'.join((self.name, self.codebase))
 
         self.alwaysUseLatest = alwaysUseLatest
 

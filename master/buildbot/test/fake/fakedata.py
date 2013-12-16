@@ -252,7 +252,12 @@ class FakeUpdates(object):
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
                               validation.IdentifierValidator(50))
-        return defer.succeed((10, 1))
+        return defer.succeed((10, 1, name))
+
+    def startStep(self, stepid):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                              validation.IntValidator())
+        return defer.succeed(None)
 
     def setStepStateStrings(self, stepid, state_strings):
         validation.verifyType(self.testcase, 'stepid', stepid,
@@ -319,10 +324,6 @@ class FakeUpdates(object):
         return self.master.db.buildslaves.buildslaveDisconnected(
             buildslaveid=buildslaveid,
             masterid=masterid)
-
-    def __getattr__(self, name):
-        import traceback
-        traceback.print_stack()
 
 
 class FakeDataConnector(object):

@@ -20,6 +20,12 @@ BuildStep
     .. py:attribute:: name
 
         The name of the step.
+        Note that this value may change when the step is started, if the existing name was not unique.
+
+    .. py:attribute:: stepid
+
+        The ID of this step in the database.
+        This attribute is not set until the step starts.
 
     .. py:attribute:: description
 

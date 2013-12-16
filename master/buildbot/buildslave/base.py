@@ -316,10 +316,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             return defer.succeed(None)
 
     def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
-        if buildStarted:
-            self.slave_status.buildStarted(buildStarted)
-        if buildFinished:
-            self.slave_status.buildFinished(buildFinished)
+        # TODO
+        pass
 
     @defer.inlineCallbacks
     def attached(self, conn):

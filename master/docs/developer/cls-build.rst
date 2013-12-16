@@ -10,6 +10,10 @@ Build
 
 .. py:class:: Build
 
+    .. py:attribute:: buildid
+
+        The ID of this build in the database.
+
     .. py:method:: getSummaryStatistic(name, summary_fn, initial_value=None)
 
         :param name: statistic name to summarize
