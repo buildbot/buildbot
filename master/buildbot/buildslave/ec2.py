@@ -95,6 +95,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
         self.volumes = volumes
+        self.price_multiplier = price_multiplier
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -331,7 +332,6 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                        availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
-        target_price = self.target_price
         for price in spot_prices:
             if price.instance_type == self.instance_type:
                 price_sum += price.price
