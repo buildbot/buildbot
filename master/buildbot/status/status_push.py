@@ -360,7 +360,7 @@ class StatusPush(StatusReceiverMultiService):
         d.addErrback(log.err, 'while pushing status message')
 
     def slavePaused(self, slavename):
-        d = self.push('slavePaused', slave=self.status.getSlave(slavename))
+        d = self.push('slavePaused', slavename=slavename)
         d.addErrback(log.err, 'while pushing status message')
 
     def slaveUnpaused(self, slavename):
