@@ -316,18 +316,17 @@ class AcquireBuildLocks(LoggingBuildStep):
     description="Acquiring builder locks..."
     descriptionDone="Builder locks acquired."
 
-    def __init__(self, hideStepIf = True, locks=None, resumeBuild=False, **kwargs):
-        self.resumeBuild = resumeBuild
+    def __init__(self, hideStepIf = True, locks=None, **kwargs):
         self.initialLocks = locks
+        self.locksAvailable = False
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
 
     @defer.inlineCallbacks
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build."])
-        available_slavebuilders = self.build.builder.getAvailableSlaveBuilders()
 
-        if self.resumeBuild and len(available_slavebuilders) > 1 and self.build.slavebuilder not in available_slavebuilders:
-            slavebuilder = yield self.build.builder._chooseSlave(available_slavebuilders)
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 1:
+            slavebuilder = yield self.build.builder._chooseSlave(self.build.builder.getAvailableSlaveBuilders())
             self.build.setupSlaveBuilder(slavebuilder)
             # Acquire lock
             self.locks = self.setStepLocks(self.initialLocks)
@@ -343,6 +342,17 @@ class AcquireBuildLocks(LoggingBuildStep):
 
     def releaseLocks(self):
         return
+
+    def checkLocksAvailable(self, currentLocks):
+        for lock, access in currentLocks:
+            if not lock.isAvailable(self, access):
+                return False
+        return True
+
+    def startStep(self, remote):
+        currentLocks =  self.setStepLocks(self.initialLocks)
+        self.locksAvailable = self.checkLocksAvailable(currentLocks)
+        return super(LoggingBuildStep, self).startStep(remote)
 
 class ReleaseBuildLocks(LoggingBuildStep):
     name = "Release Builder Locks"
