@@ -944,3 +944,44 @@ class TestDefaultMessageIntro(unittest.TestCase):
         build = self.setUpBuild()
         self.assertEqual("The Buildbot has detected a build exception",
                          mail._defaultMessageIntro("all", EXCEPTION, build))
+
+
+# Test buildbot.status.mail._defaultMessageProjects() function
+class TestDefaultMessageProjects(unittest.TestCase):
+    # test the case when source stamp does not specify a project
+    def testNoSorceStampsProject(self):
+        source_stamp = Mock()
+        source_stamp.project = None
+
+        master_status = Mock()
+        master_status.getTitle = Mock(return_value="test-title")
+
+        self.assertEqual("test-title",
+                         mail._defaultMessageProjects([source_stamp],
+                                                      master_status))
+
+    # test the case where single source stamp specifies a project
+    def testSingleSourceStampProject(self):
+        source_stamp = Mock()
+        source_stamp.project = "source-stamp-title"
+
+        self.assertEqual("source-stamp-title",
+                         mail._defaultMessageProjects([source_stamp], Mock()))
+
+    # test the case where multiple source stamps specifies a project
+    def testMultiSourceStampsProject(self):
+        source_stamp1 = Mock()
+        source_stamp1.project = "title-a"
+
+        # second source stamp specifies same project as first source stamp
+        source_stamp2 = Mock()
+        source_stamp2.project = "title-a"
+
+        source_stamp3 = Mock()
+        source_stamp3.project = "title-b"
+
+        self.assertEqual("title-a, title-b",
+                         mail._defaultMessageProjects([source_stamp1,
+                                                      source_stamp2,
+                                                      source_stamp3],
+                         Mock()))

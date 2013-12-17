@@ -114,21 +114,27 @@ def _defaultMessageIntro(mode, results, build):
     return text
 
 
+def _defaultMessageProjects(source_stamps, master_status):
+    projects = []
+
+    for ss in source_stamps:
+        if ss.project and ss.project not in projects:
+            projects.append(ss.project)
+
+    if not projects:
+        projects = [master_status.getTitle()]
+
+    return ', '.join(projects)
+
+
 def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
     ss_list = build.getSourceStamps()
 
     text = _defaultMessageIntro(mode, results, build)
-
-    projects = []
-    if ss_list:
-        for ss in ss_list:
-            if ss.project and ss.project not in projects:
-                projects.append(ss.project)
-    if not projects:
-        projects = [master_status.getTitle()]
-    text += " on builder %s while building %s." % (name, ', '.join(projects))
+    text += " on builder %s while building %s." % \
+            (name, _defaultMessageProjects(ss_list, master_status))
 
     if master_status.getURLForThing(build):
         text += " Full details are available at:\n    %s\n" % master_status.getURLForThing(build)
