@@ -42,6 +42,7 @@ SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
 SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
 FULFILLED = 'fulfilled'
+PRICE_TOO_LOW = 'price-too-low'
 
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
@@ -57,7 +58,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
-                 placement=None):
+                 placement=None, price_multiplier=1.2):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -330,6 +331,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                        availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
+        target_price = self.target_price
         for price in spot_prices:
             if price.instance_type == self.instance_type:
                 price_sum += price.price
@@ -337,13 +339,16 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if price_count == 0:
             target_price = 0.02
         else:
-            target_price = ( price_sum / price_count ) * 1.1
+            target_price = ( price_sum / price_count ) * self.price_multiplier
         if target_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.2f exceeds '
                     'configured maximum of %0.2f' %
                     (self.__class__.__name__, self.slavename,
                      target_price, self.max_spot_price))
             raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+        else:
+            log.msg('%s %s requesting spot instance with price %0.2f.' %
+                    (self.__class__.__name__, self.slavename, target_price))
         reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name, 
                                                         security_groups=[self.security_name],
                                                         instance_type=self.instance_type, 
@@ -412,6 +417,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     (self.__class__.__name__, self.slavename,
                      request.id, minutes, seconds))
             return request
+        elif request_status == PRICE_TOO_LOW:
+            log.msg('%s %s spot request rejected, spot price too low' %
+                    (self.__class__.__name__, self.slavename))
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                request.id, request.status)
         else:
             log.msg('%s %s failed to fulfill spot request %s' %
                     (self.__class__.__name__, self.slavename,
