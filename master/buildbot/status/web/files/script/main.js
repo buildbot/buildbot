@@ -7,15 +7,14 @@ require.config({
 		'dataTables': 'project/dataTables',
 		'dotdotdot': 'plugins/jquery-dotdotdot',
 		'screensize': 'project/screen-size',
-		'currentitem': 'project/set-current-item',
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup'
 	}
 });
 
-require(['jquery','popup','screensize','projectdropdown','helpers'], 
-	function($, popup, screenSize, projectDropDown, helpers ) {
+require(['jquery','helpers','popup','screensize','projectdropdown'], 
+	function($,helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
 
 	$(document).ready(function() {
@@ -43,9 +42,6 @@ require(['jquery','popup','screensize','projectdropdown','helpers'],
 			        selectors.comboBox('.select-tools-js');	
 			        selectors.init();
 		    });
-		}
-		if ($('#builddetail_page').length > 0) {
-			helpers.summaryArtifactTests();
 		}
 				
 		// get scripts for general popups

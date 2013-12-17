@@ -3,46 +3,57 @@ define(['jquery', 'datatables-plugin'], function ($) {
     var dataTables;
     
     dataTables = {
-        init: function (m) {
+        init: function () {
 
  			// Colums with sorting 
-				var colList = [];
-				var tablesorterEl = $('.tablesorter-js');
-
-				// Select which columns not to sort
-				$('> thead th', tablesorterEl).each(function(i){
-					
-					if (!$(this).hasClass('no-tablesorter-js')) {
-						colList.push(null);
-					} else {
-						colList.push({'bSortable': false });
-					}
-				});
 				
-				// sort and filter tabless		
-				 var oTable = tablesorterEl.dataTable({
-					"bPaginate": false,
-					"bLengthChange": false,
-					"bFilter": true,
-					"bSort": true,
-					"bInfo": false,
-					"bAutoWidth": false,
-					"bRetrieve": false,
-					"asSorting": true,
-					"bServerSide": false,
-					"bSearchable": true,
-					"aaSorting": [],
-					"aoColumns": colList,					
-					"oLanguage": {
-					 	"sSearch": ""
-					 },
-					"bStateSave": true
-				});
+				var tablesorterEl = $('.tablesorter-js');
+				var filterTableInput = $('#filterTableInput');
+				// Select which columns not to sort
+			    tablesorterEl.each(function(i){			    	
+			    	var colList = [];
 
-				// Set the marquee in the input field on load adn listen for key event
-				$('#filterTableInput').focus().keydown(function(event) {
-					oTable.fnFilter($(this).val());
-				});;
+			        $('> thead th', this).each(function(i){
+			            
+			            if (!$(this).hasClass('no-tablesorter-js')) {
+			                colList.push(null);
+			            } else {
+			                colList.push({'bSortable': false });
+			            }
+
+			        });
+
+			       //initialize datatable
+			      	var oTable = $(this).dataTable({
+						"bPaginate": false,
+						"bLengthChange": false,
+						"bFilter": true,
+						"bSort": true,
+						"bInfo": false,
+						"bAutoWidth": false,
+						"bRetrieve": true,
+						"asSorting": true,
+						"bServerSide": false,
+						"bSearchable": true,
+						"aaSorting": [],
+						"aoColumns": colList,					
+						"oLanguage": {
+						 	"sSearch": ""
+						 },
+						"bStateSave": true
+					});
+
+			    	// Set the marquee in the input field on load and listen for key event
+					filterTableInput.focus().keydown(function(event) {
+						oTable.fnFilter($(this).val());
+					});  
+
+			    });
+				
+				// sort and filter tables	
+				
+
+							
 		}
 	}
 	return dataTables;

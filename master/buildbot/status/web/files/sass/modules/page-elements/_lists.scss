@@ -112,6 +112,22 @@
 	line-height: 24px;
 }
 
+.sum-display:after {
+	margin-left: 4px;
+}
+
+.graceful_shutdown {
+	float: right;
+    margin-top: 4px;
+}
+
+.pos-content {
+	float: left;
+    line-height: 8px;
+    margin-left: 10px;
+    margin-top: -2px;
+}
+
 // test report and result links
 .tests-summary-list {
 	 margin: 3px 5px 0 0;
@@ -286,6 +302,7 @@ div.force-text {
     background-color:#F4F4F4;
     border: 1px solid #D9D9D9;
     padding: 11px;
+   	@include box-shadow(inset 0 1px 0 #fff);
     @include border-radius (7px);
     .more-info-box & {
 		background-color: #FFF;
@@ -297,6 +314,7 @@ div.force-text {
     	}
     }
     li {
+    	@include text-shadow(0 1px 0 #fff);
 		width: 100%;
 		display:table;
 		padding: 8px 0;
@@ -340,7 +358,6 @@ div.force-text {
 		list-style:none;
 		padding:0;
 		margin:0;
-		margin-bottom:15px;
 	}
 	&.horisontal li {
 		float: left;
@@ -357,6 +374,11 @@ div.force-text {
 }
 
 @include breakpoint($bkpt-small) {
+	.graceful_shutdown {
+		float: none;
+		margin-bottom: 10px; 
+
+	}
 	.step-list {
 		.result {
 			clear: both;

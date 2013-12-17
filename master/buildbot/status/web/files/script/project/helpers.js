@@ -1,11 +1,11 @@
-define(['jquery', 'screensize'], function ($, screenSize) {
+define(['jquery', 'screensize', 'dataTables'], function ($, screenSize, dataTables) {
 
     "use strict";
     var helpers;
     
     helpers = {
         init: function () {
-
+        	
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -30,7 +30,16 @@ define(['jquery', 'screensize'], function ($, screenSize) {
         	// insert codebase and branch on the builders page
         	if ($('#builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
-        		helpers.codeBaseBranchOverview();
+        		helpers.codeBaseBranchOverview();	
+			}
+
+			if ($('#buildslave_page').length) {
+				// display the number of current jobs
+				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
+			}
+
+			if ($('#builddetail_page').length > 0) {
+				helpers.summaryArtifactTests();
 			}
 
 			if ($('#tb-root').length != 0) {
@@ -287,6 +296,10 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.tool-tip').remove();
 					$(this).unbind(e);
 				});
+		}, displaySum: function (displayEl, countEl) {
+			// Insert the total length of the elements
+			displayEl.text(countEl.length);
+
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
 

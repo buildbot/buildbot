@@ -312,3 +312,17 @@ body.log.interface {
 		max-width: 175px;
 	}
 }
+
+@include breakpoint($bkpt-medium) {
+	.auth-user {display:none;}
+}
+@include breakpoint($bkpt-large) {
+	.hide-mobile {display:inline;}		
+	.auth-user {display:block;}
+}
+@include breakpoint($bkpt-large2) {
+	.hide-mobile {display:inline;}		
+}
+@include breakpoint($bkpt-xlarge) {
+	.hide-mobile {display:inline;}		
+}
