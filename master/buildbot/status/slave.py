@@ -36,6 +36,7 @@ class SlaveStatus:
         self._lastMessageReceived = 0
         self.runningBuilds = []
         self.graceful_callbacks = []
+        self.pause_callbacks = []
         self.info = {}
         self.info_change_callbacks = []
         self.connect_times = []
@@ -91,6 +92,20 @@ class SlaveStatus:
 
     def setPaused(self, isPaused):
         self.paused = isPaused
+        for cb in self.pause_callbacks:
+            eventually(cb, isPaused)
+
+    def addPauseWatcher(self, watcher):
+        """Add watcher to the list of watchers to be notified when the
+        pause flag is changed."""
+        if not watcher in self.pause_callbacks:
+            self.pause_callbacks.append(watcher)
+
+    def removePauseWatcher(self, watcher):
+        """Remove watcher from the list of watchers to be notified when the
+        pause shutdown flag is changed."""
+        if watcher in self.pause_callbacks:
+            self.pause_callbacks.remove(watcher)
 
     def recordConnectTime(self):
         # record this connnect, and keep data for the last hour
