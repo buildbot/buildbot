@@ -73,7 +73,9 @@ class Model(base.DBConnectorComponent):
         # time the buildrequest was completed, or NULL
         sa.Column('complete_at', sa.Integer),
         sa.Column('artifactbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
-        sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
+        sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
+        sa.Column('mergebrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
+        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
     )
 
     # Each row in this table represents a claimed build request, where the
@@ -406,6 +408,8 @@ class Model(base.DBConnectorComponent):
             unique=True)
     sa.Index('buildrequests_artifactbrid', buildrequests.c.artifactbrid, unique=False)
     sa.Index('buildrequests_triggeredbybrid', buildrequests.c.triggeredbybrid, unique=False)
+    sa.Index('buildrequests_mergebrid', buildrequests.c.mergebrid, unique=False)
+    sa.Index('buildrequests_startbrid', buildrequests.c.startbrid, unique=False)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be

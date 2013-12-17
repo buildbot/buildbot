@@ -20,6 +20,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    });
 			*/
 
+
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
@@ -94,6 +95,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
 			}
 
+
 		}, setCurrentItem: function () {
 			
 				var path = window.location.pathname.split("\/");
@@ -134,7 +136,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				valOrTxt = $(this).is('input')? 'val' : 'text';				
 				$(this)[valOrTxt](cookieVal);
 			});
-			
+		
 		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
 
@@ -341,7 +343,10 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			} else {
 				var expiredate = 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			}
-			//var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
+			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
+			
+			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
+
 			
 		}, startTimer: function(el, start) {		// specific for the builddetail page
 			

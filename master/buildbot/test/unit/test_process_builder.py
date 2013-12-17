@@ -157,7 +157,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave1', [10])])
+                exp_claims=[10, 11], exp_builds=[('test-slave1', [10, 11])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_limited_by_available_slaves(self):
@@ -171,7 +171,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('test-slave2', [10])])
+                exp_claims=[10, 11], exp_builds=[('test-slave2', [10, 11])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_unlimited(self):
@@ -186,7 +186,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[10, 11],
-                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
+                exp_builds=[('test-slave2', [10, 11])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_limited_by_requests(self):
@@ -310,7 +310,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[11], exp_builds=[('test-slave2', [11])])
+                exp_claims=[10, 11], exp_builds=[('test-slave2', [10, 11])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_builder_stopped(self):
@@ -346,8 +346,8 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 buildername="bldr", submitted_at=1332025495.19141),
         ]
         yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[42880],
-                exp_builds=[('bldr', [42880])])
+                exp_claims=[42880, 42922],
+                exp_builds=[('bldr', [42880, 42922])])
 
     # _chooseSlave
 

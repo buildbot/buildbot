@@ -25,12 +25,14 @@ require(['jquery','helpers','popup','screensize','projectdropdown'],
 
 	$(document).ready(function() {
 		
+
 		// get all common scripts
 		helpers.init();			
 		// get scripts for general popups
 		popup.init();
 		// get scripts for the projects dropdown
 		projectDropDown.init();
+
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
