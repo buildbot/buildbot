@@ -44,7 +44,8 @@ class FakeUpdates(object):
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
         self.buildslaveIds = {}  # { name : id }; users can add buildslaves here
-        self.logs = {}  # { logid : [ added stuff, None for finish ] }
+        # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
+        self.logs = {}
 
     # extra assertions
 
@@ -280,12 +281,14 @@ class FakeUpdates(object):
                               validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
-        return defer.succeed(10)
+        logid = max([0] + self.logs.keys()) + 1
+        self.logs[logid] = dict(name=name, type=type, content=[], finished=False)
+        return defer.succeed(logid)
 
     def finishLog(self, logid):
         validation.verifyType(self.testcase, 'logid', logid,
                               validation.IntValidator())
-        self.logs.setdefault(logid, []).append(None)
+        self.logs[logid]['finished'] = True
         return defer.succeed(None)
 
     def compressLog(self, logid):
@@ -299,7 +302,7 @@ class FakeUpdates(object):
         validation.verifyType(self.testcase, 'content', content,
                               validation.StringValidator())
         self.testcase.assertEqual(content[-1], u'\n')
-        self.logs.setdefault(logid, []).append(content)
+        self.logs[logid]['content'].append(content)
         return defer.succeed(None)
 
     def findBuildslaveId(self, name):

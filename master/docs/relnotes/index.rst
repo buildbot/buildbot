@@ -180,7 +180,8 @@ Old steps had two ways of interacting with logfiles, both of which have changed.
 The first is writing to logs while a step is executing.
 When using :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog` or :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`, this is straightforward, except that in new-style steps the methods return a Deferred.
 
-For :py:meth:`buildbot.process.buildstep.BuildStep.addLog`, the returned object (via Deferred) has the following methods to add log content:
+The second method is via :py:meth:`buildbot.process.buildstep.BuildStep.addLog`.
+In new-style steps, the returned object (via Deferred) has the following methods to add log content:
 
  * :py:meth:`~buildbot.process.log.StreamLog.addStdout`
  * :py:meth:`~buildbot.process.log.StreamLog.addStderr`
@@ -188,7 +189,7 @@ For :py:meth:`buildbot.process.buildstep.BuildStep.addLog`, the returned object 
  * :py:meth:`~buildbot.process.log.Log.finish`
 
 All of these methods now return Deferreds.
-Note that the log-reading methods, are not available on this object:
+Note that the log-reading methods are not available on this object:
 
  * ``hasContents``
  * ``getLog``
@@ -199,6 +200,10 @@ Note that the log-reading methods, are not available on this object:
 If your step uses such methods, consider using a LogObserver instead, or using the Data API to get the required data.
 
 The undocumented and unused ``subscribeConsumer`` method of logfiles has also been removed.
+
+The :py:meth:`~buildbot.process.log.Log.subscribe` method now takes a callable, rather than an instance, and does not support catchup.
+This method was primarily used by :py:class:`~buildbot.process.logobserver.LogObserver`, the implementation of which has been modified accordingly.
+Any other uses of the subscribe method should be refactored to use a :py:class:`~buildbot.process.logobserver.LogObserver`.
 
 Removed Methods
 +++++++++++++++

@@ -161,15 +161,21 @@ class RunSteps(unittest.TestCase):
         # then get the BuildStatus and return it
         defer.returnValue(self.master.status.lastBuilderStatus.lastBuildStatus)
 
+    def assertLogs(self, exp_logs):
+        got_logs = {}
+        for id, l in self.master.data.updates.logs.iteritems():
+            self.failUnless(l['finished'])
+            got_logs[l['name']] = ''.join(l['content'])
+        self.assertEqual(got_logs, exp_logs)
+
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep(self):
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
-        bs = yield self.do_test_step()
-        logs = dict((l.name, l.old_getText()) for l in bs.getLogs())
-        self.assertEqual(logs, {
-            'compl.html': '<blink>A very short logfile</blink>\n',
-            'foo': 'stdout\nstderr\n',
-            'obs': 'Observer saw [\'stdout\\n\']',
+        yield self.do_test_step()
+        self.assertLogs({
+            u'compl.html': u'<blink>A very short logfile</blink>\n',
+            u'foo': u'ostdout\nestderr\n',
+            u'obs': u'Observer saw [u\'stdout\\n\']\n',
         })
 
     @defer.inlineCallbacks

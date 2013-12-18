@@ -29,7 +29,9 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.util import identifiers
 from buildbot.process import logobserver
+from buildbot.process import log as plog
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
@@ -244,6 +246,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self.stopped = False
         self.master = None
         self.statistics = {}
+        self.logs = {}
 
         self._start_unhandled_deferreds = None
 
@@ -540,11 +543,18 @@ class BuildStep(object, properties.PropertiesMixin):
         return self.build.getSlaveName()
 
     def addLog(self, name, type='s'):
+        @defer.inlineCallbacks
+        def _addLog():
+            logid = yield self.master.data.updates.newLog(self.stepid,
+                    util.ascii2unicode(name), unicode(type))
+            l = plog.Log.new(self.master, name, type, logid)
+            self._setupLog(name, l)
+            defer.returnValue(l)
+
         # This method implements a smooth transition for nine
         # it returns a synchronous version of logfile, so that steps can safely
         # start writting into logfile, without waiting for log creation in db
-        loog_d = defer.maybeDeferred(self.step_status.addLog, name)
-        self._connectPendingLogObservers()
+        loog_d = _addLog()
         if self._start_unhandled_deferreds is None:
             # This is a new-style step, so we can return the deferred
             return loog_d
@@ -559,22 +569,26 @@ class BuildStep(object, properties.PropertiesMixin):
         raise KeyError("no log named '%s'" % (name,))
 
     @_maybeUnhandled
+    @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)
-        loog = self.step_status.addLog(name)
-        size = loog.chunkSize
-        for start in range(0, len(text), size):
-            loog.addStdout(text[start:start + size])
-        loog.finish()
-        self._connectPendingLogObservers()
-        return defer.succeed(None)
+        logid = yield self.master.data.updates.newLog(self.stepid,
+                util.ascii2unicode(name), u't')
+        l = plog.Log.new(self.master, name, u't', logid)
+        self._setupLog(name, l)
+        yield l.addContent(text)
+        yield l.finish()
 
     @_maybeUnhandled
+    @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
-        self.step_status.addHTMLLog(name, html)
-        self._connectPendingLogObservers()
-        return defer.succeed(None)
+        logid = yield self.master.data.updates.newLog(self.stepid,
+                util.ascii2unicode(name), u'h')
+        l = plog.Log.new(self.master, name, u'h', logid)
+        self._setupLog(name, l)
+        yield l.addContent(html)
+        yield l.finish()
 
     def addLogObserver(self, logname, observer):
         assert interfaces.ILogObserver.providedBy(observer)
@@ -582,17 +596,14 @@ class BuildStep(object, properties.PropertiesMixin):
         self._pendingLogObservers.append((logname, observer))
         self._connectPendingLogObservers()
 
+    def _setupLog(self, name, log):
+        self.logs[name] = log
+        self._connectPendingLogObservers()
+
     def _connectPendingLogObservers(self):
-        if not self._pendingLogObservers:
-            return
-        if not self.step_status:
-            return
-        current_logs = {}
-        for loog in self.step_status.getLogs():
-            current_logs[loog.getName()] = loog
         for logname, observer in self._pendingLogObservers[:]:
-            if logname in current_logs:
-                observer.setLog(current_logs[logname])
+            if logname in self.logs:
+                observer.setLog(self.logs[logname])
                 self._pendingLogObservers.remove((logname, observer))
 
     @_maybeUnhandled

@@ -35,6 +35,10 @@ class Log(object):
         self.finished = False
         self.finishWaiters = []
 
+        # function to decode bytestring data to unicode TODO: make this
+        # configurable, with a global default
+        self.decoder = lambda s: s.decode('utf-8', 'replace')
+
     @classmethod
     def new(cls, master, name, type, logid):
         type = unicode(type)
@@ -49,13 +53,8 @@ class Log(object):
 
     # subscriptions
 
-    def subscribe(self, receiver, catchup):
-        assert not catchup, "subscribe(catchup=True) is no longer supported"
-        sub = self.subscriptions[receiver] = self.subPoint.subscribe(receiver)
-        return sub
-
-    def unsubscribe(self, receiver):
-        self.subscriptions[receiver].unsubscribe()
+    def subscribe(self, callback):
+        return self.subPoint.subscribe(callback)
 
     # adding lines
 
@@ -105,6 +104,8 @@ class PlainLog(Log):
         super(PlainLog, self).__init__(master, name, type, logid)
 
         def wholeLines(lines):
+            if not isinstance(lines, unicode):
+                lines = self.decoder(lines)
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
         self.lbf = lineboundaries.LineBoundaryFinder(wholeLines)
@@ -146,6 +147,8 @@ class StreamLog(Log):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
+                if not isinstance(lines, unicode):
+                    lines = self.decoder(lines)
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)
                 # strip the last character, as the regexp will add a

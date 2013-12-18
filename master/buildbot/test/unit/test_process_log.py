@@ -16,7 +16,6 @@
 import mock
 
 from buildbot.process import log
-from buildbot.status import logfile
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.util import interfaces
@@ -51,17 +50,19 @@ class Tests(unittest.TestCase):
         l.addContent(u'world\nthis is a second line')  # unfinished
         l.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], [
-            u'hello\n',
-            u'hello cruel world\n',
-            u'this is a second line\n',
-            None])
+        self.assertEqual(self.master.data.updates.logs[l.logid], {
+            'content': [u'hello\n', u'hello cruel world\n',
+                        u'this is a second line\n'],
+            'finished': True,
+            'type': u't',
+            'name': u'testlog',
+        })
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
         l = yield self.makeLog('t')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)), False)
+        l.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
         yield l.addContent(u'hello\n')
@@ -84,8 +85,8 @@ class Tests(unittest.TestCase):
     def test_subscription_unsubscribe(self):
         l = yield self.makeLog('t')
         sub_fn = mock.Mock()
-        l.subscribe(sub_fn, False)
-        l.unsubscribe(sub_fn)
+        sub = l.subscribe(sub_fn)
+        sub.unsubscribe()
         yield l.finish()
         sub_fn.assert_not_called()
 
@@ -93,7 +94,7 @@ class Tests(unittest.TestCase):
     def test_subscription_stream(self):
         l = yield self.makeLog('s')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)), False)
+        l.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
         yield l.addStdout(u'hello\n')
@@ -133,12 +134,13 @@ class Tests(unittest.TestCase):
         l.addStderr(u'bad things!')  # unfinished
         l.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], [
-            'ohello\n',
-            'eoh noes!\n',
-            'ohello cruel world\n',
-            'ebad things!\n',
-            None])
+        self.assertEqual(self.master.data.updates.logs[l.logid], {
+            'content': [u'ohello\n', u'eoh noes!\n', u'ohello cruel world\n',
+                        u'ebad things!\n'],
+            'finished': True,
+            'name': u'testlog',
+            'type': u's',
+        })
 
     @defer.inlineCallbacks
     def test_isFinished(self):
@@ -207,13 +209,12 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_subscribe(self):
         @self.assertArgSpecMatches(self.log.subscribe)
-        def subscribe(self, receiver, catchup):
+        def subscribe(self, callback):
             pass
 
     def test_signature_unsubscribe(self):
-        @self.assertArgSpecMatches(self.log.unsubscribe)
-        def unsubscribe(self, receiver):
-            pass
+        # method has been removed
+        self.failIf(hasattr(self.log, 'unsubscribe'))
 
     def test_signature_getStep_removed(self):
         self.failIf(hasattr(self.log, 'getStep'))
@@ -235,14 +236,6 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_getChunks_removed(self):
         self.failIf(hasattr(self.log, 'getChunks'))
-
-
-class TestStatusItfc(unittest.TestCase, InterfaceTests):
-
-    def setUp(self):
-        step = mock.Mock(name='step')
-        step.build.builder.basedir = '.'
-        self.log = logfile.LogFile(step, 'stdio', 'stdio')
 
 
 class TestProcessItfc(unittest.TestCase, InterfaceTests):

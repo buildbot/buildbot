@@ -24,6 +24,7 @@ The sections contained here document classes that can be used or subclassed.
     cls-protocols
     cls-bslavemanager
     cls-log
+    cls-logobserver
 
 .. todo::
 
