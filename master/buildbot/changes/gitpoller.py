@@ -106,12 +106,14 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         else:
             branches = 'ALL'
 
-        str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-               % (self.repourl, ', '.join(branches), status))
+        str = ('GitPoller watching the remote git repository %s, '
+               'branches: %s %s' % (self.repourl, ', '.join(branches),
+                                    status))
         return str
 
     def _getBranches(self):
         d = self._dovccmd('ls-remote', [self.repourl])
+
         @d.addCallback
         def parseRemote(rows):
             branches = []
