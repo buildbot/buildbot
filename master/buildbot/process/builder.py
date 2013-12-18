@@ -384,7 +384,7 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # create the BuildStatus object that goes with the Build
-        bs = self.builder_status.newBuild()
+        bs = self.builder_status.newBuild([req.id for req in build.requests])
 
         # record the build in the db - one row per buildrequest
         try:

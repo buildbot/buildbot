@@ -507,7 +507,7 @@ class BuilderStatus(styles.Versioned):
                 log.msg("Exception caught publishing state to %r" % w)
                 log.err()
 
-    def newBuild(self):
+    def newBuild(self, brids):
         """The Builder has decided to start a build, but the Build object is
         not yet ready to report status (it has not finished creating the
         Steps). Create a BuildStatus object that it can use."""
@@ -517,7 +517,7 @@ class BuilderStatus(styles.Versioned):
         # build number we've just allocated. This is not quite as important
         # as it was before we switch to determineNextBuildNumber, but I think
         # it may still be useful to have the new build save itself.
-        s = BuildStatus(self, self.master, number)
+        s = BuildStatus(self, self.master, number, brids)
         s.waitUntilFinished().addCallback(self._buildFinished)
         return s
 
