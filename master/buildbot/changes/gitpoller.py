@@ -98,17 +98,18 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     def describe(self):
-        status = ""
-        if not self.master:
-            status = "[STOPPED - check log]"
-        if self.branches:
-            branches = ', '.join(self.branches)
-        else:
-            branches = 'ALL'
+        str = ('GitPoller watching the remote git repository ' +
+               self.repourl)
 
-        str = ('GitPoller watching the remote git repository %s, '
-               'branches: %s %s' % (self.repourl, ', '.join(branches),
-                                    status))
+        if self.branches:
+            if self.branches is True:
+                str += ', branches: ALL'
+            elif not callable(self.branches):
+                str += ', branches: ' + ', '.join(self.branches)
+
+        if not self.master:
+            str += " [STOPPED - check log]"
+
         return str
 
     def _getBranches(self):
