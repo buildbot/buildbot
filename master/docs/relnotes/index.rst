@@ -14,6 +14,13 @@ Master
 Features
 ~~~~~~~~
 
+* :py:class:EC2LatentBuildSlave has been extended:
+   * Optional parameter ``spot_instance``, default False, creates a spot instance.
+   * Optional parameter ``max_spot_price`` defines the maximum bid for a spot instance.
+   * Optional parameter ``volumes``, takes a list of (volume_id, mount_point) tuples.
+   * Optional parameter ``placement`` is appended to the ``region`` parameter, e.g. region=us-west-2, placement=b.
+   * Optional parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price. 
+
 * The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
 
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.

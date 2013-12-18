@@ -423,8 +423,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                 request.id, request.status)
         else:
-            log.msg('%s %s failed to fulfill spot request %s' %
+            log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.slavename,
-                     request.id))
+                     request.id, request_status))
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                 request.id, request.status)
