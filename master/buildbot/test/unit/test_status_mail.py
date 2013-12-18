@@ -985,3 +985,42 @@ class TestDefaultMessageProjects(unittest.TestCase):
                                                       source_stamp2,
                                                       source_stamp3],
                          Mock()))
+
+
+# Test buildbot.status.mail._defaultMessageSourceStamps() function
+class TestDefaultMessageSourceStamps(unittest.TestCase):
+
+    # utility function to create mocked source stamp object
+    def setUpSourceStamp(self, branch=None, revision=None, patch=None,
+                         codebase=""):
+
+        source_stamp = Mock()
+        source_stamp.branch = branch
+        source_stamp.revision = revision
+        source_stamp.patch = patch
+        source_stamp.codebase = codebase
+
+        return source_stamp
+
+    # test the case where build does not have any source stamps
+    def testNoSourceStamps(self):
+        self.assertEqual(mail._defaultMessageSourceStamps([]), "")
+
+    # test the case with one single minimal source stamp
+    def testOneSourceStamp(self):
+        source_stamp = self.setUpSourceStamp()
+
+        self.assertEqual("Build Source Stamp: HEAD\n",
+                         mail._defaultMessageSourceStamps([source_stamp]))
+
+    # test the case with multiple source stamps, with branches, revisions,
+    # patch and codebase specifications
+    def testMultipleSourceStamps(self):
+        sstamp1 = self.setUpSourceStamp(branch="branch1", revision="rev1")
+        sstamp2 = self.setUpSourceStamp(branch="branch2", revision="rev2",
+                                        patch="dummy", codebase="base1")
+
+        self.assertEqual("Build Source Stamp: [branch branch1] rev1\n"
+                         "Build Source Stamp 'base1': [branch branch2] rev2 "
+                         "(plus patch)\n",
+                         mail._defaultMessageSourceStamps([sstamp1, sstamp2]))

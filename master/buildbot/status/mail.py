@@ -127,6 +127,32 @@ def _defaultMessageProjects(source_stamps, master_status):
     return ', '.join(projects)
 
 
+def _defaultMessageSourceStamps(source_stamps):
+    text = ""
+
+    for ss in source_stamps:
+        source = ""
+
+        if ss.branch:
+            source += "[branch %s] " % ss.branch
+
+        if ss.revision:
+            source += str(ss.revision)
+        else:
+            source += "HEAD"
+
+        if ss.patch:
+            source += " (plus patch)"
+
+        discriminator = ""
+        if ss.codebase:
+            discriminator = " '%s'" % ss.codebase
+
+        text += "Build Source Stamp%s: %s\n" % (discriminator, source)
+
+    return text
+
+
 def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
@@ -145,25 +171,8 @@ def defaultMessage(mode, name, build, results, master_status):
 
     text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
     text += "Build Reason: %s\n" % build.getReason()
-
-    for ss in ss_list:
-        source = ""
-        if ss and ss.branch:
-            source += "[branch %s] " % ss.branch
-        if ss and ss.revision:
-            source += str(ss.revision)
-        else:
-            source += "HEAD"
-        if ss and ss.patch:
-            source += " (plus patch)"
-
-        discriminator = ""
-        if ss.codebase:
-            discriminator = " '%s'" % ss.codebase
-        text += "Build Source Stamp%s: %s\n" % (discriminator, source)
-
+    text += _defaultMessageSourceStamps(ss_list)
     text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
-
     text += "\n"
 
     t = build.getText()
