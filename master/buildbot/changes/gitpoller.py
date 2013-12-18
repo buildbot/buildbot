@@ -137,6 +137,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             branch = branch[11:]
         return branch
 
+    def _trackerBranch(self, branch):
+        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''),
+            self._removeHeads(branch))
+
     @defer.inlineCallbacks
     def poll(self):
         yield self._dovccmd('init', ['--bare', self.workdir])
@@ -148,12 +152,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 branches = filter(self.branches, branches)
             else:
                 branches = filter(self._headsFilter, branches)
-            # We remove the refs/heads/ prefix here, so that
-            # poller state with bare branch names is respected
-            branches = map(self._removeHeads, branches)
 
         refspecs = [
-            '+%s:%s' % (branch, self._localBranch(branch))
+            '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
             for branch in branches
         ]
         yield self._dovccmd('fetch',
@@ -162,8 +163,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revs = {}
         for branch in branches:
             try:
-                revs[branch] = rev = yield self._dovccmd('rev-parse',
-                                                         [self._localBranch(branch)], path=self.workdir)
+                revs[branch] = rev = yield self._dovccmd(
+                    'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
                 yield self._process_changes(rev, branch)
             except:
                 log.err(_why="trying to poll branch %s of %s"
@@ -298,6 +299,3 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure)
         return d
-
-    def _localBranch(self, branch):
-        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''), branch)

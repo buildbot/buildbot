@@ -480,7 +480,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # do the poll
         self.poller.branches = True
         self.poller.lastRev = {
-            'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+            'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         }
         d = self.poller.poll()
 
@@ -488,7 +488,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         def cb(_):
             self.assertAllCommandsRan()
             self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'refs/heads/master':
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
             })
 
             self.assertEqual(len(self.changes_added), 2)
@@ -497,7 +498,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
+            self.assertEqual(self.changes_added[0]['branch'],
+                             'refs/heads/master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
@@ -608,8 +610,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # do the poll
         self.poller.branches = True
         self.poller.lastRev = {
-            'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
-            'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+            'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
         d = self.poller.poll()
 
@@ -617,8 +619,10 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         def cb(_):
             self.assertAllCommandsRan()
             self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+                'refs/heads/master':
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'refs/heads/release':
+                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
             })
 
             self.assertEqual(len(self.changes_added), 3)
@@ -627,7 +631,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
+            self.assertEqual(self.changes_added[0]['branch'],
+                             'refs/heads/master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
@@ -699,8 +704,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         self.poller.branches = TestCallable()
         self.poller.lastRev = {
-            'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
-            'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+            'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
         d = self.poller.poll()
 
@@ -711,8 +716,10 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             # The release branch id should remain unchanged,
             # because it was ignorned.
             self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+                'refs/heads/master':
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'refs/heads/release':
+                'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
 
             self.assertEqual(len(self.changes_added), 2)
@@ -721,7 +728,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'], 'master')
+            self.assertEqual(self.changes_added[0]['branch'],
+                             'refs/heads/master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
