@@ -5,7 +5,7 @@ import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
 from buildbot.process.slavebuilder import IDLE, BUILDING
-
+import random
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
 
@@ -321,21 +321,17 @@ class AcquireBuildLocks(LoggingBuildStep):
         self.locksAvailable = False
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
 
-    @defer.inlineCallbacks
+
     def start(self):
         self.step_status.setText(["Acquiring lock to complete build."])
-
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 1:
-            slavebuilder = yield self.build.builder._chooseSlave(self.build.builder.getAvailableSlaveBuilders())
-            self.build.setupSlaveBuilder(slavebuilder)
-            # Acquire lock
-            self.locks = self.setStepLocks(self.initialLocks)
-
         self.build.locks = self.locks
+
         if self.build.slavebuilder.state == IDLE:
             self.build.slavebuilder.state = BUILDING
+
         if self.build.builder.builder_status.currentBigState == "idle":
             self.build.builder.builder_status.setBigState("building")
+
         self.build.releaseLockInstanse = self
         self.finished(SUCCESS)
         return
@@ -352,6 +348,14 @@ class AcquireBuildLocks(LoggingBuildStep):
     def startStep(self, remote):
         currentLocks =  self.setStepLocks(self.initialLocks)
         self.locksAvailable = self.checkLocksAvailable(currentLocks)
+        self.locksAvailable = False
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 1:
+            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
+            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
+            self.build.setupSlaveBuilder(slavebuilder)
+            # if not available builder we probably could attach to d = lock.waitUntilMaybeAvailable(self, access)
+            # process / buildstep.py
+
         return super(LoggingBuildStep, self).startStep(remote)
 
 class ReleaseBuildLocks(LoggingBuildStep):
