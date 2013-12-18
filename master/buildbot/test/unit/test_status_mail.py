@@ -1024,3 +1024,33 @@ class TestDefaultMessageSourceStamps(unittest.TestCase):
                          "Build Source Stamp 'base1': [branch branch2] rev2 "
                          "(plus patch)\n",
                          mail._defaultMessageSourceStamps([sstamp1, sstamp2]))
+
+
+# Test buildbot.status.mail._defaultMessageSummary() function
+class TestDefaultMessageSummary(unittest.TestCase):
+
+    def setUp(self):
+        self.build = Mock()
+        self.build.getText = Mock(return_value=None)
+
+    def testSuccess(self):
+        self.assertEqual("Build succeeded!\n",
+                         mail._defaultMessageSummary(self.build, SUCCESS))
+
+    def testWarnings(self):
+        self.assertEqual("Build Had Warnings\n",
+                         mail._defaultMessageSummary(self.build, WARNINGS))
+
+    def testException(self):
+        self.assertEqual("BUILD FAILED\n",
+                         mail._defaultMessageSummary(self.build, EXCEPTION))
+
+    def testFailure(self):
+        self.assertEqual("BUILD FAILED\n",
+                         mail._defaultMessageSummary(self.build, FAILURE))
+
+    # test failed build with text contributed by two steps
+    def testFailureStepsText(self):
+        self.build.getText = Mock(return_value=["step1", "step2"])
+        self.assertEqual("BUILD FAILED: step1 step2\n",
+                         mail._defaultMessageSummary(self.build, FAILURE))

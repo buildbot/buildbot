@@ -153,6 +153,23 @@ def _defaultMessageSourceStamps(source_stamps):
     return text
 
 
+def _defaultMessageSummary(build, results):
+    t = build.getText()
+    if t:
+        t = ": " + " ".join(t)
+    else:
+        t = ""
+
+    if results == SUCCESS:
+        text = "Build succeeded!\n"
+    elif results == WARNINGS:
+        text = "Build Had Warnings%s\n" % t
+    else:
+        text = "BUILD FAILED%s\n" % t
+
+    return text
+
+
 def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
@@ -175,23 +192,12 @@ def defaultMessage(mode, name, build, results, master_status):
     text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
     text += "\n"
 
-    t = build.getText()
-    if t:
-        t = ": " + " ".join(t)
-    else:
-        t = ""
-
-    if results == SUCCESS:
-        text += "Build succeeded!\n"
-    elif results == WARNINGS:
-        text += "Build Had Warnings%s\n" % t
-    else:
-        text += "BUILD FAILED%s\n" % t
-
+    text += _defaultMessageSummary(build, results)
     text += "\n"
     text += "Sincerely,\n"
     text += " -The Buildbot\n"
     text += "\n"
+
     return {'body': text, 'type': 'plain'}
 
 
