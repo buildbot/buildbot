@@ -365,7 +365,7 @@ these AWS EC2 values.  They both default to ``latent_buildbot_slave``.
 Spot instances
 ##############
 
-If you would prefer to use spot instances for running your builds, you can accomplisg that
+If you would prefer to use spot instances for running your builds, you can accomplish that
 by passing in a True value to the ``spot_instance`` parameter to the EC2LatentBuildSlave
 constructor. Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier``
 in order to limit your builds' budget consumption. ::
