@@ -14,13 +14,15 @@ Master
 Features
 ~~~~~~~~
 
-* The following optional parameters have been added to :py:class:EC2LatentBuildSlave:
+* The following optional parameters have been added to :py:class:`EC2LatentBuildSlave`
    * Boolean parameter ``spot_instance``, default False, creates a spot instance.
    * Float parameter ``max_spot_price`` defines the maximum bid for a spot instance.
    * List parameter ``volumes``, takes a list of (volume_id, mount_point) tuples.
-   * String parameter ``placement`` is appended to the ``region`` parameter, e.g. region=us-west-2, placement=b.
+   * String parameter ``placement`` is appended to the ``region`` parameter, e.g. ``region='us-west-2', placement='b'``
+     will result in the spot request being placed in us-west-2b.
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
-  An EC2LatentBuildSlave will now attempt to create a spot instance based on the above parameters.
+  With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
+  price, placement, and so on.
 
 * The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
 
