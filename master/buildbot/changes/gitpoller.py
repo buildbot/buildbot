@@ -98,26 +98,69 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     def describe(self):
-        status = ""
+        str = ('GitPoller watching the remote git repository ' +
+               self.repourl)
+
+        if self.branches:
+            if self.branches is True:
+                str += ', branches: ALL'
+            elif not callable(self.branches):
+                str += ', branches: ' + ', '.join(self.branches)
+
         if not self.master:
-            status = "[STOPPED - check log]"
-        str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-               % (self.repourl, ', '.join(self.branches), status))
+            str += " [STOPPED - check log]"
+
         return str
+
+    def _getBranches(self):
+        d = self._dovccmd('ls-remote', [self.repourl])
+
+        @d.addCallback
+        def parseRemote(rows):
+            branches = []
+            for row in rows.splitlines():
+                if not '\t' in row:
+                    # Not a useful line
+                    continue
+                sha, ref = row.split("\t")
+                branches.append(ref)
+            return branches
+        return d
+
+    def _headsFilter(self, branch):
+        """Filter out remote references that don't begin with 'refs/heads'."""
+        return branch.startswith("refs/heads/")
+
+    def _removeHeads(self, branch):
+        """Remove 'refs/heads/' prefix from remote references."""
+        if branch.startswith("refs/heads/"):
+            branch = branch[11:]
+        return branch
 
     @defer.inlineCallbacks
     def poll(self):
         yield self._dovccmd('init', ['--bare', self.workdir])
 
+        branches = self.branches
+        if branches is True or callable(branches):
+            branches = yield self._getBranches()
+            if callable(self.branches):
+                branches = filter(self.branches, branches)
+            else:
+                branches = filter(self._headsFilter, branches)
+            # We remove the refs/heads/ prefix here, so that
+            # poller state with bare branch names is respected
+            branches = map(self._removeHeads, branches)
+
         refspecs = [
             '+%s:%s' % (branch, self._localBranch(branch))
-            for branch in self.branches
+            for branch in branches
         ]
         yield self._dovccmd('fetch',
                             [self.repourl] + refspecs, path=self.workdir)
 
         revs = {}
-        for branch in self.branches:
+        for branch in branches:
             try:
                 revs[branch] = rev = yield self._dovccmd('rev-parse',
                                                          [self._localBranch(branch)], path=self.workdir)
