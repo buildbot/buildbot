@@ -31,7 +31,7 @@ class BuildslaveRegistration(object):
         self.buildslave = buildslave
 
     def __repr__(self):
-        return "<%s for %r>" % (self.__class__.__name__, self.slavename)
+        return "<%s for %r>" % (self.__class__.__name__, self.buildslave.slavename)
 
     @defer.inlineCallbacks
     def unregister(self):
