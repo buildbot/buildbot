@@ -97,7 +97,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             .path('/some/dir').stdout(os.linesep.join([
                 '1273258100.0 -7200',
                 'Bob Test <bobtest@example.org>',
-                'file1' + os.pathsep + 'dir/file2' + os.pathsep,
+                'file1 with spaces' + os.pathsep + os.path.join('dir with spaces', 'file2') + os.pathsep,
                 'This is rev 73591',
                 ''])),
         )
@@ -115,7 +115,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                              'Bob Test <bobtest@example.org>')
             self.assertEqual(change['when_timestamp'],
                              epoch2datetime(1273258100)),
-            self.assertEqual(change['files'], ['file1', 'dir/file2'])
+            self.assertEqual(change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
             self.assertEqual(change['comments'], 'This is rev 73591')
