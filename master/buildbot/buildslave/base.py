@@ -239,6 +239,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
         self.updateLocks()
 
+        bids = [b._builderid for b in self.botmaster.getBuildersForSlave(self.slavename)]
+        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, bids)
+
         # update the attached slave's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
@@ -351,6 +354,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             'access_uri': conn.info.get('access_uri'),
             'version': conn.info.get('version')
         }
+
         yield self.master.data.updates.buildslaveConnected(
             buildslaveid=self.buildslaveid,
             masterid=self.master.masterid,

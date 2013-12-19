@@ -195,12 +195,12 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = ConcreteBuildSlave('bot', 'pass',
+        old = self.createBuildslave('bot', 'pass',
                                  max_builds=2,
                                  notify_on_missing=['me@me.com'],
                                  missing_timeout=120,
                                  properties={'a': 'b'})
-        new = ConcreteBuildSlave('bot', 'pass',
+        new = self.createBuildslave('bot', 'pass',
                                  max_builds=3,
                                  notify_on_missing=['her@me.com'],
                                  missing_timeout=121,
@@ -219,13 +219,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
-        old = ConcreteBuildSlave('bot', 'pass')
+        old = self.createBuildslave(name="bot", password="pass")
+
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
-        old = ConcreteBuildSlave('bot', 'pass')
+        old = self.createBuildslave('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
                                            existingRegistration=False)
         self.assertIn('bot', self.master.buildslaves.registrations)

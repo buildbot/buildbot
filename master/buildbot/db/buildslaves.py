@@ -35,6 +35,21 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                 info={},
             ))
 
+    def buildslaveConfigured(self, buildslaveid, buildermasterids):
+        def thd(conn):
+            cfg_tbl = self.db.model.configured_buildslaves
+            for buildermasterid in buildermasterids:
+                q = cfg_tbl.insert()
+                try:
+                    conn.execute(q,
+                                 {'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid})
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    # TODO
+                    # if the row is already present, silently fail..
+                    pass
+
+        return self.db.pool.do(thd)
+
     @defer.inlineCallbacks
     def getBuildslave(self, buildslaveid=None, name=None, masterid=None,
                       builderid=None):
