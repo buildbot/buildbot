@@ -139,7 +139,7 @@ class BuildRequest(object):
                 ss.patch = (patch['level'], patch['body'], patch['subdir'])
                 ss.patch_info = (patch['author'], patch['comment'])
             else:
-                ss.patch = (None, None, None)
+                ss.patch = None
                 ss.patch_info = (None, None)
             ss.changes = []
             # XXX: sourcestamps don't have changes anymore; this affects merging!!

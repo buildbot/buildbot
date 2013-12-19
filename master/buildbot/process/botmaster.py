@@ -147,9 +147,16 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         def buildRequestAdded(key, msg):
             self.maybeStartBuildsForBuilder(msg['buildername'])
         # consume both 'new' and 'unclaimed' build requests
+
+        # TODO: Support for BuildRequest doesn't exist yet
+        # It's a temporary fix in order to wake up the BuildRequestDistributor
+        #
+        # self.buildrequest_consumer_new = self.master.mq.startConsuming(
+        #     buildRequestAdded,
+        #     ('buildrequest', None, None, None, 'new'))
         self.buildrequest_consumer_new = self.master.mq.startConsuming(
             buildRequestAdded,
-            ('buildrequest', None, None, None, 'new'))
+            ('buildset', None, 'builder', None, 'buildrequest', None, 'new'))
         self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
             buildRequestAdded,
             ('buildrequest', None, None, None, 'unclaimed'))
