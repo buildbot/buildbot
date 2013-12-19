@@ -375,6 +375,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         self.lastMessageReceived = now
         self.slave_status.setLastMessageReceived(now)
 
+    @defer.inlineCallbacks
     def detached(self):
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", -1)
         self.conn = None
@@ -384,6 +385,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.master.status.slaveDisconnected(self.slavename)
         self.releaseLocks()
+        yield self.master.data.updates.buildslaveDisconnected(
+                    buildslaveid=self.buildslaveid,
+                    masterid=self.master.masterid,
+        )
 
     def disconnect(self):
         """Forcibly disconnect the slave.
