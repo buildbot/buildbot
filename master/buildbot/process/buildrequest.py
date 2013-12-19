@@ -139,7 +139,11 @@ class BuildRequest(object):
                 ss.patch = (patch['level'], patch['body'], patch['subdir'])
                 ss.patch_info = (patch['author'], patch['comment'])
             else:
-                ss.patch = (None, None, None)
+                # Set ss.patch to None instead of (None, None, None)
+                # As in buildbot/steps/source/base.py line 293 we do this:
+                # patch = s.patch
+                #     if patch:
+                ss.patch = None # (None, None, None)
                 ss.patch_info = (None, None)
             ss.changes = []
             # XXX: sourcestamps don't have changes anymore; this affects merging!!

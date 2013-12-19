@@ -157,6 +157,7 @@ class Buildset(base.ResourceType):
                                    'builder', str(builderid),
                                    'buildrequest', str(brid),
                                    'new'), msg)
+            self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
 
         # and the buildset itself
         msg = dict(

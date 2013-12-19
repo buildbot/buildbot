@@ -301,6 +301,11 @@ class BuildStepStatus(styles.Versioned):
         del d['finishedWatchers']
         del d['updates']
         del d['master']
+
+        for attr in ("getStatistic", "hasStatistic", "setStatistic"):
+            if attr in d:
+                del d[attr]
+
         return d
 
     def __setstate__(self, d):
