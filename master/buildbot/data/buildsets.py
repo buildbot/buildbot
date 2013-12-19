@@ -157,6 +157,8 @@ class Buildset(base.ResourceType):
                                    'builder', str(builderid),
                                    'buildrequest', str(brid),
                                    'new'), msg)
+            # TODO
+            #~ self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
 
         # and the buildset itself
         msg = dict(
@@ -173,7 +175,7 @@ class Buildset(base.ResourceType):
         self.master.mq.produce(("buildset", str(bsid), "new"), msg)
 
         log.msg("added buildset %d to database" % bsid)
-
+    
         # if there are no builderNames, then this is done already, so send the
         # appropriate messages for that
         if not builderNames:
