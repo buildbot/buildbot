@@ -14,17 +14,12 @@
   
   <form id="getForm" method="get" name="select_codebases" action="/projects/{{selectedproject|urlencode}}/builders">
     
-    
-  
   <div class="filter-table-input">
     <input value="Show builders" class="blue-btn var-2" type="submit" />
-    <h4 class="help-txt">Select branch for each codebase before showing builders</h4>
-    <label>
-        <input type="text" id="filterTableInput" placeholder="Filter results">
-    </label>
+    <h4 class="help-txt">Select branch for each codebase before showing builders</h4>    
   </div>
-    <div class="dataTables_wrapper">
-      <table class="table-2 no-bg tablesorter-js tablesorter">
+    
+      <table class="table-2 no-bg tablesorter-js tablesorter tools-js">
          <thead>
         <tr>
           <th>Codebase</th>
@@ -76,7 +71,7 @@
       {% endfor %}
       </tbody>
       </table>
-    </div>
+   
   </form>
 </div>
 {% endblock %}

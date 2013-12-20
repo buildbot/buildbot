@@ -8,11 +8,11 @@
 //forthcoming mediaqueries
 $bkpt-small: 0 570px;
 $bkpt-small-portrait: (0 570px )(orientation portrait);
-$bkpt-medium-1: 0 1024px;
+$bkpt-medium-1: 0 1025px;
 $bkpt-medium: 571px 1024px;
 $bkpt-large: min-width 1025px;
-$bkpt-large2: min-width 1400px;
-$bkpt-xlarge: min-width 1600px;
+$bkpt-xlarge: min-width 1400px;
+$bkpt-xxlarge: min-width 1600px;
 
 $bkpt-small-height: (max-height 460px)(orientation landscape);
 $bkpt-large-height: min-height 600px;
@@ -190,7 +190,7 @@ div.column-1 {
 	}		
 }
 
-@include breakpoint($bkpt-large2) {
+@include breakpoint($bkpt-xlarge) {
 	.container-inner {
 		width: 1400px;
 	}
@@ -208,7 +208,7 @@ div.column-1 {
 	}	
 }
 
-@include breakpoint($bkpt-xlarge) {
+@include breakpoint($bkpt-xxlarge) {
 	.span-3 {width:1010px;}
 	.span-2 {width:430px;}
 	.span-4 {width:350px;}

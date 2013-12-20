@@ -320,9 +320,9 @@ body.log.interface {
 	.hide-mobile {display:inline;}		
 	.auth-user {display:block;}
 }
-@include breakpoint($bkpt-large2) {
+@include breakpoint($bkpt-xlarge) {
 	.hide-mobile {display:inline;}		
 }
-@include breakpoint($bkpt-xlarge) {
+@include breakpoint($bkpt-xxlarge) {
 	.hide-mobile {display:inline;}		
 }

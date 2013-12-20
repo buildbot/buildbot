@@ -1,4 +1,4 @@
-define(['jquery', 'helpers'], function ($, helpers) {
+define(['helpers'], function (helpers) {
 
     "use strict";
     var popup;

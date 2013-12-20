@@ -1,4 +1,4 @@
-define(['jquery', 'screensize', 'dataTables'], function ($, screenSize, dataTables) {
+define(['screensize'], function (screenSize) {
 
     "use strict";
     var helpers;
@@ -356,12 +356,12 @@ define(['jquery', 'screensize', 'dataTables'], function ($, screenSize, dataTabl
 			}
 			//var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
-			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
-
+			document.cookie=name + "=" + encodeURI(value) + "; path=/; expires=" + expiredate; 
+			
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 
-		  	return (value != null) ? unescape(value[1]) : ''; 
+		  	return (value != null) ?  decodeURI(value[1]) : ''; 
 
 		}, eraseCookie: function (name, value, eraseCookie) {
     		helpers.setCookie(name, value, eraseCookie);

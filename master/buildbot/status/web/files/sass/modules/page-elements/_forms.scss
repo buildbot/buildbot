@@ -68,39 +68,7 @@ form.command_forcebuild .force-nested > .label {
     color:#8C8C8C;
 }
 
-.filter-table-input {
-    height:58px;
-    position:relative;
-    label {
-        position: absolute;
-        font-weight: bold;
-        top: 7px;
-        @include text-shadow (0 1px 0 white);
-        input {
-            border: 1px solid #CCCCCC;
-            @include border-radius (4px);
-            @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-            color: #666666;
-            font-size: 12px;
-            line-height: 13px;
-            padding: 9px 11px 8px 30px;
-            @include text-shadow (0 1px 0 white);
-            width: 100px;
-        }
-        &:after {
-            color: #ADADAD;
-            font-family: katana_icons;
-            content: "";
-            left: 12px;
-            position: absolute;
-            top: 10px;
-            line-height: 12px;
-        }
-    }
-    .more-info-box & {
-        height: 32px;   
-    }
-}
+
 
 // user login
  
@@ -166,10 +134,6 @@ form.command_forcebuild .force-nested > .label {
 }
 
 @include breakpoint($bkpt-small) {
-
-    .filter-table-input label input {
-        width: 67px;
-    }
 
     form.command_forcebuild {
         width: auto;
