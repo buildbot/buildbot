@@ -410,12 +410,10 @@ class Builder(config.ReconfigurableServiceMixin,
         try:
             bids = []
             req = build.requests[-1]
-            # TODO: get id's for builder, slave
-            bid, number = yield self.master.db.builds.addBuild(
-                builderid=builderid, buildrequestid=req.id,
-                buildslaveid=buildslaveid, masterid=self.master.masterid,
-                state_strings=[u'created'])
+            bid, number = yield self.master.data.updates.newBuild(builderid=builderid,
+                                                                  buildrequestid=req.id, buildslaveid=buildslaveid)
             bids.append(bid)
+            build.setBuilDBId(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
             run_cleanups()
@@ -478,7 +476,11 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
-        d = self.master.db.builds.finishBuild(bids[0], results)
+        # TODO: The www service use this table
+        #       So, I think it's important that it complete successfully.
+        #       tardyp, djmitche do you confirm ?
+        d = self.master.data.updates.finishBuild(bids[0], results)
+        d.addCallback(lambda _: self.master.data.updates.setBuildStateStrings(bids[0], [u'finished']))
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         self.building.remove(build)
@@ -489,9 +491,8 @@ class Builder(config.ReconfigurableServiceMixin,
             complete_at_epoch = reactor.seconds()
             complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
-            db = self.master.db
-            d = db.buildrequests.completeBuildRequests(brids, results,
-                                                       complete_at=complete_at)
+
+            d = self.master.data.updates.completeBuildRequests(brids, results, complete_at=complete_at)
             d.addCallback(lambda _:
                           self._notify_completions(build.requests, results,
                                                    complete_at_epoch))
@@ -536,7 +537,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        d = self.master.db.buildrequests.unclaimBuildRequests(brids)
+        d = self.master.data.updates.unclaimBuildRequests(brids)
 
         @d.addCallback
         def notify(_):
@@ -617,6 +618,7 @@ class BuilderControl:
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
         master = self.original.master
+        # TODO Use DATA API
         brdicts = yield master.db.buildrequests.getBuildRequests(
             buildername=self.original.name,
             claimed=False)

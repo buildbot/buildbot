@@ -104,6 +104,13 @@ class Buildslave(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
+    @defer.inlineCallbacks
+    def buildslaveConfigured(self, buildslaveid, buildermasterids):
+        yield self.master.db.buildslaves.buildslaveConfigured(
+            buildslaveid=buildslaveid,
+            buildermasterids=buildermasterids)
+
+    @base.updateMethod
     def findBuildslaveId(self, name):
         return self.master.db.buildslaves.findBuildslaveId(name)
 

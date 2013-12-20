@@ -1299,6 +1299,11 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 
+    def buildslaveConfigured(self, buildslaveid, buildermasterids):
+        self.insertTestData([ConfiguredBuildslave(buildslaveid=buildslaveid,
+                                                  buildermasterid=buildermasterid) for buildermasterid in buildermasterids])
+        return defer.succeed(None)
+
     def buildslaveDisconnected(self, buildslaveid, masterid):
         del_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
         for id, conn in self.connected.iteritems():

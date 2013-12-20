@@ -132,7 +132,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'number': 1,
                        'results': None,
                        'started_at': 1,
-                       'state_strings': [u'starting']}
+                       'state_strings': [u'created']}
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -168,13 +168,13 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                         builderid=10, buildrequestid=13, buildslaveid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         buildslaveid=20, masterid=self.master.masterid,
-                                                        state_strings=['starting']))
+                                                        state_strings=['created']))
 
     def test_newBuildEvent(self):
         return self.do_test_event(self.rtype.newBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
                                   exp_events=[(('builder', '10', 'build', '1', 'new'), self.new_build_event),
-                                 (('build', '100', 'new'), self.new_build_event)])
+                                              (('build', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateStrings(self):
         @self.assertArgSpecMatches(

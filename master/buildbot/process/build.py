@@ -90,6 +90,7 @@ class Build(properties.PropertiesMixin):
         self.terminate = False
 
         self._acquiringLock = None
+        self._dbid = None
 
     def setBuilder(self, builder):
         """
@@ -108,6 +109,9 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
+    def setBuilDBId(self, dbid):
+        self._dbid = dbid
+
     def getSourceStamp(self, codebase=''):
         for source in self.sources:
             if source.codebase == codebase:
@@ -116,6 +120,11 @@ class Build(properties.PropertiesMixin):
 
     def getAllSourceStamps(self):
         return list(self.sources)
+
+    def getBuilDBId(self):
+        # TODO:
+        # Maybe is needed to implement a function in the DATA API to retreive the id
+        return self._dbid
 
     def allChanges(self):
         for s in self.sources:
@@ -278,7 +287,9 @@ class Build(properties.PropertiesMixin):
             d.callback(self)
             return d
 
+        self.master.data.updates.setBuildStateStrings(self.getBuilDBId(), [u'starting'])
         self.build_status.buildStarted(self)
+
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
