@@ -1,4 +1,4 @@
-define(['jquery', 'select2'], function ($) {
+define(['select2'], function () {
 
     "use strict";
     var selectors;

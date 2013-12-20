@@ -13,12 +13,9 @@ require.config({
 	}
 });
 
-require(['jquery','helpers','popup','screensize','projectdropdown'], 
+define(['jquery','helpers','popup','screensize','projectdropdown'], 
 	function($,helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
-
-	$(document).ready(function() {
-		
 		
 		if ($('.tablesorter-js').length > 0) {
 			require(['dataTables'],
@@ -51,5 +48,4 @@ require(['jquery','helpers','popup','screensize','projectdropdown'],
 		// get all common scripts
 		helpers.init();	
 
-	});
 });

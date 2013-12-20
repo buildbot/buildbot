@@ -1,1 +1,1 @@
-define(["jquery"],function(e){var t;return t={isSmallScreen:function(){var t=e(".container-inner").width()<=570;return t},isMediumScreen:function(){var t=e(".container-inner").width()<=768;return t}},t});
+define([],function(){var e;return e={isSmallScreen:function(){var e=$(".container-inner").width()<=570;return e},isMediumScreen:function(){var e=$(".container-inner").width()<=768;return e}},e});
