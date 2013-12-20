@@ -75,6 +75,7 @@ class MasterConfig(object):
         self.multiMaster = False
         self.debugPassword = None
         self.manhole = None
+        self.realTimeServer = ''
 
         self.ldap = dict(
             ldap_server = 'my_ldap_server',
@@ -113,7 +114,7 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer"
     ])
 
     @classmethod
@@ -247,6 +248,7 @@ class MasterConfig(object):
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
         copy_str_param('buildbotURL')
+        copy_str_param('realTimeServer')
 
         copy_int_param('changeHorizon')
         copy_int_param('eventHorizon')

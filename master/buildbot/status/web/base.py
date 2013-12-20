@@ -238,6 +238,8 @@ class AccessorMixin(object):
     def getBuildmaster(self, request):
         return request.site.buildbot_service.master
 
+    def getRealTimeServer(self, request):
+        return  request.site.buildbot_service.master.config.realTimeServer
 
 class ContextMixin(AccessorMixin):
     def getContext(self, request):
@@ -253,6 +255,7 @@ class ContextMixin(AccessorMixin):
                     stylesheet = rootpath + 'default.css',
                     path_to_root = rootpath,
                     version = version,
+                    realTimeServer = self.getRealTimeServer(request),
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
                     tz = locale_tz,
