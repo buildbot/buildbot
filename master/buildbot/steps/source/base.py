@@ -36,7 +36,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     """
 
     renderables = ['description', 'descriptionDone', 'descriptionSuffix',
-                   'workdir']
+                   'workdir', 'env']
 
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
