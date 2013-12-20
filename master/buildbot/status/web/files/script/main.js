@@ -13,17 +13,12 @@ require.config({
 	}
 });
 
-define(['jquery','helpers','popup','screensize','projectdropdown'], 
-	function($,helpers, popup, screenSize, projectDropDown ) {
+define(['jquery','dataTables','helpers','popup','screensize','projectdropdown'], 
+	function($,dataTables,helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
-		
-		if ($('.tablesorter-js').length > 0) {
-			require(['dataTables'],
-	        function(dataTables) {
-	        	dataTables.init();
-	        });
-		}
-
+				
+	    dataTables.init();
+	        
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
 			require(['dotdotdot'],
