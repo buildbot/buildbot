@@ -151,7 +151,7 @@ class Build(base.ResourceType):
             buildrequestid=buildrequestid,
             buildslaveid=buildslaveid,
             masterid=self.master.masterid,
-            state_strings=[u'starting'])
+            state_strings=[u'created'])
         if res is not None:
             _id, number = res
             yield self.generateEvent(_id, "new")
@@ -170,5 +170,5 @@ class Build(base.ResourceType):
     def finishBuild(self, buildid, results):
         res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
-        yield self.generateEvent(buildid, "update")
+        yield self.generateEvent(buildid, "update") # Should be "finished" instead of "update" ???
         defer.returnValue(res)
