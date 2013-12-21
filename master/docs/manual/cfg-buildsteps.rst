@@ -2151,7 +2151,7 @@ The available constructor arguments are
 
 Here is an example on how to drive compilation with Visual Studio 2013::
 
-    from buildbot.steps.VisualStudio import VS2013
+    from buildbot.steps.vstudio import VS2013
 
     f.addStep(
         VS2013(projectfile="project.sln", config="release",
@@ -2161,7 +2161,7 @@ Here is an example on how to drive compilation with Visual Studio 2013::
 
 Here is a similar example using "MsBuild12"::
 
-    from buildbot.steps.VisualStudio import MsBuild12
+    from buildbot.steps.vstudio import MsBuild12
 
     # Build one project in Release mode for Win32
     f.addStep(
