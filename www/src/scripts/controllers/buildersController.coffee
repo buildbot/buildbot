@@ -9,8 +9,8 @@ angular.module('app').controller 'buildersController',
             _.each $scope.builders, (builder) ->
                 builder.all('buildslave').getList().then (slaves) ->
                     builder.slaves = slaves
-                builder.getList('build', {complete:false}).then (builds) ->
-                    builder.running_builds = builds
+                builder.getList('build', {limit:30, order:"-number"}).then (builds) ->
+                    builder.builds = builds
 
         what_it_should_look_like_eventually = ->
             builders = buildbotService.all('builder').bind($scope, 'builders')

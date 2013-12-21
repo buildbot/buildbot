@@ -59,10 +59,10 @@ angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuS
                 url: "/builders/:builder/build/:build"
                 tabid: "builders"
             step:
-                url: "/builders/:builder/build/:build/steps/:step"
+                url: "/builders/:builder/build/:build/step/:step"
                 tabid: "builders"
             log:
-                url: "/builders/:builder/build/:build/steps/:step/logs/:log"
+                url: "/builders/:builder/build/:build/step/:step/log/:log"
                 tabid: "builders"
 
             buildslave:
