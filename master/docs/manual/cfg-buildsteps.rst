@@ -2053,24 +2053,26 @@ source code filenames involved).
 .. bb:step:: VC9
 .. bb:step:: VC10
 .. bb:step:: VC11
+.. bb:step:: VC12
 .. bb:step:: VS2003
 .. bb:step:: VS2005
 .. bb:step:: VS2008
 .. bb:step:: VS2010
 .. bb:step:: VS2012
+.. bb:step:: VS2013
 .. bb:step:: VCExpress9
-.. bb:step:: MsBuild
+.. bb:step:: MsBuild4
+.. bb:step:: MsBuild12
 
 Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-11 (aka Visual Studio 2003-2012 and VCExpress9) are supported via calling
-``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
-``MsBuild`` step. These steps will take care of setting up a clean compilation
-environment, parsing the generated
-output in real time and delivering as detailed as possible information
-about the compilation executed.
+VC++ 6-12 (aka Visual Studio 2003-2013 and VCExpress9) are supported via calling
+``devenv``. Msbuild as well as Windows Driver Kit 8 are supported via the
+``MsBuild4`` and ``MsBuild12`` steps. These steps will take care of setting up a
+clean compilation environment, parsing the generated output in real time, and
+delivering as detailed as possible information about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes are:
 
@@ -2080,13 +2082,16 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC9``
  * ``VC10``
  * ``VC11``
+ * ``VC12``
  * ``VS2003``
  * ``VS2005``
  * ``VS2008``
  * ``VS2010``
  * ``VS2012``
+ * ``VS2013``
  * ``VCExpress9``
- * ``MsBuild``
+ * ``MsBuild4``
+ * ``MsBuild12``
 
 The available constructor arguments are
 
@@ -2131,7 +2136,7 @@ The available constructor arguments are
 ``arch``
     That one is only available with the class VS2005 (VC8). It gives the
     target architecture of the built artifact. It defaults to ``x86`` and
-    does not apply to ``MsBuild``. Please see ``platform`` below.
+    does not apply to ``MsBuild4`` or ``MsBuild12``. Please see ``platform`` below.
 
 ``project``
     This gives the specific project to build from within a
@@ -2139,33 +2144,34 @@ The available constructor arguments are
     for building cmake generate projects.
 
 ``platform``
-    This is a mandatory argument for MsBuild specifying the target platform
-    such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
-    driver targets that appear once Windows Driver Kit 8 is installed.
+    This is a mandatory argument for ``MsBuild4`` and ``MsBuild12`` specifying
+    the target platform such as 'Win32', 'x64' or 'Vista Debug'. The last one
+    is an example of driver targets that appear once Windows Driver Kit 8 is
+    installed.
 
-Here is an example on how to drive compilation with Visual Studio 2010::
+Here is an example on how to drive compilation with Visual Studio 2013::
 
-    from buildbot.steps.VisualStudio import VS2010
+    from buildbot.steps.VisualStudio import VS2013
 
     f.addStep(
-        VS2010(projectfile="project.sln", config="release",
+        VS2013(projectfile="project.sln", config="release",
             arch="x64", mode="build",
                INCLUDE=[r'C:\3rd-pary\libmagic\include'],
                LIB=[r'C:\3rd-party\libmagic\lib-x64']))
 
-Here is a similar example using "msbuild"::
+Here is a similar example using "MsBuild12"::
 
-    from buildbot.steps.VisualStudio import MsBuild
+    from buildbot.steps.VisualStudio import MsBuild12
 
     # Build one project in Release mode for Win32
     f.addStep(
-        MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
+        MsBuild12(projectfile="trunk.sln", config="Release", platform="Win32",
                 workdir="trunk",
                 project="tools\\protoc"))
 
     # Build the entire solution in Debug mode for x64
     f.addStep(
-        MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
+        MsBuild12(projectfile="trunk.sln", config='Debug', platform='x64',
                 workdir="trunk"))
 
 
@@ -3078,6 +3084,39 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
+
+.. _Setting-Buildslave-Info:
+
+Setting Buildslave Info
+-----------------------
+
+Each buildslave has a dictionary of properties (the "buildslave info dictionary") that is persisted into the database.
+This info dictionary is displayed on the "buildslave" web page and is available in Interpolate operations.
+
+.. bb:step:: SetSlaveInfo
+
+.. _Step-SetSlaveInfo:
+
+SetSlaveInfo
+++++++++++++
+
+.. py:class:: buildbot.steps.master.SetSlaveInfo
+
+``SetSlaveInfo`` is a base class to provide a facility to set values in the buildslave info dictionary.
+For example::
+
+    from buildbot.steps.master import SetSlaveInfo
+
+    class SetSlaveFromPropInfo(SetSlaveInfo):
+        name = "SetSlaveFromPropInfo"
+
+        # override this to return the dictionary update
+        def getSlaveInfoUpdate(self):
+            # for example, copy a property into the buildslave dict
+            update = { 
+                "foo": self.getProperty("foo")
+            }
+            return update
 
 
 .. index:: Properties; triggering schedulers

@@ -359,6 +359,14 @@ class StatusPush(StatusReceiverMultiService):
         d = self.push('slaveDisconnected', slavename=slavename)
         d.addErrback(log.err, 'while pushing status message')
 
+    def slavePaused(self, slavename):
+        d = self.push('slavePaused', slavename=slavename)
+        d.addErrback(log.err, 'while pushing status message')
+
+    def slaveUnpaused(self, slavename):
+        d = self.push('slaveUnpaused', slavename=slavename)
+        d.addErrback(log.err, 'while pushing status message')
+
 
 class HttpStatusPush(StatusPush):
 

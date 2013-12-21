@@ -1014,9 +1014,28 @@ GerritChangeSource
 
 The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH
 interface and uses its event source mechanism,
-`gerrit stream-events <http://gerrit.googlecode.com/svn/documentation/2.1.6/cmd-stream-events.html>`_.
+`gerrit stream-events <http://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-stream-events.html>`_.
 
-This class adds a change to the buildbot system for each of the following events:
+The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
+
+``gerritserver``
+   the dns or ip that host the gerrit ssh server
+
+``gerritport``
+   the port of the gerrit ssh server
+
+``username``
+   the username to use to connect to gerrit
+
+``identity_file``
+   ssh identity file to for authentication (optional) 
+   pay attention to the `ssh passphrase`
+
+``handled_events``
+   event to be handled (optional)
+   by default processes `patchset-created` and `ref-updated`
+
+By default this class adds a change to the buildbot system for each of the following events:
 
 ``patchset-created``
     A change is proposed for review. Automatic checks like
@@ -1029,6 +1048,26 @@ This class adds a change to the buildbot system for each of the following events
     A change has been merged into the repository. Typically, this kind
     of event can lead to a complete rebuild of the project, and upload
     binaries to an incremental build results server.
+
+But you can specify how to handle Events:
+
+* Any event with change and patchSet will 
+  be processed by universal collector by default.
+
+* In case you've specified processing function for the given kind of events, 
+  all events of this kind will be processed only by this function, bypassing universal collector.
+
+An example::
+
+    from buildbot.changes.gerritchangesource import GerritChangeSource
+    class MyGerritChangeSource(GerritChangeSource):
+        """Custom GerritChangeSource
+        """
+        def eventReceived_patchset_created(self, properties, event):
+            """Handler events without properties
+            """
+            properties = {}
+            self.addChangeFromEvent(properties, event)
 
 This class will populate the property list of the triggered build with the info
 received from Gerrit server in JSON format.
@@ -1094,7 +1133,10 @@ In case of ``ref-updated`` event, these properties will be:
 A configuration for this source might look like::
 
     from buildbot.changes.gerritchangesource import GerritChangeSource
-    c['change_source'] = GerritChangeSource(gerrit_server, gerrit_user)
+    c['change_source'] = GerritChangeSource(
+        "gerrit.example.com",
+        "gerrit_user",
+        handled_events=["patchset-created", "change-merged"])
 
 see :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
 for a full example setup of :bb:chsrc:`GerritChangeSource`.
