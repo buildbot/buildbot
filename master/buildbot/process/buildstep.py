@@ -412,6 +412,9 @@ class BuildStep(object, properties.PropertiesMixin):
             self.progress.finish()
 
         self.step_status.stepFinished(results)
+
+        yield self.master.data.updates.finishStep(self.stepid, results)
+
         hidden = self.hideStepIf
         if callable(hidden):
             try:
