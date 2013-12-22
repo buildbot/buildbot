@@ -41,8 +41,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=5, name='make'),
-            fakedb.Log(id=60, stepid=50, name=u'stdio', type='s'),
-            fakedb.Log(id=61, stepid=50, name=u'errors', type='t'),
+            fakedb.Log(id=60, stepid=50, name=u'stdio',
+                       slug=u'stdio', type='s'),
+            fakedb.Log(id=61, stepid=50, name=u'errors',
+                       slug=u'errors', type='t'),
         ])
 
     def tearDown(self):
@@ -55,6 +57,7 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(log, {
             'logid': 60,
             'name': u'stdio',
+            'slug': u'stdio',
             'step_link': base.Link(('step', '50')),
             'stepid': 50,
             'complete': False,
@@ -198,9 +201,25 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
         def newLog(self, stepid, name, type):
             pass
 
-    def test_newLog(self):
-        self.do_test_callthrough('addLog', self.rtype.newLog,
-                                 stepid=203, name='stdio', type='s')
+    @defer.inlineCallbacks
+    def test_newLog_uniquify(self):
+        tries = []
+
+        @self.assertArgSpecMatches(self.master.db.logs.addLog)
+        def addLog(stepid, name, slug, type):
+            tries.append((stepid, name, slug, type))
+            if len(tries) < 3:
+                return defer.fail(KeyError())
+            return defer.succeed(23)
+        self.patch(self.master.db.logs, 'addLog', addLog)
+        logid = yield self.rtype.newLog(
+            stepid=13, name=u'foo', type=u's')
+        self.assertEqual(logid, 23)
+        self.assertEqual(tries, [
+            (13, u'foo', u'foo', 's'),
+            (13, u'foo', u'foo_2', 's'),
+            (13, u'foo', u'foo_3', 's'),
+        ])
 
     def test_signature_finishLog(self):
         @self.assertArgSpecMatches(

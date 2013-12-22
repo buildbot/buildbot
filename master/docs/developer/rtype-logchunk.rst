@@ -40,36 +40,36 @@ Logchunks
 
         :pathkey integer logid: the ID of the log
 
-    .. bb:rpath:: /step/:stepid/log/:log_name/content
+    .. bb:rpath:: /step/:stepid/log/:log_slug/content
 
         :pathkey integer stepid: the ID of the step
-        :pathkey integer log_name: the name of the log
+        :pathkey integer log_slug: the slug of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_name/content
+    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_slug/content
 
         :pathkey integer buildid: the ID of the build
         :pathkey identifier step_name: the name of the step within the build
-        :pathkey identifier log_name: the name of the log
+        :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_name/content
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_slug/content
 
         :pathkey integer buildid: the ID of the build
         :pathkey integer step_number: the number of the step within the build
-        :pathkey identifier log_name: the name of the log
+        :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_name/content
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_slug/content
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
         :pathkey identifier name: the name of the step within the build
-        :pathkey identifier log_name: the name of the log
+        :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_name/content
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_slug/content
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
         :pathkey integer step_number: the number of the step within the build
-        :pathkey identifier log_name: the name of the log
+        :pathkey identifier log_slug: the slug of the log
 
 Update Methods
 --------------
