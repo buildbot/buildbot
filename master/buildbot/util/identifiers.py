@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re
+
 from buildbot import util
 
 ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
