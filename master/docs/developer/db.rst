@@ -57,7 +57,7 @@ Identifier
 
 An "identifier" is a nonempty unicode string of limited length, containing only ASCII alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
 Wherever an identifier is used, the documentation will give the maximum length in characters.
-The function :py:func:`buildbot.util.typechecks.isIdentifier` is useful to verify a well-formed identifier.
+The function :py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
 
 buildrequests
 ~~~~~~~~~~~~~
