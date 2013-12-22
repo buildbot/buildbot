@@ -17,13 +17,20 @@
   .row
     .col-sm-6
       h4 Steps
-      ul.list-group
-        li.list-group-item(ng-repeat="step in steps",ng-click="fulldisplay=!fulldisplay",ng-init="fulldisplay=0")
-          span.badge
-            i.icon-spinner.icon-spin(ng-show="step.complete==0")
+      ul.list-group.no-select
+        li.list-group-item(ng-repeat="step in steps",ng-click="fulldisplay=!fulldisplay",ng-init="fulldisplay=step.results")
+          span.pull-right(ng-if="step.started_at")
             | &nbsp;{{step.state_strings.join(' ')}}
-          | {{step.name}}
-          ul.unstyled(ng-show="fulldisplay")
+          span.badge-status(ng-class="'status_'+step.results + ((step.complete==0  && step.started_at) ? ' status_pending pulse':'')")
+            | {{step.number}}
+          | &nbsp;
+          i.fa.fa-chevron-circle-right.rotate(ng-class="{'rotate-90':fulldisplay}", ng-if="step.logs.length")
+          | &nbsp; {{step.name}}
+          div.anim-stepdetails(ng-show="fulldisplay")
+            ul.unstyled
+              li(ng-repeat="log in step.logs")
+                a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}") {{log.name}}
+          ul.unstyled
             li(ng-repeat="url in step.urls")
               a(href="{{url}}") {{url}}
     .col-sm-6

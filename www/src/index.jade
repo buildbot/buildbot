@@ -14,6 +14,6 @@ block content
       topmenu
   // alerts: not that ng-animate does not work well with angular-ui's alert for ng-enter event
   div(ng-controller="alertPanelController")
-    alert.animate-repeat(ng-repeat="alert in alerts",type="alert.type",close="closeAlert($index)")
+    alert.anim-alert(ng-repeat="alert in alerts",type="alert.type",close="closeAlert($index)")
       | {{alert.msg}}{{alert.occur_msg}}
   ui:view

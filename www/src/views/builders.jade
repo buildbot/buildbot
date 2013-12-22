@@ -7,28 +7,13 @@
     table.table.table-hover.table-striped.table-condensed
       tr
           td Builder Name
-          td Slaves
-          td Current Builds
-          td Status
+          td Builds
         tr(ng-repeat='builder in builders')
-          td
+          td(style="width:200px")
             a(href='#/builders/{{ builder.builderid }}')
               | {{ builder.name }}
           td
-            ul.list-inline
-              li(ng-repeat="slave in builder.connected_slaves")
-                a(href="#/buildslaves/{{slave}}")
-                  | {{ slave.name }}
-          td
-            ul.list-inline
-              li(data-ng-repeat="build in builder.running_builds")
-                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.buildid}}")
-                  | {{ build.buildid }}
-          td
-            ul.list-inline
-              li(ng-show='builder.connected_slaves.length == 0')
-                | no slaves
-              li(ng-show='builder.running_builds.length == 0')
-                | idle
-              li(ng-show='builder.running_builds.length > 0')
-                | pending builds
+            span(data-ng-repeat="build in builder.builds")
+                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.number}}")
+                    span.badge-status(ng-class="'status_'+build.results + (build.complete==0 ? ' status_pending pulse':'')")
+                      | {{ build.number }}
