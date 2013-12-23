@@ -17,6 +17,7 @@ import sys
 import time
 
 from buildbot.schedulers import timed
+from buildbot.test.util import compat
 from buildbot.test.util import config
 from buildbot.test.util import scheduler
 from multiprocessing import Process
@@ -195,6 +196,7 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
 
 class NightlyCroniterImport(config.ConfigErrorsMixin, unittest.TestCase):
 
+    @compat.skipUnlessPlatformIs('posix')
     def test_error_without_dateutil(self):
         """
         Because it removes a module from sys.modules, this test needs to be run in a new
