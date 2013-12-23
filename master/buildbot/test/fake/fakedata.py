@@ -272,7 +272,7 @@ class FakeUpdates(object):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
-                              validation.IdentifierValidator(50))
+                              validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
         return defer.succeed(10)
