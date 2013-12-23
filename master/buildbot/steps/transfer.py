@@ -231,6 +231,8 @@ class _TransferBuildStep(BuildStep):
 
         @d.addCallback
         def checkResult(_):
+            if cmd.didFail():
+                writer.cancel()
             return FAILURE if cmd.didFail() else SUCCESS
 
         @d.addErrback
