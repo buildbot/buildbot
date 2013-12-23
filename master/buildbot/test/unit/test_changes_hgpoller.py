@@ -97,11 +97,11 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
+                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
             .path('/some/dir').stdout(os.linesep.join([
                 '1273258100.0 -7200',
                 'Bob Test <bobtest@example.org>',
-                'file1 dir/file2',
+                'file1 with spaces' + os.pathsep + os.path.join('dir with spaces', 'file2') + os.pathsep,
                 'This is rev 73591',
                 ''])),
         )
@@ -118,7 +118,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['author'],
                              'Bob Test <bobtest@example.org>')
             self.assertEqual(change['when_timestamp'], 1273258100),
-            self.assertEqual(change['files'], ['file1', 'dir/file2'])
+            self.assertEqual(change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
             self.assertEqual(change['comments'], 'This is rev 73591')
@@ -165,7 +165,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
+                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
             .path('/some/dir').stdout(os.linesep.join([
                 '1273258009.0 -7200',
                 'Joe Test <joetest@example.org>',

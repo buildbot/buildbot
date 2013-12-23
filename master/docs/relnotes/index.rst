@@ -70,6 +70,12 @@ Nine
 
 * The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
 
+* :py:mod:`buildbot.schedulers.forcesched` has the following changes:
+
+  - The default configuration does not contain 4 AnyPropertyParameter anymore
+  - configuring codebase is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
+  - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
+
 .. _Refactoring-Buildsteps:
 
 Refactoring Buildsteps
@@ -215,13 +221,6 @@ Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStat
 The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
 Instead, users should implement a custom step with a LogObserver.
 
-..
-    Any change that adds a feature or fixes a bug should have an entry here.
-    Most simply need an additional bulleted list item, but more significant
-    changes can be given a subsection of their own.
-
-The following are the release notes for Buildbot |version|.
-
 Backward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -232,6 +231,13 @@ These hacks are only activated when an old-style step is detected (by the lack o
 First, the Deferreds all asynchronous methods invoked during step execution are gathered internally.
 The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
 For logfiles, this is accomplished by means of a synchronous wrapper class.
+
+..
+    Any change that adds a feature or fixes a bug should have an entry here.
+    Most simply need an additional bulleted list item, but more significant
+    changes can be given a subsection of their own.
+
+The following are the release notes for Buildbot |version|.
 
 Master
 ------
@@ -352,6 +358,10 @@ Features
 
 * reconf option for GNUAutotools to run autoreconf before ./configure
 
+* A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
+
+* The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
+
 Fixes
 ~~~~~
 
@@ -362,6 +372,8 @@ Fixes
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
 
+* The source steps now correctly interpolate properties in ``env``.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -371,15 +383,12 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The buildmaster now requires at least Twisted-11.0.0.
 
+* The ``hgbuildbot`` Mercurial hook has been moved to ``contrib/``, and does not work with recent versions of Mercurial and Twisted.
+  The runtimes for these two tools are incompatible, yet ``hgbuildbot`` attempts to run both in the same Python interpreter.
+  Mayhem ensues.
+
 * The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:mod`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
   Similarly, the former ``buildbot.process.buildstep.LogObserver`` class and its subclasses are now in :py:mod`buildbot.process.logobserver`, although imports from the previous path will continue to work.
-
-* :py:mod:`buildbot.schedulers.forcesched` has the following changes:
-
-  - The default configuration does not contain 4 AnyPropertyParameter anymore
-  - configuring codebase is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
-  - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
-
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

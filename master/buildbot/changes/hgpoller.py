@@ -97,14 +97,14 @@ class HgPoller(base.PollingChangeSource):
         args = ['log', '-r', rev, os.linesep.join((
             '--template={date|hgdate}',
             '{author}',
-            '{files}',
+            "{files % '{file}" + os.pathsep + "'}",
             '{desc|strip}'))]
         # Mercurial fails with status 255 if rev is unknown
         d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
                                    env=os.environ, errortoo=False)
 
         def process(output):
-            # fortunately, Mercurial issues all filenames one one line
+            # all file names are on one line
             date, author, files, comments = output.decode(self.encoding, "replace").split(
                 os.linesep, 3)
 
@@ -117,7 +117,7 @@ class HgPoller(base.PollingChangeSource):
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)
                     raise
-            return stamp, author.strip(), files.split(), comments.strip()
+            return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
 
         d.addCallback(process)
         return d

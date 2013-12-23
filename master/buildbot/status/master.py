@@ -382,6 +382,21 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
+    def slavePaused(self, name):
+        for t in self.watchers:
+            if hasattr(t, 'slavePaused'):
+                t.slavePaused(name)
+
+    def slaveUnpaused(self, name):
+        for t in self.watchers:
+            if hasattr(t, 'slaveUnpaused'):
+                t.slaveUnpaused(name)
+
+    def changeAdded(self, change):
+        for t in self.watchers:
+            if hasattr(t, 'changeAdded'):
+                t.changeAdded(change)
+
     def br_consumer_cb(self, key, msg):
         buildername = msg['buildername']
         if buildername in self._builder_observers:

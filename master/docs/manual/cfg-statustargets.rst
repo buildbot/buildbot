@@ -184,10 +184,10 @@ that periodically poll the Google Code commit feed for changes.
 Poller hook
 +++++++++++
 
-The poller hook allows you to use GET requests to trigger polling. One
-advantage of this is your buildbot instance can (at start up) poll to get
-changes that happened while it was down, but then you can still use a commit
-hook to get fast notification of new changes.
+The poller hook allows you to use GET or POST requests to trigger
+polling. One advantage of this is your buildbot instance can (at start
+up) poll to get changes that happened while it was down, but then you
+can still use a commit hook to get fast notification of new changes.
 
 Suppose you have a poller configured like this::
 
@@ -207,7 +207,8 @@ Then you will be able to trigger a poll of the SVN repository by poking the
 
 .. code-block:: bash
 
-    curl http://yourbuildbot/change_hook/poller?poller=https%3A%2F%2Famanda.svn.sourceforge.net%2Fsvnroot%2Famanda%2Famanda
+    curl -s -F poller=https://amanda.svn.sourceforge.net/svnroot/amanda/amanda \
+        http://yourbuildbot/change_hook/poller
 
 If no ``poller`` argument is provided then the hook will trigger polling of all
 polling change sources.
@@ -480,7 +481,8 @@ given below::
             unilist = list()
             for line in content[len(content)-limit_lines:]:
                 unilist.append(cgi.escape(unicode(line,'utf-8')))
-            text.append(u'<pre>'.join([uniline for uniline in unilist]))
+            text.append(u'<pre>')
+            text.extend(unilist)
             text.append(u'</pre>')
             text.append(u'<br><br>')
             text.append(u'<b>-The Buildbot</b>')

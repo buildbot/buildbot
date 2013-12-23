@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import types
+
 from buildbot.changes import gerritchangesource
 from buildbot.test.util import changesource
 from buildbot.util import json
@@ -28,8 +30,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
     def tearDown(self):
         return self.tearDownChangeSource()
 
-    def newChangeSource(self, host, user, **kwargs):
-        s = gerritchangesource.GerritChangeSource(host, user, **kwargs)
+    def newChangeSource(self, host, user, *args, **kwargs):
+        s = gerritchangesource.GerritChangeSource(
+            host, user, *args, **kwargs)
         self.attachChangeSource(s)
         return s
 
@@ -56,7 +59,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'author': u'Dustin <dustin@mozilla.com>',
                        'comments': u'fix 1234',
                        'project': u'pr',
-                       'branch': u'br/4321',
+                       'branch': u'br',
                        'revlink': u'http://buildbot.net',
                        'codebase': None,
                        'revision': u'abcdef',
@@ -93,5 +96,56 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             c = self.master.data.updates.changesAdded[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
+        d.addCallback(check)
+        return d
+
+    change_merged_event = {
+        "type": "change-merged",
+        "change": {
+            "branch": "br",
+            "project": "pr",
+            "number": "4321",
+            "owner": {"name": "Chuck", "email": "chuck@norris.com"},
+            "url": "http://buildbot.net",
+            "subject": "fix 1234"},
+        "patchSet": {"revision": "abcdefj", "number": "13"}
+    }
+
+    def test_handled_events_filter_true(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user', handled_events=["change-merged"])
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+
+        def check(_):
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
+            self.failUnlessEqual(c["category"], "change-merged")
+        d.addCallback(check)
+        return d
+
+    def test_handled_events_filter_false(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user')
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+        check = lambda _: self.failUnlessEqual(len(self.master.data.updates.changesAdded), 0)
+        d.addCallback(check)
+        return d
+
+    def test_custom_handler(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user',
+            handled_events=["change-merged"])
+
+        def custom_handler(self, properties, event):
+            event['change']['project'] = "world"
+            return self.addChangeFromEvent(properties, event)
+        # Patches class to not bother with the inheritance
+        s.eventReceived_change_merged = types.MethodType(custom_handler, s)
+        d = s.lineReceived(json.dumps(self.change_merged_event))
+
+        def check(_):
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
+            self.failUnlessEqual(c['project'], "world")
         d.addCallback(check)
         return d

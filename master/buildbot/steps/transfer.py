@@ -17,6 +17,7 @@ from __future__ import with_statement
 
 
 import os.path
+import stat
 import tarfile
 import tempfile
 try:
@@ -33,6 +34,7 @@ from buildbot.process.buildstep import SKIPPED
 from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
 from twisted.python import log
 from twisted.spread import pb
 
@@ -95,7 +97,8 @@ class _FileWriter(pb.Referenceable):
         fp = getattr(self, "fp", None)
         if fp:
             fp.close()
-            os.unlink(self.destfile)
+            if self.destfile and os.path.exists(self.destfile):
+                os.unlink(self.destfile)
             if self.tmpname and os.path.exists(self.tmpname):
                 os.unlink(self.tmpname)
 
@@ -220,22 +223,31 @@ class _TransferBuildStep(BuildStep):
             workdir = self.workdir
         return workdir
 
+    def runTransferCommand(self, cmd, writer=None):
+        # Run a transfer step, add a callback to extract the command status,
+        # add an error handler that cancels the writer.
+        self.cmd = cmd
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def checkResult(_):
+            if cmd.didFail():
+                writer.cancel()
+            return FAILURE if cmd.didFail() else SUCCESS
+
+        @d.addErrback
+        def cancel(res):
+            if writer:
+                writer.cancel()
+            return res
+
+        return d
+
     def interrupt(self, reason):
         self.addCompleteLog('interrupt', str(reason))
         if self.cmd:
             d = self.cmd.interrupt(reason)
             return d
-
-    def finished(self, result):
-        # Subclasses may choose to skip a transfer. In those cases, self.cmd
-        # will be None, and we should just let BuildStep.finished() handle
-        # the rest
-        if result == SKIPPED:
-            return BuildStep.finished(self, SKIPPED)
-
-        if self.cmd.didFail():
-            return BuildStep.finished(self, FAILURE)
-        return BuildStep.finished(self, SUCCESS)
 
 
 class FileUpload(_TransferBuildStep):
@@ -296,13 +308,8 @@ class FileUpload(_TransferBuildStep):
             'keepstamp': self.keepstamp,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
-        d = self.runCommand(self.cmd)
-
-        @d.addErrback
-        def cancel(res):
-            fileWriter.cancel()
-            return res
+        cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
+        d = self.runTransferCommand(cmd, fileWriter)
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -357,25 +364,145 @@ class DirectoryUpload(_TransferBuildStep):
             'compress': self.compress
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
-        d = self.runCommand(self.cmd)
+        cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
+        d = self.runTransferCommand(cmd, dirWriter)
+        d.addCallback(self.finished).addErrback(self.failed)
 
-        @d.addErrback
-        def cancel(res):
-            dirWriter.cancel()
-            return res
+
+class MultipleFileUpload(_TransferBuildStep):
+
+    name = 'upload'
+
+    renderables = ['slavesrcs', 'masterdest', 'url']
+
+    def __init__(self, slavesrcs, masterdest,
+                 workdir=None, maxsize=None, blocksize=16 * 1024,
+                 mode=None, compress=None, keepstamp=False, url=None, **buildstep_kwargs):
+        _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
+
+        self.slavesrcs = slavesrcs
+        self.masterdest = masterdest
+        self.maxsize = maxsize
+        self.blocksize = blocksize
+        if not isinstance(mode, (int, type(None))):
+            config.error(
+                'mode must be an integer or None')
+        self.mode = mode
+        if compress not in (None, 'gz', 'bz2'):
+            config.error(
+                "'compress' must be one of None, 'gz', or 'bz2'")
+        self.compress = compress
+        self.keepstamp = keepstamp
+        self.url = url
+
+    def uploadFile(self, source, masterdest):
+        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+
+        args = {
+            'slavesrc': source,
+            'workdir': self._getWorkdir(),
+            'writer': fileWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize,
+            'keepstamp': self.keepstamp,
+        }
+
+        cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
+        return self.runTransferCommand(cmd, fileWriter)
+
+    def uploadDirectory(self, source, masterdest):
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+
+        args = {
+            'slavesrc': source,
+            'workdir': self._getWorkdir(),
+            'writer': dirWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize,
+            'compress': self.compress
+        }
+
+        cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
+        return self.runTransferCommand(cmd, dirWriter)
+
+    def startUpload(self, source, destdir):
+        masterdest = os.path.join(destdir, os.path.basename(source))
+        args = {
+            'file': source,
+            'workdir': self._getWorkdir()
+        }
+
+        cmd = makeStatusRemoteCommand(self, 'stat', args)
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def checkStat(_):
+            s = cmd.updates['stat'][-1]
+            if stat.S_ISDIR(s[stat.ST_MODE]):
+                return self.uploadDirectory(source, masterdest)
+            elif stat.S_ISREG(s[stat.ST_MODE]):
+                return self.uploadFile(source, masterdest)
+            else:
+                return defer.fail('%r is neither a regular file, nor a directory' % source)
+
+        @d.addCallback
+        def uploadDone(result):
+            d = defer.maybeDeferred(self.uploadDone, result, source, masterdest)
+            d.addCallback(lambda _: result)
+            return d
+
+        return d
+
+    def uploadDone(self, result, source, masterdest):
+        pass
+
+    def allUploadsDone(self, result, sources, masterdest):
+        if self.url is not None:
+            self.addURL(os.path.basename(masterdest), self.url)
+
+    def start(self):
+        self.checkSlaveVersion("uploadDirectory")
+        self.checkSlaveVersion("uploadFile")
+        self.checkSlaveVersion("stat")
+
+        masterdest = os.path.expanduser(self.masterdest)
+        sources = self.slavesrcs
+
+        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
+            m = ("This buildslave (%s) does not support preserving timestamps. "
+                 "Please upgrade the buildslave." % self.build.slavename)
+            raise BuildSlaveTooOldError(m)
+
+        if not sources:
+            return self.finished(SKIPPED)
+
+        @defer.inlineCallbacks
+        def uploadSources():
+            for source in sources:
+                result = yield self.startUpload(source, masterdest)
+                if result == FAILURE:
+                    defer.returnValue(FAILURE)
+                    return
+            defer.returnValue(SUCCESS)
+
+        d = uploadSources()
+
+        @d.addCallback
+        def allUploadsDone(result):
+            d = defer.maybeDeferred(self.allUploadsDone, result, sources, masterdest)
+            d.addCallback(lambda _: result)
+            return d
+
+        log.msg("MultipleFileUpload started, from slave %r to master %r"
+                % (sources, masterdest))
+
+        nsrcs = len(sources)
+        self.step_status.setText(['uploading', '%d %s' % (nsrcs, 'file' if nsrcs == 1 else 'files')])
+
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):
-        # Subclasses may choose to skip a transfer. In those cases, self.cmd
-        # will be None, and we should just let BuildStep.finished() handle
-        # the rest
-        if result == SKIPPED:
-            return BuildStep.finished(self, SKIPPED)
-
-        if self.cmd.didFail():
-            return BuildStep.finished(self, FAILURE)
-        return BuildStep.finished(self, SUCCESS)
+        return BuildStep.finished(self, result)
 
 
 class _FileReader(pb.Referenceable):
@@ -468,8 +595,8 @@ class FileDownload(_TransferBuildStep):
             'mode': self.mode,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runCommand(self.cmd)
+        cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
+        d = self.runTransferCommand(cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
 
@@ -520,8 +647,8 @@ class StringDownload(_TransferBuildStep):
             'mode': self.mode,
         }
 
-        self.cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
-        d = self.runCommand(self.cmd)
+        cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
+        d = self.runTransferCommand(cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
 

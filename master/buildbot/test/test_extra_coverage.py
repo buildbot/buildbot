@@ -61,9 +61,6 @@ modules.extend([eventual])
 #import buildbot.clients.gtkPanes
 #import buildbot.clients.debug
 
-# requires mercurial
-#import buildbot.changes.hgbuildbot
-
 # requires libboto
 #import buildbot.ec2buildslave
 

@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import itertools
 import os
+import re
 import urllib
 
 from twisted.internet import defer
@@ -128,9 +130,13 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.lastRev.update(revs)
         yield self.setState('lastRev', self.lastRev)
 
+    def _decode(self, git_output):
+        return git_output.decode(self.encoding)
+
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
+        d.addCallback(self._decode)
         return d
 
     def _get_commit_timestamp(self, rev):
@@ -155,13 +161,16 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         args = ['--name-only', '--no-walk', r'--format=%n', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
 
-        def process(git_output):
-            fileList = git_output.split()
+        def decode_file(file):
+            # git use octal char sequences in quotes when non ASCII
+            match = re.match('^"(.*)"$', file)
+            if match:
+                file = match.groups()[0].decode('string_escape')
+            return self._decode(file)
 
-            # filenames in git are presumably just like POSIX filenames -
-            # encoding-free bytestrings.  In most cases, they'll UTF-8 and
-            # mostly ASCII, so that's a safe assumption here.
-            return [f.decode('utf-8', 'replace') for f in fileList]
+        def process(git_output):
+            fileList = [decode_file(file) for file in itertools.ifilter(lambda s: len(s), git_output.splitlines())]
+            return fileList
         d.addCallback(process)
         return d
 
@@ -170,7 +179,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d = self._dovccmd('log', args, path=self.workdir)
 
         def process(git_output):
-            git_output = git_output.decode(self.encoding)
+            git_output = self._decode(git_output)
             if len(git_output) == 0:
                 raise EnvironmentError('could not get commit author for rev')
             return git_output
