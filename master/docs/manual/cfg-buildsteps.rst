@@ -3085,39 +3085,6 @@ Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
 
-.. _Setting-Buildslave-Info:
-
-Setting Buildslave Info
------------------------
-
-Each buildslave has a dictionary of properties (the "buildslave info dictionary") that is persisted into the database.
-This info dictionary is displayed on the "buildslave" web page and is available in Interpolate operations.
-
-.. bb:step:: SetSlaveInfo
-
-.. _Step-SetSlaveInfo:
-
-SetSlaveInfo
-++++++++++++
-
-.. py:class:: buildbot.steps.master.SetSlaveInfo
-
-``SetSlaveInfo`` is a base class to provide a facility to set values in the buildslave info dictionary.
-For example::
-
-    from buildbot.steps.master import SetSlaveInfo
-
-    class SetSlaveFromPropInfo(SetSlaveInfo):
-        name = "SetSlaveFromPropInfo"
-
-        # override this to return the dictionary update
-        def getSlaveInfoUpdate(self):
-            # for example, copy a property into the buildslave dict
-            update = { 
-                "foo": self.getProperty("foo")
-            }
-            return update
-
 
 .. index:: Properties; triggering schedulers
 
