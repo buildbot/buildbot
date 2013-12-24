@@ -292,10 +292,6 @@ class TestFakeLogFile(unittest.TestCase, InterfaceTests):
     # place lets the tests pass until all of the built-in steps are rewritten
     # to use LogObservers, etc.
 
-    def test_signature_hasContents_removed(self):
-        InterfaceTests.test_signature_hasContents_removed(self)
-    test_signature_hasContents_removed.todo = "not removed yet"
-
     def test_signature_getText_removed(self):
         InterfaceTests.test_signature_getText_removed(self)
     test_signature_getText_removed.todo = "not removed yet"
