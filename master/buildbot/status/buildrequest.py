@@ -93,7 +93,7 @@ class BuildRequestStatus:
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
 
-        bdicts = yield self.master.db.builds.getBuildsForRequest(self.brid)
+        bdicts = yield self.master.db.builds.getBuilds(buildrequestid=self.brid)
 
         buildnums = sorted([bdict['number'] for bdict in bdicts])
 
