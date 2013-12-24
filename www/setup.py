@@ -83,12 +83,14 @@ package_json = {
         "grunt-contrib-concat": "~0.3.0",
         "grunt-contrib-livereload": "~0.1.2",
         "grunt-contrib-requirejs": "~0.4.0",
-        "grunt-contrib-watch": "~0.5.1",
+        "grunt-contrib-watch": "~0.5.3",
         "grunt-mkdir": "~0.1.1",
         "grunt-html2js": "~0.1.6",
-        "grunt-coffeelint": "~0.0.7",
+        "grunt-coffeelint": "~0.0.8",
         "grunt-requiregen": "~0.1.0",
-        "grunt-karma": "~0.6.0",
+        "grunt-karma": "~0.7.2",
+        "karma": "~0.11.0",
+        "karma-jasmine": "~0.1.5",
         "bower": "~1.2.7"
     },
     "engines": {
@@ -98,10 +100,7 @@ package_json = {
 }
 package_json.update(base_json)
 
-# we take angular 1.2.0 which has important new features
-# like ng-animate, and ng-if
-
-ANGULAR_TAG = "v1.2.1"
+ANGULAR_TAG = "v1.2.5"
 bower_json = {
     "dependencies": {
         "bootstrap": "~3.0.0",

@@ -417,19 +417,30 @@ The idea is to simplifify automatic update of the $scope based on events happeni
 
 Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
 
-    * ``.bind($scope, scope_key)``
+    * ``.bind($scope, opts)``
 
         bind the api result to the scope, automatically listening to events on this endpoint, and modifying the scope object accordingly.
-        scope_key defaults to the last path of the restangular object, i.e ``build/1/step/2`` binds to ``$scope.step``
+        ``bind()`` takes several optional parameters in ``opts``:
 
-    * ``.unbind()``
+        * ``dest_key`` defaults to the last path of the restangular object, i.e ``build/1/step/2`` binds to ``$scope.step``
 
-        Stop listening to events. This is automatically done when $scope is destroyed.
+        * ``dest`` (defaults to $scope): object where to store the results
 
-    * ``.on(eventtype, callback)``
+        * ``ismutable``(defaults to always false): ``(elem) ->`` function used to know if the object will not evolve anymore (so no need to register to events)
+
+        * ``gotchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
+            This can be used to get more data derived from a list. The child received are restangular elements
+
+        * ``queryParams`` : query parameters used to filter the results of a list api
+
+    * ``.on(eventtype, callback, $scope)``
 
         Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
-        You need to manually call unbind() when the scope is destroyed. EventSource connection is shared between listeners on the same endpoint.
+        You need to pass $scope, so that event is unregistered on scope destroy.
+
+    * ``.control(method, params)``
+
+        Call the control data api. This builds up a POST with jsonapi encoded parameters
 
 Mocks and testing utils
 ~~~~~~~~~~~~~~~~~~~~~~~

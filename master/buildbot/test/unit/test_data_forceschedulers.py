@@ -134,13 +134,13 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        res = yield self.callGet(('forceschedulers', "defaultforce"))
+        res = yield self.callGet(('forcescheduler', "defaultforce"))
         self.validateData(res)
         self.assertEquals(res, expected_default)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        res = yield self.callGet(('forceschedulers', 'foo'))
+        res = yield self.callGet(('forcescheduler', 'foo'))
         self.assertEquals(res, None)
 
 
@@ -161,5 +161,5 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        res = yield self.callGet(('forceschedulers', ))
+        res = yield self.callGet(('forcescheduler', ))
         self.assertEquals(res, [expected_default])

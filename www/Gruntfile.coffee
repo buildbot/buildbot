@@ -91,13 +91,16 @@ module.exports = (grunt) ->
                         level: "ignore"
                     no_throwing_strings:
                         level: "error"
+                    # at some point we probably need to enable this rule
+                    # for the moment, We dont have the proper design patterns
+                    # to resolve those issues
                     cyclomatic_complexity:
                         value: 10
-                        level: "warn"
+                        level: "ignore"
                     no_backticks:
                         level: "error"
                     line_endings:
-                        level: "ignore"
+                        level: "error"
                         value: "unix"
                     no_implicit_parens:
                         level: "ignore"
@@ -361,31 +364,26 @@ module.exports = (grunt) ->
                 colors: true
                 keepalive: true
                 autoWatch: false
-                background: true
+                background: false
+                singleRun: true
                 reporters: ['progress']
                 frameworks: ['jasmine', 'requirejs'],
+                browsers: ['PhantomJS']
                 files: [
                     "./#{project_name}/scripts/test/main.js"
                     {pattern: "#{project_name}/scripts/**/*.js", included: false},
                     {pattern: "#{project_name}/scripts/**/*.js.map", included: false},
                 ]
-                singleRun: false
             dev:
                 options: # choose from Chrome,Firefox,PhantomJS
                     browsers: (grunt.option('browsers') or 'PhantomJS').split(",")
+                    background: true
+                    singleRun: false
             ci:
                 options:
-                    background: false
-                    autoWatch: false
-                    browsers: ['PhantomJS']
                     singleRun: true
             prod:
                 options:
-                    background: false
-                    autoWatch: false
-                    browsers: ['PhantomJS']
-                    singleRun: true
-                    frameworks: ['jasmine', 'requirejs'],
                     files: [
                         './src/scripts/libs/jquery.js'
                         './src/scripts/libs/angular.js'
@@ -412,6 +410,7 @@ module.exports = (grunt) ->
                     'copy:scripts'
                     'copy:src'
                     'karma:dev:run'
+                    'coffeelint:scripts'
                 ]
                 options:
                     spawn: false,
@@ -457,6 +456,8 @@ module.exports = (grunt) ->
     grunt.loadNpmTasks 'grunt-karma'
     grunt.loadNpmTasks 'grunt-requiregen'
 
+    # Register grunt tasks supplied by grunt-coffeelint.
+    grunt.loadNpmTasks 'grunt-coffeelint'
 
     grunt.registerTask 'dataspec', ->
         done = @async()
@@ -495,7 +496,7 @@ module.exports = (grunt) ->
     # grunt dev
     grunt.registerTask 'dev', [
         'default'
-        'karma:dev'
+        'karma:dev:start'
         'watch',
     ]
 
@@ -504,6 +505,7 @@ module.exports = (grunt) ->
     # grunt ci
     grunt.registerTask 'ci', [
         'default'
+        'coffeelint'
         'karma:ci'
         'prod'
         'dataspec'
@@ -529,3 +531,4 @@ module.exports = (grunt) ->
         'jade:prod'
         'copy:prod'
     ]
+    grunt.file.write("coffeelint.json", JSON.stringify(grunt.config("coffeelint.scripts.options")))

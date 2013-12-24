@@ -15,7 +15,7 @@
       li.pull-right
         button.btn.btn-default Promote
   .row
-    .col-sm-6
+    .col-sm-4
       h4 Steps
       ul.list-group.no-select
         li.list-group-item(ng-repeat="step in steps",ng-click="fulldisplay=!fulldisplay",ng-init="fulldisplay=step.results")
@@ -33,5 +33,13 @@
           ul.unstyled
             li(ng-repeat="url in step.urls")
               a(href="{{url}}") {{url}}
-    .col-sm-6
-      h4 Slave: {{buildslave.name}}
+    .col-sm-8
+      tabset(justified="true")
+          tab(heading="properties")
+              rawdata(data="properties")
+          tab(heading="{{buildslave.name}}")
+              rawdata(data="buildslave")
+          tab(heading="builder")
+              rawdata(data="builder")
+          tab(heading="build")
+              rawdata(data="build")

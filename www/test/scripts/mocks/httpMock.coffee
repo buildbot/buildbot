@@ -28,7 +28,7 @@ window.decorateHttpBackend = ($httpBackend) ->
         splitpath = path.split("/")
         return splitpath[splitpath.length - 1]
 
-    $httpBackend.resetIds = () ->
+    $httpBackend.resetIds = ->
         ids = {}
 
     $httpBackend.buildDataValue = (ep, nItems) ->
@@ -38,7 +38,7 @@ window.decorateHttpBackend = ($httpBackend) ->
                 return valueFromSpec(spec, hint)
             hint ?= "mystring"
             if not spec.name?
-                throw "no type: #{ spec } #{ tip }"
+                throw Error("no type: #{ spec } #{ tip }")
             type = spec.name
             switch type
                 when "string"
@@ -58,7 +58,7 @@ window.decorateHttpBackend = ($httpBackend) ->
                 when "sourced-properties"
                     return {prop: ['value', "source"]}
                 else
-                    throw "unknown type: #{ type }"
+                    throw Error("unknown type: #{ type }")
 
         valueFromSpec = (spec, basehint) ->
             ret = {}
@@ -85,7 +85,7 @@ window.decorateHttpBackend = ($httpBackend) ->
                 ret = {meta:{links: [] }}
                 ret[dataEp.plural] = data
                 return ret
-        throw "endpoint not specified! #{ep}"
+        throw Error("endpoint not specified! #{ep}")
 
     $httpBackend.whenDataGET = (ep, opts) ->
         opts ?= {}
