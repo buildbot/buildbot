@@ -215,6 +215,7 @@ class BuildStep(object, properties.PropertiesMixin):
              'description',
              'descriptionDone',
              'descriptionSuffix',
+             'logEncoding',
              ]
 
     name = "generic"
@@ -228,6 +229,7 @@ class BuildStep(object, properties.PropertiesMixin):
     buildslave = None
     step_status = None
     progress = None
+    logEncoding = None
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -542,14 +544,12 @@ class BuildStep(object, properties.PropertiesMixin):
     def getSlaveName(self):
         return self.build.getSlaveName()
 
-    def addLog(self, name, type='s'):
+    def addLog(self, name, type='s', logEncoding=None):
         @defer.inlineCallbacks
         def _addLog():
             logid = yield self.master.data.updates.newLog(self.stepid,
                     util.ascii2unicode(name), unicode(type))
-            l = plog.Log.new(self.master, name, type, logid)
-            self._setupLog(name, l)
-            defer.returnValue(l)
+            defer.returnValue(self._newLog(name, type, logid, logEncoding))
 
         # This method implements a smooth transition for nine
         # it returns a synchronous version of logfile, so that steps can safely
@@ -574,8 +574,7 @@ class BuildStep(object, properties.PropertiesMixin):
         log.msg("addCompleteLog(%s)" % name)
         logid = yield self.master.data.updates.newLog(self.stepid,
                 util.ascii2unicode(name), u't')
-        l = plog.Log.new(self.master, name, u't', logid)
-        self._setupLog(name, l)
+        l = self._newLog(name, u't', logid)
         yield l.addContent(text)
         yield l.finish()
 
@@ -585,8 +584,7 @@ class BuildStep(object, properties.PropertiesMixin):
         log.msg("addHTMLLog(%s)" % name)
         logid = yield self.master.data.updates.newLog(self.stepid,
                 util.ascii2unicode(name), u'h')
-        l = plog.Log.new(self.master, name, u'h', logid)
-        self._setupLog(name, l)
+        l = self._newLog(name, u'h', logid)
         yield l.addContent(html)
         yield l.finish()
 
@@ -596,9 +594,15 @@ class BuildStep(object, properties.PropertiesMixin):
         self._pendingLogObservers.append((logname, observer))
         self._connectPendingLogObservers()
 
-    def _setupLog(self, name, log):
+    def _newLog(self, name, type, logid, logEncoding=None):
+        if not logEncoding:
+            logEncoding = self.logEncoding
+        if not logEncoding:
+            logEncoding = self.master.config.logEncoding
+        log = plog.Log.new(self.master, name, type, logid, logEncoding)
         self.logs[name] = log
         self._connectPendingLogObservers()
+        return log
 
     def _connectPendingLogObservers(self):
         for logname, observer in self._pendingLogObservers[:]:

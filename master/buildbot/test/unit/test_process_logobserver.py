@@ -42,7 +42,7 @@ class TestLogObserver(unittest.TestCase):
     @defer.inlineCallbacks
     def test_sequence(self):
         logid = yield self.master.data.updates.newLog(1, u'mine', u's')
-        l = log.Log.new(self.master, 'mine', 's', logid)
+        l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = MyLogObserver()
         lo.setLog(l)
 
@@ -85,7 +85,7 @@ class TestLogLineObserver(unittest.TestCase):
     @defer.inlineCallbacks
     def test_sequence(self):
         logid = yield self.master.data.updates.newLog(1, u'mine', u's')
-        l = log.Log.new(self.master, 'mine', 's', logid)
+        l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = MyLogLineObserver()
         lo.setLog(l)
 

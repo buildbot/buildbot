@@ -24,7 +24,7 @@ from twisted.python import log
 class Log(object):
     _byType = {}
 
-    def __init__(self, master, name, type, logid):
+    def __init__(self, master, name, type, logid, decoder):
         self.type = type
         self.logid = logid
         self.master = master
@@ -35,18 +35,24 @@ class Log(object):
         self.finished = False
         self.finishWaiters = []
 
-        # function to decode bytestring data to unicode TODO: make this
-        # configurable, with a global default
-        self.decoder = lambda s: s.decode('utf-8', 'replace')
+        self.decoder = decoder
+
+    @staticmethod
+    def _decoderFromString(cfg):
+        if isinstance(cfg, basestring):
+            return lambda s: s.decode(cfg, 'replace')
+        else:
+            return cfg
 
     @classmethod
-    def new(cls, master, name, type, logid):
+    def new(cls, master, name, type, logid, logEncoding):
         type = unicode(type)
         try:
             subcls = cls._byType[type]
         except KeyError:
             raise RuntimeError("Invalid log type %r" % (type,))
-        return subcls(master, name, type, logid)
+        decoder = Log._decoderFromString(logEncoding)
+        return subcls(master, name, type, logid, decoder)
 
     def getName(self):
         return self.name
@@ -100,8 +106,8 @@ class Log(object):
 
 class PlainLog(Log):
 
-    def __init__(self, master, name, type, logid):
-        super(PlainLog, self).__init__(master, name, type, logid)
+    def __init__(self, master, name, type, logid, decoder):
+        super(PlainLog, self).__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
             if not isinstance(lines, unicode):
@@ -138,8 +144,8 @@ class StreamLog(Log):
 
     pat = re.compile('^', re.M)
 
-    def __init__(self, step, name, type, logid):
-        super(StreamLog, self).__init__(step, name, type, logid)
+    def __init__(self, step, name, type, logid, decoder):
+        super(StreamLog, self).__init__(step, name, type, logid, decoder)
         self.lbfs = {}
 
     def _getLbf(self, stream):

@@ -76,6 +76,10 @@ Nine
   - configuring codebase is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
   - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
 
+* Logs are now stored as Unicode strings, and thus must be decoded properly from the bytestrings provided by shell commands.
+  By default this encoding is assumed to be UTF-8, but the :bb:cfg:`logEncoding` parameter can be used to select an alternative.
+  Steps and individual logfiles can also override the global default.
+
 .. _Refactoring-Buildsteps:
 
 Refactoring Buildsteps

@@ -168,6 +168,12 @@ Arguments common to all :class:`BuildStep` subclasses:
     list of actual :class:`Lock` instances, not names. Also note that all Locks must have
     unique names.  See :ref:`Interlocks`.
 
+.. index:: Buildstep Parameter; logEncoding
+
+``logEncoding``
+    The character encoding to use to decode logs produced during the execution of this step.
+    This overrides the default :bb:cfg:`logEncoding`; see :ref:`Log-Encodings`.
+
 .. _Source-Checkout:
 
 Source Checkout

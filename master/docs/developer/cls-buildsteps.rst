@@ -89,6 +89,11 @@ BuildStep
 
         If true, the step will run even if a previous step halts the build with ``haltOnFailure``.
 
+    .. py:attribute:: logEncoding
+
+        The log encoding to use for logs produced in this step, or None to ues the global default.
+        See :ref:`Log-Encodings`.
+
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
 
@@ -335,10 +340,11 @@ BuildStep
     The following methods provide some useful behaviors.
     These methods can be called while the step is running, but not before.
 
-    .. py:method:: addLog(name, type="s")
+    .. py:method:: addLog(name, type="s", logEncoding=None)
 
         :param name: log name
         :param type: log type; see :bb:rtype:`logchunk`
+        :param logEncoding: the log encoding, or None to use the step or global default (see :ref:`Log-Encodings`)
         :returns: :class:`~buildbot.process.log.Log` instance via Deferred
 
         Add a new logfile with the given name to the step, and return the log file instance.
@@ -352,6 +358,9 @@ BuildStep
         This method adds a new log and sets ``text`` as its content.
         This is often useful to add a short logfile describing activities performed on the master.
         The logfile is immediately closed, and no further data can be added.
+
+        If the logfile's content is a bytestring, it is decoded with the step's log encoding or the global default log encoding.
+        To add a logfile with a different character encoding, perform the decode operation directly and pass the resulting unicode string to this method.
 
     .. py:method:: addHTMLLog(name, html)
 

@@ -30,15 +30,33 @@ class Tests(unittest.TestCase):
                                              wantData=True)
 
     @defer.inlineCallbacks
-    def makeLog(self, type):
-        logid = yield self.master.data.updates.newLog(stepid=27,
-                                                      name=u'testlog', type=unicode(type))
-        defer.returnValue(log.Log.new(self.master, u'testlog', type, logid))
+    def makeLog(self, type, logEncoding='utf-8'):
+        logid = yield self.master.data.updates.newLog(
+                stepid=27, name=u'testlog', type=unicode(type))
+        defer.returnValue(log.Log.new(self.master, u'testlog', type,
+                                      logid, logEncoding))
 
     @defer.inlineCallbacks
     def test_creation(self):
         for type in 'ths':
             yield self.makeLog(type)
+
+    def test_logDecodeFunctionFromConfig(self):
+        otilde = u'\u00f5'
+        otilde_utf8 = otilde.encode('utf-8')
+        otilde_latin1 = otilde.encode('latin1')
+        invalid_utf8 = '\xff'
+        replacement = u'\ufffd'
+
+        f = log.Log._decoderFromString('latin-1')
+        self.assertEqual(f(otilde_latin1), otilde)
+
+        f = log.Log._decoderFromString('utf-8')
+        self.assertEqual(f(otilde_utf8), otilde)
+        self.assertEqual(f(invalid_utf8), replacement)
+
+        f = log.Log._decoderFromString(lambda s : unicode(s[::-1]))
+        self.assertEqual(f('abc'), u'cba')
 
     @defer.inlineCallbacks
     def test_updates_plain(self):
@@ -57,6 +75,24 @@ class Tests(unittest.TestCase):
             'type': u't',
             'name': u'testlog',
         })
+
+    @defer.inlineCallbacks
+    def test_updates_different_encoding(self):
+        l = yield self.makeLog('t', logEncoding='latin-1')
+        l.addContent('$ and \xa2\n')  # 0xa2 is latin-1 encoding for CENT SIGN
+        l.finish()
+
+        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+                         [u'$ and \N{CENT SIGN}\n'])
+
+    @defer.inlineCallbacks
+    def test_updates_unicode_input(self):
+        l = yield self.makeLog('t', logEncoding='something-invalid')
+        l.addContent(u'\N{SNOWMAN}\n')
+        l.finish()
+
+        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+                        [u'\N{SNOWMAN}\n'])
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
@@ -241,7 +277,8 @@ class InterfaceTests(interfaces.InterfaceTests):
 class TestProcessItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
-        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101)
+        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
+                                 101, unicode)
 
 
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):

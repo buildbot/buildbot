@@ -72,8 +72,9 @@ class MasterConfig(object):
         self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
         self.logCompressionMethod = 'bz2'
-        self.logMaxTailSize = None
+        self.logEncoding = 'utf-8'
         self.logMaxSize = None
+        self.logMaxTailSize = None
         self.properties = properties.Properties()
         self.mergeRequests = None
         self.codebaseGenerator = None
@@ -117,12 +118,12 @@ class MasterConfig(object):
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
         'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
-        "logCompressionLimit", "logCompressionMethod", "logHorizon",
-        "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
-        "mq", "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "protocols", "revlink", "schedulers", "slavePortnum",
-        "slaves", "status", "title", "titleURL", "user_managers", "validation",
-        'www'
+        "logCompressionLimit", "logCompressionMethod", "logEncoding",
+        "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
+        "mergeRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
+        "projectName", "projectURL", "properties", "protocols", "revlink",
+        "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
+        "user_managers", "validation", 'www'
     ])
 
     @classmethod
@@ -273,6 +274,7 @@ class MasterConfig(object):
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
+        copy_param('logEncoding')
 
         properties = config_dict.get('properties', {})
         if not isinstance(properties, dict):
