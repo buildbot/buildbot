@@ -13,7 +13,7 @@ Overview
 
 Buildbot is structured as a hybrid state- and event-based application, which
 will probably offend adherents of either pattern.  In particular, the most
-current state is stored in the :doc:`Database <db>`, while any
+current state is stored in the :doc:`Database <database>`, while any
 changes to the state are announced in the form of a message.  The content of
 the messages is sufficient to reconstruct the updated state, allowing external
 processes to represent "live" state without polling the database.
