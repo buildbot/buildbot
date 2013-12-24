@@ -170,11 +170,24 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         def newStep(self, buildid, name):
             pass
 
+    def test_signature_startStep(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.startStep,  # fake
+            self.rtype.startStep)  # real
+        def newStep(self, stepid):
+            pass
+
     def test_newStep(self):
         self.do_test_callthrough('addStep', self.rtype.newStep,
                                  buildid=10, name=u'name',
                                  exp_kwargs=dict(buildid=10, name=u'name',
                                                  state_strings=['pending']))
+
+    @defer.inlineCallbacks
+    def test_fake_newStep(self):
+        self.assertEqual(
+            len((yield self.master.data.updates.newStep(10, u'ten'))),
+            3)
 
     def test_startStep(self):
         self.do_test_callthrough('startStep', self.rtype.startStep,

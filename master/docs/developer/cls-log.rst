@@ -23,6 +23,11 @@ Logs
 
         The ID of the logfile.
 
+    .. py:attribute:: decoder
+
+        A callable used to decode bytestrings.
+        See :bb:cfg:`logEncoding'.
+
     .. py:method:: subscribe(receiver)
 
         :type receiver: callable

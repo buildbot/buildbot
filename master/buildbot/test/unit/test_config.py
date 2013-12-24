@@ -49,6 +49,7 @@ global_defaults = dict(
     buildHorizon=None,
     logCompressionLimit=4096,
     logCompressionMethod='bz2',
+    logEncoding='utf-8',
     logMaxTailSize=None,
     logMaxSize=None,
     properties=properties.Properties(),
@@ -450,6 +451,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_logMaxTailSize(self):
         self.do_test_load_global(dict(logMaxTailSize=123), logMaxTailSize=123)
+
+    def test_load_global_logEncoding(self):
+        self.do_test_load_global(
+                dict(logEncoding='latin-2'), logEncoding='latin-2')
 
     def test_load_global_properties(self):
         exp = properties.Properties()

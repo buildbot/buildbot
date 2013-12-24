@@ -57,7 +57,7 @@ Identifier
 
 An "identifier" is a nonempty unicode string of limited length, containing only ASCII alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
 Wherever an identifier is used, the documentation will give the maximum length in characters.
-The function :py:func:`buildbot.util.typechecks.isIdentifier` is useful to verify a well-formed identifier.
+The function :py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
 
 buildrequests
 ~~~~~~~~~~~~~
@@ -409,7 +409,8 @@ logs
 
     * ``id`` (log ID, globally unique)
     * ``stepid`` (step ID, indicating the containing step)
-    * ``name`` (50-identifier for the log, unique within the step)
+    * ``name`` free-form name of this log
+    * ``slug`` (50-identifier for the log, unique within the step)
     * ``complete`` (true if the log is complete and will not receive more lines)
     * ``num_lines`` (number of lines in the log)
     * ``type`` (log type; see below)
@@ -432,10 +433,10 @@ logs
 
         Get a log, identified by logid.
 
-    .. py:method:: getLogByName(stepid, name)
+    .. py:method:: getLogBySlug(stepid, slug)
 
         :param integer stepid: ID of the step containing this log
-        :param name: name of the logfile to retrieve
+        :param slug: slug of the logfile to retrieve
         :type name: 50-character identifier
         :returns: logdict via Deferred
 
@@ -464,10 +465,11 @@ logs
     .. py:method:: addLog(stepid, name, type)
 
         :param integer stepid: ID of the step containing this log
-        :param name: name of the logfile to retrieve
-        :type name: 50-character identifier
+        :param string name: name of the logfile
+        :param slug: slug (unique identifier) of the logfile
+        :type slug: 50-character identifier
         :param string type: log type (see above)
-        :raises KeyError: if a log by the given name already exists
+        :raises KeyError: if a log with the given slug already exists in the step
         :returns: ID of the new log, via Deferred
 
         Add a new log file to the given step.

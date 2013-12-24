@@ -25,29 +25,30 @@ class LogObserver:
         self.step = step
 
     def setLog(self, loog):
-        loog.subscribe(self, True)
+        loog.subscribe(self.gotData)
 
-    def logChunk(self, build, step, log, channel, text):
-        if channel == interfaces.LOG_CHANNEL_STDOUT:
-            self.outReceived(text)
-        elif channel == interfaces.LOG_CHANNEL_STDERR:
-            self.errReceived(text)
+    def gotData(self, stream, data):
+        if data is None:
+            self.finishReceived()
+        elif stream is None or stream == 'o':
+            self.outReceived(data)
+        elif stream == 'e':
+            self.errReceived(data)
 
-    # TODO: add a logEnded method? er, stepFinished?
+    # TODO: document / test
+    def finishReceived(self):
+        pass
 
     def outReceived(self, data):
-        """This will be called with chunks of stdout data. Override this in
-        your observer."""
         pass
 
     def errReceived(self, data):
-        """This will be called with chunks of stderr data. Override this in
-        your observer."""
         pass
 
 
 class LogLineObserver(LogObserver):
 
+    # TODO: simplify now that each chunk is line-delimited
     def __init__(self):
         self.stdoutParser = basic.LineOnlyReceiver()
         self.stdoutParser.delimiter = "\n"
@@ -92,6 +93,6 @@ class OutputProgressObserver(LogObserver):
     def __init__(self, name):
         self.name = name
 
-    def logChunk(self, build, step, log, channel, text):
-        self.length += len(text)
+    def gotData(self, stream, data):
+        self.length += len(data)
         self.step.setProgress(self.name, self.length)

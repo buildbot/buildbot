@@ -67,6 +67,7 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
 
             l = self.addLog('foo')
             l.addStdout('stdout\n')
+            l.addStdout(u'\N{SNOWMAN}\n'.encode('utf-8'))
             l.addStderr('stderr\n')
             l.finish()
 
@@ -80,6 +81,16 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
             import traceback
             traceback.print_exc()
             self.failed(failure.Failure(e))
+
+
+class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
+
+    @defer.inlineCallbacks
+    def run(self):
+        l = yield self.addLog('xx')
+        yield l.addStdout(u'\N{CENT SIGN}'.encode('latin-1'))
+        yield l.finish()
+        defer.returnValue(results.SUCCESS)
 
 
 class FailingCustomStep(buildstep.LoggingBuildStep):
@@ -146,8 +157,8 @@ class RunSteps(unittest.TestCase):
         bfd = defer.Deferred()
         old_buildFinished = self.builder.buildFinished
 
-        def buildFinished(build, sb, bids):
-            old_buildFinished(build, sb, bids)
+        def buildFinished(*args):
+            old_buildFinished(*args)
             bfd.callback(None)
         self.builder.buildFinished = buildFinished
 
@@ -161,15 +172,21 @@ class RunSteps(unittest.TestCase):
         # then get the BuildStatus and return it
         defer.returnValue(self.master.status.lastBuilderStatus.lastBuildStatus)
 
+    def assertLogs(self, exp_logs):
+        got_logs = {}
+        for id, l in self.master.data.updates.logs.iteritems():
+            self.failUnless(l['finished'])
+            got_logs[l['name']] = ''.join(l['content'])
+        self.assertEqual(got_logs, exp_logs)
+
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep(self):
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
-        bs = yield self.do_test_step()
-        logs = dict((l.name, l.old_getText()) for l in bs.getLogs())
-        self.assertEqual(logs, {
-            'compl.html': '<blink>A very short logfile</blink>\n',
-            'foo': 'stdout\nstderr\n',
-            'obs': 'Observer saw [\'stdout\\n\']',
+        yield self.do_test_step()
+        self.assertLogs({
+            u'compl.html': u'<blink>A very short logfile</blink>\n',
+            u'foo': u'ostdout\no\N{SNOWMAN}\nestderr\n',
+            u'obs': u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
         })
 
     @defer.inlineCallbacks
@@ -193,3 +210,11 @@ class RunSteps(unittest.TestCase):
         self.assertEqual(bs.getResults(), results.EXCEPTION)
         #self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
+
+    @defer.inlineCallbacks
+    def test_Latin1ProducingCustomBuildStep(self):
+        self.factory.addStep(Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
+        yield self.do_test_step()
+        self.assertLogs({
+            u'xx': u'o\N{CENT SIGN}\n',
+        })

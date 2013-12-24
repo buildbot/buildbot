@@ -16,7 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db import base
-from buildbot.util import typechecks
+from buildbot.util import identifiers
 from twisted.internet import defer
 
 
@@ -26,7 +26,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
     def findBuildslaveId(self, name):
         tbl = self.db.model.buildslaves
         # callers should verify this and give good user error messages
-        assert typechecks.isIdentifier(50, name)
+        assert identifiers.isIdentifier(50, name)
         return self.findSomethingId(
             tbl=tbl,
             whereclause=(tbl.c.name == name),

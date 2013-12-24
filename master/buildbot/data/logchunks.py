@@ -25,11 +25,11 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
     isCollection = False
     pathPatterns = """
         /log/n:logid/content
-        /step/n:stepid/log/i:log_name/content
-        /build/n:buildid/step/i:step_name/log/i:log_name/content
-        /build/n:buildid/step/n:step_number/log/i:log_name/content
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_name/content
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_name/content
+        /step/n:stepid/log/i:log_slug/content
+        /build/n:buildid/step/i:step_name/log/i:log_slug/content
+        /build/n:buildid/step/n:step_number/log/i:log_slug/content
+        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_slug/content
+        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_slug/content
     """
 
     @defer.inlineCallbacks
@@ -42,8 +42,8 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
             stepid = yield self.getStepid(kwargs)
             if stepid is None:
                 return
-            dbdict = yield self.master.db.logs.getLogByName(stepid,
-                                                            kwargs.get('log_name'))
+            dbdict = yield self.master.db.logs.getLogBySlug(stepid,
+                                                            kwargs.get('log_slug'))
             if not dbdict:
                 return
             logid = dbdict['id']

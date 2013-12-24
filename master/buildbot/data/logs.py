@@ -15,6 +15,7 @@
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util import identifiers
 from twisted.internet import defer
 
 
@@ -24,6 +25,7 @@ class EndpointMixin(object):
         data = {
             'logid': dbdict['id'],
             'name': dbdict['name'],
+            'slug': dbdict['slug'],
             'stepid': dbdict['stepid'],
             'step_link': base.Link(('step', str(dbdict['stepid']))),
             'complete': dbdict['complete'],
@@ -39,11 +41,11 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     isCollection = False
     pathPatterns = """
         /log/n:logid
-        /step/n:stepid/log/i:log_name
-        /build/n:buildid/step/i:step_name/log/i:log_name
-        /build/n:buildid/step/n:step_number/log/i:log_name
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_name
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_name
+        /step/n:stepid/log/i:log_slug
+        /build/n:buildid/step/i:step_name/log/i:log_slug
+        /build/n:buildid/step/n:step_number/log/i:log_slug
+        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_slug
+        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_slug
     """
 
     @defer.inlineCallbacks
@@ -58,8 +60,8 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
         if stepid is None:
             return
 
-        dbdict = yield self.master.db.logs.getLogByName(stepid,
-                                                        kwargs.get('log_name'))
+        dbdict = yield self.master.db.logs.getLogBySlug(stepid,
+                                                        kwargs.get('log_slug'))
         defer.returnValue((yield self.db2data(dbdict))
                           if dbdict else None)
 
@@ -94,7 +96,8 @@ class Log(base.ResourceType):
 
     class EntityType(types.Entity):
         logid = types.Integer()
-        name = types.Identifier(50)
+        name = types.String()
+        slug = types.Identifier(50)
         stepid = types.Integer()
         step_link = types.Link()
         complete = types.Boolean()
@@ -104,9 +107,17 @@ class Log(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def newLog(self, stepid, name, type):
-        return self.master.db.logs.addLog(
-            stepid=stepid, name=name, type=type)
+        slug = name
+        while True:
+            try:
+                logid = yield self.master.db.logs.addLog(
+                    stepid=stepid, name=name, slug=slug, type=type)
+            except KeyError:
+                slug = identifiers.incrementIdentifier(50, slug)
+                continue
+            defer.returnValue(logid)
 
     @base.updateMethod
     def finishLog(self, logid):

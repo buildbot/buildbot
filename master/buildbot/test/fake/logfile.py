@@ -16,6 +16,7 @@
 import StringIO
 import warnings
 
+from buildbot import util
 from buildbot.status.logfile import HEADER
 from buildbot.status.logfile import STDERR
 from buildbot.status.logfile import STDOUT
@@ -33,16 +34,13 @@ class FakeLogFile(object):
         self.chunks = []
         self.finished = False
         self.step = step
+        self.subPoint = util.subscription.SubscriptionPoint("%r log" % (name,))
 
     def getName(self):
         return self.name
 
-    def subscribe(self, receiver, catchup):
-        assert not catchup, "catchup must be False"
-        # no actual subscription..
-
-    def unsubscribe(self, receiver):
-        pass
+    def subscribe(self, callback):
+        return self.subPoint.subscribe(callback)
 
     def addHeader(self, text):
         self.header += text

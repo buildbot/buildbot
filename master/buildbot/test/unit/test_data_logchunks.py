@@ -42,7 +42,8 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=9, name='make'),
-            fakedb.Log(id=60, stepid=50, name='stdio', type='s', num_lines=7),
+            fakedb.Log(id=60, stepid=50, name='stdio', slug='stdio', type='s',
+                       num_lines=7),
             fakedb.LogChunk(logid=60, first_line=0, last_line=1, compressed=0,
                 content=textwrap.dedent("""\
                         line zero
@@ -56,14 +57,15 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                             content="another line"),
             fakedb.LogChunk(logid=60, first_line=6, last_line=6, compressed=0,
                             content="yet another line"),
-            fakedb.Log(id=61, stepid=50, name='errors', type='t',
-                       num_lines=100),
+            fakedb.Log(id=61, stepid=50, name='errors', slug='errors',
+                       type='t', num_lines=100),
         ] + [
             fakedb.LogChunk(logid=61, first_line=i, last_line=i, compressed=0,
                             content="%08d" % i)
             for i in range(100)
         ] + [
-            fakedb.Log(id=62, stepid=50, name='notes', type='t', num_lines=0),
+            fakedb.Log(id=62, stepid=50, name='notes', slug='notes', type='t',
+                       num_lines=0),
             # logid 62 is empty
         ])
 

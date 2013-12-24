@@ -86,6 +86,8 @@ class Build(properties.PropertiesMixin):
         self.progress = None
         self.currentStep = None
         self.slaveEnvironment = {}
+        self.buildid = None
+        self.number = None
 
         self.terminate = False
 
@@ -109,9 +111,6 @@ class Build(properties.PropertiesMixin):
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
 
-    def setBuilDBId(self, dbid):
-        self._dbid = dbid
-
     def getSourceStamp(self, codebase=''):
         for source in self.sources:
             if source.codebase == codebase:
@@ -120,11 +119,6 @@ class Build(properties.PropertiesMixin):
 
     def getAllSourceStamps(self):
         return list(self.sources)
-
-    def getBuilDBId(self):
-        # TODO:
-        # Maybe is needed to implement a function in the DATA API to retreive the id
-        return self._dbid
 
     def allChanges(self):
         for s in self.sources:
@@ -198,7 +192,7 @@ class Build(properties.PropertiesMixin):
 
         # now set some properties of our own, corresponding to the
         # build itself
-        props.setProperty("buildnumber", self.build_status.number, "Build")
+        props.setProperty("buildnumber", self.number, "Build")
 
         if self.sources and len(self.sources) == 1:
             # old interface for backwards compatibility
@@ -230,10 +224,12 @@ class Build(properties.PropertiesMixin):
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
 
+    @defer.inlineCallbacks
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
+        slave = slavebuilder.slave
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -242,10 +238,19 @@ class Build(properties.PropertiesMixin):
 
         log.msg("%s.startBuild" % self)
         self.build_status = build_status
+        # TODO: this will go away when build collapsing is implemented; until
+        # then we just assign the bulid to the first buildrequest
+        brid = self.requests[0].id
+        self.buildid, self.number = \
+            yield self.master.data.updates.newBuild(
+                builderid=(yield self.builder.getBuilderId()),
+                buildrequestid=brid,
+                buildslaveid=slave.buildslaveid)
+
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
-        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
+        slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right slave
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
@@ -255,18 +260,7 @@ class Build(properties.PropertiesMixin):
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        d = self.deferred = defer.Deferred()
-
-        def _uncount_build(res):
-            metrics.MetricCountEvent.log('active_builds', -1)
-            return res
-        d.addBoth(_uncount_build)
-
-        def _release_slave(res, slave, bs):
-            self.slavebuilder.buildFinished()
-            slave.updateSlaveStatus(buildFinished=bs)
-            return res
-        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
+        self.deferred = defer.Deferred()
 
         try:
             self.setupBuild(expectations)  # create .steps
@@ -279,19 +273,30 @@ class Build(properties.PropertiesMixin):
             # handler
             log.msg("Build.setupBuild failed")
             log.err(Failure())
-            self.builder.builder_status.addPointEvent(["setupBuild",
-                                                       "exception"])
             self.finished = True
             self.results = EXCEPTION
             self.deferred = None
-            d.callback(self)
-            return d
+            return
 
-        self.master.data.updates.setBuildStateStrings(self.getBuilDBId(), [u'starting'])
+        yield self.master.data.updates.setBuildStateStrings(self.buildid,
+                                                            [u'starting'])
         self.build_status.buildStarted(self)
+        yield self.acquireLocks()
 
-        self.acquireLocks().addCallback(self._startBuild_2)
-        return d
+        try:
+            # start the sequence of steps and wait until it's finished
+            self.startNextStep()
+            yield self.deferred
+        finally:
+            metrics.MetricCountEvent.log('active_builds', -1)
+
+        yield self.master.db.builds.finishBuild(self.buildid, self.results)
+        yield self.master.data.updates.setBuildStateStrings(self.buildid,
+                                                            [u'finished'])
+
+        # mark the build as finished
+        self.slavebuilder.buildFinished()
+        slave.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
     def canStartWithSlavebuilder(lockList, slavebuilder):
@@ -319,9 +324,6 @@ class Build(properties.PropertiesMixin):
         for lock, access in self.locks:
             lock.claim(self, access)
         return defer.succeed(None)
-
-    def _startBuild_2(self, res):
-        self.startNextStep()
 
     def setupBuild(self, expectations):
         # create the actual BuildSteps. If there are any name collisions, we
@@ -509,7 +511,6 @@ class Build(properties.PropertiesMixin):
         if self.finished:
             return
         # TODO: include 'reason' in this point event
-        self.builder.builder_status.addPointEvent(['interrupt'])
         self.stopped = True
         if self.currentStep:
             self.currentStep.interrupt(reason)

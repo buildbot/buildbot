@@ -16,7 +16,6 @@
 import mock
 
 from buildbot.process import log
-from buildbot.status import logfile
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.util import interfaces
@@ -31,15 +30,33 @@ class Tests(unittest.TestCase):
                                              wantData=True)
 
     @defer.inlineCallbacks
-    def makeLog(self, type):
-        logid = yield self.master.data.updates.newLog(stepid=27,
-                                                      name=u'testlog', type=unicode(type))
-        defer.returnValue(log.Log.new(self.master, u'testlog', type, logid))
+    def makeLog(self, type, logEncoding='utf-8'):
+        logid = yield self.master.data.updates.newLog(
+                stepid=27, name=u'testlog', type=unicode(type))
+        defer.returnValue(log.Log.new(self.master, u'testlog', type,
+                                      logid, logEncoding))
 
     @defer.inlineCallbacks
     def test_creation(self):
         for type in 'ths':
             yield self.makeLog(type)
+
+    def test_logDecodeFunctionFromConfig(self):
+        otilde = u'\u00f5'
+        otilde_utf8 = otilde.encode('utf-8')
+        otilde_latin1 = otilde.encode('latin1')
+        invalid_utf8 = '\xff'
+        replacement = u'\ufffd'
+
+        f = log.Log._decoderFromString('latin-1')
+        self.assertEqual(f(otilde_latin1), otilde)
+
+        f = log.Log._decoderFromString('utf-8')
+        self.assertEqual(f(otilde_utf8), otilde)
+        self.assertEqual(f(invalid_utf8), replacement)
+
+        f = log.Log._decoderFromString(lambda s : unicode(s[::-1]))
+        self.assertEqual(f('abc'), u'cba')
 
     @defer.inlineCallbacks
     def test_updates_plain(self):
@@ -51,17 +68,37 @@ class Tests(unittest.TestCase):
         l.addContent(u'world\nthis is a second line')  # unfinished
         l.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], [
-            u'hello\n',
-            u'hello cruel world\n',
-            u'this is a second line\n',
-            None])
+        self.assertEqual(self.master.data.updates.logs[l.logid], {
+            'content': [u'hello\n', u'hello cruel world\n',
+                        u'this is a second line\n'],
+            'finished': True,
+            'type': u't',
+            'name': u'testlog',
+        })
+
+    @defer.inlineCallbacks
+    def test_updates_different_encoding(self):
+        l = yield self.makeLog('t', logEncoding='latin-1')
+        l.addContent('$ and \xa2\n')  # 0xa2 is latin-1 encoding for CENT SIGN
+        l.finish()
+
+        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+                         [u'$ and \N{CENT SIGN}\n'])
+
+    @defer.inlineCallbacks
+    def test_updates_unicode_input(self):
+        l = yield self.makeLog('t', logEncoding='something-invalid')
+        l.addContent(u'\N{SNOWMAN}\n')
+        l.finish()
+
+        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+                        [u'\N{SNOWMAN}\n'])
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
         l = yield self.makeLog('t')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)), False)
+        l.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
         yield l.addContent(u'hello\n')
@@ -84,8 +121,8 @@ class Tests(unittest.TestCase):
     def test_subscription_unsubscribe(self):
         l = yield self.makeLog('t')
         sub_fn = mock.Mock()
-        l.subscribe(sub_fn, False)
-        l.unsubscribe(sub_fn)
+        sub = l.subscribe(sub_fn)
+        sub.unsubscribe()
         yield l.finish()
         sub_fn.assert_not_called()
 
@@ -93,7 +130,7 @@ class Tests(unittest.TestCase):
     def test_subscription_stream(self):
         l = yield self.makeLog('s')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)), False)
+        l.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
         yield l.addStdout(u'hello\n')
@@ -133,12 +170,13 @@ class Tests(unittest.TestCase):
         l.addStderr(u'bad things!')  # unfinished
         l.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], [
-            'ohello\n',
-            'eoh noes!\n',
-            'ohello cruel world\n',
-            'ebad things!\n',
-            None])
+        self.assertEqual(self.master.data.updates.logs[l.logid], {
+            'content': [u'ohello\n', u'eoh noes!\n', u'ohello cruel world\n',
+                        u'ebad things!\n'],
+            'finished': True,
+            'name': u'testlog',
+            'type': u's',
+        })
 
     @defer.inlineCallbacks
     def test_isFinished(self):
@@ -207,13 +245,12 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_subscribe(self):
         @self.assertArgSpecMatches(self.log.subscribe)
-        def subscribe(self, receiver, catchup):
+        def subscribe(self, callback):
             pass
 
     def test_signature_unsubscribe(self):
-        @self.assertArgSpecMatches(self.log.unsubscribe)
-        def unsubscribe(self, receiver):
-            pass
+        # method has been removed
+        self.failIf(hasattr(self.log, 'unsubscribe'))
 
     def test_signature_getStep_removed(self):
         self.failIf(hasattr(self.log, 'getStep'))
@@ -237,18 +274,11 @@ class InterfaceTests(interfaces.InterfaceTests):
         self.failIf(hasattr(self.log, 'getChunks'))
 
 
-class TestStatusItfc(unittest.TestCase, InterfaceTests):
-
-    def setUp(self):
-        step = mock.Mock(name='step')
-        step.build.builder.basedir = '.'
-        self.log = logfile.LogFile(step, 'stdio', 'stdio')
-
-
 class TestProcessItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
-        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's', 101)
+        self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
+                                 101, unicode)
 
 
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):

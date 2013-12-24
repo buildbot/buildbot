@@ -757,16 +757,9 @@ some event has occurred (like a source file being compiled), it can
 use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
 progress that this event represents.
 
-There are a number of pre-built :class:`~buildbot.process.logobserver.LogObserver` classes that you
-can choose from (defined in :mod:`buildbot.process.buildstep`, and of
-course you can subclass them to add further customization. The
-:class:`~buildbot.process.logobserver.LogLineObserver` class handles the grunt work of buffering and
+The :class:`~buildbot.process.logobserver.LogLineObserver` class handles the grunt work of buffering and
 scanning for end-of-line delimiters, allowing your parser to operate
-on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
-length are dropped; the maximum defaults to 16384 bytes, but you can
-change it by calling :meth:`setMaxLineLength()` on your
-:class:`~buildbot.process.logobserver.LogLineObserver` instance.  Use ``sys.maxint`` for effective
-infinity.)
+on complete :file:`stdout`/:file:`stderr` lines.
 
 For example, let's take a look at the :class:`TrialTestCaseCounter`,
 which is used by the :bb:step:`Trial` step to count test cases as they are run.

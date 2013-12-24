@@ -40,8 +40,8 @@ class Tests(interfaces.InterfaceTests):
     ]
 
     testLogLines = [
-        fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                   num_lines=7, type=u's'),
+        fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                   complete=0, num_lines=7, type=u's'),
         fakedb.LogChunk(logid=201, first_line=0, last_line=1, compressed=0,
             content=textwrap.dedent("""\
                     line zero
@@ -77,9 +77,9 @@ class Tests(interfaces.InterfaceTests):
         def getLog(self, logid):
             pass
 
-    def test_signature_getLogByName(self):
-        @self.assertArgSpecMatches(self.db.logs.getLogByName)
-        def getLogByName(self, stepid, name):
+    def test_signature_getLogBySlug(self):
+        @self.assertArgSpecMatches(self.db.logs.getLogBySlug)
+        def getLogBySlug(self, stepid, slug):
             pass
 
     def test_signature_getLogs(self):
@@ -94,7 +94,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addLog(self):
         @self.assertArgSpecMatches(self.db.logs.addLog)
-        def addLog(self, stepid, name, type):
+        def addLog(self, stepid, name, slug, type):
             pass
 
     def test_signature_appendLog(self):
@@ -117,8 +117,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLog(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
         ])
         logdict = yield self.db.logs.getLog(201)
         validation.verifyDbDict(self, 'logdict', logdict)
@@ -126,6 +126,7 @@ class Tests(interfaces.InterfaceTests):
             'id': 201,
             'stepid': 101,
             'name': u'stdio',
+            'slug': u'stdio',
             'complete': False,
             'num_lines': 200,
             'type': 's',
@@ -137,35 +138,35 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
-    def test_getLogByName(self):
+    def test_getLogBySlug(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
-            fakedb.Log(id=202, stepid=101, name=u'debug_log',
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=202, stepid=101, name=u'dbg.log', slug=u'dbg_log',
                        complete=1, num_lines=200, type=u's'),
         ])
-        logdict = yield self.db.logs.getLogByName(101, u'debug_log')
+        logdict = yield self.db.logs.getLogBySlug(101, u'dbg_log')
         validation.verifyDbDict(self, 'logdict', logdict)
         self.assertEqual(logdict['id'], 202)
 
     @defer.inlineCallbacks
-    def test_getLogByName_missing(self):
+    def test_getLogBySlug_missing(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
         ])
-        logdict = yield self.db.logs.getLogByName(102, u'stdio')
+        logdict = yield self.db.logs.getLogBySlug(102, u'stdio')
         self.assertEqual(logdict, None)
 
     @defer.inlineCallbacks
     def test_getLogs(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
-            fakedb.Log(id=202, stepid=101, name=u'debug_log', complete=1,
-                       num_lines=300, type=u't'),
-            fakedb.Log(id=203, stepid=102, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
+            fakedb.Log(id=202, stepid=101, name=u'dbg.log', slug=u'dbg_log',
+                       complete=1, num_lines=300, type=u't'),
+            fakedb.Log(id=203, stepid=102, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
         ])
         logdicts = yield self.db.logs.getLogs(101)
         for logdict in logdicts:
@@ -183,8 +184,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLogLines_empty(self):
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Log(id=201, stepid=101, name=u'stdio', complete=0,
-                       num_lines=200, type=u's'),
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=0, num_lines=200, type=u's'),
         ])
         self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
@@ -192,14 +193,15 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_addLog_getLog(self):
         yield self.insertTestData(self.backgroundData)
-        logid = yield self.db.logs.addLog(stepid=101, name=u'config_log',
-                                          type=u't')
+        logid = yield self.db.logs.addLog(
+            stepid=101, name=u'config.log', slug=u'config_log', type=u't')
         logdict = yield self.db.logs.getLog(logid)
         validation.verifyDbDict(self, 'logdict', logdict)
         self.assertEqual(logdict, {
             'id': logid,
             'stepid': 101,
-            'name': u'config_log',
+            'name': u'config.log',
+            'slug': u'config_log',
             'complete': False,
             'num_lines': 0,
             'type': 't',
@@ -208,8 +210,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_appendLog_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        logid = yield self.db.logs.addLog(stepid=102,
-                                          name=u'another', type=u's')
+        logid = yield self.db.logs.addLog(
+            stepid=102, name=u'another', slug=u'another', type=u's')
         self.assertEqual((yield self.db.logs.appendLog(logid, u'xyz\n')),
                          (0, 0))
         self.assertEqual((yield self.db.logs.appendLog(201, u'abc\ndef\n')),
@@ -228,6 +230,7 @@ class Tests(interfaces.InterfaceTests):
             'complete': False,
             'id': logid,
             'name': u'another',
+            'slug': u'another',
             'num_lines': 2,
             'stepid': 102,
             'type': u's',
