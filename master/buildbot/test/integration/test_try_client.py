@@ -23,6 +23,7 @@ from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
 from buildbot.status import client
 from buildbot.test.util import dirs
+from buildbot.test.util import www
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -85,7 +86,7 @@ class FakeRemoteSlave(pb.Referenceable):
         return
 
 
-class Schedulers(dirs.DirsMixin, unittest.TestCase):
+class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
