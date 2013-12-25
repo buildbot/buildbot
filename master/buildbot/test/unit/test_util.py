@@ -15,6 +15,8 @@
 
 import datetime
 
+from twisted.internet import reactor
+from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
@@ -199,3 +201,16 @@ class Flatten(unittest.TestCase):
 
     def test_tuples(self):
         self.assertEqual(util.flatten([(1, 2), 3]), [(1, 2), 3])
+
+
+class AsyncSleep(unittest.TestCase):
+
+    def test_sleep(self):
+        clock = task.Clock()
+        self.patch(reactor, 'callLater', clock.callLater)
+        d = util.asyncSleep(2)
+        self.assertFalse(d.called)
+        clock.advance(1)
+        self.assertFalse(d.called)
+        clock.advance(1)
+        self.assertTrue(d.called)
