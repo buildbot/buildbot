@@ -3,8 +3,8 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
         url: "/force/:scheduler",
         onEnter: ["$stateParams", "$state", "$modal", "buildbotService"
             ($stateParams, $state, $modal, buildbotService) ->
-                scheduler = buildbotService.one('forceschedulers', $stateParams.scheduler)
-                scheduler.get().then (schedulers) ->
+                scheduler = buildbotService.one('forcescheduler', $stateParams.scheduler)
+                scheduler.get().then (scheduler_data) ->
                     modal = {}
                     modal.modal = $modal.open
                         templateUrl: "views/forcedialog.html"
@@ -12,7 +12,7 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                         resolve:
                             builderid: -> $stateParams.builder
                             scheduler: -> scheduler
-                            schedulers: -> schedulers
+                            scheduler_data: -> scheduler_data
                             modal: -> modal
 
                     # We exit the state if the dialog is closed or dismissed
@@ -21,8 +21,8 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                     modal.modal.result.then(goUp, goUp)
             ]
     forceDialogController = [ "$scope", "$state", "modal", "scheduler",
-        "schedulers","$rootScope", "builderid"
-        ($scope, $state, modal, scheduler, schedulers, $rootScope, builderid) ->
+        "scheduler_data","$rootScope", "builderid"
+        ($scope, $state, modal, scheduler, scheduler_data, $rootScope, builderid) ->
             # prepare default values
             prepareFields = (fields) ->
                 for field in fields
@@ -30,14 +30,14 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                         prepareFields(field.fields)
                     else
                         field.value = field.default
-            prepareFields(schedulers[0].all_fields)
+            prepareFields(scheduler_data.all_fields)
             angular.extend $scope,
                 rootfield:
                     type: "nested"
                     layout: "simple"
-                    fields: schedulers[0].all_fields
+                    fields: scheduler_data.all_fields
                     columns: 1
-                sch: schedulers[0]
+                sch: scheduler_data
                 ok: ->
                     params =
                         builderid: builderid
@@ -51,7 +51,7 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                                 params[field.fullName] = field.value
                                 fields_ref[field.fullName] = field
 
-                    gatherFields(schedulers[0].all_fields)
+                    gatherFields(scheduler_data.all_fields)
                     scheduler.control("force", params)
                     .then (res) ->
                         modal.modal.close(res)

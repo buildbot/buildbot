@@ -415,28 +415,39 @@ The idea is to simplifify automatic update of the $scope based on events happeni
 
     buildbotService.one("build", 1).one("step", 2).bind($scope)
 
+Difference with restangular is all restangular objects are reused, i.e. if you are calling bind() twice on the same
+object, no additionnal ressource is gathered via http.
+
 Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
 
     * ``.bind($scope, opts)``
 
-        bind the api result to the scope, automatically listening to events on this endpoint, and modifying the scope object accordingly.
-        ``bind()`` takes several optional parameters in ``opts``:
+        bind the api results to the $scope, automatically listening to events on this endpoint, and modifying the $scope object accordingly.
+        This method automatically references the scopes where the data is used, and will remove the reference when the $scope is destoyed.
+        When no scope is referencing the data anymore, the service will wait a configurable amount of time, and stop listening to associated events.
+        As a result, the service will loose real-time track of the underlying data, so any subsequent call to bind() will trigger another http requests to get updated data.
+        This delayed event unregister mechanism enables better user experience. When user is going back and forth between several pages, chances are that the data is still on-track, so the page will be displayed instantly.
 
-        * ``dest_key`` defaults to the last path of the restangular object, i.e ``build/1/step/2`` binds to ``$scope.step``
+        ``bind()`` takes several optional parameters in ``opts``:
 
         * ``dest`` (defaults to $scope): object where to store the results
 
         * ``ismutable``(defaults to always false): ``(elem) ->`` function used to know if the object will not evolve anymore (so no need to register to events)
 
-        * ``gotchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
+        * ``onchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
             This can be used to get more data derived from a list. The child received are restangular elements
-
-        * ``queryParams`` : query parameters used to filter the results of a list api
 
     * ``.on(eventtype, callback, $scope)``
 
         Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
         You need to pass $scope, so that event is unregistered on scope destroy.
+
+    * ``.some(route, queryParams)``
+
+        like .all(), but allows to specify query parameters
+
+        * ``queryParams`` : query parameters used to filter the results of a list api
+
 
     * ``.control(method, params)``
 

@@ -4,11 +4,9 @@ angular.module('app').controller 'buildersController',
 
         buildbotService.all('builder').bind $scope,
             onchild: (builder) ->
-                console.log builder
                 builder.all('buildslave').bind $scope,
                     dest: builder
-                builder.all('build').bind $scope,
+                builder.some('build', {limit:20, order:"-number"}).bind $scope,
                     dest: builder
-                    queryParams: {limit:20, order:"-number"}
 
 ]

@@ -4,18 +4,32 @@ angular.module('app').service 'singulars', ['plurals', (plurals) ->
         ret[v] = k
     return ret
 ]
-jsonrpc2_id = 1
 angular.module('app').factory 'buildbotService',
 ['$log', 'Restangular', 'mqService', '$rootScope', 'BASEURLAPI',
-    'BASEURLSSE', 'plurals', 'singulars', '$q',
-    ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE, plurals, singulars, $q ) ->
-        getIdFromElem = (elem) ->
-          return elem[elem.route + "id"]
+    'BASEURLSSE', 'plurals', 'singulars', '$q', '$timeout', 'config',
+    ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE, plurals,
+        singulars, $q, $timeout, config) ->
+        jsonrpc2_id = 1
+        referenceid = 1
+        config.unbind_delay ?= 10 * 60 * 1000 # 10 min by default
+        # some is added to base service, and restangularized elements
+        addSomeAndMemoize = (elem) ->
+            # all will be memoized later, so we need to save the unmemoized version
+            elem.unmemoized_all = elem.all
+            elem.some = _.memoize (route, queryParams) ->
+                new_elem = elem.unmemoized_all(route)
+                new_elem.queryParams = queryParams
+                return new_elem
+            elem.one = _.memoize(elem.one)
+            elem.all = _.memoize(elem.all)
+
         responseExtractor =  (response, operation) ->
+            if operation == "post"
+                return response
             # for now, we only support one resource type per request
             # we'll have to figure out how to support aggregated response at
             # some point because this will be a big improve in latency
-            # so we return the first elem that is not "meta"
+            # so we return the first elem that we now the type
             for k, v of response
                 if singulars.hasOwnProperty(k)
                     id = singulars[k] + "id"
@@ -26,62 +40,104 @@ angular.module('app').factory 'buildbotService',
                         return v
                     else
                         return v[0]
-            throw Error("got unexpected value from data api: #{JSON.stringify(response)}," +
-                        " expected one of #{JSON.stringify(singulars)}")
+            throw Error("got unexpected value from data api: #{JSON.stringify(response)},
+                         expected one of #{JSON.stringify(singulars)}")
 
         onElemRestangularized = (elem, isCollection, route, Restangular) ->
             idkey = elem.route + "id"
-            elem.bind = ($scope, opts) ->
-                defaults_opts =
-                    dest_key: elem.route
-                    dest: $scope
-                    subElement: undefined
-                    queryParams: undefined
-                    ismutable: -> false
-                    onchild: ->
-                if isCollection
-                    defaults_opts.dest_key = plurals[defaults_opts.dest_key]
-                opts = _.extend(defaults_opts, opts)
 
+            # list the callers that reference this elem
+            references = {}
+            events = []
+            bound = false
+
+            unbind = ->
+                # dont unbind, if some scope is still holding a reference to us
+                if _.size(references) != 0
+                    return
+                for e in events
+                    e()
+                bound = false
+                events = []
+
+            # private backend to elem.bind()
+            bind = (opts) ->
+                if bound
+                    return $q.when(elem.value)
+                bound = true
                 if (isCollection)
-                    onNewOrChange = (msg) ->
-                        l = opts.dest[opts.dest_key]
+                    onNewOrChange = (value) ->
+                        l = elem.value
                         # de-duplicate, if the element is already there
                         for e in l
-                            if e[idkey] == msg[idkey]
-                                for k, v of msg
+                            if e[idkey] == value[idkey]
+                                for k, v of value
                                     e[k] = v
                                 return
 
+                        value["id"] = value[idkey]
+                        value["_raw_data"] = angular.copy(value)
+
                         # restangularize the object before putting it in
                         # this allows controllers to get more data within onchild()
-                        newobj = _.assign(elem.one(msg[idkey]), msg)
+                        newobj = self.restangularizeElement(elem.parentResource, value, route)
                         # @todo, on new events, need to re-filter through queryParams..
                         l.push(newobj)
-                        opts.onchild(newobj)
+                        for k, ref of references
+                            ref.onchild(newobj)
 
-                    p = elem.getList(opts.queryParams).then (res) ->
-                        opts.dest[opts.dest_key] = res
-                        for child in res
-                            opts.onchild(child)
-                        elem.on("*/new", onNewOrChange, $scope)
-                        elem.on("*/update", onNewOrChange, $scope)
+                    p = elem.getList(elem.queryParams).then (res) ->
+                        elem.value = res
+                        events.push(elem.on("*/new", onNewOrChange))
+                        events.push(elem.on("*/update", onNewOrChange))
                         return res
                 else
                     onUpdate = (msg) ->
-                        for k, v of msg
-                            opts.dest[opts.dest_key][k] = v
+                        _.assign(elem.value, msg)
 
-                    p = this.get().then (res) ->
-                        opts.dest[opts.dest_key] = res
+                    p = elem.get().then (res) ->
+                        elem.value = res
                         if opts.ismutable(res)
-                            elem.on("update", onUpdate, $scope)
+                            events.push(elem.on("update", onUpdate))
                         return res
+                elem.value = p
                 return p
 
-            elem.on = (event, onEvent, $scope) ->
+            elem.bind = ($scope, opts) ->
+                # manage default options
+                opts ?= {}
+                _.defaults opts,
+                    dest_key: if isCollection then plurals[route] else route
+                    dest: $scope
+                    ismutable: -> false
+                    onchild: ->
+
+                # manage scope that references this elem
+                myreferenceid = referenceid += 1
+                references[referenceid] =
+                    onchild: opts.onchild
+
+                ondestroy = ->
+                    delete references[myreferenceid]
+                    # we only unbind after a few delay, so that other scope has
+                    # a chance to reuse the data or if the user navigate back to the page
+                    if _.size(references) == 0
+                        $timeout(unbind, config.unbind_delay)
+                $scope.$on("$destroy", ondestroy)
+
+                p = bind(opts)
+                p = p.then (res) ->
+                    if isCollection
+                        for child in res
+                            opts.onchild(child)
+                    opts.dest[opts.dest_key] = res
+                    return res
+                return p
+
+            elem.on = (event, onEvent) ->
                 path = elem.getRestangularUrl().replace(BASEURLAPI,"")
                 return mqService.on( path + "/" + event, onEvent)
+
 
             elem.control = (method, params) ->
                 # do jsonrpc2.0 like POST
@@ -93,12 +149,12 @@ angular.module('app').factory 'buildbotService',
                     jsonrpc: "2.0"
                 return elem.post("", req)
 
+            addSomeAndMemoize(elem)
             return elem
         configurer = (RestangularConfigurer) ->
             RestangularConfigurer.setBaseUrl(BASEURLAPI)
             RestangularConfigurer.setOnElemRestangularized(onElemRestangularized)
             RestangularConfigurer.setResponseExtractor(responseExtractor)
-            RestangularConfigurer.getIdFromElem = getIdFromElem
             mqService.setBaseUrl(BASEURLSSE)
 
         self = Restangular.withConfig(configurer)
@@ -109,6 +165,7 @@ angular.module('app').factory 'buildbotService',
                 r = r.one(path, $stateParams[path])
                 l.push(r.bind($scope))
             return $q.all(l)
+        addSomeAndMemoize(self)
         return self
 
 ]
