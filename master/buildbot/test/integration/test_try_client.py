@@ -188,7 +188,10 @@ class Schedulers(dirs.DirsMixin, unittest.TestCase):
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 
-        # hang out until the scheduler has registered its PB port
+        # wait until the scheduler is active
+        yield waitFor(lambda: self.sch.active)
+
+        # and, for Try_Userpass, until it's registered its port
         if isinstance(self.sch, trysched.Try_Userpass):
             def getSchedulerPort():
                 if not self.sch.registrations:
@@ -246,7 +249,7 @@ class Schedulers(dirs.DirsMixin, unittest.TestCase):
             'Delivering job; comment= None',
             'job has been delivered',
             'All Builds Complete',
-            'a: success (build successful)',
+            'a: success (build successful one two)',
         ])
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)

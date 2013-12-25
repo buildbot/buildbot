@@ -214,6 +214,7 @@ class Try_Jobdir(TryBase):
             comment = parsed_job['comment']
 
         sourcestamp = dict(branch=parsed_job['branch'],
+                           codebase='',
                            revision=parsed_job['baserev'],
                            patch_body=parsed_job['patch_body'],
                            patch_level=parsed_job['patch_level'],

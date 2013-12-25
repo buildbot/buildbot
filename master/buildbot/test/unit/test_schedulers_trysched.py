@@ -540,6 +540,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     sourcestamps=[
                         dict(
                             branch='trunk',
+                            codebase='',
                             patch_author='who',
                             patch_body='this is my diff, -- ++, etc.',
                             patch_comment='comment',
@@ -592,6 +593,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     sourcestamps=[
                         dict(
                             branch='trunk',
+                            codebase='',
                             patch_author='who',
                             patch_body='this is my diff, -- ++, etc.',
                             patch_comment='comment',
@@ -619,6 +621,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                     sourcestamps=[
                         dict(
                             branch='trunk',
+                            codebase='',
                             patch_author='who',
                             patch_body='this is my diff, -- ++, etc.',
                             patch_comment='comment',
@@ -705,6 +708,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                     sourcestamps=[
                         dict(
                             branch='default',
+                            codebase='',
                             patch_author='',
                             patch_body='-- ++',
                             patch_comment='',
@@ -733,6 +737,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                     sourcestamps=[
                         dict(
                             branch='default',
+                            codebase='',
                             patch_author='who',
                             patch_body='-- ++',
                             patch_comment='comment',
