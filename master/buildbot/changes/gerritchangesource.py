@@ -162,7 +162,8 @@ class GerritChangeSource(base.ChangeSource):
                 'repository': u"ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
-                'branch': event_change["branch"],
+                'branch': "%s/%s" % (event_change["branch"],
+                                     event_change['number']),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],

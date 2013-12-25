@@ -267,7 +267,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
-            patch_comment=comment or '',
+            patch_comment=comment or '', codebase='',
         )           # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
@@ -300,6 +300,7 @@ class Try_Userpass(TryBase):
                          properties=properties)
         self.port = port
         self.userpass = userpass
+        self.registrations = []
 
     @defer.inlineCallbacks
     def activate(self):
@@ -308,7 +309,6 @@ class Try_Userpass(TryBase):
         # register each user/passwd with the pbmanager
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
-        self.registrations = []
         for user, passwd in self.userpass:
             self.registrations.append(
                 self.master.pbmanager.register(

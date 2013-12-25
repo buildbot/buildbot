@@ -15,6 +15,8 @@
 
 import datetime
 
+from twisted.internet import reactor
+from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
@@ -251,3 +253,16 @@ class StringToBoolean(unittest.TestCase):
 
     def test_None(self):
         self.assertEqual(util.ascii2unicode(None), None)
+
+
+class AsyncSleep(unittest.TestCase):
+
+    def test_sleep(self):
+        clock = task.Clock()
+        self.patch(reactor, 'callLater', clock.callLater)
+        d = util.asyncSleep(2)
+        self.assertFalse(d.called)
+        clock.advance(1)
+        self.assertFalse(d.called)
+        clock.advance(1)
+        self.assertTrue(d.called)

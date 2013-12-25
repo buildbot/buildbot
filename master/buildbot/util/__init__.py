@@ -248,6 +248,14 @@ def string2boolean(str):
         '0': False,
     }[str.lower()]
 
+
+def asyncSleep(delay):
+    from twisted.internet import reactor, defer
+    d = defer.Deferred()
+    reactor.callLater(delay, d.callback, None)
+    return d
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
