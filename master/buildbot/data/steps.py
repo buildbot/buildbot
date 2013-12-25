@@ -85,6 +85,18 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
         defer.returnValue([(yield self.db2data(dbdict)) for dbdict in steps])
 
+    def startConsuming(self, callback, options, kwargs):
+        if 'stepid' in kwargs:
+            return self.master.mq.startConsuming(
+                    callback,
+                    ('step', str(kwargs['stepid']), None))
+        elif 'buildid' in kwargs:
+            return self.master.mq.startConsuming(
+                    callback,
+                    ('build', str('buildid'), 'step', None, None))
+        else:
+            raise NotImplementedError("cannot consume from this path")
+
 
 class Step(base.ResourceType):
 
@@ -92,6 +104,10 @@ class Step(base.ResourceType):
     plural = "steps"
     endpoints = [StepEndpoint, StepsEndpoint]
     keyFields = ['builderid', 'stepid']
+    eventPathPatterns = """
+        /build/:buildid/step/:stepid
+        /step/:stepid
+    """
 
     class EntityType(types.Entity):
         stepid = types.Integer()
@@ -99,7 +115,7 @@ class Step(base.ResourceType):
         name = types.Identifier(50)
         buildid = types.Integer()
         build_link = types.Link()
-        started_at = types.Integer()
+        started_at = types.NoneOk(types.Integer())
         complete = types.Boolean()
         complete_at = types.NoneOk(types.Integer())
         results = types.NoneOk(types.Integer())
@@ -109,20 +125,33 @@ class Step(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def newStep(self, buildid, name):
-        return self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_strings=['pending'])
+        stepid, num, name = yield self.master.db.steps.addStep(
+            buildid=buildid, name=name, state_strings=[u'pending'])
+        stepdict = yield self.master.data.get(('step', stepid))
+        self.produceEvent(stepdict, 'new')
+        defer.returnValue((stepid, num, name))
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def startStep(self, stepid):
-        return self.master.db.steps.startStep(stepid=stepid)
+        yield self.master.db.steps.startStep(stepid=stepid)
+        stepdict = yield self.master.data.get(('step', stepid))
+        self.produceEvent(stepdict, 'started')
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def setStepStateStrings(self, stepid, state_strings):
-        return self.master.db.steps.setStepStateStrings(
+        yield self.master.db.steps.setStepStateStrings(
             stepid=stepid, state_strings=state_strings)
+        stepdict = yield self.master.data.get(('step', stepid))
+        self.produceEvent(stepdict, 'updated')
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def finishStep(self, stepid, results):
-        return self.master.db.steps.finishStep(
+        yield self.master.db.steps.finishStep(
             stepid=stepid, results=results)
+        stepdict = yield self.master.data.get(('step', stepid))
+        self.produceEvent(stepdict, 'finished')

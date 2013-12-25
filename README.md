@@ -165,6 +165,15 @@ ex from jsonapi spec:
 * Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
 * Steps' URLs should be stored as JSON objects giving both a title and a URL. :runner:
 * Validate messages using the same system as used to validate resource types
+* the fake self.master.mq.startConsuming should verify that all of its arguments are strings :runner:
+* Type verificatoin in the fake self.master.mq.produce is currently commented out, since the first element in the routing key does not correctly identify the resource type.
+  It's possible that the last or second-to-last element *does* reliably identify the type, in which case this verification can be reinstated.
+  Whether this is possible depends on whether we continue to send multiple messages for each event.
+
+## Missing Functionality ##
+
+* Builds' status strings are not handled like they were in the 0.8.x version.
+  The old handling should be characterized and, roughly at least, reproduced.
 
 ## Testing ##
 
@@ -175,7 +184,6 @@ The BaseScheduler's addBuildsetForXxx methods should have their signatures check
 The following will need to be rewritten:
 
 * IRC (words.py) :runner:
-* StatusClient (maybe)
 * WebStatus (already in progress with buildbot-www)
 * MailNotifier.
   Note that the tests for MailNotifier mock a lot of things out - incorrectly, now.
