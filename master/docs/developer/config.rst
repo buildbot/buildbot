@@ -79,6 +79,10 @@ described in :ref:`developer-Reconfiguration`.
 
         The current log maximum size, from :bb:cfg:`logMaxTailSize`.
 
+    .. py:attribute:: logEncoding
+
+        The encoding to expect when logs are provided as bytestrings, from :bb:cfg:`logEncoding`.
+
     .. py:attribute:: properties
 
         A :py:class:`~buildbot.process.properties.Properties` instance
