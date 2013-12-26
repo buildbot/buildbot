@@ -112,25 +112,6 @@ Here are the remaining bits:
 
 ## Data API ##
 
-### Remaining Resource Types ###
-
-The outstanding resource types are:
-
-* buildrequest :runner:
-
-For each resource type, we'll need the following (based on "Adding Resource Types" in ``master/docs/developer/data.rst``).  use this list as a template in the list of types below when you begin a new type.
-
-* A resource-type module and class, with unit tests
-* Docs for that resource type
-* Fake versions of all update methods
-* Type validators for the resource type
-* New endpoints, with unit tests
-* Docs for the endpoints
-* Appropriate update methods, with unit tests
-* Docs for those update methods
-* Integrate with Buildbot: process classes should use the data API and not the DB or MQ APIs.
-* event generation is done in the data layer, and not in the process layer, as far as possible
-
 ### Other Resource-Type Related Tasks ###
 
 * ``addBuildset`` currently sends messages about buildrequests directly.
