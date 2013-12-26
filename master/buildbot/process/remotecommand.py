@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE

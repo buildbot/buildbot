@@ -307,10 +307,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
-        # get some ID's for use later
-        buildslaveid = slavebuilder.slave.buildslaveid
-        builderid = yield self.getBuilderId()
-
         # Build a stack of cleanup functions so that, at any point, we can
         # abort this operation and unwind the commitments made so far.
         cleanups = []
@@ -326,8 +322,6 @@ class Builder(config.ReconfigurableServiceMixin,
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
         cleanups.append(lambda: self.updateBigStatus())
-
-        builderid = yield self.getBuilderId()
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
@@ -402,24 +396,6 @@ class Builder(config.ReconfigurableServiceMixin,
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
-        # record the build in the db, but only for the last buildrequest
-        # (NOTE: this is a behavior change that will cause unexpected results
-        #  in the nine branch!)
-        # (NOTE: the build number the db assigns may not be the same that the
-        #  builder status assigns!)
-        try:
-            bids = []
-            req = build.requests[-1]
-            bid, number = yield self.master.data.updates.newBuild(builderid=builderid,
-                                                                  buildrequestid=req.id, buildslaveid=buildslaveid)
-            bids.append(bid)
-            build.setBuilDBId(bid)
-        except:
-            log.err(failure.Failure(), 'while adding rows to build table:')
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
         # IMPORTANT: no yielding is allowed from here to the startBuild call!
 
         # it's possible that we lost the slave remote between the ping above
@@ -433,7 +409,7 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs)
+        self.master.status.build_started(buildrequests[0].id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
@@ -445,7 +421,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
                                 bs, self.expectations, slavebuilder)
-        d.addCallback(self.buildFinished, slavebuilder, bids)
+        d.addCallback(lambda _: self.buildFinished(build, slavebuilder))
         # this shouldn't happen. if it does, the slave will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
@@ -463,7 +439,7 @@ class Builder(config.ReconfigurableServiceMixin,
                                   self.config.properties[propertyname],
                                   "Builder")
 
-    def buildFinished(self, build, sb, bids):
+    def buildFinished(self, build, sb):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
@@ -473,15 +449,6 @@ class Builder(config.ReconfigurableServiceMixin,
         # (maybeStartBuilds)
 
         results = build.build_status.getResults()
-
-        # mark the builds as finished, although since nothing ever reads this
-        # table, it's not too important that it complete successfully
-        # TODO: The www service use this table
-        #       So, I think it's important that it complete successfully.
-        #       tardyp, djmitche do you confirm ?
-        d = self.master.data.updates.finishBuild(bids[0], results)
-        d.addCallback(lambda _: self.master.data.updates.setBuildStateStrings(bids[0], [u'finished']))
-        d.addErrback(log.err, 'while marking builds as finished (ignored)')
 
         self.building.remove(build)
         if results == RETRY:
