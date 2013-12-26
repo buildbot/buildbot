@@ -41,6 +41,8 @@ class FakeBuild(properties.PropertiesMixin):
         self.build_status = FakeBuildStatus()
         self.builder = mock.Mock(name='build.builder')
         self.path_module = posixpath
+        self.buildid = 92
+        self.number = 13
 
         self.sources = {}
         if props is None:

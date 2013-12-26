@@ -91,9 +91,10 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         d = self.runStep()
 
         def printlogs(res):
-            text = self.step.stdio_log.getTextWithHeaders()
-            if "Failure instance" in text and not self.shouldRetry:
-                print text
+            if hasattr(self.step, 'stdio_log'):
+                text = self.step.stdio_log.getTextWithHeaders()
+                if "Failure instance" in text and not self.shouldRetry:
+                    print text
             return res
         d.addBoth(printlogs)
         return d
