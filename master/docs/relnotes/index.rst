@@ -156,6 +156,8 @@ Deprecations, Removals, and Non-Compatible Changes
   The runtimes for these two tools are incompatible, yet ``hgbuildbot`` attempts to run both in the same Python interpreter.
   Mayhem ensues.
 
+* The try scheduler's ``--connect=ssh`` method no longer supports waiting for results (``--wait``).
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
