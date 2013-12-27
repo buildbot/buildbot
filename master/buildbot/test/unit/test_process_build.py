@@ -491,7 +491,6 @@ class TestBuild(unittest.TestCase):
         step.acquireLocks = acquireLocks
         step.setStepStatus = Mock()
         step.step_status = Mock()
-        step.step_status.addLog().chunkSize = 10
         step.step_status.getLogs.return_value = []
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)

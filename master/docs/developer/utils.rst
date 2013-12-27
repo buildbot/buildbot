@@ -668,12 +668,12 @@ This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` mo
 It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
 It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.
 
-buildbot.util.typechecks
-~~~~~~~~~~~~~~~~~~~~~~~~
+buildbot.util.identifiers
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:module:: buildbot.util.typechecks
+.. py:module:: buildbot.util.identifiers
 
-This module makes it easy to check argument types.
+This module makes it easy to manipulate identifiers.
 
 .. py:function:: isIdentifier(maxLength, object)
 
@@ -682,6 +682,26 @@ This module makes it easy to check argument types.
     :returns: boolean
 
     Is object a :ref:`identifier <type-identifier>`?
+
+.. py:function:: forceIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: string to coerce to an identifier
+    :returns: identifer of maximum length ``maxLength``
+
+    Coerce a string (assuming ASCII for bytestrings) into an identifier.
+    This method will replace any invalid characters with ``_`` and truncate to the given length.
+
+.. py:function:: incrementIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: identifier to increment
+    :returns: identifer of maximum length ``maxLength``
+    :raises: ValueError if no suitable identifier can be constructed
+
+    "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.
+    This is useful when selecting a unique identifier for an object.
+    Maximum-length identifiers like ``_999999`` cannot be incremented and will raise :py:exc:`ValueError`.
 
 buildbot.util.lineboundaries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -23,9 +23,14 @@ Logs
 
         The ID of the logfile.
 
+    .. py:attribute:: decoder
+
+        A callable used to decode bytestrings.
+        See :bb:cfg:`logEncoding`.
+
     .. py:method:: subscribe(receiver)
 
-        :type receiver: callable
+        :param callable receiver: the function to call
 
         Register ``receiver`` to be called with line-delimited chunks of log data.
         The callable is invoked as ``receiver(stream, chunk)``, where the stream is indicated by a single character, or None for logs without streams.

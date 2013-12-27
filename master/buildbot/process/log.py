@@ -24,7 +24,7 @@ from twisted.python import log
 class Log(object):
     _byType = {}
 
-    def __init__(self, master, name, type, logid):
+    def __init__(self, master, name, type, logid, decoder):
         self.type = type
         self.logid = logid
         self.master = master
@@ -35,27 +35,32 @@ class Log(object):
         self.finished = False
         self.finishWaiters = []
 
+        self.decoder = decoder
+
+    @staticmethod
+    def _decoderFromString(cfg):
+        if isinstance(cfg, basestring):
+            return lambda s: s.decode(cfg, 'replace')
+        else:
+            return cfg
+
     @classmethod
-    def new(cls, master, name, type, logid):
+    def new(cls, master, name, type, logid, logEncoding):
         type = unicode(type)
         try:
             subcls = cls._byType[type]
         except KeyError:
             raise RuntimeError("Invalid log type %r" % (type,))
-        return subcls(master, name, type, logid)
+        decoder = Log._decoderFromString(logEncoding)
+        return subcls(master, name, type, logid, decoder)
 
     def getName(self):
         return self.name
 
     # subscriptions
 
-    def subscribe(self, receiver, catchup):
-        assert not catchup, "subscribe(catchup=True) is no longer supported"
-        sub = self.subscriptions[receiver] = self.subPoint.subscribe(receiver)
-        return sub
-
-    def unsubscribe(self, receiver):
-        self.subscriptions[receiver].unsubscribe()
+    def subscribe(self, callback):
+        return self.subPoint.subscribe(callback)
 
     # adding lines
 
@@ -101,10 +106,12 @@ class Log(object):
 
 class PlainLog(Log):
 
-    def __init__(self, master, name, type, logid):
-        super(PlainLog, self).__init__(master, name, type, logid)
+    def __init__(self, master, name, type, logid, decoder):
+        super(PlainLog, self).__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
+            if not isinstance(lines, unicode):
+                lines = self.decoder(lines)
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
         self.lbf = lineboundaries.LineBoundaryFinder(wholeLines)
@@ -137,8 +144,8 @@ class StreamLog(Log):
 
     pat = re.compile('^', re.M)
 
-    def __init__(self, step, name, type, logid):
-        super(StreamLog, self).__init__(step, name, type, logid)
+    def __init__(self, step, name, type, logid, decoder):
+        super(StreamLog, self).__init__(step, name, type, logid, decoder)
         self.lbfs = {}
 
     def _getLbf(self, stream):
@@ -146,6 +153,8 @@ class StreamLog(Log):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
+                if not isinstance(lines, unicode):
+                    lines = self.decoder(lines)
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)
                 # strip the last character, as the regexp will add a

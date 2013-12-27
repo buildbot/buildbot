@@ -446,7 +446,8 @@ class Log(Row):
 
     defaults = dict(
         id=None,
-        name='step29',
+        name='log29',
+        slug='log29',
         stepid=None,
         complete=0,
         num_lines=0,
@@ -1825,6 +1826,7 @@ class FakeLogsComponent(FakeDBComponent):
             id=row['id'],
             stepid=row['stepid'],
             name=row['name'],
+            slug=row['slug'],
             complete=bool(row['complete']),
             num_lines=row['num_lines'],
             type=row['type'])
@@ -1835,10 +1837,10 @@ class FakeLogsComponent(FakeDBComponent):
             return defer.succeed(None)
         return defer.succeed(self._row2dict(row))
 
-    def getLogByName(self, stepid, name):
+    def getLogBySlug(self, stepid, slug):
         row = None
         for row in self.logs.itervalues():
-            if row['name'] == name and row['stepid'] == stepid:
+            if row['slug'] == slug and row['stepid'] == stepid:
                 break
         else:
             return defer.succeed(None)
@@ -1857,11 +1859,11 @@ class FakeLogsComponent(FakeDBComponent):
         rv = '\n'.join(lines[first_line:last_line + 1])
         return defer.succeed(rv + u'\n' if rv else u'')
 
-    def addLog(self, stepid, name, type):
+    def addLog(self, stepid, name, slug, type):
         id = self._newId()
         self.logs[id] = dict(id=id, stepid=stepid,
-                             name=name, type=type, complete=0,
-                             num_lines=0)
+                             name=name, slug=slug, type=type,
+                             complete=0, num_lines=0)
         self.log_lines[id] = []
         return defer.succeed(id)
 

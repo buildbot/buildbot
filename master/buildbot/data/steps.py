@@ -65,8 +65,6 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         defer.returnValue((yield self.db2data(dbdict))
                           if dbdict else None)
 
-# FIXME: need unit tests!
-
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 

@@ -179,7 +179,7 @@ To enable multi-master mode in this configuration, you will need to set the :bb:
 .. bb:cfg:: title
 
 Site Definitions
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Three basic settings describe the buildmaster in status reports::
 
@@ -202,6 +202,9 @@ It will also be made available to queriers (over IRC) who want to find out where
 .. bb:cfg:: logCompressionMethod
 .. bb:cfg:: logMaxSize
 .. bb:cfg:: logMaxTailSize
+.. bb:cfg:: logEncoding
+
+.. _Log-Encodings:
 
 Log Handling
 ~~~~~~~~~~~~
@@ -212,6 +215,7 @@ Log Handling
     c['logCompressionMethod'] = 'gz'
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
+    c['logEncoding'] = 'utf-8'
 
 The :bb:cfg:`logCompressionLimit` enables compression of build logs on disk for logs that are bigger than the given size, or disables that completely if set to ``False``.
 The default value is 4096, which should be a reasonable default on most file systems.
@@ -227,6 +231,14 @@ Any output exceeding :bb:cfg:`logMaxSize` will be truncated, and a message to th
 If :bb:cfg:`logMaxSize` is set, and the output from a step exceeds the maximum, the :bb:cfg:`logMaxTailSize` parameter controls how much of the end of the build log will be kept.
 The effect of setting this parameter is that the log will contain the first :bb:cfg:`logMaxSize` bytes and the last :bb:cfg:`logMaxTailSize` bytes of output.
 Don't set this value too high, as the the tail of the log is kept in memory.
+
+The :bb:cfg:`logEncoding` parameter specifies the character encoding to use to decode bytestrings provided as logs.
+It defaults to ``utf-8``, which should work in most cases, but can be overridden if necessary.
+In extreme cases, a callable can be specified for this parameter.
+It will be called with byte strings, and should return the corresponding Unicode string.
+
+This setting can be overridden for a single build step with the ``logEncoding`` step parameter.
+It can also be overridden for a single log file by passing the ``logEncoding`` parameter to :py:meth:`~buildbot.process.buildstep.addLog`.
 
 Data Lifetime
 ~~~~~~~~~~~~~

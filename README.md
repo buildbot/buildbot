@@ -74,6 +74,8 @@ The "process" part of Buildbot is the part that coordinates all of the other par
   Builds for merged requests currently only refer to one of the merged requests.
 * In the Trigger step, add links from the triggering step to the triggered builds
 * Create builds, steps, logs, and log chunks during execution of a build.
+* Simplify LogLineObserver - this class is designed to handle arbitrary chunks of log data, but now chunks always end on a line boundary.
+  It can be substantially simplified to just split each chunk into lines and call {err,out}LineReceived for each line. :runner:
 
 ## Documentation ##
 

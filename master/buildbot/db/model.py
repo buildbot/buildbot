@@ -131,7 +131,8 @@ class Model(base.DBConnectorComponent):
 
     logs = sa.Table('logs', metadata,
                     sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('name', sa.String(50), nullable=False),
+                    sa.Column('name', sa.Text, nullable=False),
+                    sa.Column('slug', sa.String(50), nullable=False),
                     sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
                     sa.Column('complete', sa.SmallInteger, nullable=False),
                     sa.Column('num_lines', sa.Integer, nullable=False),
@@ -599,7 +600,7 @@ class Model(base.DBConnectorComponent):
              unique=True)
     sa.Index('steps_name', steps.c.buildid, steps.c.name,
              unique=True)
-    sa.Index('logs_name', logs.c.stepid, logs.c.name, unique=True)
+    sa.Index('logs_slug', logs.c.stepid, logs.c.slug, unique=True)
     sa.Index('logchunks_firstline', logchunks.c.logid, logchunks.c.first_line)
     sa.Index('logchunks_lastline', logchunks.c.logid, logchunks.c.last_line)
 

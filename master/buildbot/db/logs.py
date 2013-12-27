@@ -42,9 +42,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def getLog(self, logid):
         return self._getLog(self.db.model.logs.c.id == logid)
 
-    def getLogByName(self, stepid, name):
+    def getLogBySlug(self, stepid, slug):
         tbl = self.db.model.logs
-        return self._getLog((tbl.c.name == name) & (tbl.c.stepid == stepid))
+        return self._getLog((tbl.c.slug == slug) & (tbl.c.stepid == stepid))
 
     def getLogs(self, stepid):
         def thd(conn):
@@ -86,17 +86,18 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return u'\n'.join(rv) + u'\n' if rv else u''
         return self.db.pool.do(thd)
 
-    def addLog(self, stepid, name, type):
+    def addLog(self, stepid, name, slug, type):
         assert type in 'tsh', "Log type must be one of t, s, or h"
 
         def thd(conn):
             try:
                 r = conn.execute(self.db.model.logs.insert(),
-                                 dict(name=name, stepid=stepid, complete=0,
-                                      num_lines=0, type=type))
+                                 dict(name=name, slug=slug, stepid=stepid,
+                                      complete=0, num_lines=0, type=type))
                 return r.inserted_primary_key[0]
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                raise KeyError("log with name '%r' already exists in this step" % (name,))
+                raise KeyError(
+                    "log with slug '%r' already exists in this step" % (slug,))
         return self.db.pool.do(thd)
 
     def appendLog(self, logid, content):

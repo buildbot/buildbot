@@ -136,7 +136,7 @@ class BuildStepMixin(object):
 
         # step overrides
 
-        def addLog(name, type='s'):
+        def addLog(name, type='s', logEncoding=None):
             assert type == 's', "type must be 's' until Data API backend is in place"
             l = logfile.FakeLogFile(name, step)
             ss.logs[name] = l
