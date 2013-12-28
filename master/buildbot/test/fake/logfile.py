@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import StringIO
 import warnings
 
 from buildbot import util
@@ -100,11 +99,6 @@ class FakeLogFile(object):
             self.chunks.append((STDERR, stderr))
 
     # removed methods, here temporarily
-
-    def readlines(self):
-        warnings.warn("step uses removed LogFile method `readlines`")
-        io = StringIO.StringIO(self.stdout)
-        return io.readlines()
 
     def getText(self):
         warnings.warn("step uses removed LogFile method `getText`")
