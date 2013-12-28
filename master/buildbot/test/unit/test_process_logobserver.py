@@ -120,3 +120,35 @@ class TestLogLineObserver(unittest.TestCase):
         # callable.  Just don't fail.
         lo = MyLogLineObserver()
         lo.setMaxLineLength(120939403)
+
+
+class TestBufferObserver(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+
+    @defer.inlineCallbacks
+    def do_test_sequence(self, lo):
+        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
+        lo.setLog(l)
+
+        yield l.addStdout(u'hello\n')
+        yield l.addStderr(u'cruel\n')
+        yield l.addStdout(u'multi\nline\nchunk\n')
+        yield l.addHeader(u'H1\nH2\n')
+        yield l.finish()
+
+    @defer.inlineCallbacks
+    def test_stdout_only(self):
+        lo = logobserver.BufferLogObserver(wantStdout=True, wantStderr=False)
+        yield self.do_test_sequence(lo)
+        self.assertEqual(lo.getStdout(), u'hello\nmulti\nline\nchunk\n')
+        self.assertEqual(lo.getStderr(), u'')
+
+    @defer.inlineCallbacks
+    def test_both(self):
+        lo = logobserver.BufferLogObserver(wantStdout=True, wantStderr=True)
+        yield self.do_test_sequence(lo)
+        self.assertEqual(lo.getStdout(), u'hello\nmulti\nline\nchunk\n')
+        self.assertEqual(lo.getStderr(), u'cruel\n')
