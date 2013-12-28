@@ -20,10 +20,10 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    logs = sa.Table('logs', metadata, autoload=True)
-    logs.drop()
     logchunks = sa.Table('logchunks', metadata, autoload=True)
     logchunks.drop()
+    logs = sa.Table('logs', metadata, autoload=True)
+    logs.drop()
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
