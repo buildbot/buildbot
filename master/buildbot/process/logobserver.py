@@ -96,3 +96,32 @@ class OutputProgressObserver(LogObserver):
     def logChunk(self, build, step, log, channel, text):
         self.length += len(text)
         self.step.setProgress(self.name, self.length)
+
+class BufferLogObserver(LogObserver):
+
+    def __init__(self, wantStdout=True, wantStderr=False):
+        self.stdout = [] if wantStdout else None
+        self.stderr = [] if wantStderr else None
+
+    def outReceived(self, data):
+        if self.stdout is not None:
+            self.stdout.append(data)
+
+    def errReceived(self, data):
+        if self.stderr is not None:
+            self.stderr.append(data)
+
+    def _get(self, chunks):
+        if chunks is None:
+            return [u'']
+        if len(chunks) > 1:
+            chunks = [''.join(chunks)]
+        elif not chunks:
+            chunks = [u'']
+        return chunks
+
+    def getStdout(self):
+        return self._get(self.stdout)[0]
+
+    def getStderr(self):
+        return self._get(self.stderr)[0]
