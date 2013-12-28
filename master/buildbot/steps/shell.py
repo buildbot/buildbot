@@ -19,9 +19,8 @@ import re
 
 from buildbot import config
 from buildbot.process import buildstep
+from buildbot.process import logobserver
 from buildbot.process import remotecommand
-from buildbot.status.logfile import STDERR
-from buildbot.status.logfile import STDOUT
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
@@ -317,6 +316,11 @@ class SetPropertyFromCommand(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
+        if self.extract_fn:
+            self.observer = logobserver.BufferLogObserver(wantStdout=True,
+                                                          wantStderr=True)
+            self.addLogObserver('stdio', self.observer)
+
         self.property_changes = {}
 
     def commandComplete(self, cmd):
@@ -330,10 +334,9 @@ class SetPropertyFromCommand(ShellCommand):
             self.setProperty(propname, result, "SetProperty Step")
             self.property_changes[propname] = result
         else:
-            log = cmd.logs['stdio']
             new_props = self.extract_fn(cmd.rc,
-                                        ''.join(log.getChunks([STDOUT], onlyText=True)),
-                                        ''.join(log.getChunks([STDERR], onlyText=True)))
+                                        self.observer.getStdout(),
+                                        self.observer.getStderr())
             for k, v in new_props.items():
                 self.setProperty(k, v, "SetProperty Step")
             self.property_changes = new_props

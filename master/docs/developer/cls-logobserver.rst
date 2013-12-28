@@ -65,3 +65,23 @@ LogObservers
     .. py:method:: finishReceived()
 
         This method, inherited from :py:class:`LogObserver`, is invoked when the observed log is finished.
+
+.. py:class:: BufferLogObserver(wantStdout=True, wantStderr=False)
+
+    :param boolean wantStdout: true if stdout should be buffered
+    :param boolean wantStderr: true if stderr should be buffered
+
+    This subclass of :py:class:`LogObserver` buffers stdout and/or stderr for analysis after the step is complete.
+    This can cause excessive memory consumption if the output is large.
+
+    .. py:method:: getStdout()
+
+        :returns: unicode string
+
+        Return the accumulated stdout.
+
+    .. py:method:: getStderr()
+
+        :returns: unicode string
+
+        Return the accumulated stderr.
