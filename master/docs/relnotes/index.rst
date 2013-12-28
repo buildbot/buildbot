@@ -85,10 +85,13 @@ Nine
   * ``buildbot statuslog``
   * ``buildbot statusgui`` (the GTK client)
   * ``buildbot debugclient``
+
 The ``PBListener`` status listener is now deprecated and does nothing.
 Accordingly, there is no external access to status objects via Perspective Broker, aside from some compatibility code for the try scheduler.
 
 The ``debugPassword`` configuration option is no longer needed and is thus deprecated.
+
+* The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
 
 .. _Refactoring-Buildsteps:
 

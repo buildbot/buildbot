@@ -93,10 +93,6 @@ class FakeLogFile(object):
         return ''.join([c for str, c in self.chunks
                         if str in (STDOUT, STDERR)])
 
-    def getTextWithHeaders(self):
-        warnings.warn("step uses removed LogFile method `getTextWithHeaders`")
-        return ''.join([c for str, c in self.chunks])
-
     def getChunks(self, channels=[], onlyText=False):
         warnings.warn("step uses removed LogFile method `getChunks`")
         if onlyText:
