@@ -31,6 +31,9 @@ class MyLogObserver(logobserver.LogObserver):
     def errReceived(self, data):
         self.obs.append(('err', data))
 
+    def headerReceived(self, data):
+        self.obs.append(('hdr', data))
+
     def finishReceived(self):
         self.obs.append(('fin',))
 
@@ -51,6 +54,7 @@ class TestLogObserver(unittest.TestCase):
         yield l.addStderr(u'cruel\n')
         yield l.addStdout(u'world\n')
         yield l.addStdout(u'multi\nline\nchunk\n')
+        yield l.addHeader(u'HDR\n')
         yield l.finish()
 
         self.assertEqual(lo.obs, [
@@ -58,6 +62,7 @@ class TestLogObserver(unittest.TestCase):
             ('err', 'cruel\n'),
             ('out', 'world\n'),
             ('out', 'multi\nline\nchunk\n'),
+            ('hdr', 'HDR\n'),
             ('fin',),
         ])
 
@@ -73,6 +78,9 @@ class MyLogLineObserver(logobserver.LogLineObserver):
 
     def errLineReceived(self, data):
         self.obs.append(('err', data))
+
+    def headerLineReceived(self, data):
+        self.obs.append(('hdr', data))
 
     def finishReceived(self):
         self.obs.append(('fin',))
@@ -93,6 +101,7 @@ class TestLogLineObserver(unittest.TestCase):
         yield l.addStdout(u'hello\n')
         yield l.addStderr(u'cruel\n')
         yield l.addStdout(u'multi\nline\nchunk\n')
+        yield l.addHeader(u'H1\nH2\n')
         yield l.finish()
 
         self.assertEqual(lo.obs, [
@@ -101,6 +110,8 @@ class TestLogLineObserver(unittest.TestCase):
             ('out', 'multi'),
             ('out', 'line'),
             ('out', 'chunk'),
+            ('hdr', 'H1'),
+            ('hdr', 'H2'),
             ('fin',),
         ])
 

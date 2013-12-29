@@ -45,6 +45,9 @@ class FakeLogFile(object):
     def addHeader(self, text):
         self.header += text
         self.chunks.append((HEADER, text))
+        if self.name in self.step.logobservers:
+            for obs in self.step.logobservers[self.name]:
+                obs.headerReceived(text)
 
     def addStdout(self, text):
         self.stdout += text
@@ -92,10 +95,6 @@ class FakeLogFile(object):
         warnings.warn("step uses removed LogFile method `getText`")
         return ''.join([c for str, c in self.chunks
                         if str in (STDOUT, STDERR)])
-
-    def getTextWithHeaders(self):
-        warnings.warn("step uses removed LogFile method `getTextWithHeaders`")
-        return ''.join([c for str, c in self.chunks])
 
     def getChunks(self, channels=[], onlyText=False):
         warnings.warn("step uses removed LogFile method `getChunks`")
