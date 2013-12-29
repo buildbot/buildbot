@@ -18,6 +18,7 @@ from buildbot.process import logobserver
 from buildbot.test.fake import fakemaster
 from twisted.internet import defer
 from twisted.trial import unittest
+import mock
 
 
 class MyLogObserver(logobserver.LogObserver):
@@ -120,6 +121,25 @@ class TestLogLineObserver(unittest.TestCase):
         # callable.  Just don't fail.
         lo = MyLogLineObserver()
         lo.setMaxLineLength(120939403)
+
+
+class TestOutputProgressObserver(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+
+    @defer.inlineCallbacks
+    def test_sequence(self):
+        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
+        lo = logobserver.OutputProgressObserver('stdio')
+        step = mock.Mock()
+        lo.setStep(step)
+        lo.setLog(l)
+
+        yield l.addStdout(u'hello\n')
+        step.setProgress.assert_called_with('stdio', 6)
+        yield l.finish()
 
 
 class TestBufferObserver(unittest.TestCase):
