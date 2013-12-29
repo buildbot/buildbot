@@ -267,82 +267,6 @@ class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
     optionsClass = runner.ReconfigOptions
 
 
-class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.DebugClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_synopsis(self):
-        opts = runner.DebugClientOptions()
-        self.assertIn('buildbot debugclient', opts.getSynopsis())
-
-    def test_defaults(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
-
-    def test_args_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('-m', 'mm'))
-
-    def test_options_long(self):
-        opts = self.parse('--master', 'mm:9989', '--passwd', 'pp')
-        exp = dict(master='mm:9989', passwd='pp')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master_passwd(self):
-        opts = self.parse('foo:9989', 'pass')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('-p', 'pass', 'foo:9989')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_args_master_passwd(self):
-        opts = self.parse('foo:9989', 'pass')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_missing_both(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
-
-    def test_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('master'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('-p', 'pass'))
-
-    def test_invalid_master(self):
-        self.assertRaises(usage.UsageError, self.parse,
-                          "-m", "foo", "-p", "pass")
-
-    def test_options_extra_positional(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('mm', 'pp', '??'))
-
-    def test_options_master(self):
-        self.options_file['master'] = 'opt:9989'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_options_debugMaster(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['debugMaster'] = 'opt:9989'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
 class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
@@ -391,20 +315,6 @@ class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
         opts = self.parse('-p', 'pass', '-u', 'user')
         exp = dict(master='opt:3', username='user', passwd='pass')
         self.assertOptions(opts, exp)
-
-
-class TestStatusLogOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusLogOptions()
-        self.assertIn('buildbot statuslog', opts.getSynopsis())
-
-
-class TestStatusGuiOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusGuiOptions()
-        self.assertIn('buildbot statusgui', opts.getSynopsis())
 
 
 class TestTryOptions(OptionsMixin, unittest.TestCase):

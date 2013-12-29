@@ -57,10 +57,6 @@ modules.extend([rpmbuild, rpmlint, rpmspec])
 from buildbot.util import eventual
 modules.extend([eventual])
 
-# require gobject
-#import buildbot.clients.gtkPanes
-#import buildbot.clients.debug
-
 # requires libboto
 #import buildbot.ec2buildslave
 

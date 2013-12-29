@@ -21,7 +21,9 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.util import epoch2datetime
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 TIME1 = 2001111
@@ -170,6 +172,46 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         def newStep(self, buildid, name):
             pass
 
+    @defer.inlineCallbacks
+    def test_newStep(self):
+        stepid, number, name = yield self.rtype.newStep(buildid=10,
+                                                        name=u'name')
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': name,
+            'number': number,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'stepid': stepid,
+            'urls': [],
+        }
+        self.master.mq.assertProductions([
+            (('build', '10', 'step', str(stepid), 'new'), msgBody),
+            (('step', str(stepid), 'new'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(stepid)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': stepid,
+            'name': name,
+            'number': number,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'urls': [],
+        })
+
+    @defer.inlineCallbacks
+    def test_fake_newStep(self):
+        self.assertEqual(
+            len((yield self.master.data.updates.newStep(buildid=10,
+                                                        name=u'ten'))),
+            3)
+
     def test_signature_startStep(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.startStep,  # fake
@@ -177,22 +219,41 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         def newStep(self, stepid):
             pass
 
-    def test_newStep(self):
-        self.do_test_callthrough('addStep', self.rtype.newStep,
-                                 buildid=10, name=u'name',
-                                 exp_kwargs=dict(buildid=10, name=u'name',
-                                                 state_strings=['pending']))
-
     @defer.inlineCallbacks
-    def test_fake_newStep(self):
-        self.assertEqual(
-            len((yield self.master.data.updates.newStep(10, u'ten'))),
-            3)
-
     def test_startStep(self):
-        self.do_test_callthrough('startStep', self.rtype.startStep,
-                                 stepid=10,
-                                 exp_kwargs=dict(stepid=10))
+        self.patch(reactor, 'seconds', lambda: TIME1)
+        yield self.master.db.steps.addStep(buildid=10, name=u'ten',
+                                           state_strings=[u'pending'])
+        yield self.rtype.startStep(stepid=100)
+
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': TIME1,
+            'state_strings': [u'pending'],
+            'stepid': 100,
+            'urls': [],
+        }
+        self.master.mq.assertProductions([
+            (('build', '10', 'step', str(100), 'started'), msgBody),
+            (('step', str(100), 'started'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': 100,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': epoch2datetime(TIME1),
+            'state_strings': [u'pending'],
+            'urls': [],
+        })
 
     def test_signature_setStepStateStrings(self):
         @self.assertArgSpecMatches(
@@ -201,10 +262,40 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         def setStepStateStrings(self, stepid, state_strings):
             pass
 
+    @defer.inlineCallbacks
     def test_setStepStateStrings(self):
-        self.do_test_callthrough('setStepStateStrings',
-                                 self.rtype.setStepStateStrings,
-                                 stepid=10, state_strings=['a', 'b'])
+        yield self.master.db.steps.addStep(buildid=10, name=u'ten',
+                                           state_strings=[u'pending'])
+        yield self.rtype.setStepStateStrings(stepid=100, state_strings=[u'hi'])
+
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'hi'],
+            'stepid': 100,
+            'urls': [],
+        }
+        self.master.mq.assertProductions([
+            (('build', '10', 'step', str(100), 'updated'), msgBody),
+            (('step', str(100), 'updated'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': 100,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'hi'],
+            'urls': [],
+        })
 
     def test_signature_finishStep(self):
         @self.assertArgSpecMatches(
@@ -213,6 +304,41 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         def finishStep(self, stepid, results):
             pass
 
+    @defer.inlineCallbacks
     def test_finishStep(self):
-        self.do_test_callthrough('finishStep', self.rtype.finishStep,
-                                 stepid=10, results=3)
+        yield self.master.db.steps.addStep(buildid=10, name=u'ten',
+                                           state_strings=[u'pending'])
+        self.patch(reactor, 'seconds', lambda: TIME1)
+        yield self.rtype.startStep(stepid=100)
+        self.patch(reactor, 'seconds', lambda: TIME2)
+        self.master.mq.clearProductions()
+        yield self.rtype.finishStep(stepid=100, results=9)
+
+        msgBody = {
+            'buildid': 10,
+            'complete': True,
+            'complete_at': TIME2,
+            'name': u'ten',
+            'number': 0,
+            'results': 9,
+            'started_at': TIME1,
+            'state_strings': [u'pending'],
+            'stepid': 100,
+            'urls': [],
+        }
+        self.master.mq.assertProductions([
+            (('build', '10', 'step', str(100), 'finished'), msgBody),
+            (('step', str(100), 'finished'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': epoch2datetime(TIME2),
+            'id': 100,
+            'name': u'ten',
+            'number': 0,
+            'results': 9,
+            'started_at': epoch2datetime(TIME1),
+            'state_strings': [u'pending'],
+            'urls': [],
+        })

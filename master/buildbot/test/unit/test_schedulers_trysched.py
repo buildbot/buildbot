@@ -669,27 +669,12 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
             return dict(bsid=bsid)
         self.db.buildsets.getBuildset = getBuildset
 
-        class BuildSetStatus(object):
-
-            def __init__(self, *args):
-                self.args = args
-        self.patch(trysched, 'BuildSetStatus', BuildSetStatus)
-
-        class RemoteBuildSetStatus(object):
-
-            def __init__(self, bss):
-                self.bss = bss
-        from buildbot.status import client
-        self.patch(client, 'makeRemote', RemoteBuildSetStatus)
-
         d = persp.perspective_try(*args, **kwargs)
 
         def check(rbss):
             if rbss is None:
                 return
-            self.assertIsInstance(rbss, RemoteBuildSetStatus)
-            self.assertIsInstance(rbss.bss, BuildSetStatus)
-            self.assertEqual(rbss.bss.args[0], dict(bsid=500))
+            self.assertIsInstance(rbss, trysched.RemoteBuildSetStatus)
         d.addCallback(check)
         return d
 

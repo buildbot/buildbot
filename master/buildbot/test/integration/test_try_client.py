@@ -21,7 +21,6 @@ from buildbot import master
 from buildbot import util
 from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
-from buildbot.status import client
 from buildbot.test.util import dirs
 from buildbot.test.util import www
 from twisted.cred import credentials
@@ -157,15 +156,11 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         return self.jobdir
 
     @defer.inlineCallbacks
-    def startMaster(self, sch, startSlave=False, wantPBListener=False):
+    def startMaster(self, sch, startSlave=False):
         BuildmasterConfig['schedulers'] = [sch]
         self.sch = sch
 
-        if wantPBListener:
-            self.pblistener = client.PBListener(0)
-            BuildmasterConfig['status'] = [self.pblistener]
-        else:
-            BuildmasterConfig['status'] = []
+        BuildmasterConfig['status'] = []
 
         # create the master and set its config
         m = self.master = master.BuildMaster(self.basedir, self.configfile)
@@ -250,7 +245,9 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             'Delivering job; comment= None',
             'job has been delivered',
             'All Builds Complete',
-            'a: success (build successful one two)',
+            # XXX should be something like "build successful one two", but
+            # currently just drawn from the build status strings
+            'a: success (finished)',
         ])
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
@@ -280,8 +277,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         jobdir = self.setupJobdir()
         yield self.startMaster(
             trysched.Try_Jobdir('try', ['a'], jobdir),
-            startSlave=False,
-            wantPBListener=True)
+            startSlave=False)
         yield self.runClient({
             'connect': 'ssh',
             'master': '127.0.0.1',
@@ -351,3 +347,4 @@ c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
 c['db'] = {'db_url': "sqlite:///state.sqlite"}
+c['mq'] = {'debug': True}

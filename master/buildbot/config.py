@@ -80,7 +80,6 @@ class MasterConfig(object):
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
         self.multiMaster = False
-        self.debugPassword = None
         self.manhole = None
         self.protocols = {}
 
@@ -117,7 +116,7 @@ class MasterConfig(object):
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
+        'db', "db_poll_interval", "db_url", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logEncoding",
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "mergeRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
@@ -332,7 +331,8 @@ class MasterConfig(object):
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
 
-        copy_str_param('debugPassword')
+        if 'debugPassword' in config_dict:
+            log.msg("the 'debugPassword' parameter is unused and can be removed from the configuration flie")
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
@@ -677,8 +677,6 @@ class MasterConfig(object):
             return
         if self.slaves:
             error("slaves are configured, but c['protocols'] not")
-        if self.debugPassword:
-            error("debug client is configured, but c['protocols'] not")
 
 
 class BuilderConfig:
