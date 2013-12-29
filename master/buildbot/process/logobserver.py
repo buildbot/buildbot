@@ -113,7 +113,8 @@ class OutputProgressObserver(LogObserver):
         self.name = name
 
     def gotData(self, stream, data):
-        self.length += len(data)
+        if data:
+            self.length += len(data)
         self.step.setProgress(self.name, self.length)
 
 
