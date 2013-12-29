@@ -34,6 +34,8 @@ class LogObserver:
             self.outReceived(data)
         elif stream == 'e':
             self.errReceived(data)
+        elif stream == 'h':
+            self.headerReceived(data)
 
     # TODO: document / test
     def finishReceived(self):
@@ -43,6 +45,9 @@ class LogObserver:
         pass
 
     def errReceived(self, data):
+        pass
+
+    def headerReceived(self, data):
         pass
 
 
@@ -61,6 +66,11 @@ class LogLineObserver(LogObserver):
         self.stderrParser.lineReceived = self.errLineReceived
         self.stderrParser.transport = self
 
+        self.headerParser = basic.LineOnlyReceiver()
+        self.headerParser.delimiter = "\n"
+        self.headerParser.lineReceived = self.headerLineReceived
+        self.headerParser.transport = self
+
     def setMaxLineLength(self, max_length):
         """
         Set the maximum line length: lines longer than max_length are
@@ -69,6 +79,7 @@ class LogLineObserver(LogObserver):
         """
         self.stdoutParser.MAX_LENGTH = max_length
         self.stderrParser.MAX_LENGTH = max_length
+        self.headerParser.MAX_LENGTH = max_length
 
     def outReceived(self, data):
         self.stdoutParser.dataReceived(data)
@@ -76,12 +87,20 @@ class LogLineObserver(LogObserver):
     def errReceived(self, data):
         self.stderrParser.dataReceived(data)
 
+    def headerReceived(self, data):
+        self.headerParser.dataReceived(data)
+
     def outLineReceived(self, line):
         """This will be called with complete stdout lines (not including the
         delimiter). Override this in your observer."""
         pass
 
     def errLineReceived(self, line):
+        """This will be called with complete lines of stderr (not including
+        the delimiter). Override this in your observer."""
+        pass
+
+    def headerLineReceived(self, line):
         """This will be called with complete lines of stderr (not including
         the delimiter). Override this in your observer."""
         pass

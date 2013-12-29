@@ -29,6 +29,12 @@ LogObservers
 
         This method is similar to :py:meth:`outReceived`, but is called for output to stderr.
 
+    .. py:method:: headerReceived(data):
+
+        :param unicode data: received data
+
+        This method is similar to :py:meth:`outReceived`, but is called for header output.
+
     .. py:method:: finishReceived()
 
         This method is invoked when the observed log is finished.
@@ -49,6 +55,12 @@ LogObservers
         :param unicode line: received line, without newline
 
         Similar to :py:meth:`~LogLineObserver.outLineReceived`, but for stderr.
+
+    .. py:method:: headerLineReceived(line):
+
+        :param unicode line: received line, without newline
+
+        Similar to :py:meth:`~LogLineObserver.outLineReceived`, but for header output..
 
     .. py:method:: finishReceived()
 

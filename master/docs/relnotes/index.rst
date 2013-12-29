@@ -91,6 +91,8 @@ Accordingly, there is no external access to status objects via Perspective Broke
 
 The ``debugPassword`` configuration option is no longer needed and is thus deprecated.
 
+* The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
+
 .. _Refactoring-Buildsteps:
 
 Refactoring Buildsteps

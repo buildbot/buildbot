@@ -38,9 +38,8 @@ modules.extend([checkconfig, logwatcher, reconfig, runner])
 from buildbot.status import client
 from buildbot.status import status_gerrit
 modules.extend([client, status_gerrit])
-from buildbot.status import tinderbox
 from buildbot.status import words
-modules.extend([tinderbox, words])
+modules.extend([words])
 from buildbot.steps import master
 from buildbot.steps import maxq
 from buildbot.steps import python

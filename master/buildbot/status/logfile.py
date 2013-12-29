@@ -327,9 +327,6 @@ class LogFile:
         # this produces one ginormous string
         return "".join(self.old_getChunks([STDOUT, STDERR], onlyText=True))
 
-    def old_getTextWithHeaders(self):
-        return "".join(self.old_getChunks(onlyText=True))
-
     def old_getChunks(self, channels=[], onlyText=False):
         # generate chunks for everything that was logged at the time we were
         # first called, so remember how long the file was when we started.
@@ -667,9 +664,6 @@ class HTMLLogFile:
 
     def old_getText(self):
         return self.html  # looks kinda like text
-
-    def old_getTextWithHeaders(self):
-        return self.html
 
     def old_getChunks(self):
         return [(STDERR, self.html)]

@@ -88,16 +88,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def myRunStep(self, result=SUCCESS, status_text=["update"]):
         self.expectOutcome(result=result, status_text=status_text)
-        d = self.runStep()
-
-        def printlogs(res):
-            if hasattr(self.step, 'stdio_log'):
-                text = self.step.stdio_log.getTextWithHeaders()
-                if "Failure instance" in text and not self.shouldRetry:
-                    print text
-            return res
-        d.addBoth(printlogs)
-        return d
+        return self.runStep()
 
     def expectClobber(self):
         # stat return 1 so we clobber
