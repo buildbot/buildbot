@@ -43,22 +43,28 @@ class FakeLogFile(object):
         return self.subPoint.subscribe(callback)
 
     def addHeader(self, text):
+        assert text.endswith('\n')
         self.header += text
         self.chunks.append((HEADER, text))
+        if self.name in self.step.logobservers:
+            for obs in self.step.logobservers[self.name]:
+                obs.headerReceived(text.decode('utf-8'))
 
     def addStdout(self, text):
+        assert text.endswith('\n')
         self.stdout += text
         self.chunks.append((STDOUT, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.outReceived(text)
+                obs.outReceived(text.decode('utf-8'))
 
     def addStderr(self, text):
+        assert text.endswith('\n')
         self.stderr += text
         self.chunks.append((STDERR, text))
         if self.name in self.step.logobservers:
             for obs in self.step.logobservers[self.name]:
-                obs.errReceived(text)
+                obs.errReceived(text.decode('utf-8'))
 
     def isFinished(self):
         return self.finished
