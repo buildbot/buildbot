@@ -116,6 +116,7 @@ class OutputProgressObserver(LogObserver):
         self.length += len(data)
         self.step.setProgress(self.name, self.length)
 
+
 class BufferLogObserver(LogObserver):
 
     def __init__(self, wantStdout=True, wantStderr=False):
