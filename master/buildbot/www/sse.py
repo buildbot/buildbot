@@ -99,9 +99,9 @@ class EventResource(resource.Resource):
                     options[k] = options[k][1]
 
             try:
-                qref = self.master.data.startConsuming(
+                qref = self.master.mq.startConsuming(
                     consumer.onMessage,
-                    options, tuple(path))
+                    tuple(path))
                 consumer.registerQref(pathref, qref)
             except NotImplementedError:
                 return self.finish(request, 404, "not implemented")

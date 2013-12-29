@@ -15,16 +15,3 @@
           td
             a(href="#/masters/{{scheduler.master.masterid}}")
               | {{ scheduler.master.name }}
-  .row
-    table.table.table-hover.table-striped.table-condensed
-      tr
-          td Force Scheduler Name
-          td builder names
-          td config
-        tr(ng-repeat='scheduler in forceschedulers')
-          td
-            | {{ scheduler.name }}
-          td
-            | {{ scheduler.builder_names }}
-          td
-            | {{ scheduler.all_fields }}

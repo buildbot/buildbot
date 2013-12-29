@@ -9,11 +9,12 @@ angular.module('app').provider 'topMenuStates', ->
         states.push(state)
     @$get = ->
         states
-    @
+    return this
+
 angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuStatesProvider"
     ($stateProvider, $urlRouterProvider, topMenuStatesProvider) ->
 
-        $urlRouterProvider.otherwise('/');
+        $urlRouterProvider.otherwise('/')
 
         # by convention, in this module the key of the mapping
         # is the name of the template and of the controller
@@ -32,12 +33,12 @@ angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuS
             changes:
                 caption: "Last Changes"
                 url: "/changes"
-        #    buildslaves:
-        #        caption: "Build Slaves"
-        #        url: "/buildslaves"
-        #    buildmasters:
-        #        caption: "Build Masters"
-        #        url: "/buildmasters"
+            buildslaves:
+                caption: "Build Slaves"
+                url: "/buildslaves"
+            masters:
+                caption: "Build Masters"
+                url: "/masters"
             schedulers:
                 caption: "Schedulers"
                 url: "/schedulers"
