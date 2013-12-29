@@ -124,34 +124,36 @@ class Step(base.ResourceType):
         link = types.Link()
     entityType = EntityType(name)
 
+    @defer.inlineCallbacks
+    def generateEvent(self, stepid, event):
+        step = yield self.master.data.get(('step', stepid))
+        self.produceEvent(step, event)
+
     @base.updateMethod
     @defer.inlineCallbacks
     def newStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
             buildid=buildid, name=name, state_strings=[u'pending'])
-        stepdict = yield self.master.data.get(('step', stepid))
-        self.produceEvent(stepdict, 'new')
+        yield self.generateEvent(stepid, 'new')
         defer.returnValue((stepid, num, name))
 
     @base.updateMethod
     @defer.inlineCallbacks
     def startStep(self, stepid):
         yield self.master.db.steps.startStep(stepid=stepid)
-        stepdict = yield self.master.data.get(('step', stepid))
-        self.produceEvent(stepdict, 'started')
+        yield self.generateEvent(stepid, 'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def setStepStateStrings(self, stepid, state_strings):
         yield self.master.db.steps.setStepStateStrings(
             stepid=stepid, state_strings=state_strings)
-        stepdict = yield self.master.data.get(('step', stepid))
-        self.produceEvent(stepdict, 'updated')
+        yield self.generateEvent(stepid, 'updated')
+
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishStep(self, stepid, results):
         yield self.master.db.steps.finishStep(
             stepid=stepid, results=results)
-        stepdict = yield self.master.data.get(('step', stepid))
-        self.produceEvent(stepdict, 'finished')
+        yield self.generateEvent(stepid, 'finished')
