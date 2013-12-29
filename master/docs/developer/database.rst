@@ -337,22 +337,21 @@ steps
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
     * ``urls`` (list of URLs produced by this step)
 
-    .. py:method:: getStep(stepid)
+    .. py:method:: getStep(stepid=None, buildid=None, number=None, name=None)
 
         :param integer stepid: the step id to retrieve
-        :returns: stepdict via Deferred
-
-        Get a single step by ID.
-
-    .. py:method:: getStepByNumber(buildid, number=None, name=None)
-
         :param integer buildid: the build from which to get the step
         :param integer number: the step number
         :param name: the step name
         :type name: 50-character :ref:`identifier <type-identifier>`
         :returns: stepdict via Deferred
 
-        Get a single step within a build by either number or name.
+        Get a single step.
+        The step can be specified by
+
+            * ``stepid`` alone;
+            * ``buildid`` and ``number``, the step number within that build; or
+            * ``buildid`` and ``name``, the unique step name within that build.
 
     .. py:method:: getSteps(buildid)
 

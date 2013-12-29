@@ -60,8 +60,10 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return
-        dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                                                           number=kwargs.get('step_number'), name=kwargs.get('step_name'))
+        dbdict = yield self.master.db.steps.getStep(
+            buildid=buildid,
+            number=kwargs.get('step_number'),
+            name=kwargs.get('step_name'))
         defer.returnValue((yield self.db2data(dbdict))
                           if dbdict else None)
 
