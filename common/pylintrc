@@ -45,13 +45,13 @@ load-plugins=
 # R0915: Too many statements (%s/%s)*
 # R0921: Abstract class not referenced*
 # R0922: Abstract class is only
-# R0924: Badly implemented %s, implements %s but not %s*
 # W0122: Use of the exec statement*
 # W0142: Used * or ** magic
 # W0402: Uses of a deprecated module %r
 # W0511: FIXME or XXX is detected
 # W0601: Global variable %r undefined at the module level
 # W0613: Unused argument %r
+# W0633: Attempting to unpack a non-sequence
 # E1103: %s %r has no %r member (but some types could not be inferred)
 
 disable=
@@ -72,7 +72,6 @@ disable=
   R0915,
   R0921,
   R0922,
-  R0924,
   W0402,
   W0511,
   W0601,
@@ -132,13 +131,15 @@ disable=
   W0622,
   W0631,
   W0632,
+  W0633,
   W0701,
   W0702,
   W0703,
   W0710,
   W1001,
   W1402,
-  W1501
+  W1501,
+  superfluous-parens
 
 [REPORTS]
 

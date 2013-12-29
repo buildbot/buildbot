@@ -503,43 +503,6 @@ class RemoteTryPP(protocol.ProcessProtocol):
         self.d.callback((sig, rc))
 
 
-class BuildSetStatusGrabber:
-    retryCount = 5  # how many times to we try to grab the BuildSetStatus?
-    retryDelay = 3  # seconds to wait between attempts
-
-    def __init__(self, status, bsid):
-        self.status = status
-        self.bsid = bsid
-
-    def grab(self):
-        # return a Deferred that either fires with the BuildSetStatus
-        # reference or errbacks because we were unable to grab it
-        self.d = defer.Deferred()
-        # wait a second before querying to give the master's maildir watcher
-        # a chance to see the job
-        reactor.callLater(0.01, self.go)
-        return self.d
-
-    def go(self, dummy=None):
-        if self.retryCount == 0:
-            output("couldn't find matching buildset")
-            sys.exit(1)
-        self.retryCount -= 1
-        d = self.status.callRemote("getBuildSets")
-        d.addCallback(self._gotSets)
-
-    def _gotSets(self, buildsets):
-        print "GOT", buildsets, self.bsid
-        for bs, bsid in buildsets:
-            if bsid == self.bsid:
-                # got it
-                self.d.callback(bs)
-                return
-        d = defer.Deferred()
-        d.addCallback(self.go)
-        reactor.callLater(self.retryDelay, d.callback, None)
-
-
 class Try(pb.Referenceable):
     buildsetStatus = None
     quiet = False
@@ -690,40 +653,14 @@ class Try(pb.Referenceable):
         # may emit status messages while we wait
         wait = bool(self.getopt("wait"))
         if not wait:
-            # TODO: emit the URL where they can follow the builds. This
-            # requires contacting the Status server over PB and doing
-            # getURLForThing() on the BuildSetStatus. To get URLs for
-            # individual builds would require we wait for the builds to
-            # start.
             output("not waiting for builds to finish")
-            return
-        if self.connect == "ssh":
+        elif self.connect == "ssh":
             output("waiting for builds with ssh is not supported")
-            return
-        d = self.running = defer.Deferred()
-        if self.buildsetStatus:
+        else:
+            self.running = defer.Deferred()
+            assert self.buildsetStatus
             self._getStatus_1()
             return self.running
-        # contact the status port
-        # we're probably using the ssh style
-        master = self.getopt("master")
-        host, port = master.split(":")
-        port = int(port)
-        self.announce("contacting the status port at %s:%d" % (host, port))
-        f = pb.PBClientFactory()
-        creds = credentials.UsernamePassword("statusClient", "clientpw")
-        d = f.login(creds)
-        reactor.connectTCP(host, port, f)
-        d.addCallback(self._getStatus_ssh_1)
-        return self.running
-
-    def _getStatus_ssh_1(self, remote):
-        # find a remotereference to the corresponding BuildSetStatus object
-        self.announce("waiting for job to be accepted")
-        g = BuildSetStatusGrabber(remote, self.bsid)
-        d = g.grab()
-        d.addCallback(self._getStatus_1)
-        return d
 
     def _getStatus_1(self, res=None):
         if res:
