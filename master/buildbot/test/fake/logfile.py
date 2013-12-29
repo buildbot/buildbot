@@ -95,14 +95,3 @@ class FakeLogFile(object):
         warnings.warn("step uses removed LogFile method `getText`")
         return ''.join([c for str, c in self.chunks
                         if str in (STDOUT, STDERR)])
-
-    def getChunks(self, channels=[], onlyText=False):
-        warnings.warn("step uses removed LogFile method `getChunks`")
-        if onlyText:
-            return [data
-                    for (ch, data) in self.chunks
-                    if not channels or ch in channels]
-        else:
-            return [(ch, data)
-                    for (ch, data) in self.chunks
-                    if not channels or ch in channels]
