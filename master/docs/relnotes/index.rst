@@ -158,6 +158,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The try scheduler's ``--connect=ssh`` method no longer supports waiting for results (``--wait``).
 
+* The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:mod`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
+  Similarly, the former ``buildbot.process.buildstep.LogObserver`` class and its subclasses are now in :py:mod`buildbot.process.logobserver`, although imports from the previous path will continue to work.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
