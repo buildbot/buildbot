@@ -14,14 +14,17 @@ angular.module('app').factory 'buildbotService',
         config.unbind_delay ?= 10 * 60 * 1000 # 10 min by default
         # some is added to base service, and restangularized elements
         addSomeAndMemoize = (elem) ->
+            memoize = (f) ->
+                return _.memoize f, (a,b,c) ->
+                    return [a,b,c].toString()
             # all will be memoized later, so we need to save the unmemoized version
             elem.unmemoized_all = elem.all
-            elem.some = _.memoize (route, queryParams) ->
+            elem.some = memoize (route, queryParams) ->
                 new_elem = elem.unmemoized_all(route)
                 new_elem.queryParams = queryParams
                 return new_elem
-            elem.one = _.memoize(elem.one)
-            elem.all = _.memoize(elem.all)
+            elem.one = memoize(elem.one)
+            elem.all = memoize(elem.all)
 
         responseExtractor =  (response, operation) ->
             if operation == "post"
@@ -88,8 +91,7 @@ angular.module('app').factory 'buildbotService',
 
                     p = elem.getList(elem.queryParams).then (res) ->
                         elem.value = res
-                        events.push(elem.on("*/new", onNewOrChange))
-                        events.push(elem.on("*/update", onNewOrChange))
+                        events.push(elem.on("*/*", onNewOrChange))
                         return res
                 else
                     onUpdate = (msg) ->

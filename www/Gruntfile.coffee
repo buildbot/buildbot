@@ -369,16 +369,19 @@ module.exports = (grunt) ->
                 reporters: ['progress']
                 frameworks: ['jasmine', 'requirejs'],
                 browsers: ['PhantomJS']
+                preprocessors:
+                    '**/*.coffee': ['coffee']
+                ,
                 files: [
-                    "./#{project_name}/scripts/test/main.js"
+                    "#{project_name}/scripts/test/main.js",
                     {pattern: "#{project_name}/scripts/**/*.js", included: false},
                     {pattern: "#{project_name}/scripts/**/*.js.map", included: false},
                 ]
             dev:
                 options: # choose from Chrome,Firefox,PhantomJS
                     browsers: (grunt.option('browsers') or 'PhantomJS').split(",")
-                    background: true
-                    singleRun: false
+#                    background: true
+#                    singleRun: false
             ci:
                 options:
                     singleRun: true
@@ -409,7 +412,7 @@ module.exports = (grunt) ->
                     'copy:js'
                     'copy:scripts'
                     'copy:src'
-                    'karma:dev:run'
+                    'karma:dev'
                     'coffeelint:scripts'
                 ]
                 options:
@@ -496,7 +499,6 @@ module.exports = (grunt) ->
     # grunt dev
     grunt.registerTask 'dev', [
         'default'
-        'karma:dev:start'
         'watch',
     ]
 

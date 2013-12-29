@@ -91,6 +91,11 @@ package_json = {
         "grunt-karma": "~0.7.2",
         "karma": "~0.11.0",
         "karma-jasmine": "~0.1.5",
+        "karma-requirejs": "~0.2.1",
+        "karma-coffee-preprocessor": "*",
+        "karma-chrome-launcher": "*",
+        "karma-firefox-launcher": "*",
+        "karma-phantomjs-launcher": "*",
         "bower": "~1.2.7"
     },
     "engines": {

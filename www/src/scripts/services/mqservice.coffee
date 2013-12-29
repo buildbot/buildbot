@@ -31,12 +31,16 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
 
         broadcast: (eventname, message) ->
             hasmatched = false
+            if _.isArray(eventname)
+                eventname = eventname.join("/")
             for k, namedListeners of listeners
                 if match(k, eventname)
                     for callback in namedListeners
                         callback(message, eventname)
                     hasmatched = true
             if !hasmatched
+                for k, namedListeners of listeners
+                    console.log k, eventname
                 throw Error("broadcasting #{eventname} without listeners!")
 
         # this is intended to be mocked in unittests
