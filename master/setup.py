@@ -167,9 +167,6 @@ setup_args = {
             "buildbot/db/migrate/migrate.cfg",
         ]),
         include("buildbot/db/migrate/versions", "*.py"),
-        ("buildbot/clients", [
-            "buildbot/clients/debug.glade",
-        ]),
         ("buildbot/scripts", [
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",

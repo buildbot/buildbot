@@ -18,6 +18,7 @@ import os
 from twisted.internet import defer
 from twisted.protocols import basic
 from twisted.python import log
+from twisted.spread import pb
 
 from buildbot import pbutil
 from buildbot.process.properties import Properties
@@ -238,6 +239,111 @@ class Try_Jobdir(TryBase):
             properties=requested_props)
 
 
+class RemoteBuildSetStatus(pb.Referenceable):
+
+    def __init__(self, master, bsid, brids):
+        self.master = master
+        self.bsid = bsid
+        self.brids = brids
+
+    def remote_getBuildRequests(self):
+        return [(n, RemoteBuildRequest(self.master, n, brid))
+                for n, brid in self.brids.iteritems()]
+
+class RemoteBuildRequest(pb.Referenceable):
+
+    def __init__(self, master, builderName, brid):
+        self.master = master
+        self.builderName = builderName
+        self.brid = brid
+        self.consumer = None
+
+    @defer.inlineCallbacks
+    def remote_subscribe(self, subscriber):
+        brdict = yield self.master.data.get(('buildrequest', self.brid))
+        if not brdict:
+            return
+        builderId = brdict['builderid']
+
+        # subscribe to any new builds..
+        def gotBuild(key, msg):
+            if msg['buildrequestid'] != self.brid or key[-1] != 'new':
+                return
+            return subscriber.callRemote('newbuild',
+                    RemoteBuild(self.master, msg, self.builderName),
+                    self.builderName)
+        self.consumer = self.master.data.startConsuming(
+                gotBuild, {}, ('builder', builderId, 'build'))
+        subscriber.notifyOnDisconnect(lambda _:
+            self.remote_unsubscribe(subscriber))
+
+        # and get any existing builds
+        builds = yield self.master.data.get(('buildrequest', self.brid, 'build'))
+        for build in builds:
+            yield subscriber.callRemote('newbuild',
+                    RemoteBuild(self.master, build, self.builderName),
+                    self.builderName)
+
+    def remote_unsubscribe(self, subscriber):
+        if self.consumer:
+            self.consumer.stopConsuming()
+            self.consumer = None
+
+
+class RemoteBuild(pb.Referenceable):
+
+    def __init__(self, master, builddict, builderName):
+        self.master = master
+        self.builddict = builddict
+        self.builderName = builderName
+        self.consumer = None
+
+    def remote_subscribe(self, subscriber, interval):
+        # subscribe to any new steps..
+        def stepChanged(key, msg):
+            if key[-1] == 'started':
+                return subscriber.callRemote('stepStarted',
+                    self.builderName, self, msg['name'], None)
+            elif key[-1] == 'finished':
+                return subscriber.callRemote('stepFinished',
+                    self.builderName, self, msg['name'], None, msg['results'])
+        self.consumer = self.master.data.startConsuming(
+                stepChanged, {},
+                ('build', self.builddict['buildid'], 'step'))
+        subscriber.notifyOnDisconnect(lambda _:
+            self.remote_unsubscribe(subscriber))
+
+    def remote_unsubscribe(self, subscriber):
+        if self.consumer:
+            self.consumer.stopConsuming()
+            self.consumer = None
+
+    def remote_waitUntilFinished(self):
+        d = defer.Deferred()
+        cons = []
+        def buildEvent(key, msg):
+            if key[-1] != 'finished':
+                return
+            cons[0].stopConsuming()
+            d.callback(self)  # callers expect result=self
+        cons.append(self.master.data.startConsuming(
+                buildEvent, {},
+                ('build', self.builddict['buildid'])))
+        return d
+
+    @defer.inlineCallbacks
+    def remote_getResults(self):
+        buildid = self.builddict['buildid']
+        builddict = yield self.master.data.get(('build', buildid))
+        defer.returnValue(builddict['results'])
+
+    @defer.inlineCallbacks
+    def remote_getText(self):
+        buildid = self.builddict['buildid']
+        builddict = yield self.master.data.get(('build', buildid))
+        defer.returnValue(builddict['state_strings'])
+
+
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     def __init__(self, scheduler, username):
@@ -247,7 +353,6 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
                         builderNames, who="", comment="", properties={}):
-        db = self.scheduler.master.db
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
 
@@ -278,11 +383,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
             properties=requested_props, builderNames=builderNames)
 
         # return a remotely-usable BuildSetStatus object
-        bsdict = yield db.buildsets.getBuildset(bsid)
-
-        bss = BuildSetStatus(bsdict, self.scheduler.master.status)
-        from buildbot.status.client import makeRemote
-        defer.returnValue(makeRemote(bss))
+        bss = RemoteBuildSetStatus(self.scheduler.master, bsid, brids)
+        defer.returnValue(bss)
 
     def perspective_getAvailableBuilderNames(self):
         # Return a list of builder names that are configured

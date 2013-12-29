@@ -69,10 +69,10 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         buildid = kwargs.get('buildid')
         if builderid is not None:
             return self.master.mq.startConsuming(callback,
-                                                 ('builder', builderid, 'build', number, None))
+                                                 ('builder', str(builderid), 'build', str(number), None))
         else:
             return self.master.mq.startConsuming(callback,
-                                                 ('build', buildid, None))
+                                                 ('build', str(buildid), None))
 
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
@@ -97,14 +97,16 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         builderid = kwargs.get('builderid')
         buildrequestid = kwargs.get('buildrequestid')
         if builderid is not None:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builder', builderid, 'build', None))
+            return self.master.mq.startConsuming(
+                    callback,
+                    ('builder', str(builderid), 'build', None, None))
         elif buildrequestid is not None:
+            # XXX these messages are never produced
             return self.master.mq.startConsuming(callback,
                                                  ('buildrequest', buildrequestid, 'build', None))
         else:
             return self.master.mq.startConsuming(callback,
-                                                 ('build', None))
+                                                 ('build', None, None, None))
 
 
 class Build(base.ResourceType):
@@ -170,5 +172,5 @@ class Build(base.ResourceType):
     def finishBuild(self, buildid, results):
         res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
-        yield self.generateEvent(buildid, "update")  # Should be "finished" instead of "update" ???
+        yield self.generateEvent(buildid, "finished")
         defer.returnValue(res)

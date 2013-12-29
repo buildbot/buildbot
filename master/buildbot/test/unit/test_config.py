@@ -57,7 +57,6 @@ global_defaults = dict(
     prioritizeBuilders=None,
     protocols={},
     multiMaster=False,
-    debugPassword=None,
     manhole=None,
     www=dict(port=None, url='http://localhost:8080/', plugins={}),
 )
@@ -505,10 +504,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_global_multiMaster(self):
         self.do_test_load_global(dict(multiMaster=1), multiMaster=1)
-
-    def test_load_global_debugPassword(self):
-        self.do_test_load_global(dict(debugPassword='xyz'),
-                                 debugPassword='xyz')
 
     def test_load_global_manhole(self):
         mh = mock.Mock(name='manhole')
@@ -1046,12 +1041,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "slaves are configured, but c['protocols'] not")
-
-    def test_check_ports_protocols_not_set_debug(self):
-        self.cfg.debugPassword = 'ssh'
-        self.cfg.check_ports()
-        self.assertConfigError(self.errors,
-                               "debug client is configured, but c['protocols'] not")
 
     def test_check_ports_protocols_port_duplication(self):
         self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}

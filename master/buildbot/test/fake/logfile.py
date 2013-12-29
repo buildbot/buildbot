@@ -88,10 +88,6 @@ class FakeLogFile(object):
         io = StringIO.StringIO(self.stdout)
         return io.readlines()
 
-    def hasContents(self):
-        warnings.warn("step uses removed LogFile method `hasContents`")
-        return self.chunks
-
     def getText(self):
         warnings.warn("step uses removed LogFile method `getText`")
         return ''.join([c for str, c in self.chunks

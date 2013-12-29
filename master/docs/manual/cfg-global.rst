@@ -427,20 +427,6 @@ The :bb:cfg:`properties` configuration key defines a dictionary of properties th
        'release-stage' : 'alpha'
    }
 
-.. bb:cfg:: debugPassword
-
-.. _Debug-Options:
-
-Debug Options
-~~~~~~~~~~~~~
-
-If you set :bb:cfg:`debugPassword`, then you can connect to the buildmaster with the diagnostic tool launched by :samp:`buildbot debugclient {MASTER}:{PORT}`.
-From this tool, you can reload the config file, manually force builds, and inject changes, which may be useful for testing your buildmaster without actually committing changes to your repository (or before you have the Change Sources configured.)
-
-The debug tool uses the same port number as the slaves, :bb:cfg:`protocols`, and you may configure its authentication credentials as follows::
-
-    c['debugPassword'] = "debugpassword"
-
 .. index:: Manhole
 
 .. bb:cfg:: manhole

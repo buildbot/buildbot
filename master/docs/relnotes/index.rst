@@ -80,6 +80,16 @@ Nine
   By default this encoding is assumed to be UTF-8, but the :bb:cfg:`logEncoding` parameter can be used to select an alternative.
   Steps and individual logfiles can also override the global default.
 
+* The PB status service uses classes which have now been removed, and anyway is redundant to the REST API, so it has been removed.
+  It has taken the following with it:
+  * ``buildbot statuslog``
+  * ``buildbot statusgui`` (the GTK client)
+  * ``buildbot debugclient``
+The ``PBListener`` status listener is now deprecated and does nothing.
+Accordingly, there is no external access to status objects via Perspective Broker, aside from some compatibility code for the try scheduler.
+
+The ``debugPassword`` configuration option is no longer needed and is thus deprecated.
+
 .. _Refactoring-Buildsteps:
 
 Refactoring Buildsteps

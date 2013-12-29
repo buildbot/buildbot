@@ -114,11 +114,6 @@ described in :ref:`developer-Reconfiguration`.
         If true, then this master is part of a cluster; based on
         :bb:cfg:`multiMaster`.
 
-    .. py:attribute:: debugPassword
-
-        The password for the debug client, or None; from
-        :bb:cfg:`debugPassword`.
-
     .. py:attribute:: manhole
 
         The manhole instance to use, or None; from :bb:cfg:`manhole`.

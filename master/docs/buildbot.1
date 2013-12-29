@@ -147,47 +147,6 @@ sendchange
 .IR FILES ...
 .PP
 .B buildbot
-debugclient
-[
-.BR \-m | \-\-master
-.I MASTER
-]
-[
-.BR \-p | \-\-passwd
-.I PASSWORD
-]
-.PP
-.B buildbot
-statuslog
-[
-.BR \-m | \-\-master
-.I MASTER
-]
-[
-.BR \-u | \-\-username
-.I USERNAME
-]
-[
-.BR \-p | \-\-passwd
-.I PASSWORD
-]
-.PP
-.B buildbot
-statusgui
-[
-.BR \-m | \-\-master
-.I MASTER
-]
-[
-.BR \-u | \-\-username
-.I USERNAME
-]
-[
-.BR \-p | \-\-passwd
-.I PASSWORD
-]
-.PP
-.B buildbot
 try
 [
 .BR \-\-wait
@@ -322,15 +281,6 @@ Send SIGHUP signal to buildmaster to make it re-read the config file
 .BR sendchange
 Send a change to the buildmaster
 .TP
-.BR debugclient
-Launch a small debug panel gui
-.TP
-.BR statuslog
-Emit current builder status to stdout
-.TP
-.BR statusgui
-Display a small window showing current builder status
-.TP
 .BR try
 Run a build with your local changes. This command requires in-advance
 configuration of the buildmaster to accept such build requests. Please
@@ -414,7 +364,7 @@ Directory where buildbot master files are stored.
 .SS sendchange command options
 .TP
 .B \-\-master
-Set the location of buildmaster's PBListener to attach to in form
+Set the location of buildmaster's PBChangeSource to attach to in form
 .IR HOST : PORT .
 .TP
 .BR \-u | \-\-username
@@ -467,51 +417,6 @@ Set timestamp used as the change time to
 .I FILES
 Lis of files have been changed.
 
-.SS debugclient command options
-.TP
-.BR \-m | \-\-master
-Set the location of buildmaster's PBListener to attach to in form
-.IR HOST : PORT .
-.TP
-.BR \-p | \-\-passwd
-Debug password to use.
-
-.SS statuslog command options
-.TP
-.BR \-m | \-\-master
-Set the location of buildmaster's PBListener to attach to in form
-.IR HOST : PORT .
-.TP
-.BR \-u | \-\-username
-Set username for PB authentication to
-.IR USERNAME .
-Default is
-.BR statusClient .
-.TP
-.BR \-p | \-\-passwd
-Set password for PB authentication to
-.IR PASSWORD .
-Default is
-.BR clientpw .
-
-.SS statusgui command options
-.TP
-.BR \-m | \-\-master
-Set the location of buildmaster's PBListener to attach to in form
-.IR HOST : PORT .
-.TP
-.BR \-u | \-\-username
-Set username for PB authentication to
-.IR USERNAME .
-Default is
-.BR statusClient .
-.TP
-.BR \-p | \-\-passwd
-Set password for PB authentication to
-.IR PASSWORD .
-Default is
-.BR clientpw .
-
 .SS try command options
 .TP
 .BR \-\-wait
@@ -537,7 +442,7 @@ Set the hostname (used by ssh) for the buildmaster to
 Specify trydir (on the tryhost) where tryjobs are deposited.
 .TP
 .BR \-m | \-\-master
-Set the location of the buildmaster's PBListener in form
+Set the location of the buildmaster's try scheduler in form
 .IR HOST : PORT
 .TP
 .BR \-u | \-\-username

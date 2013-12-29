@@ -908,27 +908,6 @@ while ``failedDelay`` defaults to a random one between 45 and 60. Setting random
 defaults like this means multiple IRC bots are less likely to deny each other
 by flooding the server.
 
-.. bb:status:: PBListener
-
-PBListener
-~~~~~~~~~~
-
-.. @cindex PBListener
-.. py:class:: buildbot.status.client.PBListener
-
-::
-
-    import buildbot.status.client
-    pbl = buildbot.status.client.PBListener(port=int, user=str,
-                                            passwd=str)
-    c['status'].append(pbl)
-
-This sets up a PB listener on the given TCP port, to which a PB-based
-status client can connect and retrieve status information.
-:command:`buildbot statusgui` (:bb:cmdline:`statusgui`) is an example of such a
-status client. The ``port`` argument can also be a strports
-specification string.
-
 .. bb:status:: StatusPush
 
 StatusPush
