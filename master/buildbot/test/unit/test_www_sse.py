@@ -26,14 +26,14 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.master = master = self.make_master(url='h:/a/b/')
         self.sse = sse.EventResource(master)
 
-    def test_oldapi(self):
-        self.render_resource(self.sse, '/change')
+    def test_simpleapi(self):
+        self.render_resource(self.sse, '/change/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
 
     def test_listen(self):
-        self.render_resource(self.sse, '/listen/change')
+        self.render_resource(self.sse, '/listen/change/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
@@ -43,7 +43,7 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         request = self.request
         self.request = None
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + "/change")
+        self.render_resource(self.sse, '/add/' + uuid + "/change/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
@@ -54,10 +54,10 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.render_resource(self.sse, '/listen')
         request = self.request
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + "/change")
+        self.render_resource(self.sse, '/add/' + uuid + "/change/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(request.finished, False)
-        self.render_resource(self.sse, '/remove/' + uuid + "/change")
+        self.render_resource(self.sse, '/remove/' + uuid + "/change/*/*")
         self.assertRaises(AssertionError, self.assertReceivesChangeNewMessage, request)
 
     def test_listen_add_nouuid(self):
@@ -77,26 +77,6 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.finished, True)
         self.assertEqual(self.request.responseCode, 400)
         self.assertIn("unknown uuid", self.request.written)
-
-    def test_listen_add_badevent(self):
-        self.render_resource(self.sse, '/listen')
-        request = self.request
-        uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + '/foo')
-        self.assertEqual(self.request.finished, True)
-        self.assertEqual(self.request.responseCode, 404)
-        self.assertIn("not implemented", self.request.written)
-
-    def test_listen_add_then_remove_bad_event(self):
-        self.render_resource(self.sse, '/listen')
-        request = self.request
-        uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + "/change")
-        self.assertReceivesChangeNewMessage(request)
-        self.assertEqual(request.finished, False)
-        self.render_resource(self.sse, '/remove/' + uuid + "/foo")
-        self.assertEqual(self.request.responseCode, 404)
-        self.assertIn("consumer is not listening to this event", self.request.written)
 
     def readEvent(self, request):
         kw = {}

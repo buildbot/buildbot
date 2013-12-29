@@ -38,33 +38,35 @@ angular.module('app').directive 'forcefield',
 
 # these directives, combined with "recursive" implement
 # the template of recursively nested field groups
-_.each ['verticallayout', 'simplelayout', 'tabslayout'], (fieldtype) ->
-  angular.module('app').directive fieldtype, ->
-    replace: true
-    restrict: 'E'
-    templateUrl: "views/directives/#{fieldtype}.html"
-    controller: [ "$scope", ($scope) ->
-        # filter out hidden fields, and nested params empty of full of hidden fields
-        filtered = []
-        for f in $scope.field.fields
-            if f.hide
-                continue
-            if f.type is "nested"
-                all_hidden = true
-                for sf in f.fields
-                    if !sf.hide
-                        all_hidden = false
-                if all_hidden
-                    continue
-            filtered.push(f)
-        $scope.field.fields = filtered
-        $scope.column_class = 'col-sm-' + (12 / $scope.field.columns).toString()
-    ]
+_.each ['verticallayout', 'simplelayout', 'tabslayout'],
+    (fieldtype) ->
+        angular.module('app').directive fieldtype, ->
+            replace: true
+            restrict: 'E'
+            templateUrl: "views/directives/#{fieldtype}.html"
+            controller: [ "$scope", ($scope) ->
+                # filter out hidden fields, and nested params empty of full of hidden fields
+                filtered = []
+                for f in $scope.field.fields
+                    if f.hide
+                        continue
+                    if f.type is "nested"
+                        all_hidden = true
+                        for sf in f.fields
+                            if !sf.hide
+                                all_hidden = false
+                        if all_hidden
+                            continue
+                    filtered.push(f)
+                $scope.field.fields = filtered
+                $scope.column_class = 'col-sm-' + (12 / $scope.field.columns).toString()
+            ]
 
 # defines standard field directives which only have templates
-_.each [ 'textfield' , 'intfield', 'textareafield', 'listfield', 'boolfield'], (fieldtype) ->
-    angular.module('app').directive fieldtype, ->
-        replace: false
-        restrict: 'E'
-        scope: false
-        templateUrl: "views/directives/#{fieldtype}.html"
+_.each [ 'textfield' , 'intfield', 'textareafield', 'listfield', 'boolfield'],
+    (fieldtype) ->
+        angular.module('app').directive fieldtype, ->
+            replace: false
+            restrict: 'E'
+            scope: false
+            templateUrl: "views/directives/#{fieldtype}.html"

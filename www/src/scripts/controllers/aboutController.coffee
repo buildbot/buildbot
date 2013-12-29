@@ -13,6 +13,6 @@ angular.module('app').controller 'aboutController',
                 projecturl: "http://buildbot.net"
                 config: config
         $scope.bower_configs = bower_configs
-        buildbotService.all('application.spec').getList().then (specs)->
+        buildbotService.all('application.spec').getList().then (specs) ->
             $scope.specs = specs
 ]
