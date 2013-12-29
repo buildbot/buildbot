@@ -439,7 +439,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_extract_fn(self):
         def extract_fn(rc, stdout, stderr):
-            self.assertEqual((rc, stdout, stderr), (0, 'startend', 'STARTEND'))
+            self.assertEqual((rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
             return dict(a=1, b=2)
         self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
@@ -526,8 +526,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
                     Result: PASS
                     Tests: 10 Failed: 0
                     Tests: 10 Failed: 0
-                    Files=93, Tests=20
-                    """))
+                    Files=93, Tests=20"""))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -549,8 +548,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
                     OHNOES 1
                     OHNOES 2
                     Files=93, Tests=20,  0 wallclock secs ...
-                    Result: PASS
-                    """))
+                    Result: PASS"""))
             + 0
         )
         self.expectOutcome(result=WARNINGS,
@@ -564,12 +562,10 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
-                    foo.pl .. 1/4
-                    """))
+                    foo.pl .. 1/4"""))
             + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
                     # Failed test 2 in foo.pl at line 6
-                    #  foo.pl line 6 is: ok(0);
-                    """))
+                    #  foo.pl line 6 is: ok(0);"""))
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     foo.pl .. Failed 1/4 subtests
 
@@ -578,11 +574,9 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
                     foo.pl (Wstat: 0 Tests: 4 Failed: 1)
                       Failed test:  0
                     Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr  0.01 csys =  0.11 CPU)
-                    Result: FAIL
-                    """))
+                    Result: FAIL"""))
             + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
-                    Failed 1/1 test programs. 1/4 subtests failed.
-                    """))
+                    Failed 1/1 test programs. 1/4 subtests failed."""))
             + 1
         )
         self.expectOutcome(result=FAILURE,
@@ -598,8 +592,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
                     All tests successful
-                    Files=10, Tests=20, 100 wall blah blah
-                    """))
+                    Files=10, Tests=20, 100 wall blah blah"""))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -613,8 +606,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
-                    Failed 1/1 test programs, 3/20 subtests failed.
-                    """))
+                    Failed 1/1 test programs, 3/20 subtests failed."""))
             + 1
         )
         self.expectOutcome(result=FAILURE,
