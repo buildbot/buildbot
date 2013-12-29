@@ -18,7 +18,7 @@ from twisted.protocols import basic
 from zope.interface import implements
 
 
-class LogObserver:
+class LogObserver(object):
     implements(interfaces.ILogObserver)
 
     def setStep(self, step):
@@ -113,5 +113,37 @@ class OutputProgressObserver(LogObserver):
         self.name = name
 
     def gotData(self, stream, data):
-        self.length += len(data)
+        if data:
+            self.length += len(data)
         self.step.setProgress(self.name, self.length)
+
+
+class BufferLogObserver(LogObserver):
+
+    def __init__(self, wantStdout=True, wantStderr=False):
+        LogObserver.__init__(self)
+        self.stdout = [] if wantStdout else None
+        self.stderr = [] if wantStderr else None
+
+    def outReceived(self, data):
+        if self.stdout is not None:
+            self.stdout.append(data)
+
+    def errReceived(self, data):
+        if self.stderr is not None:
+            self.stderr.append(data)
+
+    def _get(self, chunks):
+        if chunks is None:
+            return [u'']
+        if len(chunks) > 1:
+            chunks = [''.join(chunks)]
+        elif not chunks:
+            chunks = [u'']
+        return chunks
+
+    def getStdout(self):
+        return self._get(self.stdout)[0]
+
+    def getStderr(self):
+        return self._get(self.stderr)[0]

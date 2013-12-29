@@ -299,7 +299,3 @@ class TestFakeLogFile(unittest.TestCase, InterfaceTests):
     def test_signature_readlines_removed(self):
         InterfaceTests.test_signature_readlines_removed(self)
     test_signature_readlines_removed.todo = "not removed yet"
-
-    def test_signature_getChunks_removed(self):
-        InterfaceTests.test_signature_getChunks_removed(self)
-    test_signature_getChunks_removed.todo = "not removed yet"
