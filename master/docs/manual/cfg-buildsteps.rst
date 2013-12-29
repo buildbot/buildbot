@@ -3061,6 +3061,8 @@ stderr is lost.  For example, given ::
 Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
 and ``stderr="error\n"``.
 
+Avoid using the ``extract_fn`` form of this step with commands that produce a great deal of output, as the output is buffered in memory until complete.
+
 .. bb:step:: SetPropertiesFromEnv
 
 .. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
