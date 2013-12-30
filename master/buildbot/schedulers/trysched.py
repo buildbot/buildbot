@@ -264,11 +264,16 @@ class RemoteBuildRequest(pb.Referenceable):
         if not brdict:
             return
         builderId = brdict['builderid']
+        # make sure we aren't double-reporting any builds
+        reportedBuilds = set([])
 
         # subscribe to any new builds..
         def gotBuild(key, msg):
             if msg['buildrequestid'] != self.brid or key[-1] != 'new':
                 return
+            if msg['buildid'] in reportedBuilds:
+                return
+            reportedBuilds.add(msg['buildid'])
             return subscriber.callRemote('newbuild',
                                          RemoteBuild(self.master, msg, self.builderName),
                                          self.builderName)
@@ -280,6 +285,9 @@ class RemoteBuildRequest(pb.Referenceable):
         # and get any existing builds
         builds = yield self.master.data.get(('buildrequest', self.brid, 'build'))
         for build in builds:
+            if build['buildid'] in reportedBuilds:
+                return
+            reportedBuilds.add(build['buildid'])
             yield subscriber.callRemote('newbuild',
                                         RemoteBuild(self.master, build, self.builderName),
                                         self.builderName)
