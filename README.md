@@ -1,7 +1,5 @@
 What?  This doesn't look like a README!
 
-Right, this is the TODO list for Buildbot-0.9.0.  We'll delete this once it's empty.  Pitch in!
-
 # Overall Goals #
 
 The 'nine' branch is a refactoring of Buildbot into a consistent, well-defined application composed of loosely coupled components.
@@ -57,37 +55,226 @@ but it's a little more complicated:
    Messaging requirements will be similar to DB requirements: small installs can use something built-in that doesn't scale well.
    Larger installs can use external tools with better scaling behavior.
 
-# Development Tasks #
-
-## Progress ##
+# Project Progress #
 
 At this point, most of the configuration objects (masters, schedulers, builders, etc.) and everything that is in the DB in 0.8.x are ported to the Data API.
-The status objects (builds, steps, logs, log chunks) are defined in the DB and Data APIs, but Buildbot does not yet insert data into the database tables while performing a build.
-The next step is to insert this data, and then remove support for the existing status hierarchy.
-Each of the existing status listeners - irc, WebStatus, MailNotifier, etc. - will need to be rewritten based on the Data API.
+The status objects (builds, steps, logs, log chunks) are defined in the DB and Data APIs, and Buildbot inserts data into the DB as builds proceed, as well as updating the legacy status objects.
 
-## Process ##
+The new web UI is functional but by no means feature-complete.
+See ``master/docs/developer/www.rst`` for more about the UI.
 
-The "process" part of Buildbot is the part that coordinates all of the other parts - the master, botmaster, etc.  Remaining work in the Buildbot process code includes:
+The next steps are:
 
-* Request collapsing - see https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
-  Builds for merged requests currently only refer to one of the merged requests.
-* In the Trigger step, add links from the triggering step to the triggered builds
-* Create builds, steps, logs, and log chunks during execution of a build.
-* Simplify LogLineObserver - this class is designed to handle arbitrary chunks of log data, but now chunks always end on a line boundary.
-  It can be substantially simplified to just split each chunk into lines and call {err,out}LineReceived for each line. :runner:
+ * refactor lots of steps to not use deprecated log methods
+ * rewrite status listeners
+ * stop updating status objects
 
-## Documentation ##
+# Tasks #
 
-* Document naming conventions (below) in the style guide, make sure everything adheres to those conventions
-  * interCaps for Python, CoffeeScript function names
-  * In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
-    @TODO: actually it would make things much easier for webui to have it named ``id``
-  * In the DB API, each result field has an ``id`` key.
-* The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved to a new file
-* The tour must be upgraded to cover the new web UI.
+There's lots of work do do before we're ready for 0.9.0.
+Below are some of those tasks, divided into categories according to how much context is required and how clearly defined the goal is.
 
-## Asynchronous Steps ##
+If you'd like to help out, please do!
+Contact the developers in #buildbot or on the mailing list with any questions.
+
+## "Simple" ##
+
+These are tasks that don't require too much nine-specific context.
+You should be able to jump in after reading some related code and documentation.
+
+### Trigger Links ###
+
+In the Trigger step, add links from the triggering step to the triggered builds
+
+### Names for IDs ###
+
+In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
+In the DB API, ID's are always named ``id``, since there's generally only one.
+
+It would make things easier for users of the REST API if the Data API provided an 'id' field for the ID of the resource, with links to other resources using longer names like ``masterid``.
+This is also in accordance with the JSON API.
+
+In the process, validate that all links to other resources use the full name, e.g., ``sourcestampid``, not something shorter like ``ssid``.
+
+### Documentation Refactoring ###
+
+The how-to guides for the Data API (writing new resource types, endpoints, etc.) should be moved out of ``data.rst`` and into new files, 
+The DB API documentation should be broken into multiple files like the Data API.
+
+### Buildset Refactoring ###
+
+``addBuildset`` currently sends messages about buildrequests directly.
+It should, instead, coordinate with the buildrequests resource type to do so.
+
+Similarly, `addBuildset` often creates source stamps.
+Messages should be sent when this occurs.
+
+The BaseScheduler's addBuildsetForXxx methods should have their signatures checked against the corresponding fakes.
+
+Finally, addBuildset should take a list of builder IDs, rather than their names.
+Similarly, rather than naming builders, build requests in the DB should use a foreign key to reference the builders table.
+
+### More Properties ###
+
+Properties are currently omitted in many places in the Data API.
+Come up wiht a consistent way to represent properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
+
+The storage for the properties should also be determined carefully.
+A single blob containing all properties for a build set, build, etc., makes it difficult to query for builds with particular properties, which will surely be a common request.
+
+### Step URLs Are Missing Titles ###
+
+We currently store steps' URLs as a list of strings, but URLs are actually tuples of (title, URL), so the format should be adjusted accordingly.
+
+### Validate Messages against resource type definitions ###
+
+Validation for messages is currently based on definitions in ``master/buildbot/test/util/validation.py``, while validation for resource types is based on the resource type definition itself.
+Since messages should match resource types, it make sense that message validation should be based on resource type definitions, too.
+
+The wrinkle here is that it's currently difficult to figure out what resource type a message corresponds to.
+At one point, the first component of each routing key identified the type, but new topics don't follow this pattern.
+
+### Check startConsuming Arguments ###
+
+The ``startConsuming`` method must be passed only strings.
+The fake version of this method should verify that each argument is a string.
+
+### addChange arguments ###
+
+We have gone back and forth over which arguments are accepted for this method -- ``when`` or ``when_timestamp``, for example.
+At this point, we should just be flexible about the arguments, and test that flexibility.
+See http://trac.buildbot.net/ticket/2378.
+
+### Users for Changes (Sam Kleinman) ###
+
+In the Data API, Changes don't have users, even though that data is in the DB API.
+Change users should be included in changes.
+
+### Compress Log Chunks ###
+
+The log chunk support in the DB and Data APIs supports compressing logs after they are created.
+However, right now this is a no-op.
+
+Compression is intended to include byte-stream compression, but the major advantage will be in collapsing multiple, small log chunks into larger chunks, resulting in fewer database rows used and thus faster log access.
+
+The compression must be done in such a way that logs can be correctly retrieved at any time.
+
+### Build Request Messages ###
+
+Add proper messages about build requests and buildsets to the build request distributor
+  * claiming build requests
+  * unclaiming build requests
+  * completing build requests
+  * completing buildsets
+
+### Scheduler and ChangeSource Messages ###
+
+Add messages to the scheduler and change source resource types, one for each possible change in status.
+This will allow users to track which master has a running scheduler.
+
+### Remove Links ###
+
+The Data API does quite a bit of extra work to support links in REST responses, because REST says they're important.
+But they're not really that useful, particularly as implemented.
+
+Let's remove them for now.
+We can re-add them later when we have a concrete use-case.
+
+### Document the db2data idiom ###
+
+Several Data API resource types have functions and mixins to convert from DB API dictionaries to Data API objects.
+This should be documented as an idiom, and all resource types refactored to follow that idiom closely.
+
+### Use plurals ###
+
+REST API path elements are currently singluar, e.g., ``/build/1/step/3``.
+Typical REST design suggests plurals, e.g., ``/builds/1/steps/3``.
+
+The change itself isn't too difficult, but updating every use of singular paths may take some work!
+
+### Reduce Buildset Race Condition ###
+
+Make `completeBuildSet` return true if the database claims to have updated the row, and use that to narrow the race condition in `maybeBuildsetComplete`
+
+### Unlimited-length Strings ###
+
+Use sa.Text instead of sa.String(LEN), so we have unlimited-length (well, almost) strings.
+Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
+Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
+
+### Identifiers and Slugs ###
+
+Convert master, builder, changesource, and scheduler names to identifiers, removing use of hashes.
+Use slug/name pairs like in logs to allow display names to contain non-identifier characters.
+
+### Document Writing Schedulers ###
+
+Document how to write a scheduler: the ``addBuildsetForXxx`` methods, as well as the proper procedure for listening for changes.
+
+## "Involved" ##
+
+These tasks are more involved in terms of familiarity with new code in this branch, and with development plans.
+However, they are reasonably well-defined, so you won't be required to invent a lot of new ideas.
+
+### Support Rebuilding ###
+
+The ``BuilderControl`` ``rebuildBuild`` method allowed users to request a rebuild of a build.
+That class and method are gone, but need to be replaced with a Data API control method that can be called from the Web UI.
+
+### Use DateTime Everywhere ###
+
+Currently, the DB API uses DateTime objects and the Data API uses epoch times.
+That's silly.
+We should use DateTime instances everywhere, with appropriate code in place to transform them to a usable format in JSON output.
+
+### Flexible Build Queries ###
+
+Add a means to enumerate builds *previous* to a given build, using flexible criteria.
+Something like ``/build/1234/previous?lib:branch=foo&builder=bar&count=3`` to get the three builds before 1234 with branch ``foo`` in the ``lib`` codebase, on builder ``bar``.
+This is to address http://trac.buildbot.net/ticket/2431.
+
+### Cache Headers ###
+
+The HTTP server should provide cache headers for resources, based on information encoded in resource types regarding immutability and speed of change.
+For example, log chunks can always be cached indefinitely, as can a finished build.
+
+### Document Plugins ###
+
+Document writing www plugins, and create an example plugin project on GitHub.
+
+### Remove ``is_dir`` ###
+
+This change attribute is no longer used, but is still in the DB.
+Remove it and references to it, but leave the ``addChange`` parameter with a deprecation warning.
+
+### Add more MQ backends ###
+
+The MQ layer currently only has a simple (single-master) implementation.  We should have some or all of
+
+* AMQP
+* AMP-based master-to-master communication (full mesh, with every master talking to every other master)
+* ZeroMQ
+
+## "Complicated" ##
+
+These tasks are complex and there's no clear implementation plan yet.
+
+### Request collapsing ###
+
+*Currently Broken*: Builds for merged requests currently only refer to one of the merged requests.
+
+* Before a build request is added to a non-empty queue, examine each unclaimed build request in that queue.
+  If it is compatible with the new request (defined as having matching sourcestamps, except for revision), then claim the old request and immediately complete it with result SKIPPED.
+
+* Allow the same kind of configuration as for merging: global and per-builder, with options True (merge), False (never), and callable (called with two build request dictionaries, and expected to get the rest from the data API).
+
+* Call it "queue collapsing" rather than merging (hat-tip to Mozilla release engineering for the term)
+
+Note that the first bullet here assumes that a more recently-submitted request should be preferred over an older request.
+
+See https://plus.google.com/105883044168332773236/posts/TG8DHus4L4D
+
+### Asynchronous Steps (dustin) ###
 
 In 0.8.x, build steps are *very* synchronous.
 Nine introduces "new-style" steps that call methods asynchronously and do not expect easy access to the full text of logfiles.
@@ -112,126 +299,25 @@ Here are the remaining bits:
   * merge rewrites to master
   * remove `step_status` for statistics
 
-## Data API ##
+### Importing old Build Pickles ###
 
-### Other Resource-Type Related Tasks ###
+The most likely plan for data from 0.8.x implementations is to ignore it.
+However, it would be great for users if data in build pickles could be easily imported into the database.
 
-* ``addBuildset`` currently sends messages about buildrequests directly.
-  It should, instead, coordinate with the buildrequests resource type to do so.
-* Similarly, `addBuildset` often creates source stamps.
-  Messages should be sent when this occurs.
-* Add support for uids to the change resource type :runner:
-* Consider importing build pickles into the new DB. :runner:
-* Implement compression in log chunks - implement ``compressLog`` to re-split logs into larger chunks and compress them; implement decompression, and handle the case where chunks overlap during the compression process :runner:
-
-### Misc Data API Work ###
-
-* Add proper messages about build requests and buildsets to the build request distributor
-  * claiming build requests
-  * unclaiming build requests
-  * completing build requests
-  * completing buildsets
-* Make sure that the arguments to `addChange` are flexible and compatible: http://trac.buildbot.net/ticket/2378 :runner:
-* addBuildset should take a list of builder IDs, rather than names :runner:
-* REST stuff:
-  * Create links with relations (`rel=..`). :runner:
-* If several rtypes have `_db2data` functions or similar (so far masters and changes both do), then make that an idiom and document it.
-* Move the methods of BuilderControl to update methods of the Builder resouce type (or other places as appropriate), and add control methods where appropriate.
-  In particular, implement `rebuildBuild` properly.
-* Use DateTimes everywhere :runner:
-* Ensure that all foreign id's in the Data API are named using their full name (e.g., ``sourcestampid`` and not ``ssid``).
-as per jsonapi spec, this does not include the self-id (so, ``id``, not ``builderid``, is a field of a builder resource). :runner:
-* Ensure that resources are consistent in their handling of embedded objects vs. ids/links.
-* follow more jsonapi spec concerning links. Better use the id only version. developer will then use the spec to know how to fetch it.
-ex from jsonapi spec:
-{
-  "posts": [{
-    "id": "1",
-    "title": "Rails is Omakase",
-    "links": {
-      "author": "9",
-      "comments": [ "5", "12", "17", "20" ]
-    }
-  }]
-}
-* Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler when they are no longer used.
-* Add messages to the scheduler resource type, one for each possible change in scheduler status. :runner:
-* Add a means to enumerate builds *previous* to a given build, using flexible criteria.
-  Something like ``/build/1234/previous?lib:branch=foo&builder=bar&count=3`` to get the three builds before 1234 with branch ``foo`` in the ``lib`` codebase, on builder ``bar``.
-  This is to address http://trac.buildbot.net/ticket/2431.
-* Represent buildset properties (perhaps by adding a 'propertyset' rtype, flexible enough to serve for buildsets and builds).
-  Same for builds. :runner:
-* Rewrite all message and endpoint names in the Data API documentation to use ``{var}`` instead of ``$var`` :runner:
-* Check that all Data API update methods have fake implementations, and that those fake implementations have the same signature as the real implementation.
-* Steps' URLs should be stored as JSON objects giving both a title and a URL. :runner:
-* Validate messages using the same system as used to validate resource types
-* the fake self.master.mq.startConsuming should verify that all of its arguments are strings :runner:
-* Type verificatoin in the fake self.master.mq.produce is currently commented out, since the first element in the routing key does not correctly identify the resource type.
-  It's possible that the last or second-to-last element *does* reliably identify the type, in which case this verification can be reinstated.
-  Whether this is possible depends on whether we continue to send multiple messages for each event.
-
-## Missing Functionality ##
-
-* Builds' status strings are not handled like they were in the 0.8.x version.
-  The old handling should be characterized and, roughly at least, reproduced.
-
-## Testing ##
-
-The BaseScheduler's addBuildsetForXxx methods should have their signatures checked against the corresponding fakes.
-
-## Status Rewrites ##
+### Status Receiver Rewrites ###
 
 The following will need to be rewritten:
 
 * IRC (words.py) :runner:
-* WebStatus (already in progress with buildbot-www)
 * MailNotifier.
   Note that the tests for MailNotifier mock a lot of things out - incorrectly, now.
   So don't trust the tests!
-* Tinderbox (maybe)
 * `status_gerrit`
 * `status_push` (maybe)
 
-## Web ##
-
-### Javascript ###
-
-* Convert tabs to spaces
-* Verify licensing for Bootstrap
-
-### Javascript Testing ###
-
-We need a means to unit-test the JavaScript frontend.
-
-Testing javascript and json api interaction is tricky. Few design principles:
-* Stubbing the data api in JS can only be made automatic, by reusing the same spec that the python tests are already using.
-* ensure tests run either in dev mode, and prod mode. dev mode is much easier to debug, but the step of minification
-  adds some small deviation which makes important to unit test.
-* Run JS inside trial environment is difficult. txghost.py method has been experimented, and has several drawbacks.
-  - ghost is based on webkit which in turn is based on qt. The qtreactor had licence issue and is not well supported in twisted. So there is a
-    hack in txghost trying to run the qt event loop at the same time as the twisted event loop.
-  - better solution would be to run ghost in its own process, and have minimal RPC to control it. RPC between twisted and qt looks complicated.
-  - installing pyqt/webkit inside virtualenv is tricky. You need to manually copy some of the .so libraries inside the sandbox
-  - ghost is not very well supported/known in the JS community
-* better option has been discussed:
-  - let the JS test suite be entirely JS driven, and not python trial driven + JS assertion, like originally though
-  - angularJS comes with a very well though test framework (Karma + Jasmine). We should use it.
-  - For E2E tests, there is a angularJS solution which is pure E2E (need a real full blown master)
-  - Intermediate solution testing the whole UI against the fake data API has to be investigated.
-  - We have not found (yet) solution for testing the templates appart from E2E.
-
-### REST API ###
-
-* Use plurals in path elements (/changes/NNN rather than /change/NNN) :runner:
-* Return dates as strings :runner:
-* Add cache headers to the HTTP server, based on information encoded in the resource types regarding immutability and speed of change. :runner:
-
-### Documentation ###
-
-* Document writing plugins, and create an example plugin project on GitHub.
-
 ### Localization ###
 
+The Web UI should be localized.
 AngularJS ecosystem has ngTranslate project, which makes i18n relatively easy.
 
 ### Setup ###
@@ -239,57 +325,35 @@ AngularJS ecosystem has ngTranslate project, which makes i18n relatively easy.
 `buildbot create_master` and `buildbot upgrade_master` need to be upgraded to handle whatever setup is required for the new web service.
 The upgrade process should make whatever modifications are required, or at least tell the user what directories are no longer used, e.g., templates.
 
-## Database ##
+### Track Triggered Builds ###
 
-### Schema Changes ###
+Add a parent-child 1-N relationship table for triggered and promoted build
+Should that be buildid 1-N buildsetid or buildid 1-N buildid?
 
-* Remove ``is_dir`` from the changes table (and ignore/remove it everywhere else)
-* Add ``changesources`` :runner:
-* add a parent-child 1-N relationship table for triggered and promoted build
-  Should that be buildid 1-N buildsetid or buildid 1-N buildid?
+### Coordinate Messages and Data ###
 
-### DB API Changes ###
+We currently have a DB API which may use a backend DB without read-after-write consistency, due to replication delay.
+And we have an MQ API which introduces an unbounded propagation delay in messages.
 
-* Use None/NULL, not -1, as the "no results yet" sentinel value in buildsets and buildrequests :runner:
-* Make `completeBuildSet` return true if the database claims to have updated the row, and use that to narrow the race condition in `maybeBuildsetComplete`
-* Use sa.Text instead of sa.String(LEN), so we have unlimited-length strings.
-  Where indexes -- especially unique indexes -- are required on these columns, add sha1 hash columns and index those.
-  Among other advantages, this will allow MySQL databases to use the vastly superior InnoDB table type.
-* Rather than naming builders, build requests should use a foreign key to reference the builders table. :runner:
-* Convert master, builder, and scheduler names to identifiers, removing use of hashes :runner:
+So it's possible to receive a message about a change, say a build finishing, after which a DB query still shows the build as unfinished.
+Likewise, it's possible to see an updated value from a DB query long before the corresponding message arrives.
 
-### Documentation ###
+This causes problems.
+For example, a user might want an event for every build triggered for a particular buildset.
+The naive approach is to get the list of current builds for that buildset, and subscribe to builds with that buildset in the future.
+Given the timing discrepancies, though, this approach may either miss builds for which a message has already been sent but which is not in the DB yet; or double-report a build which is already in the DB but for which the message has not yet been delivered.
 
-* Document Buildbot's behavior for a DBA: isolation assumptions, dependencies on autogenerated IDs, read-after-write expectations, buildrequest claiming, buildset completion detection
-
-### Miscellaneous ###
-
-* Look carefully at race conditions around masters being marked inactive
-* Now that schedulers don't give lists of changes to addBuildset, there's no need to keep a list of important/unimportant changes; just state.
+I don't have any good solutions to this.
 
 ## Later ##
 
-This section can hold tasks that don't need to be done by 0.9.0, but shouldn't be forgotten, and might be implemented sooner if convenient.
+These tasks are far down the road, but things we don't want to forget.
 
-### MQ ###
+* Remove `listBuilderNames` and `getPendingBuildTimes` methods from BaseScheduler when they are no longer used.
 
-The MQ layer currently only has a simple (single-master) implementation.  We should have some or all of
+* Builds' status strings are not handled like they were in the 0.8.x version.
+  The old handling should be characterized and, roughly at least, reproduced.
 
-* AMQP
-* AMP-based master-to-master communication (full mesh, with every master talking to every other master)
-* ZeroMQ
+* Document Buildbot's behavior for a DBA: isolation assumptions, dependencies on autogenerated IDs, read-after-write expectations, buildrequest claiming, buildset completion detection
 
-### Data API ###
-
-* Add identifiers for builders (url-component safe strings), and allow use of those in place of integer IDs in data API paths.
-  For example, external users might find it easier to look at a request queue with `/builder/smoketest/requests` rather than `/buidler/12/requests`.
-* Specify ``slaves`` instead of a single slave for builds, to leave open the possibility of a build running on zero or multiple slaves.
-
-### Infrastructure ###
-
-* Use some fancy algorithms to delay message transmission until the data is known-good in the database, for cases where the underlying database is asynchronously replicated.
-* Make the DB API a sub-component of the Data API, so that the two can be more tightly coupled (allowing for more effective filtering, sorting, and pagination) and so that it is clear the DB API should not be used outside of teh Data API implementation.  This will also permit changes to the DB API with fewer compatibility concerns.
-
-### Documentation ###
-
-* Document how to write a scheduler: the ``addBuildsetForXxx`` methods, as well as the proper procedure for listening for changes.
+* Now that schedulers don't give lists of changes to addBuildset, there's no need to keep a list of important/unimportant changes; just state.
