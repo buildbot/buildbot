@@ -1709,24 +1709,24 @@ class FakeStepsComponent(FakeDBComponent):
             results=row['results'],
             urls=json.loads(row['urls_json']))
 
-    def getStep(self, stepid):
-        row = self.steps.get(stepid)
-        if not row:
-            return defer.succeed(None)
-        return defer.succeed(self._row2dict(row))
-
-    def getStepByBuild(self, buildid, number=None, name=None):
-        if number is None and name is None:
-            return defer.fail(RuntimeError("specify both name and number"))
-        for row in self.steps.itervalues():
-            if row['buildid'] != buildid:
-                continue
-            if number is not None and row['number'] != number:
-                continue
-            if name is not None and row['name'] != name:
-                continue
+    def getStep(self, stepid=None, buildid=None, number=None, name=None):
+        if stepid is not None:
+            row = self.steps.get(stepid)
+            if not row:
+                return defer.succeed(None)
             return defer.succeed(self._row2dict(row))
-        return defer.succeed(None)
+        else:
+            if number is None and name is None:
+                return defer.fail(RuntimeError("specify both name and number"))
+            for row in self.steps.itervalues():
+                if row['buildid'] != buildid:
+                    continue
+                if number is not None and row['number'] != number:
+                    continue
+                if name is not None and row['name'] != name:
+                    continue
+                return defer.succeed(self._row2dict(row))
+            return defer.succeed(None)
 
     def getSteps(self, buildid):
         ret = []

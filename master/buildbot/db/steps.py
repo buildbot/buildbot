@@ -25,9 +25,23 @@ from twisted.internet import reactor
 class StepsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
-    def _getStep(self, whereclause):
+    def getStep(self, stepid=None, buildid=None, number=None, name=None):
+        if stepid is not None:
+            wc = self.db.model.steps.c.id == stepid
+        else:
+            if buildid is None:
+                return defer.fail(RuntimeError('must supply either stepid or buildid'))
+            tbl = self.db.model.steps
+            if number is not None:
+                wc = (tbl.c.number == number)
+            elif name is not None:
+                wc = (tbl.c.name == name)
+            else:
+                return defer.fail(RuntimeError('must supply either number or name'))
+            wc = wc & (tbl.c.buildid == buildid)
+
         def thd(conn):
-            q = self.db.model.steps.select(whereclause=whereclause)
+            q = self.db.model.steps.select(whereclause=wc)
             res = conn.execute(q)
             row = res.fetchone()
 
@@ -37,20 +51,6 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             res.close()
             return rv
         return self.db.pool.do(thd)
-
-    def getStep(self, stepid):
-        return self._getStep(self.db.model.steps.c.id == stepid)
-
-    def getStepByBuild(self, buildid, number=None, name=None):
-        tbl = self.db.model.steps
-        if number is not None:
-            wc = (tbl.c.number == number)
-        elif name is not None:
-            wc = (tbl.c.name == name)
-        else:
-            return defer.fail(RuntimeError('must supply either number or name'))
-        wc = wc & (tbl.c.buildid == buildid)
-        return self._getStep(wc)
 
     def getSteps(self, buildid):
         def thd(conn):
