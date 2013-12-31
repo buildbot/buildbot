@@ -16,6 +16,7 @@
 import types
 
 from buildbot.data import connector
+from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import json
 
@@ -46,6 +47,7 @@ class FakeUpdates(object):
         self.buildslaveIds = {}  # { name : id }; users can add buildslaves here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
+        self.claimedBuildRequests = set([])
 
     # extra assertions
 
@@ -144,22 +146,45 @@ class FakeUpdates(object):
         self.maybeBuildsetCompleteCalls += 1
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
         validation.verifyType(self.testcase, 'claimed_at', claimed_at,
                               validation.NoneOk(validation.DateTimeValidator()))
-        return defer.succeed(True)
+        if not brids:
+            defer.returnValue(True)
+            return
+        try:
+            yield self.master.db.buildrequests.claimBuildRequests(
+                brids=brids, claimed_at=claimed_at, _reactor=_reactor)
+        except AlreadyClaimedError:
+            defer.returnValue(False)
+        self.claimedBuildRequests.update(set(brids))
+        defer.returnValue(True)
 
+    @defer.inlineCallbacks
     def reclaimBuildRequests(self, brids, _reactor=reactor):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
-        return defer.succeed(True)
+        if not brids:
+            defer.returnValue(True)
+            return
+        try:
+            yield self.master.db.buildrequests.reclaimBuildRequests(
+                    brids=brids, _reactor=_reactor)
+        except AlreadyClaimedError:
+            defer.returnValue(False)
+        self.claimedBuildRequests.update(set(brids))
+        defer.returnValue(True)
 
+    @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
-        return defer.succeed(None)
+        self.claimedBuildRequests.difference_update(set(brids))
+        if brids:
+            yield self.master.db.buildrequests.unclaimBuildRequests(brids)
 
     def completeBuildRequests(self, brids, results, complete_at=None, _reactor=reactor):
         validation.verifyType(self.testcase, 'brids', brids,

@@ -139,6 +139,10 @@ class TestBRDBase(unittest.TestCase):
         for name in names:
             self.createBuilder(name)
 
+    def assertMyClaims(self, brids):
+        self.assertEqual(self.master.data.updates.claimedBuildRequests,
+                         set(brids))
+
 
 class Test(TestBRDBase):
 
@@ -396,7 +400,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
-        self.master.db.buildrequests.assertMyClaims(exp_claims)
+        self.assertMyClaims(exp_claims)
         self.assertBuildsStarted(exp_builds)
 
     @defer.inlineCallbacks
@@ -670,12 +674,12 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
-        self.master.db.buildrequests.assertMyClaims([11])  # reclaimed so none taken!
+        self.assertMyClaims([11])  # reclaimed so none taken!
         self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11])])
 
         # second time around the #10 will pass, adding another request and it is claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
-        self.master.db.buildrequests.assertMyClaims([10, 11])
+        self.assertMyClaims([10, 11])
         self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11]), ('test-slave2', [10])])
 
     @defer.inlineCallbacks
@@ -763,7 +767,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.master.db.buildrequests.claimBuildRequests
 
-        def claimBuildRequests(brids, claimed_at=None):
+        def claimBuildRequests(brids, claimed_at=None, _reactor=None):
             # first, ensure this only happens the first time
             self.master.db.buildrequests.claimBuildRequests = old_claimBuildRequests
             # claim brid 10 for some other master
