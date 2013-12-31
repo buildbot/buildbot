@@ -242,6 +242,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testFakeDataClaimBuildRequests(self):
+        self.master.db.insertTestData([
+            fakedb.BuildRequest(id=44, buildsetid=8822),
+            fakedb.BuildRequest(id=55, buildsetid=8822),
+        ])
         res = yield self.master.data.updates.claimBuildRequests(
             [44, 55],
             claimed_at=self.CLAIMED_AT,
