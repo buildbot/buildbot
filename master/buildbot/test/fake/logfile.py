@@ -101,6 +101,6 @@ class FakeLogFile(object):
     # removed methods, here temporarily
 
     def getText(self):
-        warnings.warn("step uses removed LogFile method `getText`")
+        warnings.warn("step uses removed LogFile method `getText`", stacklevel=2)
         return ''.join([c for str, c in self.chunks
                         if str in (STDOUT, STDERR)])

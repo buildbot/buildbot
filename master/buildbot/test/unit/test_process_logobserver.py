@@ -88,6 +88,70 @@ class MyLogLineObserver(logobserver.LogLineObserver):
         self.obs.append(('fin',))
 
 
+class TestLineConsumerLogObesrver(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+
+    @defer.inlineCallbacks
+    def do_test_sequence(self, consumer):
+        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
+        lo = logobserver.LineConsumerLogObserver(consumer)
+        lo.setLog(l)
+
+        yield l.addStdout(u'hello\n')
+        yield l.addStderr(u'cruel\n')
+        yield l.addStdout(u'multi\nline\nchunk\n')
+        yield l.addHeader(u'H1\nH2\n')
+        yield l.finish()
+
+    @defer.inlineCallbacks
+    def test_sequence_finish(self):
+        results = []
+
+        def consumer():
+            while True:
+                try:
+                    stream, line = yield
+                    results.append((stream, line))
+                except GeneratorExit:
+                    results.append('finish')
+                    raise
+        yield self.do_test_sequence(consumer)
+
+        self.assertEqual(results, [
+            ('o', u'hello'),
+            ('e', u'cruel'),
+            ('o', u'multi'),
+            ('o', u'line'),
+            ('o', u'chunk'),
+            ('h', u'H1'),
+            ('h', u'H2'),
+            'finish',
+        ])
+
+    @defer.inlineCallbacks
+    def test_sequence_no_finish(self):
+        results = []
+
+        def consumer():
+            while True:
+                stream, line = yield
+                results.append((stream, line))
+        yield self.do_test_sequence(consumer)
+
+        self.assertEqual(results, [
+            ('o', u'hello'),
+            ('e', u'cruel'),
+            ('o', u'multi'),
+            ('o', u'line'),
+            ('o', u'chunk'),
+            ('h', u'H1'),
+            ('h', u'H2'),
+        ])
+
+
 class TestLogLineObserver(unittest.TestCase):
 
     def setUp(self):

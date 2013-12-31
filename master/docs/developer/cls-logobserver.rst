@@ -66,6 +66,42 @@ LogObservers
 
         This method, inherited from :py:class:`LogObserver`, is invoked when the observed log is finished.
 
+.. py:class:: LineConsumerLogObserver
+
+    This subclass of :py:class:`LogObserver` takes a generator function and "sends" each line to that function.
+    This allows consumers to be written as stateful Python functions, e.g., ::
+
+        def logConsumer(self):
+            while True:
+                stream, line = yield
+                if stream == 'o' and line.startswith('W'):
+                    self.warnings.append(line[1:])
+
+        def __init__(self):
+            ...
+            self.warnings = []
+            self.addLogObserver('stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
+    Each ``yield`` expression evaluates to a tuple of (stream, line), where the stream is one of 'o', 'e', or 'h' for stdout, stderr, and header, respectively.
+    As with any generator function, the ``yield`` expression will raise a ``GeneratorExit`` exception when the generator is complete.
+    To do something after the log is finished, just catch this exception (but then re-raise it or return) ::
+
+        def logConsumer(self):
+            while True:
+                try:
+                    stream, line = yield
+                    if stream == 'o' and line.startswith('W'):
+                        self.warnings.append(line[1:])
+                except GeneratorExit:
+                    self.warnings.sort()
+                    return
+
+    .. warning::
+
+        This use of generator functions is a simple Python idiom first described in [PEP 342](http://www.python.org/dev/peps/pep-0342/).
+        It is unrelated to the generators used in ``inlineCallbacks``.
+        In fact, consumers of this type are incompatible with asynchronous programming, as each line must be processed immediately.
+
 .. py:class:: BufferLogObserver(wantStdout=True, wantStderr=False)
 
     :param boolean wantStdout: true if stdout should be buffered
