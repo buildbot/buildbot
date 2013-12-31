@@ -56,6 +56,14 @@ class LBF(unittest.TestCase):
         self.assertCallbacks(['world\n'])
 
     @defer.inlineCallbacks
+    def test_empty_appends(self):
+        yield self.lbf.append('hello ')
+        yield self.lbf.append('')
+        yield self.lbf.append('world\n')
+        yield self.lbf.append('')
+        self.assertCallbacks(['hello world\n'])
+
+    @defer.inlineCallbacks
     def test_embedded_newlines(self):
         yield self.lbf.append('hello, ')
         self.assertCallbacks([])

@@ -16,7 +16,6 @@
 import os
 
 from bz2 import BZ2File
-from cStringIO import StringIO
 from gzip import GzipFile
 
 from buildbot import interfaces
@@ -394,13 +393,6 @@ class LogFile:
                 yield leftover[1]
             else:
                 yield leftover
-
-    def old_readlines(self):
-        """Return an iterator that produces newline-terminated lines,
-        excluding header chunks."""
-        alltext = "".join(self.old_getChunks([STDOUT], onlyText=True))
-        io = StringIO(alltext)
-        return io.readlines()
 
     def subscribe(self, receiver, catchup):
         if self.finished:

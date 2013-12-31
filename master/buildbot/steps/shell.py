@@ -571,8 +571,6 @@ class WarningCountingShellCommand(ShellCommand):
         # warnings regular expressions. If did, bump the warnings count and
         # add the line to the collection of lines with warnings
         warnings = []
-        # TODO: use log.readlines(), except we need to decide about stdout vs
-        # stderr
         for line in log.getText().split("\n"):
             if directoryEnterRe:
                 match = directoryEnterRe.search(line)
@@ -665,87 +663,73 @@ class Test(WarningCountingShellCommand):
         return description
 
 
+class PerlModuleTestObserver(logobserver.LogLineObserver):
+
+    def __init__(self, warningPattern):
+        logobserver.LogLineObserver.__init__(self)
+        if warningPattern:
+            self.warningPattern = re.compile(warningPattern)
+        else:
+            self.warningPattern = None
+        self.rc = SUCCESS
+        self.total = 0
+        self.failed = 0
+        self.warnings = 0
+        self.newStyle = False
+        self.complete = False
+
+    failedRe = re.compile(r"Tests: \d+ Failed: (\d+)\)")
+    testsRe = re.compile(r"Files=\d+, Tests=(\d+)")
+    oldFailureCountsRe = re.compile(r"(\d+)/(\d+) subtests failed")
+    oldSuccessCountsRe = re.compile(r"Files=\d+, Tests=(\d+),")
+
+    def outLineReceived(self, line):
+        if self.warningPattern.match(line):
+            self.warnings += 1
+        if self.newStyle:
+            if line.startswith('Result: FAIL'):
+                self.rc = FAILURE
+            mo = self.failedRe.search(line)
+            if mo:
+                self.failed += int(mo.group(1))
+                if self.failed:
+                    self.rc = FAILURE
+            mo = self.testsRe.search(line)
+            if mo:
+                self.total = int(mo.group(1))
+        else:
+            if line.startswith('Test Summary Report'):
+                self.newStyle = True
+            mo = self.oldFailureCountsRe.search(line)
+            if mo:
+                self.failed = int(mo.group(1))
+                self.total = int(mo.group(2))
+                self.rc = FAILURE
+            mo = self.oldSuccessCountsRe.search(line)
+            if mo:
+                self.total = int(mo.group(1))
+
+
 class PerlModuleTest(Test):
     command = ["prove", "--lib", "lib", "-r", "t"]
     total = 0
 
+    def __init__(self, *args, **kwargs):
+        Test.__init__(self, *args, **kwargs)
+        self.observer = PerlModuleTestObserver(warningPattern=self.warningPattern)
+        self.addLogObserver('stdio', self.observer)
+
     def evaluateCommand(self, cmd):
-        # Get stdio, stripping pesky newlines etc.
-        lines = map(
-            lambda line: line.replace('\r\n', '').replace('\r', '').replace('\n', ''),
-            self.getLog('stdio').readlines()
-        )
+        if self.observer.total:
+            passed = self.observer.total - self.observer.failed
 
-        total = 0
-        passed = 0
-        failed = 0
-        rc = SUCCESS
-        if cmd.didFail():
-            rc = FAILURE
+            self.setTestResults(
+                total=self.observer.total,
+                failed=self.observer.failed,
+                passed=passed,
+                warnings=self.observer.warnings)
 
-        # New version of Test::Harness?
-        if "Test Summary Report" in lines:
-            test_summary_report_index = lines.index("Test Summary Report")
-            del lines[0:test_summary_report_index + 2]
-
-            re_test_result = re.compile(r"^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
-
-            mos = map(lambda line: re_test_result.search(line), lines)
-            test_result_lines = [mo.groups() for mo in mos if mo]
-
-            for line in test_result_lines:
-                if line[0] == 'FAIL':
-                    rc = FAILURE
-
-                if line[1]:
-                    failed += int(line[1])
-                if line[2]:
-                    total = int(line[2])
-
-        else:  # Nope, it's the old version
-            re_test_result = re.compile(r"^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
-
-            mos = map(lambda line: re_test_result.search(line), lines)
-            test_result_lines = [mo.groups() for mo in mos if mo]
-
-            if test_result_lines:
-                test_result_line = test_result_lines[0]
-
-                success = test_result_line[0]
-
-                if success:
-                    failed = 0
-
-                    test_totals_line = test_result_lines[1]
-                    total_str = test_totals_line[3]
-                else:
-                    failed_str = test_result_line[1]
-                    failed = int(failed_str)
-
-                    total_str = test_result_line[2]
-
-                    rc = FAILURE
-
-                total = int(total_str)
-
-        warnings = 0
-        if self.warningPattern:
-            wre = self.warningPattern
-            if isinstance(wre, str):
-                wre = re.compile(wre)
-
-            warnings = len([l for l in lines if wre.search(l)])
-
-            # Because there are two paths that are used to determine
-            # the success/fail result, I have to modify it here if
-            # there were warnings.
-            if rc == SUCCESS and warnings:
-                rc = WARNINGS
-
-        if total:
-            passed = total - failed
-
-            self.setTestResults(total=total, failed=failed, passed=passed,
-                                warnings=warnings)
-
+        rc = self.observer.rc
+        if rc == SUCCESS and self.observer.warnings:
+            rc = WARNINGS
         return rc
