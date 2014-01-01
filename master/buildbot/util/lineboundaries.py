@@ -28,15 +28,16 @@ class LineBoundaryFinder(object):
         if self.partialLine:
             text = self.partialLine + text
             self.partialLine = None
-        if text[-1] != '\n':
-            i = text.rfind('\n')
-            if i >= 0:
-                i = i + 1
-                text, self.partialLine = text[:i], text[i:]
-            else:
-                self.partialLine = text
-                return defer.succeed(None)
-        return self.callback(text)
+        if text:
+            if text[-1] != '\n':
+                i = text.rfind('\n')
+                if i >= 0:
+                    i = i + 1
+                    text, self.partialLine = text[:i], text[i:]
+                else:
+                    self.partialLine = text
+                    return defer.succeed(None)
+            return self.callback(text)
 
     def flush(self):
         if self.partialLine:

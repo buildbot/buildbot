@@ -439,7 +439,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_run_extract_fn(self):
         def extract_fn(rc, stdout, stderr):
-            self.assertEqual((rc, stdout, stderr), (0, 'startend', 'STARTEND'))
+            self.assertEqual((rc, stdout, stderr), (0, 'startend\n', 'STARTEND\n'))
             return dict(a=1, b=2)
         self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
@@ -505,6 +505,114 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         d.addCallback(lambda _:
                       self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
+
+
+class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_new_version_success(self):
+        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    This junk ignored
+                    Test Summary Report
+                    Result: PASS
+                    Tests: 10 Failed: 0
+                    Tests: 10 Failed: 0
+                    Files=93, Tests=20"""))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=['test', '20 tests', '20 passed'])
+        return self.runStep()
+
+    def test_new_version_warnings(self):
+        self.setupStep(shell.PerlModuleTest(command="cmd",
+                                            warningPattern='^OHNOES'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    This junk ignored
+                    Test Summary Report
+                    -------------------
+                    foo.pl (Wstat: 0 Tests: 10 Failed: 0)
+                      Failed test:  0
+                    OHNOES 1
+                    OHNOES 2
+                    Files=93, Tests=20,  0 wallclock secs ...
+                    Result: PASS"""))
+            + 0
+        )
+        self.expectOutcome(result=WARNINGS,
+                           status_text=['test', '20 tests', '20 passed',
+                                        '2 warnings', 'warnings'])
+        return self.runStep()
+
+    def test_new_version_failed(self):
+        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    foo.pl .. 1/4"""))
+            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+                    # Failed test 2 in foo.pl at line 6
+                    #  foo.pl line 6 is: ok(0);"""))
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    foo.pl .. Failed 1/4 subtests
+
+                    Test Summary Report
+                    -------------------
+                    foo.pl (Wstat: 0 Tests: 4 Failed: 1)
+                      Failed test:  0
+                    Files=1, Tests=4,  0 wallclock secs ( 0.06 usr  0.01 sys +  0.03 cusr  0.01 csys =  0.11 CPU)
+                    Result: FAIL"""))
+            + ExpectShell.log('stdio', stderr=textwrap.dedent("""\
+                    Failed 1/1 test programs. 1/4 subtests failed."""))
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=['test', '4 tests',
+                                        '3 passed', '1 failed', 'failed'])
+        return self.runStep()
+
+    def test_old_version_success(self):
+        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    This junk ignored
+                    All tests successful
+                    Files=10, Tests=20, 100 wall blah blah"""))
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=['test', '20 tests', '20 passed'])
+        return self.runStep()
+
+    def test_old_version_failed(self):
+        self.setupStep(shell.PerlModuleTest(command="cmd"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
+                    This junk ignored
+                    Failed 1/1 test programs, 3/20 subtests failed."""))
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=['test', '20 tests', '17 passed',
+                                        '3 failed', 'failed'])
+        return self.runStep()
 
 
 class SetPropertyDeprecation(unittest.TestCase):

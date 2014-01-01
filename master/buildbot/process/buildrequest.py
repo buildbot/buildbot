@@ -257,7 +257,7 @@ class BuildRequest(object):
         # cancelling a request without running into trouble with dangling
         # references.
         yield self.master.data.updates.completeBuildRequests([self.id],
-                                                                 FAILURE)
+                                                             FAILURE)
 
         # and see if the enclosing buildset may be complete
         yield self.master.data.updates.maybeBuildsetComplete(self.bsid)

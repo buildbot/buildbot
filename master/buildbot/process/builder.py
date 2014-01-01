@@ -479,7 +479,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # send a message for each request
         for br in requests:
             updates.completeBuildRequests([br.id], results,
-                    epoch2datetime(complete_at_epoch))
+                                          epoch2datetime(complete_at_epoch))
 
         # check for completed buildsets -- one call for each build request with
         # a unique bsid

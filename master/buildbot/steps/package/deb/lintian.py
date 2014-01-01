@@ -22,6 +22,7 @@ from buildbot.process import buildstep
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.steps.package import util as pkgutil
 from buildbot.steps.shell import ShellCommand
 
 
@@ -76,19 +77,17 @@ class DebLintian(ShellCommand):
             for tag in self.suppressTags:
                 self.command += ['--suppress-tags', tag]
 
+        self.obs = pkgutil.WEObserver()
+        self.addLogObserver('stdio', self.obs)
+
     def createSummary(self, log):
         """
         Create nice summary logs.
 
         @param log: log to create summary off of.
         """
-        warnings = []
-        errors = []
-        for line in log.readlines():
-            if 'W: ' in line:
-                warnings.append(line)
-            elif 'E: ' in line:
-                errors.append(line)
+        warnings = self.obs.warnings
+        errors = self.obs.errors
 
         if warnings:
             self.addCompleteLog('%d Warnings' % len(warnings), "".join(warnings))

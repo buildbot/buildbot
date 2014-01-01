@@ -172,7 +172,7 @@ class FakeUpdates(object):
             return
         try:
             yield self.master.db.buildrequests.reclaimBuildRequests(
-                    brids=brids, _reactor=_reactor)
+                brids=brids, _reactor=_reactor)
         except AlreadyClaimedError:
             defer.returnValue(False)
         self.claimedBuildRequests.update(set(brids))

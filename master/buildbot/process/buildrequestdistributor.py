@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.util import ascii2unicode
@@ -514,7 +513,7 @@ class BuildRequestDistributor(service.AsyncService):
             claimed_at_epoch = _reactor.seconds()
             claimed_at = epoch2datetime(claimed_at_epoch)
             if not (yield self.master.data.updates.claimBuildRequests(
-                                brids, claimed_at=claimed_at)):
+                    brids, claimed_at=claimed_at)):
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue

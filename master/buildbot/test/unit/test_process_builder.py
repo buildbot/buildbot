@@ -222,7 +222,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.bldr.reclaimAllBuilds()
 
         self.assertEqual(self.master.data.updates.claimedBuildRequests,
-                set([10, 11, 12, 15]))
+                         set([10, 11, 12, 15]))
 
     def test_canStartBuild(self):
         yield self.makeBuilder()
