@@ -244,3 +244,15 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
         self.do_test_callthrough('compressLog',
                                  self.rtype.compressLog,
                                  logid=10)
+
+    def test_signature_appendLog(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.appendLog,  # fake
+            self.rtype.appendLog)  # real
+        def appendLog(self, logid, content):
+            pass
+
+    def test_appendLog(self):
+        self.do_test_callthrough('appendLog',
+                                 self.rtype.appendLog,
+                                 logid=10, content=u'foo\nbar\n')

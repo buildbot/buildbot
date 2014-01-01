@@ -34,7 +34,7 @@ class Log(object):
         self.subscriptions = {}
         self.finished = False
         self.finishWaiters = []
-
+        self.lock = defer.DeferredLock()
         self.decoder = decoder
 
     @staticmethod
@@ -70,7 +70,9 @@ class Log(object):
         # formatted for the log type, and newline-terminated
         assert lines[-1] == '\n'
         assert not self.finished
+        yield self.lock.acquire()
         yield self.master.data.updates.appendLog(self.logid, lines)
+        yield self.lock.release()
 
     # completion
 

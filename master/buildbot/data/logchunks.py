@@ -85,6 +85,3 @@ class LogChunk(base.ResourceType):
         content = types.String()
     entityType = EntityType(name)
 
-    @base.updateMethod
-    def appendLog(self, logid, content):
-        return self.master.db.logs.appendLog(logid=logid, content=content)

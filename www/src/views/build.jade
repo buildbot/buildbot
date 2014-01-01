@@ -11,14 +11,19 @@
         a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}")
           | {{build.number}}
       li.pull-right
-        button.btn.btn-default Rebuild
+        button.btn.btn-default(ng-hide="build.complete")
+          i.fa.fa-times-circle
+          | &nbsp;Stop
       li.pull-right
-        button.btn.btn-default Promote
+        button.btn.btn-default(ng-show="build.complete") Rebuild
+      li.pull-right
+        button.btn.btn-default(ng-show="build.complete") Promote
   .row
     .col-sm-4
       h4 Steps
       ul.list-group.no-select
-        li.list-group-item(ng-repeat="step in steps",ng-click="fulldisplay=!fulldisplay",ng-init="fulldisplay=step.results")
+        li.list-group-item(ng-repeat="step in steps",
+                           ng-click="step.fulldisplay=!step.fulldisplay")
           span.pull-right(ng-if="step.started_at")
             | &nbsp;{{step.state_strings.join(' ')}}
           span.badge-status(ng-class="'status_'+step.results + ((step.complete==0  && step.started_at) ? ' status_pending pulse':'')")
@@ -26,10 +31,11 @@
           | &nbsp;
           i.fa.fa-chevron-circle-right.rotate(ng-class="{'rotate-90':fulldisplay}", ng-if="step.logs.length")
           | &nbsp; {{step.name}}
-          div.anim-stepdetails(ng-show="fulldisplay")
+          div.anim-stepdetails(ng-show="step.fulldisplay")
             ul.unstyled
               li(ng-repeat="log in step.logs")
                 a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}") {{log.name}}
+                | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
           ul.unstyled
             li(ng-repeat="url in step.urls")
               a(href="{{url}}") {{url}}
