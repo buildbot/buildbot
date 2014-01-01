@@ -10,6 +10,7 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', '$q', ($http,
     cid = null
     basepath = null
     deferred = null
+    lostConnection = false
     self =
         # public api
         on: (name, listener, $scope) ->
@@ -62,7 +63,7 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', '$q', ($http,
 
             eventsource.onerror = (e) ->
                 console.error(e)
-
+                lostConnection = true
             eventsource.onmessage = (e) ->
                 console.log "got message!", e
 
@@ -76,6 +77,9 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', '$q', ($http,
                     allp.push(self.startConsuming(k))
                 $q.all(allp).then ->
                     deferred.resolve()
+                    # this will trigger bound data to re fetch the full-data
+                    if lostConnection
+                        $rootScope.$broadcast("lost-sync")
 
             eventsource.addEventListener "event", (e) ->
                 e.msg = JSON.parse(e.data)
