@@ -115,8 +115,8 @@ class LineConsumerLogObserver(LogLineObserver):
 
     def feed(self, input):
         # note that we defer starting the generator until the first bit of
-        # data, since the observer will be instantiated during configuration
-        # as well as during
+        # data, since the observer may be instantiated during configuration as
+        # well as for each execution of the step.
         self.generator = self.consumerFunction()
         self.generator.next()
         # shortcut all remaining feed operations
