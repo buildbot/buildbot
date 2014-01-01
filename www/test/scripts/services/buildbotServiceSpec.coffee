@@ -11,9 +11,10 @@ if window.__karma__?
             $scope = $rootScope.$new()
             mqService = $injector.get('mqService')
             $timeout = $injector.get('$timeout')
+            $q = $injector.get('$q')
             # stub out the actual backend of mqservice
             spyOn(mqService,"setBaseUrl").andReturn(null)
-            spyOn(mqService,"startConsuming").andReturn(null)
+            spyOn(mqService,"startConsuming").andReturn($q.when( -> ))
             spyOn(mqService,"stopConsuming").andReturn(null)
             buildbotService = $injector.get('buildbotService')
 

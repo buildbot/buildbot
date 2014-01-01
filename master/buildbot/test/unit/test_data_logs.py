@@ -188,10 +188,11 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
 
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
                             exp_kwargs=None, *args, **kwargs):
-        rv = defer.succeed(None)
-        m = mock.Mock(return_value=rv)
+        rv = (1,2)
+        m = mock.Mock(return_value=defer.succeed(rv))
         setattr(self.master.db.logs, dbMethodName, m)
-        self.assertIdentical(method(*args, **kwargs), rv)
+        res = yield method(*args, **kwargs)
+        self.assertIdentical(res, rv)
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
     def test_signature_newLog(self):

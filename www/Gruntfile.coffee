@@ -380,8 +380,8 @@ module.exports = (grunt) ->
             dev:
                 options: # choose from Chrome,Firefox,PhantomJS
                     browsers: (grunt.option('browsers') or 'PhantomJS').split(",")
-#                    background: true
-#                    singleRun: false
+                    background: true
+                    singleRun: false
             ci:
                 options:
                     singleRun: true
@@ -498,7 +498,9 @@ module.exports = (grunt) ->
     # Enter the following command at the command line to execute this build task:
     # grunt dev
     grunt.registerTask 'dev', [
+        'karma:dev'
         'default'
+        'karma:dev:run'
         'watch',
     ]
 

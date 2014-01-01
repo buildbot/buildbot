@@ -93,6 +93,10 @@ class Log(base.ResourceType):
     plural = "logs"
     endpoints = [LogEndpoint, LogsEndpoint]
     keyFields = ['stepid', 'logid']
+    eventPathPatterns = """
+        /log/n:logid
+        /step/n:stepid/log/i:slug
+    """
 
     class EntityType(types.Entity):
         logid = types.Integer()
@@ -106,6 +110,12 @@ class Log(base.ResourceType):
         link = types.Link()
     entityType = EntityType(name)
 
+    @defer.inlineCallbacks
+    def generateEvent(self, _id, event):
+        # get the build and munge the result for the notification
+        build = yield self.master.data.get(('log', str(_id)))
+        self.produceEvent(build, event)
+
     @base.updateMethod
     @defer.inlineCallbacks
     def newLog(self, stepid, name, type):
@@ -117,11 +127,15 @@ class Log(base.ResourceType):
             except KeyError:
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue
+            self.generateEvent(logid, "new")
             defer.returnValue(logid)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def finishLog(self, logid):
-        return self.master.db.logs.finishLog(logid=logid)
+        res = yield self.master.db.logs.finishLog(logid=logid)
+        self.generateEvent(logid, "finished")
+        defer.returnValue(res)
 
     @base.updateMethod
     def compressLog(self, logid):

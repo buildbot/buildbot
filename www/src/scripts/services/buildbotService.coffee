@@ -89,10 +89,11 @@ angular.module('app').factory 'buildbotService',
                         for k, ref of references
                             ref.onchild(newobj)
 
-                    p = elem.getList(elem.queryParams).then (res) ->
-                        elem.value = res
-                        events.push(elem.on("*/*", onNewOrChange))
-                        return res
+                    p = elem.on("*/*", onNewOrChange).then (unsub) ->
+                        return elem.getList(elem.queryParams).then (res) ->
+                            elem.value = res
+                            events.push(unsub)
+                            return res
                 else
                     onUpdate = (msg) ->
                         _.assign(elem.value, msg)

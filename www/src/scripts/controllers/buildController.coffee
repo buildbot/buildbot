@@ -4,6 +4,7 @@ angular.module('app').controller 'buildController',
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builder', 'build'])
         .then ([builder, build]) ->
+            build = buildbotService.one('build', build.id)
             build.all('step').bind $scope,
                 onchild: (step) ->
                     logs = buildbotService.one("step", step.stepid).all("log")

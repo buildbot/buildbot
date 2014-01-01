@@ -437,10 +437,9 @@ Several methods are added to each "restangularized" objects, aside from get(), p
         * ``onchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
             This can be used to get more data derived from a list. The child received are restangular elements
 
-    * ``.on(eventtype, callback, $scope)``
+    * ``.on(eventtype, callback)``
 
         Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
-        You need to pass $scope, so that event is unregistered on scope destroy.
 
     * ``.some(route, queryParams)``
 

@@ -1,4 +1,4 @@
-angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $rootScope) ->
+angular.module('app').factory 'mqService', ['$http', '$rootScope', '$q', ($http, $rootScope, $q) ->
     # private variables
     match = (matcher, value) ->
         # ultra simple matcher used to route event back to the original subscriber
@@ -9,14 +9,16 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
     eventsource = null
     cid = null
     basepath = null
-
+    deferred = null
     self =
         # public api
         on: (name, listener, $scope) ->
             namedListeners = listeners[name]
             if !namedListeners or namedListeners.length == 0
                 listeners[name] = namedListeners = []
-                self.startConsuming(name)
+                p = self.startConsuming(name)
+            else
+                p = $q.when(0)
             namedListeners.push(listener)
 
             # returns unsubscriber
@@ -27,7 +29,7 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
                     delete listeners[name]
             $scope?.$on("$destroy", unsub)
 
-            return unsub
+            return p.then -> unsub
 
         broadcast: (eventname, message) ->
             hasmatched = false
@@ -49,6 +51,10 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
 
         setBaseUrl: (url) ->
             cid = null
+            makedeferred = ->
+                deferred = $q.defer()
+                deferred.promise.then(makedeferred)
+            makedeferred()
             basepath = url
             eventsource = self.getEventSource(url)
             eventsource.onopen = (e) ->
@@ -65,8 +71,11 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
                 # now we got our handshake, we can start consuming
                 # what was registered in between
                 # this is still racy, as we can have miss some events during this handshake time
+                allp = []
                 for k, v of listeners
-                    self.startConsuming(k)
+                    allp.push(self.startConsuming(k))
+                $q.all(allp).then ->
+                    deferred.resolve()
 
             eventsource.addEventListener "event", (e) ->
                 e.msg = JSON.parse(e.data)
@@ -75,8 +84,9 @@ angular.module('app').factory 'mqService', ['$http', '$rootScope', ($http, $root
 
         startConsuming: (name) ->
             if cid?
-                $http.get(basepath + "add/#{cid}/#{name}")
-
+                return $http.get(basepath + "add/#{cid}/#{name}")
+            else
+                return deferred.promise
         stopConsuming: (name) ->
             if cid?
                 $http.get(basepath + "remove/#{cid}/#{name}")
