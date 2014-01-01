@@ -14,12 +14,10 @@
 # Copyright Buildbot Team Members
 
 import mock
-import re
 
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
@@ -61,53 +59,6 @@ class NewStyleStep(buildstep.BuildStep):
 
     def run(self):
         pass
-
-
-class TestRegexLogEvaluator(unittest.TestCase):
-
-    def makeRemoteCommand(self, rc, stdout, stderr=''):
-        cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
-        cmd.fakeLogData(self, 'stdio', stdout=stdout, stderr=stderr)
-        cmd.rc = rc
-        return cmd
-
-    def test_find_worse_status(self):
-        cmd = self.makeRemoteCommand(0, 'This is a big step')
-        step_status = FakeStepStatus()
-        r = [(re.compile("This is"), WARNINGS)]
-        new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, WARNINGS,
-                         "regex_log_evaluator returned %d, expected %d"
-                         % (new_status, WARNINGS))
-
-    def test_multiple_regexes(self):
-        cmd = self.makeRemoteCommand(0, "Normal stdout text\nan error")
-        step_status = FakeStepStatus()
-        r = [(re.compile("Normal stdout"), SUCCESS),
-             (re.compile("error"), FAILURE)]
-        new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, FAILURE,
-                         "regex_log_evaluator returned %d, expected %d"
-                         % (new_status, FAILURE))
-
-    def test_exception_not_in_stdout(self):
-        cmd = self.makeRemoteCommand(0,
-                                     "Completely normal output", "exception output")
-        step_status = FakeStepStatus()
-        r = [(re.compile("exception"), EXCEPTION)]
-        new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, EXCEPTION,
-                         "regex_log_evaluator returned %d, expected %d"
-                         % (new_status, EXCEPTION))
-
-    def test_pass_a_string(self):
-        cmd = self.makeRemoteCommand(0, "Output", "Some weird stuff on stderr")
-        step_status = FakeStepStatus()
-        r = [("weird stuff", WARNINGS)]
-        new_status = regex_log_evaluator(cmd, step_status, r)
-        self.assertEqual(new_status, WARNINGS,
-                         "regex_log_evaluator returned %d, expected %d"
-                         % (new_status, WARNINGS))
 
 
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
