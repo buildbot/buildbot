@@ -16,8 +16,7 @@
 
 from twisted.python import log
 
-from buildbot.process.buildstep import LogLineObserver
-from buildbot.process.buildstep import OutputProgressObserver
+from buildbot.process import logobserver
 from buildbot.status import testresult
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
@@ -54,6 +53,9 @@ class HLint(ShellCommand):
     def __init__(self, python=None, **kwargs):
         ShellCommand.__init__(self, **kwargs)
         self.python = python
+        self.warningLines = []
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def start(self):
         # create the command
@@ -77,17 +79,15 @@ class HLint(ShellCommand):
 
         ShellCommand.start(self)
 
+    def logConsumer(self):
+        while True:
+            stream, line = yield
+            if ':' in line:
+                self.warnings += 1
+                self.warningLines.append(line)
+
     def commandComplete(self, cmd):
-        # TODO: remove the 'files' file (a list of .xhtml files that were
-        # submitted to hlint) because it is available in the logfile and
-        # mostly exists to give the user an idea of how long the step will
-        # take anyway).
-        lines = cmd.logs['stdio'].getText().split("\n")
-        warningLines = filter(lambda line: ':' in line, lines)
-        if warningLines:
-            self.addCompleteLog("warnings", "".join(warningLines))
-        warnings = len(warningLines)
-        self.warnings = warnings
+        self.addCompleteLog('warnings', '\n'.join(self.warningLines))
 
     def evaluateCommand(self, cmd):
         # warnings are in stdout, rc is always 0, unless the tools break
@@ -104,64 +104,20 @@ class HLint(ShellCommand):
                                self.warnings == 1 and 't' or 'ts')]
 
 
-def countFailedTests(output):
-    # start scanning 10kb from the end, because there might be a few kb of
-    # import exception tracebacks between the total/time line and the errors
-    # line
-    chunk = output[-10000:]
-    lines = chunk.split("\n")
-    lines.pop()  # blank line at end
-    # lines[-3] is "Ran NN tests in 0.242s"
-    # lines[-2] is blank
-    # lines[-1] is 'OK' or 'FAILED (failures=1, errors=12)'
-    #  or 'FAILED (failures=1)'
-    #  or "PASSED (skips=N, successes=N)"  (for Twisted-2.0)
-    # there might be other lines dumped here. Scan all the lines.
-    res = {'total': None,
-           'failures': 0,
-           'errors': 0,
-           'skips': 0,
-           'expectedFailures': 0,
-           'unexpectedSuccesses': 0,
-           }
-    for l in lines:
-        out = re.search(r'Ran (\d+) tests', l)
-        if out:
-            res['total'] = int(out.group(1))
-        if (l.startswith("OK") or
-            l.startswith("FAILED ") or
-                l.startswith("PASSED")):
-            # the extra space on FAILED_ is to distinguish the overall
-            # status from an individual test which failed. The lack of a
-            # space on the OK is because it may be printed without any
-            # additional text (if there are no skips,etc)
-            out = re.search(r'failures=(\d+)', l)
-            if out:
-                res['failures'] = int(out.group(1))
-            out = re.search(r'errors=(\d+)', l)
-            if out:
-                res['errors'] = int(out.group(1))
-            out = re.search(r'skips=(\d+)', l)
-            if out:
-                res['skips'] = int(out.group(1))
-            out = re.search(r'expectedFailures=(\d+)', l)
-            if out:
-                res['expectedFailures'] = int(out.group(1))
-            out = re.search(r'unexpectedSuccesses=(\d+)', l)
-            if out:
-                res['unexpectedSuccesses'] = int(out.group(1))
-            # successes= is a Twisted-2.0 addition, and is not currently used
-            out = re.search(r'successes=(\d+)', l)
-            if out:
-                res['successes'] = int(out.group(1))
-
-    return res
-
-
-class TrialTestCaseCounter(LogLineObserver):
+class TrialTestCaseCounter(logobserver.LogLineObserver):
     _line_re = re.compile(r'^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$')
-    numTests = 0
-    finished = False
+
+    def __init__(self):
+        logobserver.LogLineObserver.__init__(self)
+        self.numTests = 0
+        self.finished = False
+        self.counts = {'total': None,
+                       'failures': 0,
+                       'errors': 0,
+                       'skips': 0,
+                       'expectedFailures': 0,
+                       'unexpectedSuccesses': 0,
+                       }
 
     def outLineReceived(self, line):
         # different versions of Twisted emit different per-test lines with
@@ -173,18 +129,44 @@ class TrialTestCaseCounter(LogLineObserver):
         # Note that doctests create lines line this:
         #  Doctest: viff.field.GF ... [OK]
 
-        if self.finished:
-            return
         if line.startswith("=" * 40):
             self.finished = True
-            return
+        if not self.finished:
+            m = self._line_re.search(line.strip())
+            if m:
+                testname, result = m.groups()
+                self.numTests += 1
+                self.step.setProgress('tests', self.numTests)
 
-        m = self._line_re.search(line.strip())
-        if m:
-            testname, result = m.groups()
-            self.numTests += 1
-            self.step.setProgress('tests', self.numTests)
-
+        out = re.search(r'Ran (\d+) tests', line)
+        if out:
+            self.counts['total'] = int(out.group(1))
+        if (line.startswith("OK") or
+            line.startswith("FAILED ") or
+                line.startswith("PASSED")):
+            # the extra space on FAILED_ is to distinguish the overall
+            # status from an individual test which failed. The lack of a
+            # space on the OK is because it may be printed without any
+            # additional text (if there are no skips,etc)
+            out = re.search(r'failures=(\d+)', line)
+            if out:
+                self.counts['failures'] = int(out.group(1))
+            out = re.search(r'errors=(\d+)', line)
+            if out:
+                self.counts['errors'] = int(out.group(1))
+            out = re.search(r'skips=(\d+)', line)
+            if out:
+                self.counts['skips'] = int(out.group(1))
+            out = re.search(r'expectedFailures=(\d+)', line)
+            if out:
+                self.counts['expectedFailures'] = int(out.group(1))
+            out = re.search(r'unexpectedSuccesses=(\d+)', line)
+            if out:
+                self.counts['unexpectedSuccesses'] = int(out.group(1))
+            # successes= is a Twisted-2.0 addition, and is not currently used
+            out = re.search(r'successes=(\d+)', line)
+            if out:
+                self.counts['successes'] = int(out.group(1))
 
 UNSPECIFIED = ()  # since None is a valid choice
 
@@ -382,7 +364,15 @@ class Trial(ShellCommand):
             self.descriptionDone = ["tests"]
 
         # this counter will feed Progress along the 'test cases' metric
-        self.addLogObserver('stdio', TrialTestCaseCounter())
+        self.observer = TrialTestCaseCounter()
+        self.addLogObserver('stdio', self.observer)
+
+        # this observer consumes multiple lines in a go, so it can't be easily
+        # handled in TrialTestCaseCounter.
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+        self.problems = ""
+        self.warnings = {}
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
@@ -403,7 +393,7 @@ class Trial(ShellCommand):
     def start(self):
         # choose progressMetrics and logfiles based on whether trial is being
         # run with multiple workers or not.
-        output_observer = OutputProgressObserver('test.log')
+        output_observer = logobserver.OutputProgressObserver('test.log')
 
         if self.jobs is not None:
             self.jobs = int(self.jobs)
@@ -436,10 +426,7 @@ class Trial(ShellCommand):
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
-        # 'cmd' is the original trial command, so cmd.logs['stdio'] is the
-        # trial output. We don't have access to test.log from here.
-        output = cmd.logs['stdio'].getText()
-        counts = countFailedTests(output)
+        counts = self.observer.counts
 
         total = counts['total']
         failures, errors = counts['failures'], counts['errors']
@@ -525,32 +512,31 @@ class Trial(ShellCommand):
         # self.step_status.build.addTestResult(tr)
         self.build.build_status.addTestResult(tr)
 
-    def createSummary(self, loog):
-        output = loog.getText()
-        problems = ""
-        sio = StringIO.StringIO(output)
-        warnings = {}
+    def logConsumer(self):
         while True:
-            line = sio.readline()
-            if line == "":
-                break
+            stream, line = yield
             if line.find(" exceptions.DeprecationWarning: ") != -1:
                 # no source
                 warning = line  # TODO: consider stripping basedir prefix here
-                warnings[warning] = warnings.get(warning, 0) + 1
+                self.warnings[warning] = self.warnings.get(warning, 0) + 1
             elif (line.find(" DeprecationWarning: ") != -1 or
                   line.find(" UserWarning: ") != -1):
                 # next line is the source
-                warning = line + sio.readline()
-                warnings[warning] = warnings.get(warning, 0) + 1
+                warning = line + "\n" + (yield)[1] + "\n"
+                self.warnings[warning] = self.warnings.get(warning, 0) + 1
             elif line.find("Warning: ") != -1:
                 warning = line
-                warnings[warning] = warnings.get(warning, 0) + 1
+                self.warnings[warning] = self.warnings.get(warning, 0) + 1
 
             if line.find("=" * 60) == 0 or line.find("-" * 60) == 0:
-                problems += line
-                problems += sio.read()
-                break
+                # read to EOF
+                while True:
+                    self.problems += line + "\n"
+                    stream, line = yield
+
+    def createSummary(self, loog):
+        problems = self.problems
+        warnings = self.warnings
 
         if problems:
             self.addCompleteLog("problems", problems)
