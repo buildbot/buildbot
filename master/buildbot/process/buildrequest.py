@@ -238,7 +238,7 @@ class BuildRequest(object):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
-            yield self.master.db.buildrequests.claimBuildRequests([self.id])
+            yield self.master.data.updates.claimBuildRequests([self.id])
         except buildrequests.AlreadyClaimedError:
             log.msg("build request already claimed; cannot cancel")
             return
@@ -256,7 +256,7 @@ class BuildRequest(object):
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.
-        yield self.master.db.buildrequests.completeBuildRequests([self.id],
+        yield self.master.data.updates.completeBuildRequests([self.id],
                                                                  FAILURE)
 
         # and see if the enclosing buildset may be complete

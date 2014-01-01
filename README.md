@@ -211,6 +211,11 @@ Use slug/name pairs like in logs to allow display names to contain non-identifie
 
 Document how to write a scheduler: the ``addBuildsetForXxx`` methods, as well as the proper procedure for listening for changes.
 
+### Use DB API for build requests ###
+
+Currently a bunch of process code calls ``self.master.db.buildrequests.getBuildRequests``.
+Instead, it should call ``self.master.data.get('/buildrequest/...')``, noting that the the return values have different keys.
+
 ## "Involved" ##
 
 These tasks are more involved in terms of familiarity with new code in this branch, and with development plans.

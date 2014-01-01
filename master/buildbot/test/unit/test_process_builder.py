@@ -206,14 +206,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def test_reclaimAllBuilds(self):
         yield self.makeBuilder()
 
-        claims = []
-
-        def fakeClaimBRs(*args):
-            claims.append(args)
-            return defer.succeed(None)
-        self.bldr.master.db.buildrequests.claimBuildRequests = fakeClaimBRs
-        self.bldr.master.db.buildrequests.reclaimBuildRequests = fakeClaimBRs
-
         def mkbld(brids):
             bld = mock.Mock(name='Build')
             bld.requests = []
@@ -229,7 +221,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         yield self.bldr.reclaimAllBuilds()
 
-        self.assertEqual(claims, [(set([10, 11, 12, 15]),)])
+        self.assertEqual(self.master.data.updates.claimedBuildRequests,
+                set([10, 11, 12, 15]))
 
     def test_canStartBuild(self):
         yield self.makeBuilder()

@@ -170,7 +170,7 @@ class Builder(config.ReconfigurableServiceMixin,
         if not brids:
             return defer.succeed(None)
 
-        d = self.master.db.buildrequests.reclaimBuildRequests(brids)
+        d = self.master.data.updates.reclaimBuildRequests(list(brids))
         d.addErrback(log.err, 'while re-claiming running BuildRequests')
         return d
 
@@ -474,24 +474,12 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _notify_completions(self, requests, results, complete_at_epoch):
-        builderid = yield self.getBuilderId()
+        updates = self.master.data.updates
+
         # send a message for each request
         for br in requests:
-            bsid = br.bsid
-            brid = br.id
-            key = ('buildrequest', str(bsid), str(builderid),
-                   str(brid), 'complete')
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
-                buildername=br.buildername,
-                builderid=builderid,
-                complete_at=complete_at_epoch,
-                results=results)
-            # TODO: actually send when buildrequests are defined in the data
-            # API
-            log.msg("would send %s message with body %r, but buildrequests "
-                    "aren't defined yet" % (key, msg))
+            updates.completeBuildRequests([br.id], results,
+                    epoch2datetime(complete_at_epoch))
 
         # check for completed buildsets -- one call for each build request with
         # a unique bsid
@@ -500,7 +488,7 @@ class Builder(config.ReconfigurableServiceMixin,
             if br.bsid in seen_bsids:
                 continue
             seen_bsids.add(br.bsid)
-            yield self.master.data.updates.maybeBuildsetComplete(br.bsid)
+            yield updates.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

@@ -513,10 +513,8 @@ class BuildRequestDistributor(service.AsyncService):
             brids = [br.id for br in breqs]
             claimed_at_epoch = _reactor.seconds()
             claimed_at = epoch2datetime(claimed_at_epoch)
-            try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids,
-                                                                      claimed_at=claimed_at)
-            except AlreadyClaimedError:
+            if not (yield self.master.data.updates.claimBuildRequests(
+                                brids, claimed_at=claimed_at)):
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
@@ -542,7 +540,7 @@ class BuildRequestDistributor(service.AsyncService):
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
 
             if not buildStarted:
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+                yield self.master.data.updates.unclaimBuildRequests(brids)
 
                 for breq in breqs:
                     bsid = breq.bsid
