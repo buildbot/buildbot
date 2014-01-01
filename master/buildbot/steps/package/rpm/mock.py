@@ -144,12 +144,16 @@ class MockBuildSRPM(Mock):
 
         self.command += ['--buildsrpm', '--spec', self.spec,
                          '--sources', self.sources]
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def commandComplete(self, cmd):
-        out = cmd.logs['build.log'].getText()
-        m = re.search(r"Wrote: .*/([^/]*.src.rpm)", out)
-        if m:
-            self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
+    def logConsumer(self):
+        r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
+        while True:
+            stream, line = yield
+            m = r.search(line)
+            if m:
+                self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
 
 
 class MockRebuild(Mock):
