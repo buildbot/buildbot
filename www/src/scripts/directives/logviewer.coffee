@@ -115,8 +115,7 @@ angular.module('app').directive 'logviewer',
                 return null
 
             updateLog: ->
-                self.log.bind self.scope,
-                    ismutable: (log) -> not log.complete
+                self.log.bind(self.scope)
                 .then (log) ->
                     if log.type == 's'
                         self.scope.$watch "log.num_lines", ->

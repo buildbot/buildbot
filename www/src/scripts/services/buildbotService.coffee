@@ -112,7 +112,10 @@ angular.module('app').factory 'buildbotService',
                 _.defaults opts,
                     dest_key: if isCollection then plurals[route] else route
                     dest: $scope
-                    ismutable: -> false
+                    ismutable: (v) ->
+                        if v.complete?
+                            return not v.complete
+                        return false
                     onchild: ->
 
                 # manage scope that references this elem
