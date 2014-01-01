@@ -287,11 +287,3 @@ class TestFakeLogFile(unittest.TestCase, InterfaceTests):
         step = mock.Mock(name='fake step')
         step.logobservers = []
         self.log = fakelogfile.FakeLogFile('stdio', step)
-
-    # mark these TODO for the fake, for the moment -- leaving these methods in
-    # place lets the tests pass until all of the built-in steps are rewritten
-    # to use LogObservers, etc.
-
-    def test_signature_getText_removed(self):
-        InterfaceTests.test_signature_getText_removed(self)
-    test_signature_getText_removed.todo = "not removed yet"

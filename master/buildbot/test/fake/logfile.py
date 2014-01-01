@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import warnings
-
 from buildbot import util
 from buildbot.status.logfile import HEADER
 from buildbot.status.logfile import STDERR
@@ -97,10 +95,3 @@ class FakeLogFile(object):
         if stderr:
             self.stderr += stderr
             self.chunks.append((STDERR, stderr))
-
-    # removed methods, here temporarily
-
-    def getText(self):
-        warnings.warn("step uses removed LogFile method `getText`", stacklevel=2)
-        return ''.join([c for str, c in self.chunks
-                        if str in (STDOUT, STDERR)])
