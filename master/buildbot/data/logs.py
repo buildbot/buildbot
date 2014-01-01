@@ -94,8 +94,8 @@ class Log(base.ResourceType):
     endpoints = [LogEndpoint, LogsEndpoint]
     keyFields = ['stepid', 'logid']
     eventPathPatterns = """
-        /log/n:logid
-        /step/n:stepid/log/i:slug
+        /log/:logid
+        /step/:stepid/log/:slug
     """
 
     class EntityType(types.Entity):
@@ -129,6 +129,13 @@ class Log(base.ResourceType):
                 continue
             self.generateEvent(logid, "new")
             defer.returnValue(logid)
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def appendLog(self, logid, content):
+        res = yield self.master.db.logs.appendLog(logid=logid, content=content)
+        self.generateEvent(logid, "append")
+        defer.returnValue(res)
 
     @base.updateMethod
     @defer.inlineCallbacks

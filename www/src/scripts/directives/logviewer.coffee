@@ -115,16 +115,12 @@ angular.module('app').directive 'logviewer',
                 return null
 
             updateLog: ->
-                self.log.getList().then (v) ->
-                    log = v[0]
-                    self.scope.log = log
+                self.log.bind self.scope,
+                    ismutable: (log) -> not log.complete
+                .then (log) ->
                     if log.type == 's'
-                        self.setNumLines(log.num_lines)
-                        # hack to update the log while we dont have
-                        # log event anymore
-                        if not log.complete
-                            cancel = $timeout(self.updateLog, 5000)
-                            self.scope.$on("$destroy", cancel)
+                        self.scope.$watch "log.num_lines", ->
+                            self.setNumLines(log.num_lines)
                     else
                         self.log.all('content').getList().then (content) ->
                             self.scope.content = $sce.trustAs($sce.HTML, content[0].content)

@@ -101,7 +101,7 @@ angular.module('app').factory 'buildbotService',
                     p = elem.get().then (res) ->
                         elem.value = res
                         if opts.ismutable(res)
-                            events.push(elem.on("update", onUpdate))
+                            events.push(elem.on("*", onUpdate))
                         return res
                 elem.value = p
                 return p
