@@ -122,9 +122,9 @@ class BuildNestingMixin(object):
             if buildid is None:
                 return
 
-            dbdict = yield self.master.db.steps.getStepByBuild(buildid=buildid,
-                                                               number=kwargs.get('step_number'),
-                                                               name=kwargs.get('step_name'))
+            dbdict = yield self.master.db.steps.getStep(buildid=buildid,
+                                                        number=kwargs.get('step_number'),
+                                                        name=kwargs.get('step_name'))
             if not dbdict:
                 return
             defer.returnValue(dbdict['id'])

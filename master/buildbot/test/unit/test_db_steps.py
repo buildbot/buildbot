@@ -82,12 +82,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getStep(self):
         @self.assertArgSpecMatches(self.db.steps.getStep)
-        def getStep(self, stepid):
-            pass
-
-    def test_signature_getStepByBuild(self):
-        @self.assertArgSpecMatches(self.db.steps.getStepByBuild)
-        def getStep(self, buildid, number=None, name=None):
+        def getStep(self, stepid=None, buildid=None, number=None, name=None):
             pass
 
     def test_signature_getSteps(self):
@@ -130,34 +125,34 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(stepdict, None)
 
     @defer.inlineCallbacks
-    def test_getStepByBuild_number(self):
+    def test_getStep_number(self):
         yield self.insertTestData(self.backgroundData + [self.stepRows[1]])
-        stepdict = yield self.db.steps.getStepByBuild(buildid=30, number=1)
+        stepdict = yield self.db.steps.getStep(buildid=30, number=1)
         validation.verifyDbDict(self, 'stepdict', stepdict)
         self.assertEqual(stepdict['id'], 71)
 
     @defer.inlineCallbacks
-    def test_getStepByBuild_number_missing(self):
+    def test_getStep_number_missing(self):
         yield self.insertTestData(self.backgroundData + [self.stepRows[1]])
-        stepdict = yield self.db.steps.getStepByBuild(buildid=30, number=9)
+        stepdict = yield self.db.steps.getStep(buildid=30, number=9)
         self.assertEqual(stepdict, None)
 
     @defer.inlineCallbacks
-    def test_getStepByBuild_name(self):
+    def test_getStep_name(self):
         yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
-        stepdict = yield self.db.steps.getStepByBuild(buildid=30,
-                                                      name='three')
+        stepdict = yield self.db.steps.getStep(buildid=30,
+                                               name='three')
         validation.verifyDbDict(self, 'stepdict', stepdict)
         self.assertEqual(stepdict['id'], 72)
 
     @defer.inlineCallbacks
-    def test_getStepByBuild_name_missing(self):
+    def test_getStep_name_missing(self):
         yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
-        stepdict = yield self.db.steps.getStepByBuild(buildid=30, name='five')
+        stepdict = yield self.db.steps.getStep(buildid=30, name='five')
         self.assertEqual(stepdict, None)
 
-    def test_getStepByBuild_invalid(self):
-        d = self.db.steps.getStepByBuild(buildid=30)
+    def test_getStep_invalid(self):
+        d = self.db.steps.getStep(buildid=30)
         self.assertFailure(d, RuntimeError)
 
     @defer.inlineCallbacks
