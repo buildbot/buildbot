@@ -281,8 +281,14 @@ class TreeSize(ShellCommand):
     descriptionDone = "tree size measured"
     kib = None
 
+    def __init__(self, **kwargs):
+        ShellCommand.__init__(self, **kwargs)
+        self.observer = logobserver.BufferLogObserver(wantStdout=True,
+                                                      wantStderr=True)
+        self.addLogObserver('stdio', self.observer)
+
     def commandComplete(self, cmd):
-        out = cmd.logs['stdio'].getText()
+        out = self.observer.getStdout()
         m = re.search(r'^(\d+)', out)
         if m:
             self.kib = int(m.group(1))
@@ -316,10 +322,9 @@ class SetPropertyFromCommand(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
-        if self.extract_fn:
-            self.observer = logobserver.BufferLogObserver(wantStdout=True,
-                                                          wantStderr=True)
-            self.addLogObserver('stdio', self.observer)
+        self.observer = logobserver.BufferLogObserver(
+            wantStdout=True, wantStderr=self.extract_fn)
+        self.addLogObserver('stdio', self.observer)
 
         self.property_changes = {}
 
@@ -327,7 +332,7 @@ class SetPropertyFromCommand(ShellCommand):
         if self.property:
             if cmd.didFail():
                 return
-            result = cmd.logs['stdio'].getText()
+            result = self.observer.getStdout()
             if self.strip:
                 result = result.strip()
             propname = self.property
@@ -433,6 +438,13 @@ class WarningCountingShellCommand(ShellCommand):
         self.suppressions = []
         self.directoryStack = []
 
+        self.warnCount = 0
+        self.loggedWarnings = []
+
+        self.addLogObserver(
+            'stdio',
+            logobserver.LineConsumerLogObserver(self.warningLogConsumer))
+
     def addSuppression(self, suppressionList):
         """
         This method can be used to add patters of warnings that should
@@ -477,6 +489,44 @@ class WarningCountingShellCommand(ShellCommand):
             lineNo = int(lineNo)
         text = match.group(3)
         return (file, lineNo, text)
+
+    def warningLogConsumer(self):
+        # Now compile a regular expression from whichever warning pattern we're
+        # using
+        wre = self.warningPattern
+        if isinstance(wre, str):
+            wre = re.compile(wre)
+
+        directoryEnterRe = self.directoryEnterPattern
+        if (directoryEnterRe is not None
+                and isinstance(directoryEnterRe, basestring)):
+            directoryEnterRe = re.compile(directoryEnterRe)
+
+        directoryLeaveRe = self.directoryLeavePattern
+        if (directoryLeaveRe is not None
+                and isinstance(directoryLeaveRe, basestring)):
+            directoryLeaveRe = re.compile(directoryLeaveRe)
+
+        # Check if each line in the output from this command matched our
+        # warnings regular expressions. If did, bump the warnings count and
+        # add the line to the collection of lines with warnings
+        self.loggedWarnings = []
+        while True:
+            stream, line = yield
+            if directoryEnterRe:
+                match = directoryEnterRe.search(line)
+                if match:
+                    self.directoryStack.append(match.group(1))
+                    continue
+            if (directoryLeaveRe and
+                self.directoryStack and
+                    directoryLeaveRe.search(line)):
+                    self.directoryStack.pop()
+                    continue
+
+            match = wre.match(line)
+            if match:
+                self.maybeAddWarning(self.loggedWarnings, line, match)
 
     def maybeAddWarning(self, warnings, line, match):
         if self.suppressions:
@@ -549,49 +599,11 @@ class WarningCountingShellCommand(ShellCommand):
         Warnings are collected into another log for this step, and the
         build-wide 'warnings-count' is updated."""
 
-        self.warnCount = 0
-
-        # Now compile a regular expression from whichever warning pattern we're
-        # using
-        wre = self.warningPattern
-        if isinstance(wre, str):
-            wre = re.compile(wre)
-
-        directoryEnterRe = self.directoryEnterPattern
-        if (directoryEnterRe is not None
-                and isinstance(directoryEnterRe, basestring)):
-            directoryEnterRe = re.compile(directoryEnterRe)
-
-        directoryLeaveRe = self.directoryLeavePattern
-        if (directoryLeaveRe is not None
-                and isinstance(directoryLeaveRe, basestring)):
-            directoryLeaveRe = re.compile(directoryLeaveRe)
-
-        # Check if each line in the output from this command matched our
-        # warnings regular expressions. If did, bump the warnings count and
-        # add the line to the collection of lines with warnings
-        warnings = []
-        for line in log.getText().split("\n"):
-            if directoryEnterRe:
-                match = directoryEnterRe.search(line)
-                if match:
-                    self.directoryStack.append(match.group(1))
-                    continue
-            if (directoryLeaveRe and
-                self.directoryStack and
-                    directoryLeaveRe.search(line)):
-                    self.directoryStack.pop()
-                    continue
-
-            match = wre.match(line)
-            if match:
-                self.maybeAddWarning(warnings, line, match)
-
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
             self.addCompleteLog("warnings (%d)" % self.warnCount,
-                                "\n".join(warnings) + "\n")
+                                "\n".join(self.loggedWarnings) + "\n")
 
         warnings_stat = self.getStatistic('warnings', 0)
         self.setStatistic('warnings', warnings_stat + self.warnCount)
