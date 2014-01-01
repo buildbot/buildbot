@@ -209,7 +209,7 @@ All of these methods now return Deferreds.
 Note that the log-reading methods are not available on this object:
 
  * ``hasContents``
- * ``getLog``
+ * ``getText``
  * ``readLines``
  * ``getTextWithHeaders``
  * ``getChunks``
