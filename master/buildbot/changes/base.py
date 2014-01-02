@@ -47,12 +47,16 @@ class PollingChangeSource(ChangeSource):
     pollInterval = 60
     "time (in seconds) between calls to C{poll}"
 
+    pollAtLaunch = False
+    "determines when the first poll occurs. True = immediately on launch, False = wait for one pollInterval."
+
     _loop = None
 
-    def __init__(self, name=None, pollInterval=60 * 10):
+    def __init__(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
         if name:
             self.setName(name)
         self.pollInterval = pollInterval
+        self.pollAtLaunch = pollAtLaunch
 
         self.doPoll = util.misc.SerializedInvocation(self.doPoll)
 
@@ -76,7 +80,7 @@ class PollingChangeSource(ChangeSource):
 
     def startLoop(self):
         self._loop = task.LoopingCall(self.doPoll)
-        self._loop.start(self.pollInterval, now=False)
+        self._loop.start(self.pollInterval, now=self.pollAtLaunch)
 
     def stopLoop(self):
         if self._loop and self._loop.running:

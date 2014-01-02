@@ -35,21 +35,22 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     compare_attrs = ["repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project"]
+                     "category", "project", "pollAtLaunch"]
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
-                 encoding='utf-8'):
+                 encoding='utf-8', pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
         base.PollingChangeSource.__init__(self, name=repourl,
-                                          pollInterval=pollInterval)
+                                          pollInterval=pollInterval,
+                                          pollAtLaunch=pollAtLaunch)
 
         if project is None:
             project = ''
