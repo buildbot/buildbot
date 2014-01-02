@@ -185,15 +185,3 @@ class LogChunk(interfaces.InterfaceTests, unittest.TestCase):
         setattr(self.master.db.logs, dbMethodName, m)
         self.assertIdentical(method(*args, **kwargs), rv)
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
-
-    def test_signature_appendLog(self):
-        @self.assertArgSpecMatches(
-            self.master.data.updates.appendLog,  # fake
-            self.rtype.appendLog)  # real
-        def appendLog(self, logid, content):
-            pass
-
-    def test_appendLog(self):
-        self.do_test_callthrough('appendLog',
-                                 self.rtype.appendLog,
-                                 logid=10, content=u'foo\nbar\n')

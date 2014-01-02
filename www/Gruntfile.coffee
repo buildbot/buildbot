@@ -412,8 +412,8 @@ module.exports = (grunt) ->
                     'copy:js'
                     'copy:scripts'
                     'copy:src'
-                    'karma:dev'
                     'coffeelint:scripts'
+                    'karma:dev:run'
                 ]
                 options:
                     spawn: false,

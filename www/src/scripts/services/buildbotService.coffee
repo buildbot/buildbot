@@ -70,30 +70,32 @@ angular.module('app').factory 'buildbotService',
                 bound = true
                 if (isCollection)
                     onNewOrChange = (value) ->
-                        l = elem.value
-                        # de-duplicate, if the element is already there
-                        for e in l
-                            if e[idkey] == value[idkey]
-                                for k, v of value
-                                    e[k] = v
-                                return
+                        $q.when(elem.value).then (l) ->
+                            # de-duplicate, if the element is already there
+                            for e in l
+                                if e[idkey] == value[idkey]
+                                    for k, v of value
+                                        e[k] = v
+                                    return
+                            if not _.isArray(l)
+                                debugger
+                            value["id"] = value[idkey]
+                            value["_raw_data"] = angular.copy(value)
 
-                        value["id"] = value[idkey]
-                        value["_raw_data"] = angular.copy(value)
-
-                        # restangularize the object before putting it in
-                        # this allows controllers to get more data within onchild()
-                        newobj = self.restangularizeElement(elem.parentResource, value, route)
-                        # @todo, on new events, need to re-filter through queryParams..
-                        l.push(newobj)
-                        for k, ref of references
-                            ref.onchild(newobj)
+                            # restangularize the object before putting it in
+                            # this allows controllers to get more data within onchild()
+                            newobj = self.restangularizeElement(elem.parentResource, value, route)
+                            # @todo, on new events, need to re-filter through queryParams..
+                            l.push(newobj)
+                            for k, ref of references
+                                ref.onchild(newobj)
 
                     p = elem.on("*/*", onNewOrChange).then (unsub) ->
+                        events.push(unsub)
                         return elem.getList(elem.queryParams).then (res) ->
                             elem.value = res
-                            events.push(unsub)
                             return res
+
                 else
                     onUpdate = (msg) ->
                         _.assign(elem.value, msg)
@@ -101,7 +103,8 @@ angular.module('app').factory 'buildbotService',
                     p = elem.get().then (res) ->
                         elem.value = res
                         if opts.ismutable(res)
-                            events.push(elem.on("update", onUpdate))
+                            elem.on("*", onUpdate).then (unsub) ->
+                                events.push(unsub)
                         return res
                 elem.value = p
                 return p
@@ -112,7 +115,10 @@ angular.module('app').factory 'buildbotService',
                 _.defaults opts,
                     dest_key: if isCollection then plurals[route] else route
                     dest: $scope
-                    ismutable: -> false
+                    ismutable: (v) ->
+                        if v.complete?
+                            return not v.complete
+                        return false
                     onchild: ->
 
                 # manage scope that references this elem
@@ -127,15 +133,21 @@ angular.module('app').factory 'buildbotService',
                     if _.size(references) == 0
                         $timeout(unbind, config.unbind_delay)
                 $scope.$on("$destroy", ondestroy)
-
-                p = bind(opts)
-                p = p.then (res) ->
-                    if isCollection
-                        for child in res
-                            opts.onchild(child)
-                    opts.dest[opts.dest_key] = res
-                    return res
-                return p
+                rebind = ->
+                    p = bind(opts)
+                    p = p.then (res) ->
+                        if isCollection
+                            for child in res
+                                opts.onchild(child)
+                        opts.dest[opts.dest_key] = res
+                        unsub_lostsync = $rootScope.$on "lost-sync", ->
+                            unsub_lostsync()
+                            delete references[myreferenceid]
+                            unbind()
+                            rebind()
+                        return res
+                    return p
+                return rebind()
 
             elem.on = (event, onEvent) ->
                 path = elem.getRestangularUrl().replace(BASEURLAPI,"")

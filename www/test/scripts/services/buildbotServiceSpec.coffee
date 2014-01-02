@@ -58,6 +58,7 @@ if window.__karma__?
             $httpBackend.flush()
             expect($scope.step.res).toBe("PENDING")
             mqService.broadcast("build/1/step/2/update", {"res": "SUCCESS"})
+            $rootScope.$digest()
             expect($scope.step.res).toBe("SUCCESS")
             # should not override other fields
             expect($scope.step.otherfield).toBe("FOO")
@@ -73,6 +74,7 @@ if window.__karma__?
             $httpBackend.flush()
             expect($scope.steps.length).toBe(1)
             mqService.broadcast("build/1/step/3/new", {stepid:3, "res": "SUCCESS"})
+            $rootScope.$digest()
             expect($scope.steps.length).toBe(2)
             expect(childs.length).toBe(2)
             for c in childs
@@ -90,6 +92,7 @@ if window.__karma__?
             expect($scope.steps.length).toBe(1)
             mqService.broadcast("build/1/step/3/new", {stepid:3, "res": "SUCCESS"})
             mqService.broadcast("build/1/step/1/update", {stepid:1, res: "SUCCESS"})
+            $rootScope.$digest()
             expect($scope.steps.length).toBe(2)
             expect($scope.steps[0].res).toBe("SUCCESS")
             expect($scope.steps[1].res).toBe("SUCCESS")
@@ -186,3 +189,24 @@ if window.__karma__?
             expect ->
                 mqService.broadcast("build/7/new", {buildid:7, "res": "SUCCESS"})
             .toThrow()
+
+        it 'should reload the data in case of loss of synchronisation', ->
+            console.log "here"
+            $httpBackend.expectDataGET 'build',
+                nItems:1
+            r = buildbotService.all("build")
+            r.bind($scope)
+            $httpBackend.flush()
+            $rootScope.$digest()
+            mqService.broadcast("build/3/new", {buildid:3, "res": "SUCCESS"})
+            $rootScope.$digest()
+            expect($scope.builds.length).toBe(2)
+            $httpBackend.expectDataGET 'build',
+                nItems:2
+            $rootScope.$broadcast("lost-sync")
+            $httpBackend.flush()
+            $rootScope.$digest()
+            expect($scope.builds.length).toBe(2)
+            mqService.broadcast("build/4/new", {buildid:4, "res": "SUCCESS"})
+            $rootScope.$digest()
+            expect($scope.builds.length).toBe(3)
