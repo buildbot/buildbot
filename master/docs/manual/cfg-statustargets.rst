@@ -829,15 +829,18 @@ Poller hook
 ###########
 
 The poller hook allows you to use GET or POST requests to trigger
-polling. One advantage of this is your buildbot instance can (at start
-up) poll to get changes that happened while it was down, but then you
-can still use a commit hook to get fast notification of new changes.
+polling. One advantage of this is your buildbot instance can poll
+at launch (using the pollAtLaunch flag) to get changes that happened
+while it was down, but then you can still use a commit hook to get
+fast notification of new changes.
 
 Suppose you have a poller configured like this::
 
     c['change_source'] = SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
-        split_file=split_file_branches)
+        split_file=split_file_branches,
+        pollInterval=24*60*60,
+        pollAtLaunch=True)
 
 And you configure your WebStatus to enable this hook::
 
