@@ -216,6 +216,14 @@ Document how to write a scheduler: the ``addBuildsetForXxx`` methods, as well as
 Currently a bunch of process code calls ``self.master.db.buildrequests.getBuildRequests``.
 Instead, it should call ``self.master.data.get('/buildrequest/...')``, noting that the the return values have different keys.
 
+### Encodings for all Change Sources ###
+
+All change sources take data from somewhere else, and in many cases that data arrives in the form of bytestrings.
+By the time that data makes it to the data API's `addChange` method, it needs to be unicode.
+Some change sources already handle this, using an 'encoding' parameter to indicate the encoding expected for any bytestrings.
+However, other change sources - notably, those in `mail.py`, don't.
+Those change sources should be tested, then fixed to handle bytestrings correctly.
+
 ## "Involved" ##
 
 These tasks are more involved in terms of familiarity with new code in this branch, and with development plans.
