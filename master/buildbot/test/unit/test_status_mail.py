@@ -1093,3 +1093,33 @@ class TestDefaultMessageSummary(unittest.TestCase):
         self.build.getText = Mock(return_value=["step1", "step2"])
         self.assertEqual("BUILD FAILED: step1 step2\n",
                          mail._defaultMessageSummary(self.build, FAILURE))
+
+
+# Test buildbot.status.mail.defaultMessage() function
+class TestDefaultMessage(unittest.TestCase):
+    def testMessage(self):
+
+        # patch private functions
+        self.patch(mail, "_defaultMessageIntro", Mock(return_value="intro"))
+        self.patch(mail, "_defaultMessageProjects", Mock(return_value="project"))
+        self.patch(mail, "_defaultMessageURLs", Mock(return_value="\nurl\n"))
+        self.patch(mail, "_defaultMessageSourceStamps", Mock(return_value="source-stamp"))
+        self.patch(mail, "_defaultMessageSummary", Mock(return_value="summary"))
+
+        # set-up mock build
+        build = Mock()
+        build.getSourceStamps = Mock()
+        build.getSlavename = Mock(return_value="slave-name")
+        build.getReason = Mock(return_value="build-reason")
+        build.getResponsibleUsers = Mock(return_value=["usr1", "usr2"])
+
+        message = mail.defaultMessage(("all"), "test-build", build,
+                                      SUCCESS, Mock())
+
+        expected_message = dict(type="plain",
+                    body="intro on builder test-build while building project.\n"
+                         "url\nBuildslave for this Build: slave-name\n\n"
+                         "Build Reason: build-reason\n"
+                         "source-stampBlamelist: usr1,usr2\n\nsummary\n"
+                         "Sincerely,\n -The Buildbot\n\n")
+        self.assertEqual(message, expected_message)
