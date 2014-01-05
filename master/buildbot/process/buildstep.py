@@ -643,7 +643,7 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
     cmd = None
 
     renderables = ['logfiles', 'lazylogfiles']
@@ -661,10 +661,9 @@ class LoggingBuildStep(BuildStep):
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
-        if log_eval_func and not callable(log_eval_func):
+        if log_eval_func is not None:
             config.error(
-                "the 'log_eval_func' paramater must be a callable")
-        self.log_eval_func = log_eval_func
+                "the 'log_eval_func' paramater is no longer available")
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
@@ -763,8 +762,6 @@ class LoggingBuildStep(BuildStep):
         pass
 
     def evaluateCommand(self, cmd):
-        if self.log_eval_func:
-            return self.log_eval_func(cmd, self.step_status)
         return cmd.results()
 
     def getText(self, cmd, results):

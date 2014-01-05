@@ -68,8 +68,6 @@ Nine
 * "New-style" buildsteps are now supported, with compatibility hacks in place to support "old-style" steps.
   Existing custom steps will continue to function properly, but even so should be refactored as described in :ref:`Refactoring-Buildsteps`.
 
-* The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
-
 * :py:mod:`buildbot.schedulers.forcesched` has the following changes:
 
   - The default configuration does not contain 4 AnyPropertyParameter anymore
@@ -241,7 +239,7 @@ Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects
 Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.
 
 The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
-Instead, users should implement a custom step with a LogObserver.
+Instead, users should override the :py:meth:`~buildbot.process.buildstep.LoggingBuildStep.evaluateCommand` method.
 
 Backward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -22,7 +22,6 @@ from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import slave
@@ -308,7 +307,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertTrue(NewStyleStep().isNewStyle())
 
 
-class TestLoggingBuildStep(unittest.TestCase):
+class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
         cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
@@ -333,14 +332,8 @@ class TestLoggingBuildStep(unittest.TestCase):
             (status, FAILURE))
 
     def test_evaluateCommand_log_eval_func(self):
-        cmd = self.makeRemoteCommand(0, "Log text")
-
-        def eval(cmd, step_status):
-            return WARNINGS
-        lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
-        status = lbs.evaluateCommand(cmd)
-        self.assertEqual(status, WARNINGS,
-                         "evaluateCommand didn't call log_eval_func or overrode its results")
+        self.assertRaisesConfigError("is no longer available", lambda:
+                                     buildstep.LoggingBuildStep(log_eval_func=mock.Mock()))
 
 
 class InterfaceTests(interfaces.InterfaceTests):

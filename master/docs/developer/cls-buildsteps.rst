@@ -383,7 +383,7 @@ BuildStep
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     :param logfiles: see :bb:step:`ShellCommand`
     :param lazylogfiles: see :bb:step:`ShellCommand`
