@@ -127,6 +127,24 @@ def _defaultMessageProjects(source_stamps, master_status):
     return ', '.join(projects)
 
 
+def _defaultMessageURLs(master_status, build):
+    text = ""
+
+    # add build URL if available
+    url = master_status.getURLForThing(build)
+    if url:
+        text += " Full details are available at:\n    %s\n" % url
+
+    text += "\n"
+
+    # add buildbot main URL if available
+    url = master_status.getBuildbotURL()
+    if url:
+        text += "Buildbot URL: %s\n\n" % urllib.quote(url, '/:')
+
+    return text
+
+
 def _defaultMessageSourceStamps(source_stamps):
     text = ""
 
@@ -179,12 +197,7 @@ def defaultMessage(mode, name, build, results, master_status):
     text += " on builder %s while building %s." % \
             (name, _defaultMessageProjects(ss_list, master_status))
 
-    if master_status.getURLForThing(build):
-        text += " Full details are available at:\n    %s\n" % master_status.getURLForThing(build)
-    text += "\n"
-
-    if master_status.getBuildbotURL():
-        text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
+    text += _defaultMessageURLs(master_status, build)
 
     text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
     text += "Build Reason: %s\n" % build.getReason()

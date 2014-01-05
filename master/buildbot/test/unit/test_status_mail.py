@@ -987,6 +987,45 @@ class TestDefaultMessageProjects(unittest.TestCase):
                          Mock()))
 
 
+# Test buildbot.status.mail._defaultMessageURLs() function
+class TestDefaultMessageURLs(unittest.TestCase):
+    def setUpStatus(self, build_url, buildbot_url):
+        master_status = Mock()
+
+        master_status.getURLForThing = Mock(return_value=build_url)
+        master_status.getBuildbotURL = Mock(return_value=buildbot_url)
+
+        return master_status
+
+    # test the case when both build and buildbot URLs are available
+    def testAllURLs(self):
+        master_status = self.setUpStatus("build_url", "buildbot_url")
+
+        self.assertRegexpMatches(mail._defaultMessageURLs(master_status, Mock()),
+                ".*Full details are available at:(.|\\n)*build_url(.|\\n)*"
+                "Buildbot URL: buildbot_url.*")
+
+    # test the case when build URL is not available
+    def testNoBuildURL(self):
+        master_status = self.setUpStatus(None, "buildbot_url")
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()),
+                         "\nBuildbot URL: buildbot_url\n\n")
+
+    # test the case when buildbot URL is not available
+    def testNoBuildbotURL(self):
+        master_status = self.setUpStatus("build_url", None)
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()),
+                         " Full details are available at:\n    build_url\n\n")
+
+    # test the case when no URLs are available
+    def testNoURLs(self):
+        master_status = self.setUpStatus(None, None)
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()), "\n")
+
+
 # Test buildbot.status.mail._defaultMessageSourceStamps() function
 class TestDefaultMessageSourceStamps(unittest.TestCase):
 
