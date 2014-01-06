@@ -662,6 +662,7 @@ class BuildersResource(HtmlResource):
                     bld['end'] = time.ctime(end)
                     bld['elapsed'] = util.formatInterval(end - start)
                     bld['last_run'] = util.formatIntervalDays(util.now() - end)
+                    bld['last_run_date'] = start
                 bld['build_css_class'] = build_get_class(b)
 
             current_box = ICurrentBox(builder).getBox(status, brcounts)

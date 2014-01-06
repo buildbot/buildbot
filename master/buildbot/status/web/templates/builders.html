@@ -85,7 +85,14 @@
       </td>
       <td class="txt-align-left last-build-js">
           {% if b.last_run %}
-             {{ b.last_run }} ago <span class="small-txt">({{b.elapsed}})</span>
+          {# hidden timestamp for datatable to sort by #}
+          <span class="hide">
+            {{b.last_run_date}}
+          </span>
+
+             {{ b.last_run }} 
+
+             ago <span class="small-txt">({{b.elapsed}})</span>
           {% endif %}
       </td>
       {% if b.build_url %}
