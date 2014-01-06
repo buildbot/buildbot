@@ -469,6 +469,7 @@ given below::
                     break
             name = "%s.%s" % (log.getStep().getName(), log.getName())
             status, dummy = log.getStep().getResults()
+            # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
@@ -733,6 +734,7 @@ Log information ::
     for log in build.getLogs():
         log_name = "%s.%s" % (log.getStep().getName(), log.getName())
         log_status, dummy = log.getStep().getResults()
+        # XXX logs no longer have a getText method
         log_body = log.getText().splitlines() # Note: can be VERY LARGE
         log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),

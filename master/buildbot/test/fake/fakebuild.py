@@ -55,6 +55,9 @@ class FakeBuild(properties.PropertiesMixin):
             return self.sources[codebase]
         return None
 
+    def allFiles(self):
+        return []
+
 
 components.registerAdapter(
     lambda build: build.build_status.properties,

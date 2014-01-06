@@ -24,6 +24,7 @@ import time
 from twisted.python import log
 
 from buildbot import config
+from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import FAILURE
 from buildbot.steps.shell import WarningCountingShellCommand
@@ -120,6 +121,9 @@ class DebPbuilder(WarningCountingShellCommand):
 
         self.suppressions.append((None, re.compile(r"\.pbuilderrc does not exist"), None, None))
 
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
     # Check for Basetgz
     def start(self):
         cmd = remotecommand.RemoteCommand('stat', {'file': self.basetgz})
@@ -182,11 +186,13 @@ class DebPbuilder(WarningCountingShellCommand):
         else:
             return WarningCountingShellCommand.start(self)
 
-    def commandComplete(self, cmd):
-        out = cmd.logs['stdio'].getText()
-        m = re.search(r"dpkg-genchanges  >\.\./(.+\.changes)", out)
-        if m:
-            self.setProperty("deb-changes", m.group(1), "DebPbuilder")
+    def logConsumer(self):
+        r = re.compile(r"dpkg-genchanges  >\.\./(.+\.changes)")
+        while True:
+            stream, line = yield
+            mo = r.search(line)
+            if mo:
+                self.setProperty("deb-changes", mo.group(1), "DebPbuilder")
 
 
 class DebCowbuilder(DebPbuilder):

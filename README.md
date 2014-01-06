@@ -312,6 +312,10 @@ Here are the remaining bits:
   * merge rewrites to master
   * remove `step_status` for statistics
 
+* update documentation
+  * lots of changes in `customization.rst`
+  * `cfg-statustargets.rst` references `getText`
+
 ### Importing old Build Pickles ###
 
 The most likely plan for data from 0.8.x implementations is to ignore it.
