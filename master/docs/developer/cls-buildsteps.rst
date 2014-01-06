@@ -349,6 +349,15 @@ BuildStep
 
         Add a new logfile with the given name to the step, and return the log file instance.
 
+    .. py:method:: getLog(name)
+
+        :param name: log name
+        :raises KeyError: if there is no such log
+        :returns: :class:`~buildbot.process.log.Log` instance
+
+        Return an existing logfile, previously added with :py:meth:`addLog`.
+        Note that this return value is synchronous, and only available after :py:meth:`addLog`'s deferred has fired.
+
     .. py:method:: addCompleteLog(name, text)
 
         :param name: log name

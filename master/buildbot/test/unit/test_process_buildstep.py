@@ -270,6 +270,24 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                          [step2.name] + descriptionSuffix)
 
     @defer.inlineCallbacks
+    def test_step_getLog(self):
+        testcase = self
+
+        class TestGetLogStep(buildstep.BuildStep):
+
+            @defer.inlineCallbacks
+            def run(self):
+                testcase.assertRaises(KeyError, lambda:
+                                      self.getLog('testy'))
+                log1 = yield self.addLog('testy')
+                log2 = self.getLog('testy')
+                testcase.assertIdentical(log1, log2)
+                defer.returnValue(SUCCESS)
+        self.setupStep(TestGetLogStep())
+        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_step_renders_flunkOnFailure(self):
         self.setupStep(
             TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))

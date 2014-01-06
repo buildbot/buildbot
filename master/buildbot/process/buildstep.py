@@ -13,6 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+try:
+    import cStringIO as StringIO
+    assert StringIO
+except ImportError:
+    import StringIO
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
@@ -32,6 +38,9 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
+from buildbot.status.logfile import HEADER
+from buildbot.status.logfile import STDERR
+from buildbot.status.logfile import STDOUT
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
@@ -96,18 +105,22 @@ def _maybeUnhandled(fn):
     return wrap
 
 
-class SyncWriteOnlyLogFileWrapper(object):
+class SyncLogFileWrapper(logobserver.LogObserver):
 
     # A temporary wrapper around process.log.Log to emulate *synchronous*
     # writes to the logfile by handling the Deferred from each add* operation
     # as part of the step's _start_unhandled_deferreds.  This has to handle
     # the tricky case of adding data to a log *before* addLog has returned!
+    # this also adds the read-only methods such as getText
 
     def __init__(self, step, name, addLogDeferred):
         self.step = step
         self.name = name
         self.delayedOperations = []
         self.asyncLogfile = None
+        self.chunks = []
+        self.finished = False
+        self.finishDeferreds = []
 
         @addLogDeferred.addCallback
         def gotAsync(log):
@@ -143,26 +156,66 @@ class SyncWriteOnlyLogFileWrapper(object):
         if len(self.delayedOperations) == 1:
             self._catchup()
 
-    def getName(self):
-        # useLog uses this
-        return self.name
+    def _maybeFinished(self):
+        if self.finished and self.finishDeferreds:
+            pending = self.finishDeferreds
+            self.finishDeferreds = []
+            for d in pending:
+                d.callback(self)
+
+    # write methods
 
     def addStdout(self, data):
+        self.chunks.append((STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
+        self.chunks.append((STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
+        self.chunks.append((HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
     def finish(self):
+        self.finished = True
+        self._maybeFinished()
         self._delay(lambda: self.asyncLogfile.finish())
 
     def unwrap(self):
         d = defer.Deferred()
         self._delay(lambda: d.callback(self.asyncLogfile))
         return d
+
+    # read-only methods
+
+    def getName(self):
+        return self.name
+
+    def getText(self):
+        return "".join(self.getChunks([STDOUT, STDERR], onlyText=True))
+
+    def readlines(self):
+        alltext = "".join(self.getChunks([STDOUT], onlyText=True))
+        io = StringIO.StringIO(alltext)
+        return io.readlines()
+
+    def getChunks(self, channels=[], onlyText=False):
+        chunks = self.chunks
+        if channels:
+            channels = set(channels)
+            chunks = ((c, t) for (c, t) in chunks if c in channels)
+        if onlyText:
+            chunks = (t for (c, t) in chunks)
+        return chunks
+
+    def isFinished(self):
+        return self.finished
+
+    def waitUntilFinished(self):
+        d = defer.Deferred()
+        self.finishDefereds.append(d)
+        self._maybeFinished()
 
 
 class BuildStep(object, properties.PropertiesMixin):
@@ -455,6 +508,10 @@ class BuildStep(object, properties.PropertiesMixin):
         self._start_deferred = defer.Deferred()
         unhandled = self._start_unhandled_deferreds = []
         try:
+            # here's where we set things up for backward compatibility for
+            # old-style tests, using monkey patches so that new-style tests
+            # aren't bothered by any of this equipment
+
             # monkey-patch self.step_status.{setText,setText2} back into
             # existence for old steps; when these write to the data API,
             # the monkey patches will stash their deferreds on the unhandled
@@ -462,10 +519,18 @@ class BuildStep(object, properties.PropertiesMixin):
             self.step_status.setText = self.step_status.old_setText
             self.step_status.setText2 = self.step_status.old_setText2
 
-            # and monkey-patch in support for old statistics functions
+            # monkey-patch in support for old statistics functions
             self.step_status.setStatistic = self.setStatistic
             self.step_status.getStatistic = self.getStatistic
             self.step_status.hasStatistic = self.hasStatistic
+
+            # monkey-patch an addLog that returns an write-only, sync log
+            self.addLog = self.addLog_oldStyle
+            self._logFileWrappers = {}
+
+            # and a getLog that returns a read-only, sync log, captured by
+            # LogObservers installed by addLog_oldStyle
+            self.getLog = self.getLog_oldStyle
 
             results = yield self.start()
             if results == SKIPPED:
@@ -541,28 +606,32 @@ class BuildStep(object, properties.PropertiesMixin):
         return self.build.getSlaveName()
 
     def addLog(self, name, type='s', logEncoding=None):
-        @defer.inlineCallbacks
-        def _addLog():
-            logid = yield self.master.data.updates.newLog(self.stepid,
-                                                          util.ascii2unicode(name), unicode(type))
-            defer.returnValue(self._newLog(name, type, logid, logEncoding))
+        d = self.master.data.updates.newLog(self.stepid,
+                                            util.ascii2unicode(name),
+                                            unicode(type))
 
-        # This method implements a smooth transition for nine
-        # it returns a synchronous version of logfile, so that steps can safely
-        # start writting into logfile, without waiting for log creation in db
-        loog_d = _addLog()
-        if self._start_unhandled_deferreds is None:
-            # This is a new-style step, so we can return the deferred
-            return loog_d
+        @d.addCallback
+        def newLog(logid):
+            return self._newLog(name, type, logid, logEncoding)
+        return d
+    addLog_newStyle = addLog
 
+    def addLog_oldStyle(self, name, type='s', logEncoding=None):
+        # create a logfile instance that acts like old-style status logfiles
+        # begin to create a new-style logfile
+        loog_d = self.addLog_newStyle(name, type, logEncoding)
         self._start_unhandled_deferreds.append(loog_d)
-        return SyncWriteOnlyLogFileWrapper(self, name, loog_d)
+        # and wrap the deferred that will eventually fire with that logfile
+        # into a write-only logfile instance
+        wrapper = SyncLogFileWrapper(self, name, loog_d)
+        self._logFileWrappers[name] = wrapper
+        return wrapper
 
     def getLog(self, name):
-        for l in self.step_status.getLogs():
-            if l.getName() == name:
-                return l
-        raise KeyError("no log named '%s'" % (name,))
+        return self.logs[name]
+
+    def getLog_oldStyle(self, name):
+        return self._logFileWrappers[name]
 
     @_maybeUnhandled
     @defer.inlineCallbacks
@@ -710,6 +779,8 @@ class LoggingBuildStep(BuildStep):
 
         def _gotResults(results):
             self.setStatus(cmd, results)
+            # finish off the stdio logfile
+            stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
         d.addCallbacks(self.finished, self.checkDisconnect)
