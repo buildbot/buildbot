@@ -86,6 +86,12 @@ You should be able to jump in after reading some related code and documentation.
 
 In the Trigger step, add links from the triggering step to the triggered builds
 
+### LogLineObserver Simplification ###
+
+LogLineObserver uses a Twisted utility designed to take arbitrary blocks of data and break them into lines.
+Logs are now handled in units of whole lines, so there's no need for this complexity anymore.
+Instead, the LogObserver class can simply split its output on ``\n``.
+
 ### Names for IDs ###
 
 In the Data API, each resource has an id named after the resource type, e.g., ``masterid`` or ``builderid``.
