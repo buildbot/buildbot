@@ -318,7 +318,10 @@ table.codebase-branch-table {
     }
 }
 
-//.filter-table-input,
+.filter-table-input {
+	margin-bottom:25px;
+}
+
 .top {
 	@include pie-clearfix;
 	margin-bottom:20px;

@@ -2267,7 +2267,12 @@ table.codebase-branch-table tr:first-child th {
     padding-left: 8px;
   }
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003322}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003321}}
+.filter-table-input {
+  margin-bottom: 25px;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003325}}
 .top {
   *zoom: 1;
   margin-bottom: 20px;
@@ -2279,21 +2284,21 @@ table.codebase-branch-table tr:first-child th {
   clear: both;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003326}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003329}}
 .dataTables_filter {
   width: 145px;
   float: left;
   margin-right: 20px;
   height: 30px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003331}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003334}}
 .dataTables_filter label {
   position: absolute;
   font-weight: bold;
   top: 7px;
   text-shadow: 0 1px 0 white;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003336}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003339}}
 .dataTables_filter label input {
   border: 1px solid #CCCCCC;
   -webkit-border-radius: 4px;
@@ -2311,7 +2316,7 @@ table.codebase-branch-table tr:first-child th {
   text-shadow: 0 1px 0 white;
   width: 100px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003347}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003350}}
 .dataTables_filter label:after {
   color: #ADADAD;
   font-family: katana_icons;
@@ -2321,42 +2326,42 @@ table.codebase-branch-table tr:first-child th {
   top: 10px;
   line-height: 12px;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003357}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003360}}
 .more-info-box .dataTables_filter {
   height: 32px;
 }
 
 @media (min-width: 0) and (max-width: 570px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003365}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003368}}
   .dataTables_paginate,
   .dataTables_filter {
     float: none;
     clear: both;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003370}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003373}}
   .top .dataTables_paginate {
     margin: 24px 0 0;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003378}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003381}}
   .dataTables_length,
   .dataTables_info,
   .border-table-holder {
     display: none;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003381}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003384}}
   .dataTables_filter label input {
     width: 67px;
   }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003385}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003388}}
   .more-info-box {
     min-width: inherit;
     width: 80%;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003388}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003391}}
   .more-info-box .table-1 {
     display: block;
     position: relative;
@@ -2365,12 +2370,12 @@ table.codebase-branch-table tr:first-child th {
     border-collapse: collapse;
     border-spacing: 0;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003395}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003398}}
   .more-info-box .table-1 thead {
     display: block;
     float: left;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003399}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003402}}
   .more-info-box .table-1 tbody {
     display: block;
     overflow-x: auto;
@@ -2379,37 +2384,37 @@ table.codebase-branch-table tr:first-child th {
     width: auto;
     display: -webkit-box;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003406}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003409}}
   .more-info-box .table-1 tbody tr {
     display: inline-block;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003411}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003414}}
   .more-info-box .table-1.first-child tr th:first-child {
     border-left: none;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003414}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003417}}
   .more-info-box .table-1 th, .more-info-box .table-1 td, .more-info-box .table-1 tr {
     display: block;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003417}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003420}}
   .more-info-box .table-1 th {
     border-top: none;
     border-bottom: 1px solid #ccc;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003421}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003424}}
   .more-info-box .table-1 td {
     border-top: none;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003424}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003427}}
   .more-info-box .table-1 tr:last-child td {
     padding-bottom: 15px;
     border-bottom: 1px solid #ccc;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003429}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003432}}
   .more-info-box .table-1 tr td:last-child {
     border-bottom: none;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003433}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003436}}
   .more-info-box .table-1 tr th:last-child {
     -webkit-border-radius: 0;
     -moz-border-radius: 0;
@@ -2417,7 +2422,7 @@ table.codebase-branch-table tr:first-child th {
     -o-border-radius: 0;
     border-radius: 0;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003436}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003439}}
   .more-info-box .table-1 tr th:first-child {
     -webkit-border-radius: 4px 0 0 0;
     -moz-border-radius: 4px 0 0 0;
@@ -2425,7 +2430,7 @@ table.codebase-branch-table tr:first-child th {
     -o-border-radius: 4px 0 0 0;
     border-radius: 4px 0 0 0;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003440}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003443}}
   .more-info-box .table-1 tr:nth-child(2) td,
   .more-info-box .table-1 tr:first-child td {
     border-top: none;
@@ -2435,21 +2440,21 @@ table.codebase-branch-table tr:first-child th {
     -o-border-radius: 0;
     border-radius: 0;
   }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003445}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003448}}
   .more-info-box .table-1 tr:first-child th,
   .more-info-box .table-1 tbody tr:first-child td {
     padding-left: 10px;
   }
 }
 @media (min-width: 0) and (max-width: 1025px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003457}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003460}}
   .dataTables_length,
   .dataTables_info {
     display: none;
   }
 }
 @media (min-width: 1025px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003463}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003466}}
   .table-wrapper {
     overflow: visible;
   }
