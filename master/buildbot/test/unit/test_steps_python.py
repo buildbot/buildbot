@@ -78,6 +78,58 @@ index.rst:: WARNING: toctree contains reference to document 'preamble' that \
 doesn't have a title: no link will be generated\
 '''
 
+# this is from a run of epydoc against the buildbot source..
+epydoc_output = '''\
+  [...............
++---------------------------------------------------------------------
+| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/
+| ec2buildslave.py:
+| Import failed (but source code parsing was successful).
+|     Error: ImportError: No module named boto (line 19)
+|
+  [....
+Warning: Unable to extract the base list for
+         twisted.web.resource.EncodingResourceWrapper: Bad dotted name
+  [......
++---------------------------------------------------------------------
+| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/buildslave/
+| ec2.py:
+| Import failed (but source code parsing was successful).
+|     Error: ImportError: No module named boto (line 28)
+|
+  [...........
++---------------------------------------------------------------------
+| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/status/
+| status_push.py:
+| Import failed (but source code parsing was successful).
+|     Error: ImportError: No module named status_json (line 40)
+|
+  [....................<paragraph>Special descriptor for class __provides__</paragraph>
+'''
+
+
+class BuildEPYDoc(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_sample(self):
+        self.setupStep(python.BuildEPYDoc())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'epydocs'],
+                        usePTY='slave-config')
+            + ExpectShell.log('stdio',
+                              stdout=epydoc_output)
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=['epydoc', 'warn=1',
+                                        'err=3', 'failed'])
+        return self.runStep()
+
 
 class PyLint(steps.BuildStepMixin, unittest.TestCase):
 

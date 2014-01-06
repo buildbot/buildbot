@@ -106,6 +106,37 @@ class LogLineObserver(LogObserver):
         pass
 
 
+class LineConsumerLogObserver(LogLineObserver):
+
+    def __init__(self, consumerFunction):
+        LogLineObserver.__init__(self)
+        self.generator = None
+        self.consumerFunction = consumerFunction
+
+    def feed(self, input):
+        # note that we defer starting the generator until the first bit of
+        # data, since the observer may be instantiated during configuration as
+        # well as for each execution of the step.
+        self.generator = self.consumerFunction()
+        self.generator.next()
+        # shortcut all remaining feed operations
+        self.feed = self.generator.send
+        self.feed(input)
+
+    def outLineReceived(self, line):
+        self.feed(('o', line))
+
+    def errLineReceived(self, line):
+        self.feed(('e', line))
+
+    def headerLineReceived(self, line):
+        self.feed(('h', line))
+
+    def finishReceived(self):
+        if self.generator:
+            self.generator.close()
+
+
 class OutputProgressObserver(LogObserver):
     length = 0
 

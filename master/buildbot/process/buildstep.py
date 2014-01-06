@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
@@ -41,7 +39,6 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.status.results import worst_status
 
 
 class BuildStepFailed(Exception):
@@ -807,27 +804,6 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText2(self.maybeGetText2(cmd, results))
         return defer.succeed(None)
 
-
-# Parses the logs for a list of regexs. Meant to be invoked like:
-# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
-# self.addStep(ShellCommand,
-#   command=...,
-#   ...,
-#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
-# )
-def regex_log_evaluator(cmd, step_status, regexes):
-    worst = cmd.results()
-    for err, possible_status in regexes:
-        # worst_status returns the worse of the two status' passed to it.
-        # we won't be changing "worst" unless possible_status is worse than it,
-        # so we don't even need to check the log if that's the case
-        if worst_status(worst, possible_status) == possible_status:
-            if isinstance(err, (basestring)):
-                err = re.compile(".*%s.*" % err, re.DOTALL)
-            for l in cmd.logs.values():
-                if err.search(l.getText()):
-                    worst = possible_status
-    return worst
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
