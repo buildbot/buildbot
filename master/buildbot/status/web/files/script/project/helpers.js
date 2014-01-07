@@ -258,8 +258,8 @@ define(['screensize'], function (screenSize) {
 					
 					var branches = this.split('=')[1];
 
-					$('tr.codebase').append('<td>' + codeBases + '</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td>');
-					$('tr.branch').append('<td>' + branches + '</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td>');
+					$('tr.codebase').append('<td>' + codeBases + '</td>');
+					$('tr.branch').append('<td>' + branches + '</td>');
 				}
 				
 			});
