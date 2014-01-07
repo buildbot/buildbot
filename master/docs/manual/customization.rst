@@ -145,6 +145,8 @@ also return a Deferred::
         d.addCallback(pick)
         return d
 
+The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`.
+
 .. _Customizing-SVNPoller:
 
 Customizing SVNPoller
