@@ -723,7 +723,7 @@ class LoggingBuildStep(BuildStep):
 
         if logfiles and not isinstance(logfiles, dict):
             config.error(
-                "the ShellCommand 'logfiles' parameter must be a dictionary")
+                "the %s 'logfiles' parameter must be a dictionary" % (self.__class__.__name__),)
 
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
@@ -748,7 +748,7 @@ class LoggingBuildStep(BuildStep):
         @param cmd: a suitable RemoteCommand which will be launched, with
                     all output being put into our self.stdio_log LogFile
         """
-        log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
+        log.msg("%s.startCommand(cmd=%s)" % (self.__class__.__name__, cmd))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
         self.step_status.setText(self.describe(False))
