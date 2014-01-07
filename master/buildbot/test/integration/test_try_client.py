@@ -128,6 +128,10 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         self.output = []
 
+        # stub out printStatus, as it's timing-based and thus causes
+        # occasional test failures.
+        self.patch(tryclient.Try, 'printStatus', lambda: None)
+
         def output(*msg):
             msg = ' '.join(map(str, msg))
             log.msg("output: %s" % msg)

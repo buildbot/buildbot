@@ -11,16 +11,16 @@ in the configuration's :bb:cfg:`status` list. To add status targets, you
 just append more objects to this list::
 
     c['status'] = []
-    
+
     from buildbot.status import html
     c['status'].append(html.Waterfall(http_port=8010))
-    
+
     from buildbot.status import mail
     m = mail.MailNotifier(fromaddr="buildbot@localhost",
                           extraRecipients=["builds@lists.example.com"],
                           sendToInterestedUsers=False)
     c['status'].append(m)
-    
+
     from buildbot.status import words
     c['status'].append(words.IRC(host="irc.example.com", nick="bb",
                                  channels=[{"channel": "#example1"},
@@ -57,7 +57,7 @@ Change Hooks
 The ``/change_hook`` url is a magic URL which will accept HTTP requests and translate
 them into changes for buildbot. Implementations (such as a trivial json-based endpoint
 and a GitHub implementation) can be found in :bb:src:`master/buildbot/status/web/hooks`.
-The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the 
+The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the
 hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
 separately, for security reasons
 
@@ -148,7 +148,7 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
 
   c['status'].append(html.WebStatus(...,
-                                    change_hook_auth=('user', 'password')))
+                                    change_hook_auth=["file:changehook.passwd"]))
 
 Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
 
@@ -185,15 +185,18 @@ Poller hook
 +++++++++++
 
 The poller hook allows you to use GET or POST requests to trigger
-polling. One advantage of this is your buildbot instance can (at start
-up) poll to get changes that happened while it was down, but then you
-can still use a commit hook to get fast notification of new changes.
+polling. One advantage of this is your buildbot instance can poll
+at launch (using the pollAtLaunch flag) to get changes that happened
+while it was down, but then you can still use a commit hook to get
+fast notification of new changes.
 
 Suppose you have a poller configured like this::
 
     c['change_source'] = SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
-        split_file=split_file_branches)
+        split_file=split_file_branches,
+        pollInterval=24*60*60,
+        pollAtLaunch=True)
 
 And you configure your WebStatus to enable this hook::
 
@@ -248,7 +251,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
     c['status'].append(html.WebStatus(
         # ...
-        change_hook_auth=('user', 'password')
+        change_hook_auth=["file:changehook.passwd"]
     ))
 
 Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
@@ -281,7 +284,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
     c['status'].append(html.WebStatus(
         # ...
-        change_hook_auth=('user', 'password')
+        change_hook_auth=["file:changehook.passwd"]
     ))
 
 Then, create a Gitorious web hook (see http://gitorious.org/gitorious/pages/WebHooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitorious``.
@@ -384,14 +387,14 @@ For example, if only short emails are desired (e.g., for delivery to phones) ::
     from buildbot.status.builder import Results
     def messageFormatter(mode, name, build, results, master_status):
         result = Results[results]
-    
+
         text = list()
         text.append("STATUS: %s" % result.title())
         return {
             'body' : "\n".join(text),
             'type' : 'plain'
         }
-    
+
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
                       mode=('problem',),
@@ -404,16 +407,16 @@ given below::
 
     from buildbot.status.builder import Results
 
-    import cgi, datetime    
+    import cgi, datetime
 
     def html_message_formatter(mode, name, build, results, master_status):
         """Provide a customized message to Buildbot's MailNotifier.
-        
+
         The last 80 lines of the log are provided as well as the changes
         relevant to the build.  Message content is formatted as html.
         """
         result = Results[results]
-        
+
         limit_lines = 80
         text = list()
         text.append(u'<h4>Build status: %s</h4>' % result.upper())
@@ -461,7 +464,7 @@ given below::
                             text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
-            # get log for last step 
+            # get log for last step
             logs = build.getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
@@ -474,7 +477,7 @@ given below::
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
                                            log.getName())
-            
+
             text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
                         % (url, url))
             text.append(u'<br>')
@@ -491,7 +494,7 @@ given below::
                 'body': u"\n".join(text),
                 'type': 'html'
                 }
-    
+
     mn = MailNotifier(fromaddr="buildbot@example.org",
                       sendToInterestedUsers=False,
                       mode=('failing',),
@@ -535,13 +538,13 @@ MailNotifier arguments
 
     ``change``
         Send mail about builds which change status.
-    
+
     ``failing``
         Send mail about builds which fail.
 
     ``passing``
         Send mail about builds which succeed.
-        
+
     ``problem``
         Send mail about a build which failed when the previous build has passed.
 
@@ -594,7 +597,7 @@ MailNotifier arguments
 
 ``smtpUser``
     (string). The user name to use when authenticating with the
-    ``relayhost``. 
+    ``relayhost``.
 
 ``smtpPassword``
     (string). The password that will be used when authenticating with the
@@ -624,7 +627,7 @@ MailNotifier arguments
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send
     mail to addresses in the ``extraRecipients`` list.
-    
+
 ``messageFormatter``
     This is a optional function that can be used to generate a custom mail message.
     A :func:`messageFormatter` function takes the mail mode (``mode``), builder
@@ -668,7 +671,7 @@ MailNotifier mode
         ``exception``, ``all``)
 
 Builder result as a string ::
-    
+
     from buildbot.status.builder import Results
     result_str = Results[results]
     # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
@@ -697,7 +700,7 @@ List of responsible users
 Source information (only valid if ss is not ``None``)
 
     A build has a set of sourcestamps::
-        
+
         for ss in build.getSourceStamp():
             branch = ss.branch
             revision = ss.revision
@@ -708,28 +711,28 @@ Source information (only valid if ss is not ``None``)
 
     ``who``
         (str) who made this change
-        
+
     ``revision``
         (str) what VC revision is this change
-        
+
     ``branch``
         (str) on what branch did this change occur
-        
+
     ``when``
         (str) when did this change occur
-        
+
     ``files``
         (list of str) what files were affected in this change
-        
+
     ``comments``
         (str) comments reguarding the change.
 
     The ``Change`` methods :meth:`asText` and :meth:`asDict` can be used to format the
     information above.  :meth:`asText` returns a list of strings and :meth:`asDict` returns
     a dictionary suitable for html/mail rendering.
-    
+
 Log information ::
-    
+
     logs = list()
     for log in build.getLogs():
         log_name = "%s.%s" % (log.getStep().getName(), log.getName())
@@ -793,26 +796,26 @@ Some of the commands currently available:
 
 ``list builders``
     Emit a list of all configured builders
-    
+
 :samp:`status {BUILDER}`
     Announce the status of a specific Builder: what it is doing right now.
-    
+
 ``status all``
     Announce the status of all Builders
-    
+
 :samp:`watch {BUILDER}`
     If the given :class:`Builder` is currently running, wait until the :class:`Build` is
     finished and then announce the results.
-    
+
 :samp:`last {BUILDER}`
     Return the results of the last build to run on the given :class:`Builder`.
-    
+
 :samp:`join {CHANNEL}`
     Join the given IRC channel
-    
+
 :samp:`leave {CHANNEL}`
     Leave the given IRC channel
-    
+
 :samp:`notify on|off|list {EVENT}`
     Report events relating to builds.  If the command is issued as a
     private message, then the report will be sent back as a private
@@ -821,19 +824,19 @@ Some of the commands currently available:
 
     ``started``
         A build has started
-        
+
     ``finished``
         A build has finished
-        
+
     ``success``
         A build finished successfully
-        
+
     ``failure``
         A build failed
-        
+
     ``exception``
         A build generated and exception
-        
+
     ``xToY``
         The previous build was x, but this one is Y, where x and Y are each
         one of success, warnings, failure, exception (except Y is
@@ -859,10 +862,10 @@ Some of the commands currently available:
 
     ``now``
         Shutdown immediately without waiting for the builders to finish
-    
+
 ``source``
     Announce the URL of the Buildbot's home page.
-    
+
 ``version``
     Announce the version of this Buildbot.
 
@@ -891,7 +894,7 @@ will be available:
     before starting the second (hopefully fixed) build.
 
 If the `categories` is set to a category of builders (see the categories
-option in :ref:`Builder-Configuration`) changes related to only that 
+option in :ref:`Builder-Configuration`) changes related to only that
 category of builders will be sent to the channel.
 
 If the `useRevisions` option is set to `True`, the IRC bot will send status messages
@@ -923,7 +926,7 @@ StatusPush
     def Process(self):
       print str(self.queue.popChunk())
       self.queueNextServerPush()
-    
+
     import buildbot.status.status_push
     sp = buildbot.status.status_push.StatusPush(serverPushCb=Process,
                                                 bufferDelay=0.5,

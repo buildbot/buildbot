@@ -79,7 +79,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     compare_attrs = ("svnurl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath")
+                     "svnbin", "category", "cachepath", "pollAtLaunch")
 
     parent = None  # filled in when we're added
     last_change = None
@@ -90,7 +90,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=10 * 60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None,
                  project='', cachepath=None, pollinterval=-2,
-                 extra_args=None, name=None):
+                 extra_args=None, name=None, pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -99,7 +99,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = svnurl
 
-        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=name,
+                                          pollInterval=pollInterval,
+                                          pollAtLaunch=pollAtLaunch)
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1]  # strip the trailing slash

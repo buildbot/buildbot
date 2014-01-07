@@ -33,7 +33,7 @@ class HgPoller(base.PollingChangeSource):
 
     compare_attrs = ("repourl", "branch", "workdir",
                      "pollInterval", "hgpoller", "usetimestamps",
-                     "category", "project")
+                     "category", "project", "pollAtLaunch")
 
     db_class_name = 'HgPoller'
 
@@ -41,7 +41,7 @@ class HgPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10 * 60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='', pollinterval=-2,
-                 encoding='utf-8', name=None):
+                 encoding='utf-8', name=None, pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -53,7 +53,7 @@ class HgPoller(base.PollingChangeSource):
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=name, pollInterval=pollInterval)
+            self, name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()

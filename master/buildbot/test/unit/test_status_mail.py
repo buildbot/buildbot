@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+import re
 import sys
 
 from buildbot import config
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
+from buildbot.status import mail
 from buildbot.status.mail import MailNotifier
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -900,3 +903,264 @@ def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
     unibody = u'Unicode body with non-ascii (%s).' % funny_chars
     msg_dict = dict(body=unibody, type='plain')
     return msg_dict
+
+
+# Test buildbot.status.mail._defaultMessageIntro() function
+class TestDefaultMessageIntro(unittest.TestCase):
+    # Set-up a mocked build status object.
+    # If previousBuildResult is specified, create a mocked previous
+    # build with the specified build result.
+
+    def setUpBuild(self, previousBuildResult=None):
+        prev_build = None
+        if previousBuildResult is not None:
+            prev_build = Mock()
+            prev_build.getResults = Mock(return_value=previousBuildResult)
+
+        build = Mock()
+        build.getPreviousBuild = Mock(return_value=prev_build)
+
+        return build
+
+    def testFailureChangeModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("change", FAILURE, build))
+
+    def testFailureChangeModeNewResult(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a new failure",
+                         mail._defaultMessageIntro("change", FAILURE, build))
+
+    def testFailureProblemModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testFailureProblemModeNewFailure(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a new failure",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testFailureProblemModeOldFailure(self):
+        build = self.setUpBuild(FAILURE)
+        self.assertEqual("The Buildbot has detected a failed build",
+                         mail._defaultMessageIntro("problem", FAILURE, build))
+
+    def testWarnings(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a problem in the build",
+                         mail._defaultMessageIntro("all", WARNINGS, build))
+
+    def testSuccessChangeModeFirstBuild(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a passing build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testSuccessChangeModeNewSuccess(self):
+        build = self.setUpBuild(FAILURE)
+        self.assertEqual("The Buildbot has detected a restored build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testSuccessChangeModeSuccessAgain(self):
+        build = self.setUpBuild(SUCCESS)
+        self.assertEqual("The Buildbot has detected a passing build",
+                         mail._defaultMessageIntro("change", SUCCESS, build))
+
+    def testException(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Buildbot has detected a build exception",
+                         mail._defaultMessageIntro("all", EXCEPTION, build))
+
+    def testCancelled(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Build was cancelled by the user",
+                         mail._defaultMessageIntro("all", CANCELLED, build))
+
+
+# Test buildbot.status.mail._defaultMessageProjects() function
+class TestDefaultMessageProjects(unittest.TestCase):
+    # test the case when source stamp does not specify a project
+
+    def testNoSorceStampsProject(self):
+        source_stamp = Mock()
+        source_stamp.project = None
+
+        master_status = Mock()
+        master_status.getTitle = Mock(return_value="test-title")
+
+        self.assertEqual("test-title",
+                         mail._defaultMessageProjects([source_stamp],
+                                                      master_status))
+
+    # test the case where single source stamp specifies a project
+    def testSingleSourceStampProject(self):
+        source_stamp = Mock()
+        source_stamp.project = "source-stamp-title"
+
+        self.assertEqual("source-stamp-title",
+                         mail._defaultMessageProjects([source_stamp], Mock()))
+
+    # test the case where multiple source stamps specifies a project
+    def testMultiSourceStampsProject(self):
+        source_stamp1 = Mock()
+        source_stamp1.project = "title-a"
+
+        # second source stamp specifies same project as first source stamp
+        source_stamp2 = Mock()
+        source_stamp2.project = "title-a"
+
+        source_stamp3 = Mock()
+        source_stamp3.project = "title-b"
+
+        self.assertEqual("title-a, title-b",
+                         mail._defaultMessageProjects([source_stamp1,
+                                                      source_stamp2,
+                                                      source_stamp3],
+                                                      Mock()))
+
+
+# Test buildbot.status.mail._defaultMessageURLs() function
+class TestDefaultMessageURLs(unittest.TestCase):
+
+    def setUpStatus(self, build_url, buildbot_url):
+        master_status = Mock()
+
+        master_status.getURLForThing = Mock(return_value=build_url)
+        master_status.getBuildbotURL = Mock(return_value=buildbot_url)
+
+        return master_status
+
+    # test the case when both build and buildbot URLs are available
+    def testAllURLs(self):
+        master_status = self.setUpStatus("build_url", "buildbot_url")
+
+        r = (".*Full details are available at:(.|\\n)*build_url(.|\\n)*"
+             "Buildbot URL: buildbot_url.*")
+        msg = mail._defaultMessageURLs(master_status, Mock())
+        self.failUnless(re.search(r, msg), "%r does not match %r" % (msg, r))
+
+    # test the case when build URL is not available
+    def testNoBuildURL(self):
+        master_status = self.setUpStatus(None, "buildbot_url")
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()),
+                         "\nBuildbot URL: buildbot_url\n\n")
+
+    # test the case when buildbot URL is not available
+    def testNoBuildbotURL(self):
+        master_status = self.setUpStatus("build_url", None)
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()),
+                         " Full details are available at:\n    build_url\n\n")
+
+    # test the case when no URLs are available
+    def testNoURLs(self):
+        master_status = self.setUpStatus(None, None)
+
+        self.assertEqual(mail._defaultMessageURLs(master_status, Mock()), "\n")
+
+
+# Test buildbot.status.mail._defaultMessageSourceStamps() function
+class TestDefaultMessageSourceStamps(unittest.TestCase):
+
+    # utility function to create mocked source stamp object
+    def setUpSourceStamp(self, branch=None, revision=None, patch=None,
+                         codebase=""):
+
+        source_stamp = Mock()
+        source_stamp.branch = branch
+        source_stamp.revision = revision
+        source_stamp.patch = patch
+        source_stamp.codebase = codebase
+
+        return source_stamp
+
+    # test the case where build does not have any source stamps
+    def testNoSourceStamps(self):
+        self.assertEqual(mail._defaultMessageSourceStamps([]), "")
+
+    # test the case with one single minimal source stamp
+    def testOneSourceStamp(self):
+        source_stamp = self.setUpSourceStamp()
+
+        self.assertEqual("Build Source Stamp: HEAD\n",
+                         mail._defaultMessageSourceStamps([source_stamp]))
+
+    # test the case with multiple source stamps, with branches, revisions,
+    # patch and codebase specifications
+    def testMultipleSourceStamps(self):
+        sstamp1 = self.setUpSourceStamp(branch="branch1", revision="rev1")
+        sstamp2 = self.setUpSourceStamp(branch="branch2", revision="rev2",
+                                        patch="dummy", codebase="base1")
+
+        self.assertEqual("Build Source Stamp: [branch branch1] rev1\n"
+                         "Build Source Stamp 'base1': [branch branch2] rev2 "
+                         "(plus patch)\n",
+                         mail._defaultMessageSourceStamps([sstamp1, sstamp2]))
+
+
+# Test buildbot.status.mail._defaultMessageSummary() function
+class TestDefaultMessageSummary(unittest.TestCase):
+
+    def setUp(self):
+        self.build = Mock()
+        self.build.getText = Mock(return_value=None)
+
+    def testSuccess(self):
+        self.assertEqual("Build succeeded!\n",
+                         mail._defaultMessageSummary(self.build, SUCCESS))
+
+    def testWarnings(self):
+        self.assertEqual("Build Had Warnings\n",
+                         mail._defaultMessageSummary(self.build, WARNINGS))
+
+    def testException(self):
+        self.assertEqual("BUILD FAILED\n",
+                         mail._defaultMessageSummary(self.build, EXCEPTION))
+
+    def testCancelled(self):
+        self.build.getResponsibleUsers = Mock(return_value="Joe Bloggs")
+        self.assertEqual("Build was cancelled by Joe Bloggs\n",
+                         mail._defaultMessageSummary(self.build, CANCELLED))
+
+    def testFailure(self):
+        self.assertEqual("BUILD FAILED\n",
+                         mail._defaultMessageSummary(self.build, FAILURE))
+
+    # test failed build with text contributed by two steps
+    def testFailureStepsText(self):
+        self.build.getText = Mock(return_value=["step1", "step2"])
+        self.assertEqual("BUILD FAILED: step1 step2\n",
+                         mail._defaultMessageSummary(self.build, FAILURE))
+
+
+# Test buildbot.status.mail.defaultMessage() function
+class TestDefaultMessage(unittest.TestCase):
+
+    def testMessage(self):
+
+        # patch private functions
+        self.patch(mail, "_defaultMessageIntro", Mock(return_value="intro"))
+        self.patch(mail, "_defaultMessageProjects", Mock(return_value="project"))
+        self.patch(mail, "_defaultMessageURLs", Mock(return_value="\nurl\n"))
+        self.patch(mail, "_defaultMessageSourceStamps", Mock(return_value="source-stamp"))
+        self.patch(mail, "_defaultMessageSummary", Mock(return_value="summary"))
+
+        # set-up mock build
+        build = Mock()
+        build.getSourceStamps = Mock()
+        build.getSlavename = Mock(return_value="slave-name")
+        build.getReason = Mock(return_value="build-reason")
+        build.getResponsibleUsers = Mock(return_value=["usr1", "usr2"])
+
+        message = mail.defaultMessage(("all"), "test-build", build,
+                                      SUCCESS, Mock())
+
+        expected_message = dict(type="plain",
+                                body="intro on builder test-build while building project.\n"
+                                "url\nBuildslave for this Build: slave-name\n\n"
+                                "Build Reason: build-reason\n"
+                                "source-stampBlamelist: usr1,usr2\n\nsummary\n"
+                                "Sincerely,\n -The Buildbot\n\n")
+        self.assertEqual(message, expected_message)

@@ -55,7 +55,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     them to the change master."""
 
     compare_attrs = ("p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollInterval")
+                     "p4bin", "pollInterval", "pollAtLaunch")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET", "PATH"]
@@ -76,7 +76,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
-                 server_tz=None):
+                 server_tz=None, pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -85,7 +85,9 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = "P4Source:%s:%s" % (p4port, p4base)
 
-        base.PollingChangeSource.__init__(self, name=name, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=name,
+                                          pollInterval=pollInterval,
+                                          pollAtLaunch=pollAtLaunch)
 
         if project is None:
             project = ''

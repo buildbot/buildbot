@@ -220,12 +220,12 @@ class BonsaiParser:
 
 class BonsaiPoller(base.PollingChangeSource):
     compare_attrs = ("bonsaiURL", "pollInterval", "tree",
-                     "module", "branch", "cvsroot")
+                     "module", "branch", "cvsroot", "pollAtLaunch")
 
     def __init__(self, bonsaiURL, module, branch, tree="default",
-                 cvsroot="/cvsroot", pollInterval=30, project=''):
+                 cvsroot="/cvsroot", pollInterval=30, project='', pollAtLaunch=False):
 
-        base.PollingChangeSource.__init__(self, name=bonsaiURL, pollInterval=pollInterval)
+        base.PollingChangeSource.__init__(self, name=bonsaiURL, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
 
         self.bonsaiURL = bonsaiURL
         self.module = module

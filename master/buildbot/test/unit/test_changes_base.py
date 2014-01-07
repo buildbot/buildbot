@@ -160,3 +160,23 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         reactor.callWhenRunning(d.callback, None)
         return d
+
+    def test_pollAtLaunch(self):
+        # track when poll() gets called
+        loops = []
+        self.changesource.poll = \
+            lambda: loops.append(self.clock.seconds())
+
+        self.changesource.pollInterval = 5
+        self.changesource.pollAtLaunch = True
+        self.startChangeSource()
+
+        d = defer.Deferred()
+        d.addCallback(self.runClockFor, 12)
+
+        def check(_):
+            # note that it *does* poll at time 0
+            self.assertEqual(loops, [0.0, 5.0, 10.0])
+        d.addCallback(check)
+        reactor.callWhenRunning(d.callback, None)
+        return d
