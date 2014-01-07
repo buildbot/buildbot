@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import sys
+import re
 
 from buildbot import config
 from buildbot.config import ConfigErrors
@@ -1004,9 +1005,10 @@ class TestDefaultMessageURLs(unittest.TestCase):
     def testAllURLs(self):
         master_status = self.setUpStatus("build_url", "buildbot_url")
 
-        self.assertRegexpMatches(mail._defaultMessageURLs(master_status, Mock()),
-                                 ".*Full details are available at:(.|\\n)*build_url(.|\\n)*"
-                                 "Buildbot URL: buildbot_url.*")
+        r = (".*Full details are available at:(.|\\n)*build_url(.|\\n)*"
+             "Buildbot URL: buildbot_url.*")
+        msg = mail._defaultMessageURLs(master_status, Mock())
+        self.failUnless(re.search(r, msg), "%r does not match %r" % (msg, r))
 
     # test the case when build URL is not available
     def testNoBuildURL(self):
