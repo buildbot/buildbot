@@ -157,15 +157,17 @@
 		}
 	}
 }
-
+ 
  
 .border-table-holder  {
 	border-left: 2px solid #2B6194;
-    left: 210px;
     padding: 0 0 0 4px;
-    position: absolute;
-    top: 7px;
     @include box-shadow (1px 0 0px #FFFFFF inset);
+    overflow-y: auto;
+    white-space: nowrap;
+    width: 88%;
+    float:left;
+    margin-top: 7px;
 }
 
 table.codebase-branch-table {
@@ -454,7 +456,11 @@ table.codebase-branch-table {
 	}
 
 }
-
+@include breakpoint($bkpt-medium) {
+	.border-table-holder  {
+		width: 69%;
+	}
+}
 
 @include breakpoint($bkpt-medium-1) {
 	.dataTables_length,
@@ -466,5 +472,14 @@ table.codebase-branch-table {
 @include breakpoint($bkpt-large) {	
 	.table-wrapper {
 		overflow: visible;	 	
+	}
+		.border-table-holder  {
+		width: 82%;
+	}
+}
+
+@include breakpoint($bkpt-xlarge) {
+	.border-table-holder  {
+		width: 87%;
 	}
 }
