@@ -163,11 +163,22 @@
 	border-left: 2px solid #2B6194;
     padding: 0 0 0 4px;
     @include box-shadow (1px 0 0px #FFFFFF inset);
-    overflow-y: auto;
+    float: left;
+    height: 32px;
+    margin-top: 8px;
+    overflow-x: visible;
+    overflow-y: hidden;
+    padding: 0 0 0 4px; 
+}
+
+
+
+.inner-table-holder {
+	overflow-y: auto;
+    padding-bottom: 20px;
     white-space: nowrap;
     width: 88%;
     float:left;
-    margin-top: 7px;
 }
 
 table.codebase-branch-table {
@@ -457,7 +468,7 @@ table.codebase-branch-table {
 
 }
 @include breakpoint($bkpt-medium) {
-	.border-table-holder  {
+	.inner-table-holder  {
 		width: 69%;
 	}
 }
@@ -473,13 +484,13 @@ table.codebase-branch-table {
 	.table-wrapper {
 		overflow: visible;	 	
 	}
-		.border-table-holder  {
+		.inner-table-holder  {
 		width: 82%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
-	.border-table-holder  {
+	.inner-table-holder  {
 		width: 87%;
 	}
 }

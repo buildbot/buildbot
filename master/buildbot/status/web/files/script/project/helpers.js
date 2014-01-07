@@ -236,9 +236,9 @@ define(['screensize'], function (screenSize) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
-			var cbTable = $('<div class="border-table-holder">'+
+			var cbTable = $('<div class="border-table-holder"><div class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
-							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div>');
+							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
   			$(cbTable).insertAfter($('.filter-table-input'));
 
@@ -258,8 +258,8 @@ define(['screensize'], function (screenSize) {
 					
 					var branches = this.split('=')[1];
 
-					$('tr.codebase').append('<td>' + codeBases + '</td>');
-					$('tr.branch').append('<td>' + branches + '</td>');
+					$('tr.codebase').append('<td>' + codeBases + '</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td>');
+					$('tr.branch').append('<td>' + branches + '</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td><td>hej</td>');
 				}
 				
 			});
