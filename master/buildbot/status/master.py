@@ -147,7 +147,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
-            bldr = self.botmaster.builders[builder_name]
             url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
             url['text'] = "%s #%d" % (builder_name, build_number)
             return url

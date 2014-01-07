@@ -938,6 +938,22 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
+    def mergePendingBuildRequests(self, brids, claimed_at=None):
+        for brid in brids:
+            if brid not in self.reqs or brid in self.claims:
+                return defer.fail(
+                    failure.Failure(buildrequests.AlreadyClaimedError))
+
+        claimed_at = datetime2epoch(claimed_at)
+        if not claimed_at:
+            claimed_at = self._reactor.seconds()
+
+        # now that we've thrown any necessary exceptions, get started
+        for brid in brids:
+            self.claims[brid] = BuildRequestClaim(brid=brid,
+                                                  objectid=self.MASTER_ID, claimed_at=claimed_at)
+        return defer.succeed(None)
+
     def reclaimBuildRequests(self, brids):
         for brid in brids:
             if brid not in self.claims:

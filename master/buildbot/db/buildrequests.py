@@ -183,13 +183,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return buildrequest
         return self.db.pool.do(thd)
 
-    def reusePreviousBuild(self, brid, artifactbrid):
+    def reusePreviousBuild(self, requests, artifactbrid):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
 
+            brids = [br.id for br in requests]
             stmt = buildrequests_tbl.update()\
-                .where(buildrequests_tbl.c.id == brid)\
+                .where(buildrequests_tbl.c.id.in_(brids))\
                 .values(artifactbrid=artifactbrid)
 
             res = conn.execute(stmt)
@@ -201,19 +202,171 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
-            clauses = []
-            mergedrequests = requests[1:]
-            for br in mergedrequests:
-                clauses.append(buildrequests_tbl.c.id == br.id)
+            mergedrequests = [br.id for br in requests[1:]]
 
-            stmt = sa.select([buildrequests_tbl.c.id]).where(sa.or_(*clauses))
+            if len(mergedrequests) > 0:
+                stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests))\
+                    .values(artifactbrid=requests[0].id)
 
+                res = conn.execute(stmt2)
+                return res.rowcount
+
+        return self.db.pool.do(thd)
+
+    def mergeBuildingRequest(self, requests, brids, number):
+        def thd(conn):
+            transaction = conn.begin()
+            try:
+                self.tryClaimBuildRequests(conn, brids)
+                self.addBuilds(conn, brids, number)
+                self.executeMergeBuildingRequests(conn, requests)
+            except:
+                transaction.rollback()
+                raise
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
+
+    def executeMergeBuildingRequests(self, conn, requests):
+            buildrequests_tbl = self.db.model.buildrequests
+            mergedrequests = [br.id for br in requests[1:]]
+
+            # we'll need to batch the brids into groups of 100, so that the
+            # parameter lists supported by the DBAPI aren't
+            iterator = iter(mergedrequests)
+            batch = list(itertools.islice(iterator, 100))
+            while len(batch) > 0:
+                q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                    .where(id == requests[0].id)
+                res = conn.execute(q)
+                row = res.fetchone()
+                # by default it will mark using artifact generated from merged brid
+                stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=requests[0].id)\
+                    .values(mergebrid=requests[0].id)
+
+                if row and (row.artifactbrid is not None):
+                    stmt2 = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                    .values(artifactbrid=row.artifactbrid)\
+                    .values(mergebrid=requests[0].id)
+                conn.execute(stmt2)
+                batch = list(itertools.islice(iterator, 100))
+
+    def findCompatibleFinishedBuildRequest(self, buildername, startbrid):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+            q = sa.select([buildrequests_tbl]) \
+                .where(buildrequests_tbl.c.startbrid == startbrid) \
+                .where(buildrequests_tbl.c.buildername == buildername) \
+                .where(buildrequests_tbl.c.complete == 1)\
+                .where(buildrequests_tbl.c.results == 0)
+
+            res = conn.execute(q)
+            row = res.fetchone()
+            rv = None
+            if row:
+                rv = self._brdictFromRow(row, None)
+            res.close()
+            return rv
+        return self.db.pool.do(thd)
+
+    def getRequestsCompatibleToMerge(self, buildername, startbrid, compatible_brids):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+
+            stmt = sa.select([buildrequests_tbl.c.id]) \
+                .where(buildrequests_tbl.c.id.in_(compatible_brids)) \
+                .where(buildrequests_tbl.c.buildername == buildername)\
+                .where(buildrequests_tbl.c.startbrid == startbrid)
+
+            res = conn.execute(stmt)
+            rows = res.fetchall()
+            merged_brids = [row.id for row in rows]
+
+            res.close()
+            return merged_brids
+        return self.db.pool.do(thd)
+
+    def executeMergeFinishedBuildRequest(self, conn, brdict, merged_brids):
+        buildrequests_tbl = self.db.model.buildrequests
+
+        completed_at = datetime2epoch(brdict['complete_at'])
+        # we'll need to batch the brids into groups of 100, so that the
+        # parameter lists supported by the DBAPI aren't
+        iterator = iter(merged_brids)
+        batch = list(itertools.islice(iterator, 100))
+        while len(batch) > 0:
             stmt2 = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.id.in_(stmt))\
-                .values(artifactbrid=requests[0].id)
+                .where(buildrequests_tbl.c.id.in_(batch)) \
+                .values(complete = 1) \
+                .values(results=brdict['results']) \
+                .values(mergebrid=brdict['brid']) \
+                .values(complete_at = completed_at)
 
-            res = conn.execute(stmt2)
-            return res.rowcount
+            if brdict['artifactbrid'] is None:
+                stmt2 = stmt2.values(artifactbrid=brdict['brid'])
+            else:
+                stmt2 = stmt2.values(artifactbrid=brdict['artifactbrid'])
+            conn.execute(stmt2)
+            batch = list(itertools.islice(iterator, 100))
+
+    def addFinishedBuilds(self, conn, brdict, merged_brids):
+        builds_tbl = self.db.model.builds
+        stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
+                          order_by = [sa.desc(builds_tbl.c.number)]) \
+            .where(builds_tbl.c.brid == brdict['brid'])
+
+        res = conn.execute(stmt3)
+        row = res.fetchone()
+        if row:
+            stmt4 = builds_tbl.insert()
+            conn.execute(stmt4, [ dict(number=row.number, brid=br,
+                                       start_time=row.start_time,finish_time=row.finish_time)
+                                  for br in merged_brids ])
+        res.close()
+
+    def mergeFinishedBuildRequest(self, brdict, merged_brids):
+        def thd(conn):
+            transaction = conn.begin()
+            try:
+                self.tryClaimBuildRequests(conn, merged_brids)
+                # build request will have same properties so we skip checking it
+                self.executeMergeFinishedBuildRequest(conn, brdict, merged_brids)
+                # insert builds
+                self.addFinishedBuilds(conn, brdict, merged_brids)
+            except:
+                transaction.rollback()
+                raise
+
+            transaction.commit()
+        return self.db.pool.do(thd)
+
+    def mergePendingBuildRequests(self, brids):
+        def thd(conn):
+            transaction = conn.begin()
+            try:
+                self.tryClaimBuildRequests(conn, brids)
+                # we'll need to batch the brids into groups of 100, so that the
+                # parameter lists supported by the DBAPI aren't
+                iterator = iter(brids[1:])
+                batch = list(itertools.islice(iterator, 100))
+                while len(batch) > 0:
+                    buildrequests_tbl = self.db.model.buildrequests
+                    stmt = buildrequests_tbl.update()\
+                        .where(buildrequests_tbl.c.id.in_(batch))\
+                        .values(mergebrid=brids[0])
+                    conn.execute(stmt)
+                    batch = list(itertools.islice(iterator, 100))
+
+            except:
+                transaction.rollback()
+                raise
+            transaction.commit()
 
         return self.db.pool.do(thd)
 
@@ -253,14 +406,41 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
+            q = sa.select([buildrequests_tbl.c.triggeredbybrid, buildrequests_tbl.c.startbrid])\
+                .where(buildrequests_tbl.c.id == triggeredbybrid)
+
+            res = conn.execute(q)
+            row = res.fetchone()
+
             stmt = buildrequests_tbl.update() \
                 .where(buildrequests_tbl.c.buildsetid == bsid) \
-                .values(triggeredbybrid=triggeredbybrid)
+                .values(triggeredbybrid=triggeredbybrid)\
+                .values(startbrid=triggeredbybrid)
+
+            if row and (row.triggeredbybrid is not None):
+                stmt = buildrequests_tbl.update() \
+                    .where(buildrequests_tbl.c.buildsetid == bsid) \
+                    .values(triggeredbybrid=triggeredbybrid) \
+                    .values(startbrid=row.startbrid)
 
             res = conn.execute(stmt)
             return
 
         return  self.db.pool.do(thd)
+
+    def insertBuildRequestClaimsTable(self, conn, _master_objectid, brids, claimed_at=None):
+        tbl = self.db.model.buildrequest_claims
+        q = tbl.insert()
+        conn.execute(q, [dict(brid=id, objectid=_master_objectid,
+                              claimed_at=claimed_at)
+                         for id in brids])
+
+    def getClaimedAtValue(self, _reactor, claimed_at):
+        if claimed_at is not None:
+            claimed_at = datetime2epoch(claimed_at)
+        else:
+            claimed_at = _reactor.seconds()
+        return claimed_at
 
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
@@ -286,6 +466,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
         return self.db.pool.do(thd)
+
+    @with_master_objectid
+    def tryClaimBuildRequests(self, conn, brids, claimed_at=None,
+                                      _reactor=reactor, _master_objectid=None):
+        claimed_at = self.getClaimedAtValue(_reactor, claimed_at)
+
+        self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
+
+    def addBuilds(self, conn, brids, number, _reactor=reactor):
+        builds_tbl = self.db.model.builds
+        start_time = _reactor.seconds()
+        q = builds_tbl.insert()
+        conn.execute(q, [ dict(number=number, brid=id,
+                               start_time=start_time,finish_time=None)
+                          for id in brids ])
 
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,
@@ -322,6 +517,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
+            req_tbl = self.db.model.buildrequests
 
             # we'll need to batch the brids into groups of 100, so that the
             # parameter lists supported by the DBAPI aren't exhausted
@@ -337,6 +533,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                             (claims_tbl.c.brid.in_(batch))
                             & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
+
+                    q = req_tbl.update(req_tbl.c.id.in_(batch))
+                    conn.execute(q, mergebrid=None)
                 except:
                     transaction.rollback()
                     raise
@@ -412,17 +611,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def _brdictFromRow(self, row, master_objectid):
         claimed = mine = False
         claimed_at = None
-        if row.claimed_at is not None:
+
+        if 'claimed_at' in row.keys() and row.claimed_at is not None:
             claimed_at = row.claimed_at
             claimed = True
             mine = row.objectid == master_objectid
 
         submitted_at = mkdt(row.submitted_at)
         complete_at = mkdt(row.complete_at)
-        claimed_at = mkdt(row.claimed_at)
+        claimed_at = mkdt(claimed_at)
 
         return BrDict(brid=row.id, buildsetid=row.buildsetid,
                 buildername=row.buildername, priority=row.priority,
                 claimed=claimed, claimed_at=claimed_at, mine=mine,
                 complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at)
+                submitted_at=submitted_at, complete_at=complete_at,
+                artifactbrid=row.artifactbrid, triggeredbybrid = row.triggeredbybrid,
+                mergebrid=row.mergebrid, startbrid=row.startbrid)

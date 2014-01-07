@@ -82,6 +82,29 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
+    def finishedMergedBuilds(self, brids, number):
+        def thd(conn):
+            if len(brids) > 1:
+                builds_tbl = self.db.model.builds
+
+                q = sa.select([builds_tbl.c.number, builds_tbl.c.finish_time])\
+                    .where(builds_tbl.c.brid == brids[0])\
+                    .where(builds_tbl.c.number == number)
+
+                res = conn.execute(q)
+                row = res.fetchone()
+                if row:
+                    stmt = builds_tbl.update()\
+                        .where(builds_tbl.c.brid.in_(brids))\
+                        .where(builds_tbl.c.number==number)\
+                        .where(builds_tbl.c.finish_time == None)\
+                        .values(finish_time = row.finish_time)
+
+                    res = conn.execute(stmt)
+                    return res.rowcount
+
+        return self.db.pool.do(thd)
+
     def _bdictFromRow(self, row):
         def mkdt(epoch):
             if epoch:

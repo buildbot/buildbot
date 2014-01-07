@@ -301,7 +301,7 @@ body.log.interface {
     	font-weight: bold;
 	}
 }
-
+ 
 @include breakpoint($bkpt-small) {
 	.auth-user {display:none;}
 	

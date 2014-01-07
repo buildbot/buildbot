@@ -220,7 +220,7 @@ class Trigger(LoggingBuildStep):
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn,num), url, *getBuildResults(build))
+                            self.step_status.addURL("%s #%d" % (bn, num), url, *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
