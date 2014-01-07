@@ -1,10 +1,10 @@
 require.config({
 	paths: {
-		'jquery': 'libs/jQuery-2-0-3',
+		//'jquery':'libs/jQuery-2-0-3',
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
-		'datatables-plugin': 'plugins/jquery-datatables',
-		'dataTables': 'project/dataTables',
+		//'datatables-plugin': 'plugins/jquery-datatables',
+		//'dataTables': 'project/dataTables',
 		'dotdotdot': 'plugins/jquery-dotdotdot',
 		'screensize': 'project/screen-size',
 		'helpers': 'project/helpers',
@@ -13,12 +13,10 @@ require.config({
 	}
 });
 
-define(['jquery','dataTables','helpers','popup','screensize','projectdropdown'], 
-	function($,dataTables,helpers, popup, screenSize, projectDropDown ) {
+require(['helpers','popup','screensize','projectdropdown'], 
+	function(helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
-				
-	    dataTables.init();
-	        
+	  
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
 			require(['dotdotdot'],
@@ -42,5 +40,5 @@ define(['jquery','dataTables','helpers','popup','screensize','projectdropdown'],
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-
+	
 });
