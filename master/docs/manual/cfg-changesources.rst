@@ -887,7 +887,13 @@ arguments:
     (see the :command:`git fetch` help for more info on git-url formats)
 
 ``branches``
-    a list of the branches to fetch, will default to ``['master']``
+    One of the following:
+
+    * a list of the branches to fetch.
+    * ``True`` indicating that all branches should be fetched
+    * a callable which takes a single argument.
+      It should take a remote refspec (such as ``'refs/heads/master'``, and
+      return a boolean indicating whether that branch should be fetched.
 
 ``branch``
     accepts a single branch name to fetch.
