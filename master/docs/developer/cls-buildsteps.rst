@@ -392,11 +392,7 @@ BuildStep
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
-
-    :param logfiles: see :bb:step:`ShellCommand`
-    :param lazylogfiles: see :bb:step:`ShellCommand`
-    :param log_eval_func: see :bb:step:`ShellCommand`
+.. py:class:: LoggingBuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     The remaining arguments are passed to the :class:`BuildStep` constructor.
 
@@ -420,25 +416,35 @@ LoggingBuildStep
 
         Note that lazy logfiles cannot be specified using this method; they must be provided as constructor arguments.
 
-    .. py:method:: startCommand(command)
+    .. py:method:: setupLogsRunCommandAndProcessResults(cmd, stdioLog=None, closeLogWhenFinished=True, errorMessages=None, logfiles=None, lazylogfiles=False):
 
         :param command: the :class:`~buildbot.process.remotecommand.RemoteCommand`
             instance to start
+	:param stdioLog: an optional :class:`~buildbot.process.log.Log` object where the
+            stdout of the command will be stored.
+        :param closeLogWhenFinished: a boolean
+        :param logfiles: optional dictionary see :bb:step:`ShellCommand`
+        :param lazylogfiles: optional boolean see :bb:step:`ShellCommand`
+
+        :returns: step result from :mod:`buildbot.status.results`
 
         .. note::
-
-            This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged.
-            It will be removed, and its use is deprecated.
+            This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged. It will be removed, and its use is deprecated.
 
          Handle all of the mechanics of running the given command.
-         This sets up all required logfiles, keeps status text up to date, and calls the utility hooks described below.
-         When the command is finished, the step is finished as well, making this class is unsuitable for steps that run more than one command in sequence.
+         This sets up all required logfiles, and calls the utility hooks described below.
 
-         Subclasses should override :meth:`~buildbot.process.buildstep.BuildStep.start` and, after setting up an appropriate command, call this method. ::
+         Subclasses should use that method if they want to launch multiple commands in a single step.
+         One could use that method, like for example ::
 
-            def start(self):
-                cmd = RemoteShellCommand(...)
-                self.startCommand(cmd, warnings)
+            @defer.inlineCallbacks
+            def run(self):
+                cmd = RemoteCommand(...)
+                res = yield self.setupLogRunCommandAndProcessResults(cmd)
+                if res == results.SUCCESS:
+                     cmd = RemoteCommand(...)
+                     res = yield self.setupLogRunCommandAndProcessResults(cmd)
+                defer.returnValue(res)
 
     To refine the status output, override one or more of the following methods.
     The :class:`LoggingBuildStep` implementations are stubs, so there is no need to call the parent method.
@@ -456,6 +462,9 @@ LoggingBuildStep
         :returns: step result from :mod:`buildbot.status.results`
 
         This hook should decide what result the step should have.
+
+    ..  py:method:: startComandAndSetStatus(cmd, stdioLog=None, closeLogWhenFinished=True, errorMessages=None, logfiles=None, lazylogfiles=False):
+        Runs setupLogsRunCommandAndProcessResults and keeps status up to date.
 
     The remaining methods provide an embarrassment of ways to set the summary of the step that appears in the various status interfaces.
     The easiest way to affect this output is to override :meth:`~BuildStep.describe`.
@@ -481,9 +490,8 @@ LoggingBuildStep
 
 ShellBaseStep
 ----------------
-Abstract class, that provides helpers to execute one or multiple shell commands in the slave.
+Abstract class, that provides helpers to execute shell commands in the slave.
 It takes care of setting up shell specific tuning, like the environment, workdir, or the pty to use.
-
 
 .. py:class:: ShellBaseStep(workdir, description, descriptionDone, descriptionSuffix, usePTY):
 
@@ -499,7 +507,15 @@ It takes care of setting up shell specific tuning, like the environment, workdir
     * workdir
     * pty setting
 
-    .. py:attribute:: logfiles
+    Finally that class handles to updates the description of the step according to the current
+    command that is being executed.
+
+    .. py:method:: buildCommandKwargs(self, command, warnings, logfiles=None)
+
+       :param command: a string or list of strings to execute the command
+       :param warnings: a list of strings where the warnings will be stored
+       :param logfiles: optional dictionary of logfiles created by inspecting files in the slaves workdir see :bb:step:`ShellCommand`
+       :returns: a dictionary of arguments with environment, use-pty and workdir set aimed at being given to remotecommand.RemoteShellCommand.
 
     .. py:method:: getCurrCommand()
 

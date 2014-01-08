@@ -23,3 +23,40 @@ def worst_status(a, b):
     for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
         if s in (a, b):
             return s
+
+# The first try consisted at creating a mixin with that. That attempt failed
+# on method resolution issues for buildstep.
+# This solution works, even if obj, is actually self, and therefore that function
+# looks quite similar to a method.
+
+
+def computeResultAndContinuation(obj, result, previousResult):
+    possible_overall_result = result
+    terminate = False
+    if result == FAILURE:
+        if not obj.flunkOnFailure:
+            possible_overall_result = SUCCESS
+        if obj.warnOnFailure:
+            possible_overall_result = WARNINGS
+        if obj.flunkOnFailure:
+            possible_overall_result = FAILURE
+        if obj.haltOnFailure:
+            terminate = True
+    elif result == WARNINGS:
+        if not obj.warnOnWarnings:
+            possible_overall_result = SUCCESS
+        else:
+            possible_overall_result = WARNINGS
+        if obj.flunkOnWarnings:
+            possible_overall_result = FAILURE
+    elif result in (EXCEPTION, RETRY, CANCELLED):
+        terminate = True
+
+    # if we skipped this step, then don't adjust the build status
+    # XXX What about putting SUCCESS < SKIPPED in the relational order
+    #     in worst_status ? that would permit us to remove the if below.
+    if result != SKIPPED:
+        result = worst_status(previousResult, possible_overall_result)
+    else:
+        result = previousResult
+    return result, terminate

@@ -257,14 +257,15 @@ class CompositeStepMixin():
     def runRemoteCommand(self, cmd, args, abandonOnFailure=True):
         """generic RemoteCommand boilerplate"""
         cmd = remotecommand.RemoteCommand(cmd, args)
-        cmd.useLog(self.rc_log, False)
-        d = self.runCommand(cmd)
+        d = self.setupLogsRunCommandAndProcessResults(cmd, stdioLog=self.rc_log,
+                                                      closeLogWhenFinished=False)
 
-        def commandComplete(cmd):
-            if abandonOnFailure and cmd.didFail():
+        def commandComplete(res):
+            isFailure = res == FAILURE
+            if abandonOnFailure and isFailure:
                 raise buildstep.BuildStepFailed()
-            return cmd.didFail()
-        d.addCallback(lambda res: commandComplete(cmd))
+            return isFailure
+        d.addCallback(lambda res: commandComplete(res))
         return d
 
     def runRmdir(self, dir, **kwargs):
