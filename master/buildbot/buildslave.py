@@ -88,6 +88,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.master = None
 
         self.slave_status = SlaveStatus(name)
+        self.slave_status.setFriendlyName(self.friendly_name)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = {}
