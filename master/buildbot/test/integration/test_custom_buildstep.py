@@ -15,6 +15,8 @@
 
 import mock
 
+from StringIO import StringIO
+
 from buildbot import config
 from buildbot.buildslave.base import BuildSlave
 from buildbot.process import builder
@@ -23,6 +25,7 @@ from buildbot.process import buildstep
 from buildbot.process import factory
 from buildbot.process import slavebuilder
 from buildbot.status import results
+from buildbot.steps import shell
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
@@ -105,6 +108,44 @@ class FailingCustomStep(buildstep.LoggingBuildStep):
     def start(self):
         yield defer.succeed(None)
         raise self.exception()
+
+
+class OldBuildEPYDoc(shell.ShellCommand):
+
+    command = ['epydoc']
+
+    def runCommand(self, cmd):
+        # we don't have a real buildslave in this test harness, so fake it
+        l = cmd.logs['stdio']
+        l.addStdout('some\noutput\n')
+        return defer.succeed(None)
+
+    def createSummary(self, log):
+        for line in StringIO(log.getText()):
+            # what we do with the line isn't important to the test
+            assert line in ('some\n', 'output\n')
+
+
+class OldPerlModuleTest(shell.Test):
+
+    command = ['perl']
+
+    def runCommand(self, cmd):
+        # we don't have a real buildslave in this test harness, so fake it
+        l = cmd.logs['stdio']
+        l.addStdout('a\nb\nc\n')
+        return defer.succeed(None)
+
+    def evaluateCommand(self, cmd):
+        # Get stdio, stripping pesky newlines etc.
+        lines = map(
+            lambda line: line.replace('\r\n', '').replace('\r', '').replace('\n', ''),
+            self.getLog('stdio').readlines()
+        )
+        # .. the rest of this method isn't htat interesting, as long as the
+        # statement above worked
+        assert lines == ['a', 'b', 'c']
+        return results.SUCCESS
 
 
 class RunSteps(unittest.TestCase):
@@ -200,7 +241,6 @@ class RunSteps(unittest.TestCase):
     def test_step_raising_buildstepfailed_in_start(self):
         self.factory.addStep(FailingCustomStep())
         bs = yield self.do_test_step()
-        # , status_text=["generic"])
         self.assertEqual(bs.getResults(), results.FAILURE)
 
     @defer.inlineCallbacks
@@ -218,3 +258,17 @@ class RunSteps(unittest.TestCase):
         self.assertLogs({
             u'xx': u'o\N{CENT SIGN}\n',
         })
+
+    @defer.inlineCallbacks
+    def test_OldBuildEPYDoc(self):
+        # test old-style calls to log.getText, figuring readlines will be ok
+        self.factory.addStep(OldBuildEPYDoc())
+        bs = yield self.do_test_step()
+        self.assertEqual(bs.getResults(), results.FAILURE)
+
+    @defer.inlineCallbacks
+    def test_OldPerlModuleTest(self):
+        # test old-style calls to self.getLog
+        self.factory.addStep(OldPerlModuleTest())
+        bs = yield self.do_test_step()
+        self.assertEqual(bs.getResults(), results.SUCCESS)

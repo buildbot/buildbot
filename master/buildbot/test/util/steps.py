@@ -141,10 +141,11 @@ class BuildStepMixin(object):
         def addLog(name, type='s', logEncoding=None):
             assert type == 's', "type must be 's' until Data API backend is in place"
             l = logfile.FakeLogFile(name, step)
+            self.step.logs[name] = l
             ss.logs[name] = l
-            return l
-
+            return defer.succeed(l)
         step.addLog = addLog
+        step.addLog_newStyle = addLog
 
         def addHTMLLog(name, html):
             l = logfile.FakeLogFile(name, step)
