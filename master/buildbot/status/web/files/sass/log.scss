@@ -38,9 +38,15 @@ $bkpt-xlarge: min-width 1600px;
 	float: right;
     margin-bottom: 0;
     margin-top: 0;
+    width: auto;
     label {
     	color:#fff;
     	margin-right:3px;
+    	position:relative;
+    	top: 0;
+    	&:after {
+    		 top: 1px;
+    	}
     }
     input {
     	 margin-right: 12px;
@@ -78,6 +84,9 @@ $bkpt-xlarge: min-width 1600px;
 	float: left;
     margin-right: 20px;
     margin-top: 7px;
+    input {
+    	top:0;
+    }
 }
 
 .log-main .table-1 {

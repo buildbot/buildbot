@@ -345,7 +345,7 @@ table.codebase-branch-table {
     float:left;
     margin-right:20px;
     height:30px;
-    label {
+    > label {
         position: absolute;
         font-weight: bold;
         top: 7px;
@@ -395,7 +395,7 @@ table.codebase-branch-table {
     .border-table-holder {
         display:none;
     }
-    .dataTables_filter label input {
+    .dataTables_filter > label input {
         width: 67px;
     }
 

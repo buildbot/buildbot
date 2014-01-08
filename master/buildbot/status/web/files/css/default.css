@@ -2304,14 +2304,14 @@ table.codebase-branch-table tr:first-child th {
   height: 30px;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003348}}
-.dataTables_filter label {
+.dataTables_filter > label {
   position: absolute;
   font-weight: bold;
   top: 7px;
   text-shadow: 0 1px 0 white;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003353}}
-.dataTables_filter label input {
+.dataTables_filter > label input {
   border: 1px solid #CCCCCC;
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
@@ -2329,7 +2329,7 @@ table.codebase-branch-table tr:first-child th {
   width: 100px;
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003364}}
-.dataTables_filter label:after {
+.dataTables_filter > label:after {
   color: #ADADAD;
   font-family: katana_icons;
   content: "";
@@ -2364,7 +2364,7 @@ table.codebase-branch-table tr:first-child th {
   }
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003398}}
-  .dataTables_filter label input {
+  .dataTables_filter > label input {
     width: 67px;
   }
 
