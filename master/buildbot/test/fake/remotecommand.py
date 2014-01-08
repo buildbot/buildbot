@@ -182,8 +182,11 @@ class Expect(object):
         """
         if behavior == 'rc':
             command.rc = args[0]
-            for l in command.logs.values():
-                l.flushFakeLogfile()
+            d = defer.succeed(None)
+            for wrapper in command.logs.values():
+                d.addCallback(lambda _: wrapper.unwrap())
+                d.addCallback(lambda l: l.flushFakeLogfile())
+            return d
         elif behavior == 'err':
             return defer.fail(args[0])
         elif behavior == 'update':

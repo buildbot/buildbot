@@ -68,8 +68,6 @@ Nine
 * "New-style" buildsteps are now supported, with compatibility hacks in place to support "old-style" steps.
   Existing custom steps will continue to function properly, but even so should be refactored as described in :ref:`Refactoring-Buildsteps`.
 
-* The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
-
 * :py:mod:`buildbot.schedulers.forcesched` has the following changes:
 
   - The default configuration does not contain 4 AnyPropertyParameter anymore
@@ -102,8 +100,8 @@ In 0.9.0, many operations performed by BuildStep subclasses now return a Deferre
 As a result, custom build steps which call these methods will need to be rewritten.
 
 Some compatibility is included in Buildbot for old steps, and many will continue to operate properly in 0.9.0.
-However, this compatibility is accomplished through some ugly hacks that may not work in all circumstances, and will be removed in a future version anyway.
-All custom steps should be rewritten in the new style as soon as possible.
+However, this compatibility is accomplished through some ugly hacks that may not work in all circumstances, and will be removed in a future version anyway; see "Backward Compatiblity" below.
+All custom steps, particularly those for which the backward compatibility hacks do not work, should be rewritten in the new style as soon as possible.
 
 Buildbot distinguishes new-style from old-style steps by the presence of a :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
 If this method is present, then the step is a new-style step.
@@ -118,6 +116,20 @@ Summary of Changes
    However, it does not support log-reading methods such as ``getText``.
    It was never advisable to handle logs as enormous strings.
    New-style steps should, instead, use a LogObserver or fetch log lines bit by bit using :bb:rtype:`logchunk`.
+
+Backward Compatibility
+~~~~~~~~~~~~~~~~~~~~~~
+
+Some hacks are in place to support old-style tests.
+This list will grow as the pickle-based backend is replaced with the Data API.
+These hacks are only activated when an old-style step is detected.
+
+* The Deferreds from all asynchronous methods invoked during step execution are gathered internally.
+  The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
+  For logfiles, this is accomplished by means of a synchronous wrapper class.
+
+* Logfile data is available while the step is still in memory.
+  This means that logs returned from ``step.getLog`` have the expected methods ``getText``, ``readlines`` and so on.
 
 Rewriting ``start``
 +++++++++++++++++++
@@ -225,9 +237,6 @@ Any other uses of the subscribe method should be refactored to use a :py:class:`
 Removed Methods
 +++++++++++++++
 
-The ``getLog`` method is completely removed, as discussed above.
-The equivalent functionality is now accessible through the Data API.
-
 Similarly, the :py:class:`~buildbot.process.buildstep.LoggingBuildStep` ``createSummary`` method has been removed, as its ``log`` argument was an instance of a class that is no longer present.
 Instead, process logs in the ``evaluateCommand`` method using the Data API, or implement a log observer.
 
@@ -241,18 +250,7 @@ Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects
 Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.
 
 The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
-Instead, users should implement a custom step with a LogObserver.
-
-Backward Compatibility
-~~~~~~~~~~~~~~~~~~~~~~
-
-Some hacks are in place to support old-style tests.
-This list will grow as the pickle-based backend is replaced with the Data API.
-These hacks are only activated when an old-style step is detected (by the lack of a ``run`` method).
-
-First, the Deferreds all asynchronous methods invoked during step execution are gathered internally.
-The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
-For logfiles, this is accomplished by means of a synchronous wrapper class.
+Instead, users should override the :py:meth:`~buildbot.process.buildstep.LoggingBuildStep.evaluateCommand` method.
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.

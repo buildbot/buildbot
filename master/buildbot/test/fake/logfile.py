@@ -39,6 +39,7 @@ class FakeLogFile(object):
         return self.name
 
     def subscribe(self, callback):
+        log.msg("NOTE: fake logfile subscription never produces anything")
         return self.subPoint.subscribe(callback)
 
     def _getLbf(self, stream, meth):
@@ -59,16 +60,19 @@ class FakeLogFile(object):
         self.header += text
         self.chunks.append((HEADER, text))
         self._getLbf('h', 'headerReceived').append(text)
+        return defer.succeed(None)
 
     def addStdout(self, text):
         self.stdout += text
         self.chunks.append((STDOUT, text))
         self._getLbf('o', 'outReceived').append(text)
+        return defer.succeed(None)
 
     def addStderr(self, text):
         self.stderr += text
         self.chunks.append((STDERR, text))
         self._getLbf('e', 'errReceived').append(text)
+        return defer.succeed(None)
 
     def isFinished(self):
         return self.finished

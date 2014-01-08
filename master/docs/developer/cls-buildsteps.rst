@@ -349,6 +349,15 @@ BuildStep
 
         Add a new logfile with the given name to the step, and return the log file instance.
 
+    .. py:method:: getLog(name)
+
+        :param name: log name
+        :raises KeyError: if there is no such log
+        :returns: :class:`~buildbot.process.log.Log` instance
+
+        Return an existing logfile, previously added with :py:meth:`addLog`.
+        Note that this return value is synchronous, and only available after :py:meth:`addLog`'s deferred has fired.
+
     .. py:method:: addCompleteLog(name, text)
 
         :param name: log name
@@ -383,7 +392,7 @@ BuildStep
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     :param logfiles: see :bb:step:`ShellCommand`
     :param lazylogfiles: see :bb:step:`ShellCommand`

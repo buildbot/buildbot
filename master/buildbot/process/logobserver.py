@@ -37,7 +37,6 @@ class LogObserver(object):
         elif stream == 'h':
             self.headerReceived(data)
 
-    # TODO: document / test
     def finishReceived(self):
         pass
 
