@@ -1131,3 +1131,15 @@ class IBuildStepFactory(Interface):
 
     def buildStep():
         pass
+
+
+class IResComputingConfig(Interface):
+    haltOnfailure = Attribute('haltOnFailure', 'whether a failure must stop the sequence')
+    flunkOnWarnigns = Attribute('flunkOnWarnings', ('whether the step will be marked as '
+                                                    'failure if it ends with warnings'))
+    flunkOnFailure = Attribute('flunkOnFailure', ('whether the step will be marked as '
+                                                  'failure if it ends with failure'))
+    warnOnWarnigns = Attribute('warnOnWarnings', ('whether the step will be marked as '
+                                                  'warnings, or worse if it ends with warnings'))
+    warnOnFailure = Attribute('warnOnWarnings', ('whether the step will be marked as '
+                                                 'warnings, or worse if it ends with failure'))

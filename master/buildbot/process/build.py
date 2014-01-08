@@ -32,15 +32,13 @@ from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
-from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.status.results import worst_status
+from buildbot.status.results import computeResultAndContinuation
 from buildbot.util.eventual import eventually
 
 
 class Build(properties.PropertiesMixin):
-
     """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
@@ -451,33 +449,10 @@ class Build(properties.PropertiesMixin):
         self.results.append(result)
         if text:
             self.text.extend(text)
+        self.result, terminate = computeResultAndContinuation(step, result,
+                                                              self.result)
         if not self.conn:
             terminate = True
-
-        possible_overall_result = result
-        if result == FAILURE:
-            if not step.flunkOnFailure:
-                possible_overall_result = SUCCESS
-            if step.warnOnFailure:
-                possible_overall_result = WARNINGS
-            if step.flunkOnFailure:
-                possible_overall_result = FAILURE
-            if step.haltOnFailure:
-                terminate = True
-        elif result == WARNINGS:
-            if not step.warnOnWarnings:
-                possible_overall_result = SUCCESS
-            else:
-                possible_overall_result = WARNINGS
-            if step.flunkOnWarnings:
-                possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY, CANCELLED):
-            terminate = True
-
-        # if we skipped this step, then don't adjust the build status
-        if result != SKIPPED:
-            self.result = worst_status(self.result, possible_overall_result)
-
         return terminate
 
     def lostRemote(self, conn=None):

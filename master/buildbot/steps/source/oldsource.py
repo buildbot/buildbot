@@ -133,6 +133,17 @@ class SlaveSource(Source):
                      'retry': retry,
                      }
 
+    def startCommand(self, cmd, errorMessages=None):
+        if errorMessages is None:
+            errorMessages = []
+
+        # stdio is the first log
+        self.stdio_log = self.addLog("stdio")
+
+        d = self.startCommandWithoutEnding(cmd, self.stdio_log, errorMessages=errorMessages)
+        d.addCallbacks(self.finished)
+        d.addErrback(self.failed)
+
     def start(self):
         self.args['workdir'] = self.workdir
         self.args['logEnviron'] = self.logEnviron

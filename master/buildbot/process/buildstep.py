@@ -222,6 +222,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
 
 class BuildStep(object, properties.PropertiesMixin):
+    implements(interfaces.IResComputingConfig)
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -309,7 +310,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def _describe(self, done=False):
+    def describeWithoutSuffix(self, done=False):
         if self.descriptionDone and done:
             return self.descriptionDone
         elif self.description:
@@ -317,7 +318,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return [self.name]
 
     def describe(self, done=False):
-        desc = self._describe(done)
+        desc = self.describeWithoutSuffix(done)
         if self.descriptionSuffix:
             desc = desc + self.descriptionSuffix
         return desc
@@ -715,83 +716,82 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms
     cmd = None
 
-    renderables = ['logfiles', 'lazylogfiles']
-
-    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+    def __init__(self, logfiles=None, lazylogfiles=None, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
-        if logfiles and not isinstance(logfiles, dict):
+        if any([x is not None for x in [logfiles, lazylogfiles, log_eval_func]]):
             config.error(
-                "the %s 'logfiles' parameter must be a dictionary" % (self.__class__.__name__),)
-
-        # merge a class-level 'logfiles' attribute with one passed in as an
-        # argument
-        self.logfiles = self.logfiles.copy()
-        self.logfiles.update(logfiles)
-        self.lazylogfiles = lazylogfiles
-        if log_eval_func is not None:
-            config.error(
-                "the 'log_eval_func' paramater is no longer available")
+                "'logfiles', 'lazylogfiles', 'log_eval_func' paramaters are no longer available")
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
         self.logfiles[logname] = filename
 
-    def buildCommandKwargs(self):
-        kwargs = dict()
-        kwargs['logfiles'] = self.logfiles
-        return kwargs
-
-    def startCommand(self, cmd, errorMessages=[]):
-        """
-        @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into our self.stdio_log LogFile
-        """
-        log.msg("%s.startCommand(cmd=%s)" % (self.__class__.__name__, cmd))
-        log.msg("  cmd.args = %r" % (cmd.args))
+    def setupLogsRunCommandAndProcessResults(self, cmd, stdioLog=None, closeLogWhenFinished=True,
+                                             errorMessages=None, logfiles=None, lazylogfiles=False):
+        if errorMessages is None:
+            errorMessages = []
+        if logfiles is None:
+            logfiles = {}
+        if logfiles:
+            cmd.setLogFiles(logfiles)
+        log.msg("%s.startCommandWithoutEnding(cmd=%s)" % (self.__class__.__name__, cmd))
+        log.msg("  cmd.args = %r" % (cmd.args,))
         self.cmd = cmd  # so we can interrupt it
-        self.step_status.setText(self.describe(False))
-
-        # stdio is the first log
-        self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, True)
-        for em in errorMessages:
-            stdio_log.addHeader(em)
-            # TODO: consider setting up self.stdio_log earlier, and have the
-            # code that passes in errorMessages instead call
-            # self.stdio_log.addHeader() directly.
-
-        # there might be other logs
-        self.setupLogfiles(cmd, self.logfiles)
-
-        d = self.runCommand(cmd)  # might raise ConnectionLost
-        d.addCallback(lambda res: self.commandComplete(cmd))
-
         # TODO: when the status.LogFile object no longer exists, then this
         # method will a synthetic logfile for old-style steps, and to be called
         # without the `logs` parameter for new-style steps.  Unfortunately,
         # lots of createSummary methods exist, but don't look at the log, so
         # it's difficult to optimize when the synthetic logfile is needed.
-        d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
+        if stdioLog is not None:
+            cmd.useLog(stdioLog, closeLogWhenFinished)
+            for em in errorMessages:
+                stdioLog.addHeader(em)
+                # TODO: consider setting up self.stdioLog earlier, and have the
+                # code that passes in errorMessages instead call
+                # self.stdioLog.addHeader() directly.
+        self.setupLogfiles(cmd, logfiles, lazylogfiles=lazylogfiles)
+        d = self.runCommand(cmd)  # might raise ConnectionLost
+        d.addCallback(lambda _: self.commandComplete(cmd))
 
-        d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
+        if stdioLog is not None:
+            def _createSummary(res):
+                self.createSummary(cmd.logs[stdioLog.getName()])
+                return res
+            d.addCallback(lambda res: _createSummary(res))
+
+        d.addCallback(lambda _: self.evaluateCommand(cmd))  # returns results
+
+        def _gotResults(results):
+            if stdioLog is not None:
+                # finish off the stdio logfile
+                stdioLog.finish()
+            return results
+        d.addCallback(_gotResults)  # returns results
+        d.addErrback(self.checkDisconnect)  # handle slave lost
+        return d
+
+    def startCommandAndSetStatus(self, cmd, stdioLog=None, closeLogWhenFinished=True,
+                                 errorMessages=None, logfiles=None, lazylogfiles=False):
+        self.step_status.setText(self.describe(False))
+        d = self.setupLogsRunCommandAndProcessResults(cmd, stdioLog=stdioLog,
+                                                      closeLogWhenFinished=closeLogWhenFinished,
+                                                      errorMessages=errorMessages,
+                                                      logfiles=logfiles, lazylogfiles=lazylogfiles)
 
         def _gotResults(results):
             self.setStatus(cmd, results)
-            # finish off the stdio logfile
-            stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
-        d.addCallbacks(self.finished, self.checkDisconnect)
-        d.addErrback(self.failed)
+        return d
 
-    def setupLogfiles(self, cmd, logfiles):
+    def setupLogfiles(self, cmd, logfiles, lazylogfiles=False):
         for logname, remotefilename in logfiles.items():
-            if self.lazylogfiles:
+            if lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
                 #
@@ -822,11 +822,14 @@ class LoggingBuildStep(BuildStep):
             d = self.cmd.interrupt(reason)
             d.addErrback(log.err, 'while cancelling command')
 
-    def checkDisconnect(self, f):
-        f.trap(error.ConnectionLost)
+    def setConnectionLostInStatus(self):
         self.step_status.setText(self.describe(True) +
                                  ["exception", "slave", "lost"])
         self.step_status.setText2(["exception", "slave", "lost"])
+
+    def checkDisconnect(self, f):
+        f.trap(error.ConnectionLost)
+        self.setConnectionLostInStatus()
         return self.finished(RETRY)
 
     def commandComplete(self, cmd):
@@ -963,9 +966,8 @@ class ShellBaseStep(LoggingBuildStep):
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
-    def buildCommandKwargs(self, command, warnings):
-        kwargs = LoggingBuildStep.buildCommandKwargs(self)
-        kwargs.update(self.remote_kwargs)
+    def buildCommandKwargs(self, command, warnings, logfiles=None):
+        kwargs = self.remote_kwargs.copy()
 
         kwargs['command'] = flatten(command, (list, tuple))
 
@@ -985,7 +987,7 @@ class ShellBaseStep(LoggingBuildStep):
     def getCurrCommand(self):
         raise NotImplementedError()
 
-    def _describe(self, done=False):
+    def describeWithoutSuffix(self, done=False):
         """Return a list of short strings to describe this step, for the
         status display. This uses the first few words of the shell command.
         You can replace this by setting .description in your subclass, or by

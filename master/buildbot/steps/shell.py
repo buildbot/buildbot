@@ -72,20 +72,32 @@ class ShellCommand(buildstep.ShellBaseStep):
     """
 
     name = "shell"
-    renderables = ['command']
+    renderables = ['command', 'logfiles', 'lazylogfiles']
 
     command = None  # set this to a command, or set in kwargs
-    # logfiles={} # you can also set 'logfiles' to a dictionary, and it
-    #               will be merged with any logfiles= argument passed in
-    #               to __init__
+    logfiles = {}   # you can also set 'logfiles' to a dictionary, and it
+                    #  will be merged with any logfiles= argument passed in
+                    #  to __init__
 
     # override this on a specific ShellCommand if you want to let it fail
     # without dooming the entire build to a status of FAILURE
     flunkOnFailure = True
 
-    def __init__(self, command=None, **kwargs):
+    def __init__(self, command=None, logfiles=None, lazylogfiles=False, **kwargs):
         if command:
             self.setCommand(command)
+        if logfiles is None:
+            logfiles = {}
+        if logfiles and not isinstance(logfiles, dict):
+            config.error(
+                "the %s 'logfiles' parameter must be a dictionary" % (self.__class__.__name__,))
+
+        # merge a class-level 'logfiles' attribute with one passed in as an
+        # argument
+        self.logfiles = self.logfiles.copy()
+        self.logfiles.update(logfiles)
+        self.lazylogfiles = lazylogfiles
+
         super(ShellCommand, self).__init__(**kwargs)
 
     def setCommand(self, command):
@@ -97,11 +109,21 @@ class ShellCommand(buildstep.ShellBaseStep):
     def buildCommandKwargs(self, warnings):
         return super(ShellCommand, self).buildCommandKwargs(self.command, warnings)
 
-    def start(self):
-        # this block is specific to ShellCommands. subclasses that don't need
-        # to set up an argv array, an environment, or extra logfiles= (like
-        # the Source subclasses) can just skip straight to startCommand()
+    def startCommand(self, cmd, errorMessages=None):
+        if errorMessages is None:
+            errorMessages = []
 
+        # stdio is the first log
+        self.stdio_log = self.addLog("stdio")
+
+        d = self.startCommandAndSetStatus(cmd, self.stdio_log,
+                                          logfiles=self.logfiles,
+                                          lazylogfiles=self.lazylogfiles,
+                                          errorMessages=errorMessages)
+        d.addCallback(self.finished)
+        d.addErrback(self.failed)
+
+    def start(self):
         warnings = []
 
         # create the actual RemoteShellCommand instance now
