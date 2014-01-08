@@ -73,10 +73,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         service.MultiService.__init__(self)
         self.slavename = name
         self.password = password
-        self.friendlyName = friendlyName
+        self.friendly_name = friendlyName
 
-        if self.friendlyName is None:
-            self.friendlyName = name
+        if self.friendly_name is None:
+            self.friendly_name = name
 
         # PB registration
         self.registration = None
