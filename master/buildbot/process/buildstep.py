@@ -746,27 +746,28 @@ class LoggingBuildStep(BuildStep):
         kwargs['logfiles'] = self.logfiles
         return kwargs
 
-    def startCommand(self, cmd, errorMessages=[]):
+    def runCmd(self, cmd, stdioLog=None,
+               stdioLogName=None, errorMessages=None):
         """
-        @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into our self.stdio_log LogFile
+        @type cmd: RemoteCommand,
+        @param cmd: the command to launch,
+        @type stdioLog: deferred that produces a LogFile,
+        @param stdioLog: where the output will be logged
+        @rtype: deferred
         """
+        if errorMessages is None:
+            errorMessages = []
         log.msg("%s.startCommand(cmd=%s)" % (self.__class__.__name__, cmd))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
         self.step_status.setText(self.describe(False))
-
-        # stdio is the first log
-        self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, True)
-        for em in errorMessages:
-            stdio_log.addHeader(em)
-            # TODO: consider setting up self.stdio_log earlier, and have the
-            # code that passes in errorMessages instead call
-            # self.stdio_log.addHeader() directly.
-
-        # there might be other logs
-        self.setupLogfiles(cmd, self.logfiles)
+        if stdioLog is not None:
+            cmd.useLog(stdioLog, True)
+            for em in errorMessages:
+                stdioLog.addHeader(em)
+                # TODO: consider setting up self.stdioLog earlier, and have the
+                # code that passes in errorMessages instead call
+                # self.stdioLog.addHeader() directly.
 
         d = self.runCommand(cmd)  # might raise ConnectionLost
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -776,16 +777,35 @@ class LoggingBuildStep(BuildStep):
         # without the `logs` parameter for new-style steps.  Unfortunately,
         # lots of createSummary methods exist, but don't look at the log, so
         # it's difficult to optimize when the synthetic logfile is needed.
-        d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
+        if stdioLog is not None:
+            d.addCallback(lambda res: self.createSummary(cmd.logs[stdioLog.getName()]))
 
         d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
 
         def _gotResults(results):
             self.setStatus(cmd, results)
-            # finish off the stdio logfile
-            stdio_log.finish()
+            if stdioLog is not None:
+                # finish off the stdio logfile
+                stdioLog.finish()
             return results
         d.addCallback(_gotResults)  # returns results
+        return d
+
+    def startCommand(self, cmd, errorMessages=None):
+        """
+        @param cmd: a suitable RemoteCommand which will be launched, with
+                    all output being put into our self.stdio_log LogFile
+        """
+        if errorMessages is None:
+            errorMessages = []
+
+        # setup other logs than stdio logs
+        self.setupLogfiles(cmd, self.logfiles)
+
+        # stdio is the first log
+        self.stdio_log = self.addLog("stdio")
+
+        d = self.runCmd(cmd, self.stdio_log, errorMessages=errorMessages)
         d.addCallbacks(self.finished, self.checkDisconnect)
         d.addErrback(self.failed)
 
@@ -822,11 +842,14 @@ class LoggingBuildStep(BuildStep):
             d = self.cmd.interrupt(reason)
             d.addErrback(log.err, 'while cancelling command')
 
-    def checkDisconnect(self, f):
-        f.trap(error.ConnectionLost)
+    def setConnectionLostInStatus(self):
         self.step_status.setText(self.describe(True) +
                                  ["exception", "slave", "lost"])
         self.step_status.setText2(["exception", "slave", "lost"])
+
+    def checkDisconnect(self, f):
+        f.trap(error.ConnectionLost)
+        self.setConnectionLostInStatus()
         return self.finished(RETRY)
 
     def commandComplete(self, cmd):
@@ -1006,7 +1029,6 @@ class ShellBaseStep(LoggingBuildStep):
                      text, so a simple noun is appropriate ('compile',
                      'tests' ...)
         """
-
         try:
             if done and self.descriptionDone is not None:
                 return self.descriptionDone

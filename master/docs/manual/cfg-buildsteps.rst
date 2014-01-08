@@ -1902,12 +1902,10 @@ The :bb:step:`ShellCommand` arguments are:
     only be added when and if something is written to them. This can be used to
     suppress the display of empty or missing log files. The default is ``False``.
 
-
 ``timeout``
     if the command fails to produce any output for this many seconds, it
     is assumed to be locked up and will be killed. This defaults to
     1200 seconds. Pass ``None`` to disable.
-
 
 ``maxTime``
     if the command takes longer than this many seconds, it will be
@@ -1937,7 +1935,56 @@ The :bb:step:`ShellCommand` arguments are:
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
 
-.. bb:step:: Configure
+
+.. bb:step:: ListOfShellComands
+
+
+List of Shell Commands
+++++++++++++++++++++++
+.. py:class:: buildbot.steps.listofshellcommands.ListOfShellCommands
+
+This is a class to execute not one but a sequence of shell commands during
+a build. It takes as argument a renderable, or list of commands which are
+:class:`~buildbot.steps.listofshellcommands.ShellArg` objects. This objects
+take as parameter a ``command`` (see :bb:step:`ShellCommand` ``command`` argument) and an optional
+``logfile`` name, that will be used as the stdio log of a :bb:step:`ShellCommand`.
+If ``logfile`` name does not start with the prefix ``stdio``, that prefix will be
+set like ``stdio <logfile>``. All these commands share the same configuration of ``environment``,
+``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
+
+Four methods tune the behavior of how the list of shell commands are executed:
+
+``doIContinue(obtainedResults)``
+  Whether the next step, if it exists, should be executed according to the previous results.
+  The default value is to continue if all the previous had either SKIPPED, WARNINGS, or SUCCESS.
+  Any other value stops the execution.
+
+``doIRunTheCommand(oneCmd)``
+  Whether the string ``oneCmd`` should be executed. If ``doIRunTheCommand`` returns False, the result
+  of the command will be recorded as SKIPPED. The default value will be to skip all ``oneCmd``, such
+  that ``oneCmd == ""``.
+
+``computeResult(allRes)``
+  Compute a single result according to the previously obtained results. Default value is too
+  take the worst result of all. The order being
+  SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED.
+
+``getFinalState``
+  Method to set the status text of the step in the end. The default value is to set the text
+  describing the execution of the last shell command.
+
+The single :bb:step:`ListOfShellCommands` argument is:
+
+``commands``
+
+  A list of :class:`~buildbot.steps.listofshellcommands.ShellArg` objects or a renderable the returns
+  a list of :class:`~buildbot.steps.listofshellcommands.ShellArg` objects. ::
+
+        from buildbot.steps.listofshellcommands import ShellArg
+        from buildbot.steps.listofshellcommands import ListOfShellCommands
+        f.addStep(ListOfShellCommands(commands=[ShellArg(cmd='make p1'),
+                                                ShellArg(cmd='deploy p1', log='deploy p1')]))
+
 
 Configure
 +++++++++

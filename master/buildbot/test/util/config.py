@@ -23,12 +23,15 @@ class ConfigErrorsMixin(object):
             self.fail("too many errors: %s" % (errors.errors,))
         elif len(errors.errors) < 1:
             self.fail("expected error did not occur")
-        elif isinstance(substr_or_re, str):
-            if substr_or_re not in errors.errors[0]:
-                self.fail("non-matching error: %s" % (errors.errors,))
         else:
-            if not substr_or_re.search(errors.errors[0]):
-                self.fail("non-matching error: %s" % (errors.errors,))
+            curr_error = errors.errors[0]
+            if isinstance(substr_or_re, str):
+                if substr_or_re not in curr_error:
+                    self.fail("non-matching error: %s, "
+                              "expected: %s" % (curr_error, substr_or_re))
+            else:
+                if not substr_or_re.search(curr_error):
+                    self.fail("non-matching error: %s" % (curr_error,))
 
     def assertRaisesConfigError(self, substr_or_re, fn):
         try:
