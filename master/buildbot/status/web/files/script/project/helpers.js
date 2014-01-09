@@ -5,7 +5,7 @@ define(['screensize'], function (screenSize) {
     
     helpers = {
         init: function () {
-        	
+
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -236,7 +236,7 @@ define(['screensize'], function (screenSize) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
-			var cbTable = $('<div class="border-table-holder"><div class="inner-table-holder">'+
+			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
@@ -263,7 +263,13 @@ define(['screensize'], function (screenSize) {
 				}
 				
 			});
-				
+			/*
+			$(".border-table-holder").hover(function(){
+        		$(this).css({"overflow-x":"scroll", 'marginTop':0});
+        	},function(){
+        		$(this).css({"overflow":""});
+        	});
+			*/	
 		}, menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 	        	
         	if (isMediumScreen){	
@@ -302,24 +308,23 @@ define(['screensize'], function (screenSize) {
 
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
-
 			// Artifacts produced in the buildsteplist
 			var artifactJS = $('li.artifact-js').clone();
 			
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
+			var noArtifactsJS = $('#noArtifactsJS');
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
 				showArtifactsJS
-				.removeClass('no-artifacts')
-				.addClass('more-info mod-1 popup-btn-js-2')
+				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);
+				.append(artifactJS);				
 			} else {
-				showArtifactsJS.text('No Artifacts');
+				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult

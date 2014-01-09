@@ -9,14 +9,27 @@ require.config({
 		'screensize': 'project/screen-size',
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
-		'popup': 'project/popup'
+		'popup': 'project/popup',
+		'overscroll': 'plugins/jquery-overscroll'
 	}
 });
 
-require(['helpers','popup','screensize','projectdropdown'], 
+define(['helpers','popup','screensize','projectdropdown'], 
 	function(helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
-	  
+	  $(document).ready(function() {
+
+	  	// swipe or scroll in the codebases overview
+	  	if ($('#builders_page').length) {
+	  	require(['overscroll'],
+	        function(overscroll) {	        	
+	        	$("#overScrollJS").overscroll({
+	        		showThumbs:false,
+	        		direction:'horizontal'
+	        	});
+	        });
+	  	}
+
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
 			require(['dotdotdot'],
@@ -40,5 +53,5 @@ require(['helpers','popup','screensize','projectdropdown'],
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-	
+	});	
 });
