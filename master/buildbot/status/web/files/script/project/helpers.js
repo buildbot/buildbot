@@ -432,7 +432,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
         	var isFinishedAttr = $('#isFinished').attr('data-isfinished');
         	
         	$.each(currentPage, function(key, value) {
-        		if (value.length === 1 && isFinishedAttr) {        		
+        		if (value.length === 1 && !isFinishedAttr) {        		
         			isRealTimePage = true;
         			currentPage = value;        			
         			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];
