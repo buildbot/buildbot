@@ -4,9 +4,9 @@ define(['jquery', 'helpers'], function ($, helpers) {
     
     realtimePages = {
         buildDetail: function (m, stepList) {
-        	  
-            	try {
-        
+        	
+            try {
+        	
                   var obj = JSON.parse(m);
                   
                  $.each(obj, function (key, value) {
@@ -16,7 +16,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
                   	var endTime = value.times[1];
  					
                   	var resultTxt = value.text;	
-                  	
+            		console.log(m)        	
                   			// timetable
 		                    var myInt = setInterval(function() {
 						    	helpers.startTimer($('#elapsedTimeJs'), startTime);
