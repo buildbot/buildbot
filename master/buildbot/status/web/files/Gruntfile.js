@@ -40,10 +40,28 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
+          name: 'main',
           baseUrl: 'script/',
-          dir: "prod/script",
-          optimize: 'uglify',
-          mainConfigFile:'script/main.js'
+          //dir: "prod/script",
+          //optimize: 'uglify',
+            //paths: {
+             // requirejs: "require"
+           // },
+
+          mainConfigFile:'script/main.js',
+          out: 'prod/script/main.js',
+          /*
+          modules: [
+            {
+                name: "foo",
+                include: ['jquery',"requirejs", "main"],
+                //True tells the optimizer it is OK to create
+                //a new file foo.js. Normally the optimizer
+                //wants foo.js to exist in the source directory.
+                create: true
+            }
+          ]
+          */
         }
       },
       compileLog: {
