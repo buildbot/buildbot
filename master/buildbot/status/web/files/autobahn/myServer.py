@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 from threading import Lock, Thread
 import urllib2
@@ -10,6 +11,7 @@ from twisted.web.server import Site
 from twisted.web.static import File
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 
+PORT = 8010
 POLL_INTERVAL = 5
 updateLock = Lock()
 
@@ -93,13 +95,13 @@ class BroadcastServerFactory(WebSocketServerFactory):
     def checkURL(self, urlCache):
         url = urlCache.url
         if self.urlCacheDict[url].errorCount > 5:
-            print("Removing cached URL as it has too many errors")
+            logging.info("Removing cached URL as it has too many errors")
             del self.urlCacheDict[url]
             return
         if urlCache.pollNeeded():
             updateLock.acquire()
             try:
-                print("Polling: {0}".format(url))
+                logging.info("Polling: {0}".format(url))
                 response = urllib2.urlopen(url, timeout=POLL_INTERVAL-1)
                 jsonObj = json.load(response)
                 urlCache.lastChecked = time.time()
@@ -107,23 +109,23 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     self.urlCacheDict[url].cachedJSON = jsonObj
                     clients = self.urlCacheDict[url].clients
                     jsonString = json.dumps(jsonObj)
-                    print("JSON Changed, informing {0} client(s)".format(len(clients)))
+                    logging.info("JSON Changed, informing {0} client(s)".format(len(clients)))
                     for client in clients:
                         client.sendMessage(jsonString)
             except Exception as e:
-                print e
+                logging.error(e)
                 self.urlCacheDict[url].errorCount += 1
             finally:
                 updateLock.release()
 
     def register(self, client):
         if not client in self.clients:
-            print "registered client " + client.peerstr
+            logging.info("registered client " + client.peerstr)
             self.clients.append(client)
 
     def unregister(self, client):
         if client in self.clients:
-            print "unregistered client " + client.peerstr
+            logging.info("unregistered client " + client.peerstr)
             self.clients.remove(client)
             for items in self.urlCacheDict.items():
                 url = items[0]
@@ -133,7 +135,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
                 if len(urlCache.clients) == 0:
                     del self.urlCacheDict[url]
-                    print("Removed stale cached URL")
+                    logging.info("Removed stale cached URL")
 
                 break
 
@@ -147,21 +149,45 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
             if self.urlCacheDict[msg].cachedJSON is not None:
                 jsonString = json.dumps(self.urlCacheDict[msg].cachedJSON)
-                print("Sending cached JSON to client {0}".format(client.peerstr))
+                logging.info("Sending cached JSON to client {0}".format(client.peerstr))
                 client.sendMessage(jsonString)
 
+
+def createDeamon():
+    import os, sys
+    fpid = os.fork()
+    if fpid is not 0:
+        f = open('myServer.pid','w')
+        f.write(str(fpid))
+        f.close()
+        sys.exit(0)
 
 if __name__ == '__main__':
 
     if len(sys.argv) > 1 and sys.argv[1] == 'debug':
         log.startLogging(sys.stdout)
         debug = True
+    elif len(sys.argv) > 1 and sys.argv[1] == 'daemon':
+        createDeamon()
+        debug = False
     else:
         debug = False
 
+    logFormat = '%(asctime)s %(levelname)s: %(message)s'
+    dateFormat = '%m/%d/%Y %I:%M:%S %p'
+    logging.basicConfig(format=logFormat, filename='myServer.log', level=logging.INFO, datefmt=dateFormat)
+
+    if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != 'daemon'):
+        #Add console logging
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        formatter = logging.Formatter(logFormat, datefmt=dateFormat)
+        console.setFormatter(formatter)
+        logging.getLogger('').addHandler(console)
+
     ServerFactory = BroadcastServerFactory
 
-    factory = ServerFactory("ws://localhost:8010",
+    factory = ServerFactory("ws://localhost:{0}".format(PORT),
                             debug=debug,
                             debugCodePaths=debug)
 
@@ -173,4 +199,5 @@ if __name__ == '__main__':
     web = Site(webdir)
     reactor.listenTCP(8080, web)
 
+    logging.info("Starting autobahn server on port {0}".format(PORT))
     reactor.run()
