@@ -77,6 +77,10 @@ a.grey-btn,
     }
 }
 
+.chrome.win .grey-btn.var-1:after {
+    content:""; 
+}
+
 .grey-btn.var-2 {
     font-size: 9px;
     padding: 7px 8px;
@@ -95,18 +99,15 @@ a.grey-btn,
 
 .codebases .blue-btn {
     position: absolute;
-    right: 0;
+    right: 10px;
     top: -6px;
 }
 
-
-
-@include breakpoint($bkpt-small) {
-    .codebases .grey-btn {
-        //float:left;   
-    }
-    .grey-btn + .dataTables_wrapper {
-        margin-right: 0;
+.rebuild, 
+.cancelbuild,
+.stopbuild {
+    .grey-btn {
+        padding: 5px 9px;
     }
 }
 
@@ -182,4 +183,13 @@ a.grey-btn,
     content: "✖";
     font-size: 20px;
     text-shadow: 1px 1px 1px #FFFFFF;
+}
+
+@include breakpoint($bkpt-small) {
+    .codebases .grey-btn {
+        //float:left;   
+    }
+    .grey-btn + .dataTables_wrapper {
+        margin-right: 0;
+    }
 }

@@ -7,68 +7,65 @@
   {{submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename)}}
 {% endblock %}
 
-
 {% block content %}
-
 <div class="column-1">
-  <div class="column-2">
-    <h2 class="head-2">
-      Administration options
-    </h2>    
-    
-    <ul class="list">
-      {% if authz.advertiseAction('gracefulShutdown', request) %}
-        
-        {% if slave.getGraceful() %}
-          <li>
-            Slave will shut down gracefully when it is idle.
-          </li>
-        {% else %}
-          <li>
+  <div class="column span-3">
+    {% if authz.advertiseAction('gracefulShutdown', request) %}
+              
+      {% if slave.getGraceful() %}
+      <div class="graceful_shutdown">
+          Slave will shut down gracefully when it is idle.
+      </div>
+      {% else %}
 
-            {{ forms.graceful_shutdown(shutdown_url, authz) }}
-          </li>
-        {% endif %}
-      
+          {{ forms.graceful_shutdown(shutdown_url, authz) }}
+     
+      {% endif %}
+            
     {% endif %}
-    
-  </ul>
-
-  </div>
-  <div class="column-2 last">
-    <h2 class="head-2"> 
-      Buildslave information 
+     <h2 class="head-2">
+      Recent builds
     </h2>
-    {% if current %}
-    <ul class="list">
-    {% for b in current %}
-     <li>
-      <h2 class="small-head">
-        Current job
-      </h2>
-      Running
-      {{ build_line(b, True) }}
-       <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
-         <input class="link-button" type="submit" value="Stop Build" />
-         <input type="hidden" name="url" value="{{ this_url }}" />
-       </form>
-     </li>
-    {% endfor %}
-    </ul>
-    {% else %}
-      <h2 class="small-head">
-        No current builds
-      </h2>
-      <br>
-      
-    {% endif %}
-    <div class="dataTables_wrapper">
     {{ build_table(recent, True) }}
-    </div>
   </div>
+  <div class="column span-2">
+        <h2 class="head-2"> Current builds </h2>
+        {% if current %}
+        <!--
+        <a class="more-info sum-display popup-btn-js-2" href="#">
+          Current jobs 
+          (<span id="currentJobs"></span>)
+        </a>
+        -->
+   
+          <ul id="runningBuilds_onBuildslave" class="pending-job-list">
+          {% for b in current %}
+           <li>
+            <!--
+            <h2 class="small-head">
+              Current job
+            </h2>
+            Running
+          -->
+             
+             {{ build_line(b, True) }}
+             <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
+               <input class="link-button" type="submit" value="Stop Build" />
+               <input type="hidden" name="url" value="{{ this_url }}" />
+             </form>
+           </li>
+          {% endfor %}
+          </ul>
+     
+        {% else %}          
+            <ul id="runningBuilds_onBuildslave" class="pending-job-list">
+              <li>
+                No current builds          
+              </li>
+            </ul>
+        {% endif %}
 
+  </div>
 </div>
-
-
 
 {% endblock %}

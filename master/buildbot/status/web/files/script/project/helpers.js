@@ -1,11 +1,11 @@
-define(['jquery', 'screensize'], function ($, screenSize) {
+define(['screensize'], function (screenSize) {
 
     "use strict";
     var helpers;
     
     helpers = {
         init: function () {
-
+        	
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -20,13 +20,26 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    });
 			*/
 
+			// Set the currentmenu item
+			helpers.setCurrentItem();
+
 			// Authorize on every page
 			helpers.authorizeUser();
+
 
         	// insert codebase and branch on the builders page
         	if ($('#builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
-        		helpers.codeBaseBranchOverview();
+        		helpers.codeBaseBranchOverview();	
+			}
+
+			if ($('#buildslave_page').length) {
+				// display the number of current jobs
+				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
+			}
+
+			if ($('#builddetail_page').length > 0) {
+				helpers.summaryArtifactTests();
 			}
 
 			if ($('#tb-root').length != 0) {
@@ -90,6 +103,36 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
 			}
 
+		}, setCurrentItem: function () {
+			
+				var path = window.location.pathname.split("\/");
+				
+				 $('.top-menu a').each(function(index) {
+				 	var thishref = this.href.split("\/");
+				 	
+				    if(this.id == path[1].trim().toLowerCase() || (this.id == 'home' && path[1].trim().toLowerCase().length === 0))
+				        $(this).parent().addClass("selected");
+				});
+		
+		}, jCenter: function(el) {
+				var h = $(window).height();
+			    var w = $(window).width();
+			    var tu = el.outerHeight(); 
+			    var tw = el.outerWidth(); 
+			    
+			    el.css("position", "absolute");
+
+			    // adjust height to browser height
+
+			    if (h < tu) {
+			    	el.css("top", (h - tu + (tu - h) + 10) / 2 + $(window).scrollTop() + "px");
+			    } else {
+			    	el.css("top", (h - tu) / 2 + $(window).scrollTop() + "px");
+			    }
+				
+				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
+				return el;
+			
 		}, setFullName: function(el) {			
 			var valOrTxt;
 			var cookieVal = helpers.getCookie("fullName1");
@@ -193,11 +236,11 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
-			var cbTable = $('<div class="border-table-holder">'+
+			var cbTable = $('<div class="border-table-holder"><div class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
-							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div>');
+							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).appendTo($('.filter-table-input'));
+  			$(cbTable).insertAfter($('.filter-table-input'));
 
 			$(parsedUrl).each(function(i){
 
@@ -253,6 +296,10 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.tool-tip').remove();
 					$(this).unbind(e);
 				});
+		}, displaySum: function (displayEl, countEl) {
+			// Insert the total length of the elements
+			displayEl.text(countEl.length);
+
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
 
@@ -309,14 +356,31 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			}
 			//var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
-			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
-
+			document.cookie=name + "=" + encodeURI(value) + "; path=/; expires=" + expiredate; 
+			
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 
-		  	return (value != null) ? unescape(value[1]) : ''; 
+		  	return (value != null) ?  decodeURI(value[1]) : ''; 
+
 		}, eraseCookie: function (name, value, eraseCookie) {
     		helpers.setCookie(name, value, eraseCookie);
+
+		}, closePopup: function(boxElement, clearEl) {
+			$(document, '.close-btn').bind('click touchstart', function(e){
+				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length ) {
+					
+					if (clearEl === undefined) {
+						boxElement.remove();
+					} else {
+						boxElement.slideUp('fast', function(){
+							$(this).remove();	
+						});
+					}
+					
+					$(this).unbind(e);
+				}
+			});	
 		}
 	};
 

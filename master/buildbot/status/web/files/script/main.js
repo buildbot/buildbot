@@ -1,33 +1,22 @@
 require.config({
 	paths: {
-		'jquery': 'libs/jQuery-2-0-3',
+		//'jquery':'libs/jQuery-2-0-3',
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
-		'datatables-plugin': 'plugins/jquery-datatables',
-		'dataTables': 'project/dataTables',
+		//'datatables-plugin': 'plugins/jquery-datatables',
+		//'dataTables': 'project/dataTables',
 		'dotdotdot': 'plugins/jquery-dotdotdot',
 		'screensize': 'project/screen-size',
-		'currentitem': 'project/set-current-item',
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup'
 	}
 });
 
-require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'], 
-	function($,setCurrentItem, popup, screenSize, projectDropDown, helpers ) {
+require(['helpers','popup','screensize','projectdropdown'], 
+	function(helpers, popup, screenSize, projectDropDown ) {
 	'use strict';
-
-	$(document).ready(function() {
-		
-		
-		if ($('.tablesorter-js').length > 0) {
-			require(['dataTables'],
-	        function(dataTables) {
-	        	dataTables.init();
-	        });
-		}
-
+	  
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
 			require(['dotdotdot'],
@@ -44,18 +33,12 @@ require(['jquery','currentitem','popup','screensize','projectdropdown','helpers'
 			        selectors.init();
 		    });
 		}
-		if ($('#builddetail_page').length > 0) {
-			helpers.summaryArtifactTests();
-		}
-		
-		// set class on the curret item menu
-		setCurrentItem.init();
+				
 		// get scripts for general popups
 		popup.init();
 		// get scripts for the projects dropdown
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-
-	});
+	
 });

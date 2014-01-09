@@ -14,23 +14,24 @@
     {% endif %}
     <title>{{ pageTitle|e }}</title>
 
-    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
-    <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
-    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    
-    {% endblock %} 
-
+    <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
+    <script src="/prod/script/plugins/jquery-datatables.js"></script>
+    <script src="/prod/script/project/dataTables.js"></script>
     <script type="text/javascript">
       var require = {
           baseUrl: "/prod/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
-
     </script>
+    <script src="/prod/script/require.js"></script>    
 
-    <script src="/script/require.js"></script>
+    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+    <link href='http://fonts.googleapis.com/css?family=Pacifico|Leckerli+One' rel='stylesheet' type='text/css'>
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    
+    {% endblock %} 
 
   </head>
   <body class="interface katana-main">
@@ -55,13 +56,17 @@
             <li>
             </li>
           </ul>
+
           <div class="auth-user">
+            <span class="hide-mobile">
               Logged in as 
-              <span id="authUserName"></span>
+            </span>
+              <span class="hide-mobile" id="authUserName"></span>
               <a id="authUserBtn" href="/login">
                 Log out
               </a>
             </div>
+
         <ul class="top-menu">
           
           <li>
@@ -181,5 +186,8 @@
       </div>
     </footer>
     {% endblock -%}
+
+    
+
   </body>
 </html>

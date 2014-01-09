@@ -1,15 +1,15 @@
-define(['jquery', 'screensize'], function ($, screenSize) {
+define(['screensize', 'helpers'], function (screenSize, helpers) {
 
     "use strict";
     var projectDropDown;
 
     	projectDropDown = {
 	        init: function () {
-			var isSmallScreen = screenSize.isSmallScreen();
+			
 		    
 			$(window).resize(function() {
-				isSmallScreen = screenSize.isSmallScreen();
-				if (isSmallScreen){	
+				
+				if (screenSize.isSmallScreen()){	
 	    			$('.project-dropdown-js').remove();
 	    		} else {
 	    			$('.top-menu').show();
@@ -38,7 +38,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('body').append(preloader).show();
 
 					var path = "/projects";
-					if (!isSmallScreen){
+					if (!screenSize.isSmallScreen()){
 						var mib = $('<div class="more-info-box project-dropdown-js"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
 						$(mib).insertAfter($(this));
 					} else if ($('.submenu').length) {
@@ -50,7 +50,9 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					.done(function(data) {
 						var $response=$(data);
 						$('#bowlG').remove();
-						if (!isSmallScreen){
+
+						// not smartphone or tablet
+						if (!screenSize.isSmallScreen()){
 
 							var fw = $($response).find('.tablesorter-js');
 							$(fw).appendTo($('#content1'));
@@ -63,7 +65,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 							});
 							
 							$(mib).slideDown('fast');
-						} else {
+						} else { // show the menu
 
 							var fw = $($response).find('.scLink');
 							$('<ul/>').addClass('submenu').appendTo('.project-dropdown');
@@ -76,22 +78,13 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 							$('.submenu').slideDown('fast');
 						}
 						
-						if (!isSmallScreen){
+						// remove the submenu for smartphone or tablets
+						if (!screenSize.isSmallScreen()){
 							
 							$('.submenu').remove();	
 						
 							// close popup or menu	
-							$(document, '.close-btn').bind('click touchstart', function(e){
-
-							    if (!$(e.target).closest(mib).length || $(e.target).closest('.close-btn').length) {
-							        	
-							        $(mib).slideUp('fast', function(){
-							        	$(this).remove();	
-							        });
-
-							        $(this).unbind(e);
-							    }
-							});
+							helpers.closePopup(mib, 'slideUp');
 						} 
 							
 					});

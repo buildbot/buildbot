@@ -8,11 +8,11 @@
 //forthcoming mediaqueries
 $bkpt-small: 0 570px;
 $bkpt-small-portrait: (0 570px )(orientation portrait);
-$bkpt-medium-1: 0 1024px;
+$bkpt-medium-1: 0 1025px;
 $bkpt-medium: 571px 1024px;
-$bkpt-large: min-width 1024px;
-$bkpt-large2: min-width 1400px;
-$bkpt-xlarge: min-width 1600px;
+$bkpt-large: min-width 1025px;
+$bkpt-xlarge: min-width 1400px;
+$bkpt-xxlarge: min-width 1600px;
 
 $bkpt-small-height: (max-height 460px)(orientation landscape);
 $bkpt-large-height: min-height 600px;
@@ -22,21 +22,11 @@ $bkpt-large-height: min-height 600px;
 	margin: 0 auto;
 	width: 1500px;
 	position:relative;
-	padding:0 8px;
+	padding:0 10px;
 	//@include box-sizing(border-box);
 }
 
 /* column container */
-div.column {
-	margin: 0 20px 20px 0;
-	float: left;
-	background: none repeat scroll 0 0 #FFFFFF;
-    border: 1px solid #CCCCCC;
-    border-radius: 10px;
-    padding: 6px 20px 20px;
-    width: 426px;
-   	font-size: 12px;
-}
 
 div.column-1 {
 	width: 100%;
@@ -78,8 +68,52 @@ div.column-1 {
 	}
 }
 
-.m-top20 {margin-top:20px;}
- 
+.column-3 {
+	margin: 20px 0 20px 20px;
+    width: 350px;
+    float: left;
+    @include pie-clearfix;
+	&.last {
+		border:none;
+	}	
+}
+
+.column-4 {
+	@include pie-clearfix;
+	margin: 20px 0 20px 20px;
+    width: 720px;
+    float: left;
+	&.last {
+		border:none;
+	}	
+}
+
+.column-5 {
+	@include pie-clearfix;
+	margin: 20px 0 20px 20px;
+    width: 1010px;
+    float: left;
+	&.last {
+		border:none;
+	}	
+}
+
+.column {
+	@include pie-clearfix;
+	margin: 20px 0 20px 20px;
+    float: left;
+	&.last {
+		border:none;
+	}	
+}
+
+.span-1,
+.column-3 .span-1 {width:350px;}
+.span-2 {width:430px;}
+.span-3 {width:1010px;}
+.span-4 {width:350px;}
+.span-5 {width:720px;}
+
 @include breakpoint($bkpt-small) {
 	.container-inner {
 		width: 100%;
@@ -102,6 +136,15 @@ div.column-1 {
 		    width: auto;
 		}
 	}
+	.span-3,
+	.span-4,
+	.span-5,
+	.span-2 {
+    	width: 100%;
+	}
+	.column {
+		margin: 0 0 20px 0 ;
+	}
 }
 
 @include breakpoint($bkpt-medium) {
@@ -110,7 +153,7 @@ div.column-1 {
 		@include box-sizing(border-box);
 	}
 	div.column-1 {
-		padding:15px;
+		padding: 20px;
 		width: 100%;
 		@include box-sizing(border-box);
 	}
@@ -126,24 +169,50 @@ div.column-1 {
 		    width: auto;
 		}
 	}
+	.span-3 {
+    	 width: 100%;
+	}
+	.column {
+		margin: 0 0 20px 0 ;
+	}
+	
 }	
 
 @include breakpoint($bkpt-large) {
-	.container-inner {
-		width: 1000px;
+	.span-3 {
+		width: 950px;	
 	}
+	.container-inner {
+		width: 990px;
+	}
+	.span-5 {
+    	width: 950px;
+	}		
 }
 
-@include breakpoint($bkpt-large2) {
+@include breakpoint($bkpt-xlarge) {
 	.container-inner {
 		width: 1400px;
 	}
 	.column-2 {
 		width: 660px;	
+	}
+	.span-3 {
+		width: 910px;	
+	}
+	.span-4 {
+    	width: 320px;
+	}
+	.span-5 {
+    	width: 680px;
 	}	
 }
 
-@include breakpoint($bkpt-xlarge) {
+@include breakpoint($bkpt-xxlarge) {
+	.span-3 {width:1010px;}
+	.span-2 {width:430px;}
+	.span-4 {width:350px;}
+	.span-5 {width:720px;}
 	.container-inner {
 		width: 1500px;
 	}

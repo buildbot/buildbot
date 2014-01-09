@@ -17,3 +17,66 @@ $color-ui-a: rgb(255,255,255);
 
 // Font colors
 $color-font-grey: #666; // grey
+
+// for not implemented content
+.notimpl {color:#838383 !important;}
+
+// status colors
+.success {
+	background-color: #DDE6D6;
+}
+ 
+.table-1 .success {
+	border-top:1px solid #fff;
+}
+
+.table-1 tr .success:first-child {
+	border-top:none;
+}
+
+.failure {
+	background-color: #EFCFCF;
+	border-top:1px solid #fff;
+}
+
+.warnings {
+	color: #FFFFFF;
+	background-color: #fa3;
+	border-color: #C29D46;
+}
+
+.skipped {
+	background: #CBDCE6;
+	border-top: 1px solid #FFFFFF;
+}
+
+.exception,.retry {
+	background-color: #DDD7DD;
+	border-top: 1px solid #FFFFFF;
+}
+
+.start {
+	color: #000;
+	background-color: #ccc;
+	border-color: #ccc;
+}
+
+.running,.waiting,td.building, .current-step {
+	background-color: #FCFACB;
+	border-top:1px solid #fff;
+}
+
+.offline,td.offline {
+    background-color: #E7E7E7;
+    @include text-shadow(0 1px 0 #fff);
+}
+
+.idle,td.idle {
+    background-color: #F5F5F5;
+    @include text-shadow(0 1px 0 #fff);
+}
+ 
+.table-1 .offline,
+.table-1 .idle  {
+	border-top: 1px solid #FFFFFF;
+}

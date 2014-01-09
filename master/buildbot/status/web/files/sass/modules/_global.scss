@@ -19,7 +19,7 @@ body.interface {
 	font-size: 12px;
 	color: #444;
 	letter-spacing:0.4px;
-	-webkit-font-smoothing: antialiased
+	-webkit-font-smoothing: antialiased;
 }
 
 a:link,a:visited,a:active {
@@ -50,8 +50,4 @@ li {
 	padding: 0;
 	margin:0;
 	list-style:none;
-}
-
-.fl-right {
-	float:right;
 }

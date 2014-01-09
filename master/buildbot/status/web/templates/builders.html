@@ -11,7 +11,7 @@
 
   {% block content %}
 
-<div class="filter-table-input">
+<div class="filter-table-input dataTables_filter">
 
     <label>
         <input type="text" id="filterTableInput" placeholder="Filter results">
@@ -85,13 +85,25 @@
       </td>
       <td class="txt-align-left last-build-js">
           {% if b.last_run %}
-             {{ b.last_run }} ago <span class="small-txt">({{b.elapsed}})</span>
+          {# hidden timestamp for datatable to sort by #}
+          <span class="hide">
+            {{b.last_run_date}}
+          </span>
+
+             {{ b.last_run }} 
+
+             ago <span class="small-txt">({{b.elapsed}})</span>
           {% endif %}
       </td>
       {% if b.build_url %}
         <td class="status-build-js {{ b.build_css_class }} ">
-            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+          <span class="hide">
             {{ b.build_text }}
+          </span>
+            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+            
+            {{ b.build_text }}
+          
         </td>
       {% else %}
         <td class="LastBuild small-txt">
@@ -102,7 +114,7 @@
       <td>
         {% if b.force_schedulers != {} %}
 
-          <a class="ajaxbtn more-info" title="Run custom build" href="#" data-htmlchunk="isForm" data-rt_update="extforms" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
+          <a class="ajaxbtn more-info" title="Run custom build" href="#" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" data-b="{{b.builder_url}}" data-indexb="{{loop.index0}}">
           </a>
           <a class="run-build-js run-build" title="Run build with default values"  href="#">
           </a>

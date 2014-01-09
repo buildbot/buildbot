@@ -12,133 +12,178 @@
 
 
 <div class="column-1">
-<div class="column-2">
+  <div class="span-4 column">
 
-<h2 class="head-2">
-  Build status
+    <h2 class="head-2">
+      Build status
+    </h2>
 
-</h2>
-<ul class="list">
-<li>
-  
-{% if current %}
-
-  
-  <h2 class="small-head">
-    Current job
-  </h2>
-  <ul class="pending-job-list">
-  {% for b in current %}
-    <li>
-      <a href="{{ b.link }}">{{ b.num }}</a>
-    {% if b.when %}
-      ETA: {{ b.when_time }} [{{ b.when }}]
-    {% endif %}
-
-    {{ b.current_step }}
-
-    {% if authz.advertiseAction('stopBuild', request) %}
-      {{ forms.stop_build(b.stop_url, authz, on_all=False, short=True, label='Build') }}
-    {% endif %}    
-    </li>
-  {% endfor %}
-  </ul>
-{% else %}
-  <h2 class="small-head">
-     current builds
-  </h2> None
-  
-{% endif %}    
- </li>
-<li>
-{% if pending %}
-
-  <h2 class="small-head">
-    Pending Build Requests
-  </h2>
-  <ul class="pending-job-list">
-      {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys()) %}
-    <li>
-      <p class="txt-cont">
-        Cancel all builds
-      </p>
-        {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=False, id='all') }}
-    </li>
-      {% endif %}
-
-      {% for b in pending %}
-    <li>
-    <p class="txt-cont">
-      {{ b.when }}, waiting {{ b.delay }}
-     
-      {% if b.num_changes < 4 %}
-          {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
-          <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
-          {% endfor %}
-      {% else %}
-          {{ b.num_changes }} changes
-      {% endif %}    
-      <br/>
-      {% if 'owner' in b.properties %}
-        <b>Forced build</b>
-        by {{b.properties['owner'][0]}}
-       {{b.properties['reason'][0]}}
-      {% endif %}
-    </p>
-    {% if authz.advertiseAction('cancelPendingBuild', request) %}
-      {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=True, id=b.id) }}
-    {% endif %}    
-    </li>
-  {% endfor %}
-  </li>
-  </ul>  
-     
-{% else %}
-  <h2 class="small-head">
-    Pending Build Requests
-  </h2> None
-{% endif %}
-</li>
-  
-</ul>
-</div>
-<div class="column-2 last">
-
-<ul class="btn-list horisontal">
-  <li>
-    
-     <a href="#" title="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">Build slaves
-    </a>
-
-     
-  </li>
-  <li>
-
-      {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-        <a href="#" title="Run custom build" data-htmlchunk="isForm" data-rt_update="extforms" class="ajaxbtn more-info">Run build
-        </a>
-      {% endif %}          
+    <ul class="list">
+      <li>
         
-  </li>
-</ul>
+      {% if current %}
+        <h2 class="small-head">
+          Current job
+        </h2>
+        <ul class="pending-job-list">
+        {% for b in current %}
+          <li>
+            <a href="{{ b.link }}">{{ b.num }}</a>
+          {% if b.when %}
+            ETA: {{ b.when_time }} [{{ b.when }}]
+          {% endif %}
 
-<div class="divider"></div>
+          {{ b.current_step }}
 
-<h2 class="head-2">
-  Recent Builds
-</h2>
+          {% if authz.advertiseAction('stopBuild', request) %}
+            {{ forms.stop_build(b.stop_url, authz, on_all=False, short=True, label='Build') }}
+          {% endif %}    
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+      <h2 class="small-head">
+         current builds
+      </h2> 
+      <ul class="pending-job-list">
+        <li>
+          None
+        </li>
+      </ul>
+      
+      {% endif %}    
+     </li>
+    <li>
+    {% if pending %}
 
-{{ build_table(recent) }}
+      <h2 class="small-head">
+        Pending Build Requests
+      </h2>
+      <ul class="pending-job-list">
+          {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys()) %}
+        <li>
+          <p class="txt-cont">
+            Cancel all builds
+          </p>
+            {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=False, id='all') }}
+        </li>
+          {% endif %}
 
-<!--
-{% if authz.advertiseAction('pingBuilder', request) %}
-  <h2>Ping slaves</h2>
-  {{ forms.ping_builder(builder_url+"/ping", authz) }}
-{% endif %}
--->
+          {% for b in pending %}
+        <li>
+        <p class="txt-cont">
+          {{ b.when }}, waiting {{ b.delay }}
+         
+          {% if b.num_changes < 4 %}
+              {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
+              <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
+              {% endfor %}
+          {% else %}
+              {{ b.num_changes }} changes
+          {% endif %}    
+          <br/>
+          {% if 'owner' in b.properties %}
+            <b>Forced build</b>
+            by {{b.properties['owner'][0]}}
+           {{b.properties['reason'][0]}}
+          {% endif %}
+        </p>
+        {% if authz.advertiseAction('cancelPendingBuild', request) %}
+          {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=True, id=b.id) }}
+        {% endif %}    
+        </li>
+      {% endfor %}
+      </li>
+      </ul>  
+         
+    {% else %}
+      <h2 class="small-head">
+        Pending Build Requests
+      </h2> 
+      <ul class="pending-job-list">
+        <li>
+          None
+        </li>
+      </ul>
+    {% endif %}
+    </li>
+      
+    </ul>
+  </div>
+  <div class="column span-5">
+
+    <ul class="btn-list fl-right">
+      <!--
+        <li>
+           <a href="#" title="Build slaves" data-popuptitle="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">
+              Build slaves
+           </a>
+        </li>
+      -->
+      <li>
+        {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+          <a href="#" title="Run custom build" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" class="ajaxbtn more-info">Run build
+          </a>
+        {% endif %}          
+      </li>
+    </ul>
+
+    <h2 class="head-2">
+      Recent Builds
+    </h2>
+
+    {{ build_table(recent) }}
+
+    <!--
+    {% if authz.advertiseAction('pingBuilder', request) %}
+      <h2>Ping slaves</h2>
+      {{ forms.ping_builder(builder_url+"/ping", authz) }}
+    {% endif %}
+    -->
 
 
-</div>
+  </div>
+  <div class="column span-4 last">
+    <h2 class="head-2">
+      Build slaves
+    </h2>
+    
+    <table class="table-1 tablesorter-js tablesorter first-child span-1"> 
+      <thead>
+      {% if slaves %}
+        <tr>
+          <th class="txt-align-left">Name</th>
+          <th>Status</th>
+          <th>Admin</th>
+        </tr>
+      {% endif %}
+      </thead>
+      <tbody>
+      {% for s in slaves %}
+      <tr>
+        <td class="txt-align-left">
+          <b>
+            <a href="{{ s.link|e }}">
+              {{ s.name|e }}
+            </a>
+          </b>
+        </td>
+        {% if s.connected %}
+          <td class="idle">connected</td>
+          <td>{{ s.admin|email if s.admin else ""}}</td>
+        {% else %}
+          <td class="offline">offline</td>
+          <td>&nbsp;</td>
+        {% endif %}
+        
+      {% else %}
+        <td>
+          no slaves attached</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endblock %}
@@ -148,7 +193,7 @@
 
     {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}
-    <table class="table-1">
+    <table class="table-1 tablesorter-js tablesorter first-child">
               <thead>
               {% if slaves %}
                 <tr>
