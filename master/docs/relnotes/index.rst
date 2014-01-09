@@ -384,6 +384,8 @@ Features
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
+* :bb:step:`ShellBaseStep` has been created to help the developing of steps that execute one or multiple shell commands.
+
 Fixes
 ~~~~~
 

@@ -478,6 +478,38 @@ LoggingBuildStep
 
         Like :meth:`getText`, this method summarizes the step's result, but it is only called when that result affects the build, either by making it halt, flunk, or end with warnings.
 
+
+ShellBaseStep
+----------------
+Abstract class, that provides helpers to execute one or multiple shell commands in the slave.
+It takes care of setting up shell specific tuning, like the environment, workdir, or the pty to use.
+
+
+.. py:class:: ShellBaseStep(workdir, description, descriptionDone, descriptionSuffix, usePTY):
+
+    :param description, descriptionDone, descriptionSuffix: see :doc:`../manual/cfg-buildsteps`
+    :param usePTY: transferred to :class:`~buildbot.process.remotecommand.RemoteShellCommand`
+
+    The remaining arguments are passed to the :class:`LoggingBuildStep` constructor.
+
+    This subclass of :class:`LoggingBuildStep` is designed to help its subclasses run one or
+    multiple shell commands in the slave. It handles and sets up for, one or all shell commands,
+    the same:
+
+    * workdir
+    * pty setting
+
+    .. py:attribute:: logfiles
+
+    .. py:method:: getCurrCommand()
+
+       :returns: string or list of strings
+
+       This hook, that must be implemented by the children class, computes the shell command that will be or is being executed.
+
+    As an example of how this class can be used see :bb:step:`ShellCommand`.
+
+
 Exceptions
 ----------
 
