@@ -429,14 +429,15 @@ define(['jquery', 'screensize'], function ($, screenSize) {
         	var isRealTimePage = false;
         	var currentPageNoHash;
 
+        	var isFinishedAttr = $('#isFinished').attr('data-isfinished');
+        	
         	$.each(currentPage, function(key, value) {
-
-        		if (value.length === 1) {
+        		if (value.length === 1 && isFinishedAttr === 'true') {        		
         			isRealTimePage = true;
         			currentPage = value;        			
         			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];
         		}
-			});
+			});	
 
         	if (isRealTime) {
 				return isRealTimePage;
