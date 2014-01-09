@@ -20,14 +20,12 @@ import itertools
 import os
 import re
 
-from cPickle import dump
-from cPickle import load
-
 from buildbot import interfaces
 from buildbot import util
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.event import Event
+from buildbot.util import pickle
 from buildbot.util.lru import LRUCache
 from twisted.persisted import styles
 from twisted.python import log
@@ -35,6 +33,7 @@ from twisted.python import runtime
 from zope.interface import implements
 
 # user modules expect these symbols to be present here
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
@@ -44,7 +43,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                  EXCEPTION, RETRY, Results, worst_status]
+                  EXCEPTION, RETRY, CANCELLED, Results, worst_status]
 
 
 class BuilderStatus(styles.Versioned):
@@ -160,7 +159,7 @@ class BuilderStatus(styles.Versioned):
         tmpfilename = filename + ".tmp"
         try:
             with open(tmpfilename, "wb") as f:
-                dump(self, f, -1)
+                pickle.dump(self, f, -1)
             if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
@@ -187,7 +186,7 @@ class BuilderStatus(styles.Versioned):
             log.msg("Loading builder %s's build %d from on-disk pickle"
                     % (self.name, number))
             with open(filename, "rb") as f:
-                build = load(f)
+                build = pickle.load(f)
             build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite

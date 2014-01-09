@@ -16,7 +16,6 @@
 import os
 
 from bz2 import BZ2File
-from cStringIO import StringIO
 from gzip import GzipFile
 
 from buildbot import interfaces
@@ -27,7 +26,6 @@ from twisted.internet import reactor
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import runtime
-from zope.interface import implements
 
 STDOUT = interfaces.LOG_CHANNEL_STDOUT
 STDERR = interfaces.LOG_CHANNEL_STDERR
@@ -195,8 +193,6 @@ class LogFile:
     the length of the on-disk encoding)
     """
 
-    implements(interfaces.IStatusLog, interfaces.ILogFile)
-
     finished = False
     length = 0
     nonHeaderLength = 0
@@ -250,7 +246,7 @@ class LogFile:
         """
         return os.path.join(self.step.build.builder.basedir, self.filename)
 
-    def hasContents(self):
+    def old_hasContents(self):
         """
         Return true if this logfile's contents are available.  For a newly
         created logfile, this is always true, but for a L{LogFile} instance
@@ -271,7 +267,7 @@ class LogFile:
         """
         return self.name
 
-    def getStep(self):
+    def old_getStep(self):
         """
         Get the L{BuildStepStatus} instance containing this logfile
 
@@ -326,14 +322,11 @@ class LogFile:
             pass
         return open(self.getFilename(), "r")
 
-    def getText(self):
+    def old_getText(self):
         # this produces one ginormous string
-        return "".join(self.getChunks([STDOUT, STDERR], onlyText=True))
+        return "".join(self.old_getChunks([STDOUT, STDERR], onlyText=True))
 
-    def getTextWithHeaders(self):
-        return "".join(self.getChunks(onlyText=True))
-
-    def getChunks(self, channels=[], onlyText=False):
+    def old_getChunks(self, channels=[], onlyText=False):
         # generate chunks for everything that was logged at the time we were
         # first called, so remember how long the file was when we started.
         # Don't read beyond that point. The current contents of
@@ -401,19 +394,12 @@ class LogFile:
             else:
                 yield leftover
 
-    def readlines(self):
-        """Return an iterator that produces newline-terminated lines,
-        excluding header chunks."""
-        alltext = "".join(self.getChunks([STDOUT], onlyText=True))
-        io = StringIO(alltext)
-        return io.readlines()
-
     def subscribe(self, receiver, catchup):
         if self.finished:
             return
         self.watchers.append(receiver)
         if catchup:
-            for channel, text in self.getChunks():
+            for channel, text in self.old_getChunks():
                 # TODO: add logChunks(), to send over everything at once?
                 receiver.logChunk(self.step.build, self.step, self,
                                   channel, text)
@@ -422,7 +408,7 @@ class LogFile:
         if receiver in self.watchers:
             self.watchers.remove(receiver)
 
-    def subscribeConsumer(self, consumer):
+    def old_subscribeConsumer(self, consumer):
         p = LogFileProducer(self, consumer)
         p.resumeProducing()
 
@@ -645,8 +631,6 @@ class LogFile:
 
 
 class HTMLLogFile:
-    implements(interfaces.IStatusLog)
-
     filename = None
 
     def __init__(self, parent, name, logfilename, html):
@@ -658,7 +642,7 @@ class HTMLLogFile:
     def getName(self):
         return self.name  # set in BuildStepStatus.addLog
 
-    def getStep(self):
+    def old_getStep(self):
         return self.step
 
     def isFinished(self):
@@ -667,16 +651,13 @@ class HTMLLogFile:
     def waitUntilFinished(self):
         return defer.succeed(self)
 
-    def hasContents(self):
+    def old_hasContents(self):
         return True
 
-    def getText(self):
+    def old_getText(self):
         return self.html  # looks kinda like text
 
-    def getTextWithHeaders(self):
-        return self.html
-
-    def getChunks(self):
+    def old_getChunks(self):
         return [(STDERR, self.html)]
 
     def subscribe(self, receiver, catchup):

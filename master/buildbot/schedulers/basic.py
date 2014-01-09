@@ -74,7 +74,9 @@ class BaseBasicScheduler(base.BaseScheduler):
         self._stable_timers = defaultdict(lambda: None)
         self._stable_timers_lock = defer.DeferredLock()
 
-        self.reason = reason % {'name': name, 'classname': self.__class__.__name__}
+        self.reason = util.ascii2unicode(reason % {
+            'name': name, 'classname': self.__class__.__name__
+        })
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
@@ -83,11 +85,10 @@ class BaseBasicScheduler(base.BaseScheduler):
         # Hook for subclasses to setup before startConsumingChanges().
         return defer.succeed(None)
 
-    def startService(self, _returnDeferred=False):
-        base.BaseScheduler.startService(self)
-
-        d = self.preStartConsumingChanges()
-
+    def activate(self):
+        d = base.BaseScheduler.activate(self)
+        d.addCallback(lambda _:
+                      self.preStartConsumingChanges())
         d.addCallback(lambda _:
                       self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                                  change_filter=self.change_filter,
@@ -107,25 +108,20 @@ class BaseBasicScheduler(base.BaseScheduler):
             d.addCallback(lambda _:
                           self.scanExistingClassifiedChanges())
 
-        # handle Deferred errors, since startService does not return a Deferred
-        d.addErrback(log.err, "while starting SingleBranchScheduler '%s'"
-                              % self.name)
+        return d
 
-        if _returnDeferred:
-            return d  # only used in tests
-
-    def stopService(self):
-        # the base stopService will unsubscribe from new changes
-        d = base.BaseScheduler.stopService(self)
+    @defer.inlineCallbacks
+    def deactivate(self):
+        # the base deactivate will unsubscribe from new changes
+        yield base.BaseScheduler.deactivate(self)
 
         @util.deferredLocked(self._stable_timers_lock)
-        def cancel_timers(_):
+        def cancel_timers():
             for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
-        d.addCallback(cancel_timers)
-        return d
+        yield cancel_timers()
 
     @util.deferredLocked('_stable_timers_lock')
     def gotChange(self, change, important):

@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
-Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = range(7)
+Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
 
 
 def worst_status(a, b):
-    # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY
-    # Retry needs to be considered the worst so that conusmers don't have to
-    # worry about other failures undermining the RETRY.
-    for s in (RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
+    # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
+    # CANCELLED needs to be considered the worst.
+    for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
         if s in (a, b):
             return s

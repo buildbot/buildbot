@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot.changes import changes
 from buildbot.status import base
 from buildbot.status import master
 from buildbot.test.fake import fakedb
@@ -30,18 +31,19 @@ class TestStatus(unittest.TestCase):
 
     def makeStatus(self):
         m = mock.Mock(name='master')
-        self.db = m.db = fakedb.FakeDBConnector(self)
+        self.db = m.db = fakedb.FakeDBConnector(m, self)
         m.basedir = r'C:\BASEDIR'
+        m.botmaster.builderNames = []
         s = master.Status(m)
         return s
 
     def test_getBuildSets(self):
         s = self.makeStatus()
         self.db.insertTestData([
-            fakedb.Buildset(id=91, sourcestampsetid=234, complete=0,
+            fakedb.Buildset(id=91, complete=0,
                             complete_at=298297875, results=-1, submitted_at=266761875,
                             external_idstring='extid', reason='rsn1'),
-            fakedb.Buildset(id=92, sourcestampsetid=234, complete=1,
+            fakedb.Buildset(id=92, complete=1,
                             complete_at=298297876, results=7, submitted_at=266761876,
                             external_idstring='extid', reason='rsn2'),
         ])
@@ -98,3 +100,42 @@ class TestStatus(unittest.TestCase):
         self.assertIdentical(sr0.master, None)
         self.assertIdentical(sr1.master, None)
         self.assertIdentical(sr2.master, None)
+
+    @defer.inlineCallbacks
+    def test_change_consumer_cb_nobody_interested(self):
+        m = mock.Mock(name='master')
+        status = master.Status(m)
+
+        yield status.change_consumer_cb('change.13.new',
+                                        dict(changeid=13))
+
+        self.assertFalse(m.db.changes.getChange.called)
+
+    @defer.inlineCallbacks
+    def test_change_consumer_cb(self):
+        status = self.makeStatus()
+
+        # insert the change that will be announced in the database
+        self.db.insertTestData([
+            fakedb.Change(changeid=13),
+        ])
+
+        # patch out fromChdict
+        self.patch(changes.Change, 'fromChdict',
+                   classmethod(lambda cls, mstr, chd:
+                               defer.succeed(dict(m=mstr, c=chd))))
+
+        # set up a watcher
+        class W(object):
+            pass
+        watcher = W()
+        watcher.changeAdded = mock.Mock(name='changeAdded')
+        status.subscribe(watcher)
+
+        yield status.change_consumer_cb('change.13.new',
+                                        dict(changeid=13))
+
+        self.assertTrue(watcher.changeAdded.called)
+        args, kwargs = watcher.changeAdded.call_args
+        self.assertEqual(args[0]['m'], status.master)
+        self.assertEqual(args[0]['c']['changeid'], 13)

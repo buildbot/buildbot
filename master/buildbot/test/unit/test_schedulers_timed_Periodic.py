@@ -15,15 +15,19 @@
 
 from buildbot import config
 from buildbot.schedulers import timed
+from buildbot.test.util import scheduler
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 
 
-class Periodic(unittest.TestCase):
+class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
+
+    OBJECTID = 23
 
     def makeScheduler(self, firstBuildDuration=0, exp_branch=None, **kwargs):
         self.sched = sched = timed.Periodic(**kwargs)
+        self.attachScheduler(self.sched, self.OBJECTID)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
@@ -77,14 +81,14 @@ class Periodic(unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    periodicBuildTimer=13)
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it trigger the first build
         while self.clock.seconds() < 30:
             self.clock.advance(1)
         self.assertEqual(self.events, ['B@0', 'B@13', 'B@26'])
         self.assertEqual(self.state.get('last_build'), 26)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def test_iterations_simple_branch(self):
@@ -92,14 +96,14 @@ class Periodic(unittest.TestCase):
                                    name='test', builderNames=['test'],
                                    periodicBuildTimer=13, branch='newfeature')
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it trigger the first build
         while self.clock.seconds() < 30:
             self.clock.advance(1)
         self.assertEqual(self.events, ['B@0', 'B@13', 'B@26'])
         self.assertEqual(self.state.get('last_build'), 26)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def test_iterations_long(self):
@@ -107,14 +111,14 @@ class Periodic(unittest.TestCase):
                                    periodicBuildTimer=10,
                                    firstBuildDuration=15)  # takes a while to start a build
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it trigger the first (longer) build
         while self.clock.seconds() < 40:
             self.clock.advance(1)
         self.assertEqual(self.events, ['B@0', 'B@15', 'B@25', 'B@35'])
         self.assertEqual(self.state.get('last_build'), 35)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def test_iterations_stop_while_starting_build(self):
@@ -122,18 +126,18 @@ class Periodic(unittest.TestCase):
                                    periodicBuildTimer=13,
                                    firstBuildDuration=6)  # takes a while to start a build
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it trigger the first (longer) build
         self.clock.advance(3)  # get partway into that build
 
-        d = sched.stopService()  # begin stopping the service
+        d = sched.deactivate()  # begin stopping the service
         d.addCallback(lambda _: self.events.append('STOP@%d' % self.clock.seconds()))
 
         # run the clock out
         while self.clock.seconds() < 40:
             self.clock.advance(1)
 
-        # note that the stopService completes after the first build completes, and no
+        # note that the deactivate completes after the first build completes, and no
         # subsequent builds occur
         self.assertEqual(self.events, ['B@0', 'STOP@6'])
         self.assertEqual(self.state.get('last_build'), 0)
@@ -145,14 +149,14 @@ class Periodic(unittest.TestCase):
                                    periodicBuildTimer=13)
         self.state['last_build'] = self.clock.seconds() - 7  # so next build should start in 6s
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it trigger the first build
         while self.clock.seconds() < 30:
             self.clock.advance(1)
         self.assertEqual(self.events, ['B@6', 'B@19'])
         self.assertEqual(self.state.get('last_build'), 19)
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d
 
     def test_getNextBuildTime_None(self):
@@ -176,9 +180,9 @@ class Periodic(unittest.TestCase):
                                    periodicBuildTimer=13)
         self.state['last_build'] = self.clock.seconds() - 10  # so next build should start in 3s
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(0)  # let it schedule the first build
         self.assertEqual(sched.getPendingBuildTimes(), [3.0])
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d

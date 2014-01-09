@@ -79,6 +79,10 @@ described in :ref:`developer-Reconfiguration`.
 
         The current log maximum size, from :bb:cfg:`logMaxTailSize`.
 
+    .. py:attribute:: logEncoding
+
+        The encoding to expect when logs are provided as bytestrings, from :bb:cfg:`logEncoding`.
+
     .. py:attribute:: properties
 
         A :py:class:`~buildbot.process.properties.Properties` instance
@@ -110,11 +114,6 @@ described in :ref:`developer-Reconfiguration`.
         If true, then this master is part of a cluster; based on
         :bb:cfg:`multiMaster`.
 
-    .. py:attribute:: debugPassword
-
-        The password for the debug client, or None; from
-        :bb:cfg:`debugPassword`.
-
     .. py:attribute:: manhole
 
         The manhole instance to use, or None; from :bb:cfg:`manhole`.
@@ -129,9 +128,8 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: db
 
-        Database specification, a dictionary with keys :bb:cfg:`db_url` and
-        :bb:cfg:`db_poll_interval`.  It is safe to assume that both keys are
-        present.
+        Database specification, a dictionary with key :bb:cfg:`db_url`.  It is
+        safe to assume that this key is present.
 
     .. py:attribute:: metrics
 
@@ -175,6 +173,11 @@ described in :ref:`developer-Reconfiguration`.
     .. py:attribute:: user_managers
 
         The list of user managers providers from :bb:cfg:`user_managers`.
+
+    .. py:attribute:: www
+
+        The web server configuration from :bb:cfg:`www`.  The keys ``port`` and
+        ``url`` are always available.
 
     Loading of the configuration file is generally triggered by the master,
     using the following methods:
@@ -329,6 +332,8 @@ components in Buildbot.
     reconfig support in Buildbot is intended for "intermediate" uses of the
     software, where there are fewer surprises.
 
+.. index:: Service Mixins; ReconfigurableServiceMixin
+
 Reconfigurable Services
 -----------------------
 
@@ -416,11 +421,6 @@ a Periodic scheduler without changing the name.
 Because Buildbot uses :py:class:`~buildbot.schedulers.base.BaseScheduler`
 instances directly in the configuration file, a reconfigured scheduler must
 extract its new configuration information from another instance of itself.
-:py:class:`~buildbot.schedulers.base.BaseScheduler` implements a helper method,
-:py:meth:`~buildbot.schedulers.base.BaseScheduler.findNewSchedulerInstance`,
-which will return the new instance of the scheduler in the given
-:py:class:`MasterConfig` object.
-
 
 Custom Subclasses
 ~~~~~~~~~~~~~~~~~

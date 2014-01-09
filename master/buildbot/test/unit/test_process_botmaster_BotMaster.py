@@ -20,7 +20,7 @@ from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
 from buildbot.test.fake import fakemaster
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -111,7 +111,7 @@ class TestCleanShutdown(unittest.TestCase):
         self.assertTrue(self.botmaster.brd.running)
 
 
-class FakeBuildSlave(config.ReconfigurableServiceMixin, service.Service):
+class FakeBuildSlave(config.ReconfigurableServiceMixin, service.AsyncService):
 
     implements(interfaces.IBuildSlave)
 
@@ -132,7 +132,9 @@ class FakeBuildSlave2(FakeBuildSlave):
 class TestBotMaster(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+                                             wantData=True)
+        self.master.mq = self.master.mq
         self.botmaster = BotMaster(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()

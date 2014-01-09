@@ -76,10 +76,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = ["svnurl", "split_file",
+    compare_attrs = ("svnurl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath", "pollAtLaunch"]
+                     "svnbin", "category", "cachepath", "pollAtLaunch")
 
     parent = None  # filled in when we're added
     last_change = None
@@ -90,13 +90,18 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=10 * 60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None,
                  project='', cachepath=None, pollinterval=-2,
-                 extra_args=None, pollAtLaunch=False):
+                 extra_args=None, name=None, pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
-        base.PollingChangeSource.__init__(self, name=svnurl, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+        if name is None:
+            name = svnurl
+
+        base.PollingChangeSource.__init__(self, name=name,
+                                          pollInterval=pollInterval,
+                                          pollAtLaunch=pollAtLaunch)
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1]  # strip the trailing slash
@@ -114,8 +119,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.svnbin = svnbin
         self.histmax = histmax
         self._prefix = None
-        self.category = category
-        self.project = project
+        self.category = util.ascii2unicode(category)
+        self.project = util.ascii2unicode(project)
 
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
@@ -318,13 +323,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         changes = []
 
         for el in new_logentries:
-            revision = str(el.getAttribute("revision"))
+            revision = unicode(el.getAttribute("revision"))
 
-            revlink = ''
+            revlink = u''
 
-            if self.revlinktmpl:
-                if revision:
-                    revlink = self.revlinktmpl % urllib.quote_plus(revision)
+            if self.revlinktmpl and revision:
+                revlink = self.revlinktmpl % urllib.quote_plus(revision)
+                revlink = unicode(revlink)
 
             log.msg("Adding change revision %s" % (revision,))
             author = self._get_text(el, "author")
@@ -345,10 +350,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
-                # the rest of buildbot is certainly not yet ready to handle
-                # unicode filenames, because they get put in RemoteCommands
-                # which get sent via PB to the buildslave, and PB doesn't
-                # handle unicode.
                 path = path.encode("ascii")
                 if path.startswith("/"):
                     path = path[1:]
@@ -393,15 +394,19 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 else:
                     chdict = dict(
                         author=author,
-                        files=files,
+                        # weakly assume filenames are utf-8
+                        files=[f.decode('utf-8', 'replace') for f in files],
                         comments=comments,
                         revision=revision,
-                        branch=branch,
+                        branch=util.ascii2unicode(branch),
                         revlink=revlink,
                         category=self.category,
-                        repository=branches[branch].get('repository', self.svnurl),
-                        project=branches[branch].get('project', self.project),
-                        codebase=branches[branch].get('codebase', None))
+                        repository=util.ascii2unicode(
+                            branches[branch].get('repository', self.svnurl)),
+                        project=util.ascii2unicode(
+                            branches[branch].get('project', self.project)),
+                        codebase=util.ascii2unicode(
+                            branches[branch].get('codebase', None)))
                     changes.append(chdict)
 
         return changes
@@ -409,7 +414,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            yield self.master.addChange(src='svn', **chdict)
+            yield self.master.data.updates.addChange(src=u'svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:

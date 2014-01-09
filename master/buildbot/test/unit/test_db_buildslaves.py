@@ -15,25 +15,41 @@
 
 from buildbot.db import buildslaves
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
-from twisted.python import failure
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMixin,
-                                        unittest.TestCase):
+class Tests(interfaces.InterfaceTests):
 
-    def setUp(self):
-        d = self.setUpConnectorComponent(
-            table_names=['buildslaves'])
+    # common sample data
 
-        def finish_setup(_):
-            self.db.buildslaves = buildslaves.BuildslavesConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-        return d
+    baseRows = [
+        fakedb.Master(id=10, name='m10'),
+        fakedb.Master(id=11, name='m11'),
+        fakedb.Builder(id=20, name=u'a'),
+        fakedb.Builder(id=21, name=u'b'),
+        fakedb.Builder(id=22, name=u'c'),
+        fakedb.Buildslave(id=30, name='zero'),
+        fakedb.Buildslave(id=31, name='one'),
+    ]
 
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
+    multipleMasters = [
+        fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+        fakedb.BuilderMaster(id=13, builderid=21, masterid=10),
+        fakedb.BuilderMaster(id=14, builderid=20, masterid=11),
+        fakedb.BuilderMaster(id=15, builderid=22, masterid=11),
+        fakedb.ConfiguredBuildslave(id=3012, buildslaveid=30, buildermasterid=12),
+        fakedb.ConfiguredBuildslave(id=3013, buildslaveid=30, buildermasterid=13),
+        fakedb.ConfiguredBuildslave(id=3014, buildslaveid=30, buildermasterid=14),
+        fakedb.ConfiguredBuildslave(id=3114, buildslaveid=31, buildermasterid=14),
+        fakedb.ConfiguredBuildslave(id=3115, buildslaveid=31, buildermasterid=15),
+        fakedb.ConnectedBuildslave(id=3010, buildslaveid=30, masterid=10),
+        fakedb.ConnectedBuildslave(id=3111, buildslaveid=31, masterid=11),
+    ]
 
     # sample buildslave data, with id's avoiding the postgres id sequence
 
@@ -51,160 +67,393 @@ class TestBuildslavesConnectorComponent(connector_component.ConnectorComponentMi
 
     # tests
 
-    def test_getBuildslaveByName_empty(self):
-        d = self.insertTestData(self.buildslave1_rows)
+    def test_signature_findBuildslaveId(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.findBuildslaveId)
+        def findBuildslaveId(self, name):
+            pass
 
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BOGUS_NAME)
+    def test_signature_getBuildslave(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.getBuildslave)
+        def getBuildslave(self, buildslaveid=None, name=None,
+                          masterid=None, builderid=None):
+            pass
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res, None)
+    def test_signature_getBuildslaves(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.getBuildslaves)
+        def getBuildslaves(self, masterid=None, builderid=None):
+            pass
 
-        return d
+    def test_signature_buildslaveConnected(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.buildslaveConnected)
+        def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+            pass
 
-    def test_getBuildslaveByName_existing(self):
-        d = self.insertTestData(self.buildslave1_rows)
+    def test_signature_buildslaveDisconnected(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.buildslaveDisconnected)
+        def buildslaveDisconnected(self, buildslaveid, masterid):
+            pass
 
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
+    @defer.inlineCallbacks
+    def test_findBuildslaveId_insert(self):
+        id = yield self.db.buildslaves.findBuildslaveId(name=u"xyz")
+        bslave = yield self.db.buildslaves.getBuildslave(buildslaveid=id)
+        self.assertEqual(bslave['name'], 'xyz')
+        self.assertEqual(bslave['slaveinfo'], {})
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res['slaveid'], self.BS1_ID)
-            self.assertEqual(res['name'], self.BS1_NAME)
-            self.assertEqual(res['slaveinfo'], self.BS1_INFO)
+    @defer.inlineCallbacks
+    def test_findBuildslaveId_existing(self):
+        yield self.insertTestData(self.baseRows)
+        id = yield self.db.buildslaves.findBuildslaveId(name=u"one")
+        self.assertEqual(id, 31)
 
-        return d
+    @defer.inlineCallbacks
+    def test_getBuildslave_no_such(self):
+        yield self.insertTestData(self.baseRows)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=99)
+        self.assertEqual(slavedict, None)
 
+    @defer.inlineCallbacks
+    def test_getBuildslave_by_name_no_such(self):
+        yield self.insertTestData(self.baseRows)
+        slavedict = yield self.db.buildslaves.getBuildslave(name='NOSUCH')
+        self.assertEqual(slavedict, None)
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_not_configured(self):
+        yield self.insertTestData(self.baseRows)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              connected_to=[], configured_on=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_connected_not_configured(self):
+        yield self.insertTestData(self.baseRows + [
+            # the slave is connected to this master, but not configured.
+            # weird, but the DB should represent it.
+            fakedb.Buildslave(id=32, name='two'),
+            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
+        ])
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=32)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=32, name='two', slaveinfo={'a': 'b'},
+                              connected_to=[11], configured_on=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_multiple_connections(self):
+        yield self.insertTestData(self.baseRows + [
+            # the slave is connected to two masters at once.
+            # weird, but the DB should represent it.
+            fakedb.Buildslave(id=32, name='two'),
+            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=10),
+            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
+            fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
+            fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
+            fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=24),
+            fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=25),
+        ])
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=32)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=32, name='two', slaveinfo={'a': 'b'},
+                              connected_to=[10, 11], configured_on=[
+                                  {'builderid': 20, 'masterid': 10},
+                                  {'builderid': 20, 'masterid': 11},
+                              ]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_by_name_not_configured(self):
+        yield self.insertTestData(self.baseRows)
+        slavedict = yield self.db.buildslaves.getBuildslave(name='zero')
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              connected_to=[], configured_on=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_not_connected(self):
+        yield self.insertTestData(self.baseRows + [
+            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+            fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
+        ])
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=[{'masterid': 10, 'builderid': 20}],
+                              connected_to=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_connected(self):
+        yield self.insertTestData(self.baseRows + [
+            fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
+            fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
+            fakedb.ConnectedBuildslave(buildslaveid=30, masterid=10),
+        ])
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=[{'masterid': 10, 'builderid': 20}],
+                              connected_to=[10]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_with_multiple_masters(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        slavedict['configured_on'].sort()
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=sorted([
+                                  {'masterid': 10, 'builderid': 20},
+                                  {'masterid': 10, 'builderid': 21},
+                                  {'masterid': 11, 'builderid': 20},
+                              ]), connected_to=[10]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_with_multiple_masters_builderid(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30, builderid=20)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        slavedict['configured_on'].sort()
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=sorted([
+                                  {'masterid': 10, 'builderid': 20},
+                                  {'masterid': 11, 'builderid': 20},
+                              ]), connected_to=[10]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_with_multiple_masters_masterid(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30, masterid=11)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=[
+                                  {'masterid': 11, 'builderid': 20},
+                              ], connected_to=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_with_multiple_masters_builderid_masterid(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedict = yield self.db.buildslaves.getBuildslave(buildslaveid=30,
+                                                            builderid=20, masterid=11)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=[
+                                  {'masterid': 11, 'builderid': 20},
+                              ], connected_to=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslave_by_name_with_multiple_masters_builderid_masterid(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedict = yield self.db.buildslaves.getBuildslave(name='zero',
+                                                            builderid=20, masterid=11)
+        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        self.assertEqual(slavedict,
+                         dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                              configured_on=[
+                                  {'masterid': 11, 'builderid': 20},
+                              ], connected_to=[]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslaves_no_config(self):
+        yield self.insertTestData(self.baseRows)
+        slavedicts = yield self.db.buildslaves.getBuildslaves()
+        [validation.verifyDbDict(self, 'buildslavedict', slavedict)
+         for slavedict in slavedicts]
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                 configured_on=[], connected_to=[]),
+            dict(id=31, name='one', slaveinfo={'a': 'b'},
+                 configured_on=[], connected_to=[]),
+        ]))
+
+    @defer.inlineCallbacks
+    def test_getBuildslaves_with_config(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves()
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 10, 'builderid': 20},
+                     {'masterid': 10, 'builderid': 21},
+                     {'masterid': 11, 'builderid': 20},
+                 ]), connected_to=[10]),
+            dict(id=31, name='one', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 11, 'builderid': 20},
+                     {'masterid': 11, 'builderid': 22},
+                 ]), connected_to=[11]),
+        ]))
+
+    @defer.inlineCallbacks
     def test_getBuildslaves_empty(self):
-        d = self.db.buildslaves.getBuildslaves()
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves(masterid=11, builderid=21)
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), [])
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res, [])
+    @defer.inlineCallbacks
+    def test_getBuildslaves_with_config_builderid(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves(builderid=20)
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 10, 'builderid': 20},
+                     {'masterid': 11, 'builderid': 20},
+                 ]), connected_to=[10]),
+            dict(id=31, name='one', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 11, 'builderid': 20},
+                 ]), connected_to=[11]),
+        ]))
 
-        return d
+    @defer.inlineCallbacks
+    def test_getBuildslaves_with_config_masterid_10(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves(masterid=10)
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 10, 'builderid': 20},
+                     {'masterid': 10, 'builderid': 21},
+                 ]), connected_to=[10]),
+        ]))
 
-    def test_getBuildslaves_some(self):
-        d = self.insertTestData(self.buildslave1_rows + self.buildslave2_rows)
+    @defer.inlineCallbacks
+    def test_getBuildslaves_with_config_masterid_11(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves(masterid=11)
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=30, name='zero', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 11, 'builderid': 20},
+                 ]), connected_to=[]),
+            dict(id=31, name='one', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 11, 'builderid': 20},
+                     {'masterid': 11, 'builderid': 22},
+                 ]), connected_to=[11]),
+        ]))
 
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaves()
+    @defer.inlineCallbacks
+    def test_getBuildslaves_with_config_masterid_11_builderid_22(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        slavedicts = yield self.db.buildslaves.getBuildslaves(
+            masterid=11, builderid=22)
+        for slavedict in slavedicts:
+            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            slavedict['configured_on'].sort()
+        self.assertEqual(sorted(slavedicts), sorted([
+            dict(id=31, name='one', slaveinfo={'a': 'b'},
+                 configured_on=sorted([
+                     {'masterid': 11, 'builderid': 22},
+                 ]), connected_to=[11]),
+        ]))
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(len(res), 2)
-
-            self.assertEqual(res[0]['slaveid'], self.BS1_ID)
-            self.assertEqual(res[0]['name'], self.BS1_NAME)
-
-            self.assertEqual(res[1]['slaveid'], self.BS2_ID)
-            self.assertEqual(res[1]['name'], self.BS2_NAME)
-
-        return d
-
-    def test_updateBuildslaves_existing(self):
-        d = self.insertTestData(self.buildslave1_rows)
+    @defer.inlineCallbacks
+    def test_buildslaveConnected_existing(self):
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
 
         NEW_INFO = {'other': [1, 2, 3]}
 
-        @d.addCallback
-        def update(_):
-            return self.db.buildslaves.updateBuildslave(
-                name=self.BS1_NAME,
-                slaveinfo=NEW_INFO
-            )
+        yield self.db.buildslaves.buildslaveConnected(
+            buildslaveid=self.BS1_ID, masterid=11, slaveinfo=NEW_INFO)
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs, {
+            'id': self.BS1_ID,
+            'name': self.BS1_NAME,
+            'slaveinfo': NEW_INFO,
+            'configured_on': [],
+            'connected_to': [11]})
+
+    @defer.inlineCallbacks
+    def test_buildslaveConnected_already_connected(self):
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
+            fakedb.ConnectedBuildslave(id=888,
+                                       buildslaveid=self.BS1_ID, masterid=11),
+        ])
+        yield self.db.buildslaves.buildslaveConnected(
+            buildslaveid=self.BS1_ID, masterid=11, slaveinfo={})
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [11])
+
+    @defer.inlineCallbacks
+    def test_buildslaveDisconnected(self):
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
+            fakedb.ConnectedBuildslave(id=888,
+                                       buildslaveid=self.BS1_ID, masterid=10),
+            fakedb.ConnectedBuildslave(id=889,
+                                       buildslaveid=self.BS1_ID, masterid=11),
+        ])
+        yield self.db.buildslaves.buildslaveDisconnected(
+            buildslaveid=self.BS1_ID, masterid=11)
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [10])
+
+    @defer.inlineCallbacks
+    def test_buildslaveDisconnected_already_disconnected(self):
+        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
+        yield self.db.buildslaves.buildslaveDisconnected(
+            buildslaveid=self.BS1_ID, masterid=11)
+
+        bs = yield self.db.buildslaves.getBuildslave(self.BS1_ID)
+        self.assertEqual(bs['connected_to'], [])
+
+
+class RealTests(Tests):
+
+    # tests that only "real" implementations will pass
+    pass
+
+
+class TestFakeDB(unittest.TestCase, Tests):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        self.db = fakedb.FakeDBConnector(self.master, self)
+        self.insertTestData = self.db.insertTestData
+
+
+class TestRealDB(unittest.TestCase,
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
+
+    def setUp(self):
+        d = self.setUpConnectorComponent(
+            table_names=['buildslaves', 'masters', 'builders',
+                         'builder_masters', 'connected_buildslaves',
+                         'configured_buildslaves'])
 
         @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res['slaveid'], self.BS1_ID)
-            self.assertEqual(res['name'], self.BS1_NAME)
-            self.assertEqual(res['slaveinfo'], NEW_INFO)
-
+        def finish_setup(_):
+            self.db.buildslaves = \
+                buildslaves.BuildslavesConnectorComponent(self.db)
         return d
 
-    def test_updateBuildslaves_new(self):
-        # insert only #1, but not #2
-        d = self.insertTestData(self.buildslave1_rows)
-
-        @d.addCallback
-        def update(_):
-            return self.db.buildslaves.updateBuildslave(
-                name=self.BS2_NAME,
-                slaveinfo=self.BS2_INFO
-            )
-
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BS2_NAME)
-
-        @d.addCallback
-        def check(res):
-            self.failIfIdentical(res['slaveid'], None)
-            self.assertEqual(res['name'], self.BS2_NAME)
-            self.assertEqual(res['slaveinfo'], self.BS2_INFO)
-
-        return d
-
-    def test_updateBuildslave_race(self):
-        RACE_INFO = {'race': 'yep'}
-
-        def race_thd(conn):
-            # generate a new connection, since the passed connection will be
-            # rolled back as a result of the conflicting insert
-            newConn = conn.engine.connect()
-            newConn.execute(self.db.model.buildslaves.insert(),
-                            name=self.BS1_NAME,
-                            info=RACE_INFO)
-
-        d = self.db.buildslaves.updateBuildslave(
-            name=self.BS1_NAME,
-            slaveinfo=self.BS1_INFO,
-            _race_hook=race_thd)
-
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-
-        @d.addCallback
-        def check(res):
-            self.failIfIdentical(res['slaveid'], None)
-            self.assertEqual(res['name'], self.BS1_NAME)
-            self.assertEqual(res['slaveinfo'], RACE_INFO)  # race wins
-
-        return d
-
-    def test_updateBuildslave_badJson(self):
-        d = self.insertTestData(self.buildslave1_rows)
-
-        @d.addCallback
-        def corrupt(_):
-            BAD_JSON = {
-                'key': object(),  # something json wont serialize
-            }
-            return self.db.buildslaves.updateBuildslave(
-                name=self.BS1_NAME,
-                slaveinfo=BAD_JSON)
-
-        @d.addBoth
-        def shouldThrow(res):
-            self.assertIsInstance(res, failure.Failure)
-
-        @d.addCallback
-        def get(_):
-            return self.db.buildslaves.getBuildslaveByName(self.BS1_NAME)
-
-        @d.addCallback
-        def checkUnchanged(res):
-            # should be unchanged from the original value
-            self.assertEqual(res['slaveinfo'], self.BS1_INFO)
-
-        return d
+    def tearDown(self):
+        return self.tearDownConnectorComponent()

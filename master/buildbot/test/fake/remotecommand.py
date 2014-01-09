@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.logfile import HEADER
-from buildbot.status.logfile import STDERR
-from buildbot.status.logfile import STDOUT
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
-from cStringIO import StringIO
+from buildbot.test.fake import logfile
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -47,9 +44,9 @@ class FakeRemoteCommand(object):
         if collectStderr:
             self.stderr = ''
 
-    def run(self, step, remote):
+    def run(self, step, conn, builder_name):
         # delegate back to the test case
-        return self.testcase._remotecommand_run(self, step, remote)
+        return self.testcase._remotecommand_run(self, step, conn, builder_name)
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
         if not logfileName:
@@ -72,7 +69,7 @@ class FakeRemoteCommand(object):
 
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
         # note that this should not be used in the same test as useLog(Delayed)
-        self.logs[log] = l = FakeLogFile(log, step)
+        self.logs[log] = l = logfile.FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
     def __repr__(self):
@@ -96,73 +93,6 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                                    collectStdout=collectStdout,
                                    collectStderr=collectStderr,
                                    decodeRC=decodeRC)
-
-
-class FakeLogFile(object):
-
-    def __init__(self, name, step):
-        self.name = name
-        self.header = ''
-        self.stdout = ''
-        self.stderr = ''
-        self.chunks = []
-        self.step = step
-
-    def getName(self):
-        return self.name
-
-    def addHeader(self, text):
-        self.header += text
-        self.chunks.append((HEADER, text))
-
-    def addStdout(self, text):
-        self.stdout += text
-        self.chunks.append((STDOUT, text))
-        if self.name in self.step.logobservers:
-            for obs in self.step.logobservers[self.name]:
-                obs.outReceived(text)
-
-    def addStderr(self, text):
-        self.stderr += text
-        self.chunks.append((STDERR, text))
-        if self.name in self.step.logobservers:
-            for obs in self.step.logobservers[self.name]:
-                obs.errReceived(text)
-
-    def readlines(self):
-        io = StringIO(self.stdout)
-        return io.readlines()
-
-    def getText(self):
-        return ''.join([c for str, c in self.chunks
-                        if str in (STDOUT, STDERR)])
-
-    def getTextWithHeaders(self):
-        return ''.join([c for str, c in self.chunks])
-
-    def getChunks(self, channels=[], onlyText=False):
-        if onlyText:
-            return [data
-                    for (ch, data) in self.chunks
-                    if not channels or ch in channels]
-        else:
-            return [(ch, data)
-                    for (ch, data) in self.chunks
-                    if not channels or ch in channels]
-
-    def finish(self):
-        pass
-
-    def fakeData(self, header='', stdout='', stderr=''):
-        if header:
-            self.header += header
-            self.chunks.append((HEADER, header))
-        if stdout:
-            self.stdout += stdout
-            self.chunks.append((STDOUT, stdout))
-        if stderr:
-            self.stderr += stderr
-            self.chunks.append((STDERR, stderr))
 
 
 class ExpectRemoteRef(object):
@@ -252,6 +182,11 @@ class Expect(object):
         """
         if behavior == 'rc':
             command.rc = args[0]
+            d = defer.succeed(None)
+            for wrapper in command.logs.values():
+                d.addCallback(lambda _: wrapper.unwrap())
+                d.addCallback(lambda l: l.flushFakeLogfile())
+            return d
         elif behavior == 'err':
             return defer.fail(args[0])
         elif behavior == 'update':

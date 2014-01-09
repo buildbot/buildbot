@@ -13,19 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from twisted.trial import unittest
 
 from buildbot.process.users import users
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 
 
 class UsersTests(unittest.TestCase):
 
     def setUp(self):
-        self.master = mock.Mock()
-        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.db = self.master.db
         self.test_sha = users.encrypt("cancer")
 
     def test_createUserObject_no_src(self):

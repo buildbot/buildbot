@@ -69,16 +69,28 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return ('svn', dict(fake_chdict=1))
+            return (u'svn', dict(author=u'jimmy'))
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
 
         def check(_):
             self.assertMailProcessed()
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['fake_chdict'], 1)
-            self.assertEqual(self.changes_added[0]['src'], 'svn')
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': 'jimmy',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': None,
+                'files': None,
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': None,
+                'revlink': '',
+                'src': 'svn',
+                'when_timestamp': None,
+            }])
         d.addCallback(check)
         return d
 
@@ -90,15 +102,27 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
         # monkey-patch in a parse method
         def parse(message, prefix):
             assert 'this is a test' in message.get_payload()
-            return ('bzr', dict(fake_chdict=1))
+            return (u'bzr', dict(author=u'jimmy'))
         mds.parse = parse
 
         d = mds.messageReceived('newmsg')
 
         def check(_):
             self.assertMailProcessed()
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['fake_chdict'], 1)
-            self.assertEqual(self.changes_added[0]['src'], 'bzr')
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': 'jimmy',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': None,
+                'files': None,
+                'project': '',
+                'properties': {},
+                'repository': '',
+                'revision': None,
+                'revlink': '',
+                'src': 'bzr',
+                'when_timestamp': None,
+            }])
         d.addCallback(check)
         return d

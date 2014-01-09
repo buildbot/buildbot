@@ -21,6 +21,7 @@ from twisted.python import log
 from buildbot import config as bbconfig
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
 
@@ -251,9 +252,9 @@ class Git(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -262,11 +263,11 @@ class Git(Source):
         d.addCallback(lambda _: self.incremental())
 
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
-                                          {'fromdir': self.srcdir,
-                                           'todir': old_workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+            cmd = remotecommand.RemoteCommand('cpdir',
+                                              {'fromdir': self.srcdir,
+                                               'todir': old_workdir,
+                                               'logEnviron': self.logEnviron,
+                                               'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -333,13 +334,13 @@ class Git(Source):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
-        cmd = buildstep.RemoteShellCommand(self.workdir,
-                                           full_command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin)
+        cmd = remotecommand.RemoteShellCommand(self.workdir,
+                                               full_command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -482,9 +483,9 @@ class Git(Source):
 
     def _doClobber(self):
         """Remove the work directory"""
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 

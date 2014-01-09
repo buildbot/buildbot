@@ -53,6 +53,7 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.process.users import users
 from buildbot.status import base
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
@@ -110,6 +111,8 @@ def _defaultMessageIntro(mode, results, build):
             text = "The Buildbot has detected a passing build"
     elif results == EXCEPTION:
         text = "The Buildbot has detected a build exception"
+    elif results == CANCELLED:
+        text = "The Build was cancelled by the user"
 
     return text
 
@@ -182,6 +185,8 @@ def _defaultMessageSummary(build, results):
         text = "Build succeeded!\n"
     elif results == WARNINGS:
         text = "Build Had Warnings%s\n" % t
+    elif results == CANCELLED:
+        text = "Build was cancelled by %s\n" % build.getResponsibleUsers()
     else:
         text = "BUILD FAILED%s\n" % t
 
@@ -245,7 +250,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception")
+    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception", "cancelled")
 
     def __init__(self, fromaddr, mode=("failing", "passing", "warnings"),
                  categories=None, builders=None, addLogs=False,
@@ -290,6 +295,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                                   when the previous build passed
                      - "warnings": send mail if a build contain warnings
                      - "exception": send mail if a build fails due to an exception
+                     - "cancelled": send mail if a build is cancelled
                      - "all": always send mail
                      Defaults to ("failing", "passing", "warnings").
 
@@ -395,7 +401,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
             if mode == "all":
-                mode = ("failing", "passing", "warnings", "exception")
+                mode = ("failing", "passing", "warnings", "exception", "cancelled")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:
@@ -434,7 +440,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
         self.buildSetSummary = buildSetSummary
-        self.buildSetSubscription = None
+        self._buildset_complete_consumer = None
         self.getPreviousBuild = previousBuildGetter
         self.watched = []
         self.master_status = None
@@ -450,25 +456,23 @@ class MailNotifier(base.StatusReceiverMultiService):
                 "customMesg is deprecated; use messageFormatter instead")
 
     def setServiceParent(self, parent):
-        """
-        @type  parent: L{buildbot.master.BuildMaster}
-        """
-        base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.master_status = self.parent
         self.master_status.subscribe(self)
         self.master = self.master_status.master
+        return base.StatusReceiverMultiService.setServiceParent(self, parent)
 
     def startService(self):
         if self.buildSetSummary:
-            self.buildSetSubscription = \
-                self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
+            self._buildset_complete_consumer = self.master.mq.startConsuming(
+                self._buildset_complete_cb,
+                ('buildset', None, 'complete'))
 
         base.StatusReceiverMultiService.startService(self)
 
     def stopService(self):
-        if self.buildSetSubscription is not None:
-            self.buildSetSubscription.unsubscribe()
-            self.buildSetSubscription = None
+        if self._buildset_complete_consumer is not None:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
         return base.StatusReceiverMultiService.stopService(self)
 
@@ -520,6 +524,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             return True
         if "exception" in self.mode and results == EXCEPTION:
             return True
+        if "cancelled" in self.mode and results == CANCELLED:
+            return True
 
         return False
 
@@ -551,7 +557,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         for breq in breqs:
             buildername = breq['buildername']
             builder = self.master_status.getBuilder(buildername)
-            d = self.master.db.builds.getBuildsForRequest(breq['brid'])
+            d = self.master.db.builds.getBuilds(buildrequestid=breq['brid'])
             d.addCallback(lambda builddictlist, builder=builder:
                           (builddictlist, builder))
             dl.append(d)
@@ -562,10 +568,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
         d.addCallback(self._gotBuildRequests, buildset)
 
-    def buildsetFinished(self, bsid, result):
-        d = self.master.db.buildsets.getBuildset(bsid=bsid)
-        d.addCallback(self._gotBuildSet, bsid)
-
+    def _buildset_complete_cb(self, key, msg):
+        d = self.master.db.buildsets.getBuildset(bsid=msg['bsid'])
+        d.addCallback(self._gotBuildSet, msg['bsid'])
         return d
 
     def getCustomMesgData(self, mode, name, build, results, master_status):

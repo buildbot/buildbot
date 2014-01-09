@@ -17,6 +17,7 @@ import stat
 
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from twisted.internet import defer
@@ -95,7 +96,7 @@ class FileExists(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = buildstep.RemoteCommand('stat', {'file': self.file})
+        cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -147,7 +148,7 @@ class CopyDirectory(SlaveBuildStep):
         if self.maxTime:
             args['maxTime'] = self.maxTime
 
-        cmd = buildstep.RemoteCommand('cpdir', args)
+        cmd = remotecommand.RemoteCommand('cpdir', args)
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -190,7 +191,7 @@ class RemoveDirectory(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about rmdir")
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.dir})
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -227,7 +228,7 @@ class MakeDirectory(SlaveBuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about mkdir")
-        cmd = buildstep.RemoteCommand('mkdir', {'dir': self.dir})
+        cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
@@ -255,7 +256,7 @@ class CompositeStepMixin():
 
     def runRemoteCommand(self, cmd, args, abandonOnFailure=True):
         """generic RemoteCommand boilerplate"""
-        cmd = buildstep.RemoteCommand(cmd, args)
+        cmd = remotecommand.RemoteCommand(cmd, args)
         cmd.useLog(self.rc_log, False)
         d = self.runCommand(cmd)
 

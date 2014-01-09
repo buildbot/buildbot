@@ -17,13 +17,13 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implements
 
 
-class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
+class ChangeManager(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """
     This is the master-side service which receives file change notifications
@@ -39,7 +39,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
     name = "changemanager"
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('change_manager')
         self.master = master
 
@@ -63,7 +63,7 @@ class ChangeManager(config.ReconfigurableServiceMixin, service.MultiService):
 
             for src in added:
                 src.master = self.master
-                src.setServiceParent(self)
+                yield src.setServiceParent(self)
 
         num_sources = len(list(self))
         assert num_sources == len(new_config.change_sources)

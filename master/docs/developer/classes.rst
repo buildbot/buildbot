@@ -11,12 +11,20 @@ The sections contained here document classes that can be used or subclassed.
 .. toctree::
     :maxdepth: 1
 
+    cls-build
+    cls-buildslave
     cls-buildfactory
     cls-remotecommands
     cls-buildsteps
+    cls-basescheduler
     cls-forcesched
     cls-irenderable
     cls-iproperties
+    cls-resultspec
+    cls-protocols
+    cls-bslavemanager
+    cls-log
+    cls-logobserver
 
 .. todo::
 

@@ -236,6 +236,19 @@ def in_reactor(f):
     return wrap
 
 
+def string2boolean(str):
+    return {
+        'on': True,
+        'true': True,
+        'yes': True,
+        '1': True,
+        'off': False,
+        'false': False,
+        'no': False,
+        '0': False,
+    }[str.lower()]
+
+
 def asyncSleep(delay):
     from twisted.internet import reactor, defer
     d = defer.Deferred()
@@ -247,4 +260,4 @@ __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffSets', 'makeList', 'in_reactor']
+    'diffSets', 'makeList', 'in_reactor', 'string2boolean']

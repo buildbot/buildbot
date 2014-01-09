@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE
@@ -56,10 +55,11 @@ class RemoteCommand(pb.Referenceable):
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
-    def run(self, step, remote):
+    def run(self, step, conn, builder_name):
         self.active = True
         self.step = step
-        self.remote = remote
+        self.conn = conn
+        self.builder_name = builder_name
 
         # generate a new command id
         cmd_id = RemoteCommand._commandCounter
@@ -84,7 +84,7 @@ class RemoteCommand(pb.Referenceable):
         return self.deferred
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(log)
+        # note that, for the moment, log is a SyncWriteOnlyLogFileWrapper
         if not logfileName:
             logfileName = log.getName()
         assert logfileName not in self.logs
@@ -104,8 +104,9 @@ class RemoteCommand(pb.Referenceable):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
-        d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, self.args)
+        d = self.conn.remoteStartCommand(self, self.builder_name,
+                                         self.commandID, self.remote_command,
+                                         self.args)
         return d
 
     def _finished(self, failure=None):
@@ -128,20 +129,19 @@ class RemoteCommand(pb.Referenceable):
         if not self.active:
             log.msg(" but this RemoteCommand is already inactive")
             return defer.succeed(None)
-        if not self.remote:
-            log.msg(" but our .remote went away")
+        if not self.conn:
+            log.msg(" but our .conn went away")
             return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
             log.msg("RemoteCommand.disconnect: lost slave")
-            self.remote = None
+            self.conn = None
             self._finished(why)
             return defer.succeed(None)
 
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
 
-        d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
-                                self.commandID, str(why))
+        d = self.conn.remoteInterruptCommand(self.commandID, str(why))
         # the slave may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d

@@ -18,48 +18,45 @@ from twisted.protocols import basic
 from zope.interface import implements
 
 
-class LogObserver:
+class LogObserver(object):
     implements(interfaces.ILogObserver)
 
     def setStep(self, step):
         self.step = step
 
     def setLog(self, loog):
-        assert interfaces.IStatusLog.providedBy(loog)
-        loog.subscribe(self, True)
+        loog.subscribe(self.gotData)
 
-    def logChunk(self, build, step, log, channel, text):
-        if channel == interfaces.LOG_CHANNEL_STDOUT:
-            self.outReceived(text)
-        elif channel == interfaces.LOG_CHANNEL_STDERR:
-            self.errReceived(text)
+    def gotData(self, stream, data):
+        if data is None:
+            self.finishReceived()
+        elif stream is None or stream == 'o':
+            self.outReceived(data)
+        elif stream == 'e':
+            self.errReceived(data)
+        elif stream == 'h':
+            self.headerReceived(data)
 
-    # TODO: add a logEnded method? er, stepFinished?
+    def finishReceived(self):
+        pass
 
     def outReceived(self, data):
-        """This will be called with chunks of stdout data. Override this in
-        your observer."""
         pass
 
     def errReceived(self, data):
-        """This will be called with chunks of stderr data. Override this in
-        your observer."""
+        pass
+
+    def headerReceived(self, data):
         pass
 
 
 class LogLineObserver(LogObserver):
+    stdoutDelimiter = "\n"
+    stderrDelimiter = "\n"
+    headerDelimiter = "\n"
 
     def __init__(self):
-        self.stdoutParser = basic.LineOnlyReceiver()
-        self.stdoutParser.delimiter = "\n"
-        self.stdoutParser.lineReceived = self.outLineReceived
-        self.stdoutParser.transport = self  # for the .disconnecting attribute
-        self.disconnecting = False
-
-        self.stderrParser = basic.LineOnlyReceiver()
-        self.stderrParser.delimiter = "\n"
-        self.stderrParser.lineReceived = self.errLineReceived
-        self.stderrParser.transport = self
+        self.max_length = 16384
 
     def setMaxLineLength(self, max_length):
         """
@@ -67,14 +64,22 @@ class LogLineObserver(LogObserver):
         dropped.  Default is 16384 bytes.  Use sys.maxint for effective
         infinity.
         """
-        self.stdoutParser.MAX_LENGTH = max_length
-        self.stderrParser.MAX_LENGTH = max_length
+        self.max_length = max_length
+
+    def _lineReceived(self, data, delimiter, funcReceived):
+        for line in data.rstrip().split(delimiter):
+            if len(line) > self.max_length:
+                continue
+            funcReceived(line)
 
     def outReceived(self, data):
-        self.stdoutParser.dataReceived(data)
+        self._lineReceived(data, self.stdoutDelimiter, self.outLineReceived)
 
     def errReceived(self, data):
-        self.stderrParser.dataReceived(data)
+        self._lineReceived(data, self.stderrDelimiter, self.errLineReceived)
+
+    def headerReceived(self, data):
+        self._lineReceived(data, self.headerDelimiter, self.headerLineReceived)
 
     def outLineReceived(self, line):
         """This will be called with complete stdout lines (not including the
@@ -86,6 +91,42 @@ class LogLineObserver(LogObserver):
         the delimiter). Override this in your observer."""
         pass
 
+    def headerLineReceived(self, line):
+        """This will be called with complete lines of stderr (not including
+        the delimiter). Override this in your observer."""
+        pass
+
+
+class LineConsumerLogObserver(LogLineObserver):
+
+    def __init__(self, consumerFunction):
+        LogLineObserver.__init__(self)
+        self.generator = None
+        self.consumerFunction = consumerFunction
+
+    def feed(self, input):
+        # note that we defer starting the generator until the first bit of
+        # data, since the observer may be instantiated during configuration as
+        # well as for each execution of the step.
+        self.generator = self.consumerFunction()
+        self.generator.next()
+        # shortcut all remaining feed operations
+        self.feed = self.generator.send
+        self.feed(input)
+
+    def outLineReceived(self, line):
+        self.feed(('o', line))
+
+    def errLineReceived(self, line):
+        self.feed(('e', line))
+
+    def headerLineReceived(self, line):
+        self.feed(('h', line))
+
+    def finishReceived(self):
+        if self.generator:
+            self.generator.close()
+
 
 class OutputProgressObserver(LogObserver):
     length = 0
@@ -93,14 +134,16 @@ class OutputProgressObserver(LogObserver):
     def __init__(self, name):
         self.name = name
 
-    def logChunk(self, build, step, log, channel, text):
-        self.length += len(text)
+    def gotData(self, stream, data):
+        if data:
+            self.length += len(data)
         self.step.setProgress(self.name, self.length)
 
 
 class BufferLogObserver(LogObserver):
 
     def __init__(self, wantStdout=True, wantStderr=False):
+        LogObserver.__init__(self)
         self.stdout = [] if wantStdout else None
         self.stderr = [] if wantStderr else None
 

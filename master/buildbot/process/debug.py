@@ -14,19 +14,14 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from buildbot import interfaces
-from buildbot.pbutil import NewCredPerspective
-from buildbot.process.properties import Properties
-from buildbot.sourcestamp import SourceStamp
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
-from twisted.python import log
 
 
-class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
+class DebugServices(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('debug_services')
         self.master = master
 
@@ -37,43 +32,16 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
-
-        # debug client
-        new_config_port = None
-        if new_config.protocols.get('pb'):
-            new_config_port = new_config.protocols['pb']['port']
-        config_changed = (self.debug_port != new_config_port or
-                          self.debug_password != new_config.debugPassword)
-
-        if not new_config.debugPassword or config_changed:
-            if self.debug_registration:
-                yield self.debug_registration.unregister()
-                self.debug_registration = None
-
-        if new_config.debugPassword and config_changed:
-            factory = lambda mind, user: DebugPerspective(self.master)
-            self.debug_registration = self.master.pbmanager.register(
-                new_config_port, "debug", new_config.debugPassword,
-                factory)
-
-        self.debug_password = new_config.debugPassword
-        if self.debug_password:
-            self.debug_port = new_config_port
-        else:
-            self.debug_port = None
-
-        # manhole
         if new_config.manhole != self.manhole:
             if self.manhole:
-                yield defer.maybeDeferred(lambda:
-                                          self.manhole.disownServiceParent())
+                yield self.manhole.disownServiceParent()
                 self.manhole.master = None
                 self.manhole = None
 
             if new_config.manhole:
                 self.manhole = new_config.manhole
                 self.manhole.master = self.master
-                self.manhole.setServiceParent(self)
+                yield self.manhole.setServiceParent(self)
 
         # chain up
         yield config.ReconfigurableServiceMixin.reconfigService(self,
@@ -81,59 +49,10 @@ class DebugServices(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        if self.debug_registration:
-            yield self.debug_registration.unregister()
-            self.debug_registration = None
-
         # manhole will get stopped as a sub-service
-
-        yield defer.maybeDeferred(lambda:
-                                  service.MultiService.stopService(self))
+        yield service.AsyncMultiService.stopService(self)
 
         # clean up
         if self.manhole:
             self.manhole.master = None
             self.manhole = None
-
-
-class DebugPerspective(NewCredPerspective):
-
-    def __init__(self, master):
-        self.master = master
-
-    def attached(self, mind):
-        return self
-
-    def detached(self, mind):
-        pass
-
-    def perspective_requestBuild(self, buildername, reason, branch,
-                                 revision, properties={}):
-        c = interfaces.IControl(self.master)
-        bc = c.getBuilder(buildername)
-        ss = SourceStamp(branch, revision)
-        bpr = Properties()
-        bpr.update(properties, "remote requestBuild")
-        return bc.submitBuildRequest(ss, reason, bpr)
-
-    def perspective_pingBuilder(self, buildername):
-        c = interfaces.IControl(self.master)
-        bc = c.getBuilder(buildername)
-        bc.ping()
-
-    def perspective_reload(self):
-        log.msg("debug client - triggering master reconfig")
-        self.master.reconfig()
-
-    def perspective_pokeIRC(self):
-        log.msg("saying something on IRC")
-        from buildbot.status import words
-        for s in self.master:
-            if isinstance(s, words.IRC):
-                bot = s.f
-                for channel in bot.channels:
-                    print " channel", channel
-                    bot.p.msg(channel, "Ow, quit it")
-
-    def perspective_print(self, msg):
-        log.msg("debug %s" % msg)

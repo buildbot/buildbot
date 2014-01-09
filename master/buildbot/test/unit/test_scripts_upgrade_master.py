@@ -25,6 +25,7 @@ from buildbot.scripts import upgrade_master
 from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util import www
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -109,8 +110,8 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         return d
 
 
-class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
-                                 unittest.TestCase):
+class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
+                                 misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
@@ -227,10 +228,6 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
                 'test/public_html',
-                'test/public_html/bg_gradient.jpg',
-                'test/public_html/default.css',
-                'test/public_html/robots.txt',
-                'test/public_html/favicon.ico',
                 'test/templates',
                 'test/master.cfg.sample',
         ]:

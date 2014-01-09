@@ -27,7 +27,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         sched = self.attachScheduler(timed.NightlyTriggerable(**kwargs),
-                                     self.SCHEDULERID)
+                                     self.SCHEDULERID, overrideBuildsetMethods=True)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
@@ -39,6 +39,26 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def tearDown(self):
         self.tearDownScheduler()
+
+    # utilities
+
+    def assertBuildsetAdded(self, sourcestamps={}, properties={}):
+        properties['scheduler'] = ('test', u'Scheduler')
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', dict(
+                builderNames=None,  # uses the default
+                properties=properties,
+                reason=u"The NightlyTriggerable scheduler named 'test' "
+                       u"triggered this build",
+                sourcestamps=sourcestamps,
+                waited_for=False)),
+        ])
+        self.addBuildsetCalls = []
+
+    def assertNoBuildsetAdded(self):
+        self.assertEqual(self.addBuildsetCalls, [])
+
+    # tests
 
     def test_constructor_no_reason(self):
         sched = self.makeScheduler(name='test', builderNames=['test'])
@@ -52,135 +72,104 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5])
 
-        sched.startService()
+        sched.activate()
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildsets(0)
+        self.assertEqual(self.addBuildsetCalls, [])
 
     def test_timer_oneTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
 
-        sched.startService()
+        sched.activate()
 
-        sched.trigger({'cb':
-                       dict(revision='myrev',
-                            branch='br', project='p', repository='r'),
-                       }, set_props=None)
+        sched.trigger([
+            dict(revision='myrev', branch='br', project='p',
+                 repository='r', codebase='cb'),
+        ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev', sourcestampsetid=100)
-                                          })
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev'),
+        ])
 
     def test_timer_twoTriggers(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
 
-        sched.startService()
+        sched.activate()
 
-        sched.trigger({'cb':
-                       dict(revision='myrev1', branch='br', project='p', repository='r')
-                       }, set_props=None)
-        sched.trigger({'cb':
-                       dict(revision='myrev2', branch='br', project='p', repository='r')
-                       }, set_props=None)
+        sched.trigger([
+            dict(codebase='cb', revision='myrev1', branch='br', project='p',
+                 repository='r')
+        ], set_props=None)
+        sched.trigger([
+            dict(codebase='cb', revision='myrev2', branch='br', project='p',
+                 repository='r')
+        ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev2', sourcestampsetid=100)
-                                          })
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 # builds the second trigger's revision
+                 revision='myrev2'),
+        ])
 
     def test_timer_oneTrigger_then_noBuild(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
 
-        sched.startService()
+        sched.activate()
 
-        sched.trigger({'cb':
-                       dict(revision='myrev', branch='br', project='p', repository='r')
-                       }, set_props=None)
-
-        self.clock.advance(60 * 60)  # Run for 1h
-
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev', sourcestampsetid=100)
-                                          })
-
-        self.db.buildsets.flushBuildsets()
+        sched.trigger([
+            dict(codebase='cb', revision='myrev', branch='br', project='p',
+                 repository='r')
+        ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildsets(0)
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev'),
+        ])
+
+        self.clock.advance(60 * 60)  # Run for 1h
+
+        # no trigger, so the second did not build
+        self.assertNoBuildsetAdded()
 
     def test_timer_oneTriggers_then_oneTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
 
-        sched.startService()
+        sched.activate()
 
-        sched.trigger({'cb':
-                       dict(revision='myrev1', branch='br', project='p', repository='r')
-                       }, set_props=None)
-
-        self.clock.advance(60 * 60)  # Run for 1h
-
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev1', sourcestampsetid=100)
-                                          })
-        self.db.buildsets.flushBuildsets()
-
-        sched.trigger({'cb':
-                       dict(revision='myrev2', branch='br', project='p', repository='r')
-                       }, set_props=None)
+        sched.trigger([
+            dict(codebase='cb', revision='myrev1', branch='br', project='p',
+                 repository='r')
+        ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=101),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev2', sourcestampsetid=101)
-                                          })
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev1'),
+        ])
+
+        sched.trigger([
+            dict(codebase='cb', revision='myrev2', branch='br', project='p',
+                 repository='r')
+        ], set_props=None)
+
+        self.clock.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev2'),
+        ])
 
     def test_savedTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
@@ -188,24 +177,35 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ {"cb": {"project": "p", "repository": "r", "branch": "br", "revision": "myrev"}} , {} ]'),
+                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {} ]'),
         ])
 
-        sched.startService()
+        sched.activate()
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev', sourcestampsetid=100)
-                                          })
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev'),
+        ])
+
+    def test_savedTrigger_dict(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   minute=[5], codebases={'cb': {'repository': 'annoying'}})
+        self.db.insertTestData([
+            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
+                               value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {} ]'),
+        ])
+
+        sched.activate()
+
+        self.clock.advance(60 * 60)  # Run for 1h
+
+        self.assertBuildsetAdded(sourcestamps=[
+            dict(codebase='cb', branch='br', project='p', repository='r',
+                 revision='myrev'),
+        ])
 
     def test_saveTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
@@ -214,19 +214,19 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.startService()
+        sched.activate()
 
-        d = sched.trigger({'cb':
-                           dict(revision='myrev',
-                                branch='br', project='p', repository='r'),
-                           }, set_props=None)
+        d = sched.trigger([
+            dict(codebase='cb', revision='myrev', branch='br', project='p',
+                 repository='r'),
+        ], set_props=None)
 
         @d.addCallback
         def cb(_):
-            self.db.state.assertState(self.SCHEDULERID, lastTrigger=[{'cb':
-                                                                      dict(revision='myrev',
-                                                                           branch='br', project='p', repository='r'),
-                                                                      }, {}])
+            self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
+                dict(codebase='cb', revision='myrev',
+                     branch='br', project='p', repository='r'),
+            ], {}])
 
         return d
 
@@ -237,12 +237,12 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.startService()
+        sched.activate()
 
-        d = sched.trigger({'cb':
-                           dict(revision='myrev',
-                                branch='br', project='p', repository='r'),
-                           }, set_props=None)
+        d = sched.trigger([
+            dict(codebase='cb', revision='myrev', branch='br', project='p',
+                 repository='r'),
+        ], set_props=None)
 
         self.clock.advance(60 * 60)  # Run for 1h
 
@@ -259,32 +259,26 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
-        sched.startService()
+        sched.activate()
 
-        sched.trigger({'cb':
-                       dict(revision='myrev',
-                            branch='br', project='p', repository='r'),
-                       }, properties.Properties(testprop='test'))
+        sched.trigger([
+            dict(codebase='cb', revision='myrev', branch='br', project='p',
+                 repository='r'),
+        ], properties.Properties(testprop='test'))
 
-        self.db.state.assertState(self.SCHEDULERID, lastTrigger=[{'cb':
-                                                                  dict(revision='myrev',
-                                                                       branch='br', project='p', repository='r'),
-                                                                  }, {'testprop': ['test', 'TEST']}])
+        self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
+            dict(codebase='cb', revision='myrev',
+                 branch='br', project='p', repository='r'),
+        ], {'testprop': ['test', 'TEST']}])
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                                  ('testprop', ('test', 'TEST')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev', sourcestampsetid=100)
-                                          })
+        self.assertBuildsetAdded(
+            properties=dict(testprop=('test', 'TEST')),
+            sourcestamps=[
+                dict(codebase='cb', branch='br', project='p', repository='r',
+                     revision='myrev'),
+            ])
 
     def test_savedProperties(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
@@ -292,22 +286,16 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ {"cb": {"project": "p", "repository": "r", "branch": "br", "revision": "myrev"}} , {"testprop": ["test", "TEST"]} ]'),
+                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {"testprop": ["test", "TEST"]} ]'),
         ])
 
-        sched.startService()
+        sched.activate()
 
         self.clock.advance(60 * 60)  # Run for 1h
 
-        self.db.buildsets.assertBuildset('?',
-                                         dict(external_idstring=None,
-                                              properties=[
-                                                  ('scheduler', ('test', 'Scheduler')),
-                                                  ('testprop', ('test', 'TEST')),
-                                              ],
-                                              reason="The NightlyTriggerable scheduler named 'test' triggered this build",
-                                              sourcestampsetid=100),
-                                         {'cb':
-                                          dict(branch='br', project='p', repository='r', codebase='cb',
-                                               revision='myrev', sourcestampsetid=100)
-                                          })
+        self.assertBuildsetAdded(
+            properties={'testprop': (u'test', u'TEST')},
+            sourcestamps=[
+                dict(codebase='cb', branch='br', project='p', repository='r',
+                     revision='myrev'),
+            ])

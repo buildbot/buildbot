@@ -14,13 +14,20 @@
 # Copyright Buildbot Team Members
 
 import mock
+import os.path
 import weakref
 
 from buildbot import config
+from buildbot import interfaces
+from buildbot.status import build
+from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from twisted.internet import defer
+from zope.interface import implements
 
 
 class FakeCache(object):
@@ -51,14 +58,36 @@ class FakeCaches(object):
 
 class FakeStatus(object):
 
+    def __init__(self, master):
+        self.master = master
+        self.lastBuilderStatus = None
+
     def builderAdded(self, name, basedir, category=None, description=None):
-        return FakeBuilderStatus()
+        bs = FakeBuilderStatus(self.master)
+        self.lastBuilderStatus = bs
+        return bs
+
+    def getBuilderNames(self):
+        return []
+
+    def getSlaveNames(self):
+        return []
 
     def slaveConnected(self, name):
         pass
 
+    def build_started(self, brid, buildername, build_status):
+        pass
+
 
 class FakeBuilderStatus(object):
+
+    implements(interfaces.IBuilderStatus)
+
+    def __init__(self, master):
+        self.master = master
+        self.basedir = os.path.join(master.basedir, 'bldr')
+        self.lastBuildStatus = None
 
     def setDescription(self, description):
         self._description = description
@@ -81,6 +110,17 @@ class FakeBuilderStatus(object):
     def setBigState(self, state):
         pass
 
+    def newBuild(self):
+        bld = build.BuildStatus(self, self.master, 3)
+        self.lastBuildStatus = bld
+        return bld
+
+    def buildStarted(self, builderStatus):
+        pass
+
+    def addPointEvent(self, text):
+        pass
+
 
 class FakeMaster(object):
 
@@ -99,8 +139,11 @@ class FakeMaster(object):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
-        self.status = FakeStatus()
+        self.status = FakeStatus(self)
         self.status.master = self
+        self.name = 'fake:/master'
+        self.masterid = master_id
+        self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
@@ -112,12 +155,19 @@ class FakeMaster(object):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+
 # Leave this alias, in case we want to add more behavior later
-
-
-def make_master(wantDb=False, testcase=None, **kwargs):
+def make_master(wantMq=False, wantDb=False, wantData=False,
+                testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
+    if wantData:
+        wantMq = wantDb = True
+    if wantMq:
+        assert testcase is not None, "need testcase for wantMq"
+        master.mq = fakemq.FakeMQConnector(master, testcase)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(testcase)
+        master.db = fakedb.FakeDBConnector(master, testcase)
+    if wantData:
+        master.data = fakedata.FakeDataConnector(master, testcase)
     return master

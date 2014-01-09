@@ -32,11 +32,19 @@ from twisted.python import log
 from twisted.python.procutils import which
 from twisted.spread import pb
 
-from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
 from buildbot.util import json
 from buildbot.util import now
 from buildbot.util.eventual import fireEventually
+
+
+class SourceStamp(object):
+
+    def __init__(self, branch, revision, patch, repository=''):
+        self.branch = branch
+        self.revision = revision
+        self.patch = patch
+        self.repository = repository
 
 
 def output(*msg):

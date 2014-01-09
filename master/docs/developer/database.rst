@@ -47,6 +47,18 @@ rather than performing queries against the database itself.
 API
 ---
 
+types
+~~~~~
+
+Identifier
+..........
+
+.. _type-identifier:
+
+An "identifier" is a nonempty unicode string of limited length, containing only ASCII alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
+Wherever an identifier is used, the documentation will give the maximum length in characters.
+The function :py:func:`buildbot.util.identifiers.isIdentifier` is useful to verify a well-formed identifier.
+
 buildrequests
 ~~~~~~~~~~~~~
 
@@ -84,7 +96,7 @@ buildrequests
     * ``priority``
     * ``claimed`` (boolean, true if the request is claimed)
     * ``claimed_at`` (datetime object, time this request was last claimed)
-    * ``mine`` (boolean, true if the request is claimed by this master)
+    * ``claimed_by_masterid`` (integer, the id of the master that claimed this buildrequest)
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
 
@@ -97,7 +109,7 @@ buildrequests
         returns ``None`` if there is no such buildrequest.  Note that build
         requests are not cached, as the values in the database are not fixed.
 
-    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None))
+    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None)
 
         :param buildername: limit results to buildrequests for this builder
         :type buildername: string
@@ -116,8 +128,8 @@ buildrequests
 
         The ``claimed`` parameter can be ``None`` (the default) to ignore the
         claimed status of requests; ``True`` to return only claimed builds,
-        ``False`` to return only unclaimed builds, or ``"mine"`` to return only
-        builds claimed by this master instance.  A request is considered
+        ``False`` to return only unclaimed builds, or a ``master ID`` to return only
+        builds claimed by a particular master instance.  A request is considered
         unclaimed if its ``claimed_at`` column is either NULL or 0, and it is
         not complete.  If ``bsid`` is specified, then only build requests for
         that buildset will be returned.
@@ -218,61 +230,280 @@ builds
 
 .. py:class:: BuildsConnectorComponent
 
-    This class handles a little bit of information about builds.
-
-    .. note::
-        The interface for this class will change - the builds table duplicates
-        some information available in pickles, without including all such
-        information.  Do not depend on this API.
+    This class handles builds.
+    One build record is created for each build performed by a master.
+    This record contains information on the status of the build, as well as links to the resources used in the build: builder, master, slave, etc.
 
     An instance of this class is available at ``master.db.builds``.
 
-    .. index:: bdict, bid
+    .. index:: bdict, buildid
 
-    Builds are indexed by *bid* and their contents represented as *bdicts*
-    (build dictionaries), with keys
+    Builds are indexed by *buildid* and their contents represented as *builddicts* (build dictionaries), with the following keys:
 
-    * ``bid`` (the build ID, globally unique)
-    * ``number`` (the build number, unique only within this master and builder)
-    * ``brid`` (the ID of the build request that caused this build)
-    * ``start_time``
-    * ``finish_time`` (datetime objects, or None).
+    * ``id`` (the build ID, globally unique)
+    * ``number`` (the build number, unique only within the builder)
+    * ``builderid`` (the ID of the builder that performed this build)
+    * ``buildrequestid`` (the ID of the build request that caused this build)
+    * ``buildslaveid`` (the ID of the slave on which this build was performed)
+    * ``masterid`` (the ID of the master on which this build was performed)
+    * ``started_at`` (datetime at which this build began)
+    * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
+    * ``state_strings`` (list of short strings describing the build's state)
+    * ``results`` (results of this build; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: getBuild(bid)
+    .. py:method:: getBuild(buildid)
 
-        :param bid: build id
-        :type bid: integer
+        :param integer buildid: build id
         :returns: Build dictionary as above or ``None``, via Deferred
 
-        Get a single build, in the format described above.  Returns ``None`` if
-        there is no such build.
+        Get a single build, in the format described above.
+        Returns ``None`` if there is no such build.
 
-    .. py:method:: getBuildsForRequest(brid)
+    .. py:method:: getBuildByNumber(builderid, number)
 
-        :param brids: list of build request ids
-        :returns: List of build dictionaries as above, via Deferred
+        :param integer builder: builder id
+        :param integer number: build number within that builder
+        :returns: Build dictionary as above or ``None``, via Deferred
 
-        Get a list of builds for the given build request.  The resulting build
-        dictionaries are in exactly the same format as for :py:meth:`getBuild`.
+        Get a single build, in the format described above, specified by builder and number, rather than build id.
+        Returns ``None`` if there is no such build.
 
-    .. py:method:: addBuild(brid, number)
+    .. py:method:: getBuilds(builderid=None, buildrequestid=None)
 
-        :param brid: build request id
-        :param number: build number
-        :returns: build ID via Deferred
+        :param integer builderid: builder to get builds for
+        :param integer buildrequestid: buildrequest to get builds for
+        :returns: list of build dictionaries as above, via Deferred
 
-        Add a new build to the db, recorded as having started at the current
-        time.
+        Get a list of builds, in the format described above.
+        Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: finishBuilds(bids)
+    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_strings)
 
-        :param bids: build ids
-        :type bids: list
+        :param integer builderid: builder to get builds for
+        :param integer buildrequestid: build request id
+        :param integer slaveid: slave performing the build
+        :param integer masterid: master performing the build
+        :param list state_strings: initial state of the build
+        :returns: tuple of build ID and build number, via Deferred
+
+        Add a new build to the db, recorded as having started at the current time.
+        This will invent a new number for the build, unique within the context of the builder.
+
+    .. py:method:: setBuildStateStrings(buildid, state_strings):
+
+        :param integer buildid: build id
+        :param list state_strings: updated state of the build
         :returns: Deferred
 
-        Mark the given builds as finished, with ``finish_time`` set to the
-        current time.  This is done unconditionally, even if the builds are
-        already finished.
+        Update the state strings for the given build.
+
+    .. py:method:: finishBuild(buildid, results)
+
+        :param integer buildid: build id
+        :param integer results: build result
+        :returns: Deferred
+
+        Mark the given build as finished, with ``complete_at`` set to the current time.
+
+        .. note::
+
+            This update is done unconditionally, even if the build is already finished.
+
+steps
+~~~~~
+
+.. py:module:: buildbot.db.steps
+
+.. index:: double: Steps; DB Connector Component
+
+.. py:class:: StepsConnectorComponent
+
+    This class handles the steps performed within the context of a build.
+    Within a build, each step has a unique name and a unique, 0-based number.
+
+    An instance of this class is available at ``master.db.steps``.
+
+    .. index:: stepdict, stepid
+
+    Builds are indexed by *stepid* and their contents represented as *stepdicts* (step dictionaries), with the following keys:
+
+    * ``id`` (the step ID, globally unique)
+    * ``number`` (the step number, unique only within the build)
+    * ``name`` (the step name, an 50-character :ref:`identifier <type-identifier>` unique only within the build)
+    * ``buildid`` (the ID of the build containing this step)
+    * ``started_at`` (datetime at which this step began)
+    * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
+    * ``state_strings`` (list of short strings describing the step's state)
+    * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
+    * ``urls`` (list of URLs produced by this step)
+
+    .. py:method:: getStep(stepid=None, buildid=None, number=None, name=None)
+
+        :param integer stepid: the step id to retrieve
+        :param integer buildid: the build from which to get the step
+        :param integer number: the step number
+        :param name: the step name
+        :type name: 50-character :ref:`identifier <type-identifier>`
+        :returns: stepdict via Deferred
+
+        Get a single step.
+        The step can be specified by
+
+            * ``stepid`` alone;
+            * ``buildid`` and ``number``, the step number within that build; or
+            * ``buildid`` and ``name``, the unique step name within that build.
+
+    .. py:method:: getSteps(buildid)
+
+        :param integer buildid: the build from which to get the step
+        :returns: list of stepdicts, sorted by number, via Deferred
+
+        Get all steps in the given build, in order by number.
+
+    .. py:method:: addStep(self, buildid, name, state_strings)
+
+        :param integer buildid: the build to which to add the step
+        :param name: the step name
+        :type name: 50-character :ref:`identifier <type-identifier>`
+        :param list state_strings: the initial state of the step
+        :returns: tuple of step ID, step number, and step name, via Deferred
+
+        Add a new step to a build.
+        The given name will be used if it is unique; otherwise, a unique numerical suffix will be appended.
+
+    .. py:method:: setStepStateStrings(stepid, state_strings):
+
+        :param integer stepid: step ID
+        :param list state_strings: updated state of the step
+        :returns: Deferred
+
+        Update the state strings for the given step.
+
+    .. py:method:: finishStep(stepid, results)
+
+        :param integer stepid: step ID
+        :param integer results: step result
+        :returns: Deferred
+
+        Mark the given step as finished, with ``complete_at`` set to the current time.
+
+        .. note::
+
+            This update is done unconditionally, even if the steps are already finished.
+
+logs
+~~~~
+
+.. py:module:: buildbot.db.logs
+
+.. index:: double: Logs; DB Connector Component
+
+.. py:class:: LogsConnectorComponent
+
+    This class handles log data.
+    Build steps can have zero or more logs.
+    Logs are uniquely identified by name within a step.
+
+    Information about a log, apart from its contents, is represented as a dictionary with the following keys, referred to as a *logdict*:
+
+    * ``id`` (log ID, globally unique)
+    * ``stepid`` (step ID, indicating the containing step)
+    * ``name`` free-form name of this log
+    * ``slug`` (50-identifier for the log, unique within the step)
+    * ``complete`` (true if the log is complete and will not receive more lines)
+    * ``num_lines`` (number of lines in the log)
+    * ``type`` (log type; see below)
+
+    Each log has a type that describes how to interpret its contents.
+    See the :bb:rtype:`logchunk` resource type for details.
+
+    A log is contains a sequence of newline-separated lines of unicode.
+    Log line numbering is zero-based.
+
+    Each line must be less than 64k when encoded in UTF-8.
+    Longer lines will be truncated, and a warning logged.
+
+    Lines are stored internally in "chunks", and optionally compressed, but the implementation hides these details from callers.
+
+    .. py:method:: getLog(logid)
+
+        :param integer logid: ID of the requested log
+        :returns: logdict via Deferred
+
+        Get a log, identified by logid.
+
+    .. py:method:: getLogBySlug(stepid, slug)
+
+        :param integer stepid: ID of the step containing this log
+        :param slug: slug of the logfile to retrieve
+        :type name: 50-character identifier
+        :returns: logdict via Deferred
+
+        Get a log, identified by name within the given step.
+
+    .. py:method:: getLogs(stepid)
+
+        :param integer stepid: ID of the step containing the desired logs
+        :returns: list of logdicts via Deferred
+
+        Get all logs within the given step.
+
+    .. py:method:: getLogLines(logid, first_line, last_line)
+
+        :param integer logid: ID of the log
+        :param first_line: first line to return
+        :param last_line: last line to return
+        :returns: see below
+
+        Get a subset of lines for a logfile.
+
+        The return value, via Deferred, is a concatenation of newline-terminated strings.
+        If the requested last line is beyond the end of the logfile, only existing lines will be included.
+        If the log does not exist, or has no associated lines, this method returns an empty string.
+
+    .. py:method:: addLog(stepid, name, type)
+
+        :param integer stepid: ID of the step containing this log
+        :param string name: name of the logfile
+        :param slug: slug (unique identifier) of the logfile
+        :type slug: 50-character identifier
+        :param string type: log type (see above)
+        :raises KeyError: if a log with the given slug already exists in the step
+        :returns: ID of the new log, via Deferred
+
+        Add a new log file to the given step.
+
+    .. py:method:: appendLog(logid, content)
+
+        :param integer logid: ID of the requested log
+        :param string content: new content to be appended to the log
+        :returns: tuple of first and last line numbers in the new chunk, via Deferred
+
+        Append content to an existing log.
+        The content must end with a newline.
+        If the given log does not exist, the method will silently do nothing.
+
+        It is not safe to call this method more than once simultaneously for the same ``logid``.
+
+    .. py:method:: finishLog(logid)
+
+        :param integer logid: ID of the log to mark complete
+        :returns: Deferred
+
+        Mark a log as complete.
+
+        Note that no checking for completeness is performed when appending to a log.
+        It is up to the caller to avoid further calls to ``appendLog`` after ``finishLog``.
+
+    .. py:method:: compressLog(logid)
+
+        :param integer logid: ID of the log to compress
+        :returns: Deferred
+
+        Compress the given log.
+        This method performs internal optimizations of a log's chunks to reduce the space used and make read operations more efficient.
+        It should only be called for finished logs.
+        This method may take some time to complete.
 
 buildsets
 ~~~~~~~~~
@@ -296,16 +527,16 @@ buildsets
     * ``bsid``
     * ``external_idstring`` (arbitrary string for mapping builds externally)
     * ``reason`` (string; reason these builds were triggered)
-    * ``sourcestampsetid`` (source stamp set for this buildset)
+    * ``sourcestamps`` (list of sourcestamps for this buildset, by ID)
     * ``submitted_at`` (datetime object; time this buildset was created)
     * ``complete`` (boolean; true if all of the builds for this buildset are complete)
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(sourcestampsetid, reason, properties, builderNames, external_idstring=None)
+    .. py:method:: addBuildset(sourcestamps, reason, properties, builderNames, external_idstring=None)
 
-        :param sourcestampsetid: id of the SourceStampSet for this buildset
-        :type sourcestampsetid: integer
+        :param sourcestamps: sourcestamps for the new buildset; see below
+        :type sourcestamps: list
         :param reason: reason for this buildset
         :type reason: short unicode string
         :param properties: properties for this buildset
@@ -314,15 +545,15 @@ buildsets
         :type builderNames: list of strings
         :param external_idstring: external key to identify this buildset; defaults to None
         :type external_idstring: unicode string
+        :param datetime submitted_at: time this buildset was created; defaults to the current time
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
-        Add a new Buildset to the database, along with BuildRequests for each
-        named builder, returning the resulting bsid via a Deferred.  Arguments
-        should be specified by keyword.
+        Add a new Buildset to the database, along with BuildRequests for each named builder, returning the resulting bsid via a Deferred.
+        Arguments should be specified by keyword.
 
-        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the
-        inserted buildset ID and ``brids`` is a dictionary mapping buildernames
-        to build request IDs.
+        Each sourcestamp in the list of sourcestamps can be given either as an integer, assumed to be a sourcestamp ID, or a dictionary of keyword arguments to be passed to :py:meth:`~buildbot.db.sourcestamps.SourceStampsConnectorComponent.findSourceStampId`.
+
+        The return value is a tuple ``(bsid, brids)`` where ``bsid`` is the inserted buildset ID and ``brids`` is a dictionary mapping buildernames to build request IDs.
 
     .. py:method:: completeBuildset(bsid, results[, complete_at=XX])
 
@@ -359,10 +590,10 @@ buildsets
 
         Get a list of bsdicts matching the given criteria.
 
-    .. py:method:: getRecentBuildsets(count, branch=None, repository=None,
+    .. py:method:: getRecentBuildsets(count=None, branch=None, repository=None,
                            complete=None):
 
-        :param count: maximum number of buildsets to retrieve.
+        :param count: maximum number of buildsets to retrieve (required).
         :type branch: integer
         :param branch: optional branch name. If specified, only buildsets
             affecting such branch will be returned.
@@ -376,9 +607,11 @@ buildsets
         :type complete: Boolean
         :returns: list of bsdicts, via Deferred
 
+        Get "recent" buildsets, as defined by their ``submitted_at`` times.
+
     .. py:method:: getBuildsetProperties(buildsetid)
 
-        :param buildsetid: buildset ID
+        :param bsid: buildset ID
         :returns: dictionary mapping property name to ``value, source``, via
             Deferred
 
@@ -397,44 +630,69 @@ buildslaves
 
 .. py:class:: BuildslavesConnectorComponent
 
-    This class handles Buildbot's notion of buildslaves. The buildslave 
-    information is returned as a dictionary:
+    This class handles Buildbot's notion of buildslaves.
+    The buildslave information is returned as a dictionary:
 
-    * ``slaveid``
-    * ``name`` (the name of the buildslave)
-    * ``slaveinfo`` (buildslave information as dictionary)
+    * ``id``
+    * ``name`` - the name of the buildslave
+    * ``slaveinfo`` - buildslave information as dictionary
+    * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
+      This list will typically contain only one master, but in unusual circumstances the same bulidslave may appear to be connected to multiple masters simultaneously.
+    * ``configured_on`` - a list of master-builder pairs, on which this buildslave is configured.
+      Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``.
 
-    The 'slaveinfo' dictionary has the following keys:
+    The buildslave information can be any JSON-able object.
+    See :bb:rtype:`buildslave` for more detail.
 
-    * ``admin`` (the admin information)
-    * ``host`` (the name of the host)
-    * ``access_uri`` (the access URI)
-    * ``version`` (the version on the buildslave)
+    .. py:method:: findBuildslaveId(name=name)
 
-    .. py:method:: getBuildslaves()
+        :param name: buildslave name
+        :type name: 50-character identifier
+        :returns: builslave ID via Deferred
 
-        :returns: list of partial information via Deferred
+        Get the ID for a buildslave, adding a new buildslave to the database if necessary.
+        The slave information for a new buildslave is initialized to an empty dictionary.
 
-        Get the entire list of buildslaves. Only id and name are returned.
+    .. py:method:: getBuildslaves(masterid=None, builderid=None)
 
-    .. py:method:: getBuildslaveByName(name)
+        :param integer masterid: limit to slaves configured on this master
+        :param integer builderid: limit to slaves configured on this builder
+        :returns: list of buildslave dictionaries, via Deferred
 
-        :param name: the name of the buildslave to retrieve
-        :type name: string
-        :returns: info dictionary or None, via deferred
+        Get a list of buildslaves.
+        If either or both of the filtering parameters either specified, then the result is limited to buildslaves configured to run on that master or builder.
+        The ``configured_on`` results are limited by the filtering parameters as well.
+        The ``connected_to`` results are limited by the ``masterid`` parameter.
 
-        Looks up the buildslave with the name, returning the information or
-        ``None`` if no matching buildslave is found.
+    .. py:method:: getBuildslave(slaveid=None, name=None, masterid=None, builderid=None)
 
-    .. py:method:: updateBuildslave(name, slaveinfo)
+        :param string name: the name of the buildslave to retrieve
+        :param integer buildslaveid: the ID of the buildslave to retrieve
+        :param integer masterid: limit to slaves configured on this master
+        :param integer builderid: limit to slaves configured on this builder
+        :returns: info dictionary or None, via Deferred
 
-        :param name: the name of the buildslave to update
-        :type name: string
-        :param slaveinfo: the full buildslave dictionary
+        Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
+        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getBuildslaves`.
+
+    .. py:method:: buildslaveConnected(buildslaveid, masterid, slaveinfo)
+
+        :param integer buildslaveid: the ID of the buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :param slaveinfo: the new buildslave information dictionary
         :type slaveinfo: dict
         :returns: Deferred
 
-        Update information about the given buildslave.
+        Record the given buildslave as attached to the given master, and update its cached slave information.
+        The supplied information completely replaces any existing information.
+
+    .. py:method:: buildslaveDisconnected(buildslaveid, masterid)
+
+        :param integer buildslaveid: the ID of the buildslave
+        :param integer masterid: the ID of the master to which it connected
+        :returns: Deferred
+
+        Record the given buildslave as no longer attached to the given master.
 
 changes
 ~~~~~~~
@@ -551,12 +809,96 @@ changes
             earlier than the time at which it is merged into a repository
             monitored by Buildbot.
 
+    .. py:method:: getChanges()
+
+        :returns: list of dictionaries via Deferred
+
+        Get a list of the changes, represented as
+        dictionaries; changes are sorted, and paged using generic data query options
+
+    .. py:method:: getChangesCount()
+
+        :returns: list of dictionaries via Deferred
+
+        Get the number changes, that the query option would return if no
+        paging option where set
+
+
     .. py:method:: getLatestChangeid()
 
         :returns: changeid via Deferred
 
         Get the most-recently-assigned changeid, or ``None`` if there are no
         changes at all.
+
+
+changesources
+~~~~~~~~~~~~~
+
+.. py:module:: buildbot.db.changesources
+
+.. index:: double: ChangeSources; DB Connector Component
+
+.. py:exception:: ChangeSourceAlreadyClaimedError
+
+    Raised when a changesource request is already claimed by another master.
+
+.. py:class:: ChangeSourcesConnectorComponent
+
+    This class manages the state of the Buildbot changesources.
+
+    An instance of this class is available at ``master.db.changesources``.
+
+    Changesources are identified by their changesourceid, which can be objtained from :py:meth:`findChangeSourceId`.
+
+    Changesources are represented by dictionaries with the following keys:
+
+        * ``id`` - changesource's ID
+        * ``name`` - changesource's name
+        * ``masterid`` - ID of the master currently running this changesource, or None if it is inactive
+
+    Note that this class is conservative in determining what changesources are inactive: a changesource linked to an inactive master is still considered active.
+    This situation should never occur, however; links to a master should be deleted when it is marked inactive.
+
+    .. py:method:: findChangeSourceId(name)
+
+        :param name: changesource name
+        :returns: changesource ID via Deferred
+
+        Return the changesource ID for the changesource with this name.
+        If such a changesource is already in the database, this returns the ID.
+        If not, the changesource is added to the database and its ID returned.
+
+    .. py:method:: setChangeSourceMaster(changesourceid, masterid)
+
+        :param changesourceid: changesource to set the master for
+        :param masterid: new master for this changesource, or None
+        :returns: Deferred
+
+        Set, or unset if ``masterid`` is None, the active master for this changesource.
+        If no master is currently set, or the current master is not active, this method will complete without error.
+        If the current master is active, this method will raise :py:exc:`~buildbot.db.exceptions.ChangeSourceAlreadyClaimedError`.
+
+    .. py:method:: getChangeSource(changesourceid)
+
+        :param changesourceid: changesource ID
+        :returns: changesource dictionary or None, via Deferred
+
+        Get the changesource dictionary for the given changesource.
+
+    .. py:method:: getChangeSources(active=None, masterid=None)
+
+        :param boolean active: if specified, filter for active or inactive changesources
+        :param integer masterid: if specified, only return changesources attached associated with this master
+        :returns: list of changesource dictionaries in unspecified order
+
+        Get a list of changesources.
+
+        If ``active`` is given, changesources are filtered according to whether they are active (true) or inactive (false).
+        An active changesource is one that is claimed by an active master.
+
+        If ``masterid`` is given, the list is restricted to schedulers associated with that master.
+
 
 schedulers
 ~~~~~~~~~~
@@ -565,21 +907,31 @@ schedulers
 
 .. index:: double: Schedulers; DB Connector Component
 
+.. py:exception:: SchedulerAlreadyClaimedError
+
+    Raised when a scheduler request is already claimed by another master.
+
 .. py:class:: SchedulersConnectorComponent
 
     This class manages the state of the Buildbot schedulers.  This state includes
     classifications of as-yet un-built changes.
 
-    An instance of this class is available at ``master.db.changes``.
+    An instance of this class is available at ``master.db.schedulers``.
 
-    .. index:: objectid
+    Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
 
-    Schedulers are identified by a their objectid - see
-    :py:class:`StateConnectorComponent`.
+    Schedulers are represented by dictionaries with the following keys:
+
+        * ``id`` - scheduler's ID
+        * ``name`` - scheduler's name
+        * ``masterid`` - ID of the master currently running this scheduler, or None if it is inactive
+
+    Note that this class is conservative in determining what schedulers are inactive: a scheduler linked to an inactive master is still considered active.
+    This situation should never occur, however; links to a master should be deleted when it is marked inactive.
 
     .. py:method:: classifyChanges(objectid, classifications)
 
-        :param objectid: scheduler classifying the changes
+        :param schedulerid: ID of the scheduler classifying the changes
         :param classifications: mapping of changeid to boolean, where the boolean
             is true if the change is important, and false if it is unimportant
         :type classifications: dictionary
@@ -592,9 +944,9 @@ schedulers
         classifications once they are no longer needed, using
         :py:meth:`flushChangeClassifications`.
 
-    .. py:method: flushChangeClassifications(objectid, less_than=None)
+    .. py:method:: flushChangeClassifications(objectid, less_than=None)
 
-        :param objectid: scheduler owning the flushed changes
+        :param schedulerid: ID of the scheduler owning the flushed changes
         :param less_than: (optional) lowest changeid that should *not* be flushed
         :returns: Deferred
 
@@ -603,8 +955,8 @@ schedulers
 
     .. py:method:: getChangeClassifications(objectid[, branch])
 
-        :param objectid: scheduler to look up changes for
-        :type objectid: integer
+        :param schedulerid: ID of scheduler to look up changes for
+        :type schedulerid: integer
         :param branch: (optional) limit to changes with this branch
         :type branch: string or None (for default branch)
         :returns: dictionary via Deferred
@@ -618,6 +970,46 @@ schedulers
         default branch, and is not the same as omitting the ``branch`` argument
         altogether.
 
+    .. py:method:: findSchedulerId(name)
+
+        :param name: scheduler name
+        :returns: scheduler ID via Deferred
+
+        Return the scheduler ID for the scheduler with this name.
+        If such a scheduler is already in the database, this returns the ID.
+        If not, the scheduler is added to the database and its ID returned.
+
+    .. py:method:: setSchedulerMaster(schedulerid, masterid)
+
+        :param schedulerid: scheduler to set the master for
+        :param masterid: new master for this scheduler, or None
+        :returns: Deferred
+
+        Set, or unset if ``masterid`` is None, the active master for this scheduler.
+        If no master is currently set, or the current master is not active, this method will complete without error.
+        If the current master is active, this method will raise :py:exc:`~buildbot.db.exceptions.SchedulerAlreadyClaimedError`.
+
+    .. py:method:: getScheduler(schedulerid)
+
+        :param schedulerid: scheduler ID
+        :returns: scheduler dictionary or None via Deferred
+
+        Get the scheduler dictionary for the given scheduler.
+
+    .. py:method:: getSchedulers(active=None, masterid=None)
+
+        :param boolean active: if specified, filter for active or inactive schedulers
+        :param integer masterid: if specified, only return schedulers attached associated with this master
+        :returns: list of scheduler dictionaries in unspecified order
+
+        Get a list of schedulers.
+
+        If ``active`` is given, schedulers are filtered according to whether they are active (true) or inactive (false).
+        An active scheduler is one that is claimed by an active master.
+
+        If ``masterid`` is given, the list is restricted to schedulers associated with that master.
+
+
 sourcestamps
 ~~~~~~~~~~~~
 
@@ -627,22 +1019,25 @@ sourcestamps
 
 .. py:class:: SourceStampsConnectorComponent
 
-    This class manages source stamps, as stored in the database. Source stamps
-    are linked to changes. Source stamps with the same sourcestampsetid belong
-    to the same sourcestampset. Buildsets link to one or more source stamps via
-    a sourcestampset id.
+    This class manages source stamps, as stored in the database.
+    A source stamp uniquely identifies a particular version a single codebase.
+    Source stamps are identified by their ID.
+    It is safe to use sourcestamp ID equality as a proxy for source stamp equality.
+    For example, all builds of a particular version of a codebase will share the same sourcestamp ID.
+    This equality does not extend to patches: two sourcestamps generated with exactly the same patch will have different IDs.
+
+    Relative source stamps have a ``revision`` of None, meaning "whatever the latest is when this sourcestamp is interpreted".
+    While such source stamps may correspond to a wide array of revisions over the lifetime of a buildbot install, they will only ever have one ID.
 
     An instance of this class is available at ``master.db.sourcestamps``.
 
     .. index:: ssid, ssdict
 
-    Source stamps are identified by a *ssid*, and represented internally as a *ssdict*, with keys
-
     * ``ssid``
-    * ``sourcestampsetid`` (set to which the sourcestamp belongs)
     * ``branch`` (branch, or ``None`` for default branch)
     * ``revision`` (revision, or ``None`` to indicate the latest revision, in
       which case this is a relative source stamp)
+    * ``patchid`` (ID of the patch)
     * ``patch_body`` (body of the patch, or ``None``)
     * ``patch_level`` (directory stripping level of the patch, or ``None``)
     * ``patch_subdir`` (subdirectory in which to apply the patch, or ``None``)
@@ -650,40 +1045,43 @@ sourcestamps
     * ``patch_comment`` (comment for the patch, or ``None``)
     * ``repository`` (repository containing the source; never ``None``)
     * ``project`` (project this source is for; never ``None``)
-    * ``changeids`` (list of changes, by id, that generated this sourcestamp)
+    * ``codebase`` (codebase this stamp is in; never ``None``)
+    * ``created_at`` (timestamp when this stamp was first created)
 
-    .. note::
-        Presently, no attempt is made to ensure uniqueness of source stamps, so
-        multiple ssids may correspond to the same source stamp.  This may be fixed
-        in a future version.
+    Note that the patch body is a bytestring, not a unicode string.
 
-    .. py:method:: addSourceStamp(branch, revision, repository, project, patch_body=None, patch_level=0, patch_author="", patch_comment="", patch_subdir=None, changeids=[])
+    .. py:method:: findSourceStampId(branch=None, revision=Node,
+                        repository=None, project=None, patch_body=None,
+                        patch_level=None, patch_author=None, patch_comment=None,
+                        patch_subdir=None):
 
         :param branch:
-        :type branch: unicode string
+        :type branch: unicode string or None
         :param revision:
-        :type revision: unicode string
+        :type revision: unicode string or None
         :param repository:
-        :type repository: unicode string
+        :type repository: unicode string or None
         :param project:
-        :type project: string
-        :param patch_body: (optional)
-        :type patch_body: string
-        :param patch_level: (optional)
-        :type patch_level: int
-        :param patch_author: (optional)
-        :type patch_author: unicode string
-        :param patch_comment: (optional)
-        :type patch_comment: unicode string
-        :param patch_subdir: (optional)
-        :type patch_subdir: unicode string
-        :param changeids:
-        :type changeids: list of ints
+        :type project: unicode string or None
+        :param codebase:
+        :type codebase: unicode string (required)
+        :param patch_body: patch body
+        :type patch_body: unicode string or None
+        :param patch_level: patch level
+        :type patch_level: integer or None
+        :param patch_author: patch author
+        :type patch_author: unicode string or None
+        :param patch_comment: patch comment
+        :type patch_comment: unicode string or None
+        :param patch_subdir: patch subdir
+        :type patch_subdir: unicode string or None
         :returns: ssid, via Deferred
 
-        Create a new SourceStamp instance with the given attributes, and return
-        its ssid.  The arguments all have the same meaning as in an ssdict.
-        Pass them as keyword arguments to allow for future expansion.
+        Create a new SourceStamp instance with the given attributes, or find an existing one.
+        In either case, return its ssid.
+        The arguments all have the same meaning as in an ssdict.
+
+        If a new SourceStamp is created, its ``created_at`` is set to the current time.
 
     .. py:method:: getSourceStamp(ssid)
 
@@ -695,39 +1093,13 @@ sourcestamps
         Get an ssdict representing the given source stamp, or ``None`` if no
         such source stamp exists.
 
-    .. py:method:: getSourceStamps(sourcestampsetid)
+    .. py:method:: getSourceStamps()
 
-        :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
-        :type sourcestampsetid: integer
-        :returns: sslist of ssdict
+        :returns: list of ssdict, via Deferred
 
-        Get a set of sourcestamps identified by a set id. The set is returned as
-        a sslist that contains one or more sourcestamps (represented as ssdicts).
-        The list is empty if the set does not exist or no sourcestamps belong to the set.
-
-sourcestampset
-~~~~~~~~~~~~~~
-
-.. py:module:: buildbot.db.sourcestampsets
-
-.. index:: double: SourceStampSets; DB Connector Component
-
-.. py:class:: SourceStampSetsConnectorComponent
-
-    This class is responsible for adding new sourcestampsets to the database.
-    Build sets link to sourcestamp sets, via their (set) id's.
-
-    An instance of this class is available at ``master.db.sourcestampsets``.
-
-    Sourcestamp sets are identified by a sourcestampsetid.
-
-    .. py:method:: addSourceStampSet()
-
-        :returns: new sourcestampsetid as integer, via Deferred
-
-        Add a new (empty) sourcestampset to the database. The unique identification
-        of the set is returned as integer. The new id can be used to add
-        new sourcestamps to the database and as reference in a buildset.
+        Get all sourcestamps in the database.
+        You probably don't want to do this!
+        This method will be extended to allow appropriate filtering.
 
 state
 ~~~~~
@@ -908,6 +1280,120 @@ users
         :returns: uid or ``None``, via Deferred
 
         Fetch a uid for the given identifier, if one exists.
+
+
+masters
+~~~~~~~
+
+.. py:module:: buildbot.db.masters
+
+.. index:: double: Masters; DB Connector Component
+
+.. py:class:: MastersConnectorComponent
+
+    This class handles tracking the buildmasters in a multi-master configuration.
+    Masters "check in" periodically.
+    Other masters monitor the last activity times, and mark masters that have not recently checked in as inactive.
+
+    Masters are represented by master dictionaries with the following keys:
+
+    * ``id`` -- the ID of this master
+    * ``name`` -- the name of the master (generally of the form ``hostname:basedir``)
+    * ``active`` -- true if this master is running
+    * ``last_active`` -- time that this master last checked in (a datetime object)
+
+    .. py:method:: findMasterId(name)
+
+        :param unicode name: name of this master
+        :returns: master id via Deferred
+
+        Return the master ID for the master with this master name (generally ``hostname:basedir``).
+        If such a master is already in the database, this returns the ID.
+        If not, the master is added to the database, with ``active=False``, and its ID returned.
+
+    .. py:method:: setMasterState(masterid, active)
+
+        :param integer masterid: the master to check in
+        :param boolean active: whether to mark this master as active or inactive
+        :returns: boolean via Deferred
+
+        Mark the given master as active or inactive, returning true if the state actually changed.
+        If ``active`` is true, the ``last_active`` time is updated to the current time.
+        If ``active`` is false, then any links to this master, such as schedulers, will be deleted.
+
+    .. py:method:: getMaster(masterid)
+
+        :param integer masterid: the master to check in
+        :returns: Master dict or None via Deferred
+
+        Get the indicated master.
+
+    .. py:method:: getMasters()
+
+        :returns: list of Master dicts via Deferred
+
+        Get a list of the masters, represented as dictionaries; masters are sorted
+        and paged using generic data query options
+
+
+builders
+~~~~~~~~
+
+.. py:module:: buildbot.db.builders
+
+.. index:: double: Builders; DB Connector Component
+
+.. py:class:: BuildersConnectorComponent
+
+    This class handles the relationship between builder names and their IDs, as well as tracking which masters are configured for this builder.
+
+    Builders are represented by master dictionaries with the following keys:
+
+    * ``id`` -- the ID of this builder
+    * ``name`` -- the name of the builder
+    * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
+
+    .. py:method:: findBuilderId(name)
+
+        :param unicode name: name of this builder
+        :returns: builder id via Deferred
+
+        Return the builder ID for the builder with this builder name.
+        If such a builder is already in the database, this returns the ID.
+        If not, the builder is added to the database.
+
+    .. py:method:: addBuilderMaster(builderid=None, masterid=None)
+
+        :param integer builderid: the builder
+        :param integer masterid: the master
+        :returns: Deferred
+
+        Add the given master to the list of masters on which the builder is configured.
+        This will do nothing if the master and builder are already associated.
+
+    .. py:method:: removeBuilderMaster(builderid=None, masterid=None)
+
+        :param integer builderid: the builder
+        :param integer masterid: the master
+        :returns: Deferred
+
+        Remove the given master from the list of masters on which the builder is configured.
+
+    .. py:method:: getBuilder(builderid)
+
+        :param integer builderid: the builder to check in
+        :returns: Builder dict or None via Deferred
+
+        Get the indicated builder.
+
+    .. py:method:: getBuilders(masterid=None)
+
+        :param integer masterid: ID of the master to which the results should be limited
+        :returns: list of Builder dicts via Deferred
+
+        Get all builders (in unspecified order).
+        If ``masterid`` is given, then only builders configured on that master are returned.
+
 
 Writing Database Connector Methods
 ----------------------------------
@@ -1127,6 +1613,14 @@ You will also want to add an in-memory implementation of the methods to the
 fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
 is tested using these fake implementations in order to isolate that code from
 the database code.
+
+The keys and types used in the return value from a connector's ``get`` methods are described in :bb:src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
+This is a dictionary of ``DictValidator`` objects, one for each return value.
+
+These values are used within test methods like this::
+
+    rv = yield self.db.masters.getMaster(7)
+    validation.verifyDbDict(self, 'masterdict', rv)
 
 .. _Modifying-the-Database-Schema:
 

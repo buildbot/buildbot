@@ -26,7 +26,8 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['users', 'users_info', 'changes', 'change_users'])
+            table_names=['users', 'users_info', 'changes', 'change_users',
+                         'sourcestamps', 'patches'])
 
         def finish_setup(_):
             self.db.users = users.UsersConnectorComponent(self.db)

@@ -5,7 +5,6 @@ The keys in this section affect the operations of the buildmaster globally.
 
 .. bb:cfg:: db
 .. bb:cfg:: db_url
-.. bb:cfg:: db_poll_interval
 
 .. _Database-Specification:
 
@@ -21,16 +20,12 @@ All keys are optional::
 
     c['db'] = {
         'db_url' : 'sqlite:///state.sqlite',
-        'db_poll_interval' : 30,
     }
 
 The ``db_url`` key indicates the database engine to use.
 The format of this parameter is completely documented at http://www.sqlalchemy.org/docs/dialects/, but is generally of the form::
 
      "driver://[username:password@]host:port/database[?args]"
-
-The optional ``db_poll_interval`` specifies the interval, in seconds, between checks for pending tasks in the database.
-This parameter is generally only useful in multi-master mode. See :ref:`Multi-master-mode`.
 
 These parameters can be specified directly in the configuration dictionary, as ``c['db_url']`` and ``c['db_poll_interval']``, although this method is deprecated.
 
@@ -94,6 +89,44 @@ Postgres
 
 PosgreSQL requires no special configuration.
 
+.. bb:cfg:: mq
+
+.. _MQ-Specification:
+
+MQ Specification
+~~~~~~~~~~~~~~~~
+
+Buildbot uses a message-queueing system to handle communication within the
+master.  Messages are used to indicate events within the master, and components
+that are interested in those events arrange to receive them.
+
+The message queueing implementation is configured as a dictionary in the ``mq``
+option.  The ``type`` key describes the type of MQ implemetation to be used.
+Note that the implementation type cannot be changed in a reconfig.
+
+The available implemenetation types are described in the following sections.
+
+Simple
+++++++
+
+.. code-block:: python
+
+    c['mq'] = {
+        'type' : 'simple',
+        'debug' : False,
+    }
+
+This is the default MQ implementation.  Similar to SQLite, it has no additional
+software dependencies, but does not support multi-master mode.
+
+Note that this implementation also does not support message persistence across
+a restart of the master.  For example, if a change is received, but the master
+shuts down before the schedulers can create build requests for it, then those
+schedulers will not be notified of the change when the master starts again.
+
+The ``debug`` key, which defaults to False, can be used to enable logging of
+every message produced on this master.
+
 .. bb:cfg:: multiMaster
 
 .. _Multi-master-mode:
@@ -130,7 +163,6 @@ Because of this shared state, you are strongly encouraged to:
 One suggested configuration is to have one buildbot master configured with just the scheduler and change sources; and then other masters configured with just the builders.
 
 To enable multi-master mode in this configuration, you will need to set the :bb:cfg:`multiMaster` option so that buildbot doesn't warn about missing schedulers or builders.
-You will also need to set :bb:cfg:`db_poll_interval` to specify the interval (in seconds) at which masters should poll the database for tasks.
 
 ::
 
@@ -140,7 +172,6 @@ You will also need to set :bb:cfg:`db_poll_interval` to specify the interval (in
     # Check for new build requests every 60 seconds
     c['db'] = {
         'db_url' : 'mysql://...',
-        'db_poll_interval' : 30,
     }
 
 .. bb:cfg:: buildbotURL
@@ -148,15 +179,14 @@ You will also need to set :bb:cfg:`db_poll_interval` to specify the interval (in
 .. bb:cfg:: title
 
 Site Definitions
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Three basic settings describe the buildmaster in status reports::
 
     c['title'] = "Buildbot"
     c['titleURL'] = "http://buildbot.sourceforge.net/"
-    c['buildbotURL'] = "http://localhost:8010/"
 
-:bb:cfg:`title` is a short string that will appear at the top of this buildbot installation's :class:`html.WebStatus` home page (linked to the :bb:cfg:`titleURL`), and is embedded in the title of the waterfall HTML page.
+:bb:cfg:`title` is a short string that will appear at the top of this buildbot installation's home page (linked to the :bb:cfg:`titleURL`).
 
 :bb:cfg:`titleURL` is a URL string that must end with a slash (``/``).
 HTML status displays will show ``title`` as a link to :bb:cfg:`titleURL`.
@@ -164,7 +194,6 @@ This URL is often used to provide a link from buildbot HTML pages to your projec
 
 The :bb:cfg:`buildbotURL` string should point to the location where the buildbot's internal web server is visible.
 This URL must end with a slash (``/``).
-This typically uses the port number set for the web status (:bb:status:`WebStatus`): the buildbot needs your help to figure out a suitable externally-visible host URL.
 
 When status notices are sent to users (either by email or over IRC), :bb:cfg:`buildbotURL` will be used to create a URL to the specific build or problem that they are being notified about.
 It will also be made available to queriers (over IRC) who want to find out where to get more information about this buildbot.
@@ -173,6 +202,9 @@ It will also be made available to queriers (over IRC) who want to find out where
 .. bb:cfg:: logCompressionMethod
 .. bb:cfg:: logMaxSize
 .. bb:cfg:: logMaxTailSize
+.. bb:cfg:: logEncoding
+
+.. _Log-Encodings:
 
 Log Handling
 ~~~~~~~~~~~~
@@ -183,6 +215,7 @@ Log Handling
     c['logCompressionMethod'] = 'gz'
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
+    c['logEncoding'] = 'utf-8'
 
 The :bb:cfg:`logCompressionLimit` enables compression of build logs on disk for logs that are bigger than the given size, or disables that completely if set to ``False``.
 The default value is 4096, which should be a reasonable default on most file systems.
@@ -198,6 +231,14 @@ Any output exceeding :bb:cfg:`logMaxSize` will be truncated, and a message to th
 If :bb:cfg:`logMaxSize` is set, and the output from a step exceeds the maximum, the :bb:cfg:`logMaxTailSize` parameter controls how much of the end of the build log will be kept.
 The effect of setting this parameter is that the log will contain the first :bb:cfg:`logMaxSize` bytes and the last :bb:cfg:`logMaxTailSize` bytes of output.
 Don't set this value too high, as the the tail of the log is kept in memory.
+
+The :bb:cfg:`logEncoding` parameter specifies the character encoding to use to decode bytestrings provided as logs.
+It defaults to ``utf-8``, which should work in most cases, but can be overridden if necessary.
+In extreme cases, a callable can be specified for this parameter.
+It will be called with byte strings, and should return the corresponding Unicode string.
+
+This setting can be overridden for a single build step with the ``logEncoding`` step parameter.
+It can also be overridden for a single log file by passing the ``logEncoding`` parameter to :py:meth:`~buildbot.process.buildstep.addLog`.
 
 Data Lifetime
 ~~~~~~~~~~~~~
@@ -386,20 +427,6 @@ The :bb:cfg:`properties` configuration key defines a dictionary of properties th
        'release-stage' : 'alpha'
    }
 
-.. bb:cfg:: debugPassword
-
-.. _Debug-Options:
-
-Debug Options
-~~~~~~~~~~~~~
-
-If you set :bb:cfg:`debugPassword`, then you can connect to the buildmaster with the diagnostic tool launched by :samp:`buildbot debugclient {MASTER}:{PORT}`.
-From this tool, you can reload the config file, manually force builds, and inject changes, which may be useful for testing your buildmaster without actually committing changes to your repository (or before you have the Change Sources configured.)
-
-The debug tool uses the same port number as the slaves, :bb:cfg:`protocols`, and you may configure its authentication credentials as follows::
-
-    c['debugPassword'] = "debugpassword"
-
 .. index:: Manhole
 
 .. bb:cfg:: manhole
@@ -486,7 +513,6 @@ A manhole session might look like::
                         change_svc : <type 'instance'>
                     configFileName : master.cfg
                                 db : <class 'buildbot.db.connector.DBConnector'>
-                  db_poll_interval : None
                             db_url : sqlite:///state.sqlite
                                   ...
     >>> show(master.botmaster.builders['win32'])
@@ -608,7 +634,63 @@ The results are the substituted into the replacement text, along with the revisi
 
 :class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link callables, and tries each in turn, returning the first successful match.
 
-.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+.. bb:cfg:: www
+
+Web Server
+~~~~~~~~~~
+
+Buildbot contains a built-in web server.
+This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
+
+.. note:
+    As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
+
+``port``
+    The TCP port on which to serve requests.
+    Note that SSL is not supported.
+    To host Buildbot with SSL, use an HTTP proxy such as lighttpd, nginx, or Apache.
+    If this is ``None``, the default, then the master will not implement a web server.
+
+``url``
+    The URL of the buildbot web server.
+    This value is used to generate URLs throughout Buildbot, and should take into account any translations performed by HTTP proxies.
+
+    Note that this parameter need not point to this master.
+    For example, in a configuration with a master devoted to web service and a master devoted to scheduling and running builds, both should be configured with the same ``url``.
+    Then any strings that are generated by status plugins such as IRC or MailNotifier will contain working URLs.
+
+    The default URL is ``http://localhost:8080``, or on ``port`` if it is specified.
+    This is probably not what you want!
+
+``json_cache_seconds``
+    The number of seconds into the future at which an HTTP API response should expire.
+    Any versions less than this value will not be available.
+    This can be used to ensure that no clients are depending on API versions that will soon be removed from Buildbot.
+
+``rest_minimum_version``
+    The minimum supported REST API version.
+    Any versions less than this value will not be available.
+    This can be used to ensure that no clients are depending on API versions that will soon be removed from Buildbot.
+
+``plugins``
+    This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
+    These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-www-waterfall``.
+    For example ::
+
+        c['www'] = {
+            'plugins': {'waterfall': {'num_builds': 50}}
+        }
+
+``debug``
+    If true, then debugging information will be output to the browser.
+    This is best set to false (the default) on production systems, to avoid the possibility of information leakage.
+
+``allowed_origins``
+    This gives a list of origins which are allowed to access the Buildbot API (including control via JSONRPC 2.0).
+    It implements cross-origin request sharing (CORS), allowing pages at origins other than the Buildbot UI to use the API.
+    Each origin is interpreted as filename match expression, with ``?`` matching one character and ``*`` matching anything.
+    Thus ``['*']`` will match all origins, and ``['https://*.buildbot.net']`` will match secure sites under ``buildbot.net``.
+    The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
 
 .. bb:cfg:: codebaseGenerator
 
@@ -637,3 +719,6 @@ If changes come from different repositories, extra processing will be needed to 
 This codebase will then be a logical name for the combination of repository and or branch etc.
 
 The `codebaseGenerator` accepts a change dictionary as produced by the :py:class:`buildbot.db.changes.ChangesConnectorComponent <changes connector component>`, with a changeid equal to `None`.
+
+.. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+

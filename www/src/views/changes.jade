@@ -1,0 +1,28 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href:"#/changes") Changes
+  .row
+    .panel
+      .panel-heading
+        h4  Last changes coming into the system
+      table.table.table-hover.table-striped.table-condensed.table-bordered
+        tr
+          td #
+          td Author
+          td Branch
+          td Repository
+          td Revision
+          td Date
+          td Files
+        tr(ng-repeat="change in changes | orderBy:'changeid':true")
+          td {{ change.changeid }}
+          td {{ change.author }}
+          td {{ change.branch }}
+          td {{ change.repository }}
+          td {{ change.revision }}
+          td {{ change.when_timestamp | date:'yyyy-MM-dd HH:mm' }}
+          td
+            ul
+              li(data-ng-repeat='file in change.files') {{file}}

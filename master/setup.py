@@ -39,6 +39,13 @@ def include(d, e):
     return (d, [f for f in glob.glob('%s/%s' % (d, e)) if os.path.isfile(f)])
 
 
+def include_statics(d):
+    r = []
+    for root, ds, fs in os.walk(d):
+        r.append((root, [os.path.join(root, f) for f in fs]))
+    return r
+
+
 class install_data_twisted(install_data):
 
     """make sure data files are installed in package.
@@ -122,9 +129,11 @@ setup_args = {
     ],
 
     'packages': ["buildbot",
-                 "buildbot.status", "buildbot.status.web", "buildbot.status.web.hooks",
+                 "buildbot.status",
+                 "buildbot.www",
                  "buildbot.changes",
                  "buildbot.buildslave",
+                 "buildbot.buildslave.protocols",
                  "buildbot.steps",
                  "buildbot.steps.package",
                  "buildbot.steps.package.deb",
@@ -139,12 +148,16 @@ setup_args = {
                  "buildbot.db",
                  "buildbot.db.types",
                  "buildbot.db.migrate.versions",
-                 "buildbot.util",
+                 "buildbot.mq",
+                 "buildbot.data",
                  "buildbot.test",
                  "buildbot.test.fake",
+                 "buildbot.test.fuzz",
+                 "buildbot.test.integration",
+                 "buildbot.test.regressions",
                  "buildbot.test.unit",
                  "buildbot.test.util",
-                 "buildbot.test.regressions",
+                 "buildbot.util",
                  ],
     'data_files': [
         ("buildbot", [
@@ -154,24 +167,11 @@ setup_args = {
             "buildbot/db/migrate/migrate.cfg",
         ]),
         include("buildbot/db/migrate/versions", "*.py"),
-        ("buildbot/clients", [
-            "buildbot/clients/debug.glade",
-        ]),
-        ("buildbot/status/web/files", [
-            "buildbot/status/web/files/default.css",
-            "buildbot/status/web/files/bg_gradient.jpg",
-            "buildbot/status/web/files/robots.txt",
-            "buildbot/status/web/files/templates_readme.txt",
-            "buildbot/status/web/files/favicon.ico",
-        ]),
-        include("buildbot/status/web/files/", '*.png'),
-        include("buildbot/status/web/templates", '*.html'),
-        include("buildbot/status/web/templates", '*.xml'),
         ("buildbot/scripts", [
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",
         ]),
-    ],
+    ] + include_statics("buildbot/www/static"),
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
@@ -184,6 +184,8 @@ if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
 py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)
+if not py_26:
+    raise RuntimeError("Buildbot master requires at least Python-2.6")
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
@@ -193,44 +195,22 @@ except ImportError:
     pass
 else:
     # dependencies
-    setup_args['install_requires'] = []
-
-    if sys.version_info[:2] >= (2, 6):
-        setup_args['install_requires'] += [
-            'twisted >= 11.0.0',
-            'Jinja2 >= 2.1',
-        ]
-    else:
-        # Latest supported on Python 2.5 version of Twisted is 12.10, and
-        # pip/easy_install currently can't select correct version of Twisted.
-        # Twisted depends on zope.interface, which became incompatible with
-        # Python 2.5 starting from 4.0.0 release.
-        # Jinja2 dropped Python 2.5 support in 2.7 release.
-        setup_args['install_requires'] += [
-            'twisted >= 11.0.0, <= 12.1.0',
-            'zope.interface < 4.0.0',
-            'Jinja2 >= 2.1, < 2.7',
-        ]
+    setup_args['install_requires'] = [
+        'twisted >= 11.0.0',
+        'Jinja2 >= 2.1',
+    ]
 
     setup_args['install_requires'] += [
         # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
         'sqlalchemy >= 0.6, <= 0.7.10',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
-        'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
+        'sqlalchemy-migrate ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
     ]
     setup_args['tests_require'] = [
         'mock',
     ]
-    # Python-2.6 and up includes json
-    if not py_26:
-        setup_args['install_requires'].append('simplejson')
-
-    # Python-2.6 and up includes a working A sqlite (py25's is broken)
-    if not py_26:
-        setup_args['install_requires'].append('pysqlite')
-
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
         setup_args['tests_require'] = None

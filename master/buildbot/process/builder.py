@@ -16,24 +16,24 @@
 
 import weakref
 
-from twisted.application import internet
-from twisted.application import service
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.python import log
-from twisted.spread import pb
-from zope.interface import implements
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot.process import buildrequest
 from buildbot.process import slavebuilder
 from buildbot.process.build import Build
-from buildbot.process.properties import Properties
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.status.builder import RETRY
-from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.progress import Expectations
+from buildbot.util import ascii2unicode
+from buildbot.util import epoch2datetime
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import log
+from twisted.spread import pb
+from zope.interface import implements
 
 
 def enforceChosenSlave(bldr, slavebuilder, breq):
@@ -55,6 +55,9 @@ class Builder(config.ReconfigurableServiceMixin,
     def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
+
+        # this is filled on demand by getBuilderId; don't access it directly
+        self._builderid = None
 
         # this is created the first time we get a good build
         self.expectations = None
@@ -86,13 +89,14 @@ class Builder(config.ReconfigurableServiceMixin,
                                                              self.updateBigStatus)
             self.updateStatusService.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # find this builder in the config
         for builder_config in new_config.builders:
             if builder_config.name == self.name:
+                found_config = True
                 break
-        else:
-            assert 0, "no config found for builder '%s'" % self.name
+        assert found_config, "no config found for builder '%s'" % self.name
 
         # set up a builder status object on the first reconfig
         if not self.builder_status:
@@ -103,6 +107,11 @@ class Builder(config.ReconfigurableServiceMixin,
                 builder_config.description)
 
         self.config = builder_config
+
+        # allocate  builderid now, so that the builder is visible in the web
+        # UI; without this, the bulider wouldn't appear until it preformed a
+        # build.
+        yield self.getBuilderId()
 
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
@@ -115,15 +124,24 @@ class Builder(config.ReconfigurableServiceMixin,
         self.slaves = [s for s in self.slaves
                        if s.slave.slavename in new_slavenames]
 
-        return defer.succeed(None)
-
-    def stopService(self):
-        d = defer.maybeDeferred(lambda:
-                                service.MultiService.stopService(self))
-        return d
-
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
+
+    def getBuilderId(self):
+        # since findBuilderId is idempotent, there's no reason to add
+        # additional locking around this function.
+        if self._builderid:
+            return defer.succeed(self._builderid)
+        # buildbot.config should ensure this is already unicode, but it doesn't
+        # hurt to check again
+        name = ascii2unicode(self.name)
+        d = self.master.data.updates.findBuilderId(name)
+
+        @d.addCallback
+        def keep(builderid):
+            self._builderid = builderid
+            return builderid
+        return d
 
     @defer.inlineCallbacks
     def getOldestRequestTime(self):
@@ -132,6 +150,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
+        # TODO: use data API here
         unclaimed = yield self.master.db.buildrequests.getBuildRequests(
             buildername=self.name, claimed=False)
 
@@ -151,7 +170,7 @@ class Builder(config.ReconfigurableServiceMixin,
         if not brids:
             return defer.succeed(None)
 
-        d = self.master.db.buildrequests.reclaimBuildRequests(brids)
+        d = self.master.data.updates.reclaimBuildRequests(list(brids))
         d.addErrback(log.err, 'while re-claiming running BuildRequests')
         return d
 
@@ -176,7 +195,7 @@ class Builder(config.ReconfigurableServiceMixin,
             self.slaves.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
-    def attached(self, slave, remote, commands):
+    def attached(self, slave, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
 
@@ -209,7 +228,7 @@ class Builder(config.ReconfigurableServiceMixin,
         sb = slavebuilder.SlaveBuilder()
         sb.setBuilder(self)
         self.attaching_slaves.append(sb)
-        d = sb.attached(slave, remote, commands)
+        d = sb.attached(slave, commands)
         d.addCallback(self._attached)
         d.addErrback(self._not_attached, slave)
         return d
@@ -288,17 +307,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
-        """Start a build on the given slave.
-        @param build: the L{base.Build} to start
-        @param sb: the L{SlaveBuilder} which will host this build
-
-        @return: (via Deferred) boolean indicating that the build was
-        succesfully started.
-        """
-
-        # as of the Python versions supported now, try/finally can't be used
-        # with a generator expression.  So instead, we push cleanup functions
-        # into a list so that, at any point, we can abort this operation.
+        # Build a stack of cleanup functions so that, at any point, we can
+        # abort this operation and unwind the commitments made so far.
         cleanups = []
 
         def run_cleanups():
@@ -376,7 +386,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.remote.callRemote("startBuild")
+            yield slavebuilder.slave.conn.remoteStartBuild(build.builder.name)
         except:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
@@ -386,32 +396,20 @@ class Builder(config.ReconfigurableServiceMixin,
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
-        # record the build in the db - one row per buildrequest
-        try:
-            bids = []
-            for req in build.requests:
-                bid = yield self.master.db.builds.addBuild(req.id, bs.number)
-                bids.append(bid)
-        except:
-            log.err(failure.Failure(), 'while adding rows to build table:')
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
         # IMPORTANT: no yielding is allowed from here to the startBuild call!
 
         # it's possible that we lost the slave remote between the ping above
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.remote:
+        if not slavebuilder.slave.conn:  # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
             return
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs)
+        self.master.status.build_started(buildrequests[0].id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
@@ -423,7 +421,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
                                 bs, self.expectations, slavebuilder)
-        d.addCallback(self.buildFinished, slavebuilder, bids)
+        d.addCallback(lambda _: self.buildFinished(build, slavebuilder))
         # this shouldn't happen. if it does, the slave will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
@@ -441,7 +439,7 @@ class Builder(config.ReconfigurableServiceMixin,
                                   self.config.properties[propertyname],
                                   "Builder")
 
-    def buildFinished(self, build, sb, bids):
+    def buildFinished(self, build, sb):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
@@ -450,21 +448,21 @@ class Builder(config.ReconfigurableServiceMixin,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
-        # mark the builds as finished, although since nothing ever reads this
-        # table, it's not too important that it complete successfully
-        d = self.master.db.builds.finishBuilds(bids)
-        d.addErrback(log.err, 'while marking builds as finished (ignored)')
-
         results = build.build_status.getResults()
+
         self.building.remove(build)
         if results == RETRY:
-            self._resubmit_buildreqs(build).addErrback(log.err)
+            d = self._resubmit_buildreqs(build)
+            d.addErrback(log.err, 'while resubmitting a build request')
         else:
+            complete_at_epoch = reactor.seconds()
+            complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
-            db = self.master.db
-            d = db.buildrequests.completeBuildRequests(brids, results)
-            d.addCallback(
-                lambda _: self._maybeBuildsetsComplete(build.requests))
+
+            d = self.master.data.updates.completeBuildRequests(brids, results, complete_at=complete_at)
+            d.addCallback(lambda _:
+                          self._notify_completions(build.requests, results,
+                                                   complete_at_epoch))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
@@ -475,14 +473,32 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests):
-        # inform the master that we may have completed a number of buildsets
+    def _notify_completions(self, requests, results, complete_at_epoch):
+        updates = self.master.data.updates
+
+        # send a message for each request
         for br in requests:
-            yield self.master.maybeBuildsetComplete(br.bsid)
+            updates.completeBuildRequests([br.id], results,
+                                          epoch2datetime(complete_at_epoch))
+
+        # check for completed buildsets -- one call for each build request with
+        # a unique bsid
+        seen_bsids = set()
+        for br in requests:
+            if br.bsid in seen_bsids:
+                continue
+            seen_bsids.add(br.bsid)
+            yield updates.maybeBuildsetComplete(br.bsid)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
-        return self.master.db.buildrequests.unclaimBuildRequests(brids)
+        d = self.master.data.updates.unclaimBuildRequests(brids)
+
+        @d.addCallback
+        def notify(_):
+            # XXX method does not exist
+            self._msg_buildrequests_unclaimed(build.requests)
+        return d
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -503,7 +519,7 @@ class Builder(config.ReconfigurableServiceMixin,
     # Build Creation
 
     @defer.inlineCallbacks
-    def maybeStartBuild(self, slavebuilder, breqs):
+    def maybeStartBuild(self, slavebuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
         # start a set of buildrequests on a slave. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
@@ -554,60 +570,10 @@ class BuilderControl:
         self.original = builder
         self.control = control
 
-    def submitBuildRequest(self, ss, reason, props=None):
-        d = ss.getSourceStampSetId(self.control.master)
-
-        def add_buildset(sourcestampsetid):
-            return self.control.master.addBuildset(
-                builderNames=[self.original.name],
-                sourcestampsetid=sourcestampsetid, reason=reason, properties=props)
-        d.addCallback(add_buildset)
-
-        def get_brs(xxx_todo_changeme):
-            (bsid, brids) = xxx_todo_changeme
-            brs = BuildRequestStatus(self.original.name,
-                                     brids[self.original.name],
-                                     self.control.master.status)
-            return brs
-        d.addCallback(get_brs)
-        return d
-
-    @defer.inlineCallbacks
-    def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None, absolute=True):
-        if not bs.isFinished():
-            return
-
-        # Make a copy of the properties so as not to modify the original build.
-        properties = Properties()
-        # Don't include runtime-set properties in a rebuild request
-        properties.updateFromPropertiesNoRuntime(bs.getProperties())
-        if extraProperties is None:
-            properties.updateFromProperties(extraProperties)
-
-        properties_dict = dict((k, (v, s)) for (k, v, s) in properties.asList())
-        ssList = bs.getSourceStamps(absolute=absolute)
-
-        if ssList:
-            sourcestampsetid = yield ssList[0].getSourceStampSetId(self.control.master)
-            dl = []
-            for ss in ssList[1:]:
-                # add deferred to the list
-                dl.append(ss.addSourceStampToDatabase(self.control.master, sourcestampsetid))
-            yield defer.gatherResults(dl)
-
-            bsid, brids = yield self.control.master.addBuildset(
-                builderNames=[self.original.name],
-                sourcestampsetid=sourcestampsetid,
-                reason=reason,
-                properties=properties_dict)
-            defer.returnValue((bsid, brids))
-        else:
-            log.msg('Cannot start rebuild, rebuild has no sourcestamps for a new build')
-            defer.returnValue(None)
-
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self):
         master = self.original.master
+        # TODO Use DATA API
         brdicts = yield master.db.buildrequests.getBuildRequests(
             buildername=self.original.name,
             claimed=False)

@@ -27,6 +27,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import compat
 from buildbot.test.util import steps
+from buildbot.test.util.interfaces import InterfaceTests
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
@@ -38,20 +39,29 @@ class FakeTriggerable(object):
 
     triggered_with = None
     result = SUCCESS
+    bsid = 1
     brids = {}
     exception = False
 
     def __init__(self, name):
         self.name = name
 
-    def trigger(self, sourcestamps=None, set_props=None):
-        self.triggered_with = (sourcestamps, set_props.properties)
-        d = defer.Deferred()
+    def trigger(self, waited_for, sourcestamps=None, set_props=None):
+        self.triggered_with = (waited_for, sourcestamps, set_props.properties)
+        idsDeferred = defer.Deferred()
+        idsDeferred.callback((self.bsid, self.brids))
+        resultsDeferred = defer.Deferred()
         if self.exception:
-            reactor.callLater(0, d.errback, RuntimeError('oh noes'))
+            reactor.callLater(0, resultsDeferred.errback, RuntimeError('oh noes'))
         else:
-            reactor.callLater(0, d.callback, (self.result, self.brids))
-        return d
+            reactor.callLater(0, resultsDeferred.callback, (self.result, self.brids))
+        return (idsDeferred, resultsDeferred)
+
+
+class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
+
+    def test_interface(self):
+        self.assertInterfacesImplemented(FakeTriggerable)
 
 
 class FakeSourceStamp(object):
@@ -86,9 +96,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         # should be fixed!
 
         # set up a buildmaster that knows about two fake schedulers, a and b
-        m = fakemaster.make_master()
+        m = fakemaster.make_master(testcase=self, wantDb=True)
         self.build.builder.botmaster = m.botmaster
-        m.db = fakedb.FakeDBConnector(self)
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
 
@@ -102,14 +111,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         a.brids = {'A': 11}
         b.brids = {'B': 22}
 
-        make_fake_br = lambda brid, name: fakedb.BuildRequest(id=brid,
-                                                              buildsetid=BRID_TO_BSID(brid),
-                                                              buildername=name)
-        make_fake_build = lambda brid: fakedb.Build(brid=brid,
-                                                    id=BRID_TO_BID(brid),
-                                                    number=BRID_TO_BUILD_NUMBER(brid))
+        make_fake_br = lambda brid, name: fakedb.BuildRequest(
+            id=brid, buildsetid=BRID_TO_BSID(brid), buildername=name)
+        make_fake_build = lambda brid: fakedb.Build(
+            buildrequestid=brid, id=BRID_TO_BID(brid),
+            number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
+            buildslaveid=13)
 
         m.db.insertTestData([
+            fakedb.Master(id=9),
             make_fake_br(11, "A"),
             make_fake_br(22, "B"),
             make_fake_build(11),
@@ -129,12 +139,12 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.exp_b_trigger = None
         self.exp_added_urls = []
 
-    def runStep(self, expect_waitForFinish=False):
+    def runStep(self):
         d = steps.BuildStepMixin.runStep(self)
 
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
-        if expect_waitForFinish:
+        if self.step.waitForFinish:
             self.assertFalse(d.called)
         else:
             self.assertTrue(d.called)
@@ -219,7 +229,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_simple(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({}, {}))
+        self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
     def test_simple_failure(self):
@@ -228,7 +238,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         # not waitForFinish, so trigger step succeeds even though the build
         # didn't fail
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({}, {}))
+        self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
@@ -236,7 +246,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({}, {}))
+        self.expectTriggeredWith(a=(False, [], {}))
         d = self.runStep()
 
         def flush(_):
@@ -260,10 +270,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        gotRevisionsInBuild={'': 23456},
                        )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 23456}
-                                     }, {}))
+        self.expectTriggeredWith(
+            a=(False, [{'codebase': '', 'repository': 'x', 'revision': 23456}], {}))
         return self.runStep()
 
     def test_updateSourceStamp_no_got_revision(self):
@@ -274,10 +282,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                                             revision=11111)
                                             ])
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 11111}  # uses old revision
-                                     }, {}))
+        self.expectTriggeredWith(
+            a=(False,
+               [{'codebase': '', 'repository': 'x', 'revision': 11111}],  # uses old revision
+               {}))
         return self.runStep()
 
     def test_not_updateSourceStamp(self):
@@ -290,10 +298,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        gotRevisionsInBuild={'': 23456},
                        )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 11111}
-                                     }, {}))
+        self.expectTriggeredWith(
+            a=(False,
+               [{'codebase': '', 'repository': 'x', 'revision': 11111}],
+               {}))
         return self.runStep()
 
     def test_updateSourceStamp_multiple_repositories(self):
@@ -308,11 +316,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                        gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
                        )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({'cb1': {'codebase': 'cb1',
-                                             'revision': 23456},
-                                     'cb2': {'codebase': 'cb2',
-                                             'revision': 34567}
-                                     }, {}))
+        self.expectTriggeredWith(
+            a=(False,
+               [{'codebase': 'cb2', 'revision': 34567},
+                {'codebase': 'cb1', 'revision': 23456}],
+               {}))
         return self.runStep()
 
     def test_updateSourceStamp_prop_false(self):
@@ -327,10 +335,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('usess', False, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         # didn't use got_revision
-        self.expectTriggeredWith(a=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 11111
-                                          }}, {}))
+        self.expectTriggeredWith(
+            a=(False,
+                [{'codebase': '', 'repository': 'x', 'revision': 11111}],
+                {}))
         return self.runStep()
 
     def test_updateSourceStamp_prop_true(self):
@@ -345,10 +353,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('usess', True, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         # didn't use got_revision
-        self.expectTriggeredWith(a=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 23456
-                                          }}, {}))
+        self.expectTriggeredWith(
+            a=(False,
+                [{'codebase': '', 'repository': 'x', 'revision': 23456}],
+                {}))
         return self.runStep()
 
     def test_alwaysUseLatest(self):
@@ -360,7 +368,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                             ])
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # Do not pass setid
-        self.expectTriggeredWith(b=({}, {}))
+        self.expectTriggeredWith(b=(False, [], {}))
         return self.runStep()
 
     def test_alwaysUseLatest_prop_false(self):
@@ -373,10 +381,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('aul', False, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # didn't use latest
-        self.expectTriggeredWith(b=({'': {'codebase': '',
-                                          'repository': 'x',
-                                          'revision': 11111}
-                                     }, {}))
+        self.expectTriggeredWith(
+            b=(False, [{'codebase': '', 'repository': 'x', 'revision': 11111}], {}))
         return self.runStep()
 
     def test_alwaysUseLatest_prop_true(self):
@@ -389,7 +395,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('aul', True, 'me')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
         # didn't use latest
-        self.expectTriggeredWith(b=({}, {}))
+        self.expectTriggeredWith(b=(False, [], {}))
         return self.runStep()
 
     def test_sourceStamp(self):
@@ -397,7 +403,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        sourceStamp=ss))
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
-        self.expectTriggeredWith(b=({'': ss}, {}))
+        self.expectTriggeredWith(b=(False, [ss], {}))
         return self.runStep()
 
     def test_set_of_sourceStamps(self):
@@ -406,7 +412,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        sourceStamps=[ss1, ss2]))
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
-        self.expectTriggeredWith(b=({'cb1': ss1, 'cb2': ss2}, {}))
+        self.expectTriggeredWith(b=(False, [ss2, ss1], {}))
         return self.runStep()
 
     def test_set_of_sourceStamps_override_build(self):
@@ -417,7 +423,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        sourceStamps=[ss1, ss2]), sourcestampsInBuild=[ss3, ss4])
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
-        self.expectTriggeredWith(b=({'cb1': ss1, 'cb2': ss2}, {}))
+        self.expectTriggeredWith(b=(False, [ss2, ss1], {}))
         return self.runStep()
 
     def test_sourceStamp_prop(self):
@@ -427,7 +433,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('rev', 602, 'me')
         expected_ss = dict(revision=602, branch='dev')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'b'])
-        self.expectTriggeredWith(b=({'': expected_ss}, {}))
+        self.expectTriggeredWith(b=(False, [expected_ss], {}))
         return self.runStep()
 
     def test_waitForFinish(self):
@@ -435,19 +441,19 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                        waitForFinish=True))
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a', 'b'])
         self.expectTriggeredWith(
-            a=({}, {}),
-            b=({}, {}))
+            a=(True, [], {}),
+            b=(True, [], {}))
         self.expectTriggeredLinks('a', 'b')
-        return self.runStep(expect_waitForFinish=True)
+        return self.runStep()
 
     def test_waitForFinish_failure(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        waitForFinish=True))
         self.scheduler_a.result = FAILURE
         self.expectOutcome(result=FAILURE, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({}, {}))
+        self.expectTriggeredWith(a=(True, [], {}))
         self.expectTriggeredLinks('a')
-        return self.runStep(expect_waitForFinish=True)
+        return self.runStep()
 
     @compat.usesFlushLoggedErrors
     def test_waitForFinish_exception(self):
@@ -457,10 +463,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=EXCEPTION,
                            status_text=['triggered', 'a', 'b'])
         self.expectTriggeredWith(
-            a=({}, {}),
-            b=({}, {}))
+            a=(True, [], {}),
+            b=(True, [], {}))
         self.expectTriggeredLinks('a')  # b doesn't return a brid
-        d = self.runStep(expect_waitForFinish=True)
+        d = self.runStep()
 
         def flush(_):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -471,7 +477,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        set_properties=dict(x=1, y=2)))
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({},
+        self.expectTriggeredWith(a=(False, [],
                                     dict(x=(1, 'Trigger'), y=(2, 'Trigger'))))
         return self.runStep()
 
@@ -480,7 +486,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                        set_properties=dict(x=properties.Property('X'), y=2)))
         self.properties.setProperty('X', 'xxx', 'here')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({},
+        self.expectTriggeredWith(a=(False, [],
                                     dict(x=('xxx', 'Trigger'), y=(2, 'Trigger'))))
         return self.runStep()
 
@@ -491,17 +497,17 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('b', 'B', 'BB')
         self.properties.setProperty('c', 'C', 'CC')
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
-        self.expectTriggeredWith(a=({},
+        self.expectTriggeredWith(a=(False, [],
                                     dict(a=('A', 'Trigger'),
                                          b=('B', 'Trigger'))))
         return self.runStep()
 
-    def test_interrupt(self):
+    def test_waitForFinish_interrupt(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        waitForFinish=True))
         self.expectOutcome(result=EXCEPTION, status_text=['interrupted'])
-        self.expectTriggeredWith(a=({}, {}))
-        d = self.runStep(expect_waitForFinish=True)
+        self.expectTriggeredWith(a=(True, [], {}))
+        d = self.runStep()
 
         # interrupt before the callLater representing the Triggerable
         # schedulers completes

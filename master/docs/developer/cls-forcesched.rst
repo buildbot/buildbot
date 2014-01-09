@@ -28,8 +28,8 @@ new parameter types or hacking the existing types.
    into instance attributes, so it is generally not necessary for subclasses to
    implement a constructor.
 
-   For custom parameters that set properties, one simple customization point 
-   is `getFromKwargs`: 
+   For custom parameters that set properties, one simple customization point
+   is `getFromKwargs`:
 
     .. py:method:: getFromKwargs(kwargs)
 
@@ -41,19 +41,21 @@ new parameter types or hacking the existing types.
    For more control over parameter parsing, including modifying sourcestamps or
    changeids, override the ``updateFromKwargs`` function, which is the function
    that :py:class:`ForceScheduler` invokes for processing:
-   
-    .. py:method:: updateFromKwargs(master, properties, changes, sourcestamps, kwargs)
+
+    .. py:method:: updateFromKwargs(master, properties, changes, sourcestamps, collector, kwargs)
 
         :param master: the :py:class:`~buildbot.master.BuildMaster` instance
         :param properties: a dictionary of properties
         :param changes: a list of changeids that will be used to build the
             SourceStamp for the forced builds
-        :param sourcestamps: the SourceStamp dictionary that will be passed to the 
+        :param sourcestamps: the SourceStamp dictionary that will be passed to the
             build; some parameters modify sourcestamps rather than properties.
+        :param collector: a :py:class:`buildbot.schedulers.forcesched.ValidationErrorCollector`
+            object, which is used by nestedParameter to collect errors from its childs
         :param kwargs: a dictionary of the posted values
 
         This method updates ``properties``, ``changes``,  and/or ``sourcestamps``
-        according to the request.  The default implementation is good for many simple 
+        according to the request.  The default implementation is good for many simple
         uses, but can be overridden for more complex purposes.
 
         When overriding this function, take all parameters by name (not by position),
@@ -77,14 +79,14 @@ new parameter types or hacking the existing types.
 
            A fully-qualified name that uniquely identifies the parameter in the
            scheduler.  This name is used internally as the identifier for HTTP
-           POST arguments. It is a mix of `name` and the parent's `name` (in the 
+           POST arguments. It is a mix of `name` and the parent's `name` (in the
            case of nested parameters). This field is not modifiable.
 
     .. py:attribute:: type
 
-           A list of types that the parameter conforms to. These are used by the 
-           jinja template to create appropriate html form widget.  The available 
-           values are visible in :bb:src:`master/buildbot/status/web/template/forms.html` 
+           A list of types that the parameter conforms to. These are used by the
+           jinja template to create appropriate html form widget.  The available
+           values are visible in :bb:src:`master/buildbot/status/web/template/forms.html`
            in the ``force_build_one_scheduler`` macro.
 
     .. py:attribute:: default
@@ -125,28 +127,28 @@ Nested Parameters
 
 The :py:class:`NestedParameter` class is a container for parameters. The motivating purpose for this feature
 is the multiple-codebase configuration, which needs to provide the user with a form to control
-the branch (et al) for each codebase independently. Each branch parameter is a string field with name 
+the branch (et al) for each codebase independently. Each branch parameter is a string field with name
 'branch' and these must be disambiguated.
 
-Each of the child parameters mixes in the parent's name to create the fully qualified ``fullName``. This 
-allows, for example, each of the 'branch' fields to have a unique name in the POST request. The 
-`NestedParameter` handles adding this extra bit to the name to each of the children. When the `kwarg` 
-dictionary is posted back, this class also converts the flat POST dictionary into a richer structure 
-that represents the nested structure. 
+Each of the child parameters mixes in the parent's name to create the fully qualified ``fullName``. This
+allows, for example, each of the 'branch' fields to have a unique name in the POST request. The
+`NestedParameter` handles adding this extra bit to the name to each of the children. When the `kwarg`
+dictionary is posted back, this class also converts the flat POST dictionary into a richer structure
+that represents the nested structure.
 
 As illustration, if the nested parameter has the name 'foo', and has children 'bar1' and 'bar2', then the
-POST will have entries like "foo-bar1" and "foo-bar2". The nested parameter will translate this into a 
+POST will have entries like "foo-bar1" and "foo-bar2". The nested parameter will translate this into a
 dictionary in the 'kwargs' structure, resulting in something like::
 
-    kwargs = { 
+    kwargs = {
         # ...
         'foo': {
-            'bar1': '...', 
-            'bar2': '...' 
+            'bar1': '...',
+            'bar2': '...'
         }
     }
 
-Arbitrary nesting is allowed and results in a deeper dictionary structure. 
+Arbitrary nesting is allowed and results in a deeper dictionary structure.
 
 Nesting can also be used for presentation purposes. If the name of the :py:class:`NestedParameter` is empty, the
 nest is "anonymous" and does not mangle the child names. However, in the HTML layout, the nest

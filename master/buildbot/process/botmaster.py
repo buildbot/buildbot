@@ -14,14 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.application import service
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.python import reflect
-from twisted.python.failure import Failure
-from twisted.spread import pb
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot import locks
@@ -29,9 +21,14 @@ from buildbot import util
 from buildbot.process import metrics
 from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.python import reflect
 
 
-class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
+class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
     It provides them with BuildSlaves, and distributes build requests to
@@ -40,7 +37,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
     debug = 0
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("botmaster")
         self.master = master
 
@@ -69,7 +66,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.lastSlavePortnum = None
 
         # subscription to new build requests
-        self.buildrequest_sub = None
+        self.buildrequest_consumer = None
 
         # a distributor for incoming build requests; see below
         self.brd = BuildRequestDistributor(self)
@@ -147,11 +144,23 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         return self.builders.values()
 
     def startService(self):
-        def buildRequestAdded(notif):
-            self.maybeStartBuildsForBuilder(notif['buildername'])
-        self.buildrequest_sub = \
-            self.master.subscribeToBuildRequests(buildRequestAdded)
-        service.MultiService.startService(self)
+        def buildRequestAdded(key, msg):
+            self.maybeStartBuildsForBuilder(msg['buildername'])
+        # consume both 'new' and 'unclaimed' build requests
+
+        # TODO: Support for BuildRequest doesn't exist yet
+        # It's a temporary fix in order to wake up the BuildRequestDistributor
+        #
+        # self.buildrequest_consumer_new = self.master.mq.startConsuming(
+        #     buildRequestAdded,
+        #     ('buildrequest', None, None, None, 'new'))
+        self.buildrequest_consumer_new = self.master.mq.startConsuming(
+            buildRequestAdded,
+            ('buildset', None, 'builder', None, 'buildrequest', None, 'new'))
+        self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
+            buildRequestAdded,
+            ('buildrequest', None, None, None, 'unclaimed'))
+        return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -213,12 +222,11 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 slave.master = None
                 slave.botmaster = None
 
-                yield defer.maybeDeferred(lambda:
-                                          slave.disownServiceParent())
+                yield slave.disownServiceParent()
 
             for n in added_names:
                 slave = new_by_name[n]
-                slave.setServiceParent(self)
+                yield slave.setServiceParent(self)
                 self.slaves[n] = slave
 
         metrics.MetricCountEvent.log("num_slaves",
@@ -264,9 +272,13 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
                 builder.botmaster = self
                 builder.master = self.master
-                builder.setServiceParent(self)
+                yield builder.setServiceParent(self)
 
         self.builderNames = self.builders.keys()
+
+        yield self.master.data.updates.updateBuilderList(
+            self.master.masterid,
+            [util.ascii2unicode(n) for n in self.builderNames])
 
         metrics.MetricCountEvent.log("num_builders",
                                      len(self.builders), absolute=True)
@@ -274,13 +286,16 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.stop()
 
     def stopService(self):
-        if self.buildrequest_sub:
-            self.buildrequest_sub.unsubscribe()
-            self.buildrequest_sub = None
+        if self.buildrequest_consumer_new:
+            self.buildrequest_consumer_new.stopConsuming()
+            self.buildrequest_consumer_new = None
+        if self.buildrequest_consumer_unclaimed:
+            self.buildrequest_consumer_unclaimed.stopConsuming()
+            self.buildrequest_consumer_unclaimed = None
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
-        return service.MultiService.stopService(self)
+        return service.AsyncMultiService.stopService(self)
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
@@ -313,14 +328,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         self.brd.maybeStartBuildsOn([buildername])
 
-    def maybeStartBuildsForSlave(self, slave_name):
+    def maybeStartBuildsForSlave(self, buildslave_name):
         """
         Call this when something suggests that a particular slave may now be
         available to start a build.
 
-        @param slave_name: the name of the slave
+        @param buildslave_name: the name of the slave
         """
-        builders = self.getBuildersForSlave(slave_name)
+        builders = self.getBuildersForSlave(buildslave_name)
         self.brd.maybeStartBuildsOn([b.name for b in builders])
 
     def maybeStartBuildsForAllBuilders(self):
@@ -329,168 +344,3 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         start some builds, but nothing more specific.
         """
         self.brd.maybeStartBuildsOn(self.builderNames)
-
-
-class DuplicateSlaveArbitrator(object):
-
-    """Utility class to arbitrate the situation when a new slave connects with
-    the name of an existing, connected slave
-
-    @ivar buildslave: L{buildbot.process.slavebuilder.AbstractBuildSlave}
-    instance
-    @ivar old_remote: L{RemoteReference} to the old slave
-    @ivar new_remote: L{RemoteReference} to the new slave
-    """
-    _reactor = reactor  # for testing
-
-    # There are several likely duplicate slave scenarios in practice:
-    #
-    # 1. two slaves are configured with the same username/password
-    #
-    # 2. the same slave process believes it is disconnected (due to a network
-    # hiccup), and is trying to reconnect
-    #
-    # For the first case, we want to prevent the two slaves from repeatedly
-    # superseding one another (which results in lots of failed builds), so we
-    # will prefer the old slave.  However, for the second case we need to
-    # detect situations where the old slave is "gone".  Sometimes "gone" means
-    # that the TCP/IP connection to it is in a long timeout period (10-20m,
-    # depending on the OS configuration), so this can take a while.
-
-    PING_TIMEOUT = 10
-    """Timeout for pinging the old slave.  Set this to something quite long, as
-    a very busy slave (e.g., one sending a big log chunk) may take a while to
-    return a ping.
-    """
-
-    def __init__(self, buildslave):
-        self.buildslave = buildslave
-        self.old_remote = self.buildslave.slave
-
-    def getPerspective(self, mind, slavename):
-        self.new_remote = mind
-        self.ping_old_slave_done = False
-        self.old_slave_connected = True
-        self.ping_new_slave_done = False
-
-        old_tport = self.old_remote.broker.transport
-        new_tport = self.new_remote.broker.transport
-        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old "
-                "(%s)" % (self.buildslave.slavename, new_tport.getPeer(),
-                          old_tport.getPeer()))
-
-        # delay the new slave until we decide what to do with it
-        d = self.new_slave_d = defer.Deferred()
-
-        # Ping the old slave.  If this kills it, then we can allow the new
-        # slave to connect.  If this does not kill it, then we disconnect
-        # the new slave.
-        self.ping_old_slave(new_tport.getPeer())
-
-        # Print a message on the new slave, if possible.
-        self.ping_new_slave()
-
-        return d
-
-    def ping_new_slave(self):
-        d = defer.maybeDeferred(lambda:
-                                self.new_remote.callRemote("print", "master already has a "
-                                                           "connection named '%s' - checking its liveness"
-                                                           % self.buildslave.slavename))
-
-        def done(_):
-            # failure or success, doesn't matter - the ping is done.
-            self.ping_new_slave_done = True
-            self.maybe_done()
-        d.addBoth(done)
-
-    def ping_old_slave(self, new_peer):
-        # set a timer on this ping, in case the network is bad.  TODO: a
-        # timeout on the ping itself is not quite what we want.  If there is
-        # other data flowing over the PB connection, then we should keep
-        # waiting.  Bug #1703
-        def timeout():
-            self.ping_old_slave_timeout = None
-            self.ping_old_slave_timed_out = True
-            self.old_slave_connected = False
-            self.ping_old_slave_done = True
-            self.maybe_done()
-        self.ping_old_slave_timeout = self._reactor.callLater(
-            self.PING_TIMEOUT, timeout)
-        self.ping_old_slave_timed_out = False
-
-        # call this in maybeDeferred because callRemote tends to raise
-        # exceptions instead of returning Failures
-        d = defer.maybeDeferred(lambda:
-                                self.old_remote.callRemote("print",
-                                                           "master got a duplicate connection from %s; keeping this one"
-                                                           % new_peer))
-
-        def clear_timeout(r):
-            if self.ping_old_slave_timeout:
-                self.ping_old_slave_timeout.cancel()
-                self.ping_old_slave_timeout = None
-            return r
-        d.addBoth(clear_timeout)
-
-        def old_gone(f):
-            if self.ping_old_slave_timed_out:
-                return  # ignore after timeout
-            f.trap(pb.PBConnectionLost, pb.DeadReferenceError)
-            log.msg(("connection lost while pinging old slave '%s' - " +
-                     "keeping new slave") % self.buildslave.slavename)
-            self.old_slave_connected = False
-        d.addErrback(old_gone)
-
-        def other_err(f):
-            log.err(f, "unexpected error pinging old slave; disconnecting it")
-            self.old_slave_connected = False
-        d.addErrback(other_err)
-
-        def done(_):
-            if self.ping_old_slave_timed_out:
-                return  # ignore after timeout
-            self.ping_old_slave_done = True
-            self.maybe_done()
-        d.addCallback(done)
-
-    def maybe_done(self):
-        if not self.ping_new_slave_done or not self.ping_old_slave_done:
-            return
-
-        # both pings are done, so sort out the results
-        if self.old_slave_connected:
-            self.disconnect_new_slave()
-        else:
-            self.start_new_slave()
-
-    def start_new_slave(self):
-        # just in case
-        if not self.new_slave_d:  # pragma: ignore
-            return
-
-        d = self.new_slave_d
-        self.new_slave_d = None
-
-        if self.buildslave.isConnected():
-            # we need to wait until the old slave has fully detached, which can
-            # take a little while as buffers drain, etc.
-            def detached():
-                d.callback(self.buildslave)
-            self.buildslave.subscribeToDetach(detached)
-            self.old_remote.broker.transport.loseConnection()
-        else:  # pragma: ignore
-            # by some unusual timing, it's quite possible that the old slave
-            # has disconnected while the arbitration was going on.  In that
-            # case, we're already done!
-            d.callback(self.buildslave)
-
-    def disconnect_new_slave(self):
-        # just in case
-        if not self.new_slave_d:  # pragma: ignore
-            return
-
-        d = self.new_slave_d
-        self.new_slave_d = None
-        log.msg("rejecting duplicate slave with exception")
-        d.errback(Failure(RuntimeError("rejecting duplicate slave")))

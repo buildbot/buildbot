@@ -37,8 +37,8 @@ from buildbot import util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.process.properties import Properties
-from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
@@ -444,6 +444,7 @@ class IRCContact(base.StatusReceiver):
         FAILURE: ("Failure", 'RED'),
         EXCEPTION: ("Exception", 'PURPLE'),
         RETRY: ("Retry", 'AQUA_LIGHT'),
+        CANCELLED: ("Cancelled", 'PINK'),
     }
 
     def getResultsDescriptionAndColor(self, results):
@@ -543,13 +544,13 @@ class IRCContact(base.StatusReceiver):
         opts = ForceOptions()
         opts.parseOptions(args)
 
-        which = opts['builder']
+        builderName = opts['builder']
         branch = opts['branch']
         revision = opts['revision']
         reason = opts['reason']
         props = opts['props']
 
-        if which is None:
+        if builderName is None:
             raise UsageError("you must provide a Builder, " + errReply)
 
         # keep weird stuff out of the branch, revision, and properties args.
@@ -587,15 +588,16 @@ class IRCContact(base.StatusReceiver):
                     return
                 properties.setProperty(pname, pvalue, "Force Build IRC")
 
-        bc = self.getControl(which)
-
         reason = "forced: by %s: %s" % (self.describeUser(who), reason)
-        ss = SourceStamp(branch=branch, revision=revision)
-        d = bc.submitBuildRequest(ss, reason, props=properties.asDict())
+        d = self.master.data.addBuildset(builderNames=[builderName],
+                                         sourcestamps=[{'branch': branch, 'revision': revision}],
+                                         reason=reason, properties=properties.asDict)
 
-        def subscribe(buildreq):
-            ireq = IrcBuildRequest(self, self.useRevisions)
-            buildreq.subscribe(ireq.started)
+        def subscribe(xxx_todo_changeme):
+            (bsid, brids) = xxx_todo_changeme
+            assert 0, "rewrite to not use the status hierarchy"  # TODO
+            #ireq = IrcBuildRequest(self, self.useRevisions)
+            # buildreq.subscribe(ireq.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 
@@ -1118,10 +1120,10 @@ class IRC(base.StatusReceiverMultiService):
         c.setServiceParent(self)
 
     def setServiceParent(self, parent):
-        base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.f.status = parent
         if self.allowForce:
             self.f.control = interfaces.IControl(self.master)
+        return base.StatusReceiverMultiService.setServiceParent(self, parent)
 
     def stopService(self):
         # make sure the factory will stop reconnecting

@@ -16,10 +16,8 @@
 import os
 
 from buildbot.changes import hgpoller
-from buildbot.test.fake.fakedb import FakeDBConnector
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
-from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -47,11 +45,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                                             workdir='/some/dir')
             self.poller.master = self.master
             self.poller._isRepositoryReady = _isRepositoryReady
+        d.addCallback(create_poller)
 
         def create_db(_):
-            db = self.master.db = FakeDBConnector(self)
-            return db.setup()
-        d.addCallback(create_poller)
+            return self.master.db.setup()
         d.addCallback(create_db)
         return d
 
@@ -72,6 +69,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     def test_describe(self):
         self.assertSubstring("HgPoller", self.poller.describe())
+
+    def test_name(self):
+        self.assertEqual(self.remote_repo, self.poller.name)
+
+        # and one with explicit name...
+        other = hgpoller.HgPoller(self.remote_repo, name="MyName", workdir='/some/dir')
+        self.assertEqual("MyName", other.name)
 
     def test_hgbin_default(self):
         self.assertEqual(self.poller.hgbin, "hg")
@@ -107,14 +111,13 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         # check the results
         def check_changes(_):
-            self.assertEqual(len(self.changes_added), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-            change = self.changes_added[0]
+            change = self.master.data.updates.changesAdded[0]
             self.assertEqual(change['revision'], '4423cdb')
             self.assertEqual(change['author'],
                              'Bob Test <bobtest@example.org>')
-            self.assertEqual(change['when_timestamp'],
-                             epoch2datetime(1273258100)),
+            self.assertEqual(change['when_timestamp'], 1273258100),
             self.assertEqual(change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
@@ -177,8 +180,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d.addCallback(self.check_current_rev(5))
 
         def check_changes(_):
-            self.assertEquals(len(self.changes_added), 1)
-            change = self.changes_added[0]
-            self.assertEqual(change['revision'], '784bd')
-            self.assertEqual(change['comments'], 'Comment for rev 5')
+            self.assertEquals(len(self.master.data.updates.changesAdded), 1)
+            change = self.master.data.updates.changesAdded[0]
+            self.assertEqual(change['revision'], u'784bd')
+            self.assertEqual(change['comments'], u'Comment for rev 5')
         d.addCallback(check_changes)

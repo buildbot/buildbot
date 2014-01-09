@@ -19,6 +19,7 @@ from buildbot.util import misc
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet import task
 from twisted.python import failure
 from twisted.trial import unittest
 
@@ -144,3 +145,45 @@ class SerializedInvocation(unittest.TestCase):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         d.addCallback(check)
         return d
+
+
+class TestCancelAfter(unittest.TestCase):
+
+    def setUp(self):
+        self.d = defer.Deferred()
+
+    def test_succeeds(self):
+        d = misc.cancelAfter(10, self.d)
+        self.assertIdentical(d, self.d)
+
+        @d.addCallback
+        def check(r):
+            self.assertEqual(r, "result")
+        self.assertFalse(d.called)
+        self.d.callback("result")
+        self.assertTrue(d.called)
+
+    def test_fails(self):
+        d = misc.cancelAfter(10, self.d)
+        self.assertFalse(d.called)
+        self.d.errback(RuntimeError("oh noes"))
+        self.assertTrue(d.called)
+        self.assertFailure(d, RuntimeError)
+
+    def test_timeout_succeeds(self):
+        c = task.Clock()
+        d = misc.cancelAfter(10, self.d, _reactor=c)
+        self.assertFalse(d.called)
+        c.advance(11)
+        d.callback("result")  # ignored
+        self.assertTrue(d.called)
+        self.assertFailure(d, defer.CancelledError)
+
+    def test_timeout_fails(self):
+        c = task.Clock()
+        d = misc.cancelAfter(10, self.d, _reactor=c)
+        self.assertFalse(d.called)
+        c.advance(11)
+        self.d.errback(RuntimeError("oh noes"))  # ignored
+        self.assertTrue(d.called)
+        self.assertFailure(d, defer.CancelledError)

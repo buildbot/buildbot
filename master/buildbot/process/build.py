@@ -28,6 +28,7 @@ from buildbot.process import metrics
 from buildbot.process import properties
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
@@ -71,6 +72,9 @@ class Build(properties.PropertiesMixin):
     results = None
     stopped = False
     set_runtime_properties = True
+    subs = None
+
+    _sentinel = []  # used as a sentinel to indicate unspecified initial_value
 
     def __init__(self, requests):
         self.requests = requests
@@ -82,10 +86,13 @@ class Build(properties.PropertiesMixin):
         self.progress = None
         self.currentStep = None
         self.slaveEnvironment = {}
+        self.buildid = None
+        self.number = None
 
         self.terminate = False
 
         self._acquiringLock = None
+        self._dbid = None
 
     def setBuilder(self, builder):
         """
@@ -171,7 +178,7 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        master = self.builder.botmaster.master
+        master = self.builder.master
         props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change
@@ -185,7 +192,7 @@ class Build(properties.PropertiesMixin):
 
         # now set some properties of our own, corresponding to the
         # build itself
-        props.setProperty("buildnumber", self.build_status.number, "Build")
+        props.setProperty("buildnumber", self.number, "Build")
 
         if self.sources and len(self.sources) == 1:
             # old interface for backwards compatibility
@@ -217,10 +224,12 @@ class Build(properties.PropertiesMixin):
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
 
+    @defer.inlineCallbacks
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
+        slave = slavebuilder.slave
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -229,31 +238,29 @@ class Build(properties.PropertiesMixin):
 
         log.msg("%s.startBuild" % self)
         self.build_status = build_status
+        # TODO: this will go away when build collapsing is implemented; until
+        # then we just assign the bulid to the first buildrequest
+        brid = self.requests[0].id
+        self.buildid, self.number = \
+            yield self.master.data.updates.newBuild(
+                builderid=(yield self.builder.getBuilderId()),
+                buildrequestid=brid,
+                buildslaveid=slave.buildslaveid)
+
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
-        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
+        slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right slave
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
                       for l, a in self.locks]
-        self.remote = slavebuilder.remote
-        self.remote.notifyOnDisconnect(self.lostRemote)
+        self.conn = slavebuilder.slave.conn
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        d = self.deferred = defer.Deferred()
-
-        def _uncount_build(res):
-            metrics.MetricCountEvent.log('active_builds', -1)
-            return res
-        d.addBoth(_uncount_build)
-
-        def _release_slave(res, slave, bs):
-            self.slavebuilder.buildFinished()
-            slave.updateSlaveStatus(buildFinished=bs)
-            return res
-        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
+        self.deferred = defer.Deferred()
 
         try:
             self.setupBuild(expectations)  # create .steps
@@ -266,17 +273,30 @@ class Build(properties.PropertiesMixin):
             # handler
             log.msg("Build.setupBuild failed")
             log.err(Failure())
-            self.builder.builder_status.addPointEvent(["setupBuild",
-                                                       "exception"])
             self.finished = True
             self.results = EXCEPTION
             self.deferred = None
-            d.callback(self)
-            return d
+            return
 
+        yield self.master.data.updates.setBuildStateStrings(self.buildid,
+                                                            [u'starting'])
         self.build_status.buildStarted(self)
-        self.acquireLocks().addCallback(self._startBuild_2)
-        return d
+        yield self.acquireLocks()
+
+        try:
+            # start the sequence of steps and wait until it's finished
+            self.startNextStep()
+            yield self.deferred
+        finally:
+            metrics.MetricCountEvent.log('active_builds', -1)
+
+        yield self.master.data.updates.setBuildStateStrings(self.buildid,
+                                                            [u'finished'])
+        yield self.master.data.updates.finishBuild(self.buildid, self.results)
+
+        # mark the build as finished
+        self.slavebuilder.buildFinished()
+        slave.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
     def canStartWithSlavebuilder(lockList, slavebuilder):
@@ -305,13 +325,11 @@ class Build(properties.PropertiesMixin):
             lock.claim(self, access)
         return defer.succeed(None)
 
-    def _startBuild_2(self, res):
-        self.startNextStep()
-
     def setupBuild(self, expectations):
         # create the actual BuildSteps. If there are any name collisions, we
         # add a count to the loser until it is unique.
         self.steps = []
+        self.executedSteps = []
         self.stepStatuses = {}
         stepnames = {}
         sps = []
@@ -384,7 +402,7 @@ class Build(properties.PropertiesMixin):
         is complete."""
         if not self.steps:
             return None
-        if not self.remote:
+        if not self.conn:
             return None
         if self.terminate or self.stopped:
             # Run any remaining alwaysRun steps, and skip over the others
@@ -404,8 +422,9 @@ class Build(properties.PropertiesMixin):
             s = None
         if not s:
             return self.allStepsDone()
+        self.executedSteps.append(s)
         self.currentStep = s
-        d = defer.maybeDeferred(s.startStep, self.remote)
+        d = defer.maybeDeferred(s.startStep, self.conn)
         d.addCallback(self._stepDone, s)
         d.addErrback(self.buildException)
 
@@ -432,7 +451,7 @@ class Build(properties.PropertiesMixin):
         self.results.append(result)
         if text:
             self.text.extend(text)
-        if not self.remote:
+        if not self.conn:
             terminate = True
 
         possible_overall_result = result
@@ -452,7 +471,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY):
+        elif result in (EXCEPTION, RETRY, CANCELLED):
             terminate = True
 
         # if we skipped this step, then don't adjust the build status
@@ -461,19 +480,19 @@ class Build(properties.PropertiesMixin):
 
         return terminate
 
-    def lostRemote(self, remote=None):
+    def lostRemote(self, conn=None):
         # the slave went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
-        self.remote = None
+        self.conn = None
         if self.currentStep:
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
         else:
             self.result = RETRY
-            self.text = ["lost", "remote"]
+            self.text = ["lost", "connection"]
             self.stopped = True
             if self._acquiringLock:
                 lock, access, d = self._acquiringLock
@@ -492,12 +511,11 @@ class Build(properties.PropertiesMixin):
         if self.finished:
             return
         # TODO: include 'reason' in this point event
-        self.builder.builder_status.addPointEvent(['interrupt'])
         self.stopped = True
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.result = EXCEPTION
+        self.result = CANCELLED
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -513,6 +531,8 @@ class Build(properties.PropertiesMixin):
             text = ["exception"]
         elif self.result == RETRY:
             text = ["retry"]
+        elif self.result == CANCELLED:
+            text = ["cancelled"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
@@ -541,9 +561,10 @@ class Build(properties.PropertiesMixin):
         abandoned."""
 
         self.finished = True
-        if self.remote:
-            self.remote.dontNotifyOnDisconnect(self.lostRemote)
-            self.remote = None
+        if self.conn:
+            self.subs.unsubscribe()
+            self.subs = None
+            self.conn = None
         self.results = results
 
         log.msg(" %s: build finished" % self)
@@ -567,6 +588,16 @@ class Build(properties.PropertiesMixin):
             else:
                 # This should only happen if we've been interrupted
                 assert self.stopped
+
+    def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
+        step_stats_list = [
+            st.getStatistic(name)
+            for st in self.executedSteps
+            if st.hasStatistic(name)]
+        if initial_value is self._sentinel:
+            return reduce(summary_fn, step_stats_list)
+        else:
+            return reduce(summary_fn, step_stats_list, initial_value)
 
     # IBuildControl
 

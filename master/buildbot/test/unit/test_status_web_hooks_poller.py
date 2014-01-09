@@ -47,7 +47,7 @@ class TestPollingChangeHook(unittest.TestCase):
         self.disabledChangesrc = self.Subclass("disabled", None)
         self.disabledChangesrc.setServiceParent(master.change_svc)
 
-        anotherchangesrc = base.ChangeSource()
+        anotherchangesrc = base.ChangeSource(name='notapoller')
         anotherchangesrc.setName("notapoller")
         anotherchangesrc.setServiceParent(master.change_svc)
 

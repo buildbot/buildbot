@@ -19,6 +19,7 @@ directly from this module.
 """
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 
 
@@ -69,3 +70,16 @@ class SerializedInvocation(object):
 
     def _quiet(self):  # hook for tests
         pass
+
+
+def cancelAfter(seconds, deferred, _reactor=reactor):
+    delayedCall = _reactor.callLater(seconds, deferred.cancel)
+
+    # cancel the delayedCall when the underlying deferred fires
+    @deferred.addBoth
+    def cancelTimer(x):
+        if delayedCall.active():
+            delayedCall.cancel()
+        return x
+
+    return deferred

@@ -15,7 +15,6 @@
 
 from __future__ import with_statement
 
-import cPickle
 import cStringIO
 import mock
 import os
@@ -23,6 +22,7 @@ import os
 from buildbot import config
 from buildbot.status import logfile
 from buildbot.test.util import dirs
+from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -72,8 +72,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.tearDownDirs()
 
     def pickle_and_restore(self):
-        pkl = cPickle.dumps(self.logfile)
-        self.logfile = cPickle.loads(pkl)
+        pkl = pickle.dumps(self.logfile)
+        self.logfile = pickle.loads(pkl)
         step = self.build_step_status
         self.logfile.step = step
         self.logfile.master = self.master
@@ -93,37 +93,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.assertEqual(self.logfile.getFilename(),
                          os.path.abspath(os.path.join('basedir', '123-stdio')))
 
-    def test_hasContents_yes(self):
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_no(self):
-        self.delete_logfile()
-        self.assertFalse(self.logfile.hasContents())
-
-    def test_hasContents_gz(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
-            f.write("hi")
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_gz_pickled(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
-            f.write("hi")
-        self.pickle_and_restore()
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_bz2(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.bz2'), "w") as f:
-            f.write("hi")
-        self.assertTrue(self.logfile.hasContents())
-
     def test_getName(self):
         self.assertEqual(self.logfile.getName(), 'testlf')
-
-    def test_getStep(self):
-        self.assertEqual(self.logfile.getStep(), self.build_step_status)
 
     def test_isFinished_no(self):
         self.assertFalse(self.logfile.isFinished())

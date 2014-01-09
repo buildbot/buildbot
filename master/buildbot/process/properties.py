@@ -98,8 +98,10 @@ class Properties(util.ComparableMixin):
         return l
 
     def asDict(self):
-        """Return the properties as a simple key:value dictionary"""
-        return dict(self.properties)
+        """Return the properties as a simple key:value dictionary,
+        properly unicoded"""
+        return dict((util.ascii2unicode(k), (v, util.ascii2unicode(s)))
+                    for k, (v, s) in self.properties.iteritems())
 
     def __repr__(self):
         return ('Properties(**' +

@@ -40,6 +40,9 @@ def addEnvPath(env, name, value):
 
 class MSLogLineObserver(LogLineObserver):
 
+    stdoutDelimiter = "\r\n"
+    stderrDelimiter = "\r\n"
+
     _re_delimiter = re.compile(r'^(\d+>)?-{5}.+-{5}$')
     _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
     _re_warning = re.compile(r' ?: warning [A-Z]+[0-9]+:')
@@ -57,8 +60,6 @@ class MSLogLineObserver(LogLineObserver):
         LogLineObserver.__init__(self, **kwargs)
         self.logwarnings = logwarnings
         self.logerrors = logerrors
-        self.stdoutParser.delimiter = "\r\n"
-        self.stderrParser.delimiter = "\r\n"
 
     def outLineReceived(self, line):
         if self._re_delimiter.search(line):

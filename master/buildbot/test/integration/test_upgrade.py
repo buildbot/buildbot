@@ -15,7 +15,6 @@
 
 from __future__ import with_statement
 
-import cPickle
 import migrate
 import migrate.versioning.api
 import os
@@ -29,6 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import change_import
 from buildbot.test.util import db
 from buildbot.test.util import querylog
+from buildbot.util import pickle
 from migrate.versioning import schemadiff
 from sqlalchemy.engine import reflection
 from twisted.internet import defer
@@ -215,7 +215,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
         def check(diff):
             if diff:
-                self.fail(str(diff))
+                self.fail("\n" + str(diff))
         d.addCallback(check)
         return d
 
@@ -291,10 +291,10 @@ class UpgradeTestV075(UpgradeTestMixin,
         """Do the equivalent of master/contrib/fix_pickle_encoding.py"""
         changes_file = os.path.join(self.basedir, "changes.pck")
         with open(changes_file) as fp:
-            changemgr = cPickle.load(fp)
+            changemgr = pickle.load(fp)
         changemgr.recode_changes(old_encoding, quiet=True)
         with open(changes_file, "w") as fp:
-            cPickle.dump(changemgr, fp)
+            pickle.dump(changemgr, fp)
 
     def test_upgrade(self):
         # this tarball contains some unicode changes, encoded as utf8, so it
@@ -344,6 +344,15 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
                       whereclause=model.change_files.c.changeid == 77))
         self.assertEqual(r.scalar(), 'CHANGELOG')
 
+        r = conn.execute(
+            sa.select([model.sourcestamps],
+                      whereclause=model.sourcestamps.c.id == ch.sourcestampid))
+        row = r.fetchone()
+        r.close()
+        exp = {'revision': 'HEAD', 'branch': 'master', 'project': '',
+               'repository': '', 'codebase': '', 'patchid': None}
+        self.assertEqual(dict((k, row[k]) for k in exp), exp)
+
     def test_upgrade(self):
         return self.do_test_upgrade()
 
@@ -372,23 +381,45 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
         ])
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310337746, objname, 'buildbot.master.BuildMaster'),
-            (2, 1310337757, objname, 'buildbot.master.BuildMaster'),
-            (3, 1310337757, objname, 'buildbot.master.BuildMaster'),
-            (4, 1310337757, objname, 'buildbot.master.BuildMaster'),
-            (5, 1310337779, objname, 'buildbot.master.BuildMaster'),
-            (6, 1310337779, objname, 'buildbot.master.BuildMaster'),
-            (7, 1310337779, objname, 'buildbot.master.BuildMaster'),
+            (1, 1310337746, objname),
+            (2, 1310337757, objname),
+            (3, 1310337757, objname),
+            (4, 1310337757, objname),
+            (5, 1310337779, objname),
+            (6, 1310337779, objname),
+            (7, 1310337779, objname),
         ])
+
+        # There's just one, boring sourcetamp
+        r = conn.execute(sa.select([model.sourcestamps]))
+        rows = [dict(row) for row in r.fetchall()]
+        for row in rows:
+            del row['created_at']  # it will be near the current time
+        self.assertEqual(rows, [
+            {u'branch': None, u'codebase': u'', u'id': 1,
+             u'patchid': None, u'project': u'', u'repository': u'',
+             u'revision': None,
+             'ss_hash': '835fccf6db3694afb48c380997024542c0bc162d'},
+        ])
+
+        # ..and all of the buildsets use it.
+        bs = model.buildsets
+        bss = model.buildset_sourcestamps
+        r = conn.execute(
+            sa.select([bs.c.id, bss.c.sourcestampid],
+                      whereclause=bs.c.id == bss.c.buildsetid))
+        rows = map(dict, r.fetchall())
+        self.assertEqual([row['sourcestampid'] for row in rows],
+                         [1] * 7)
 
     def test_upgrade(self):
         d = self.do_test_upgrade()
@@ -398,13 +429,13 @@ class UpgradeTestV082(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b0 = builder_status.loadBuildFromFile(0)
             logs = b0.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
         return d
 
@@ -440,29 +471,29 @@ class UpgradeTestV083(UpgradeTestMixin, unittest.TestCase):
         ])
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310326850, objname, 'buildbot.master.BuildMaster'),
-            (2, 1310326862, objname, 'buildbot.master.BuildMaster'),
-            (3, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (4, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (5, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (6, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (7, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (8, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (9, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (10, 1310326872, objname, 'buildbot.master.BuildMaster'),
-            (11, 1310326895, objname, 'buildbot.master.BuildMaster'),
-            (12, 1310326900, objname, 'buildbot.master.BuildMaster'),
-            (13, 1310326900, objname, 'buildbot.master.BuildMaster'),
-            (14, 1310326900, objname, 'buildbot.master.BuildMaster'),
+            (1, 1310326850, objname),
+            (2, 1310326862, objname),
+            (3, 1310326872, objname),
+            (4, 1310326872, objname),
+            (5, 1310326872, objname),
+            (6, 1310326872, objname),
+            (7, 1310326872, objname),
+            (8, 1310326872, objname),
+            (9, 1310326872, objname),
+            (10, 1310326872, objname),
+            (11, 1310326895, objname),
+            (12, 1310326900, objname),
+            (13, 1310326900, objname),
+            (14, 1310326900, objname),
         ])
 
     def test_upgrade(self):
@@ -493,20 +524,20 @@ class UpgradeTestV084(UpgradeTestMixin, unittest.TestCase):
         ])
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
         # the int() is required here because sqlalchemy stores floats in an
         # INTEGER column(!)
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         objname = 'euclid:/home/dustin/code/buildbot/t/buildbot/sand27/master'
         self.assertEqual(buildreqs, [
-            (1, 1310406744, objname, 'buildbot.master.BuildMaster'),
-            (2, 1310406863, objname, 'buildbot.master.BuildMaster'),
-            (3, 1310406863, objname, 'buildbot.master.BuildMaster'),
-            (4, 1310406863, objname, 'buildbot.master.BuildMaster'),
-            (5, 1310406863, objname, 'buildbot.master.BuildMaster'),
+            (1, 1310406744, objname),
+            (2, 1310406863, objname),
+            (3, 1310406863, objname),
+            (4, 1310406863, objname),
+            (5, 1310406863, objname),
             # 6, 7 aren't claimed yet
         ])
 
@@ -530,16 +561,14 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
         self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)])
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         self.assertEqual(buildreqs, [
-            (1, 1338226540, u'euclid.r.igoro.us:/A/bbrun',
-                u'buildbot.master.BuildMaster'),
-            (2, 1338226574, u'euclid.r.igoro.us:/A/bbrun',
-                u'buildbot.master.BuildMaster')
+            (1, 1338226540, u'euclid.r.igoro.us:/A/bbrun'),
+            (2, 1338226574, u'euclid.r.igoro.us:/A/bbrun'),
         ])
 
     def test_upgrade(self):
@@ -550,13 +579,13 @@ class UpgradeTestV085(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b1 = builder_status.loadBuildFromFile(1)
             logs = b1.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
             b2 = builder_status.loadBuildFromFile(1)
             self.assertEqual(b2.getReason(),
@@ -580,14 +609,13 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
         self.assertEqual(buildreqs, [(1, 1, 1, 4)])  # note EXCEPTION status
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         self.assertEqual(buildreqs, [
-            (1, 1338229046, u'euclid.r.igoro.us:/A/bbrun',
-                u'buildbot.master.BuildMaster'),
+            (1, 1338229046, u'euclid.r.igoro.us:/A/bbrun'),
         ])
 
     def test_upgrade(self):
@@ -598,13 +626,13 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
             # try to unpickle things down to the level of a logfile
             filename = os.path.join(self.basedir, 'builder', 'builder')
             with open(filename, "rb") as f:
-                builder_status = cPickle.load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
             builder_status.basedir = os.path.join(self.basedir, 'builder')
             b0 = builder_status.loadBuildFromFile(0)
             logs = b0.getLogs()
             log = logs[0]
-            text = log.getText()
+            text = log.old_getText()
             self.assertIn('HEAD is now at', text)
         return d
 
@@ -625,16 +653,14 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)])  # two successful builds
 
         br_claims = model.buildrequest_claims
-        objects = model.objects
-        r = conn.execute(sa.select([br_claims.outerjoin(objects,
-                                                        br_claims.c.objectid == objects.c.id)]))
-        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+        masters = model.masters
+        r = conn.execute(sa.select([br_claims.outerjoin(masters,
+                                                        br_claims.c.masterid == masters.c.id)]))
+        buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         self.assertEqual(buildreqs, [
-            (1, 1363642117, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master',
-             u'buildbot.master.BuildMaster'),
-            (2, 1363642156, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master',
-             u'buildbot.master.BuildMaster'),
+            (1, 1363642117, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
+            (2, 1363642156, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
         ])
 
     def test_upgrade(self):
@@ -750,9 +776,9 @@ class TestPickles(unittest.TestCase):
                 NsS'revision'
                 p8
                 Nsb.""")
-        ss = cPickle.loads(pkl)
+        ss = pickle.loads(pkl)
         self.assertTrue(ss.revision is None)
-        self.assertTrue(hasattr(ss, '_addSourceStampToDatabase_lock'))
+        self.assertTrue(hasattr(ss, 'codebase'))
 
     def test_sourcestamp_version3(self):
         pkl = textwrap.dedent("""\
@@ -773,6 +799,6 @@ class TestPickles(unittest.TestCase):
             I2
             sS'patch'
             Nsb.""")
-        ss = cPickle.loads(pkl)
+        ss = pickle.loads(pkl)
         styles.doUpgrade()
         self.assertEqual(ss.codebase, '')

@@ -19,31 +19,20 @@ from buildbot.test.fake import fakemaster
 from twisted.trial import unittest
 
 
-class FakeSource:
-
-    def __init__(self, mergeable=True):
-        self.codebase = ''
-        self.mergeable = mergeable
-        self.changes = []
-
-    def canBeMergedWith(self, other):
-        return self.mergeable
-
-
 class TestBuildRequest(unittest.TestCase):
 
     def test_fromBrdict(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          repository='svn://...', project='world-domination'),
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk',
+            fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
                                project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=13),
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                          repository='svn://...', project='world-domination',
+                          sourcestampid=234),
+            fakedb.Buildset(id=539, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
             fakedb.BuildsetProperty(buildsetid=539, property_name='x',
                                     property_value='[1, "X"]'),
             fakedb.BuildsetProperty(buildsetid=539, property_name='y',
@@ -59,8 +48,7 @@ class TestBuildRequest(unittest.TestCase):
 
         def check(br):
             # check enough of the source stamp to verify it found the changes
-            self.assertEqual(br.source.ssid, 234)
-            self.assertEqual([ch.number for ch in br.source.changes], [13])
+            self.assertEqual([ss.ssid for ss in br.sources.values()], [234])
 
             self.assertEqual(br.reason, 'triggered')
 
@@ -75,14 +63,14 @@ class TestBuildRequest(unittest.TestCase):
         return d
 
     def test_fromBrdict_submittedAt_NULL(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk',
+            fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
                                project='world-domination'),
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
+            fakedb.Buildset(id=539, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr',
                                 priority=13, submitted_at=None),
         ])
@@ -99,12 +87,11 @@ class TestBuildRequest(unittest.TestCase):
         return d
 
     def test_fromBrdict_no_sourcestamps(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.SourceStampSet(id=234),
-            # Sourcestampset has no sourcestamps
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
+            fakedb.Buildset(id=539, reason='triggered'),
+            # buildset has no sourcestamps
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='not important',
                                 priority=0, submitted_at=None),
         ])
@@ -116,28 +103,25 @@ class TestBuildRequest(unittest.TestCase):
         return self.assertFailure(d, AssertionError)
 
     def test_fromBrdict_multiple_sourcestamps(self):
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.SourceStampSet(id=234),
-
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          repository='svn://a..', codebase='A',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='trunk',
+            fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..',
                                codebase='A', project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=13),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                          repository='svn://a..', codebase='A',
+                          project='world-domination', sourcestampid=234),
 
-            fakedb.Change(changeid=14, branch='trunk', revision='9284',
-                          repository='svn://b..', codebase='B',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=235, sourcestampsetid=234, branch='trunk',
+            fakedb.SourceStamp(id=235, branch='trunk',
                                revision='9284', repository='svn://b..',
                                codebase='B', project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=235, changeid=14),
+            fakedb.Change(changeid=14, branch='trunk', revision='9284',
+                          repository='svn://b..', codebase='B',
+                          project='world-domination', sourcestampid=235),
 
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=234),
+            fakedb.Buildset(id=539, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
             fakedb.BuildsetProperty(buildsetid=539, property_name='x',
                                     property_value='[1, "X"]'),
             fakedb.BuildsetProperty(buildsetid=539, property_name='y',
@@ -152,18 +136,6 @@ class TestBuildRequest(unittest.TestCase):
                       buildrequest.BuildRequest.fromBrdict(master, brdict))
 
         def check(br):
-            # check enough of the source stamp to verify it found the changes
-
-            # Test the single-sourcestamp interface
-            self.assertEqual(br.source.ssid, 234)
-
-            # Test the multiple sourcestamp interface
-            self.assertEqual(br.sources['A'].ssid, 234)
-            self.assertEqual(br.sources['B'].ssid, 235)
-
-            self.assertEqual([ch.number for ch in br.sources['A'].changes], [13])
-            self.assertEqual([ch.number for ch in br.sources['B'].changes], [14])
-
             self.assertEqual(br.reason, 'triggered')
 
             self.assertEqual(br.properties.getProperty('x'), 1)
@@ -190,49 +162,45 @@ class TestBuildRequest(unittest.TestCase):
             Source2 has rev 9201 and contains changes 14 and 16 from repository svn://b
         """
         brs = []  # list of buildrequests
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.SourceStampSet(id=2340),
-
-            fakedb.Change(changeid=13, branch='trunk', revision='9283',
-                          repository='svn://a..', codebase='A',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=234, sourcestampsetid=2340, branch='trunk',
+            fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..', codebase='A',
                                project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=13),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                          repository='svn://a..', codebase='A',
+                          project='world-domination', sourcestampid=234),
 
-            fakedb.Change(changeid=14, branch='trunk', revision='9200',
-                          repository='svn://b..', codebase='A',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=235, sourcestampsetid=2340, branch='trunk',
+            fakedb.SourceStamp(id=235, branch='trunk',
                                revision='9200', repository='svn://b..', codebase='B',
                                project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=235, changeid=14),
+            fakedb.Change(changeid=14, branch='trunk', revision='9200',
+                          repository='svn://b..', codebase='A',
+                          project='world-domination', sourcestampid=235),
 
-            fakedb.SourceStampSet(id=2360),
-
-            fakedb.Change(changeid=15, branch='trunk', revision='9284',
-                          repository='svn://a..', codebase='A',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=236, sourcestampsetid=2360, branch='trunk',
+            fakedb.SourceStamp(id=236, branch='trunk',
                                revision='9284', repository='svn://a..', codebase='A',
                                project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=236, changeid=15),
+            fakedb.Change(changeid=15, branch='trunk', revision='9284',
+                          repository='svn://a..', codebase='A',
+                          project='world-domination', sourcestampid=236),
 
-            fakedb.Change(changeid=16, branch='trunk', revision='9201',
-                          repository='svn://b..', codebase='B',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=237, sourcestampsetid=2360, branch='trunk',
+            fakedb.SourceStamp(id=237, branch='trunk',
                                revision='9201', repository='svn://b..', codebase='B',
                                project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=237, changeid=16),
+            fakedb.Change(changeid=16, branch='trunk', revision='9201',
+                          repository='svn://b..', codebase='B',
+                          project='world-domination', sourcestampid=237),
 
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
+            fakedb.Buildset(id=539, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=235),
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
 
-            fakedb.Buildset(id=540, reason='triggered', sourcestampsetid=2360),
+            fakedb.Buildset(id=540, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=236),
+            fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=237),
             fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -263,9 +231,6 @@ class TestBuildRequest(unittest.TestCase):
             self.assertFalse(source2 is None)
             self.assertEqual(source2.revision, '9201')
 
-            self.assertEqual([c.number for c in source1.changes], [13, 15])
-            self.assertEqual([c.number for c in source2.changes], [14, 16])
-
         d.addCallback(check)
         return d
 
@@ -280,33 +245,29 @@ class TestBuildRequest(unittest.TestCase):
               Merging requests requires both requests to have the same codebases
         """
         brs = []  # list of buildrequests
-        master = fakemaster.make_master()
-        master.db = fakedb.FakeDBConnector(self)
+        master = fakemaster.make_master(testcase=self,
+                                        wantData=True, wantDb=True)
         master.db.insertTestData([
-            fakedb.SourceStampSet(id=2340),
-
-            fakedb.Change(changeid=17, branch='trunk', revision='1800',
-                          repository='svn://c..', codebase='C',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=238, sourcestampsetid=2340, branch='trunk',
+            fakedb.SourceStamp(id=238, branch='trunk',
                                revision='1800', repository='svn://c..',
                                codebase='C', project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=238, changeid=17),
+            fakedb.Change(changeid=17, branch='trunk', revision='1800',
+                          repository='svn://c..', codebase='C',
+                          project='world-domination', sourcestampid=238),
 
-            fakedb.SourceStampSet(id=2360),
-
-            fakedb.Change(changeid=18, branch='trunk', revision='2100',
-                          repository='svn://d..', codebase='D',
-                          project='world-domination'),
-            fakedb.SourceStamp(id=239, sourcestampsetid=2360, branch='trunk',
+            fakedb.SourceStamp(id=239, branch='trunk',
                                revision='2100', repository='svn://d..',
                                codebase='D', project='world-domination'),
-            fakedb.SourceStampChange(sourcestampid=239, changeid=18),
+            fakedb.Change(changeid=18, branch='trunk', revision='2100',
+                          repository='svn://d..', codebase='D',
+                          project='world-domination', sourcestampid=239),
 
-            fakedb.Buildset(id=539, reason='triggered', sourcestampsetid=2340),
+            fakedb.Buildset(id=539, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=238),
             fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
 
-            fakedb.Buildset(id=540, reason='triggered', sourcestampsetid=2360),
+            fakedb.Buildset(id=540, reason='triggered'),
+            fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=239),
             fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -320,34 +281,10 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict:
                       buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br: brs.append(br))
+        d.addCallback(lambda _: brs[0].canBeMergedWith(brs[1]))
 
-        def check(_):
-            self.assertEqual(brs[0].canBeMergedWith(brs[1]), False)
+        def check(canbeMergedWith):
+            self.assertEqual(canbeMergedWith, False)
 
         d.addCallback(check)
         return d
-
-    def test_build_can_be_merged_with_mergables_same_codebases(self):
-        r1 = buildrequest.BuildRequest()
-        r1.sources = {"A": FakeSource()}
-        r2 = buildrequest.BuildRequest()
-        r2.sources = {"A": FakeSource()}
-        mergeable = r1.canBeMergedWith(r2)
-        self.assertTrue(mergeable, "Both request should be able to merge")
-
-    def test_build_can_be_merged_with_non_mergable_same_codebases(self):
-        r1 = buildrequest.BuildRequest()
-        r1.sources = {"A": FakeSource(mergeable=False)}
-        r2 = buildrequest.BuildRequest()
-        r2.sources = {"A": FakeSource(mergeable=False)}
-        mergeable = r1.canBeMergedWith(r2)
-        self.assertFalse(mergeable, "Both request should not be able to merge")
-
-    def test_build_can_be_merged_with_non_mergables_different_codebases(self):
-        r1 = buildrequest.BuildRequest()
-        r1.sources = {"A": FakeSource(mergeable=False)}
-        r2 = buildrequest.BuildRequest()
-        r2.sources = {"B": FakeSource(mergeable=False)}
-        mergeable = r1.canBeMergedWith(r2)
-        self.assertFalse(mergeable, "Request containing different codebases " +
-                                    "should never be able to merge")

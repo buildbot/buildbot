@@ -29,6 +29,7 @@ from twisted.python import log
 from buildbot.config import ConfigErrors
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
 
@@ -172,9 +173,9 @@ class SVN(Source):
 
         # if we're copying, copy; otherwise, export from source to build
         if self.method == 'copy':
-            cmd = buildstep.RemoteCommand('cpdir',
-                                          {'fromdir': 'source', 'todir': self.workdir,
-                                           'logEnviron': self.logEnviron})
+            cmd = remotecommand.RemoteCommand('cpdir',
+                                              {'fromdir': 'source', 'todir': self.workdir,
+                                               'logEnviron': self.logEnviron})
         else:
             export_cmd = ['svn', 'export']
             if self.revision:
@@ -187,8 +188,8 @@ class SVN(Source):
                 export_cmd.extend(self.extra_args)
             export_cmd.extend(['source', self.workdir])
 
-            cmd = buildstep.RemoteShellCommand('', export_cmd,
-                                               env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
+            cmd = remotecommand.RemoteShellCommand('', export_cmd,
+                                                   env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
 
         yield self.runCommand(cmd)
@@ -218,11 +219,11 @@ class SVN(Source):
         if self.extra_args:
             command.extend(self.extra_args)
 
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn'] + command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['svn'] + command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -273,11 +274,11 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=True)
+        cmd = remotecommand.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
@@ -373,10 +374,10 @@ class SVN(Source):
         defer.returnValue(0)
 
     def checkSvn(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['svn', '--version'],
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['svn', '--version'],
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 

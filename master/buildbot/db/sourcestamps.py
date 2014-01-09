@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 
 import base64
-import sqlalchemy as sa
 
 from buildbot.db import base
+from buildbot.util import epoch2datetime
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 
 
@@ -30,18 +31,28 @@ class SsList(list):
 
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
-    def addSourceStamp(self, branch, revision, repository,
-                       project, sourcestampsetid, codebase='',
-                       patch_body=None, patch_level=0, patch_author="",
-                       patch_comment="", patch_subdir=None, changeids=[]):
+    @defer.inlineCallbacks
+    def findSourceStampId(self, branch=None, revision=None, repository=None,
+                          project=None, codebase=None, patch_body=None,
+                          patch_level=None, patch_author=None,
+                          patch_comment=None, patch_subdir=None,
+                          _reactor=reactor):
+        tbl = self.db.model.sourcestamps
+
+        assert codebase is not None, "codebase cannot be None"
+        assert project is not None, "project cannot be None"
+        assert repository is not None, "repository cannot be None"
+        self.checkLength(tbl.c.branch, branch)
+        self.checkLength(tbl.c.revision, revision)
+        self.checkLength(tbl.c.repository, repository)
+        self.checkLength(tbl.c.project, project)
+
+        # get a patchid, if we have a patch
         def thd(conn):
-            transaction = conn.begin()
-
-            # handle inserting a patch
             patchid = None
-            if patch_body is not None:
+            if patch_body:
                 ins = self.db.model.patches.insert()
                 r = conn.execute(ins, dict(
                     patchlevel=patch_level,
@@ -50,55 +61,25 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                     patch_comment=patch_comment,
                     subdir=patch_subdir))
                 patchid = r.inserted_primary_key[0]
+            return patchid
+        patchid = yield self.db.pool.do(thd)
 
-            # insert the sourcestamp itself
-            tbl = self.db.model.sourcestamps
-            self.check_length(tbl.c.branch, branch)
-            self.check_length(tbl.c.revision, revision)
-            self.check_length(tbl.c.repository, repository)
-            self.check_length(tbl.c.project, project)
-
-            r = conn.execute(tbl.insert(), dict(
-                branch=branch,
-                revision=revision,
-                patchid=patchid,
-                repository=repository,
-                codebase=codebase,
-                project=project,
-                sourcestampsetid=sourcestampsetid))
-            ssid = r.inserted_primary_key[0]
-
-            # handle inserting change ids
-            if changeids:
-                ins = self.db.model.sourcestamp_changes.insert()
-                conn.execute(ins, [
-                    dict(sourcestampid=ssid, changeid=changeid)
-                    for changeid in changeids])
-
-            transaction.commit()
-
-            # and return the new ssid
-            return ssid
-        return self.db.pool.do(thd)
-
-    @base.cached("sssetdicts")
-    @defer.inlineCallbacks
-    def getSourceStamps(self, sourcestampsetid):
-        def getSourceStampIds(sourcestampsetid):
-            def thd(conn):
-                tbl = self.db.model.sourcestamps
-                q = sa.select([tbl.c.id],
-                              whereclause=(tbl.c.sourcestampsetid == sourcestampsetid))
-                res = conn.execute(q)
-                return [row.id for row in res.fetchall()]
-            return self.db.pool.do(thd)
-        ssids = yield getSourceStampIds(sourcestampsetid)
-
-        sslist = SsList()
-        for ssid in ssids:
-            sourcestamp = yield self.getSourceStamp(ssid)
-            sslist.append(sourcestamp)
-        defer.returnValue(sslist)
+        ss_hash = self.hashColumns(branch, revision, repository, project,
+                                   codebase, patchid)
+        sourcestampid = yield self.findSomethingId(
+            tbl=tbl,
+            whereclause=tbl.c.ss_hash == ss_hash,
+            insert_values={
+                'branch': branch,
+                'revision': revision,
+                'repository': repository,
+                'codebase': codebase,
+                'project': project,
+                'patchid': patchid,
+                'ss_hash': ss_hash,
+                'created_at': _reactor.seconds(),
+            })
+        defer.returnValue(sourcestampid)
 
     @base.cached("ssdicts")
     def getSourceStamp(self, ssid):
@@ -109,41 +90,47 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
             if not row:
                 return None
-            ssdict = SsDict(ssid=ssid, branch=row.branch, sourcestampsetid=row.sourcestampsetid,
-                            revision=row.revision, patch_body=None, patch_level=None,
-                            patch_author=None, patch_comment=None, patch_subdir=None,
-                            repository=row.repository, codebase=row.codebase,
-                            project=row.project,
-                            changeids=set([]))
-            patchid = row.patchid
+            ssdict = self._rowToSsdict_thd(conn, row)
             res.close()
-
-            # fetch the patch, if necessary
-            if patchid is not None:
-                tbl = self.db.model.patches
-                q = tbl.select(whereclause=(tbl.c.id == patchid))
-                res = conn.execute(q)
-                row = res.fetchone()
-                if row:
-                    # note the subtle renaming here
-                    ssdict['patch_level'] = row.patchlevel
-                    ssdict['patch_subdir'] = row.subdir
-                    ssdict['patch_author'] = row.patch_author
-                    ssdict['patch_comment'] = row.patch_comment
-                    body = base64.b64decode(row.patch_base64)
-                    ssdict['patch_body'] = body
-                else:
-                    log.msg('patchid %d, referenced from ssid %d, not found'
-                            % (patchid, ssid))
-                res.close()
-
-            # fetch change ids
-            tbl = self.db.model.sourcestamp_changes
-            q = tbl.select(whereclause=(tbl.c.sourcestampid == ssid))
-            res = conn.execute(q)
-            for row in res:
-                ssdict['changeids'].add(row.changeid)
-            res.close()
-
             return ssdict
         return self.db.pool.do(thd)
+
+    def getSourceStamps(self):
+        def thd(conn):
+            tbl = self.db.model.sourcestamps
+            q = tbl.select()
+            res = conn.execute(q)
+            return [self._rowToSsdict_thd(conn, row)
+                    for row in res.fetchall()]
+        return self.db.pool.do(thd)
+
+    def _rowToSsdict_thd(self, conn, row):
+        ssid = row.id
+        ssdict = SsDict(ssid=ssid, branch=row.branch,
+                        revision=row.revision, patchid=None, patch_body=None,
+                        patch_level=None, patch_author=None, patch_comment=None,
+                        patch_subdir=None, repository=row.repository,
+                        codebase=row.codebase, project=row.project,
+                        created_at=epoch2datetime(row.created_at))
+        patchid = row.patchid
+
+        # fetch the patch, if necessary
+        if patchid is not None:
+            tbl = self.db.model.patches
+            q = tbl.select(whereclause=(tbl.c.id == patchid))
+            res = conn.execute(q)
+            row = res.fetchone()
+            if row:
+                # note the subtle renaming here
+                ssdict['patchid'] = patchid
+                ssdict['patch_level'] = row.patchlevel
+                ssdict['patch_subdir'] = row.subdir
+                ssdict['patch_author'] = row.patch_author
+                ssdict['patch_comment'] = row.patch_comment
+                body = base64.b64decode(row.patch_base64)
+                ssdict['patch_body'] = body
+            else:
+                log.msg('patchid %d, referenced from ssid %d, not found'
+                        % (patchid, ssid))
+            res.close()
+        return ssdict

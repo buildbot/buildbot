@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
+from buildbot.util import service
 from twisted.application import strports
 from twisted.cred import checkers
 from twisted.cred import credentials
@@ -28,7 +28,7 @@ from zope.interface import implements
 debug = False
 
 
-class PBManager(service.MultiService):
+class PBManager(service.AsyncMultiService):
 
     """
     A centralized manager for PB ports and authentication on them.
@@ -38,7 +38,7 @@ class PBManager(service.MultiService):
     """
 
     def __init__(self):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('pbmanager')
         self.dispatchers = {}
 
@@ -71,7 +71,7 @@ class PBManager(service.MultiService):
         if not disp.users:
             disp = self.dispatchers[registration.portstr]
             del self.dispatchers[registration.portstr]
-            return disp.disownServiceParent()
+            return defer.maybeDeferred(disp.disownServiceParent)
         return defer.succeed(None)
 
 
@@ -106,7 +106,7 @@ class Registration(object):
         return disp.port.getHost().port
 
 
-class Dispatcher(service.Service):
+class Dispatcher(service.AsyncService):
     implements(portal.IRealm, checkers.ICredentialsChecker)
 
     credentialInterfaces = [credentials.IUsernamePassword,
@@ -130,7 +130,7 @@ class Dispatcher(service.Service):
     def stopService(self):
         # stop listening on the port when shut down
         d = defer.maybeDeferred(self.port.stopListening)
-        d.addCallback(lambda _: service.Service.stopService(self))
+        d.addCallback(lambda _: service.AsyncService.stopService(self))
         return d
 
     def register(self, username, password, pfactory):

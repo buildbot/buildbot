@@ -213,10 +213,3 @@ which get queued after the reconfig) will use the new process.
    The bbproto project (at https://github.com/dabrahams/bbproto) may help to
    construct large (multi-file) configurations which can be effectively reloaded
    and reconfigured.
-
-Reconfig by Debug Client
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The :bb:cmdline:`debug tool <debugclient>` (:samp:`buildbot debugclient
---master {HOST}:{PORT}`) has a :guilabel:`Reload .cfg` button which will also
-trigger a reload.

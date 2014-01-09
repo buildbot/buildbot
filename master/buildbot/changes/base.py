@@ -13,25 +13,43 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from zope.interface import implements
 
-from buildbot import util
 from buildbot.interfaces import IChangeSource
+from buildbot.util import misc
+from buildbot.util import service
 
 
-class ChangeSource(service.Service, util.ComparableMixin):
+class ChangeSource(service.ClusteredService):
     implements(IChangeSource)
-
-    master = None
-    "if C{self.running} is true, then C{cs.master} points to the buildmaster."
 
     def describe(self):
         pass
+
+    # activity handling
+
+    def activate(self):
+        return defer.succeed(None)
+
+    def deactivate(self):
+        return defer.succeed(None)
+
+    # service handling
+
+    def _getServiceId(self):
+        return self.master.data.updates.findChangeSourceId(self.name)
+
+    def _claimService(self):
+        return self.master.data.updates.trySetChangeSourceMaster(self.serviceid,
+                                                                 self.master.masterid)
+
+    def _unclaimService(self):
+        return self.master.data.updates.trySetChangeSourceMaster(self.serviceid,
+                                                                 None)
 
 
 class PollingChangeSource(ChangeSource):
@@ -53,12 +71,11 @@ class PollingChangeSource(ChangeSource):
     _loop = None
 
     def __init__(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
-        if name:
-            self.setName(name)
+        ChangeSource.__init__(self, name)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 
-        self.doPoll = util.misc.SerializedInvocation(self.doPoll)
+        self.doPoll = misc.SerializedInvocation(self.doPoll)
 
     def doPoll(self):
         """
@@ -87,9 +104,7 @@ class PollingChangeSource(ChangeSource):
             self._loop.stop()
             self._loop = None
 
-    def startService(self):
-        ChangeSource.startService(self)
-
+    def activate(self):
         # delay starting doing anything until the reactor is running - if
         # services are still starting up, they may miss an initial flood of
         # changes
@@ -98,6 +113,5 @@ class PollingChangeSource(ChangeSource):
         else:
             reactor.callWhenRunning(self.doPoll)
 
-    def stopService(self):
+    def deactivate(self):
         self.stopLoop()
-        return ChangeSource.stopService(self)

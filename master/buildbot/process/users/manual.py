@@ -17,28 +17,9 @@
 # no current implementation utilizes it aside from scripts.runner.
 
 from buildbot import pbutil
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.python import log
-
-
-class UsersBase(service.MultiService):
-
-    """
-    Base class for services that manage users manually. This takes care
-    of the service.MultiService work needed by all the services that
-    subclass it.
-    """
-
-    def __init__(self):
-        service.MultiService.__init__(self)
-        self.master = None
-
-    def startService(self):
-        service.MultiService.startService(self)
-
-    def stopService(self):
-        return service.MultiService.stopService(self)
 
 
 class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
@@ -204,7 +185,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         defer.returnValue(results)
 
 
-class CommandlineUserManager(UsersBase):
+class CommandlineUserManager(service.AsyncMultiService):
 
     """
     Service that runs to set up and register CommandlineUserManagerPerspective
@@ -212,7 +193,7 @@ class CommandlineUserManager(UsersBase):
     """
 
     def __init__(self, username=None, passwd=None, port=None):
-        UsersBase.__init__(self)
+        service.AsyncMultiService.__init__(self)
         assert username and passwd, ("A username and password pair must be given "
                                      "to connect and use `buildbot user`")
         self.username = username
@@ -223,18 +204,17 @@ class CommandlineUserManager(UsersBase):
         self.registration = None
 
     def startService(self):
-        UsersBase.startService(self)
         # set up factory and register with buildbot.pbmanager
-
         def factory(mind, username):
             return CommandlineUserManagerPerspective(self.master)
         self.registration = self.master.pbmanager.register(self.port,
                                                            self.username,
                                                            self.passwd,
                                                            factory)
+        return service.AsyncMultiService.startService(self)
 
     def stopService(self):
-        d = defer.maybeDeferred(UsersBase.stopService, self)
+        d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)
 
         def unreg(_):
             if self.registration:

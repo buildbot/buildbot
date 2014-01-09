@@ -40,6 +40,10 @@ Merge Request Functions
 
 .. index:: Builds; merging
 
+.. warning:
+
+    This section is no longer accurate in Buildbot 0.9.x
+
 The logic Buildbot uses to decide which build request can be merged can be
 customized by providing a Python function (a callable) instead of ``True`` or
 ``False`` described in :ref:`Merging-Build-Requests`.
@@ -57,10 +61,12 @@ In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildReques
 In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus
 developers forcing builds for different reasons will see distinct builds.  Note
 the use of the :func:`canBeMergedWith` method to access the source stamp
-compatibility algorithm. ::
+compatibility algorithm.  Note, in particular, that this function returns a Deferred
+as of Buildbot-0.9.0.  ::
 
+    @defer.inlineCallbacks
     def mergeRequests(builder, req1, req2):
-        if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+        if (yield req1.source.canBeMergedWith(req2.source)) and  req1.reason == req2.reason:
            return True
         return False
     c['mergeRequests'] = mergeRequests
@@ -510,15 +516,17 @@ parts of the repo URL in the sourcestamp, or lookup in a lookup table
 based on repo URL. As long as there is a permanent 1:1 mapping between
 repos and workdir, this will work.
 
+.. _Writing-New-BuildSteps:
+
 Writing New BuildSteps
 ----------------------
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
-One way to do this is to write a custom :class:`BuildStep`.
+One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
 Once written, this Step can be used in the :file:`master.cfg` file.
 
 The best reason for writing a custom :class:`BuildStep` is to better parse the results of the command being run.
-For example, a :class:`BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
+For example, a :class:`~buildbot.process.buildstep.BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
 
 Buildbot has acquired a large fleet of build steps, and sports a number of knobs and hooks to make steps easier to write.
 This section may seem a bit overwhelming, but most custom steps will only need to apply one or two of the techniques outlined here.
@@ -576,17 +584,27 @@ The whole thing looks like this::
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
 
+Step Execution Process
+~~~~~~~~~~~~~~~~~~~~~~
+
+A step's execution occurs in its :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
+When this method returns (more accurately, when the Deferred it returns fires), the step is complete.
+The method's result must be an integer, giving the result of the step.
+Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
+
+The :bb:step:`ShellCommand` class implements this ``run`` method, and in most cases steps subclassing ``ShellCommand`` simply implement some of the subsidiary methods that its ``run`` method calls.
+
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
 To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
 Make sure the log gets closed when it finishes.
-When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
+When giving a Logfile to a :class:`~buildbot.process.remotecommand.RemoteShellCommand`, just ask it to close the log when the command completes::
 
     log = self.addLog('output')
     cmd.useLog(log, closeWhenFinished=True)
@@ -686,7 +704,7 @@ returns the :class:`LogFile` object. You then add text to this :class:`LogFile` 
 calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
 are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
 closed. It may be useful to create and populate a :class:`LogFile` like this
-from a :class:`LogObserver` method - see :ref:`Adding-LogObservers`.
+from a :class:`~buildbot.process.logobserver.LogObserver` method - see :ref:`Adding-LogObservers`.
 
 The ``logfiles=`` argument to :bb:step:`ShellCommand` (see
 :bb:step:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
@@ -732,7 +750,7 @@ run than by merely tracking the number of bytes that have been written
 to stdout. This improves the accuracy and the smoothness of the ETA
 display.
 
-To accomplish this, you will need to attach a :class:`LogObserver` to
+To accomplish this, you will need to attach a :class:`~buildbot.process.logobserver.LogObserver` to
 one of the log channels, most commonly to the :file:`stdio` channel but
 perhaps to another one which tracks a log file. This observer is given
 all text as it is emitted from the command, and has the opportunity to
@@ -741,16 +759,9 @@ some event has occurred (like a source file being compiled), it can
 use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
 progress that this event represents.
 
-There are a number of pre-built :class:`LogObserver` classes that you
-can choose from (defined in :mod:`buildbot.process.buildstep`, and of
-course you can subclass them to add further customization. The
-:class:`LogLineObserver` class handles the grunt work of buffering and
+The :class:`~buildbot.process.logobserver.LogLineObserver` class handles the grunt work of buffering and
 scanning for end-of-line delimiters, allowing your parser to operate
-on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
-length are dropped; the maximum defaults to 16384 bytes, but you can
-change it by calling :meth:`setMaxLineLength()` on your
-:class:`LogLineObserver` instance.  Use ``sys.maxint`` for effective
-infinity.)
+on complete :file:`stdout`/:file:`stderr` lines.
 
 For example, let's take a look at the :class:`TrialTestCaseCounter`,
 which is used by the :bb:step:`Trial` step to count test cases as they are run.
@@ -770,7 +781,7 @@ well-defined than the `[OK]` lines.
 
 The parser class looks like this::
 
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
     
     class TrialTestCaseCounter(LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
@@ -798,7 +809,7 @@ messages that might get displayed as the test runs.
 
 Each time it identifies a test has been completed, it increments its
 counter and delivers the new progress value to the step with
-@code{self.step.setProgress}. This class is specifically measuring
+``self.step.setProgress``. This class is specifically measuring
 progress along the `tests` metric, in units of test cases (as
 opposed to other kinds of progress like the `output` metric, which
 measures in units of bytes). The Progress-tracking code uses each
@@ -840,6 +851,18 @@ instances for the current step are interpolated before the ``start`` method
 begins.
 
 .. index:: links, BuildStep URLs, addURL
+
+Using Statistics
+~~~~~~~~~~~~~~~~
+
+Statistics can be generated for each step, and then summarized across all steps in a build.
+For example, a test step might set its ``warnings`` statistic to the number of warnings observed.
+The build could then sum the ``warnings`` on all steps to get a total number of warnings.
+
+Statistics are set and retrieved with the :py:meth:`~buildbot.process.buildstep.BuildStep.setStatistic` and:py:meth:`~buildbot.process.buildstep.BuildStep.getStatistic` methods.
+The :py:meth:`~buildbot.process.buildstep.BuildStep.hasStatistic` method determines whether a statistic exists.
+
+The Build method :py:meth:`~buildbot.process.build.Build.getSummaryStatistic` can be used to aggregate over all steps in a Build.
 
 BuildStep URLs
 ~~~~~~~~~~~~~~
@@ -942,7 +965,7 @@ This will involve writing a new :class:`BuildStep` (probably named
 definition itself will look something like this::
 
     from buildbot.steps.shell import ShellCommand
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
     
     class FNURRRGHCounter(LogLineObserver):
         numTests = 0

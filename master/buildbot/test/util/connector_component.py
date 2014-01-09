@@ -42,8 +42,8 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
         def finish_setup(_):
             self.db = FakeDBConnector()
             self.db.pool = self.db_pool
-            self.db.model = model.Model(self.db)
             self.db.master = fakemaster.make_master()
+            self.db.model = model.Model(self.db)
         d.addCallback(finish_setup)
         return d
 

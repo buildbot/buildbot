@@ -111,15 +111,6 @@ def upgradeFiles(config):
             print "creating templates"
         os.mkdir(templdir)
 
-    for file in ('bg_gradient.jpg', 'default.css',
-                 'robots.txt', 'favicon.ico'):
-        source = util.sibpath(__file__, "../status/web/files/%s" % (file,))
-        target = os.path.join(webdir, file)
-        try:
-            installFile(config, target, source)
-        except IOError:
-            print "Can't write '%s'." % (target,)
-
     installFile(config, os.path.join(config['basedir'], "master.cfg.sample"),
                 util.sibpath(__file__, "sample.cfg"), overwrite=True)
 

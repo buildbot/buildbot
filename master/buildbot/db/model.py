@@ -44,7 +44,7 @@ class Model(base.DBConnectorComponent):
     # * dates are stored as unix timestamps (UTC-ish epoch time)
     #
     # * sqlalchemy does not handle sa.Boolean very well on MySQL or Postgres;
-    #   use sa.Integer instead
+    #   use sa.SmallInteger instead
 
     # build requests
 
@@ -72,30 +72,85 @@ class Model(base.DBConnectorComponent):
 
                              # time the buildrequest was completed, or NULL
                              sa.Column('complete_at', sa.Integer),
+
+                             # boolean indicating whether there is a step blocking, waiting for this request to complete
+                             sa.Column('waited_for', sa.SmallInteger,
+                                       server_default=sa.DefaultClause("0")),
                              )
 
     # Each row in this table represents a claimed build request, where the
     # claim is made by the object referenced by objectid.
     buildrequest_claims = sa.Table('buildrequest_claims', metadata,
                                    sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                                             index=True, unique=True),
-                                   sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+                                             nullable=False),
+                                   sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
                                              index=True, nullable=True),
                                    sa.Column('claimed_at', sa.Integer, nullable=False),
                                    )
 
     # builds
 
-    # This table contains basic information about each build.  Note that most
-    # data about a build is still stored in on-disk pickles.
+    # This table contains basic information about each build.
     builds = sa.Table('builds', metadata,
                       sa.Column('id', sa.Integer, primary_key=True),
                       sa.Column('number', sa.Integer, nullable=False),
-                      sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                      sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+                      sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
                                 nullable=False),
-                      sa.Column('start_time', sa.Integer, nullable=False),
-                      sa.Column('finish_time', sa.Integer),
+                      # slave which performed this build
+                      # TODO: ForeignKey to buildslaves table, named buildslaveid
+                      # TODO: keep nullable to support slave-free builds
+                      sa.Column('buildslaveid', sa.Integer),
+                      # master which controlled this build
+                      sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                nullable=False),
+                      # start/complete times
+                      sa.Column('started_at', sa.Integer, nullable=False),
+                      sa.Column('complete_at', sa.Integer),
+                      # a list of strings describing the build's state
+                      sa.Column('state_strings_json', sa.Text, nullable=False),
+                      sa.Column('results', sa.Integer),
                       )
+
+    # steps
+
+    steps = sa.Table('steps', metadata,
+                     sa.Column('id', sa.Integer, primary_key=True),
+                     sa.Column('number', sa.Integer, nullable=False),
+                     sa.Column('name', sa.String(50), nullable=False),
+                     sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
+                     sa.Column('started_at', sa.Integer),
+                     sa.Column('complete_at', sa.Integer),
+                     # a list of strings describing the step's state
+                     sa.Column('state_strings_json', sa.Text, nullable=False),
+                     sa.Column('results', sa.Integer),
+                     sa.Column('urls_json', sa.Text, nullable=False),
+                     )
+
+    # logs
+
+    logs = sa.Table('logs', metadata,
+                    sa.Column('id', sa.Integer, primary_key=True),
+                    sa.Column('name', sa.Text, nullable=False),
+                    sa.Column('slug', sa.String(50), nullable=False),
+                    sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
+                    sa.Column('complete', sa.SmallInteger, nullable=False),
+                    sa.Column('num_lines', sa.Integer, nullable=False),
+                    # 's' = stdio, 't' = text, 'h' = html
+                    sa.Column('type', sa.String(1), nullable=False),
+                    )
+
+    logchunks = sa.Table('logchunks', metadata,
+                         sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
+                         # 0-based line number range in this chunk (inclusive); note that for
+                         # HTML logs, this counts lines of HTML, not lines of rendered output
+                         sa.Column('first_line', sa.Integer, nullable=False),
+                         sa.Column('last_line', sa.Integer, nullable=False),
+                         # log contents, including a terminating newline, encoded in utf-8 or,
+                         # if 'compressed' is true, compressed with gzip
+                         sa.Column('content', sa.LargeBinary(65536)),
+                         sa.Column('compressed', sa.SmallInteger, nullable=False),
+                         )
 
     # buildsets
 
@@ -129,18 +184,59 @@ class Model(base.DBConnectorComponent):
                          # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
                          # etc - see master/buildbot/status/builder.py
                          sa.Column('results', sa.SmallInteger),
-
-                         # buildset belongs to all sourcestamps with setid
-                         sa.Column('sourcestampsetid', sa.Integer,
-                                   sa.ForeignKey('sourcestampsets.id')),
                          )
+
+    # changesources
+
+    # The changesources table gives a unique identifier to each ChangeSource.  It
+    # also links to other tables used to ensure only one master runs each
+    # changesource
+    changesources = sa.Table('changesources', metadata,
+                             sa.Column("id", sa.Integer, primary_key=True),
+
+                             # name for this changesource, as given in the configuration, plus a hash
+                             # of that name used for a unique index
+                             sa.Column('name', sa.Text, nullable=False),
+                             sa.Column('name_hash', sa.String(40), nullable=False),
+                             )
+
+    # This links changesources to the master where they are running.  A changesource
+    # linked to a master that is inactive can be unlinked by any master.  This
+    # is a separate table so that we can "claim" changesources on a master by
+    # inserting; this has better support in database servers for ensuring that
+    # exactly one claim succeeds.
+    changesource_masters = sa.Table('changesource_masters', metadata,
+                                    sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
+                                              nullable=False, primary_key=True),
+                                    sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                              nullable=False),
+                                    )
 
     # buildslaves
     buildslaves = sa.Table("buildslaves", metadata,
                            sa.Column("id", sa.Integer, primary_key=True),
-                           sa.Column("name", sa.String(256), nullable=False),
+                           sa.Column("name", sa.String(50), nullable=False),
                            sa.Column("info", JsonObject, nullable=False),
                            )
+
+    # link buildslaves to all builder/master pairs for which they are
+    # configured
+    configured_buildslaves = sa.Table('configured_buildslaves', metadata,
+                                      sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                      sa.Column('buildermasterid', sa.Integer,
+                                                sa.ForeignKey('builder_masters.id'), nullable=False),
+                                      sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                                                nullable=False),
+                                      )
+
+    # link buildslaves to the masters they are currently connected to
+    connected_buildslaves = sa.Table('connected_buildslaves', metadata,
+                                     sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                     sa.Column('masterid', sa.Integer,
+                                               sa.ForeignKey('masters.id'), nullable=False),
+                                     sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                                               nullable=False),
+                                     )
 
     # changes
 
@@ -215,6 +311,10 @@ class Model(base.DBConnectorComponent):
                        # later to filter changes
                        sa.Column('project', sa.String(length=512), nullable=False,
                                  server_default=''),
+
+                       # the sourcestamp this change brought the codebase to
+                       sa.Column('sourcestampid', sa.Integer,
+                                 sa.ForeignKey('sourcestamps.id'))
                        )
 
     # sourcestamps
@@ -239,26 +339,16 @@ class Model(base.DBConnectorComponent):
                        sa.Column('subdir', sa.Text),
                        )
 
-    # The changes that led up to a particular source stamp.
-    sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
-                                   sa.Column('sourcestampid', sa.Integer,
-                                             sa.ForeignKey('sourcestamps.id'), nullable=False),
-                                   sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
-                                             nullable=False),
-                                   )
-
-    # A sourcestampset identifies a set of sourcestamps. A sourcestamp belongs
-    # to a particular set if the sourcestamp has the same setid
-    sourcestampsets = sa.Table('sourcestampsets', metadata,
-                               sa.Column('id', sa.Integer, primary_key=True),
-                               )
-
     # A sourcestamp identifies a particular instance of the source code.
     # Ideally, this would always be absolute, but in practice source stamps can
     # also mean "latest" (when revision is NULL), which is of course a
     # time-dependent definition.
     sourcestamps = sa.Table('sourcestamps', metadata,
                             sa.Column('id', sa.Integer, primary_key=True),
+
+                            # hash of the branch, revision, patchid, repository, codebase, and
+                            # project, using hashColumns.
+                            sa.Column('ss_hash', sa.String(40), nullable=False),
 
                             # the branch to check out.  When branch is NULL, that means
                             # the main branch (trunk, master, etc.)
@@ -282,12 +372,48 @@ class Model(base.DBConnectorComponent):
                             sa.Column('project', sa.String(length=512), nullable=False,
                                       server_default=''),
 
-                            # each sourcestamp belongs to a set of sourcestamps
-                            sa.Column('sourcestampsetid', sa.Integer,
-                                      sa.ForeignKey('sourcestampsets.id')),
+                            # the time this sourcetamp was first seen (the first time it was added)
+                            sa.Column('created_at', sa.Integer, nullable=False),
                             )
 
+    # a many-to-may relationship between buildsets and sourcestamps
+    buildset_sourcestamps = sa.Table('buildset_sourcestamps', metadata,
+                                     sa.Column('id', sa.Integer, primary_key=True),
+                                     sa.Column('buildsetid', sa.Integer,
+                                               sa.ForeignKey('buildsets.id'),
+                                               nullable=False),
+                                     sa.Column('sourcestampid', sa.Integer,
+                                               sa.ForeignKey('sourcestamps.id'),
+                                               nullable=False),
+                                     )
+
     # schedulers
+
+    # The schedulers table gives a unique identifier to each scheduler.  It
+    # also links to other tables used to ensure only one master runs each
+    # scheduler, and to track changes that a scheduler may trigger a build for
+    # later.
+    schedulers = sa.Table('schedulers', metadata,
+                          sa.Column("id", sa.Integer, primary_key=True),
+
+                          # name for this scheduler, as given in the configuration, plus a hash
+                          # of that name used for a unique index
+                          sa.Column('name', sa.Text, nullable=False),
+                          sa.Column('name_hash', sa.String(40), nullable=False),
+                          )
+
+    # This links schedulers to the master where they are running.  A scheduler
+    # linked to a master that is inactive can be unlinked by any master.  This
+    # is a separate table so that we can "claim" schedulers on a master by
+    # inserting; this has better support in database servers for ensuring that
+    # exactly one claim succeeds.  The ID column is present for external users;
+    # see bug #1053.
+    scheduler_masters = sa.Table('scheduler_masters', metadata,
+                                 sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
+                                           nullable=False, primary_key=True),
+                                 sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                           nullable=False),
+                                 )
 
     # This table references "classified" changes that have not yet been
     # "processed".  That is, the scheduler has looked at these changes and
@@ -295,11 +421,32 @@ class Model(base.DBConnectorComponent):
     # Rows are deleted from this table as soon as the scheduler is done with
     # the change.
     scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                 sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
+                                 sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
                                  sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
                                  # true (nonzero) if this change is important to this scheduler
                                  sa.Column('important', sa.Integer),
                                  )
+
+    # builders
+
+    builders = sa.Table('builders', metadata,
+                        sa.Column('id', sa.Integer, primary_key=True),
+                        # builder's name
+                        sa.Column('name', sa.Text, nullable=False),
+                        # sha1 of name; used for a unique index
+                        sa.Column('name_hash', sa.String(40), nullable=False),
+                        )
+
+    # This links builders to the master where they are running.  A builder
+    # linked to a master that is inactive can be unlinked by any master.  Note
+    # that builders can run on multiple masters at the same time.
+    builder_masters = sa.Table('builder_masters', metadata,
+                               sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                               sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+                                         nullable=False),
+                               sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                                         nullable=False),
+                               )
 
     # objects
 
@@ -358,12 +505,31 @@ class Model(base.DBConnectorComponent):
                           sa.Column("attr_data", sa.String(128), nullable=False),
                           )
 
+    # masters
+
+    masters = sa.Table("masters", metadata,
+                       # unique id per master
+                       sa.Column('id', sa.Integer, primary_key=True),
+
+                       # master's name (generally in the form hostname:basedir)
+                       sa.Column('name', sa.Text, nullable=False),
+                       # sha1 of name; used for a unique index
+                       sa.Column('name_hash', sa.String(40), nullable=False),
+
+                       # true if this master is running
+                       sa.Column('active', sa.Integer, nullable=False),
+
+                       # updated periodically by a running master, so silently failed masters
+                       # can be detected by other masters
+                       sa.Column('last_active', sa.Integer, nullable=False),
+                       )
+
     # indexes
+
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_buildername', buildrequests.c.buildername)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
-    sa.Index('builds_number', builds.c.number)
-    sa.Index('builds_brid', builds.c.brid)
+    sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     sa.Index('buildsets_complete', buildsets.c.complete)
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
@@ -376,14 +542,31 @@ class Model(base.DBConnectorComponent):
     sa.Index('changes_when_timestamp', changes.c.when_timestamp)
     sa.Index('change_files_changeid', change_files.c.changeid)
     sa.Index('change_properties_changeid', change_properties.c.changeid)
-    sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
+    sa.Index('changes_sourcestampid', changes.c.sourcestampid)
+    sa.Index('changesource_name_hash', changesources.c.name_hash, unique=True)
+    sa.Index('scheduler_name_hash', schedulers.c.name_hash, unique=True)
+    sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
-    sa.Index('scheduler_changes_unique', scheduler_changes.c.objectid,
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
              scheduler_changes.c.changeid, unique=True)
-    sa.Index('sourcestamp_changes_sourcestampid',
-             sourcestamp_changes.c.sourcestampid)
-    sa.Index('sourcestamps_sourcestampsetid', sourcestamps.c.sourcestampsetid,
-             unique=False)
+    sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
+    sa.Index('builder_masters_builderid', builder_masters.c.builderid)
+    sa.Index('builder_masters_masterid', builder_masters.c.masterid)
+    sa.Index('builder_masters_identity',
+             builder_masters.c.builderid, builder_masters.c.masterid,
+             unique=True)
+    sa.Index('configured_slaves_buildmasterid',
+             configured_buildslaves.c.buildermasterid)
+    sa.Index('configured_slaves_slaves', configured_buildslaves.c.buildslaveid)
+    sa.Index('configured_slaves_identity',
+             configured_buildslaves.c.buildermasterid,
+             configured_buildslaves.c.buildslaveid, unique=True)
+    sa.Index('connected_slaves_masterid',
+             connected_buildslaves.c.masterid)
+    sa.Index('connected_slaves_slaves', connected_buildslaves.c.buildslaveid)
+    sa.Index('connected_slaves_identity',
+             connected_buildslaves.c.masterid,
+             connected_buildslaves.c.buildslaveid, unique=True)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,
@@ -396,8 +579,32 @@ class Model(base.DBConnectorComponent):
              unique=True)
     sa.Index('name_per_object', object_state.c.objectid, object_state.c.name,
              unique=True)
+    sa.Index('master_name_hashes', masters.c.name_hash, unique=True)
+    sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
+             unique=True)
+    sa.Index('sourcestamps_ss_hash_key', sourcestamps.c.ss_hash, unique=True)
+    sa.Index('buildset_sourcestamps_buildsetid',
+             buildset_sourcestamps.c.buildsetid)
+    sa.Index('buildset_sourcestamps_unique',
+             buildset_sourcestamps.c.buildsetid,
+             buildset_sourcestamps.c.sourcestampid,
+             unique=True)
+    sa.Index('builds_number',
+             builds.c.builderid, builds.c.number,
+             unique=True)
+    sa.Index('builds_buildslaveid',
+             builds.c.buildslaveid)
+    sa.Index('builds_masterid',
+             builds.c.masterid)
+    sa.Index('steps_number', steps.c.buildid, steps.c.number,
+             unique=True)
+    sa.Index('steps_name', steps.c.buildid, steps.c.name,
+             unique=True)
+    sa.Index('logs_slug', logs.c.stepid, logs.c.slug, unique=True)
+    sa.Index('logchunks_firstline', logchunks.c.logid, logchunks.c.first_line)
+    sa.Index('logchunks_lastline', logchunks.c.logid, logchunks.c.last_line)
 
-    # MySQl creates indexes for foreign keys, and these appear in the
+    # MySQL creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
     # expected on this platform
 
@@ -406,11 +613,13 @@ class Model(base.DBConnectorComponent):
             dict(unique=False, column_names=['uid'], name='uid')),
         ('sourcestamps',
             dict(unique=False, column_names=['patchid'], name='patchid')),
-        ('sourcestamp_changes',
-            dict(unique=False, column_names=['changeid'], name='changeid')),
-        ('buildsets',
-            dict(unique=False, column_names=['sourcestampsetid'],
-                 name='buildsets_sourcestampsetid_fkey')),
+        ('scheduler_masters',
+            dict(unique=False, column_names=['masterid'], name='masterid')),
+        ('changesource_masters',
+            dict(unique=False, column_names=['masterid'], name='masterid')),
+        ('buildset_sourcestamps',
+            dict(unique=False, column_names=['sourcestampid'],
+                 name='sourcestampid')),
     ]
 
     #
@@ -537,5 +746,6 @@ class Model(base.DBConnectorComponent):
                 version_control(engine)
                 upgrade(engine)
 
+        # import the prerequisite classes for pickles
         check_sqlalchemy_migrate_version()
         return self.db.pool.do_with_engine(thd)

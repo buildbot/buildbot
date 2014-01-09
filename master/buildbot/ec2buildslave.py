@@ -16,8 +16,7 @@
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 
-from buildbot.buildslave.ec2 import (
-    EC2LatentBuildSlave)
+from buildbot.buildslave.ec2 import EC2LatentBuildSlave
 
 deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "It has been moved to buildbot.buildslave.ec2",

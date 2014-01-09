@@ -36,4 +36,15 @@ common/googlecode_upload.py
 master/docs/tutorial/_build
 _build
 .tox
-/www
+master/setuptools_trial*
+master/buildbot/www/static/js/default/
+www/buildbot_www
+www/buildbot_www_test
+www/.temp
+www/coffeelint.json
+www/package.json
+www/bower.json
+www/VERSION
+www/node_modules
+www/npm-debug.log
+www/bower_components

@@ -32,8 +32,9 @@ class ChDict(dict):
 
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
+    @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties={}, repository='', codebase='',
@@ -49,6 +50,21 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             assert pv[1] == 'Change', ("properties must be qualified with"
                                        "source 'Change'")
 
+        ch_tbl = self.db.model.changes
+
+        self.checkLength(ch_tbl.c.author, author)
+        self.checkLength(ch_tbl.c.branch, branch)
+        self.checkLength(ch_tbl.c.revision, revision)
+        self.checkLength(ch_tbl.c.revlink, revlink)
+        self.checkLength(ch_tbl.c.category, category)
+        self.checkLength(ch_tbl.c.repository, repository)
+        self.checkLength(ch_tbl.c.project, project)
+
+        # calculate the sourcestamp first, before adding it
+        ssid = yield self.db.sourcestamps.findSourceStampId(
+            revision=revision, branch=branch, repository=repository,
+            codebase=codebase, project=project, _reactor=_reactor)
+
         def thd(conn):
             # note that in a read-uncommitted database like SQLite this
             # transaction does not buy atomicity - other database users may
@@ -57,16 +73,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # all in the database, but beware.
 
             transaction = conn.begin()
-
-            ch_tbl = self.db.model.changes
-
-            self.check_length(ch_tbl.c.author, author)
-            self.check_length(ch_tbl.c.branch, branch)
-            self.check_length(ch_tbl.c.revision, revision)
-            self.check_length(ch_tbl.c.revlink, revlink)
-            self.check_length(ch_tbl.c.category, category)
-            self.check_length(ch_tbl.c.repository, repository)
-            self.check_length(ch_tbl.c.project, project)
 
             r = conn.execute(ch_tbl.insert(), dict(
                 author=author,
@@ -79,12 +85,13 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 category=category,
                 repository=repository,
                 codebase=codebase,
-                project=project))
+                project=project,
+                sourcestampid=ssid))
             changeid = r.inserted_primary_key[0]
             if files:
                 tbl = self.db.model.change_files
                 for f in files:
-                    self.check_length(tbl.c.filename, f)
+                    self.checkLength(tbl.c.filename, f)
                 conn.execute(tbl.insert(), [
                     dict(changeid=changeid, filename=f)
                     for f in files
@@ -98,10 +105,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     for k, v in properties.iteritems()
                 ]
                 for i in inserts:
-                    self.check_length(tbl.c.property_name,
-                                      i['property_name'])
-                    self.check_length(tbl.c.property_value,
-                                      i['property_value'])
+                    self.checkLength(tbl.c.property_name,
+                                     i['property_name'])
+                    self.checkLength(tbl.c.property_value,
+                                     i['property_value'])
 
                 conn.execute(tbl.insert(), inserts)
             if uid:
@@ -111,8 +118,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return changeid
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @base.cached("chdicts")
     def getChange(self, changeid):
@@ -164,6 +170,37 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d.addCallback(get_changes)
         return d
 
+    def getChanges(self):
+        def thd(conn):
+            # get the changeids from the 'changes' table
+            changes_tbl = self.db.model.changes
+            q = sa.select([changes_tbl.c.changeid])
+            rp = conn.execute(q)
+            changeids = [row.changeid for row in rp]
+            rp.close()
+            return list(changeids)
+        d = self.db.pool.do(thd)
+
+        # then turn those into changes, using the cache
+        def get_changes(changeids):
+            return defer.gatherResults([self.getChange(changeid)
+                                        for changeid in changeids])
+        d.addCallback(get_changes)
+        return d
+
+    def getChangesCount(self):
+        def thd(conn):
+            changes_tbl = self.db.model.changes
+            q = sa.select([sa.func.count()]).select_from(changes_tbl)
+            rp = conn.execute(q)
+            r = 0
+            for row in rp:
+                r = row[0]
+            rp.close()
+            return int(r)
+        d = self.db.pool.do(thd)
+        return d
+
     def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -200,9 +237,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             ids_to_delete = [r.changeid for r in res]
 
             # and delete from all relevant tables, in dependency order
-            for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_properties', 'changes',
-                               'change_users'):
+            for table_name in ('scheduler_changes', 'change_files',
+                               'change_properties', 'changes', 'change_users'):
                 remaining = ids_to_delete[:]
                 while remaining:
                     batch, remaining = remaining[:100], remaining[100:]
@@ -231,7 +267,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             properties={},  # see below
             repository=ch_row.repository,
             codebase=ch_row.codebase,
-            project=ch_row.project)
+            project=ch_row.project,
+            sourcestampid=ch_row.sourcestampid)
 
         query = change_files_tbl.select(
             whereclause=(change_files_tbl.c.changeid == ch_row.changeid))

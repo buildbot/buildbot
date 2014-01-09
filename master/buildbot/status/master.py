@@ -26,20 +26,20 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
+from buildbot.util import pickle
+from buildbot.util import service
 from buildbot.util.eventual import eventually
-from cPickle import load
-from twisted.application import service
 from twisted.internet import defer
 from twisted.persisted import styles
 from twisted.python import log
 from zope.interface import implements
 
 
-class Status(config.ReconfigurableServiceMixin, service.MultiService):
+class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.master = master
         self.botmaster = master.botmaster
         self.basedir = master.basedir
@@ -59,20 +59,16 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     def startService(self):
         # subscribe to the things we need to know about
-        self._buildset_completion_sub = \
-            self.master.subscribeToBuildsetCompletions(
-                self._buildsetCompletionCallback)
-        self._buildset_sub = \
-            self.master.subscribeToBuildsets(
-                self._buildsetCallback)
-        self._build_request_sub = \
-            self.master.subscribeToBuildRequests(
-                self._buildRequestCallback)
-        self._change_sub = \
-            self.master.subscribeToChanges(
-                self.changeAdded)
+        self._buildset_new_consumer = self.master.mq.startConsuming(
+            self.bs_new_consumer_cb, ('buildset', None, 'new'))
+        self._buildset_complete_consumer = self.master.mq.startConsuming(
+            self.bs_complete_consumer_cb, ('buildset', None, 'complete'))
+        self._br_consumer = self.master.mq.startConsuming(
+            self.br_consumer_cb, ('buildrequest', None, None, None, 'new'))
+        self._change_consumer = self.master.mq.startConsuming(
+            self.change_consumer_cb, ('change', None, 'new'))
 
-        return service.MultiService.startService(self)
+        return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -92,27 +88,26 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         for sr in new_config.status:
             sr.master = self.master
-            sr.setServiceParent(self)
+            yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
 
     def stopService(self):
-        if self._buildset_completion_sub:
-            self._buildset_completion_sub.unsubscribe()
-            self._buildset_completion_sub = None
-        if self._buildset_sub:
-            self._buildset_sub.unsubscribe()
-            self._buildset_sub = None
-        if self._build_request_sub:
-            self._build_request_sub.unsubscribe()
-            self._build_request_sub = None
-        if self._change_sub:
-            self._change_sub.unsubscribe()
-            self._change_sub = None
+        if self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
-        return service.MultiService.stopService(self)
+        if self._buildset_new_consumer:
+            self._buildset_new_consumer.stopConsuming()
+            self._buildset_new_consumer = None
+
+        if self._change_consumer:
+            self._change_consumer.stopConsuming()
+            self._change_consumer = None
+
+        return service.AsyncMultiService.stopService(self)
 
     # clean shutdown
 
@@ -193,24 +188,6 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if isinstance(thing, changes.Change):
                 change = thing
                 return "%schanges/%d" % (prefix, change.number)
-
-        if interfaces.IStatusLog.providedBy(thing):
-            loog = thing
-            step = loog.getStep()
-            build = step.getBuild()
-            bldr = build.getBuilder()
-
-            logs = step.getLogs()
-            for i in range(len(logs)):
-                if loog is logs[i]:
-                    break
-            else:
-                return None
-            return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
-                urllib.quote(bldr.getName(), safe=''),
-                build.getNumber(),
-                urllib.quote(step.getName(), safe=''),
-                urllib.quote(loog.getName(), safe=''))
 
     def getChangeSources(self):
         return list(self.master.change_svc)
@@ -345,7 +322,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         builder_status = None
         try:
             with open(filename, "rb") as f:
-                builder_status = load(f)
+                builder_status = pickle.load(f)
             builder_status.master = self.master
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -420,6 +397,30 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if hasattr(t, 'changeAdded'):
                 t.changeAdded(change)
 
+    def br_consumer_cb(self, key, msg):
+        buildername = msg['buildername']
+        if buildername in self._builder_observers:
+            brs = buildrequest.BuildRequestStatus(buildername,
+                                                  msg['brid'], self)
+            for observer in self._builder_observers[buildername]:
+                if hasattr(observer, 'requestSubmitted'):
+                    eventually(observer.requestSubmitted, brs)
+
+    @defer.inlineCallbacks
+    def change_consumer_cb(self, key, msg):
+        # get a list of watchers - no sense querying the change
+        # if nobody's listening
+        interested = [t for t in self.watchers
+                      if hasattr(t, 'changeAdded')]
+        if not interested:
+            return
+
+        chdict = yield self.master.db.changes.getChange(msg['changeid'])
+        change = yield changes.Change.fromChdict(self.master, chdict)
+
+        for t in interested:
+            t.changeAdded(change)
+
     def asDict(self):
         result = {}
         # Constant
@@ -469,8 +470,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def _builder_unsubscribe(self, buildername, watcher):
         self._builder_observers.discard(buildername, watcher)
 
-    def _buildsetCallback(self, **kwargs):
-        bsid = kwargs['bsid']
+    def bs_new_consumer_cb(self, key, msg):
+        bsid = msg['bsid']
         d = self.master.db.buildsets.getBuildset(bsid)
 
         def do_notifies(bsdict):
@@ -479,16 +480,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                 if hasattr(t, 'buildsetSubmitted'):
                     t.buildsetSubmitted(bss)
         d.addCallback(do_notifies)
-        d.addErrback(log.err, 'while notifying buildsetSubmitted')
+        return d
 
-    def _buildsetCompletionCallback(self, bsid, result):
-        self._maybeBuildsetFinished(bsid)
-
-    def _buildRequestCallback(self, notif):
-        buildername = notif['buildername']
-        if buildername in self._builder_observers:
-            brs = buildrequest.BuildRequestStatus(buildername,
-                                                  notif['brid'], self)
-            for observer in self._builder_observers[buildername]:
-                if hasattr(observer, 'requestSubmitted'):
-                    eventually(observer.requestSubmitted, brs)
+    def bs_complete_consumer_cb(self, key, msg):
+        self._maybeBuildsetFinished(msg['bsid'])

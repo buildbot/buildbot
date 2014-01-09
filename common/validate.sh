@@ -46,6 +46,29 @@ check_tabs() {
     git diff "$REVRANGE" | grep -q $'+.*\t'
 }
 
+check_long_lines() {
+    # only check python files
+    local long_lines=false
+    for f in $(git diff --name-only --stat "$REVRANGE" | grep '.py$'); do
+        # don't try to check removed files
+        [ ! -f "$f" ] && continue
+        if [ $(git diff "$REVRANGE" $f | grep -E -c '^\+.{80}') != 0 ]; then
+            echo " $f"
+            long_lines=true
+        fi
+    done
+    $long_lines
+}
+
+
+check_yield_defer_returnValue() {
+    local yields=false
+    if git diff "$REVRANGE" | grep '+.*yield defer.returnValue'; then
+        yields=true
+    fi
+    $yields
+}
+
 check_relnotes() {
     if git diff --exit-code "$REVRANGE" master/docs/relnotes/index.rst >/dev/null 2>&1; then
         return 1
@@ -53,10 +76,11 @@ check_relnotes() {
         return 0
     fi
 }
-
 run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
+    else
+        warning "please provide a TRIALTMP env variable pointing to a ramfs for 30x speed up of the integration tests"
     fi
     find . -name \*.pyc -exec rm {} \;
     trial --reporter text ${TEMP_DIRECTORY_OPT} ${TEST}
@@ -72,7 +96,7 @@ fi
 # get a list of changed files, used below; this uses a tempfile to work around
 # shell behavior when piping to 'while'
 tempfile=$(mktemp)
-trap 'rm -f ${tempfile}' 1 2 3 15
+trap "rm -f ${tempfile}" 1 2 3 15
 git diff --name-only $REVRANGE | grep '\.py$' | grep -v '\(^master/\(contrib\|docs\)\|/setup\.py\)' > ${tempfile}
 py_files=()
 while read line; do
@@ -85,12 +109,22 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if $slow; then
+    status "running 'setup.py develop' for www"
+    (cd www; python setup.py develop 2>&1 >/dev/null    ) || not_ok "www/setup.py failed"
+    status "running 'grunt ci' for www"
+    LOG=/dev/null
+    if [[ `uname` == "Darwin" ]] ;then LOG=/dev/stdout; fi  # grunt >/dev/null hangs on osx ?!
+    (cd www; node_modules/.bin/grunt --no-color ci 2>&1  >$LOG ) || not_ok "grunt ci failed"
+fi
+if $slow; then
     status "running tests"
     run_tests || not_ok "tests failed"
 fi
 
 status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
+check_long_lines && warning "$REVRANGE adds long lines"
+check_yield_defer_returnValue && not_ok "$REVRANGE yields defer.returnValue"
 
 status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"

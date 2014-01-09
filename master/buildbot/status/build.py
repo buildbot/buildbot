@@ -20,11 +20,10 @@ import re
 import shutil
 
 from buildbot import interfaces
-from buildbot import sourcestamp
 from buildbot import util
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
-from cPickle import dump
+from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
@@ -106,22 +105,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return all_got_revisions
 
     def getSourceStamps(self, absolute=False):
-        sourcestamps = []
-        if not absolute:
-            sourcestamps.extend(self.sources)
-        else:
-            all_got_revisions = self.getAllGotRevisions() or {}
-            # always make a new instance
-            for ss in self.sources:
-                if ss.codebase in all_got_revisions:
-                    got_revision = all_got_revisions[ss.codebase]
-                    sourcestamps.append(ss.getAbsoluteSourceStamp(got_revision))
-                else:
-                    # No absolute revision information available
-                    # Probably build has been stopped before ending all sourcesteps
-                    # Return a clone with original revision
-                    sourcestamps.append(ss.clone())
-        return sourcestamps
+        return {}
 
     def getReason(self):
         return self.reason
@@ -157,22 +141,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return (self.started, self.finished)
 
     _sentinel = []  # used as a sentinel to indicate unspecified initial_value
-
-    def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
-        """Summarize the named statistic over all steps in which it
-        exists, using combination_fn and initial_value to combine multiple
-        results into a single result.  This translates to a call to Python's
-        X{reduce}::
-            return reduce(summary_fn, step_stats_list, initial_value)
-        """
-        step_stats_list = [
-            st.getStatistic(name)
-            for st in self.steps
-            if st.hasStatistic(name)]
-        if initial_value is self._sentinel:
-            return reduce(summary_fn, step_stats_list)
-        else:
-            return reduce(summary_fn, step_stats_list, initial_value)
 
     def isFinished(self):
         return (self.finished is not None)
@@ -408,10 +376,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             # the old .sourceStamp attribute wasn't actually very useful
             maxChangeNumber, patch = self.sourceStamp
             changes = getattr(self, 'changes', [])
-            source = sourcestamp.SourceStamp(branch=None,
-                                             revision=None,
-                                             patch=patch,
-                                             changes=changes)
+            # the old SourceStamp class is gone, so use the one that is
+            # provided for backward compatibility
+            from buildbot.util.pickle import SourceStamp
+            source = SourceStamp(branch=None,
+                                 revision=None,
+                                 patch=patch,
+                                 changes=changes)
             self.source = source
             self.changes = source.changes
             del self.sourceStamp
@@ -449,7 +420,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         tmpfilename = filename + ".tmp"
         try:
             with open(tmpfilename, "wb") as f:
-                dump(self, f, -1)
+                pickle.dump(self, f, -1)
             if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and
