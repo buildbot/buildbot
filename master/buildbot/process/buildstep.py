@@ -19,6 +19,8 @@ try:
 except ImportError:
     import StringIO
 
+import inspect
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
@@ -48,6 +50,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import flatten
 
 
 class BuildStepFailed(Exception):
@@ -871,6 +874,181 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
         return defer.succeed(None)
+
+
+class ShellBaseStep(LoggingBuildStep):
+    """
+    Base class of steps that will need to execute any shell command
+    in the step. That steps takes care of setting up shell specific
+    tuning, like the environment, workdir, or the pty to use.
+    """
+    renderables = [
+        'slaveEnvironment', 'remote_kwargs', 'description',
+        'descriptionDone', 'descriptionSuffix', 'haltOnFailure', 'flunkOnFailure']
+
+    def __init__(self, workdir=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 usePTY="slave-config", **kwargs):
+        # most of our arguments get passed through to the RemoteShellCommand
+        # that we create, but first strip out the ones that we pass to
+        # BuildStep (like haltOnFailure and friends), and a couple that we
+        # consume ourselves.
+        if description:
+            self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
+        # pull out the ones that LoggingBuildStep wants, then upcall
+        buildstep_kwargs = {}
+        for k in kwargs.keys()[:]:
+            if k in self.__class__.parms:
+                buildstep_kwargs[k] = kwargs[k]
+                del kwargs[k]
+        LoggingBuildStep.__init__(self, **buildstep_kwargs)
+
+        # check validity of arguments being passed to RemoteShellCommand
+        invalid_args = []
+        valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
+        for arg in kwargs.keys():
+            if arg not in valid_rsc_args:
+                invalid_args.append(arg)
+        # Raise Configuration error in case invalid arguments are present
+        if invalid_args:
+            config.error("Invalid argument(s) passed to RemoteShellCommand: "
+                         + ', '.join(invalid_args))
+
+        # everything left over goes to the RemoteShellCommand
+        kwargs['workdir'] = workdir  # including a copy of 'workdir'
+        kwargs['usePTY'] = usePTY
+        self.remote_kwargs = kwargs
+
+    def setBuild(self, build):
+        LoggingBuildStep.setBuild(self, build)
+        # Set this here, so it gets rendered when we start the step
+        self.slaveEnvironment = self.build.slaveEnvironment
+
+    def setStepStatus(self, step_status):
+        LoggingBuildStep.setStepStatus(self, step_status)
+
+    def setDefaultWorkdir(self, workdir):
+        rkw = self.remote_kwargs
+        rkw['workdir'] = rkw['workdir'] or workdir
+
+    def getWorkdir(self):
+        """
+        Get the current notion of the workdir.  Note that this may change
+        between instantiation of the step and C{start}, as it is based on the
+        build's default workdir, and may even be C{None} before that point.
+        """
+        return self.remote_kwargs['workdir']
+
+    def setupEnvironment(self, cmd):
+        # merge in anything from Build.slaveEnvironment
+        # This can be set from a Builder-level environment, or from earlier
+        # BuildSteps. The latter method is deprecated and superseded by
+        # BuildProperties.
+        # Environment variables passed in by a BuildStep override
+        # those passed in at the Builder level.
+        slaveEnv = self.slaveEnvironment
+        if slaveEnv:
+            if cmd.args['env'] is None:
+                cmd.args['env'] = {}
+            fullSlaveEnv = slaveEnv.copy()
+            fullSlaveEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullSlaveEnv
+            # note that each RemoteShellCommand gets its own copy of the
+            # dictionary, so we shouldn't be affecting anyone but ourselves.
+
+    def buildCommandKwargs(self, command, warnings):
+        kwargs = LoggingBuildStep.buildCommandKwargs(self)
+        kwargs.update(self.remote_kwargs)
+
+        kwargs['command'] = flatten(command, (list, tuple))
+
+        # check for the usePTY flag
+        if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        # check for the interruptSignal flag
+        if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
+            warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        return kwargs
+
+    def getCurrCommand(self):
+        raise NotImplementedError()
+
+    def _describe(self, done=False):
+        """Return a list of short strings to describe this step, for the
+        status display. This uses the first few words of the shell command.
+        You can replace this by setting .description in your subclass, or by
+        overriding this method to describe the step better.
+
+        @type  done: boolean
+        @param done: whether the command is complete or not, to improve the
+                     way the command is described. C{done=False} is used
+                     while the command is still running, so a single
+                     imperfect-tense verb is appropriate ('compiling',
+                     'testing', ...) C{done=True} is used when the command
+                     has finished, and the default getText() method adds some
+                     text, so a simple noun is appropriate ('compile',
+                     'tests' ...)
+        """
+
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # we may have no command if this is a step that sets its command
+            # name late in the game (e.g., in start())
+            command = self.getCurrCommand()
+            if not command:
+                return ["???"]
+
+            words = command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return ["???"]
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return ["???"]
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except:
+            log.err(failure.Failure(), "Error describing step")
+            return ["???"]
 
 
 # (WithProperties used to be available in this module)
