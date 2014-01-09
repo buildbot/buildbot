@@ -51,24 +51,12 @@ class LogObserver(object):
 
 
 class LogLineObserver(LogObserver):
+    stdoutDelimiter = "\n"
+    stderrDelimiter = "\n"
+    headerDelimiter = "\n"
 
-    # TODO: simplify now that each chunk is line-delimited
     def __init__(self):
-        self.stdoutParser = basic.LineOnlyReceiver()
-        self.stdoutParser.delimiter = "\n"
-        self.stdoutParser.lineReceived = self.outLineReceived
-        self.stdoutParser.transport = self  # for the .disconnecting attribute
-        self.disconnecting = False
-
-        self.stderrParser = basic.LineOnlyReceiver()
-        self.stderrParser.delimiter = "\n"
-        self.stderrParser.lineReceived = self.errLineReceived
-        self.stderrParser.transport = self
-
-        self.headerParser = basic.LineOnlyReceiver()
-        self.headerParser.delimiter = "\n"
-        self.headerParser.lineReceived = self.headerLineReceived
-        self.headerParser.transport = self
+        self.max_length = 16384
 
     def setMaxLineLength(self, max_length):
         """
@@ -76,18 +64,22 @@ class LogLineObserver(LogObserver):
         dropped.  Default is 16384 bytes.  Use sys.maxint for effective
         infinity.
         """
-        self.stdoutParser.MAX_LENGTH = max_length
-        self.stderrParser.MAX_LENGTH = max_length
-        self.headerParser.MAX_LENGTH = max_length
+        self.max_length = max_length
+
+    def _lineReceived(self, data, delimiter, funcReceived):
+        for line in data.rstrip().split(delimiter):
+            if len(line) > self.max_length:
+                continue
+            funcReceived(line)
 
     def outReceived(self, data):
-        self.stdoutParser.dataReceived(data)
+        self._lineReceived(data, self.stdoutDelimiter, self.outLineReceived)
 
     def errReceived(self, data):
-        self.stderrParser.dataReceived(data)
+        self._lineReceived(data, self.stderrDelimiter, self.errLineReceived)
 
     def headerReceived(self, data):
-        self.headerParser.dataReceived(data)
+        self._lineReceived(data, self.headerDelimiter, self.headerLineReceived)
 
     def outLineReceived(self, line):
         """This will be called with complete stdout lines (not including the
