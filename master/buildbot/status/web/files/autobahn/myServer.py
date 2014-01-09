@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
     ServerFactory = BroadcastServerFactory
 
-    factory = ServerFactory("ws://localhost:9000",
+    factory = ServerFactory("ws://localhost:9001",
                             debug=debug,
                             debugCodePaths=debug)
 
