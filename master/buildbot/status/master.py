@@ -195,6 +195,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             step = loog.getStep()
             build = step.getBuild()
             bldr = build.getBuilder()
+            proj = bldr.getProject()
 
             logs = step.getLogs()
             for i in range(len(logs)):
@@ -202,7 +203,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                     break
             else:
                 return None
-            return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
+            return prefix + "projects/%s/builders/%s/builds/%d/steps/%s/logs/%s" % (
+                urllib.quote(proj, safe=''),
                 urllib.quote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''),
