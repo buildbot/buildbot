@@ -1,5 +1,6 @@
 import json
 import sys
+from threading import Lock, Thread
 import urllib2
 import time
 from twisted.web.client import Agent
@@ -10,6 +11,7 @@ from twisted.web.static import File
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 
 POLL_INTERVAL = 5
+updateLock = Lock()
 
 agent = Agent(reactor)
 
@@ -30,6 +32,7 @@ class CachedURL():
         self.cachedJSON = None
         self.clients = []
         self.lastChecked = 0
+        self.errorCount = 0
 
     def pollNeeded(self):
         return (time.time() - self.lastChecked) > POLL_INTERVAL
@@ -77,11 +80,27 @@ class BroadcastServerFactory(WebSocketServerFactory):
         reactor.callLater(1, self.tick)
 
     def checkURLs(self):
+        threads = []
         for urlCache in self.urlCacheDict.values():
-            url = urlCache.url
-            if urlCache.pollNeeded():
+            #Thread each of these
+            p = Thread(target=self.checkURL, args=(urlCache, ))
+            p.start()
+            threads.append(p)
+
+        for t in threads:
+            t.join()
+
+    def checkURL(self, urlCache):
+        url = urlCache.url
+        if self.urlCacheDict[url].errorCount > 5:
+            print("Removing cached URL as it has too many errors")
+            del self.urlCacheDict[url]
+            return
+        if urlCache.pollNeeded():
+            updateLock.acquire()
+            try:
                 print("Polling: {0}".format(url))
-                response = urllib2.urlopen(url)
+                response = urllib2.urlopen(url, timeout=POLL_INTERVAL-1)
                 jsonObj = json.load(response)
                 urlCache.lastChecked = time.time()
                 if self.jsonChanged(jsonObj, self.urlCacheDict[url].cachedJSON):
@@ -91,6 +110,11 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     print("JSON Changed, informing {0} client(s)".format(len(clients)))
                     for client in clients:
                         client.sendMessage(jsonString)
+            except Exception as e:
+                print e
+                self.urlCacheDict[url].errorCount += 1
+            finally:
+                updateLock.release()
 
     def register(self, client):
         if not client in self.clients:
