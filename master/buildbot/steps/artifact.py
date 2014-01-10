@@ -345,18 +345,37 @@ class AcquireBuildLocks(LoggingBuildStep):
                 return False
         return True
 
+    @defer.inlineCallbacks
+    def checkSlavePing(self, slavebuilder):
+        ping_success = yield slavebuilder.ping()
+        defer.returnValue(ping_success)
+        return
+
+    def resumeStartStep(self, ping_success, remote=None, slavebuilder=None):
+        if ping_success:
+            self.build.setupSlaveBuilder(slavebuilder)
+        return super(LoggingBuildStep, self).startStep(remote)
+
     def startStep(self, remote):
         currentLocks =  self.setStepLocks(self.initialLocks)
         self.locksAvailable = self.checkLocksAvailable(currentLocks)
         self.locksAvailable = False
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 1:
+        slavebuilder =  self.build.slavebuilder
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
             # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
             slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
+            #ping_success = self.checkSlavePing(slavebuilder)
+
+            #if ping_success:
             self.build.setupSlaveBuilder(slavebuilder)
-            # if not available builder we probably could attach to d = lock.waitUntilMaybeAvailable(self, access)
+            # if not available builder we probably could change/attach to d = lock.waitUntilMaybeAvailable(self, access)
+            # to wait for other slaves ?
             # process / buildstep.py
 
-        return super(LoggingBuildStep, self).startStep(remote)
+        d = super(LoggingBuildStep, self).startStep(remote)
+
+        return d
+
 
 class ReleaseBuildLocks(LoggingBuildStep):
     name = "Release Builder Locks"
