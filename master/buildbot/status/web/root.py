@@ -52,17 +52,14 @@ class RootPage(HtmlResource):
         db = status.master.db
         pending_builds = yield db.buildrequests.getBuildRequests(claimed=False)
 
-        my_builders = []
+        my_builders = set()
         for bname in status.getBuilderNames():
-            b = status.getBuilder(bname)
-            for bs in b.getSlaves():
-                    my_builders.append(b)
+            my_builders.add(status.getBuilder(bname))
 
         # Current builds
         current_builds = set()
         for b in my_builders:
             current_builds |= set(b.getCurrentBuilds())
-
 
         cxt.update(
                 shutting_down = status.shuttingDown,
