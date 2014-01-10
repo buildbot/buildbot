@@ -22,13 +22,16 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
+from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 from zope.interface import implements
 
 A_TIMESTAMP = 1341700729
+A_TIMESTAMP_EPOCH = epoch2datetime(A_TIMESTAMP)
 EARLIER = 1248529376
+EARLIER_EPOCH = epoch2datetime(EARLIER)
 
 
 class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -154,7 +157,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
                   'project': u'pr', 'repository': u'rep', 'revision': u'rev',
-                  'created_at': 89834834, 'ssid': 234}
+                  'created_at': epoch2datetime(89834834), 'ssid': 234}
 
     def test_signature_addBuildset(self):
         @self.assertArgSpecMatches(
@@ -213,8 +216,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                  sourcestamps=[ssmap[ssid] for ssid in sourcestampids],
                  submitted_at=submitted_at))
 
-    def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP,
-                                 submitted_at=A_TIMESTAMP, external_idstring=u'extid',
+    def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
+                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring=u'extid',
                                  reason=u'because', results=0, sourcestampids=[234]):
         ssmap = {234: self.SS234_DATA}
         return (
@@ -327,7 +330,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self.assertEqual(self.master.mq.productions, [
                 self._buildsetCompleteMessage(72,
                                               results=SUCCESS if expectSuccess else FAILURE,
-                                              submitted_at=EARLIER),
+                                              submitted_at=EARLIER_EPOCH),
             ])
         else:
             self.assertEqual(self.master.mq.productions, [])

@@ -18,6 +18,7 @@ import weakref
 
 from buildbot import config
 from buildbot import interfaces
+from buildbot.data import resultspec
 from buildbot.process import buildrequest
 from buildbot.process import slavebuilder
 from buildbot.process.build import Build
@@ -150,10 +151,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
-        # TODO: use data API here
-        unclaimed = yield self.master.db.buildrequests.getBuildRequests(
-            buildername=self.name, claimed=False)
-
+        unclaimed = yield self.master.data.get(('builder', ascii2unicode(self.name), 'buildrequest'),
+                                       [resultspec.Filter('claimed', 'eq', [False])])
         if unclaimed:
             unclaimed = sorted([brd['submitted_at'] for brd in unclaimed])
             defer.returnValue(unclaimed[0])

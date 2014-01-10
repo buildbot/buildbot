@@ -14,8 +14,9 @@
 # Copyright  Team Members
 
 import uuid
-
+import datetime
 from buildbot.data.exceptions import InvalidPathError
+from buildbot.util import datetime2epoch
 from buildbot.util import json
 from twisted.web import resource
 from twisted.web import server
@@ -26,6 +27,10 @@ class Consumer(object):
     def __init__(self, request):
         self.request = request
         self.qrefs = {}
+
+    def _toJson(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return datetime2epoch(obj)
 
     def stopConsuming(self, key=None):
         if key is not None:
@@ -39,7 +44,7 @@ class Consumer(object):
         request = self.request
         msg = dict(key=event, message=data)
         request.write("event: " + "event" + "\n")
-        request.write("data: " + json.dumps(msg) + "\n")
+        request.write("data: " + json.dumps(msg, default=self._toJson) + "\n")
         request.write("\n")
 
     def registerQref(self, path, qref):
