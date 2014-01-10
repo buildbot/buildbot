@@ -48,10 +48,26 @@ class RootPage(HtmlResource):
                         redirectTo(path_to_authzfail(request), request))
                 return
 
+        # Pending builds
+        db = status.master.db
+        pending_builds = yield db.buildrequests.getBuildRequests(claimed=False)
+
+        builders = set()
+        for bname in status.getBuilderNames():
+            builders.add(status.getBuilder(bname))
+
+        # Current builds
+        current_builds = set()
+        for b in builders:
+            current_builds |= set(b.getCurrentBuilds())
+
         cxt.update(
                 shutting_down = status.shuttingDown,
                 shutdown_url = request.childLink("shutdown"),
                 cancel_shutdown_url = request.childLink("cancel_shutdown"),
+                slaves = status.getSlaveNames(),
+                pending_builds = pending_builds,
+                current_builds = current_builds
                 )
         template = request.site.buildbot_service.templates.get_template("root.html")
         defer.returnValue(template.render(**cxt))

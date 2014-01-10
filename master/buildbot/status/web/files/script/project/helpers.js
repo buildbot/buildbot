@@ -43,9 +43,10 @@ define(['screensize'], function (screenSize) {
 			}
 
 			if ($('#tb-root').length != 0) {
-				helpers.updateBuilders();
+                //Disabled until we decided that we need an updating front page
+				//helpers.updateBuilders();
 			}
-			
+
        		// submenu overflow on small screens
 
 	        helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -193,43 +194,47 @@ define(['screensize'], function (screenSize) {
 					$(hi).insertAfter($(this));
 					$('#formWrapper form').submit();
 				});
-			
+
 		}, updateBuilders: function () {
 			$.ajax({
-				url: "/json?filter=0",
+				url: "/json/builders/?filter=0",
 				dataType: "json",
 				type: "GET",
 				cache: false,
 				success: function (data) {
-				var arrayBuilders = [];
-				var arrayPending = [];
-				var arrayCurrent = [];
-				$.each(data.builders, function (key, value) {
-				arrayBuilders.push(key);
-				arrayPending.push(value.pendingBuilds);
-				if (value.state == 'building') {
-				arrayCurrent.push(value.currentBuilds);
-				}
-				});
+                    var arrayBuilders = [];
+                    var arrayPending = [];
+                    var arrayCurrent = [];
+                    $.each(data, function (key, value) {
+                        arrayBuilders.push(key);
+                        arrayPending.push(value.pendingBuilds);
+                        if (value.state == 'building') {
+                            arrayCurrent.push(value.currentBuilds);
+                        }
+                    });
 
-				function sumVal(arr) {
-				var sum = 0;
-				$.each(arr,function(){sum+=parseFloat(this) || 0;});
-				return sum;
-				};
-				var arraySlaves = [];
-				$.each(data.slaves, function (key) {
-				arraySlaves.push(key);
-				});
+                    function sumVal(arr) {
+                        var sum = 0;
+                        $.each(arr,function(){sum+=parseFloat(this) || 0;});
+                        return sum;
+                    }
 
-				var arrayProjects = [];
-				$.each(data.project, function (key) {
-				arrayProjects.push(key);
-				});
-				
-				$('#slavesNr').text(arraySlaves.length);
-				$('#pendingBuilds').text(sumVal(arrayPending));
-				
+                    $('#pendingBuilds').text(sumVal(arrayPending));
+                }
+            });
+
+                $.ajax({
+				url: "/json/slaves/?filter=0",
+				dataType: "json",
+				type: "GET",
+				cache: false,
+				success: function (data) {
+                    var arraySlaves = [];
+                    $.each(data, function (key) {
+                        arraySlaves.push(key);
+                    });
+
+                    $('#slavesNr').text(arraySlaves.length);
 				}
 			});
 		}, codeBaseBranchOverview: function() {
