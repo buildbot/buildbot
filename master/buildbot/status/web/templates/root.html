@@ -55,6 +55,7 @@ Master is shutting down<br/>
     <thead>
       <tr>
         <th>Slaves</th>
+        <th>Current builds</th>
         <th>Pending builds</th>  
       </tr>
     </thead>
@@ -63,6 +64,11 @@ Master is shutting down<br/>
           <td>
             <span id="slavesNr">
                 {{ slaves|length }}
+            </span>
+          </td>
+          <td>
+            <span id="currentBuilds">
+                {{ current_builds|length }}
             </span>
           </td>
           <td>
