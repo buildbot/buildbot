@@ -3121,10 +3121,10 @@ then the buildstep succeeds immediately after triggering the schedulers.
 The SourceStamps to use for the triggered build are controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
+source stamps given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`s, even if other
+all of the builds use exactly the same source stamps, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
 specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is
