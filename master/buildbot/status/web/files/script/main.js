@@ -1,10 +1,10 @@
 require.config({
 	paths: {
-		'jquery':'libs/jQuery-2-0-3',
+		//'jquery':'libs/jQuery-2-0-3',
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
-		'datatables-plugin': 'plugins/jquery-datatables',
-		'dataTables': 'project/dataTables',
+		//'datatables-plugin': 'plugins/jquery-datatables',
+		//'dataTables': 'project/dataTables',
 		'dotdotdot': 'plugins/jquery-dotdotdot',
 		'screensize': 'project/screen-size',
 		'helpers': 'project/helpers',
@@ -14,8 +14,8 @@ require.config({
 	}
 });
 
-require(['jquery','helpers','popup','screensize','projectdropdown','dataTables'], 
-	function($,helpers, popup, screenSize, projectDropDown,dataTables ) {
+define(['helpers','popup','screensize','projectdropdown'], 
+	function(helpers, popup, screenSize, projectDropDown) {
 	'use strict';
 	  //$(document).ready(function() {
 
@@ -53,6 +53,6 @@ require(['jquery','helpers','popup','screensize','projectdropdown','dataTables']
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-		dataTables.init();	
+		//dataTables.init();	
 	//});	
 });

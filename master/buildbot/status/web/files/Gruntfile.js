@@ -40,16 +40,16 @@ module.exports = function(grunt) {
     requirejs: {
       compile: {
         options: {
-          name: 'main',
+          //name: 'main',
           baseUrl: 'script/',
-          //dir: "prod/script",
-          //optimize: 'uglify',
+          dir: "prod/script",
+          optimize: 'uglify',
             //paths: {
              // requirejs: "require"
            // },
 
           mainConfigFile:'script/main.js',
-          out: 'prod/script/main.js',
+          //out: 'prod/script/main.js',
           /*
           modules: [
             {

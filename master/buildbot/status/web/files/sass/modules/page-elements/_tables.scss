@@ -158,8 +158,7 @@
 	}
 }
  
- 
-.border-table-holder  {
+ .border-table-holder  {
 	border-left: 2px solid #2B6194;
     padding: 0 0 0 4px;
     @include box-shadow (1px 0 0px #FFFFFF inset);
@@ -170,7 +169,7 @@
 }
 
 .inner-table-holder {
-	height: 32px;
+	height: 30px;
 	overflow: hidden;
     padding-bottom: 2px;
     white-space: nowrap;
@@ -329,8 +328,16 @@ table.codebase-branch-table {
     }
 }
 
+
+
 .filter-table-input {
 	margin-bottom:25px;
+}
+
+.more-info-box {
+	.filter-table-input {
+		margin-bottom:10px;
+	}	
 }
 
 .top {
