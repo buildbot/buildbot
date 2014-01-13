@@ -561,16 +561,14 @@ class Builder(config.ReconfigurableServiceMixin,
                 [ self._brdictToBuildRequest(brdict)
                   for brdict in brdicts ])
 
-            # merge current brdicts with currently running builds (only if we don't have a selected slave)
-            if brdict['brobj'].properties.hasProperty("selected_slave") == False:
-                try:
-                    if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
-                        self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
-                        continue
-
-                except:
-                    unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
+            # merge current brdicts with currently running builds
+            try:
+                if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
+                    self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
                     continue
+            except:
+                unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
+                continue
 
             # merge with compatible finished build in the same chain
             if 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
@@ -606,8 +604,10 @@ class Builder(config.ReconfigurableServiceMixin,
             if brdict['brobj'].properties.hasProperty("selected_slave"):
                 for sb in self.slaves:
                     if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
-                        slavebuilder = sb
-                        break
+                        if sb.isAvailable() is True:
+                            slavebuilder = sb
+                        else:
+                            continue
             else:
                 slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
@@ -723,6 +723,8 @@ class Builder(config.ReconfigurableServiceMixin,
         return property
 
     def propertiesMatch(self, req1, req2):
+        if req1.properties.has_key('selected_slave') or req2.properties.has_key('selected_slave'):
+            return False
         if self.getBoolProperty(req1, "force_rebuild") != self.getBoolProperty(req2, "force_rebuild"):
             return False
         return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
@@ -757,7 +759,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 merged_request_objects.append(other_breq_object)
 
         # convert them back to brdicts and return
-        merged_requests = [ br.brdict for br in merged_request_objects ]
+        if len(merged_request_objects) > 0:
+            merged_requests = [ br.brdict for br in merged_request_objects ]
+        else:
+            merged_requests = [breq, ]
         defer.returnValue(merged_requests)
 
     def _brdictToBuildRequest(self, brdict):
