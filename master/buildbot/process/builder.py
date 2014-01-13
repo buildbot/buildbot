@@ -499,9 +499,9 @@ class Builder(config.ReconfigurableServiceMixin,
         return
 
     # Build Creation
-    def getAvailableSlaveBuilders(self):
+    def getAvailableSlaveBuilders(self, checkCanStartBuild=True):
         return [sb for sb in self.slaves
-                if sb.isAvailable()]
+                if sb.isAvailable(checkCanStartBuild)]
 
     @defer.inlineCallbacks
     def maybeStartBuild(self):
@@ -561,15 +561,16 @@ class Builder(config.ReconfigurableServiceMixin,
                 [ self._brdictToBuildRequest(brdict)
                   for brdict in brdicts ])
 
-            # merge current brdicts with currently running builds
-            try:
-                if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
-                    self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
-                    continue
+            # merge current brdicts with currently running builds (only if we don't have a selected slave)
+            if brdict['brobj'].properties.hasProperty("selected_slave") == False:
+                try:
+                    if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
+                        self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
+                        continue
 
-            except:
-                unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
-                continue
+                except:
+                    unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
+                    continue
 
             # merge with compatible finished build in the same chain
             if 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
@@ -601,7 +602,14 @@ class Builder(config.ReconfigurableServiceMixin,
                 self.updateBigStatus()
                 break
 
-            slavebuilder = yield self._chooseSlave(available_slavebuilders)
+            slavebuilder = None
+            if brdict['brobj'].properties.hasProperty("selected_slave"):
+                for sb in self.slaves:
+                    if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
+                        slavebuilder = sb
+                        break
+            else:
+                slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:
                 break

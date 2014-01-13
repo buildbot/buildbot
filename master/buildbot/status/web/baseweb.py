@@ -48,6 +48,8 @@ from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
+from status.web.forms import FormsKatanaResource
+
 
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
@@ -375,7 +377,7 @@ class WebStatus(service.MultiService):
         #self.putChild("login", LoginResource())
         self.putChild("logout", LogoutResource())
         self.putChild("login", LoginKatanaResource())
-
+        self.putChild("forms", FormsKatanaResource())
 
 
 

@@ -321,6 +321,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['codebases_arg'] = codebases_arg
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt['builder_name'] = b.getName()
 
         cxt['rt_update'] = req.args
 

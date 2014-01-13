@@ -58,14 +58,21 @@ class AbstractSlaveBuilder(pb.Referenceable):
             return oldversion
         return self.remoteCommands.get(command)
 
-    def isAvailable(self):
+    def isAvailable(self, checkCanStartBuild=True):
         # if this SlaveBuilder is busy, then it's definitely not available
-        if self.isBusy():
-            return False
+        if checkCanStartBuild:
+            if self.isBusy():
+                return False
+        else:
+            return True
 
         # otherwise, check in with the BuildSlave
         if self.slave:
-            return self.slave.canStartBuild()
+            if checkCanStartBuild:
+                return self.slave.canStartBuild()
+            else:
+                #Return agents that are alive but are possibly building
+                return True
 
         # no slave? not very available.
         return False

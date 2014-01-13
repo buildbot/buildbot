@@ -1,0 +1,3 @@
+{% import 'forms.html' as forms %}
+{{ forms.force_build(fbuildsch.datab[0]+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props, slaves=slaves) }}
+
