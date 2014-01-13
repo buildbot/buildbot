@@ -108,7 +108,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             self.assertEqual(
                 buildrequest,
                 {
-                    'brid': brid,
+                    'buildrequestid': brid,
                     'buildername': u'b',
                     'buildsetid': bsid,
                     'claimed': False,

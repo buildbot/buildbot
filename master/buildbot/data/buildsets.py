@@ -216,8 +216,7 @@ class Buildset(base.ResourceType):
             return
 
         # mark it as completed in the database
-        complete_at_epoch = int(_reactor.seconds())
-        complete_at = epoch2datetime(complete_at_epoch)
+        complete_at = epoch2datetime(int(_reactor.seconds()))
         yield self.master.db.buildsets.completeBuildset(bsid,
                                                         cumulative_results, complete_at=complete_at)
 
@@ -238,9 +237,9 @@ class Buildset(base.ResourceType):
             external_idstring=bsdict['external_idstring'],
             reason=bsdict['reason'],
             sourcestamps=sourcestamps,
-            submitted_at=datetime2epoch(bsdict['submitted_at']),
+            submitted_at=bsdict['submitted_at'],
             complete=True,
-            complete_at=complete_at_epoch,
+            complete_at=complete_at,
             results=cumulative_results)
             # TODO: properties=properties)
         self.master.mq.produce(('buildset', str(bsid), 'complete'), msg)

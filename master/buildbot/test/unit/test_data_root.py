@@ -81,7 +81,7 @@ class SpecEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                                                         'type': 'string',
                                                         'type_spec': {'name': 'string'}},
                                                        {'name': 'last_active',
-                                                        'type': 'integer',
-                                                        'type_spec': {'name': 'integer'}}],
+                                                        'type': 'datetime',
+                                                        'type_spec': {'name': 'datetime'}}],
                                             'type': 'master'},
                               'plural': 'masters'})

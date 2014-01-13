@@ -44,7 +44,7 @@ Endpoints
         :opt claimed: if true, only returns the claimed buildrequests;
                       if false, only returns unclaimed builds
         :opt claimed_by_masterid: only returns buildrequests claimed by this master instance
-        :opt bsid: only returns buildrequests contained by this buildset ID
+        :opt buildsetid: only returns buildrequests contained by this buildset ID
         :opt branch: only returns buildrequests on this branch
         :opt repository: only returns buildrequests on this repository
 

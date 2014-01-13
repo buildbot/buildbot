@@ -67,16 +67,17 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['buildrequestid'], 44)
         self.assertEqual(buildrequest['complete'], True)
         self.assertEqual(buildrequest['builderid'], 77)
+        self.assertEqual(buildrequest['buildername'], 'bbb')
         self.assertEqual(buildrequest['waited_for'], True)
-        self.assertEqual(buildrequest['claimed_at'], self.CLAIMED_AT_EPOCH)
+        self.assertEqual(buildrequest['claimed_at'], self.CLAIMED_AT)
         self.assertEqual(buildrequest['results'], 75)
         self.assertEqual(buildrequest['claimed_by_masterid'],
                          fakedb.FakeBuildRequestsComponent.MASTER_ID)
         self.assertEqual(buildrequest['link'].__repr__(),
                          Link(('buildrequest', '44'), []).__repr__())
         self.assertEqual(buildrequest['claimed'], True)
-        self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT_EPOCH)
-        self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT_EPOCH)
+        self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT)
+        self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
         self.assertEqual(buildrequest['buildsetid'], 8822)
         self.assertEqual(buildrequest['priority'], 7)
         self.assertEqual(buildrequest['buildset_link'].__repr__(),
@@ -166,7 +167,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('complete', 'eq', [False])
         f2 = resultspec.Filter('claimed', 'eq', [True])
-        f3 = resultspec.Filter('bsid', 'eq', [55])
+        f3 = resultspec.Filter('buildsetid', 'eq', [55])
         f4 = resultspec.Filter('branch', 'eq', ['mybranch'])
         f5 = resultspec.Filter('repository', 'eq', ['myrepo'])
         yield self.callGet(

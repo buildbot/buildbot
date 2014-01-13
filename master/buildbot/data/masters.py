@@ -15,7 +15,6 @@
 
 from buildbot.data import base
 from buildbot.data import types
-from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -29,7 +28,7 @@ def _db2data(master):
     return dict(masterid=master['id'],
                 name=master['name'],
                 active=master['active'],
-                last_active=datetime2epoch(master['last_active']),
+                last_active=master['last_active'],
                 link=base.Link(('master', str(master['id']))))
 
 
@@ -95,7 +94,7 @@ class Master(base.ResourceType):
         masterid = types.Integer()
         name = types.String()
         active = types.Boolean()
-        last_active = types.Integer()
+        last_active = types.DateTime()
         link = types.Link()
     entityType = EntityType(name)
 

@@ -73,7 +73,7 @@ class Tests(interfaces.InterfaceTests):
 
         def check(brdict):
             self.assertEqual(brdict,
-                             dict(brid=44, buildsetid=self.BSID, buildername="bbb",
+                             dict(buildrequestid=44, buildsetid=self.BSID, buildername="bbb",
                                   priority=7, claimed=True,
                                   claimed_by_masterid=self.MASTER_ID, complete=True,
                                   results=75, claimed_at=self.CLAIMED_AT,
@@ -113,7 +113,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
         def check(brlist):
-            self.assertEqual(sorted([br['brid'] for br in brlist]),
+            self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
         d.addCallback(check)
         return d
@@ -151,7 +151,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
         def check(brlist):
-            self.assertEqual(sorted([br['brid'] for br in brlist]),
+            self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
         d.addCallback(check)
         return d
@@ -193,7 +193,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
         def check(brlist):
-            self.assertEqual(sorted([br['brid'] for br in brlist]),
+            self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
         d.addCallback(check)
         return d
@@ -228,7 +228,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(bsid=self.BSID))
 
         def check(brlist):
-            self.assertEqual(sorted([br['brid'] for br in brlist]),
+            self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted([70, 72]))
         d.addCallback(check)
         return d
@@ -282,7 +282,7 @@ class Tests(interfaces.InterfaceTests):
                                                              complete=True, bsid=self.BSID))
 
         def check(brlist):
-            self.assertEqual([br['brid'] for br in brlist], [44])
+            self.assertEqual([br['buildrequestid'] for br in brlist], [44])
         d.addCallback(check)
         return d
 
@@ -314,7 +314,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
         def check(brlist):
-            self.assertEqual(sorted([br['brid'] for br in brlist]),
+            self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
         d.addCallback(check)
         return d
@@ -359,7 +359,7 @@ class Tests(interfaces.InterfaceTests):
             self.assertNotEqual(expected, None,
                                 "unexpected success from claimBuildRequests")
             self.assertEqual(
-                sorted([(r['brid'], r['claimed_at'], r['claimed_by_masterid'])
+                sorted([(r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
                         for r in results]),
                 sorted(expected))
         d.addCallback(check)
@@ -433,7 +433,7 @@ class Tests(interfaces.InterfaceTests):
         def check(results):
             # check that [1,1000) were not claimed, and 1000 is still claimed
             self.assertEqual([
-                (r['brid'], r['claimed_by_masterid'], r['claimed_at'])
+                (r['buildrequestid'], r['claimed_by_masterid'], r['claimed_at'])
                 for r in results
             ][:10], [
                 (1000, self.OTHER_MASTER_ID, epoch2datetime(1300103810))
@@ -481,7 +481,7 @@ class Tests(interfaces.InterfaceTests):
                                 "unexpected success from claimBuildRequests")
             self.assertEqual(
                 sorted([
-                    (r['brid'], r['claimed_at'], r['claimed_by_masterid'])
+                    (r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
                     for r in results
                 ]),
                 sorted(expected)
@@ -525,7 +525,7 @@ class Tests(interfaces.InterfaceTests):
 
         def check(results):
             self.assertEqual(sorted(
-                (r['brid'], r['claimed_at'], r['claimed_by_masterid'])
+                (r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
                 for r in results
             ), [
                 (44, epoch2datetime(1300103810), self.MASTER_ID),
@@ -553,7 +553,7 @@ class Tests(interfaces.InterfaceTests):
             self.assertNotEqual(expected, None,
                                 "unexpected success from completeBuildRequests")
             self.assertEqual(sorted(
-                (r['brid'], r['complete'], r['results'], r['complete_at'])
+                (r['buildrequestid'], r['complete'], r['results'], r['complete_at'])
                 for r in results
             ), sorted(expected))
         d.addCallback(check)
@@ -684,7 +684,7 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildrequests.getBuildRequests(claimed=False))
 
         def check(results):
-            self.assertEqual(sorted([r['brid'] for r in results]),
+            self.assertEqual(sorted([r['buildrequestid'] for r in results]),
                              sorted(expected))
         d.addCallback(check)
         return d

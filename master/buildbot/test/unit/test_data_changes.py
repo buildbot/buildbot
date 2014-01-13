@@ -21,6 +21,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -120,7 +121,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'project': u'Buildbot',
             'repository': u'git://warner',
             'revision': u'0e92a098b',
-            'created_at': 10000000,
+            'created_at': epoch2datetime(10000000),
             'ssid': 100,
         },
         # uid
@@ -221,7 +222,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                 'project': u'Buildbot',
                 'repository': u'git://warner',
                 'revision': u'0e92a098b',
-                'created_at': 10000000,
+                'created_at': epoch2datetime(10000000),
                 'ssid': 100,
             },
             # uid
@@ -283,7 +284,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                 'project': u'Buildbot',
                 'repository': u'git://warner',
                 'revision': u'0e92a098b',
-                'created_at': 10000000,
+                'created_at': epoch2datetime(10000000),
                 'ssid': 100,
             },
             # uid

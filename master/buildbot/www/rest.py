@@ -24,6 +24,7 @@ from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.util import json
+from buildbot.util import datetime2epoch
 from buildbot.www import resource
 from contextlib import contextmanager
 from twisted.internet import defer
@@ -478,5 +479,7 @@ class V2RootResource(resource.Resource):
     def _toJson(self, obj):
         if isinstance(obj, base.Link):
             return obj.makeUrl(self.base_url, self.apiVersion)
+        elif isinstance(obj, datetime.datetime):
+            return datetime2epoch(obj)
 
 RestRootResource.addApiVersion(2, V2RootResource)
