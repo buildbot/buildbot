@@ -23,3 +23,7 @@ def worst_status(a, b):
     for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
         if s in (a, b):
             return s
+
+
+def reduceResults(resList):
+    return reduce(worst_status, resList, SUCCESS)
