@@ -45,7 +45,7 @@ class BuildSetStatus:
     def getBuilderNamesAndBuildRequests(self):
         # returns a Deferred; undocumented method that may be removed
         # without warning
-        d = self.master.data.get(('buildrequest', ),
+        d = self.master.data.get(('buildrequests', ),
                                  filters=[resultspec.Filter('buildsetid', 'eq', [self.id])])
 
         def get_objects(brdicts):
@@ -57,7 +57,7 @@ class BuildSetStatus:
         return d
 
     def getBuilderNames(self):
-        d = self.master.data.get(('buildrequest', ),
+        d = self.master.data.get(('buildrequests', ),
                                  filters=[resultspec.Filter('buildsetid', 'eq', [self.id])])
 
         def get_names(brdicts):

@@ -313,8 +313,8 @@ dbdict = {}
 
 # masters
 
-message['master'] = Selector()
-message['master'].add(None,
+message['masters'] = Selector()
+message['masters'].add(None,
                       MessageValidator(
                           events=['started', 'stopped'],
                           messageValidator=DictValidator(
@@ -349,8 +349,8 @@ _sourcestamp = dict(
         comment=NoneOk(StringValidator()))),
 )
 
-message['sourcestamp'] = Selector()
-message['sourcestamp'].add(None,
+message['sourcestamps'] = Selector()
+message['sourcestamps'].add(None,
                            DictValidator(
                                **_sourcestamp
                            ))
@@ -373,8 +373,8 @@ dbdict['ssdict'] = DictValidator(
 
 # builder
 
-message['builder'] = Selector()
-message['builder'].add(None,
+message['builders'] = Selector()
+message['builders'].add(None,
                        MessageValidator(
                            events=['started', 'stopped'],
                            messageValidator=DictValidator(
@@ -417,8 +417,8 @@ _buildset = dict(
 )
 _buildsetEvents = ['new', 'complete']
 
-message['buildset'] = Selector()
-message['buildset'].add(lambda k: k[-1] == 'new',
+message['buildsets'] = Selector()
+message['buildsets'].add(lambda k: k[-1] == 'new',
                         MessageValidator(
                             events=_buildsetEvents,
                             messageValidator=DictValidator(
@@ -429,7 +429,7 @@ message['buildset'].add(lambda k: k[-1] == 'new',
                                     )),
                                 **_buildset
                             )))
-message['buildset'].add(None,
+message['buildsets'].add(None,
                         MessageValidator(
                             events=_buildsetEvents,
                             messageValidator=DictValidator(
@@ -453,8 +453,8 @@ dbdict['bsdict'] = DictValidator(
 
 # buildrequest
 
-message['buildrequest'] = Selector()
-message['buildrequest'].add(None,
+message['buildrequests'] = Selector()
+message['buildrequests'].add(None,
                             MessageValidator(
                                 events=['new', 'claimed', 'unclaimed'],
                                 messageValidator=DictValidator(
@@ -467,8 +467,8 @@ message['buildrequest'].add(None,
 
 # change
 
-message['change'] = Selector()
-message['change'].add(None,
+message['changes'] = Selector()
+message['changes'].add(None,
                       MessageValidator(
                           events=['new'],
                           messageValidator=DictValidator(
@@ -541,8 +541,8 @@ _build = dict(
 )
 _buildEvents = ['new', 'complete']
 
-message['build'] = Selector()
-message['build'].add(None,
+message['builds'] = Selector()
+message['builds'].add(None,
                      MessageValidator(
                          events=_buildEvents,
                          messageValidator=DictValidator(
@@ -578,8 +578,8 @@ _step = dict(
 )
 _stepEvents = ['new', 'complete']
 
-message['step'] = Selector()
-message['step'].add(None,
+message['steps'] = Selector()
+message['steps'].add(None,
                     MessageValidator(
                         events=_stepEvents,
                         messageValidator=DictValidator(

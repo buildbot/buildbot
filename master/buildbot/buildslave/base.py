@@ -186,7 +186,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
         buildslave = yield self.master.data.get(
-            ('buildslave', self.buildslaveid))
+            ('buildslaves', self.buildslaveid))
         self._applySlaveInfo(buildslave['slaveinfo'])
 
     def setServiceParent(self, parent):

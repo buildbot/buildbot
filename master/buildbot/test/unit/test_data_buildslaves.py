@@ -68,15 +68,15 @@ def bs1(builderid=None, masterid=None):
         'name': 'linux',
         'slaveinfo': {},
         'connected_to': [
-            {'masterid': 13, 'link': base.Link(('master', '13'))},
+            {'masterid': 13, 'link': base.Link(('masters', '13'))},
         ],
         'configured_on': sorted([
             {'builderid': 40, 'masterid': 13,
-             'link': base.Link(('master', '13', 'builder', '40'))},
+             'link': base.Link(('masters', '13', 'builders', '40'))},
             {'builderid': 40, 'masterid': 14,
-             'link': base.Link(('master', '14', 'builder', '40'))},
+             'link': base.Link(('masters', '14', 'builders', '40'))},
         ]),
-        'link': base.Link(('buildslave', '1')),
+        'link': base.Link(('buildslaves', '1')),
     }, builderid, masterid)
 
 
@@ -86,17 +86,17 @@ def bs2(builderid=None, masterid=None):
         'name': 'windows',
         'slaveinfo': {'a': 'b'},
         'connected_to': [
-            {'masterid': 14, 'link': base.Link(('master', '14'))},
+            {'masterid': 14, 'link': base.Link(('masters', '14'))},
         ],
         'configured_on': sorted([
             {'builderid': 40, 'masterid': 13,
-             'link': base.Link(('master', '13', 'builder', '40'))},
+             'link': base.Link(('masters', '13', 'builders', '40'))},
             {'builderid': 41, 'masterid': 13,
-             'link': base.Link(('master', '13', 'builder', '41'))},
+             'link': base.Link(('masters', '13', 'builders', '41'))},
             {'builderid': 40, 'masterid': 14,
-             'link': base.Link(('master', '14', 'builder', '40'))},
+             'link': base.Link(('masters', '14', 'builders', '40'))},
         ]),
-        'link': base.Link(('buildslave', '2')),
+        'link': base.Link(('buildslaves', '2')),
     }, builderid, masterid)
 
 
@@ -113,7 +113,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('buildslave', 2))
+        d = self.callGet(('buildslaves', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -123,7 +123,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_name(self):
-        d = self.callGet(('buildslave', 'linux'))
+        d = self.callGet(('buildslaves', 'linux'))
 
         @d.addCallback
         def check(buildslave):
@@ -133,7 +133,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid(self):
-        d = self.callGet(('master', 14, 'buildslave', 2))
+        d = self.callGet(('masters', 14, 'buildslaves', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -143,7 +143,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_builderid(self):
-        d = self.callGet(('builder', 40, 'buildslave', 2))
+        d = self.callGet(('builders', 40, 'buildslaves', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -153,7 +153,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid_builderid(self):
-        d = self.callGet(('master', 13, 'builder', 40, 'buildslave', 2))
+        d = self.callGet(('masters', 13, 'builders', 40, 'buildslaves', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -163,7 +163,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('buildslave', 99))
+        d = self.callGet(('buildslaves', 99))
 
         @d.addCallback
         def check(buildslave):
@@ -184,7 +184,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('buildslave',))
+        d = self.callGet(('buildslaves',))
 
         @d.addCallback
         def check(buildslaves):
@@ -194,7 +194,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(('master', '13', 'buildslave',))
+        d = self.callGet(('masters', '13', 'buildslaves',))
 
         @d.addCallback
         def check(buildslaves):
@@ -205,7 +205,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(('builder', '41', 'buildslave',))
+        d = self.callGet(('builders', '41', 'buildslaves',))
 
         @d.addCallback
         def check(buildslaves):
@@ -216,7 +216,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_builderid(self):
-        d = self.callGet(('master', '13', 'builder', '41', 'buildslave',))
+        d = self.callGet(('masters', '13', 'builders', '41', 'buildslaves',))
 
         @d.addCallback
         def check(buildslaves):

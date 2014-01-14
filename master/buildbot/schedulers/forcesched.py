@@ -701,7 +701,7 @@ class ForceScheduler(base.BaseScheduler):
         """
         if builderNames is None:
             if builderid is not None:
-                builder = yield self.master.data.get(('builder', str(builderid)))
+                builder = yield self.master.data.get(('builders', str(builderid)))
                 builderNames = [builder['name']]
             else:
                 builderNames = self.builderNames

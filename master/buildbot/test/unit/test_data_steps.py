@@ -60,14 +60,14 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        step = yield self.callGet(('step', 72))
+        step = yield self.callGet(('steps', 72))
         self.validateData(step)
         self.assertEqual(step, {
-            'build_link': base.Link(('build', '30')),
+            'build_link': base.Link(('builds', '30')),
             'buildid': 30,
             'complete': False,
             'complete_at': None,
-            'link': base.Link(('build', '72')),
+            'link': base.Link(('builds', '72')),
             'name': u'three',
             'number': 2,
             'results': None,
@@ -78,31 +78,31 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_name(self):
-        step = yield self.callGet(('build', 30, 'step', 'two'))
+        step = yield self.callGet(('builds', 30, 'steps', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_number(self):
-        step = yield self.callGet(('build', 30, 'step', 1))
+        step = yield self.callGet(('builds', 30, 'steps', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_name(self):
-        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 'two'))
+        step = yield self.callGet(('builders', 77, 'builds', 7, 'steps', 'two'))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_existing_builder_number(self):
-        step = yield self.callGet(('builder', 77, 'build', 7, 'step', 1))
+        step = yield self.callGet(('builders', 77, 'builds', 7, 'steps', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        step = yield self.callGet(('step', 9999))
+        step = yield self.callGet(('steps', 9999))
         self.assertEqual(step, None)
 
 
@@ -139,13 +139,13 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildid(self):
-        steps = yield self.callGet(('build', 30, 'step'))
+        steps = yield self.callGet(('builds', 30, 'steps'))
         [self.validateData(step) for step in steps]
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
-        steps = yield self.callGet(('builder', 77, 'build', 7, 'step'))
+        steps = yield self.callGet(('builders', 77, 'builds', 7, 'steps'))
         [self.validateData(step) for step in steps]
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 
@@ -189,8 +189,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'urls': [],
         }
         self.master.mq.assertProductions([
-            (('build', '10', 'step', str(stepid), 'new'), msgBody),
-            (('step', str(stepid), 'new'), msgBody),
+            (('builds', '10', 'steps', str(stepid), 'new'), msgBody),
+            (('steps', str(stepid), 'new'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(stepid)
         self.assertEqual(step, {
@@ -239,8 +239,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'urls': [],
         }
         self.master.mq.assertProductions([
-            (('build', '10', 'step', str(100), 'started'), msgBody),
-            (('step', str(100), 'started'), msgBody),
+            (('builds', '10', 'steps', str(100), 'started'), msgBody),
+            (('steps', str(100), 'started'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {
@@ -281,8 +281,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'urls': [],
         }
         self.master.mq.assertProductions([
-            (('build', '10', 'step', str(100), 'updated'), msgBody),
-            (('step', str(100), 'updated'), msgBody),
+            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
+            (('steps', str(100), 'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {
@@ -327,8 +327,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'urls': [],
         }
         self.master.mq.assertProductions([
-            (('build', '10', 'step', str(100), 'finished'), msgBody),
-            (('step', str(100), 'finished'), msgBody),
+            (('builds', '10', 'steps', str(100), 'finished'), msgBody),
+            (('steps', str(100), 'finished'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {

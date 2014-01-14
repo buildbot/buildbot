@@ -260,7 +260,7 @@ class RemoteBuildRequest(pb.Referenceable):
 
     @defer.inlineCallbacks
     def remote_subscribe(self, subscriber):
-        brdict = yield self.master.data.get(('buildrequest', self.brid))
+        brdict = yield self.master.data.get(('buildrequests', self.brid))
         if not brdict:
             return
         builderId = brdict['builderid']
@@ -278,12 +278,12 @@ class RemoteBuildRequest(pb.Referenceable):
                                          RemoteBuild(self.master, msg, self.builderName),
                                          self.builderName)
         self.consumer = self.master.data.startConsuming(
-            gotBuild, {}, ('builder', builderId, 'build'))
+            gotBuild, {}, ('builders', builderId, 'builds'))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
         # and get any existing builds
-        builds = yield self.master.data.get(('buildrequest', self.brid, 'build'))
+        builds = yield self.master.data.get(('buildrequests', self.brid, 'builds'))
         for build in builds:
             if build['buildid'] in reportedBuilds:
                 return
@@ -317,7 +317,7 @@ class RemoteBuild(pb.Referenceable):
                                              self.builderName, self, msg['name'], None, msg['results'])
         self.consumer = self.master.data.startConsuming(
             stepChanged, {},
-            ('build', self.builddict['buildid'], 'step'))
+            ('builds', self.builddict['buildid'], 'steps'))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
@@ -337,19 +337,19 @@ class RemoteBuild(pb.Referenceable):
             d.callback(self)  # callers expect result=self
         cons.append(self.master.data.startConsuming(
             buildEvent, {},
-            ('build', self.builddict['buildid'])))
+            ('builds', self.builddict['buildid'])))
         return d
 
     @defer.inlineCallbacks
     def remote_getResults(self):
         buildid = self.builddict['buildid']
-        builddict = yield self.master.data.get(('build', buildid))
+        builddict = yield self.master.data.get(('builds', buildid))
         defer.returnValue(builddict['results'])
 
     @defer.inlineCallbacks
     def remote_getText(self):
         buildid = self.builddict['buildid']
-        builddict = yield self.master.data.get(('build', buildid))
+        builddict = yield self.master.data.get(('builds', buildid))
         defer.returnValue(builddict['state_strings'])
 
 

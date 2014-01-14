@@ -34,7 +34,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /forcescheduler/i:schedulername
+        /forceschedulers/i:schedulername
     """
 
     def get(self, resultSpec, kwargs):
@@ -60,8 +60,8 @@ class ForceSchedulersEndpoint(base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /forcescheduler
-        /builder/:builderid/forcescheduler
+        /forceschedulers
+        /builders/:builderid/forceschedulers
     """
     rootLinkName = 'schedulers'
 

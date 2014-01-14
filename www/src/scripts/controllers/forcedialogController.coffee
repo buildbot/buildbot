@@ -3,7 +3,7 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
         url: "/force/:scheduler",
         onEnter: ["$stateParams", "$state", "$modal", "buildbotService"
             ($stateParams, $state, $modal, buildbotService) ->
-                scheduler = buildbotService.one('forcescheduler', $stateParams.scheduler)
+                scheduler = buildbotService.one('forceschedulers', $stateParams.scheduler)
                 scheduler.get().then (scheduler_data) ->
                     modal = {}
                     modal.modal = $modal.open

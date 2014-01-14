@@ -52,28 +52,28 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        build = yield self.callGet(('build', 14))
+        build = yield self.callGet(('builds', 14))
         self.validateData(build)
         self.assertEqual(build['number'], 4)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        build = yield self.callGet(('build', 9999))
+        build = yield self.callGet(('builds', 9999))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_missing_builder_number(self):
-        build = yield self.callGet(('builder', 999, 'build', 4))
+        build = yield self.callGet(('builders', 999, 'builds', 4))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_missing_number(self):
-        build = yield self.callGet(('builder', 77, 'build', 44))
+        build = yield self.callGet(('builders', 77, 'builds', 44))
         self.assertEqual(build, None)
 
     @defer.inlineCallbacks
     def test_get_builder_number(self):
-        build = yield self.callGet(('builder', 77, 'build', 5))
+        build = yield self.callGet(('builders', 77, 'builds', 5))
         self.validateData(build)
         self.assertEqual(build['buildid'], 15)
 
@@ -104,20 +104,20 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_all(self):
-        builds = yield self.callGet(('build',))
+        builds = yield self.callGet(('builds',))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]),
                          [3, 4, 5])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
-        builds = yield self.callGet(('builder', 78, 'build'))
+        builds = yield self.callGet(('builders', 78, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
-        builds = yield self.callGet(('buildrequest', 82, 'build'))
+        builds = yield self.callGet(('buildrequests', 82, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
@@ -174,8 +174,8 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     def test_newBuildEvent(self):
         return self.do_test_event(self.rtype.newBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
-                                  exp_events=[(('builder', '10', 'build', '1', 'new'), self.new_build_event),
-                                              (('build', '100', 'new'), self.new_build_event)])
+                                  exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
+                                              (('builds', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateStrings(self):
         @self.assertArgSpecMatches(

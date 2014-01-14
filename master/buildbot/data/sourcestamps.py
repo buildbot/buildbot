@@ -28,7 +28,7 @@ def _db2data(ss):
         'repository': ss['repository'],
         'codebase': ss['codebase'],
         'created_at': ss['created_at'],
-        'link': base.Link(('sourcestamp', str(ss['ssid']))),
+        'link': base.Link(('sourcestamps', str(ss['ssid']))),
         'patch': None,
     }
     if ss['patch_body']:
@@ -47,7 +47,7 @@ class SourceStampEndpoint(base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /sourcestamp/n:ssid
+        /sourcestamps/n:ssid
     """
 
     @defer.inlineCallbacks
@@ -61,7 +61,7 @@ class SourceStampsEndpoint(base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /sourcestamp
+        /sourcestamps
     """
     rootLinkName = 'sourcestamps'
 
@@ -72,7 +72,7 @@ class SourceStampsEndpoint(base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('sourcestamp', None, None))
+                                             ('sourcestamps', None, None))
 
 
 class SourceStamp(base.ResourceType):

@@ -27,12 +27,12 @@ class Db2DataMixin(object):
         master = None
         if dbdict['masterid'] is not None:
             master = yield self.master.data.get(
-                ('master', dbdict['masterid']))
+                ('masters', dbdict['masterid']))
         data = {
             'changesourceid': dbdict['id'],
             'name': dbdict['name'],
             'master': master,
-            'link': base.Link(('changesource', str(dbdict['id']))),
+            'link': base.Link(('changesources', str(dbdict['id']))),
         }
         defer.returnValue(data)
 
@@ -40,8 +40,8 @@ class Db2DataMixin(object):
 class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
 
     pathPatterns = """
-        /changesource/n:changesourceid
-        /master/n:masterid/changesource/n:changesourceid
+        /changesources/n:changesourceid
+        /masters/n:masterid/changesources/n:changesourceid
     """
 
     @defer.inlineCallbacks
@@ -59,8 +59,8 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /changesource
-        /master/n:masterid/changesource
+        /changesources
+        /masters/n:masterid/changesources
     """
     rootLinkName = 'changesources'
 
@@ -75,7 +75,7 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('changesource', None, None))
+                                             ('changesources', None, None))
 
 
 class ChangeSource(base.ResourceType):

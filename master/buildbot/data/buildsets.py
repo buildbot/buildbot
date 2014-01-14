@@ -42,7 +42,7 @@ class Db2DataMixin(object):
 
         @defer.inlineCallbacks
         def getSs(ssid):
-            ss = yield self.master.data.get(('sourcestamp', str(ssid)))
+            ss = yield self.master.data.get(('sourcestamps', str(ssid)))
             sourcestamps.append(ss)
         yield defer.DeferredList([getSs(id)
                                   for id in buildset['sourcestamps']],
@@ -52,7 +52,7 @@ class Db2DataMixin(object):
         # minor modifications
         buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
         buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
-        buildset['link'] = base.Link(('buildset', str(buildset['bsid'])))
+        buildset['link'] = base.Link(('buildsets', str(buildset['bsid'])))
 
         defer.returnValue(buildset)
 
@@ -61,7 +61,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /buildset/n:bsid
+        /buildsets/n:bsid
     """
 
     def get(self, resultSpec, kwargs):
@@ -71,14 +71,14 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('buildset', str(kwargs['bsid']), 'complete'))
+                                             ('buildsets', str(kwargs['bsid']), 'complete'))
 
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /buildset
+        /buildsets
     """
     rootLinkName = 'buildset'
 
@@ -99,7 +99,7 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('buildset', None, 'new'))
+                                             ('buildsets', None, 'new'))
 
 
 class Buildset(base.ResourceType):
@@ -137,7 +137,7 @@ class Buildset(base.ResourceType):
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
-            (yield self.master.data.get(('sourcestamp', str(ssid)))).copy()
+            (yield self.master.data.get(('sourcestamps', str(ssid)))).copy()
             for ssid in bsdict['sourcestamps']]
 
         # strip the links from those sourcestamps
@@ -153,9 +153,9 @@ class Buildset(base.ResourceType):
                 bsid=bsid,
                 buildername=bn,
                 builderid=builderid)
-            self.master.mq.produce(('buildset', str(bsid),
-                                   'builder', str(builderid),
-                                    'buildrequest', str(brid),
+            self.master.mq.produce(('buildsets', str(bsid),
+                                   'builders', str(builderid),
+                                    'buildrequests', str(brid),
                                     'new'), msg)
             # TODO
             #~ self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
@@ -172,7 +172,7 @@ class Buildset(base.ResourceType):
             scheduler=scheduler,
             sourcestamps=sourcestamps)
             # TODO: properties=properties)
-        self.master.mq.produce(("buildset", str(bsid), "new"), msg)
+        self.master.mq.produce(("buildsets", str(bsid), "new"), msg)
 
         log.msg("added buildset %d to database" % bsid)
 
@@ -225,7 +225,7 @@ class Buildset(base.ResourceType):
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
             copy.deepcopy((yield self.master.data.get(
-                ('sourcestamp', str(ssid)))))
+                ('sourcestamps', str(ssid)))))
             for ssid in bsdict['sourcestamps']]
 
         # strip the links from those sourcestamps
@@ -242,4 +242,4 @@ class Buildset(base.ResourceType):
             complete_at=complete_at,
             results=cumulative_results)
             # TODO: properties=properties)
-        self.master.mq.produce(('buildset', str(bsid), 'complete'), msg)
+        self.master.mq.produce(('buildsets', str(bsid), 'complete'), msg)

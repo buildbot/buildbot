@@ -97,7 +97,7 @@ angular.module('app').directive 'logviewer',
                     offset: b.firstline
                     limit: b.lastline - b.firstline
                 self.loading = true
-                self.log.all('content').getList(spec).then (content) ->
+                self.log.all('contents').getList(spec).then (content) ->
                     self.loading = false
                     content = content[0]
                     offset = spec.offset
@@ -121,7 +121,7 @@ angular.module('app').directive 'logviewer',
                         self.scope.$watch "log.num_lines", ->
                             self.setNumLines(log.num_lines)
                     else
-                        self.log.all('content').getList().then (content) ->
+                        self.log.all('contents').getList().then (content) ->
                             self.scope.content = $sce.trustAs($sce.HTML, content[0].content)
             link: (scope, elm, attr) ->
                 elm = elm.children("pre")
@@ -136,7 +136,7 @@ angular.module('app').directive 'logviewer',
                     if n?
                         self.logid = n
                         unwatch()
-                        self.log = buildbotService.one('log', self.logid)
+                        self.log = buildbotService.one('logs', self.logid)
                         self.updateLog()
 
                 # for the search feature, we need to load everything

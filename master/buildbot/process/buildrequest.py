@@ -123,7 +123,7 @@ class BuildRequest(object):
         buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
         # make a fake sources dict (temporary)
-        bsdata = yield master.data.get(('buildset', str(buildrequest.bsid)))
+        bsdata = yield master.data.get(('buildsets', str(buildrequest.bsid)))
         assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
         for ssdata in bsdata['sourcestamps']:
@@ -161,9 +161,9 @@ class BuildRequest(object):
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield self.master.data.get(
-            ('buildset', str(self.bsid)))
+            ('buildsets', str(self.bsid)))
         otherBuildsets = yield self.master.data.get(
-            ('buildset', str(other.bsid)))
+            ('buildsets', str(other.bsid)))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)
@@ -245,7 +245,7 @@ class BuildRequest(object):
 
         # send a cancellation message
         builderid = -1  # TODO
-        key = ('buildrequest', self.bsid, builderid, self.id, 'cancelled')
+        key = ('buildrequests', self.bsid, builderid, self.id, 'cancelled')
         msg = dict(
             brid=self.id,
             bsid=self.bsid,

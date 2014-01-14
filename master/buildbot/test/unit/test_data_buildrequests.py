@@ -61,7 +61,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def testGetExisting(self):
         self.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
         self.db.buildrequests.completeBuildRequests([44], 75, complete_at=self.COMPLETE_AT)
-        buildrequest = yield self.callGet(('buildrequest', 44))
+        buildrequest = yield self.callGet(('buildrequests', 44))
         self.validateData(buildrequest)
         # check data formatting:
         self.assertEqual(buildrequest['buildrequestid'], 44)
@@ -74,18 +74,18 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['claimed_by_masterid'],
                          fakedb.FakeBuildRequestsComponent.MASTER_ID)
         self.assertEqual(buildrequest['link'].__repr__(),
-                         Link(('buildrequest', '44'), []).__repr__())
+                         Link(('buildrequests', '44'), []).__repr__())
         self.assertEqual(buildrequest['claimed'], True)
         self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT)
         self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
         self.assertEqual(buildrequest['buildsetid'], 8822)
         self.assertEqual(buildrequest['priority'], 7)
         self.assertEqual(buildrequest['buildset_link'].__repr__(),
-                         Link(('buildset', '8822'), []).__repr__())
+                         Link(('buildsets', '8822'), []).__repr__())
 
     @defer.inlineCallbacks
     def testGetMissing(self):
-        buildrequest = yield self.callGet(('buildrequest', 9999))
+        buildrequest = yield self.callGet(('buildrequests', 9999))
         self.assertEqual(buildrequest, None)
 
 
@@ -121,38 +121,38 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetAll(self):
-        buildrequests = yield self.callGet(('buildrequest',))
+        buildrequests = yield self.callGet(('buildrequests',))
         [self.validateData(br) for br in buildrequests]
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]),
                          [44, 45, 46])
 
     @defer.inlineCallbacks
     def testGetBuildername(self):
-        buildrequests = yield self.callGet(('builder', 'ccc', 'buildrequest'))
+        buildrequests = yield self.callGet(('builders', 'ccc', 'buildrequests'))
         [self.validateData(br) for br in buildrequests]
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [46])
 
     @defer.inlineCallbacks
     def testGetNoBuildRequest(self):
-        buildrequests = yield self.callGet(('builder', 'ddd', 'buildrequest'))
+        buildrequests = yield self.callGet(('builders', 'ddd', 'buildrequests'))
         self.assertEqual(buildrequests, [])
 
     @defer.inlineCallbacks
     def testGetBuilderid(self):
-        buildrequests = yield self.callGet(('builder', 78, 'buildrequest'))
+        buildrequests = yield self.callGet(('builders', 78, 'buildrequests'))
         [self.validateData(br) for br in buildrequests]
         self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [46])
 
     @defer.inlineCallbacks
     def testGetUnknownBuilderid(self):
-        buildrequests = yield self.callGet(('builder', 79, 'buildrequest'))
+        buildrequests = yield self.callGet(('builders', 79, 'buildrequests'))
         self.assertEqual(buildrequests, [])
 
     @defer.inlineCallbacks
     def testGetNoFilters(self):
         getBuildRequestsMock = mock.Mock(return_value={})
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
-        yield self.callGet(('buildrequest',))
+        yield self.callGet(('buildrequests',))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
             complete=None,
@@ -171,7 +171,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         f4 = resultspec.Filter('branch', 'eq', ['mybranch'])
         f5 = resultspec.Filter('repository', 'eq', ['myrepo'])
         yield self.callGet(
-            ('buildrequest',),
+            ('buildrequests',),
             resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
@@ -189,7 +189,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         f2 = resultspec.Filter('claimed_by_masterid', 'eq',
                                [fakedb.FakeBuildRequestsComponent.MASTER_ID])
         yield self.callGet(
-            ('buildrequest',),
+            ('buildrequests',),
             resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,

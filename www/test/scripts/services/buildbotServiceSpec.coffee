@@ -21,59 +21,59 @@ if window.__karma__?
         beforeEach(inject(injected))
 
         it 'should query for changes at /changes and receive an empty array', ->
-            $httpBackend.expectDataGET 'change',
+            $httpBackend.expectDataGET 'changes',
                 nItems:1
-            buildbotService.all("change").bind($scope)
+            buildbotService.all("changes").bind($scope)
             $httpBackend.flush()
             expect($scope.changes.length).toBe(1)
-        it 'should query for build/1/step/2 and receive a SUCCESS result', ->
-            $httpBackend.expectDataGET 'build/1/step/2',
+        it 'should query for builds/1/steps/2 and receive a SUCCESS result', ->
+            $httpBackend.expectDataGET 'builds/1/steps/2',
                 override: (res) ->
                     res.steps[0].res = "SUCCESS"
-            r = buildbotService.one("build", 1).one("step", 2)
+            r = buildbotService.one("builds", 1).one("steps", 2)
             r.bind $scope,
                 dest_key: "step_scope"
             $httpBackend.flush()
             expect($scope.step_scope.res).toBe("SUCCESS")
 
-        it 'should query for build/1/step/2 mocked via dataspec', ->
-            $httpBackend.expectDataGET('build/1/step/2')
-            r = buildbotService.one("build", 1).one("step", 2)
+        it 'should query for builds/1/steps/2 mocked via dataspec', ->
+            $httpBackend.expectDataGET('builds/1/steps/2')
+            r = buildbotService.one("builds", 1).one("steps", 2)
             r.bind($scope)
             $httpBackend.flush()
             expect($scope.step.state_strings).toEqual(["mystate_strings"])
 
         it 'should query default scope_key to route key', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2').respond({steps:[{res: "SUCCESS"}]})
-            buildbotService.one("build", 1).one("step", 2).bind($scope)
+            $httpBackend.expectGET('api/v2/builds/1/steps/2').respond({steps:[{res: "SUCCESS"}]})
+            buildbotService.one("builds", 1).one("steps", 2).bind($scope)
             $httpBackend.flush()
             expect($scope.step.res).toBe("SUCCESS")
 
         it 'should update the $scope when event received', ->
-            $httpBackend.expectGET('api/v2/build/1/step/2')
+            $httpBackend.expectGET('api/v2/builds/1/steps/2')
             .respond({steps:[{res: "PENDING", otherfield: "FOO"}]})
-            r = buildbotService.one("build", 1).one("step", 2)
+            r = buildbotService.one("builds", 1).one("steps", 2)
             r.bind $scope,
                 ismutable: -> true
             $httpBackend.flush()
             expect($scope.step.res).toBe("PENDING")
-            mqService.broadcast("build/1/step/2/update", {"res": "SUCCESS"})
+            mqService.broadcast("builds/1/steps/2/update", {"res": "SUCCESS"})
             $rootScope.$digest()
             expect($scope.step.res).toBe("SUCCESS")
             # should not override other fields
             expect($scope.step.otherfield).toBe("FOO")
 
         it 'should update the $scope when event received for collections', ->
-            $httpBackend.expectGET('api/v2/build/1/step')
+            $httpBackend.expectGET('api/v2/builds/1/steps')
             .respond({steps:[{stepid:1,res: "PENDING", otherfield: "FOO"}]})
-            r = buildbotService.one("build", 1).all("step")
+            r = buildbotService.one("builds", 1).all("steps")
             childs = []
             r.bind $scope,
                 ismutable: -> true
                 onchild: (c) -> childs.push(c)
             $httpBackend.flush()
             expect($scope.steps.length).toBe(1)
-            mqService.broadcast("build/1/step/3/new", {stepid:3, "res": "SUCCESS"})
+            mqService.broadcast("builds/1/steps/3/new", {stepid:3, "res": "SUCCESS"})
             $rootScope.$digest()
             expect($scope.steps.length).toBe(2)
             expect(childs.length).toBe(2)
@@ -84,41 +84,41 @@ if window.__karma__?
             expect($scope.steps[1].res).toBe("SUCCESS")
 
         it 'should update the $scope when event received for collections with same id', ->
-            $httpBackend.expectGET('api/v2/build/1/step')
+            $httpBackend.expectGET('api/v2/builds/1/steps')
             .respond({steps:[{stepid:1, res: "PENDING", otherfield: "FOO"}]})
-            r = buildbotService.one("build", 1).all("step")
+            r = buildbotService.one("builds", 1).all("steps")
             r.bind($scope)
             $httpBackend.flush()
             expect($scope.steps.length).toBe(1)
-            mqService.broadcast("build/1/step/3/new", {stepid:3, "res": "SUCCESS"})
-            mqService.broadcast("build/1/step/1/update", {stepid:1, res: "SUCCESS"})
+            mqService.broadcast("builds/1/steps/3/new", {stepid:3, "res": "SUCCESS"})
+            mqService.broadcast("builds/1/steps/1/update", {stepid:1, res: "SUCCESS"})
             $rootScope.$digest()
             expect($scope.steps.length).toBe(2)
             expect($scope.steps[0].res).toBe("SUCCESS")
             expect($scope.steps[1].res).toBe("SUCCESS")
 
         it 'has a onchild api which should be usable for restangular api', ->
-            $httpBackend.expectGET('api/v2/build')
+            $httpBackend.expectGET('api/v2/builds')
             .respond({builds:[{buildid:1,res: "PENDING", otherfield: "FOO"}]})
-            $httpBackend.expectDataGET('build/1/step')
-            r = buildbotService.all("build")
+            $httpBackend.expectDataGET('builds/1/steps')
+            r = buildbotService.all("builds")
             r.bind $scope,
                 ismutable: -> true
                 onchild: (build) ->
-                    build.all("step").bind $scope,
+                    build.all("steps").bind $scope,
                         dest: build
 
             $httpBackend.flush()
-            $httpBackend.expectDataGET('build/3/step')
-            mqService.broadcast("build/3/new", {buildid:3, "res": "SUCCESS"})
+            $httpBackend.expectDataGET('builds/3/steps')
+            mqService.broadcast("builds/3/new", {buildid:3, "res": "SUCCESS"})
             $httpBackend.flush()
             expect($scope.builds[0].steps).toBeDefined()
             expect($scope.builds[1].steps).toBeDefined()
 
         it 'has a bindHierarchy helper to bind a hierarchy', ->
-            $httpBackend.expectDataGET('build/1')
-            $httpBackend.expectDataGET('build/1/step/2')
-            p = buildbotService.bindHierarchy($scope, {build: 1, step: 2}, ["build", "step"])
+            $httpBackend.expectDataGET('builds/1')
+            $httpBackend.expectDataGET('builds/1/steps/2')
+            p = buildbotService.bindHierarchy($scope, {build: 1, step: 2}, ["builds", "steps"])
             res = null
             p.then (r) -> res = r
             $httpBackend.flush()
@@ -150,10 +150,10 @@ if window.__karma__?
 
         it 'should use one request for one endpoint, take advantage of
                 events to maintain synchronisation', ->
-            $httpBackend.expectDataGET('build')
-            r = buildbotService.all("build")
+            $httpBackend.expectDataGET('builds')
+            r = buildbotService.all("builds")
             builds1 = []
-            r2 = buildbotService.all("build")
+            r2 = buildbotService.all("builds")
             $scope2 = $rootScope.$new()
             builds2 = []
             r.bind $scope,
@@ -164,9 +164,9 @@ if window.__karma__?
                     builds2.push(build)
             $httpBackend.flush()
             $rootScope.$digest()
-            mqService.broadcast("build/3/new", {buildid:3, "res": "SUCCESS"})
-            mqService.broadcast("build/4/new", {buildid:4, "res": "SUCCESS"})
-            mqService.broadcast("build/5/new", {buildid:5, "res": "SUCCESS"})
+            mqService.broadcast("builds/3/new", {buildid:3, "res": "SUCCESS"})
+            mqService.broadcast("builds/4/new", {buildid:4, "res": "SUCCESS"})
+            mqService.broadcast("builds/5/new", {buildid:5, "res": "SUCCESS"})
             $rootScope.$digest()
             # ensure we reuse the same data between the two scopes
             expect($scope.builds).toBe($scope2.builds)
@@ -179,7 +179,7 @@ if window.__karma__?
             # destroy one scope
             $scope.$destroy()
             $timeout.flush()
-            mqService.broadcast("build/6/new", {buildid:6, "res": "SUCCESS"})
+            mqService.broadcast("builds/6/new", {buildid:6, "res": "SUCCESS"})
             $rootScope.$digest()
             expect(builds1.length + 1).toEqual(builds2.length)
 
@@ -187,26 +187,26 @@ if window.__karma__?
             $scope2.$destroy()
             $timeout.flush()
             expect ->
-                mqService.broadcast("build/7/new", {buildid:7, "res": "SUCCESS"})
+                mqService.broadcast("builds/7/new", {buildid:7, "res": "SUCCESS"})
             .toThrow()
 
         it 'should reload the data in case of loss of synchronisation', ->
             console.log "here"
-            $httpBackend.expectDataGET 'build',
+            $httpBackend.expectDataGET 'builds',
                 nItems:1
-            r = buildbotService.all("build")
+            r = buildbotService.all("builds")
             r.bind($scope)
             $httpBackend.flush()
             $rootScope.$digest()
-            mqService.broadcast("build/3/new", {buildid:3, "res": "SUCCESS"})
+            mqService.broadcast("builds/3/new", {buildid:3, "res": "SUCCESS"})
             $rootScope.$digest()
             expect($scope.builds.length).toBe(2)
-            $httpBackend.expectDataGET 'build',
+            $httpBackend.expectDataGET 'builds',
                 nItems:2
             $rootScope.$broadcast("lost-sync")
             $httpBackend.flush()
             $rootScope.$digest()
             expect($scope.builds.length).toBe(2)
-            mqService.broadcast("build/4/new", {buildid:4, "res": "SUCCESS"})
+            mqService.broadcast("builds/4/new", {buildid:4, "res": "SUCCESS"})
             $rootScope.$digest()
             expect($scope.builds.length).toBe(3)
