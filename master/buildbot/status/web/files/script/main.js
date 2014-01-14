@@ -25,7 +25,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 
 	 // reveal the page when all scripts are loaded
 	  
-	  //$(document).ready(function() {
+	  $(document).ready(function() {
         $('body').show();
 	  	// swipe or scroll in the codebases overview
 	  	if ($('#builders_page').length) {
@@ -62,6 +62,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		// get all common scripts
 		helpers.init();	
 		dataTables.init();	
-	//});	
+	});	
 
 });
