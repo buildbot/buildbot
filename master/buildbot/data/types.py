@@ -15,6 +15,7 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 
+import datetime
 import re
 
 from buildbot import util
@@ -89,6 +90,11 @@ class Integer(Instance):
 
     def valueFromString(self, arg):
         return int(arg)
+
+
+class DateTime(Instance):
+    name = "datetime"
+    types = (datetime.datetime)
 
 
 class String(Instance):

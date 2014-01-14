@@ -15,7 +15,6 @@
 
 from buildbot.data import base
 from buildbot.data import types
-from buildbot.util import datetime2epoch
 from twisted.internet import defer
 
 
@@ -28,9 +27,9 @@ class Db2DataMixin(object):
             'name': dbdict['name'],
             'buildid': dbdict['buildid'],
             'build_link': base.Link(('build', str(dbdict['buildid']))),
-            'started_at': datetime2epoch(dbdict['started_at']),
+            'started_at': dbdict['started_at'],
             'complete': dbdict['complete_at'] is not None,
-            'complete_at': datetime2epoch(dbdict['complete_at']),
+            'complete_at': dbdict['complete_at'],
             'state_strings': dbdict['state_strings'],
             'results': dbdict['results'],
             'urls': dbdict['urls'],
@@ -117,9 +116,9 @@ class Step(base.ResourceType):
         name = types.Identifier(50)
         buildid = types.Integer()
         build_link = types.Link()
-        started_at = types.NoneOk(types.Integer())
+        started_at = types.NoneOk(types.DateTime())
         complete = types.Boolean()
-        complete_at = types.NoneOk(types.Integer())
+        complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
         state_strings = types.List(of=types.String())
         urls = types.List(of=types.String())

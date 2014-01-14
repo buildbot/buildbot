@@ -16,7 +16,6 @@
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
-from buildbot.util import datetime2epoch
 
 from buildbot.db.buildrequests import NotClaimedError
 from twisted.internet import defer
@@ -27,20 +26,21 @@ class Db2DataMixin(object):
 
     def db2data(self, dbdict):
         data = {
-            'buildrequestid': dbdict['brid'],
+            'buildrequestid': dbdict['buildrequestid'],
             'buildsetid': dbdict['buildsetid'],
             'buildset_link': base.Link(('buildset', str(dbdict['buildsetid']))),
             'builderid': dbdict['builderid'],
+            'buildername': dbdict['buildername'],
             'priority': dbdict['priority'],
             'claimed': dbdict['claimed'],
-            'claimed_at': datetime2epoch(dbdict['claimed_at']),
+            'claimed_at': dbdict['claimed_at'],
             'claimed_by_masterid': dbdict['claimed_by_masterid'],
             'complete': dbdict['complete'],
             'results': dbdict['results'],
-            'submitted_at': datetime2epoch(dbdict['submitted_at']),
-            'complete_at': datetime2epoch(dbdict['complete_at']),
+            'submitted_at': dbdict['submitted_at'],
+            'complete_at': dbdict['complete_at'],
             'waited_for': dbdict['waited_for'],
-            'link': base.Link(('buildrequest', str(dbdict['brid']))),
+            'link': base.Link(('buildrequest', str(dbdict['buildrequestid']))),
         }
         return defer.succeed(data)
 
@@ -90,6 +90,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
                 defer.returnValue([])
         else:
             buildername = None
+
         complete = resultSpec.popBooleanFilter('complete')
         claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')
         if claimed_by_masterid:
@@ -99,7 +100,8 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             claimed = claimed_by_masterid
         else:
             claimed = resultSpec.popBooleanFilter('claimed')
-        bsid = resultSpec.popBooleanFilter('bsid')
+
+        bsid = resultSpec.popBooleanFilter('buildsetid')
         branch = resultSpec.popBooleanFilter('branch')
         repository = resultSpec.popBooleanFilter('repository')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
@@ -137,14 +139,15 @@ class BuildRequest(base.ResourceType):
         buildsetid = types.Integer()
         buildset_link = types.Link()
         builderid = types.Integer()
+        buildername = types.Identifier(20)
         priority = types.Integer()
         claimed = types.Boolean()
-        claimed_at = types.NoneOk(types.Integer())
+        claimed_at = types.NoneOk(types.DateTime())
         claimed_by_masterid = types.NoneOk(types.Integer())
         complete = types.Boolean()
         results = types.NoneOk(types.Integer())
-        submitted_at = types.Integer()
-        complete_at = types.NoneOk(types.Integer())
+        submitted_at = types.DateTime()
+        complete_at = types.NoneOk(types.DateTime())
         waited_for = types.Boolean()
         link = types.Link()
     entityType = EntityType(name)

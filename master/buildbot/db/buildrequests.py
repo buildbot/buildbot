@@ -271,7 +271,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         complete_at = mkdt(row.complete_at)
         claimed_at = mkdt(claimed_at)
 
-        return BrDict(brid=row.id, buildsetid=row.buildsetid,
+        return BrDict(buildrequestid=row.id, buildsetid=row.buildsetid,
                       buildername=row.buildername, priority=row.priority,
                       claimed=claimed, claimed_at=claimed_at,
                       claimed_by_masterid=claimed_by_masterid,

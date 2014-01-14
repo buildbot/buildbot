@@ -20,6 +20,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -131,7 +132,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'masterid': 824,
                        'number': 1,
                        'results': None,
-                       'started_at': 1,
+                       'started_at': epoch2datetime(1),
                        'state_strings': [u'created']}
 
     def setUp(self):

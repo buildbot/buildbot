@@ -25,6 +25,8 @@ from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
+from buildbot.data import resultspec
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log as twlog
@@ -557,7 +559,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         for breq in breqs:
             buildername = breq['buildername']
             builder = self.master_status.getBuilder(buildername)
-            d = self.master.db.builds.getBuilds(buildrequestid=breq['brid'])
+            d = self.master.db.builds.getBuilds(buildrequestid=breq['buildrequestid'])
             d.addCallback(lambda builddictlist, builder=builder:
                           (builddictlist, builder))
             dl.append(d)
@@ -565,7 +567,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         d.addCallback(self._gotBuilds, buildset)
 
     def _gotBuildSet(self, buildset, bsid):
-        d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
+        d = self.master.data.get(('buildrequest', ),
+                                 filters=[resultspec.Filter('buildsetid', 'eq', [bsid])])
         d.addCallback(self._gotBuildRequests, buildset)
 
     def _buildset_complete_cb(self, key, msg):

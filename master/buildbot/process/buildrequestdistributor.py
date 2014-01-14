@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+from buildbot.data import resultspec
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.util import ascii2unicode
@@ -89,8 +90,13 @@ class BuildChooserBase(object):
         # the self.unclaimedBrdicts to None before calling."""
 
         if self.unclaimedBrdicts is None:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.bldr.name, claimed=False)
+            # TODO: use order of the DATA API
+            brdicts = yield self.master.data.get(('builder',
+                                                  self.bldr.name,
+                                                  'buildrequest'),
+                                                 [resultspec.Filter('claimed',
+                                                                    'eq',
+                                                                    [False])])
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd: brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
@@ -101,11 +107,11 @@ class BuildChooserBase(object):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
-        breq = self.breqCache.get(brdict['brid'])
+        breq = self.breqCache.get(brdict['buildrequestid'])
         if not breq:
             breq = yield BuildRequest.fromBrdict(self.master, brdict)
             if breq:
-                self.breqCache[brdict['brid']] = breq
+                self.breqCache[brdict['buildrequestid']] = breq
         defer.returnValue(breq)
 
     def _getBrdictForBuildRequest(self, breq):
@@ -117,7 +123,7 @@ class BuildChooserBase(object):
 
         brid = breq.id
         for brdict in self.unclaimedBrdicts:
-            if brid == brdict['brid']:
+            if brid == brdict['buildrequestid']:
                 return brdict
         return None
 
@@ -524,10 +530,10 @@ class BuildRequestDistributor(service.AsyncService):
                 brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
                 key = ('buildset', str(brdict['buildsetid']),
                        'builder', str(-1),
-                       'buildrequest', str(brdict['brid']), 'claimed')
+                       'buildrequest', str(brdict['buildrequestid']), 'claimed')
                 msg = dict(
                     bsid=brdict['buildsetid'],
-                    brid=brdict['brid'],
+                    brid=brdict['buildrequestid'],
                     buildername=brdict['buildername'],
                     builderid=-1,
                     # TODO:
@@ -547,7 +553,7 @@ class BuildRequestDistributor(service.AsyncService):
                     brid = breq.id
                     key = ('buildset', str(brdict['buildsetid']),
                            'builder', str(-1),
-                           'buildrequest', str(brdict['brid']), 'unclaimed')
+                           'buildrequest', str(brdict['buildrequestid']), 'unclaimed')
                     msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                                builderid=-1)
                     self.master.mq.produce(key, msg)

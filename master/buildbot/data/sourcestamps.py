@@ -16,7 +16,6 @@
 from buildbot.data import base
 from buildbot.data import patches
 from buildbot.data import types
-from buildbot.util import datetime2epoch
 from twisted.internet import defer
 
 
@@ -28,7 +27,7 @@ def _db2data(ss):
         'project': ss['project'],
         'repository': ss['repository'],
         'codebase': ss['codebase'],
-        'created_at': datetime2epoch(ss['created_at']),
+        'created_at': ss['created_at'],
         'link': base.Link(('sourcestamp', str(ss['ssid']))),
         'patch': None,
     }
@@ -91,6 +90,6 @@ class SourceStamp(base.ResourceType):
         project = types.String()
         codebase = types.String()
         patch = types.NoneOk(patches.Patch.entityType)
-        created_at = types.Integer()
+        created_at = types.DateTime()
         link = types.Link()
     entityType = EntityType(name)

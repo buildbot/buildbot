@@ -90,7 +90,7 @@ buildrequests
     of a request are represented as build request dictionaries (brdicts) with
     keys
 
-    * ``brid``
+    * ``buildrequestid``
     * ``buildsetid``
     * ``buildername``
     * ``priority``

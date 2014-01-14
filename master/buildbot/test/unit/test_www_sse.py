@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
 from buildbot.test.unit import test_data_changes
 from buildbot.test.util import www
+from buildbot.util import datetime2epoch
 from buildbot.util import json
 from buildbot.www import sse
 from twisted.trial import unittest
@@ -104,4 +107,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(kw["event"], "event")
         msg = json.loads(kw["data"])
         self.assertEqual(msg["key"], [u'change', u'500', u'new'])
-        self.assertEqual(msg["message"], json.loads(json.dumps(test_data_changes.Change.changeEvent)))
+        self.assertEqual(msg["message"], json.loads(json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
+
+    def _toJson(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return datetime2epoch(obj)

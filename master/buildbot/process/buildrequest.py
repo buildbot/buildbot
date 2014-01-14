@@ -97,7 +97,7 @@ class BuildRequest(object):
         @returns: L{BuildRequest}, via Deferred
         """
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['brid'], brdict=brdict, master=master)
+        return cache.get(brdict['buildrequestid'], brdict=brdict, master=master)
 
     @classmethod
     @defer.inlineCallbacks
