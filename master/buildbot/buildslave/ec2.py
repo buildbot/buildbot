@@ -269,7 +269,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             instance_type=self.instance_type, user_data=self.user_data,
             placement=self.placement)
         self.instance = reservation.instances[0]
-        instance_id, image_id, start_time = self._wait_for_instance(reservation, image)
+        instance_id, image_id, start_time = self._wait_for_instance(reservation)
         if None not in [instance_id, image_id, start_time]:
             return [instance_id, image_id, start_time]
         else:
