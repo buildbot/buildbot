@@ -723,6 +723,9 @@ class Builder(config.ReconfigurableServiceMixin,
         return property
 
     def propertiesMatch(self, req1, req2):
+        #If the instances are the same then they match!
+        if req1 == req2:
+            return True
         if req1.properties.has_key('selected_slave') or req2.properties.has_key('selected_slave'):
             return False
         if self.getBoolProperty(req1, "force_rebuild") != self.getBoolProperty(req2, "force_rebuild"):
@@ -751,6 +754,8 @@ class Builder(config.ReconfigurableServiceMixin,
         breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
 
         # gather the mergeable requests
+        # NOTE: This is assuming that it checks against itself
+        # otherwise we get a return of an empty array
         merged_request_objects = []
         for other_breq_object in unclaimed_request_objects:
             if (yield defer.maybeDeferred(
@@ -759,10 +764,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 merged_request_objects.append(other_breq_object)
 
         # convert them back to brdicts and return
-        if len(merged_request_objects) > 0:
-            merged_requests = [ br.brdict for br in merged_request_objects ]
-        else:
-            merged_requests = [breq, ]
+        merged_requests = [ br.brdict for br in merged_request_objects ]
         defer.returnValue(merged_requests)
 
     def _brdictToBuildRequest(self, brdict):
