@@ -13,12 +13,13 @@
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
     <title>{{ pageTitle|e }}</title>
+    <!--
     
-    <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
     <script src="/prod/script/plugins/jquery-datatables.js"></script>
     <script src="/script/project/dataTables.js"></script>
 
-
+-->
+    <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
     <script type="text/javascript">
       var require = {
           baseUrl: "/prod/script/",
@@ -35,7 +36,7 @@
     {% endblock %} 
 
   </head>
-  <body class="interface katana-main">
+  <body class="interface katana-main" style="display:none;">
    
     {% block header -%}
  
