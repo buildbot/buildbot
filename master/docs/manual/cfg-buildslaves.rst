@@ -356,8 +356,36 @@ to wait for an EC2 instance to attach before considering the attempt to have
 failed, and email addresses to alert, respectively.  ``missing_timeout``
 defaults to 20 minutes.
 
+``volumes`` expects a list of (volume_id, mount_point) tuples to attempt attaching when
+your instance has been created.
+
 ``keypair_name`` and ``security_name`` allow you to specify different names for
 these AWS EC2 values.  They both default to ``latent_buildbot_slave``.
+
+Spot instances
+##############
+
+If you would prefer to use spot instances for running your builds, you can accomplish that
+by passing in a True value to the ``spot_instance`` parameter to the EC2LatentBuildSlave
+constructor. Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier``
+in order to limit your builds' budget consumption. ::
+
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                       'ami-12345', region='us-west-2',
+                                       identifier='publickey',
+                                       secret_identifier='privatekey',
+                                       elastic_ip='208.77.188.166',
+                                       placement='b', spot_instance=True,
+                                       max_spot_price=0.09,
+                                       price_multiplier=1.15
+                                       )]
+
+This example would attempt to create a m1.large spot instance in the us-west-2b region 
+costing no more than $0.09/hour. The spot prices for that region in the last 24 hours 
+will be averaged and multiplied by the ``price_multiplier`` parameter, then a spot request
+will be sent to Amazon with the above details. If the spot request is rejected, an error
+message will be logged with the final status.
 
 .. index::
    libvirt
