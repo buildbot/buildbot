@@ -245,7 +245,7 @@ define(['screensize'], function (screenSize) {
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).insertAfter($('.filter-table-input'));
+  			$(cbTable).insertAfter($('.dataTables_filter'));
 
 			$(parsedUrl).each(function(i){
 

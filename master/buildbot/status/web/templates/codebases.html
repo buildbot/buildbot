@@ -30,7 +30,7 @@
               
               <a class="show-common" href="#">Common</a>
               
-                <select autocomplete="off" id="commonBranch_select" class="common-branch-select">
+                <select autocomplete="off" id="commonBranch_select" class="common-branch-select hide">
                   <option></option>
                 </select>
               </div>
@@ -50,7 +50,7 @@
           </td>
           <td class="txt-align-right">
 
-            <select name='{{cbkey}}_branch' class="select-tools-js" >
+            <select name='{{cbkey}}_branch' class="select-tools-js hide" >
 
                {% for b in codebase['branch'] %}
                 {% if request.args|length > 0 and cbkey+'_branch' in request.args.keys() %}

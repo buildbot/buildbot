@@ -1,6 +1,10 @@
+define('jquery', [], function() {
+    return jQuery;
+});
+
 require.config({
 	paths: {
-		'jquery':'libs/jQuery-2-0-3',
+		//'jquery':'libs/jQuery-2-0-3',
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
 		'datatables-plugin': 'plugins/jquery-datatables',
@@ -21,8 +25,8 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 
 	 // reveal the page when all scripts are loaded
 	  
-	  $(document).ready(function() {
-	  	$('body').show();
+	  //$(document).ready(function() {
+        $('body').show();
 	  	// swipe or scroll in the codebases overview
 	  	if ($('#builders_page').length) {
 	  	require(['overscroll'],
@@ -58,6 +62,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		// get all common scripts
 		helpers.init();	
 		dataTables.init();	
-	});	
+	//});	
 
 });
