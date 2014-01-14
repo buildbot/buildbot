@@ -24,12 +24,12 @@ class LogChunkEndpoint(base.BuildNestingMixin, base.Endpoint):
     # offset/limit query params in ResultSpec
     isCollection = False
     pathPatterns = """
-        /log/n:logid/content
-        /step/n:stepid/log/i:log_slug/content
-        /build/n:buildid/step/i:step_name/log/i:log_slug/content
-        /build/n:buildid/step/n:step_number/log/i:log_slug/content
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_slug/content
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_slug/content
+        /logs/n:logid/contents
+        /steps/n:stepid/logs/i:log_slug/contents
+        /builds/n:buildid/steps/i:step_name/logs/i:log_slug/contents
+        /builds/n:buildid/steps/n:step_number/logs/i:log_slug/contents
+        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/contents
+        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/contents
     """
 
     @defer.inlineCallbacks

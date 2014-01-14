@@ -121,7 +121,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             lambda k, m: self._changeCallback(k, m, fileIsImportant,
                                               change_filter, onlyImportant),
             {},
-            ('change',))
+            ('changes',))
         return defer.succeed(None)
 
     @defer.inlineCallbacks

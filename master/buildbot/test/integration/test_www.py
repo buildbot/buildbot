@@ -139,29 +139,29 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                           active=1, last_active=OTHERTIME),
         ])
 
-        res = yield self.apiGet(self.link('master'))
+        res = yield self.apiGet(self.link('masters'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('master/7')},
+                 'last_active': SOMETIME, 'link': self.link('masters/7')},
                 {'active': True, 'masterid': 8, 'name': 'other:master',
-                 'last_active': OTHERTIME, 'link': self.link('master/8')},
+                 'last_active': OTHERTIME, 'link': self.link('masters/8')},
             ],
             'meta': {
                 'total': 2,
                 'links': [
-                    {'href': self.link('master'), 'rel': 'self'}
+                    {'href': self.link('masters'), 'rel': 'self'}
                 ],
             }})
 
-        res = yield self.apiGet(self.link('master/7'))
+        res = yield self.apiGet(self.link('masters/7'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('master/7')},
+                 'last_active': SOMETIME, 'link': self.link('masters/7')},
             ],
             'meta': {
                 'links': [
-                    {'href': self.link('master/7'), 'rel': 'self'}
+                    {'href': self.link('masters/7'), 'rel': 'self'}
                 ],
             }})

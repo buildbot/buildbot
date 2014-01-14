@@ -467,7 +467,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.buildSetSummary:
             self._buildset_complete_consumer = self.master.mq.startConsuming(
                 self._buildset_complete_cb,
-                ('buildset', None, 'complete'))
+                ('buildsets', None, 'complete'))
 
         base.StatusReceiverMultiService.startService(self)
 
@@ -567,7 +567,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         d.addCallback(self._gotBuilds, buildset)
 
     def _gotBuildSet(self, buildset, bsid):
-        d = self.master.data.get(('buildrequest', ),
+        d = self.master.data.get(('buildrequests', ),
                                  filters=[resultspec.Filter('buildsetid', 'eq', [bsid])])
         d.addCallback(self._gotBuildRequests, buildset)
 

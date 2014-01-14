@@ -47,7 +47,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('scheduler', 14))
+        d = self.callGet(('schedulers', 14))
 
         @d.addCallback
         def check(scheduler):
@@ -56,7 +56,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_no_master(self):
-        d = self.callGet(('scheduler', 13))
+        d = self.callGet(('schedulers', 13))
 
         @d.addCallback
         def check(scheduler):
@@ -65,7 +65,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_existing(self):
-        d = self.callGet(('master', 22, 'scheduler', 14))
+        d = self.callGet(('masters', 22, 'schedulers', 14))
 
         @d.addCallback
         def check(scheduler):
@@ -74,7 +74,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_no_match(self):
-        d = self.callGet(('master', 33, 'scheduler', 13))
+        d = self.callGet(('masters', 33, 'schedulers', 13))
 
         @d.addCallback
         def check(scheduler):
@@ -82,7 +82,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(('master', 99, 'scheduler', 13))
+        d = self.callGet(('masters', 99, 'schedulers', 13))
 
         @d.addCallback
         def check(scheduler):
@@ -90,7 +90,7 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('scheduler', 99))
+        d = self.callGet(('schedulers', 99))
 
         @d.addCallback
         def check(scheduler):
@@ -122,7 +122,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('scheduler',))
+        d = self.callGet(('schedulers',))
 
         @d.addCallback
         def check(schedulers):
@@ -132,7 +132,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(('master', 33, 'scheduler'))
+        d = self.callGet(('masters', 33, 'schedulers'))
 
         @d.addCallback
         def check(schedulers):
@@ -142,7 +142,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(('master', 23, 'scheduler'))
+        d = self.callGet(('masters', 23, 'schedulers'))
 
         @d.addCallback
         def check(schedulers):
@@ -151,7 +151,7 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('scheduler', None, None))
+                                expected_filter=('schedulers', None, None))
 
 
 class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
