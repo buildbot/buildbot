@@ -55,6 +55,8 @@ window.decorateHttpBackend = ($httpBackend) ->
                     return {}
                 when "link"
                     return "http://link/link"
+                when "datetime"
+                    return getNextId(hint)
                 when "sourced-properties"
                     return {prop: ['value', "source"]}
                 else
