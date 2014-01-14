@@ -62,7 +62,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     finishedWatchers = []
     testResults = {}
 
-    def __init__(self, parent, master, number):
+    def __init__(self, parent, master, number, brids):
         """
         @type  parent: L{BuilderStatus}
         @type  number: int
@@ -77,6 +77,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.steps = []
         self.testResults = {}
         self.properties = properties.Properties()
+        self.brids = brids
 
     def __repr__(self):
         return "<%s #%s>" % (self.__class__.__name__, self.number)
@@ -471,6 +472,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
+        result['brids'] = self.brids
 
         # Transient
         result['properties'] = self.getProperties().asList()
