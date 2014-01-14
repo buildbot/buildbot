@@ -2151,7 +2151,7 @@ The available constructor arguments are
 
 Here is an example on how to drive compilation with Visual Studio 2013::
 
-    from buildbot.steps.VisualStudio import VS2013
+    from buildbot.steps.vstudio import VS2013
 
     f.addStep(
         VS2013(projectfile="project.sln", config="release",
@@ -2161,7 +2161,7 @@ Here is an example on how to drive compilation with Visual Studio 2013::
 
 Here is a similar example using "MsBuild12"::
 
-    from buildbot.steps.VisualStudio import MsBuild12
+    from buildbot.steps.vstudio import MsBuild12
 
     # Build one project in Release mode for Win32
     f.addStep(
@@ -3055,6 +3055,8 @@ stderr is lost.  For example, given ::
 Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
 and ``stderr="error\n"``.
 
+Avoid using the ``extract_fn`` form of this step with commands that produce a great deal of output, as the output is buffered in memory until complete.
+
 .. bb:step:: SetPropertiesFromEnv
 
 .. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
@@ -3084,39 +3086,6 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
-
-.. _Setting-Buildslave-Info:
-
-Setting Buildslave Info
------------------------
-
-Each buildslave has a dictionary of properties (the "buildslave info dictionary") that is persisted into the database.
-This info dictionary is displayed on the "buildslave" web page and is available in Interpolate operations.
-
-.. bb:step:: SetSlaveInfo
-
-.. _Step-SetSlaveInfo:
-
-SetSlaveInfo
-++++++++++++
-
-.. py:class:: buildbot.steps.master.SetSlaveInfo
-
-``SetSlaveInfo`` is a base class to provide a facility to set values in the buildslave info dictionary.
-For example::
-
-    from buildbot.steps.master import SetSlaveInfo
-
-    class SetSlaveFromPropInfo(SetSlaveInfo):
-        name = "SetSlaveFromPropInfo"
-
-        # override this to return the dictionary update
-        def getSlaveInfoUpdate(self):
-            # for example, copy a property into the buildslave dict
-            update = { 
-                "foo": self.getProperty("foo")
-            }
-            return update
 
 
 .. index:: Properties; triggering schedulers
@@ -3152,10 +3121,10 @@ then the buildstep succeeds immediately after triggering the schedulers.
 The SourceStamps to use for the triggered build are controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
+source stamps given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`s, even if other
+all of the builds use exactly the same source stamps, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
 specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is

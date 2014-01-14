@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-
 from .test_changes_gerritchangesource import TestGerritChangeSource
 from buildbot.changes.changes import Change
 from buildbot.process.properties import Properties
@@ -103,7 +101,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def expectClobber(self):
         # stat return 1 so we clobber
         self.expectCommands(
-            Expect('stat', dict(file=os.path.join('wkdir', '.repo'),
+            Expect('stat', dict(file='wkdir/.repo',
                                 logEnviron=self.logEnviron))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
@@ -117,7 +115,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def expectnoClobber(self):
         # stat return 0, so nothing
         self.expectCommands(
-            Expect('stat', dict(file=os.path.join('wkdir', '.repo'),
+            Expect('stat', dict(file='wkdir/.repo',
                                 logEnviron=self.logEnviron))
             + 0,
         )
@@ -178,13 +176,13 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectClobber()
         override_commands = [
             Expect(
-                'stat', dict(file=os.path.join('wkdir', 'http://u.rl/test.manifest'),
+                'stat', dict(file='wkdir/http://u.rl/test.manifest',
                              logEnviron=False)),
             self.ExpectShell(logEnviron=False, command=['wget',
                              'http://u.rl/test.manifest',
                                                         '-O', 'manifest_override.xml']),
             self.ExpectShell(
-                logEnviron=False, workdir=os.path.join('wkdir', '.repo'),
+                logEnviron=False, workdir='wkdir/.repo',
                 command=['ln', '-sf', '../manifest_override.xml',
                          'manifest.xml'])
         ]
@@ -201,13 +199,13 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
-            Expect('stat', dict(file=os.path.join('wkdir', 'test.manifest'),
+            Expect('stat', dict(file='wkdir/test.manifest',
                                 logEnviron=False)),
             self.ExpectShell(logEnviron=False,
                              command=[
                                  'cp', '-f', 'test.manifest', 'manifest_override.xml']),
             self.ExpectShell(logEnviron=False,
-                             workdir=os.path.join('wkdir', '.repo'),
+                             workdir='wkdir/.repo',
                              command=['ln', '-sf', '../manifest_override.xml',
                                       'manifest.xml'])
         ]
@@ -241,7 +239,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['tar', '-z', '-xvf', '/tarball.tgz']) + 1,
             self.ExpectShell(command=['rm', '-f', '/tarball.tgz']) + 1,
-            Expect('rmdir', dict(dir=os.path.join('wkdir', '.repo'),
+            Expect('rmdir', dict(dir='wkdir/.repo',
                                  logEnviron=False))
             + 1)
         self.expectRepoSync()
@@ -304,7 +302,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['rm', '-f', '/tarball.tar']) + 0,
             Expect(
-                'rmdir', dict(dir=os.path.join('wkdir', '.repo'),
+                'rmdir', dict(dir='wkdir/.repo',
                               logEnviron=False))
             + 0)
         self.expectRepoSync()
@@ -400,13 +398,13 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                          '-b', 'mb', '-m', 'mf'])
             + 0,
             self.ExpectShell(
-                workdir=os.path.join('wkdir', '.repo', 'manifests'),
+                workdir='wkdir/.repo/manifests',
                 command=[
                     'git', 'fetch', 'git://myrepo.com/manifest.git',
                     'refs/changes/65/565/12'])
             + 0,
             self.ExpectShell(
-                workdir=os.path.join('wkdir', '.repo', 'manifests'),
+                workdir='wkdir/.repo/manifests',
                 command=['git', 'cherry-pick', 'FETCH_HEAD'])
             + 0,
             self.ExpectShell(command=['repo', 'sync', '-c'])

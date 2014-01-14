@@ -35,21 +35,22 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     compare_attrs = ["repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project"]
+                     "category", "project", "pollAtLaunch"]
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
-                 encoding='utf-8'):
+                 encoding='utf-8', pollAtLaunch=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
 
         base.PollingChangeSource.__init__(self, name=repourl,
-                                          pollInterval=pollInterval)
+                                          pollInterval=pollInterval,
+                                          pollAtLaunch=pollAtLaunch)
 
         if project is None:
             project = ''
@@ -98,29 +99,73 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return d
 
     def describe(self):
-        status = ""
+        str = ('GitPoller watching the remote git repository ' +
+               self.repourl)
+
+        if self.branches:
+            if self.branches is True:
+                str += ', branches: ALL'
+            elif not callable(self.branches):
+                str += ', branches: ' + ', '.join(self.branches)
+
         if not self.master:
-            status = "[STOPPED - check log]"
-        str = ('GitPoller watching the remote git repository %s, branches: %s %s'
-               % (self.repourl, ', '.join(self.branches), status))
+            str += " [STOPPED - check log]"
+
         return str
+
+    def _getBranches(self):
+        d = self._dovccmd('ls-remote', [self.repourl])
+
+        @d.addCallback
+        def parseRemote(rows):
+            branches = []
+            for row in rows.splitlines():
+                if not '\t' in row:
+                    # Not a useful line
+                    continue
+                sha, ref = row.split("\t")
+                branches.append(ref)
+            return branches
+        return d
+
+    def _headsFilter(self, branch):
+        """Filter out remote references that don't begin with 'refs/heads'."""
+        return branch.startswith("refs/heads/")
+
+    def _removeHeads(self, branch):
+        """Remove 'refs/heads/' prefix from remote references."""
+        if branch.startswith("refs/heads/"):
+            branch = branch[11:]
+        return branch
+
+    def _trackerBranch(self, branch):
+        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''),
+                                        self._removeHeads(branch))
 
     @defer.inlineCallbacks
     def poll(self):
         yield self._dovccmd('init', ['--bare', self.workdir])
 
+        branches = self.branches
+        if branches is True or callable(branches):
+            branches = yield self._getBranches()
+            if callable(self.branches):
+                branches = filter(self.branches, branches)
+            else:
+                branches = filter(self._headsFilter, branches)
+
         refspecs = [
-            '+%s:%s' % (branch, self._localBranch(branch))
-            for branch in self.branches
+            '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
+            for branch in branches
         ]
         yield self._dovccmd('fetch',
                             [self.repourl] + refspecs, path=self.workdir)
 
         revs = {}
-        for branch in self.branches:
+        for branch in branches:
             try:
-                revs[branch] = rev = yield self._dovccmd('rev-parse',
-                                                         [self._localBranch(branch)], path=self.workdir)
+                revs[branch] = rev = yield self._dovccmd(
+                    'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
                 yield self._process_changes(rev, branch)
             except:
                 log.err(_why="trying to poll branch %s of %s"
@@ -255,6 +300,3 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure)
         return d
-
-    def _localBranch(self, branch):
-        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''), branch)

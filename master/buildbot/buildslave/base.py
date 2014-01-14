@@ -178,7 +178,22 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             return  # oh well..
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
-    def _saveSlaveInfoDict(self, slaveinfo):
+    def _applySlaveInfo(self, info):
+        if not info:
+            return
+
+        self.slave_status.setAdmin(info.get("admin"))
+        self.slave_status.setHost(info.get("host"))
+        self.slave_status.setAccessURI(info.get("access_uri"))
+        self.slave_status.setVersion(info.get("version"))
+
+    def _saveSlaveInfoDict(self):
+        slaveinfo = {
+            'admin': self.slave_status.getAdmin(),
+            'host': self.slave_status.getHost(),
+            'access_uri': self.slave_status.getAccessURI(),
+            'version': self.slave_status.getVersion(),
+        }
         return self.master.db.buildslaves.updateBuildslave(
             name=self.slavename,
             slaveinfo=slaveinfo,
@@ -192,15 +207,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             if buildslave is None:
                 return
 
-            self.updateSlaveInfo(**buildslave['slaveinfo'])
+            self._applySlaveInfo(buildslave.get('slaveinfo'))
 
         return d
-
-    def updateSlaveInfo(self, **kwargs):
-        self.slave_status.updateInfo(**kwargs)
-
-    def getSlaveInfo(self, key, default=None):
-        return self.slave_status.getInfo(key, default)
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
@@ -211,7 +220,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
-        self.slave_status.addInfoWatcher(self._saveSlaveInfoDict)
         d = self._getSlaveInfo()
         d.addCallback(lambda _: service.MultiService.startService(self))
         return d
@@ -266,7 +274,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                                                                 new_config)
 
     def stopService(self):
-        self.slave_status.removeInfoWatcher(self._saveSlaveInfoDict)
         if self.registration:
             self.registration.unregister()
             self.registration = None
@@ -471,12 +478,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         def _accept_slave(res):
             self.slave_status.setConnected(True)
 
-            self.slave_status.updateInfo(
-                admin=state.get("admin"),
-                host=state.get("host"),
-                access_uri=state.get("access_uri"),
-                version=state.get("version"),
-            )
+            self._applySlaveInfo(state)
 
             self.slave_commands = state.get("slave_commands")
             self.slave_environ = state.get("slave_environ")
@@ -493,6 +495,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.messageReceivedFromSlave()
             self.stopMissingTimer()
             self.botmaster.master.status.slaveConnected(self.slavename)
+
+        d.addCallback(lambda _: self._saveSlaveInfoDict())
 
         d.addCallback(lambda _: self.updateSlave())
 

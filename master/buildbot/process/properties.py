@@ -395,14 +395,6 @@ class _SourceStampDict(util.ComparableMixin, object):
             return {}
 
 
-class _SlaveInfoDict(util.ComparableMixin, object):
-    implements(IRenderable)
-
-    def getRenderingFor(self, build):
-        slave = build.getBuild().slavebuilder.slave
-        return slave.slave_status.getInfoAsDict()
-
-
 class _Lazy(util.ComparableMixin, object):
     implements(IRenderable)
 
@@ -481,17 +473,6 @@ class Interpolate(util.ComparableMixin, object):
             config.error("Attribute must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
-
-    @staticmethod
-    def _parse_slave(arg):
-        try:
-            key, repl = arg.split(":", 1)
-        except ValueError:
-            key, repl = arg, None
-        if not Interpolate.identifier_re.match(key):
-            config.error("Keyword must be alphanumeric for slave-info Interpolation '%s'" % arg)
-            key = repl = None
-        return _SlaveInfoDict(), key, repl
 
     def _parse_kw(self, arg):
         try:

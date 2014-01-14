@@ -591,6 +591,10 @@ depot for changes. It accepts the following arguments:
 ``pollInterval``
     How often to poll, in seconds. Defaults to 600 (10 minutes).
 
+``pollAtLaunch``
+    Determines when the first poll occurs. True = immediately on launch,
+    False = wait for one pollInterval (default).
+
 ``histmax``
     The maximum number of changes to inspect at a time. If more than this
     number occur since the last poll, older changes will be silently
@@ -657,6 +661,10 @@ changed since the last query.
 
 ``pollInterval``
     The time (in seconds) between queries for changes.
+
+``pollAtLaunch``
+    Determines when the first poll occurs. True = immediately on launch,
+    False = wait for one pollInterval (default).
 
 ``project``
     The project name to attach to all change objects produced by this
@@ -733,6 +741,10 @@ multiple branches.
     faster, raise it if you want to reduce the network and CPU load on
     your svn server. Please be considerate of public SVN repositories by
     using a large interval when polling them.
+
+``pollAtLaunch``
+    Determines when the first poll occurs. True = immediately on launch,
+    False = wait for one pollInterval (default).
 
 ``histmax``
     The maximum number of changes to inspect at a time. Every ``pollInterval``
@@ -875,7 +887,13 @@ arguments:
     (see the :command:`git fetch` help for more info on git-url formats)
 
 ``branches``
-    a list of the branches to fetch, will default to ``['master']``
+    One of the following:
+
+    * a list of the branches to fetch.
+    * ``True`` indicating that all branches should be fetched
+    * a callable which takes a single argument.
+      It should take a remote refspec (such as ``'refs/heads/master'``, and
+      return a boolean indicating whether that branch should be fetched.
 
 ``branch``
     accepts a single branch name to fetch.
@@ -883,6 +901,10 @@ arguments:
 
 ``pollInterval``
     interval in seconds between polls, default is 10 minutes
+
+``pollAtLaunch``
+    Determines when the first poll occurs. True = immediately on launch,
+    False = wait for one pollInterval (default).
 
 ``gitbin``
     path to the Git binary, defaults to just ``'git'``
@@ -971,6 +993,10 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
 ``pollInterval``
     interval in seconds between polls, default is 10 minutes
+
+``pollAtLaunch``
+    Determines when the first poll occurs. True = immediately on launch,
+    False = wait for one pollInterval (default).
 
 ``hgbin``
     path to the Mercurial binary, defaults to just ``'hg'``

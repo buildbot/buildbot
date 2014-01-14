@@ -22,7 +22,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
-from buildbot.util import eventual
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -41,9 +40,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
-
-    def tearDown(self):
-        self.clock.pump([0])
 
     def createBuildslave(self, name='bot', password='pass', **kwargs):
         slave = self.ConcreteBuildSlave(name, password, **kwargs)
@@ -266,8 +262,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 'admin': 'TheAdmin',
                 'host': 'TheHost',
                 'access_uri': 'TheURI',
-                'version': 'TheVersion',
-                'key': 'value',
+                'version': 'TheVersion'
             })
         ])
         slave = self.createBuildslave()
@@ -278,35 +273,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getHost(), 'TheHost')
         self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
-        self.assertEqual(slave.slave_status.getInfo('key'), 'value')
-
-    @defer.inlineCallbacks
-    def test_startService_setSlaveInfo_UpdatesDb(self):
-        self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={
-                'admin': 'TheAdmin',
-                'host': 'TheHost',
-                'access_uri': 'TheURI',
-                'version': 'TheVersion',
-                'key': 'value',
-            })
-        ])
-        slave = self.createBuildslave()
-        yield slave.startService()
-
-        # change a value
-        slave.slave_status.updateInfo(key='new-value')
-        self.clock.pump([0])  # we overrode the reactor, so gotta force the calls
-        yield eventual.flushEventualQueue()
-
-        # and the db is updated too:
-        slave_db = yield self.master.db.buildslaves.getBuildslaveByName("bot")
-
-        self.assertEqual(slave_db['slaveinfo']['admin'], 'TheAdmin')
-        self.assertEqual(slave_db['slaveinfo']['host'], 'TheHost')
-        self.assertEqual(slave_db['slaveinfo']['access_uri'], 'TheURI')
-        self.assertEqual(slave_db['slaveinfo']['version'], 'TheVersion')
-        self.assertEqual(slave_db['slaveinfo']['key'], 'new-value')
 
     def createRemoteBot(self):
         class Bot():
@@ -437,8 +403,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 'admin': 'WrongAdmin',
                 'host': 'WrongHost',
                 'access_uri': 'WrongURI',
-                'version': 'WrongVersion',
-                'key': 'value',
+                'version': 'WrongVersion'
             })
         ])
         slave = self.createBuildslave()
@@ -457,10 +422,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getHost(), 'TheHost')
         self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
         self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
-        self.assertEqual(slave.slave_status.getInfo('key'), 'value')
-
-        self.clock.pump([0])  # we overrode the reactor, so gotta force the calls
-        yield eventual.flushEventualQueue()
 
         # and the db is updated too:
         buildslave = yield self.master.db.buildslaves.getBuildslaveByName("bot")

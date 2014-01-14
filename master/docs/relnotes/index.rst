@@ -140,9 +140,9 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
-* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
-
 * The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
+
+* Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
 Fixes
 ~~~~~
@@ -168,6 +168,11 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``hgbuildbot`` Mercurial hook has been moved to ``contrib/``, and does not work with recent versions of Mercurial and Twisted.
   The runtimes for these two tools are incompatible, yet ``hgbuildbot`` attempts to run both in the same Python interpreter.
   Mayhem ensues.
+
+* The try scheduler's ``--connect=ssh`` method no longer supports waiting for results (``--wait``).
+
+* The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:mod`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
+  Similarly, the former ``buildbot.process.buildstep.LogObserver`` class and its subclasses are now in :py:mod`buildbot.process.logobserver`, although imports from the previous path will continue to work.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -442,6 +442,12 @@ class Model(base.DBConnectorComponent):
             return db_version == repo_version
         return self.db.pool.do_with_engine(thd)
 
+    def create(self):
+        # this is nice and simple, but used only for tests
+        def thd(engine):
+            self.metadata.create_all(bind=engine)
+        return self.db.pool.do_with_engine(thd)
+
     def upgrade(self):
 
         # here, things are a little tricky.  If we have a 'version' table, then
