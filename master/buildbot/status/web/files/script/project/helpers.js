@@ -27,12 +27,6 @@ define(['screensize'], function (screenSize) {
 			helpers.authorizeUser();
 
 
-        	// insert codebase and branch on the builders page
-        	if ($('#builders_page').length && window.location.search != '') {
-        		// Parse the url and insert current codebases and branches
-        		helpers.codeBaseBranchOverview();	
-			}
-
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
 				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
@@ -268,13 +262,7 @@ define(['screensize'], function (screenSize) {
 				}
 				
 			});
-			/*
-			$(".border-table-holder").hover(function(){
-        		$(this).css({"overflow-x":"scroll", 'marginTop':0});
-        	},function(){
-        		$(this).css({"overflow":""});
-        	});
-			*/	
+				
 		}, menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 	        	
         	if (isMediumScreen){	
