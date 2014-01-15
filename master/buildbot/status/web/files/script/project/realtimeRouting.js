@@ -30,6 +30,17 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		        });
 		       break;
 			}
+			/*
+			case 'buildslaves':							
+				// For the frontpage
+				require(['rtbuildslaves'],
+		        function(rtFrontpage) {
+		        	rtFrontpage.init();
+		        });
+		       break;
+			}
+			*/
+			
 		}
 
 	};

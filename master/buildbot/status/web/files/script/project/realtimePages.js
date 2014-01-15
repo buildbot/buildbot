@@ -119,25 +119,28 @@ define(['jquery', 'helpers'], function ($, helpers) {
         },
         buildersPage: function(m, tableRowList) {
 			
-		  	try {            	
+		  	try {   
+		  	//console.log(tableRowList)         	
 	          	var obj = JSON.parse(m);  
 	          	var i = 0;
 	             $.each(obj, function (key, value) {
+	          //   	
 	             	if (value.project === "All Branches") {
 	             	i = ++i;
 	             	
 	             	//var bNameTxt = $('.bname-js', tableRowList).text();
 	             	//var trimmed = bNameTxt.trim();
-	             	//console.log(bNameTxt)
-	             	//console.log(key)
+	             	//console.log(bNameTxt)	             	
 	             	
 		             	tableRowList.each(function(){
-		             		//console.log($(this).text().trim());
+		            		console.log($(this)) 		
 		             		if (key === $('.bname-js',this).text().trim() && value.pendingBuilds) {
+		             			//console.log($(this).text().trim());
 		             			$('.current-cont',this).html('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in="'+ (i -1) +'"> Pending jobs </a>');
 		             				//$('.current-cont',this).html(value.pendingBuilds);
 		             		}
 		             	});
+		             	
 	             	}
 	             	/*
 	             	if (value.pendingBuilds) {

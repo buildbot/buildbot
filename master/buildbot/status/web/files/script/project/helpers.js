@@ -424,7 +424,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 		    return fullUrl;
         }, getCurrentPage: function (isRealTime) {
         	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
-        	var currentPage = [$('#builddetail_page')];
+        	var currentPage = [$('#builddetail_page'), $('#builders_page')];
         	
         	var isRealTimePage = false;
         	var currentPageNoHash;
@@ -432,11 +432,16 @@ define(['jquery', 'screensize'], function ($, screenSize) {
         	var isFinishedAttr = $('#isFinished').attr('data-isfinished');
         	
         	$.each(currentPage, function(key, value) {
-        		if (value.length === 1 && !isFinishedAttr) {        		
-        			isRealTimePage = true;
+        		if (value.length === 1) {
+
         			currentPage = value;        			
         			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];
+        			if (isFinishedAttr != 'false') {        				
+        				isRealTimePage = true;
+        			}
         		}
+
+
 			});	
 
         	if (isRealTime) {
