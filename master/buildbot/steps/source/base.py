@@ -179,6 +179,10 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.checkoutDelay value."""
         return None
 
+    def runCommand(self, cmd):
+        self.cmd = cmd
+        return LoggingBuildStep.runCommand(self, cmd)
+
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)

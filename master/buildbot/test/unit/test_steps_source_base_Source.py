@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 import mock
+from twisted.python import failure
+from twisted.spread import pb
 from twisted.trial import unittest
 
+from buildbot.process.buildstep import RemoteCommand
 from buildbot.steps.source import Source
 from buildbot.test.util import steps, sourcesteps
 
@@ -111,6 +114,18 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))        
         
         self.assertEqual(step.describe(True), ['update', 'suffix'])
+
+    def test_interrupt_remote_commands(self):
+        step = self.setupStep(Source(codebase='my-code',
+                                     descriptionSuffix='suffix'))
+        step.remote = mock.Mock(spec=pb.RemoteReference)
+        command = mock.Mock(spec=RemoteCommand)
+        step.runCommand(command)
+        step.interrupt(failure.Failure(RuntimeError('oh noes')))
+        self.assertEqual(len(command.interrupt.call_args_list), 1)
+        args = command.interrupt.call_args[0]
+        self.assertTrue(isinstance(args[0], failure.Failure))
+        self.assertEqual(args[0].type, RuntimeError)
 
 
 class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
