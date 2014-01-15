@@ -1,4 +1,4 @@
-define(['datatables-plugin'], function (dataTable) {
+define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 
     "use strict";
     var dataTables;
@@ -59,15 +59,21 @@ define(['datatables-plugin'], function (dataTable) {
 					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
 				}
 
+				if ($(this).hasClass('input-js')) {										
+					optionTable.bFilter = true;
+					optionTable.oLanguage = {
+					 	"sSearch": ""
+					};
+					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+				}
+
 				// remove sorting from selected columns
-			    $('> thead th', this).each(function(i){
-			        
+			    $('> thead th', this).each(function(i){			        
 			        if (!$(this).hasClass('no-tablesorter-js')) {
 			            colList.push(null);
 			        } else {
 			            colList.push({'bSortable': false });
 			        }
-
 			    });
 
 			    optionTable.aoColumns = colList;
@@ -77,13 +83,19 @@ define(['datatables-plugin'], function (dataTable) {
 
 			  	var filterTableInput = $('.dataTables_filter input');
 
-				// Set the marquee in the input field on load and listen for key event
+			  	// insert codebase and branch on the builders page
+	        	if ($('#builders_page').length && window.location.search != '') {
+	        		// Parse the url and insert current codebases and branches
+	        		helpers.codeBaseBranchOverview();	
+				}
+
+				// Set the marquee in the input field on load and listen for key event	
 				filterTableInput.attr('placeholder','Filter results').focus().keydown(function(event) {
 					oTable.fnFilter($(this).val());
 				});  
 
 			});
-			}
+		}
 	};
 
     return dataTables;
