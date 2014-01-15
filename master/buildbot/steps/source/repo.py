@@ -193,10 +193,10 @@ class Repo(Source):
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
-        self.cmd = cmd = buildstep.RemoteShellCommand(workdir, command,
-                                                      env=self.env,
-                                                      logEnviron=self.logEnviron,
-                                                      timeout=self.timeout,  **kwargs)
+        cmd = buildstep.RemoteShellCommand(workdir, command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout,  **kwargs)
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
