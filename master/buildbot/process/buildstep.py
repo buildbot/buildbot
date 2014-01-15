@@ -368,6 +368,14 @@ class BuildStep(object, properties.PropertiesMixin):
         if why.check(BuildStepFailed):
             self.finished(FAILURE)
             return
+        # However, in the case of losing the connection to a slave, we want to
+        # finish with a RETRY.
+        if why.check(error.ConnectionLost):
+            self.step_status.setText(self.describe(True) +
+                                     ["exception", "slave", "lost"])
+            self.step_status.setText2(["exception", "slave", "lost"])
+            self.finished(RETRY)
+            return
 
         log.err(why, "BuildStep.failed; traceback follows")
         try:
@@ -551,7 +559,7 @@ class LoggingBuildStep(BuildStep):
             self.setStatus(cmd, results)
             return results
         d.addCallback(_gotResults)  # returns results
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
@@ -584,13 +592,6 @@ class LoggingBuildStep(BuildStep):
         if self.cmd:
             d = self.cmd.interrupt(reason)
             d.addErrback(log.err, 'while interrupting command')
-
-    def checkDisconnect(self, f):
-        f.trap(error.ConnectionLost)
-        self.step_status.setText(self.describe(True) +
-                                 ["exception", "slave", "lost"])
-        self.step_status.setText2(["exception", "slave", "lost"])
-        return self.finished(RETRY)
 
     def commandComplete(self, cmd):
         pass

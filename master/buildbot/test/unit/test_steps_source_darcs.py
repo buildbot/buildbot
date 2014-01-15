@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source import darcs
 from buildbot.steps.transfer import _FileReader
@@ -21,6 +22,7 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+from twisted.internet import error
 from twisted.trial import unittest
 
 
@@ -361,4 +363,17 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        return self.runStep()
+
+    def test_slave_connection_lost(self):
+        self.setupStep(
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='clobber'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', '--version'])
+            + ('err', error.ConnectionLost()),
+        )
+        self.expectOutcome(result=RETRY,
+                           status_text=["update", "exception", "slave", "lost"])
         return self.runStep()
