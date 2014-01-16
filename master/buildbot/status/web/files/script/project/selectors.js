@@ -1,4 +1,4 @@
-define(['jquery', 'select2'], function ($) {
+define(['select2'], function () {
 
     "use strict";
     var selectors;
@@ -27,7 +27,7 @@ define(['jquery', 'select2'], function ($) {
 				placeholder: "Common branches"
 			});
 
-			selectors.clickSort('#select2-drop .select2-results');
+			selectors.clickSort($('#select2-drop .select2-results'));
 
 		}, getMaxChildWidth: function(sel) {
 			    var max = 80;
@@ -64,14 +64,14 @@ define(['jquery', 'select2'], function ($) {
 			});
 
 			$('#commonBranch_select').change(function(){
-			var commonVal = $(this);
-			
-			$('option',selector).each(function() {
+				var commonVal = $(this);
 				
-				if ($(this).val() === $(commonVal).val() ) {					
-						$(this).parent().children('option').prop('selected', false);
-						$(this).prop('selected', true);
-					}
+				$('option',selector).each(function() {
+					
+					if ($(this).val() === $(commonVal).val() ) {					
+							$(this).parent().children('option').prop('selected', false);
+							$(this).prop('selected', true);
+						}
 				});
 				
 				$(selector).trigger("change");
@@ -83,10 +83,10 @@ define(['jquery', 'select2'], function ($) {
 
 			$('.sort-name').click(function(e){
 				var sn = $(this)
-				$(sn).toggleClass('direction-up');
+				sn.toggleClass('direction-up');
 				e.preventDefault();
 
-			    $(selector).children("li").sort(function(a, b) {
+			    selector.children("li").sort(function(a, b) {
 			        var upA = $(a).text().toUpperCase();
 			        var upB = $(b).text().toUpperCase();
 			        if ($(sn).hasClass('direction-up')) {

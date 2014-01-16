@@ -290,8 +290,7 @@
 						<xsl:otherwise>
 							<xsl:call-template name="GetLastSegment">
 								<xsl:with-param name="value" select="./@name" />
-							</xsl:call-template>
-							<xsl:value-of select="translate($result, $ucletters, $lcletters)"/>
+							</xsl:call-template>							
 						</xsl:otherwise>
 					</xsl:choose>
 			</span>

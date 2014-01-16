@@ -1,13 +1,16 @@
+define('jquery', [], function() {
+    return jQuery;
+});
+
 require.config({
 	paths: {
-		'jquery': 'libs/jQuery-2-0-3',
+		//'jquery':'libs/jQuery-2-0-3',
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
 		'datatables-plugin': 'plugins/jquery-datatables',
 		'dataTables': 'project/dataTables',
 		'dotdotdot': 'plugins/jquery-dotdotdot',
 		'screensize': 'project/screen-size',
-		'currentitem': 'project/set-current-item',
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup',
@@ -15,38 +18,30 @@ require.config({
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
 		'rtfrontpage': 'project/rtFrontpage',
-		'jqache': 'plugins/jqache-0-1-1-min'
+		'jqache': 'plugins/jqache-0-1-1-min',
+		'overscroll': 'plugins/jquery-overscroll'
 	}
 });
 
-require(['jquery','helpers','popup','screensize','projectdropdown'], 
-	function($, helpers, popup, screenSize, projectDropDown ) {
+define(['helpers','dataTables','popup','screensize','projectdropdown'], 
+	function(helpers, dataTables,popup, screenSize, projectDropDown) {
+		
 	'use strict';
 
-	$(document).ready(function() {
-		
-
-		// get all common scripts
-		helpers.init();			
-		// get scripts for general popups
-		popup.init();
-		// get scripts for the projects dropdown
-		projectDropDown.init();
-
-		
-		if ($('.tablesorter-js').length > 0) {
-			require(['dataTables'],
-	        function(dataTables) {
-	        	dataTables.init();
+	 // reveal the page when all scripts are loaded
+	  
+	  $(document).ready(function() {
+        $('body').show();
+	  	// swipe or scroll in the codebases overview
+	  	if ($('#builders_page').length) {
+	  	require(['overscroll'],
+	        function(overscroll) {	        	
+	        	$("#overScrollJS").overscroll({
+	        		showThumbs:false,
+	        		direction:'horizontal'
+	        	});
 	        });
-		}
- 	
-		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {						
-			require(['realtimerouting', 'jqache'],
-	        function(realtimeRouting) {
-	        	realtimeRouting.init();
-	        });
-		}
+	  	}
 
 		// tooltip for long txtstrings
 		if ($('.ellipsis-js').length) {
@@ -64,11 +59,24 @@ require(['jquery','helpers','popup','screensize','projectdropdown'],
 			        selectors.init();
 		    });
 		}
+
+		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {						
+			require(['realtimerouting', 'jqache'],
+	        function(realtimeRouting) {
+	        	realtimeRouting.init();
+	        });
+		}
+
 		if ($('#builddetail_page').length > 0) {
 			helpers.summaryArtifactTests();
 		}
-		
-		
-
-	});
+				
+		// get scripts for general popups
+		popup.init();
+		// get scripts for the projects dropdown
+		projectDropDown.init();
+		// get all common scripts
+		helpers.init();	
+		dataTables.init();	
+	});	
 });

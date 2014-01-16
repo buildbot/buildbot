@@ -1,4 +1,4 @@
-define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
+define(['screensize', 'helpers'], function (screenSize, helpers) {
 
     "use strict";
     var projectDropDown;

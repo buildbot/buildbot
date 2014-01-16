@@ -6,9 +6,10 @@
 */
 
 @include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot?cachebusting=1", "/../fonts/katana_icons/katana_icons.ttf?cachebusting=1"));
+@include font-face("pacifico", font-files("/../fonts/pacifico/pacifico-webfont.eot?cachebusting=2", "/../fonts/pacifico/pacifico-webfont.ttf?cachebusting=2"));
+@include font-face("leckerlione", font-files("/../fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6", "/../fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6"));
 
-
-
+ 
 // Typography
 
 .small-head {
@@ -61,12 +62,12 @@ h1.logo a {
     opacity: 0.76;
 	font-family: 'Pacifico';
     font-weight: normal;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
 	text-decoration: none;
 	@include text-shadow(0 1px 0 #FFF);
 	@include transition(opacity .2s ease-in-out);
 	span {
-		font-family:'Leckerli One', cursive;
+		font-family:'leckerlione', cursive;
 		font-size: 27px;
 	}
 }
@@ -113,11 +114,6 @@ div.welcome-txt {
 		}
 	}
 }
- 
-.column h2 {
- 	font-size: 16px;
-    margin: 20px 0 10px;
-}
 
 .step-head {
 	position: relative;
@@ -154,7 +150,7 @@ div.welcome-txt {
     padding: 0;
     font-weight:normal;
     font-size: 16px;
-     position: relative;
+    position: relative;
 
     /*    
     .chrome.win & {

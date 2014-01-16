@@ -37,7 +37,7 @@ div.common-branch-select {
     color: #787878;
     display: block;
     position: absolute;
-    right: 0;
+    right: 10px;
     top: 20px;
     font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
@@ -76,8 +76,6 @@ div.common-branch-select {
 }
 
 .select2-container .select2-choice {
-	
-	
       display: block;
       overflow: hidden;
       padding: 0 0 0 8px;

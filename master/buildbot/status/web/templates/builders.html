@@ -11,15 +11,7 @@
 
   {% block content %}
 
-<div class="filter-table-input realtime">
-
-    <label>
-        <input type="text" id="filterTableInput" placeholder="Filter results">
-    </label>
-    
-</div>
-
-<table class="table-1 first-child tablesorter tablesorter-js">
+<table class="table-1 first-child tablesorter tablesorter-js input-js realtime">
   <thead>
     <tr>
       <th class="txt-align-left">Builder</th>
@@ -85,13 +77,25 @@
       </td>
       <td class="txt-align-left last-build-js">
           {% if b.last_run %}
-             {{ b.last_run }} ago <span class="small-txt">({{b.elapsed}})</span>
+          {# hidden timestamp for datatable to sort by #}
+          <span class="hide">
+            {{b.last_run_date}}
+          </span>
+
+             {{ b.last_run }} 
+
+             ago <span class="small-txt">({{b.elapsed}})</span>
           {% endif %}
       </td>
       {% if b.build_url %}
         <td class="status-build-js {{ b.build_css_class }} ">
-            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+          <span class="hide">
             {{ b.build_text }}
+          </span>
+            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
+            
+            {{ b.build_text }}
+          
         </td>
       {% else %}
         <td class="LastBuild small-txt">

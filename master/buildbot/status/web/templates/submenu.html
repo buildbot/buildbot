@@ -1,8 +1,11 @@
 {% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName) %}
 	{% set classPath = '' %}
 
+	{% if active_page == 'jsonhelp' %}
+		{% set classPath = 'jsonhelp' %}
+	{% endif %}
+
 	{% if active_page == 'frontpage' %}
-		{% set classPath = 'frontpage' %}
 		{% set classPath = 'frontpage' %}
 	{% endif %}
 
@@ -56,8 +59,8 @@
 	] -%}
 
 
-	<nav id="{{classPath}}_page" class="sub-menu-container">
-		{% if active_page != 'frontpage' %}
+	<nav id="{{classPath}}_page" class="sub-menu-container {{classPath}}">
+		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
 			<div class="container-inner">
 				<div class="wrap">
 				  <ul class="breadcrumbs-nav">

@@ -14,7 +14,7 @@
 
 // used for hidden html in the forcebuild dialogue. See forms.html
  
-
+ 
 .content-blocks {
 	margin-bottom:15px;	
 }
@@ -140,7 +140,7 @@ background: #BBBBBB;
 	&.more-info-box {
 		display: block;
 	    float: none;
-	    padding: 44px 12px 16px 33px;
+	    padding: 44px 12px 23px 33px;
 
 	    width: 200px;
 		h3 {
@@ -182,8 +182,6 @@ background: #BBBBBB;
 .log-in-txt {
 	font-size:12px;
 }
-
-
 
 // buildlog
 .content-holder {
@@ -284,7 +282,6 @@ body.log.interface {
   border-color: #c30000;
   font-size: 20px;
 }
-
  
 .footer {
 	background: none repeat scroll 0 0 #FFFFFF;
@@ -318,4 +315,18 @@ body.log.interface {
 	.tool-tip {
 		max-width: 175px;
 	}
-}	
+}
+
+@include breakpoint($bkpt-medium) {
+	.auth-user {display:none;}
+}
+@include breakpoint($bkpt-large) {
+	.hide-mobile {display:inline;}		
+	.auth-user {display:block;}
+}
+@include breakpoint($bkpt-xlarge) {
+	.hide-mobile {display:inline;}		
+}
+@include breakpoint($bkpt-xxlarge) {
+	.hide-mobile {display:inline;}		
+}

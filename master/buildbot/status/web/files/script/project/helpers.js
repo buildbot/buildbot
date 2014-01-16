@@ -1,4 +1,4 @@
-define(['jquery', 'screensize'], function ($, screenSize) {
+define(['screensize'], function (screenSize) {
 
     "use strict";
     var helpers;
@@ -20,24 +20,31 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 			    });
 			*/
 
-
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
 			// Authorize on every page
 			helpers.authorizeUser();
 
-
         	// insert codebase and branch on the builders page
         	if ($('#builders_page').length && window.location.search != '') {
         		// Parse the url and insert current codebases and branches
         		helpers.codeBaseBranchOverview();
+        	}
+			if ($('#buildslave_page').length) {
+				// display the number of current jobs
+				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
+			}
+
+			if ($('#builddetail_page').length > 0) {
+				helpers.summaryArtifactTests();
 			}
 
 			if ($('#tb-root').length != 0) {
-				helpers.updateBuilders();
+                //Disabled until we decided that we need an updating front page
+				//helpers.updateBuilders();
 			}
-			
+
        		// submenu overflow on small screens
 
 	        helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -136,7 +143,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 				valOrTxt = $(this).is('input')? 'val' : 'text';				
 				$(this)[valOrTxt](cookieVal);
 			});
-		
+
 		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
 
@@ -186,54 +193,58 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$(hi).insertAfter($(this));
 					$('#formWrapper form').submit();
 				});
-			
+
 		}, updateBuilders: function () {
 			$.ajax({
-				url: "/json?filter=0",
+				url: "/json/builders/?filter=0",
 				dataType: "json",
 				type: "GET",
 				cache: false,
 				success: function (data) {
-				var arrayBuilders = [];
-				var arrayPending = [];
-				var arrayCurrent = [];
-				$.each(data.builders, function (key, value) {
-				arrayBuilders.push(key);
-				arrayPending.push(value.pendingBuilds);
-				if (value.state == 'building') {
-				arrayCurrent.push(value.currentBuilds);
-				}
-				});
+                    var arrayBuilders = [];
+                    var arrayPending = [];
+                    var arrayCurrent = [];
+                    $.each(data, function (key, value) {
+                        arrayBuilders.push(key);
+                        arrayPending.push(value.pendingBuilds);
+                        if (value.state == 'building') {
+                            arrayCurrent.push(value.currentBuilds);
+                        }
+                    });
 
-				function sumVal(arr) {
-				var sum = 0;
-				$.each(arr,function(){sum+=parseFloat(this) || 0;});
-				return sum;
-				};
-				var arraySlaves = [];
-				$.each(data.slaves, function (key) {
-				arraySlaves.push(key);
-				});
+                    function sumVal(arr) {
+                        var sum = 0;
+                        $.each(arr,function(){sum+=parseFloat(this) || 0;});
+                        return sum;
+                    }
 
-				var arrayProjects = [];
-				$.each(data.project, function (key) {
-				arrayProjects.push(key);
-				});
-				
-				$('#slavesNr').text(arraySlaves.length);
-				$('#pendingBuilds').text(sumVal(arrayPending));
-				
+                    $('#pendingBuilds').text(sumVal(arrayPending));
+                }
+            });
+
+                $.ajax({
+				url: "/json/slaves/?filter=0",
+				dataType: "json",
+				type: "GET",
+				cache: false,
+				success: function (data) {
+                    var arraySlaves = [];
+                    $.each(data, function (key) {
+                        arraySlaves.push(key);
+                    });
+
+                    $('#slavesNr').text(arraySlaves.length);
 				}
 			});
 		}, codeBaseBranchOverview: function() {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
-			var cbTable = $('<div class="border-table-holder">'+
+			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
-							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div>');
+							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).appendTo($('.filter-table-input'));
+  			$(cbTable).insertAfter($('.dataTables_filter'));
 
 			$(parsedUrl).each(function(i){
 
@@ -289,26 +300,29 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 					$('.tool-tip').remove();
 					$(this).unbind(e);
 				});
+		}, displaySum: function (displayEl, countEl) {
+			// Insert the total length of the elements
+			displayEl.text(countEl.length);
+
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
-
 			// Artifacts produced in the buildsteplist
 			var artifactJS = $('li.artifact-js').clone();
 			
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
+			var noArtifactsJS = $('#noArtifactsJS');
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
 				showArtifactsJS
-				.removeClass('no-artifacts')
-				.addClass('more-info mod-1 popup-btn-js-2')
+				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);
+				.append(artifactJS);				
 			} else {
-				showArtifactsJS.text('No Artifacts');
+				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult
@@ -452,7 +466,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 
-		  	return (value != null) ? unescape(value[1]) : ''; 
+		  	return (value != null) ? unescape(value[1]) : ''; 			
 
 		}, eraseCookie: function (name, value, eraseCookie) {
     		helpers.setCookie(name, value, eraseCookie);
