@@ -81,35 +81,6 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			   	//initialize datatable with options
 			  	var oTable = $(this).dataTable(optionTable);
 
-
-					$('#filterTableInput').keydown(function(event) {
-						oTable.fnFilter($(this).val());
-					});
-					
-				}
-			
-		},
-		oTable: function(colList) {
-			// sort and filter tabless		
-			 var oTable = $('.tablesorter-js').dataTable({
-				"bPaginate": false,
-				"bLengthChange": false,
-				"bFilter": true,
-				"bSort": true,
-				"bInfo": false,
-				"bAutoWidth": false,
-				"bRetrieve": false,
-				"asSorting": true,
-				"bSearchable": true,
-				"aaSorting": [],
-				"aoColumns": colList,
-				"oLanguage": {
-				 	"sSearch": ""
-				 },
-				"bStateSave": true
-			});
-			return oTable;
-
 			  	var filterTableInput = $('.dataTables_filter input');
 
 			  	// insert codebase and branch on the builders page
@@ -124,7 +95,6 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 				});  
 
 			});
-
 		}
 	};
 
