@@ -23,11 +23,11 @@ import re
 from twisted.internet import defer
 from twisted.web import html, resource, server
 
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, path_to_root
 from buildbot.util import json
 
 
-_IS_INT = re.compile('^[-+]?\d+$')
+_IS_INT = re.compile(r'^[-+]?\d+$')
 
 
 FLAGS = """\
@@ -146,8 +146,8 @@ class JsonResource(resource.Resource):
             return HelpResource(self.help,
                                 pageTitle=pageTitle,
                                 parent_node=self)
-            # Equivalent to resource.Resource.getChildWithDefault()
-        if path in self.childrenpath:
+        # Equivalent to resource.Resource.getChildWithDefault()
+        if path in self.children:
             return self.children[path]
         return self.getChild(path, request)
 
@@ -257,7 +257,7 @@ class JsonResource(resource.Resource):
         if callback:
             # Only accept things that look like identifiers for now
             callback = callback[0]
-            if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
+            if re.match(r'^[a-zA-Z$_][a-zA-Z$0-9._]*$', callback):
                 data = '%s(%s);' % (callback, data)
         defer.returnValue(data)
 
@@ -356,7 +356,7 @@ class HelpResource(HtmlResource):
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
             'href="/json',
-            'href="../%sjson' % (self.parent_level * '../'))
+            'href="%s' % path_to_root(request) + 'json')
 
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
