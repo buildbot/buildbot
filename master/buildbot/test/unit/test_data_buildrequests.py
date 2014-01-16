@@ -157,7 +157,6 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             complete=None,
             claimed=None,
-            bsid=None,
             branch=None,
             repository=None)
 
@@ -177,7 +176,6 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             complete=False,
             claimed=True,
-            bsid=55,
             branch='mybranch',
             repository='myrepo')
 
@@ -195,7 +193,6 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             complete=None,
             claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
-            bsid=None,
             branch=None,
             repository=None)
 

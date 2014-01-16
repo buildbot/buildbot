@@ -78,7 +78,8 @@ class Tests(interfaces.InterfaceTests):
                                   claimed_by_masterid=self.MASTER_ID, complete=True,
                                   results=75, claimed_at=self.CLAIMED_AT,
                                   submitted_at=self.SUBMITTED_AT,
-                                  complete_at=self.COMPLETE_AT, waited_for=False))
+                                  complete_at=self.COMPLETE_AT, waited_for=False,
+                                  branch='master', codebase='', repository='repo'))
         d.addCallback(check)
         return d
 

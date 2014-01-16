@@ -77,6 +77,8 @@ class ResultSpec(object):
         if neVals and len(neVals) == 1:
             return not neVals[0]
 
+    popStringFilter = popBooleanFilter
+
     def removePagination(self):
         self.limit = self.offset = None
 

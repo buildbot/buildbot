@@ -1443,10 +1443,20 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 self.claims[row.brid] = row
 
     # component methods
-
+    @defer.inlineCallbacks
     def getBuildRequest(self, brid):
         row = self.reqs.get(brid)
         if row:
+            buildset = yield self.db.buildsets.getBuildset(row.buildsetid)
+            sourcestamp = yield self.db.sourcestamps.getSourceStamp(buildset['sourcestamps'][0] if len(buildset['sourcestamps']) > 0 else None)
+            if sourcestamp is not None:
+                row.branch = sourcestamp['branch']
+                row.repository = sourcestamp['repository']
+                row.codebase = sourcestamp['codebase']
+            else:
+                row.branch = None
+                row.repository = None
+                row.codebase = None
             claim_row = self.claims.get(brid, None)
             if claim_row:
                 row.claimed_at = claim_row.claimed_at
@@ -1455,9 +1465,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 row.claimed_by_masterid = claim_row.masterid
             else:
                 row.claimed_at = None
-            return defer.succeed(self._brdictFromRow(row))
+            defer.returnValue(self._brdictFromRow(row))
         else:
-            return defer.succeed(None)
+            defer.returnValue(None)
 
     @defer.inlineCallbacks
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
@@ -1505,6 +1515,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     continue
                 if repository and not any(repository == s['repository'] for s in sourcestamps):
                     continue
+
+            br.branch = None
+            br.repository = None
+            br.codebase = None
 
             rv.append(self._brdictFromRow(br))
         defer.returnValue(rv)

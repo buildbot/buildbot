@@ -35,6 +35,9 @@ class Db2DataMixin(object):
             'claimed': dbdict['claimed'],
             'claimed_at': dbdict['claimed_at'],
             'claimed_by_masterid': dbdict['claimed_by_masterid'],
+            'branch': dbdict['branch'],
+            'repository': dbdict['repository'],
+            'codebase': dbdict['codebase'],
             'complete': dbdict['complete'],
             'results': dbdict['results'],
             'submitted_at': dbdict['submitted_at'],
@@ -101,14 +104,12 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         else:
             claimed = resultSpec.popBooleanFilter('claimed')
 
-        bsid = resultSpec.popBooleanFilter('buildsetid')
-        branch = resultSpec.popBooleanFilter('branch')
-        repository = resultSpec.popBooleanFilter('repository')
+        branch = resultSpec.popStringFilter('branch')
+        repository = resultSpec.popStringFilter('repository')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             buildername=buildername,
             complete=complete,
             claimed=claimed,
-            bsid=bsid,
             branch=branch,
             repository=repository)
         if buildrequests:
@@ -145,6 +146,9 @@ class BuildRequest(base.ResourceType):
         claimed_at = types.NoneOk(types.DateTime())
         claimed_by_masterid = types.NoneOk(types.Integer())
         complete = types.Boolean()
+        branch = types.NoneOk(types.String())
+        repository = types.NoneOk(types.String())
+        codebase = types.NoneOk(types.String())
         results = types.NoneOk(types.Integer())
         submitted_at = types.DateTime()
         complete_at = types.NoneOk(types.DateTime())
