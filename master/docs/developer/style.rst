@@ -1,6 +1,14 @@
 Buildbot Coding Style
 =====================
 
+Documentation
+-------------
+Buildbot strongly encourages developers to write methods' input/output and overall class documentation.
+When such documentation deserves to be written outside of the code, i.e. in associated rst files
+under the master/docs directory, using docstring formatting in the code is forbidden, to avoid having
+duplicated information.
+
+
 Symbol Names
 ------------
 

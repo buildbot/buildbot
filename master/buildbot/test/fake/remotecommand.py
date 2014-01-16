@@ -28,7 +28,8 @@ class FakeRemoteCommand(object):
     active = False
 
     def __init__(self, remote_command, args,
-                 ignore_updates=False, collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS}):
+                 ignore_updates=False, collectStdout=False, collectStderr=False,
+                 decodeRC={0: SUCCESS}):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -71,6 +72,12 @@ class FakeRemoteCommand(object):
         # note that this should not be used in the same test as useLog(Delayed)
         self.logs[log] = l = logfile.FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
+
+    def setLogFiles(self, logfiles=None):
+        if logfiles is None:
+            logfiles = {}
+        if logfiles:
+            self.args['logfiles'] = logfiles
 
     def __repr__(self):
         return "FakeRemoteCommand(" + repr(self.remote_command) + "," + repr(self.args) + ")"
@@ -183,9 +190,13 @@ class Expect(object):
         if behavior == 'rc':
             command.rc = args[0]
             d = defer.succeed(None)
-            for wrapper in command.logs.values():
-                d.addCallback(lambda _: wrapper.unwrap())
-                d.addCallback(lambda l: l.flushFakeLogfile())
+            for log in command.logs.values():
+                if hasattr(log, 'unwrap'):
+                    # We're handling an old style log that was
+                    # used in an old style step. We handle the necessary
+                    # stuff to make the make sync/async log hack work.
+                    d.addCallback(lambda _: log.unwrap())
+                    d.addCallback(lambda l: l.flushFakeLogfile())
             return d
         elif behavior == 'err':
             return defer.fail(args[0])
