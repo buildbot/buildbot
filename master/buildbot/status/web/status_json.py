@@ -84,6 +84,10 @@ EXAMPLES = """\
     - A specific slave.
   - /json?select=slaves/<A_SLAVE>/&select=project&select=builders/<A_BUILDER>/builds/<A_BUILD>
     - A selection of random unrelated stuff as an random example. :)
+  - /json/projects/
+    - All projects
+  - /json/projects/<A_PROJECT>
+    - A specific project.
 """
 
 
@@ -621,6 +625,48 @@ class ProjectJsonResource(JsonResource):
     def asDict(self, request):
         return self.status.asDict()
 
+class ProjectsJsonResource(JsonResource):
+    help = """List the registered projects.
+"""
+    pageTitle = 'Projects'
+
+    def __init__(self, status):
+        JsonResource.__init__(self, status)
+        for project_name, project_status in status.getProjects().iteritems():
+            self.putChild(project_name, SingleProjectJsonResource(status, project_status))
+
+
+class SingleProjectJsonResource(JsonResource):
+    help = """Describe a project in katana"""
+    pageTitle = 'Project'
+
+    def __init__(self, status, project_status):
+        JsonResource.__init__(self, status)
+        self.status = status
+        self.project_status = project_status
+        self.name = self.project_status.name
+        self.builders = None
+
+    def getBuilders(self):
+        if self.builders is None:
+            self.builders = []
+            builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
+            for b in builder_names:
+                self.builders.append(self.status.getBuilder(b))
+
+        return self.builders
+
+    @defer.inlineCallbacks
+    def asDict(self, request):
+        status = None
+        result = self.project_status.asDict()
+
+        result['builders'] = []
+        for b in self.getBuilders():
+            builder = yield b.asDict_async()
+            result['builders'].append(builder)
+
+        defer.returnValue(result)
 
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
@@ -725,6 +771,7 @@ For help on any sub directory, use url /child/help
         self.putChild('builders', BuildersJsonResource(status))
         self.putChild('change_sources', ChangeSourcesJsonResource(status))
         self.putChild('project', ProjectJsonResource(status))
+        self.putChild('projects', ProjectsJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
         self.putChild('metrics', MetricsJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
@@ -748,6 +795,9 @@ For help on any sub directory, use url /child/help
             return
         EXAMPLES = EXAMPLES.replace('<A_BUILDER>', builder.getName())
         build = builder.getBuild(-1)
+        projects = self.status.getProjects().keys()
+        if len(projects) > 0:
+            EXAMPLES = EXAMPLES.replace('<A_PROJECT>', projects[0])
         if build:
             EXAMPLES = EXAMPLES.replace('<A_BUILD>', str(build.getNumber()))
         if builder.slavenames:
