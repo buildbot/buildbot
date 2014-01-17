@@ -21,6 +21,7 @@ from buildbot.process import properties
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakebuild
@@ -30,7 +31,7 @@ from buildbot.test.util import compat
 from buildbot.test.util import config
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
-from twisted.internet import defer
+from twisted.internet import defer, error
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -331,6 +332,11 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
         def cb(_):
             self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
         return d
+
+    def test_step_raising_connectionlost_in_start(self):
+        self.setupStep(FailingCustomStep(exception=error.ConnectionLost))
+        self.expectOutcome(result=RETRY, status_text=["generic", "exception", "slave", "lost"])
+        return self.runStep()
 
 
 class TestRemoteShellCommand(unittest.TestCase):
