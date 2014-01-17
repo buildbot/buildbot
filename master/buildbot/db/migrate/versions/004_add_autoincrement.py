@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -114,6 +115,21 @@ def upgrade(migrate_engine):
         "patches.id",
         "sourcestamps.id",
     ]
+
+    schedulers_tbl = sa.Table('schedulers', metadata, autoload=True)
+    changes_tbl = sa.Table('changes', metadata, autoload=True)
+
+    scheduler_changes_tbl = sa.Table('scheduler_changes', metadata, autoload=True)
+    scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets', metadata, autoload=True)
+    change_files_tbl = sa.Table('change_files', metadata, autoload=True)
+
+    scheduler_change_cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    scheduler_upstream_buildsets_cons = constraint.ForeignKeyConstraint([scheduler_upstream_buildsets_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    change_files_cons = constraint.ForeignKeyConstraint([change_files_tbl.c.changeid], [changes_tbl.c.changeid])
+    # drop constraints before altering the table
+    scheduler_change_cons.drop()
+    scheduler_upstream_buildsets_cons.drop()
+    change_files_cons.drop()
 
     # It seems that SQLAlchemy's ALTER TABLE doesn't work when migrating from
     # INTEGER to PostgreSQL's SERIAL data type (which is just pseudo data type

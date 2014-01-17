@@ -20,6 +20,7 @@ import cPickle
 from twisted.persisted import styles
 from buildbot.util import json
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 metadata = sa.MetaData()
 
@@ -51,7 +52,7 @@ change_links = sa.Table('change_links', metadata,
 )
 
 change_files = sa.Table('change_files', metadata,
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+    sa.Column('changeid', sa.Integer, nullable=False),
     sa.Column('filename', sa.String(1024), nullable=False),
 )
 
@@ -68,14 +69,14 @@ schedulers = sa.Table("schedulers", metadata,
 )
 
 scheduler_changes = sa.Table('scheduler_changes', metadata,
-    sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+    sa.Column('schedulerid', sa.Integer),
+    sa.Column('changeid', sa.Integer),
     sa.Column('important', sa.SmallInteger),
 )
 
 scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
     sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
-    sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
+    sa.Column('schedulerid', sa.Integer),
     sa.Column('active', sa.SmallInteger),
 )
 
@@ -270,6 +271,23 @@ def import_changes(migrate_engine):
     #    print "moving changes.pck to changes.pck.old; delete it or keep it as a backup"
     os.rename(changes_pickle, changes_pickle+".old")
 
+def add_constraints(migrate_engine):
+    metadata = sa.MetaData()
+    metadata.bind = migrate_engine
+
+    schedulers_tbl = sa.Table('schedulers', metadata, autoload=True)
+    changes_tbl = sa.Table('changes', metadata, autoload=True)
+    scheduler_changes_tbl = sa.Table('scheduler_changes', metadata, autoload=True)
+    scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets', metadata, autoload=True)
+    change_files_tbl = sa.Table('change_files', metadata, autoload=True)
+
+    cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([scheduler_upstream_buildsets_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([change_files_tbl.c.changeid], [changes_tbl.c.changeid])
+    cons.create()
+
 def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
@@ -281,3 +299,5 @@ def upgrade(migrate_engine):
 
     # and import some changes
     import_changes(migrate_engine)
+
+    add_constraints(migrate_engine)
