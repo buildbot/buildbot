@@ -503,6 +503,24 @@ class Builder(config.ReconfigurableServiceMixin,
         return [sb for sb in self.slaves
                 if sb.isAvailable(checkCanStartBuild)]
 
+    def getSelectedSlaveFromBuildRequest(self, brdict):
+        """
+        Grab the selected slave and return the slave object
+        if selected_slave property is not found then returns
+        None
+        """
+        if self.buildRequestHasSelectedSlave(brdict):
+            for sb in self.slaves:
+                if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
+                    return sb
+        return None
+
+    def buildRequestHasSelectedSlave(self, brdict):
+        """
+        Does the build request have a specified slave?
+        """
+        return brdict['brobj'].properties.hasProperty("selected_slave")
+
     @defer.inlineCallbacks
     def maybeStartBuild(self):
         # This method is called by the botmaster whenever this builder should
@@ -600,14 +618,11 @@ class Builder(config.ReconfigurableServiceMixin,
                 self.updateBigStatus()
                 break
 
-            slavebuilder = None
-            if brdict['brobj'].properties.hasProperty("selected_slave"):
-                for sb in self.slaves:
-                    if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
-                        if sb.isAvailable() is True:
-                            slavebuilder = sb
-                        else:
-                            continue
+            #If we selected a specific slave check for availability
+            if self.buildRequestHasSelectedSlave(brdict):
+                slavebuilder = self.getSelectedSlaveFromBuildRequest(brdict)
+                if slavebuilder.isAvailable() is False:
+                    slavebuilder = None
             else:
                 slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
@@ -674,6 +689,7 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             return defer.succeed(random.choice(available_slavebuilders))
 
+    @defer.inlineCallbacks
     def _chooseBuild(self, buildrequests):
         """
         Choose the next build from the given set of build requests (represented
@@ -694,9 +710,19 @@ class Builder(config.ReconfigurableServiceMixin,
                 # get the brdict for this object back
                 return brobj.brdict
             d.addCallback(to_brdict)
-            return d
+            defer.returnValue(d)
         else:
-            return defer.succeed(buildrequests[0])
+            for b in buildrequests:
+                d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
+                brdict = d[0].brdict
+                if self.buildRequestHasSelectedSlave(brdict):
+                    selected_slave = self.getSelectedSlaveFromBuildRequest(brdict)
+                    if selected_slave is not None and selected_slave.isAvailable():
+                        defer.returnValue(brdict)
+                else:
+                    defer.returnValue(brdict)
+
+            defer.returnValue(None)
 
     def _getMergeRequestsFn(self):
         """Helper function to determine which mergeRequests function to use
@@ -724,7 +750,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
     def propertiesMatch(self, req1, req2):
         #If the instances are the same then they match!
-        if req1 == req2:
+        if req1.bsid == req2.bsid:
             return True
         if req1.properties.has_key('selected_slave') or req2.properties.has_key('selected_slave'):
             return False
