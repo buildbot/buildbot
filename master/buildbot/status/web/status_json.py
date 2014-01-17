@@ -150,7 +150,7 @@ class JsonResource(resource.Resource):
             return HelpResource(self.help,
                                 pageTitle=pageTitle,
                                 parent_node=self)
-        # Equivalent to resource.Resource.getChildWithDefault()
+            # Equivalent to resource.Resource.getChildWithDefault()
         if path in self.children:
             return self.children[path]
         return self.getChild(path, request)
@@ -307,7 +307,7 @@ def ToHtml(text):
 
                     # Close previous item
                     #output.append('</li>')
-                #output.append('<li>')
+                    #output.append('<li>')
             in_item = True
             line = match.group(2)
 
@@ -624,6 +624,7 @@ class ProjectJsonResource(JsonResource):
 
     def asDict(self, request):
         return self.status.asDict()
+
 
 class ProjectsJsonResource(JsonResource):
     help = """List the registered projects.
