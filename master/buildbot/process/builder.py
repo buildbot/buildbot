@@ -495,8 +495,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @d.addCallback
         def notify(_):
-            # XXX method does not exist
-            self._msg_buildrequests_unclaimed(build.requests)
+            pass  # XXX method does not exist
+            # self._msg_buildrequests_unclaimed(build.requests)
         return d
 
     def setExpectations(self, progress):

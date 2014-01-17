@@ -244,7 +244,7 @@ class CVS(Source):
             self.setStatus(self.cmd, results)
             return results
         d.addCallback(_gotResults)
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         return d
 
     def checkLogin(self, _):

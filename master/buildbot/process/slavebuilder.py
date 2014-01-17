@@ -107,7 +107,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         return d
 
     def prepare(self, builder_status, build):
-        if not self.slave.acquireLocks():
+        if not self.slave or not self.slave.acquireLocks():
             return defer.succeed(False)
         return defer.succeed(True)
 

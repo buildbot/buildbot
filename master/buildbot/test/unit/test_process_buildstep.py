@@ -512,3 +512,33 @@ class TestRealItfc(unittest.TestCase,
 
     def setUp(self):
         self.step = buildstep.BuildStep()
+
+
+class TestRemoteShellCommand(unittest.TestCase):
+
+    def test_obfuscated_arguments(self):
+        command = ["echo",
+                   ("obfuscated", "real", "fake"),
+                   "test",
+                   ("obfuscated", "real2", "fake2"),
+                   ("not obfuscated", "a", "b"),
+                   ("obfuscated"),  # not obfuscated
+                   ("obfuscated", "test"),  # not obfuscated
+                   ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                   ]
+        cmd = buildstep.RemoteShellCommand("build", command)
+        self.assertEqual(cmd.command, command)
+        self.assertEqual(cmd.fake_command, ["echo",
+                                            "fake",
+                                            "test",
+                                            "fake2",
+                                            ("not obfuscated", "a", "b"),
+                                            ("obfuscated"),  # not obfuscated
+                                            ("obfuscated", "test"),  # not obfuscated
+                                            ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                                            ])
+
+        command = "echo test"
+        cmd = buildstep.RemoteShellCommand("build", command)
+        self.assertEqual(cmd.command, command)
+        self.assertEqual(cmd.fake_command, command)

@@ -265,6 +265,17 @@ Master
 Features
 ~~~~~~~~
 
+* The following optional parameters have been added to :py:class:`EC2LatentBuildSlave`
+   * Boolean parameter ``spot_instance``, default False, creates a spot instance.
+   * Float parameter ``max_spot_price`` defines the maximum bid for a spot instance.
+   * List parameter ``volumes``, takes a list of (volume_id, mount_point) tuples.
+   * String parameter ``placement`` is appended to the ``region`` parameter, e.g. ``region='us-west-2', placement='b'``
+     will result in the spot request being placed in us-west-2b.
+   * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
+  
+  With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
+  price, placement, and so on.
+
 * The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
 
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
@@ -414,6 +425,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * The former ``buildbot.process.buildstep.RemoteCommand`` class and its subclasses are now in :py:mod`buildbot.process.remotecommand`, although imports from the previous path will continue to work.
   Similarly, the former ``buildbot.process.buildstep.LogObserver`` class and its subclasses are now in :py:mod`buildbot.process.logobserver`, although imports from the previous path will continue to work.
 
+* The undocumented BuildStep method ``checkDisconnect`` is deprecated and now does nothing as the handling of disconnects is now handled in the ``failed`` method.
+  Any custom steps adding this method as a callback or errback should no longer do so.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -426,6 +440,7 @@ Features
 * Added zsh and bash tab-completions support for 'buildslave' command.
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug: `751`)
+* Added spot instance support to EC2LatentBuildSlave.
 
 Fixes
 ~~~~~

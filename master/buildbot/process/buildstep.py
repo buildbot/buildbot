@@ -435,6 +435,10 @@ class BuildStep(object, properties.PropertiesMixin):
             results = FAILURE
             # fall through to the end
 
+        except error.ConnectionLost:
+            self.setStateStrings(self.describe(True) + ["exception", "slave", "lost"])
+            results = RETRY
+
         except Exception:
             why = Failure()
             log.err(why, "BuildStep.failed; traceback follows")
@@ -783,7 +787,7 @@ class LoggingBuildStep(BuildStep):
             stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
@@ -820,11 +824,9 @@ class LoggingBuildStep(BuildStep):
             d.addErrback(log.err, 'while cancelling command')
 
     def checkDisconnect(self, f):
-        f.trap(error.ConnectionLost)
-        self.step_status.setText(self.describe(True) +
-                                 ["exception", "slave", "lost"])
-        self.step_status.setText2(["exception", "slave", "lost"])
-        return self.finished(RETRY)
+        # this is now handled by self.failed
+        log.msg("WARNING: step %s uses deprecated checkDisconnect method")
+        return f
 
     def commandComplete(self, cmd):
         pass

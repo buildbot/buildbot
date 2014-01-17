@@ -289,7 +289,7 @@ class Git(Source):
                     (self.cmd))
             return results
         d.addCallback(_gotResults)
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         return d
 
     @defer.inlineCallbacks

@@ -29,6 +29,7 @@ from buildbot.steps import shell
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
+from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
@@ -250,6 +251,12 @@ class RunSteps(unittest.TestCase):
         self.assertEqual(bs.getResults(), results.EXCEPTION)
         #self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
+
+    @defer.inlineCallbacks
+    def test_step_raising_connectionlost_in_start(self):
+        self.factory.addStep(FailingCustomStep(exception=error.ConnectionLost))
+        bs = yield self.do_test_step()
+        self.assertEqual(bs.getResults(), results.RETRY)
 
     @defer.inlineCallbacks
     def test_Latin1ProducingCustomBuildStep(self):

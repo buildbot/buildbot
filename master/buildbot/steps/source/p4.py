@@ -180,7 +180,7 @@ class P4(Source):
             self.setStatus(self.cmd, results)
             return results
         d.addCallback(_gotResults)
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         return d
 
     def _getP4BaseForLog(self):

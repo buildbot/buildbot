@@ -778,6 +778,7 @@ class Try(pb.Referenceable):
     def statusDone(self):
         if self.printloop:
             self.printloop.stop()
+            self.printloop = None
         output("All Builds Complete")
         # TODO: include a URL for all failing builds
         names = sorted(self.buildRequests.keys())
