@@ -23,12 +23,11 @@ import re
 from twisted.internet import defer
 from twisted.web import html, resource, server
 
-from buildbot.status.web.base import HtmlResource, path_to_root
+from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset
 from buildbot.util import json
 
 
 _IS_INT = re.compile(r'^[-+]?\d+$')
-
 
 FLAGS = """\
   - as_text
@@ -665,9 +664,27 @@ class SingleProjectJsonResource(JsonResource):
         result['builders'] = []
         for b in self.getBuilders():
             builder = yield b.asDict_async()
+
+            #Get branches
+            encoding = getRequestCharset(request)
+            branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
+
+            #Get codebases
+            codebases = {}
+            getCodebasesArg(request=request, codebases=codebases)
+
+            #Get latest build
+            builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
+                                                   codebases=codebases,
+                                                   num_builds=1))
+
+            if len(builds) > 0:
+                builder['latestBuild'] = builds[0].asDict()
+
             result['builders'].append(builder)
 
         defer.returnValue(result)
+
 
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
