@@ -19,12 +19,14 @@ import platform
 import textwrap
 
 from buildbot import config
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.p4 import P4
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
+from twisted.internet import error
 from twisted.trial import unittest
 
 _is_windows = (platform.system() == 'Windows')
@@ -725,3 +727,22 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
+
+    def test_slave_connection_lost(self):
+        self.setupStep(P4(p4port='localhost:12000', mode='incremental',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass'),
+                       dict(revision='100',))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-V'])
+            + ('err', error.ConnectionLost()),
+        )
+        self.expectOutcome(result=RETRY,
+                           status_text=["update", "exception", "slave", "lost"])
+        return self.runStep()

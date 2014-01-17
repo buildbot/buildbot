@@ -16,6 +16,7 @@
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source import svn
 from buildbot.steps.transfer import _FileReader
@@ -24,6 +25,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
+from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
 
@@ -1733,6 +1735,20 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
+    def test_slave_connection_lost(self):
+        self.setupStep(
+            svn.SVN(repourl='http://svn.local/app/trunk',
+                    mode='incremental', username='user',
+                    password='pass', extra_args=['--random']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + ('err', error.ConnectionLost()),
+        )
+        self.expectOutcome(result=RETRY,
+                           status_text=["update", "exception", "slave", "lost"])
         return self.runStep()
 
 

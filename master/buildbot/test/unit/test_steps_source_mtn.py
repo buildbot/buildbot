@@ -16,6 +16,7 @@
 from twisted.trial import unittest
 
 from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source import mtn
 from buildbot.steps.transfer import _FileReader
@@ -24,6 +25,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from twisted.internet import error
 
 
 class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
@@ -706,4 +708,20 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
+        return self.runStep()
+
+    def test_slave_connection_lost(self):
+        self.setupStep(
+            mtn.Monotone(repourl='mtn://localhost/monotone',
+                         mode='full', method='clean', branch='master'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['mtn', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
+            + ('err', error.ConnectionLost()),
+        )
+        self.expectOutcome(result=RETRY,
+                           status_text=["update", "exception", "slave", "lost"])
         return self.runStep()
