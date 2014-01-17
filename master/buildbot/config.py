@@ -665,6 +665,9 @@ class ProjectConfig:
         if errors:
             raise errors
 
+    def asDict(self):
+        return {"name" : self.name}
+
 class BuilderConfig:
 
     def __init__(self, name=None, slavename=None, slavenames=None,
