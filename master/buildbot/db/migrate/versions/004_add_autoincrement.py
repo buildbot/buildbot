@@ -176,7 +176,7 @@ def upgrade(migrate_engine):
             col = table.c[col_name]
             col.alter(autoincrement=True)
 
-    # restore constraints before altering the table
+    # restore constraints after altering the tables
     scheduler_change_cons.create()
     scheduler_upstream_buildsets_cons.create()
     change_files_cons.create()

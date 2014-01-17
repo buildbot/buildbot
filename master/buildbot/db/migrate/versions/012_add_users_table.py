@@ -23,7 +23,7 @@ def upgrade(migrate_engine):
     # what defines a user
     users = sa.Table("users", metadata,
         sa.Column("uid", sa.Integer, primary_key=True),
-        sa.Column("identifier", sa.String(256), nullable=False),
+        sa.Column("identifier", sa.String(255), nullable=False),
     )
     users.create()
 
