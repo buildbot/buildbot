@@ -593,6 +593,11 @@ class LoggingBuildStep(BuildStep):
             d = self.cmd.interrupt(reason)
             d.addErrback(log.err, 'while interrupting command')
 
+    def checkDisconnect(self, f):
+        # this is now handled by self.failed
+        log.msg("WARNING: step %s uses deprecated checkDisconnect method")
+        return f
+
     def commandComplete(self, cmd):
         pass
 
