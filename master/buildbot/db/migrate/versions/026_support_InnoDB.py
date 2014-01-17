@@ -185,18 +185,18 @@ def upgrade(migrate_engine):
 
     # sourcestamp_changes table
     cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
-    # cons.drop()
+    cons.drop()
     cons.create()
 
     cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.changeid], [changes_tbl.c.changeid])
-    # cons.drop()
+    cons.drop()
     cons.create()
 
     # scheduler_changes table
     cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.objectid], [objects_tbl.c.id])
-    # cons.drop()
+    cons.drop()
     cons.create()
 
     cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.changeid], [changes_tbl.c.changeid])
-    # cons.drop()
+    cons.drop()
     cons.create()

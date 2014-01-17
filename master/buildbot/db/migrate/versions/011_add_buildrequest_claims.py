@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 import migrate
 from buildbot.util import sautils
+from migrate.changeset import constraint
 
 def migrate_claims(migrate_engine, metadata, buildrequests, objects,
                    buildrequest_claims):
@@ -101,15 +102,21 @@ def upgrade(migrate_engine):
 
     # and a new buildrequest_claims table
     buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+        sa.Column('brid', sa.Integer,
             index=True, unique=True),
-        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+        sa.Column('objectid', sa.Integer,
             index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
 
     # create the new table
     buildrequest_claims.create()
+
+    cons = constraint.ForeignKeyConstraint([buildrequest_claims.c.brid], [buildrequests.c.id])
+    cons.create()
+
+    cons = constraint.ForeignKeyConstraint([buildrequest_claims.c.objectid], [objects.c.id])
+    cons.create()
 
     # migrate the claims into that table
     migrate_claims(migrate_engine, metadata, buildrequests,
