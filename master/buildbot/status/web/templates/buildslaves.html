@@ -12,6 +12,7 @@
 <thead>
 <tr>
   <th>Name</th>
+  <th>Hostname</th>
   <th>Status</th>
   <th>Last heard from</th>
 </tr>
@@ -22,7 +23,7 @@
 <tr>
   <td>
       <a href="{{ s.link }}">
-        {{ s.name }}
+        {{ s.friendly_name }}
       </a>
       <a class="more-info fl-right popup-btn-js-2" href="#">
       </a>
@@ -61,6 +62,9 @@
           {%- endif %}
       </div>
       
+  </td>
+  <td>
+      {{ s.name }}
   </td>
 
 {% if s.connected %}

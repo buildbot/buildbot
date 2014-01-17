@@ -54,7 +54,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None, keepalive_interval=3600):
+                 properties={}, locks=None, keepalive_interval=3600,
+                 friendlyName=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -72,6 +73,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         service.MultiService.__init__(self)
         self.slavename = name
         self.password = password
+        self.friendly_name = friendlyName
+
+        if self.friendly_name is None:
+            self.friendly_name = name
 
         # PB registration
         self.registration = None
@@ -83,6 +88,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.master = None
 
         self.slave_status = SlaveStatus(name)
+        self.slave_status.setFriendlyName(self.friendly_name)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = {}

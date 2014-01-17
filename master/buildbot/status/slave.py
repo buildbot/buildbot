@@ -27,6 +27,7 @@ class SlaveStatus:
     version = None
     connected = False
     graceful_shutdown = False
+    friendly_name = None
 
     def __init__(self, name):
         self.name = name
@@ -37,6 +38,8 @@ class SlaveStatus:
 
     def getName(self):
         return self.name
+    def getFriendlyName(self):
+        return self.friendly_name
     def getAdmin(self):
         return self.admin
     def getHost(self):
@@ -55,6 +58,8 @@ class SlaveStatus:
         then = time.time() - 3600
         return len([ t for t in self.connect_times if t > then ])
 
+    def setFriendlyName(self, name):
+        self.friendly_name = name
     def setAdmin(self, admin):
         self.admin = admin
     def setHost(self, host):
@@ -101,6 +106,7 @@ class SlaveStatus:
         result = {}
         # Constant
         result['name'] = self.getName()
+        result['friendly_name'] = self.getFriendlyName()
         result['access_uri'] = self.getAccessURI()
 
         # Transient (since it changes when the slave reconnects)

@@ -5,7 +5,7 @@ define(['screensize'], function (screenSize) {
     
     helpers = {
         init: function () {
-        	
+
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -26,12 +26,6 @@ define(['screensize'], function (screenSize) {
 			// Authorize on every page
 			helpers.authorizeUser();
 
-
-        	// insert codebase and branch on the builders page
-        	if ($('#builders_page').length && window.location.search != '') {
-        		// Parse the url and insert current codebases and branches
-        		helpers.codeBaseBranchOverview();	
-			}
 
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
@@ -241,11 +235,11 @@ define(['screensize'], function (screenSize) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
-			var cbTable = $('<div class="border-table-holder"><div class="inner-table-holder">'+
+			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).insertAfter($('.filter-table-input'));
+  			$(cbTable).insertAfter($('.dataTables_filter'));
 
 			$(parsedUrl).each(function(i){
 
@@ -307,24 +301,23 @@ define(['screensize'], function (screenSize) {
 
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
-
 			// Artifacts produced in the buildsteplist
 			var artifactJS = $('li.artifact-js').clone();
 			
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
+			var noArtifactsJS = $('#noArtifactsJS');
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
 				showArtifactsJS
-				.removeClass('no-artifacts')
-				.addClass('more-info mod-1 popup-btn-js-2')
+				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);
+				.append(artifactJS);				
 			} else {
-				showArtifactsJS.text('No Artifacts');
+				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult

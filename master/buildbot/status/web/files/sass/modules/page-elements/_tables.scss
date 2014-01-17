@@ -7,7 +7,7 @@
 }
 
 
-
+ 
 .table-1,
 .table-2 {
 	width:100%;
@@ -158,26 +158,22 @@
 	}
 }
  
- 
-.border-table-holder  {
+ .border-table-holder  {
 	border-left: 2px solid #2B6194;
     padding: 0 0 0 4px;
     @include box-shadow (1px 0 0px #FFFFFF inset);
     float: left;
-    height: 32px;
     margin-top: 8px;
-    overflow-x: visible;
-    overflow-y: hidden;
     padding: 0 0 0 4px; 
+    width: 88%;
 }
 
-
-
 .inner-table-holder {
-	overflow-y: auto;
-    padding-bottom: 20px;
+	height: 30px;
+	overflow: hidden;
+    padding-bottom: 2px;
     white-space: nowrap;
-    width: 88%;
+    width: 100%;
     float:left;
 }
 
@@ -332,8 +328,16 @@ table.codebase-branch-table {
     }
 }
 
+
+
 .filter-table-input {
 	margin-bottom:25px;
+}
+
+.more-info-box {
+	.filter-table-input {
+		margin-bottom:10px;
+	}	
 }
 
 .top {
@@ -468,7 +472,7 @@ table.codebase-branch-table {
 
 }
 @include breakpoint($bkpt-medium) {
-	.inner-table-holder  {
+	.border-table-holder {
 		width: 69%;
 	}
 }
@@ -484,13 +488,19 @@ table.codebase-branch-table {
 	.table-wrapper {
 		overflow: visible;	 	
 	}
-		.inner-table-holder  {
+	.border-table-holder  {
 		width: 82%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
-	.inner-table-holder  {
+	.border-table-holder  {
 		width: 87%;
+	}
+}
+
+@include breakpoint($bkpt-xxlarge) {
+	.border-table-holder  {
+		width: 88%;
 	}
 }
