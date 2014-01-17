@@ -12,14 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from twisted.internet import defer
-from twisted.web import error
 from twisted.web._responses import INTERNAL_SERVER_ERROR
-from twisted.web.resource import Resource, ErrorPage
+from twisted.web.resource import ErrorPage
 
+from buildbot.status.web.builder import buildForceContext
 from buildbot.status.web.base import HtmlResource, getCodebasesArg, getRequestCharset
-from status.web.builder import buildForceContext, builder_info
 
 
 class FormsKatanaResource(HtmlResource):
