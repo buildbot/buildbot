@@ -94,7 +94,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         def setLastRev(lastRev):
             self.lastRev = lastRev
         d.addCallback(setLastRev)
-
+        d.addCallback(lambda _: base.PollingChangeSource.activate(self))
         d.addErrback(log.err, 'while initializing GitPoller repository')
 
         return d
