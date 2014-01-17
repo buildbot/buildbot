@@ -118,18 +118,46 @@ def upgrade(migrate_engine):
 
     schedulers_tbl = sa.Table('schedulers', metadata, autoload=True)
     changes_tbl = sa.Table('changes', metadata, autoload=True)
+    buildrequests_tbl = sa.Table('buildrequests', metadata, autoload=True)
+    buildsets_tbl = sa.Table('buildsets', metadata, autoload=True)
+    sourcestamps_tbl = sa.Table('sourcestamps', metadata, autoload=True)
+    patches_tbl = sa.Table('patches', metadata, autoload=True)
 
     scheduler_changes_tbl = sa.Table('scheduler_changes', metadata, autoload=True)
     scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets', metadata, autoload=True)
     change_files_tbl = sa.Table('change_files', metadata, autoload=True)
+    change_links_tbl = sa.Table('change_links', metadata, autoload=True)
+    change_properties_tbl = sa.Table('change_properties', metadata, autoload=True)
+    sourcestamp_changes_tbl = sa.Table('sourcestamp_changes', metadata, autoload=True)
+    builds_tbl = sa.Table('builds', metadata, autoload=True)
+    buildset_properties_tbl = sa.Table('buildset_properties', metadata, autoload=True)
 
     scheduler_change_cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
     scheduler_upstream_buildsets_cons = constraint.ForeignKeyConstraint([scheduler_upstream_buildsets_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
     change_files_cons = constraint.ForeignKeyConstraint([change_files_tbl.c.changeid], [changes_tbl.c.changeid])
+    change_links_cons = constraint.ForeignKeyConstraint([change_links_tbl.c.changeid], [changes_tbl.c.changeid])
+    change_properties_cons = constraint.ForeignKeyConstraint([change_properties_tbl.c.changeid], [changes_tbl.c.changeid])
+    sourcestamp_changes_cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.changeid], [changes_tbl.c.changeid])
+    builds_cons = constraint.ForeignKeyConstraint([builds_tbl.c.brid], [buildrequests_tbl.c.id])
+    buildset_properties_cons = constraint.ForeignKeyConstraint([buildset_properties_tbl.c.buildsetid], [buildsets_tbl.c.id])
+    buildrequests_cons = constraint.ForeignKeyConstraint([buildrequests_tbl.c.buildsetid], [buildsets_tbl.c.id])
+    sourcestamps_cons = constraint.ForeignKeyConstraint([sourcestamps_tbl.c.patchid], [patches_tbl.c.id])
+    sourcestamp_changes_ss_cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
+    buildsets_cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
+
     # drop constraints before altering the table
     scheduler_change_cons.drop()
     scheduler_upstream_buildsets_cons.drop()
     change_files_cons.drop()
+    change_links_cons.drop()
+    change_properties_cons.drop()
+    sourcestamp_changes_cons.drop()
+    builds_cons.drop()
+    buildset_properties_cons.drop()
+    buildrequests_cons.drop()
+    sourcestamps_cons.drop()
+    sourcestamp_changes_ss_cons.drop()
+    buildsets_cons.drop()
 
     # It seems that SQLAlchemy's ALTER TABLE doesn't work when migrating from
     # INTEGER to PostgreSQL's SERIAL data type (which is just pseudo data type
@@ -147,6 +175,20 @@ def upgrade(migrate_engine):
             table = metadata.tables[table_name]
             col = table.c[col_name]
             col.alter(autoincrement=True)
+
+    # restore constraints before altering the table
+    scheduler_change_cons.create()
+    scheduler_upstream_buildsets_cons.create()
+    change_files_cons.create()
+    change_links_cons.create()
+    change_properties_cons.create()
+    sourcestamp_changes_cons.create()
+    builds_cons.create()
+    buildset_properties_cons.create()
+    buildrequests_cons.create()
+    sourcestamps_cons.create()
+    sourcestamp_changes_ss_cons.create()
+    buildsets_cons.create()
 
 
     # also drop the changes_nextid table here (which really should have been a
