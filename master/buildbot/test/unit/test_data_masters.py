@@ -51,7 +51,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('master', 14))
+        d = self.callGet(('masters', 14))
 
         @d.addCallback
         def check(master):
@@ -60,7 +60,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid_existing(self):
-        d = self.callGet(('builder', 23, 'master', 13))
+        d = self.callGet(('builders', 23, 'masters', 13))
 
         @d.addCallback
         def check(master):
@@ -69,7 +69,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid_no_match(self):
-        d = self.callGet(('builder', 24, 'master', 13))
+        d = self.callGet(('builders', 24, 'masters', 13))
 
         @d.addCallback
         def check(master):
@@ -77,7 +77,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid_missing(self):
-        d = self.callGet(('builder', 25, 'master', 13))
+        d = self.callGet(('builders', 25, 'masters', 13))
 
         @d.addCallback
         def check(master):
@@ -85,7 +85,7 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('master', 99))
+        d = self.callGet(('masters', 99))
 
         @d.addCallback
         def check(master):
@@ -114,7 +114,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('master',))
+        d = self.callGet(('masters',))
 
         @d.addCallback
         def check(masters):
@@ -124,7 +124,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(('builder', 22, 'master'))
+        d = self.callGet(('builders', 22, 'masters'))
 
         @d.addCallback
         def check(masters):
@@ -134,7 +134,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid_missing(self):
-        d = self.callGet(('builder', 23, 'master'))
+        d = self.callGet(('builders', 23, 'masters'))
 
         @d.addCallback
         def check(masters):
@@ -143,7 +143,7 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('master', None, None))
+                                expected_filter=('masters', None, None))
 
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):
@@ -197,7 +197,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(60)))
         self.assertEqual(self.master.mq.productions, [
-            (('master', '13', 'started'),
+            (('masters', '13', 'started'),
              dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
@@ -211,7 +211,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(120)))
         self.assertEqual(self.master.mq.productions, [
-            (('master', '13', 'started'),
+            (('masters', '13', 'started'),
              dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
@@ -235,7 +235,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
         self.assertEqual(self.master.mq.productions, [
-            (('master', '13', 'stopped'),
+            (('masters', '13', 'stopped'),
              dict(masterid=13, name='aname', active=False)),
         ])
 
@@ -280,7 +280,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(master, dict(id=14, name='other',
                                       active=False, last_active=None))
         self.assertEqual(self.master.mq.productions, [
-            (('master', '14', 'stopped'),
+            (('masters', '14', 'stopped'),
              dict(masterid=14, name='other', active=False)),
         ])
         self.master.data.rtypes.builder._masterDeactivated. \

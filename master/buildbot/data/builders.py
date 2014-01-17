@@ -22,8 +22,8 @@ class BuilderEndpoint(base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /builder/n:builderid
-        /master/n:masterid/builder/n:builderid
+        /builders/n:builderid
+        /masters/n:masterid/builders/n:builderid
     """
 
     @defer.inlineCallbacks
@@ -40,7 +40,7 @@ class BuilderEndpoint(base.Endpoint):
         defer.returnValue(
             dict(builderid=builderid,
                  name=bdict['name'],
-                 link=base.Link(('builder', str(kwargs['builderid'])))))
+                 link=base.Link(('builders', str(kwargs['builderid'])))))
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -48,8 +48,8 @@ class BuildersEndpoint(base.Endpoint):
     isCollection = True
     rootLinkName = 'builders'
     pathPatterns = """
-        /builder
-        /master/n:masterid/builder
+        /builders
+        /masters/n:masterid/builders
     """
 
     @defer.inlineCallbacks
@@ -59,12 +59,12 @@ class BuildersEndpoint(base.Endpoint):
         defer.returnValue([
             dict(builderid=bd['id'],
                  name=bd['name'],
-                 link=base.Link(('builder', str(bd['id']))))
+                 link=base.Link(('builders', str(bd['id']))))
             for bd in bdicts])
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('builder', None, None))
+                                             ('builders', None, None))
 
 
 class Builder(base.ResourceType):
@@ -102,7 +102,7 @@ class Builder(base.ResourceType):
                 builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
                     masterid=masterid, builderid=builderid)
-                self.master.mq.produce(('builder', str(builderid), 'stopped'),
+                self.master.mq.produce(('builders', str(builderid), 'stopped'),
                                        dict(builderid=builderid, masterid=masterid,
                                             name=bldr['name']))
             else:
@@ -113,7 +113,7 @@ class Builder(base.ResourceType):
             builderid = yield self.master.db.builders.findBuilderId(name)
             yield self.master.db.builders.addBuilderMaster(
                 masterid=masterid, builderid=builderid)
-            self.master.mq.produce(('builder', str(builderid), 'started'),
+            self.master.mq.produce(('builders', str(builderid), 'started'),
                                    dict(builderid=builderid, masterid=masterid, name=name))
 
     @defer.inlineCallbacks

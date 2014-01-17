@@ -162,12 +162,12 @@ if window.describe?
                     'prop': ['value', 'source']
                 when_timestamp: 1
 
-            value = $httpBackend.buildDataValue("change").changes[0]
+            value = $httpBackend.buildDataValue("changes").changes[0]
             for k, v of value
                 expect(v).toEqual(expected[k])
 
             $httpBackend.resetIds()
-            value = $httpBackend.buildDataValue("change", 2).changes
+            value = $httpBackend.buildDataValue("changes", 2).changes
 
             # small hack to replace ones by twos for ids of the second change
             expected = [expected, JSON.parse(JSON.stringify(expected).replace(/1/g,"2"))]

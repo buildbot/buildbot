@@ -91,9 +91,9 @@ class BuildChooserBase(object):
 
         if self.unclaimedBrdicts is None:
             # TODO: use order of the DATA API
-            brdicts = yield self.master.data.get(('builder',
+            brdicts = yield self.master.data.get(('builders',
                                                   self.bldr.name,
-                                                  'buildrequest'),
+                                                  'buildrequests'),
                                                  [resultspec.Filter('claimed',
                                                                     'eq',
                                                                     [False])])
@@ -528,9 +528,9 @@ class BuildRequestDistributor(service.AsyncService):
             for brid in brids:
                 # TODO: inefficient..
                 brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
-                key = ('buildset', str(brdict['buildsetid']),
-                       'builder', str(-1),
-                       'buildrequest', str(brdict['buildrequestid']), 'claimed')
+                key = ('buildsets', str(brdict['buildsetid']),
+                       'builders', str(-1),
+                       'buildrequests', str(brdict['buildrequestid']), 'claimed')
                 msg = dict(
                     bsid=brdict['buildsetid'],
                     brid=brdict['buildrequestid'],
@@ -551,9 +551,9 @@ class BuildRequestDistributor(service.AsyncService):
                     bsid = breq.bsid
                     buildername = ascii2unicode(breq.buildername)
                     brid = breq.id
-                    key = ('buildset', str(brdict['buildsetid']),
-                           'builder', str(-1),
-                           'buildrequest', str(brdict['buildrequestid']), 'unclaimed')
+                    key = ('buildsets', str(brdict['buildsetid']),
+                           'builders', str(-1),
+                           'buildrequests', str(brdict['buildrequestid']), 'unclaimed')
                     msg = dict(brid=brid, bsid=bsid, buildername=buildername,
                                builderid=-1)
                     self.master.mq.produce(key, msg)

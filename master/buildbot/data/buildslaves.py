@@ -26,15 +26,15 @@ class Db2DataMixin(object):
             'name': dbdict['name'],
             'slaveinfo': dbdict['slaveinfo'],
             'connected_to': [
-                {'masterid': id, 'link': base.Link(('master', str(id)))}
+                {'masterid': id, 'link': base.Link(('masters', str(id)))}
                 for id in dbdict['connected_to']],
             'configured_on': [
                 {'masterid': c['masterid'],
                  'builderid': c['builderid'],
-                 'link': base.Link(('master', str(c['masterid']),
-                                    'builder', str(c['builderid'])))}
+                 'link': base.Link(('masters', str(c['masterid']),
+                                    'builders', str(c['builderid'])))}
                 for c in dbdict['configured_on']],
-            'link': base.Link(('buildslave', str(dbdict['id']))),
+            'link': base.Link(('buildslaves', str(dbdict['id']))),
         }
 
 
@@ -42,14 +42,14 @@ class BuildslaveEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /buildslave/n:buildslaveid
-        /buildslave/i:name
-        /master/n:masterid/buildslave/n:buildslaveid
-        /master/n:masterid/buildslave/i:name
-        /master/n:masterid/builder/n:builderid/buildslave/n:buildslaveid
-        /master/n:masterid/builder/n:builderid/buildslave/i:name
-        /builder/n:builderid/buildslave/n:buildslaveid
-        /builder/n:builderid/buildslave/i:name
+        /buildslaves/n:buildslaveid
+        /buildslaves/i:name
+        /masters/n:masterid/buildslaves/n:buildslaveid
+        /masters/n:masterid/buildslaves/i:name
+        /masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid
+        /masters/n:masterid/builders/n:builderid/buildslaves/i:name
+        /builders/n:builderid/buildslaves/n:buildslaveid
+        /builders/n:builderid/buildslaves/i:name
     """
 
     @defer.inlineCallbacks
@@ -68,10 +68,10 @@ class BuildslavesEndpoint(Db2DataMixin, base.Endpoint):
     isCollection = True
     rootLinkName = 'slaves'
     pathPatterns = """
-        /buildslave
-        /master/n:masterid/buildslave
-        /master/n:masterid/builder/n:builderid/buildslave
-        /builder/n:builderid/buildslave
+        /buildslaves
+        /masters/n:masterid/buildslaves
+        /masters/n:masterid/builders/n:builderid/buildslaves
+        /builders/n:builderid/buildslaves
     """
 
     @defer.inlineCallbacks
@@ -121,7 +121,7 @@ class Buildslave(base.ResourceType):
             buildslaveid=buildslaveid,
             masterid=masterid,
             slaveinfo=slaveinfo)
-        bs = yield self.master.data.get(('buildslave', buildslaveid))
+        bs = yield self.master.data.get(('buildslaves', buildslaveid))
         self.produceEvent(bs, 'connected')
 
     @base.updateMethod
@@ -130,5 +130,5 @@ class Buildslave(base.ResourceType):
         yield self.master.db.buildslaves.buildslaveDisconnected(
             buildslaveid=buildslaveid,
             masterid=masterid)
-        bs = yield self.master.data.get(('buildslave', buildslaveid))
+        bs = yield self.master.data.get(('buildslaves', buildslaveid))
         self.produceEvent(bs, 'disconnected')

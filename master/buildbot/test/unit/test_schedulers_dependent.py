@@ -73,7 +73,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         self.assertEqual(
             sorted([q.filter for q in sched.master.mq.qrefs]),
-            [('buildset', None, 'complete',), ('buildset', None, 'new',)])
+            [('buildsets', None, 'complete',), ('buildsets', None, 'new',)])
 
         d = sched.deactivate()
 
@@ -99,7 +99,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         if not complete:
             msg['scheduler'] = scheduler_name
         self.master.mq.callConsumer(
-            ('buildset', '44', 'complete' if complete else 'new'),
+            ('buildsets', '44', 'complete' if complete else 'new'),
             msg)
 
     def do_test(self, scheduler_name, expect_subscription,

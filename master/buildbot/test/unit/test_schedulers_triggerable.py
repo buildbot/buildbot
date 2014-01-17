@@ -124,7 +124,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             )
 
     def sendCompletionMessage(self, bsid, results=3):
-        self.master.mq.callConsumer(('buildset', str(bsid), 'complete'),
+        self.master.mq.callConsumer(('buildsets', str(bsid), 'complete'),
                                     dict(
                                         bsid=bsid,
                                         submitted_at=100,
@@ -187,7 +187,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # not fired yet
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildset', None, 'complete',)])
+            [('buildsets', None, 'complete',)])
         self.assertFalse(self.fired)
 
         # pretend a non-matching buildset is complete
@@ -196,7 +196,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # scheduler should not have reacted
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildset', None, 'complete',)])
+            [('buildsets', None, 'complete',)])
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
@@ -249,7 +249,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildset', None, 'complete',)])
+            [('buildsets', None, 'complete',)])
 
         # let a few buildsets complete
         self.sendCompletionMessage(29, results=3)

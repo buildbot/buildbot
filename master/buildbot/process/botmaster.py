@@ -153,13 +153,13 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         #
         # self.buildrequest_consumer_new = self.master.mq.startConsuming(
         #     buildRequestAdded,
-        #     ('buildrequest', None, None, None, 'new'))
+        #     ('buildrequests', None, None, None, 'new'))
         self.buildrequest_consumer_new = self.master.mq.startConsuming(
             buildRequestAdded,
-            ('buildset', None, 'builder', None, 'buildrequest', None, 'new'))
+            ('buildsets', None, 'builders', None, 'buildrequests', None, 'new'))
         self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
             buildRequestAdded,
-            ('buildrequest', None, None, None, 'unclaimed'))
+            ('buildrequests', None, None, None, 'unclaimed'))
         return service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks

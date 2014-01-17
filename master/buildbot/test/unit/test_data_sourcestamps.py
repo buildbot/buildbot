@@ -38,7 +38,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('sourcestamp', 13))
+        d = self.callGet(('sourcestamps', 13))
 
         @d.addCallback
         def check(sourcestamp):
@@ -48,7 +48,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_patch(self):
-        d = self.callGet(('sourcestamp', 14))
+        d = self.callGet(('sourcestamps', 14))
 
         @d.addCallback
         def check(sourcestamp):
@@ -65,7 +65,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('sourcestamp', 99))
+        d = self.callGet(('sourcestamps', 99))
 
         @d.addCallback
         def check(sourcestamp):
@@ -89,7 +89,7 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('sourcestamp',))
+        d = self.callGet(('sourcestamps',))
 
         @d.addCallback
         def check(sourcestamps):
@@ -100,7 +100,7 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('sourcestamp', None, None))
+                                expected_filter=('sourcestamps', None, None))
 
 
 class SourceStamp(unittest.TestCase):

@@ -36,9 +36,9 @@ class FixerMixin(object):
             change = change.copy()
             del change['is_dir']
             change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-            change['link'] = base.Link(('change', str(change['changeid'])))
+            change['link'] = base.Link(('changes', str(change['changeid'])))
 
-            sskey = ('sourcestamp', str(change['sourcestampid']))
+            sskey = ('sourcestamps', str(change['sourcestampid']))
             change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
         defer.returnValue(change)
@@ -48,7 +48,7 @@ class ChangeEndpoint(FixerMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /change/n:changeid
+        /changes/n:changeid
     """
 
     def get(self, resultSpec, kwargs):
@@ -61,7 +61,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /change
+        /changes
     """
     rootLinkName = 'change'
 
@@ -73,7 +73,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('change', None, 'new'))
+                                             ('changes', None, 'new'))
 
 
 class Change(base.ResourceType):
@@ -82,7 +82,7 @@ class Change(base.ResourceType):
     plural = "changes"
     endpoints = [ChangeEndpoint, ChangesEndpoint]
     eventPathPatterns = """
-        /change/:changeid
+        /changes/:changeid
     """
 
     class EntityType(types.Entity):
@@ -164,7 +164,7 @@ class Change(base.ResourceType):
             _reactor=_reactor)
 
         # get the change and munge the result for the notification
-        change = yield self.master.data.get(('change', str(changeid)))
+        change = yield self.master.data.get(('changes', str(changeid)))
         change = copy.deepcopy(change)
         del change['link']
         del change['sourcestamp']['link']

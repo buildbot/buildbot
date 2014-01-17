@@ -313,16 +313,16 @@ dbdict = {}
 
 # masters
 
-message['master'] = Selector()
-message['master'].add(None,
-                      MessageValidator(
-                          events=['started', 'stopped'],
-                          messageValidator=DictValidator(
-                              masterid=IntValidator(),
-                              name=StringValidator(),
-                              active=BooleanValidator(),
-                              # last_active is not included
-                          )))
+message['masters'] = Selector()
+message['masters'].add(None,
+                       MessageValidator(
+                           events=['started', 'stopped'],
+                           messageValidator=DictValidator(
+                               masterid=IntValidator(),
+                               name=StringValidator(),
+                               active=BooleanValidator(),
+                               # last_active is not included
+                           )))
 
 dbdict['masterdict'] = DictValidator(
     id=IntValidator(),
@@ -349,11 +349,11 @@ _sourcestamp = dict(
         comment=NoneOk(StringValidator()))),
 )
 
-message['sourcestamp'] = Selector()
-message['sourcestamp'].add(None,
-                           DictValidator(
-                               **_sourcestamp
-                           ))
+message['sourcestamps'] = Selector()
+message['sourcestamps'].add(None,
+                            DictValidator(
+                                **_sourcestamp
+                            ))
 
 dbdict['ssdict'] = DictValidator(
     ssid=IntValidator(),
@@ -373,15 +373,15 @@ dbdict['ssdict'] = DictValidator(
 
 # builder
 
-message['builder'] = Selector()
-message['builder'].add(None,
-                       MessageValidator(
-                           events=['started', 'stopped'],
-                           messageValidator=DictValidator(
-                               builderid=IntValidator(),
-                               masterid=IntValidator(),
-                               name=StringValidator(),
-                           )))
+message['builders'] = Selector()
+message['builders'].add(None,
+                        MessageValidator(
+                            events=['started', 'stopped'],
+                            messageValidator=DictValidator(
+                                builderid=IntValidator(),
+                                masterid=IntValidator(),
+                                name=StringValidator(),
+                            )))
 
 dbdict['builderdict'] = DictValidator(
     id=IntValidator(),
@@ -417,28 +417,28 @@ _buildset = dict(
 )
 _buildsetEvents = ['new', 'complete']
 
-message['buildset'] = Selector()
-message['buildset'].add(lambda k: k[-1] == 'new',
-                        MessageValidator(
-                            events=_buildsetEvents,
-                            messageValidator=DictValidator(
-                                scheduler=StringValidator(),  # only for 'new'
-                                sourcestamps=ListValidator(
-                                    DictValidator(
-                                        **_sourcestamp
-                                    )),
-                                **_buildset
-                            )))
-message['buildset'].add(None,
-                        MessageValidator(
-                            events=_buildsetEvents,
-                            messageValidator=DictValidator(
-                                sourcestamps=ListValidator(
-                                    DictValidator(
-                                        **_sourcestamp
-                                    )),
-                                **_buildset
-                            )))
+message['buildsets'] = Selector()
+message['buildsets'].add(lambda k: k[-1] == 'new',
+                         MessageValidator(
+                             events=_buildsetEvents,
+                             messageValidator=DictValidator(
+                                 scheduler=StringValidator(),  # only for 'new'
+                                 sourcestamps=ListValidator(
+                                     DictValidator(
+                                         **_sourcestamp
+                                     )),
+                                 **_buildset
+                             )))
+message['buildsets'].add(None,
+                         MessageValidator(
+                             events=_buildsetEvents,
+                             messageValidator=DictValidator(
+                                 sourcestamps=ListValidator(
+                                     DictValidator(
+                                         **_sourcestamp
+                                     )),
+                                 **_buildset
+                             )))
 
 dbdict['bsdict'] = DictValidator(
     bsid=IntValidator(),
@@ -453,42 +453,42 @@ dbdict['bsdict'] = DictValidator(
 
 # buildrequest
 
-message['buildrequest'] = Selector()
-message['buildrequest'].add(None,
-                            MessageValidator(
-                                events=['new', 'claimed', 'unclaimed'],
-                                messageValidator=DictValidator(
-                                    # TODO: probably wrong!
-                                    brid=IntValidator(),
-                                    builderid=IntValidator(),
-                                    bsid=IntValidator(),
-                                    buildername=StringValidator(),
-                                )))
+message['buildrequests'] = Selector()
+message['buildrequests'].add(None,
+                             MessageValidator(
+                                 events=['new', 'claimed', 'unclaimed'],
+                                 messageValidator=DictValidator(
+                                     # TODO: probably wrong!
+                                     brid=IntValidator(),
+                                     builderid=IntValidator(),
+                                     bsid=IntValidator(),
+                                     buildername=StringValidator(),
+                                 )))
 
 # change
 
-message['change'] = Selector()
-message['change'].add(None,
-                      MessageValidator(
-                          events=['new'],
-                          messageValidator=DictValidator(
-                              changeid=IntValidator(),
-                              author=StringValidator(),
-                              files=ListValidator(StringValidator()),
-                              comments=StringValidator(),
-                              revision=NoneOk(StringValidator()),
-                              when_timestamp=IntValidator(),
-                              branch=NoneOk(StringValidator()),
-                              category=NoneOk(StringValidator()),
-                              revlink=NoneOk(StringValidator()),
-                              properties=SourcedPropertiesValidator(),
-                              repository=StringValidator(),
-                              project=StringValidator(),
-                              codebase=StringValidator(),
-                              sourcestamp=DictValidator(
-                                  **_sourcestamp
-                              ),
-                          )))
+message['changes'] = Selector()
+message['changes'].add(None,
+                       MessageValidator(
+                           events=['new'],
+                           messageValidator=DictValidator(
+                               changeid=IntValidator(),
+                               author=StringValidator(),
+                               files=ListValidator(StringValidator()),
+                               comments=StringValidator(),
+                               revision=NoneOk(StringValidator()),
+                               when_timestamp=IntValidator(),
+                               branch=NoneOk(StringValidator()),
+                               category=NoneOk(StringValidator()),
+                               revlink=NoneOk(StringValidator()),
+                               properties=SourcedPropertiesValidator(),
+                               repository=StringValidator(),
+                               project=StringValidator(),
+                               codebase=StringValidator(),
+                               sourcestamp=DictValidator(
+                                   **_sourcestamp
+                               ),
+                           )))
 
 dbdict['chdict'] = DictValidator(
     changeid=IntValidator(),
@@ -541,13 +541,13 @@ _build = dict(
 )
 _buildEvents = ['new', 'complete']
 
-message['build'] = Selector()
-message['build'].add(None,
-                     MessageValidator(
-                         events=_buildEvents,
-                         messageValidator=DictValidator(
-                             **_build
-                         )))
+message['builds'] = Selector()
+message['builds'].add(None,
+                      MessageValidator(
+                          events=_buildEvents,
+                          messageValidator=DictValidator(
+                              **_build
+                          )))
 
 dbdict['builddict'] = DictValidator(
     id=IntValidator(),
@@ -578,13 +578,13 @@ _step = dict(
 )
 _stepEvents = ['new', 'complete']
 
-message['step'] = Selector()
-message['step'].add(None,
-                    MessageValidator(
-                        events=_stepEvents,
-                        messageValidator=DictValidator(
-                            **_step
-                        )))
+message['steps'] = Selector()
+message['steps'].add(None,
+                     MessageValidator(
+                         events=_stepEvents,
+                         messageValidator=DictValidator(
+                             **_step
+                         )))
 
 dbdict['stepdict'] = DictValidator(
     id=IntValidator(),

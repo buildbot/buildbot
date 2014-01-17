@@ -48,12 +48,12 @@ class Dependent(base.BaseScheduler):
 
         self._buildset_new_consumer = self.master.data.startConsuming(
             self._buildset_new_cb,
-            {}, ('buildset',))
+            {}, ('buildsets',))
         # TODO: refactor to subscribe only to interesting buildsets, and
         # subscribe to them directly, via the data API
         self._buildset_complete_consumer = self.master.mq.startConsuming(
             self._buildset_complete_cb,
-            ('buildset', None, 'complete'))
+            ('buildsets', None, 'complete'))
 
         # check for any buildsets completed before we started
         yield self._checkCompletedBuildsets(None, )
@@ -123,7 +123,7 @@ class Dependent(base.BaseScheduler):
         changed = False
         rv = []
         for bsid in self._cached_upstream_bsids[:]:
-            buildset = yield self.master.data.get(('buildset', str(bsid)))
+            buildset = yield self.master.data.get(('buildsets', str(bsid)))
             if not buildset:
                 self._cached_upstream_bsids.remove(bsid)
                 changed = True
