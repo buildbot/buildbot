@@ -145,6 +145,7 @@ class BuildSlavesResource(HtmlResource):
             info['running_builds_new'] = slave_status.getRunningBuilds()
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
+            info['friendly_name'] = s.botmaster.slaves[name].friendly_name
 
             if show_builder_column:
                 info['builders'] = []

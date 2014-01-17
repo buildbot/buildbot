@@ -119,7 +119,7 @@ define(['helpers'], function (helpers) {
 			var path = $('#pathToCodeBases').attr('href');
 			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 			$('body').append(preloader).show();
-			var mib = popup.htmlModule ('Run custom build');
+			var mib = popup.htmlModule ('Select branches');
 			
 			$(mib).appendTo('body');
 
@@ -228,7 +228,7 @@ define(['helpers'], function (helpers) {
 				var mib = 
 				$('<div class="more-info-box remove-js">' +
 				'<span class="close-btn"></span>' +
-				'<h3>'+ headLine +'</h3>' +
+				'<h3 class="codebases-head">'+ headLine +'</h3>' +
 				'<div id="content1"></div></div>');
 
 			return mib;
