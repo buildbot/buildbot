@@ -734,10 +734,6 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                           p4user='user', p4client='p4_client1', p4passwd='pass'),
                        dict(revision='100',))
 
-        root_dir = '/home/user/workspace/wkdir'
-        if _is_windows:
-            root_dir = r'C:\Users\username\Workspace\wkdir'
-
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['p4', '-V'])
