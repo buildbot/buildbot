@@ -268,7 +268,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             repository=ch_row.repository,
             codebase=ch_row.codebase,
             project=ch_row.project,
-            sourcestampid=ch_row.sourcestampid)
+            sourcestampid=int(ch_row.sourcestampid))
 
         query = change_files_tbl.select(
             whereclause=(change_files_tbl.c.changeid == ch_row.changeid))
