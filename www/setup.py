@@ -113,7 +113,7 @@ bower_json = {
         "angular": ANGULAR_TAG,
         "angular-animate": ANGULAR_TAG,
         "angular-bootstrap": "~0.6.0",
-        "angular-ui-router": "~0.2.0",
+        "angular-ui-router": "0.2.7",
         "restangular": "latest",
         "lodash": "latest",
         "html5shiv": "~3.6.2",
