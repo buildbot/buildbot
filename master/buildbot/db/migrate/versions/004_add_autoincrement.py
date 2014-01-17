@@ -83,7 +83,7 @@ def upgrade(migrate_engine):
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
             nullable=False),
-        sa.Column('buildername', sa.String(length=None), nullable=False),
+        sa.Column('buildername', sa.String(length=255), nullable=False),
         sa.Column('priority', sa.Integer, nullable=False,
             server_default=sa.DefaultClause("0")),
         sa.Column('claimed_at', sa.Integer,
@@ -146,18 +146,19 @@ def upgrade(migrate_engine):
     buildsets_cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
 
     # drop constraints before altering the table
-    scheduler_change_cons.drop()
-    scheduler_upstream_buildsets_cons.drop()
-    change_files_cons.drop()
-    change_links_cons.drop()
-    change_properties_cons.drop()
-    sourcestamp_changes_cons.drop()
-    builds_cons.drop()
-    buildset_properties_cons.drop()
-    buildrequests_cons.drop()
-    sourcestamps_cons.drop()
-    sourcestamp_changes_ss_cons.drop()
-    buildsets_cons.drop()
+    if migrate_engine.dialect.name in ('postgres', 'postgresql', 'mysql'):
+        scheduler_change_cons.drop()
+        scheduler_upstream_buildsets_cons.drop()
+        change_files_cons.drop()
+        change_links_cons.drop()
+        change_properties_cons.drop()
+        sourcestamp_changes_cons.drop()
+        builds_cons.drop()
+        buildset_properties_cons.drop()
+        buildrequests_cons.drop()
+        sourcestamps_cons.drop()
+        sourcestamp_changes_ss_cons.drop()
+        buildsets_cons.drop()
 
     # It seems that SQLAlchemy's ALTER TABLE doesn't work when migrating from
     # INTEGER to PostgreSQL's SERIAL data type (which is just pseudo data type
