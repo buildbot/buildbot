@@ -55,7 +55,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('buildset', 13))
+        d = self.callGet(('buildsets', 13))
 
         @d.addCallback
         def check(buildset):
@@ -64,7 +64,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_no_sourcestamps(self):
-        d = self.callGet(('buildset', 14))
+        d = self.callGet(('buildsets', 14))
 
         @d.addCallback
         def check(buildset):
@@ -73,7 +73,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('buildset', 99))
+        d = self.callGet(('buildsets', 99))
 
         @d.addCallback
         def check(buildset):
@@ -82,7 +82,7 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {'bsid': 13},
-                                expected_filter=('buildset', '13', 'complete'))
+                                expected_filter=('buildsets', '13', 'complete'))
 
 
 class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -104,7 +104,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('buildset',))
+        d = self.callGet(('buildsets',))
 
         @d.addCallback
         def check(buildsets):
@@ -116,7 +116,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_complete(self):
         f = resultspec.Filter('complete', 'eq', [True])
-        d = self.callGet(('buildset',),
+        d = self.callGet(('buildsets',),
                          resultSpec=resultspec.ResultSpec(filters=[f]))
 
         @d.addCallback
@@ -128,7 +128,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_get_incomplete(self):
         f = resultspec.Filter('complete', 'eq', [False])
-        d = self.callGet(('buildset',),
+        d = self.callGet(('buildsets',),
                          resultSpec=resultspec.ResultSpec(filters=[f]))
 
         @d.addCallback
@@ -140,7 +140,7 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('buildset', None, 'new'))
+                                expected_filter=('buildsets', None, 'new'))
 
 
 class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
@@ -198,9 +198,9 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def _buildRequestMessage(self, brid, bsid, builderid, buildername):
         return (
-            ('buildset', str(bsid),
-             'builder', str(builderid),
-             'buildrequest', str(brid), 'new'),
+            ('buildsets', str(bsid),
+             'builders', str(builderid),
+             'buildrequests', str(brid), 'new'),
             dict(brid=brid, bsid=bsid, builderid=builderid,
                  buildername=buildername))
 
@@ -209,7 +209,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                          submitted_at=A_TIMESTAMP):
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildset', str(bsid), 'new'),
+            ('buildsets', str(bsid), 'new'),
             dict(bsid=bsid, complete=False, complete_at=None,
                  external_idstring=external_idstring, reason=reason,
                  results=None, scheduler=scheduler,
@@ -221,7 +221,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                                  reason=u'because', results=0, sourcestampids=[234]):
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildset', str(bsid), 'complete'),
+            ('buildsets', str(bsid), 'complete'),
             dict(bsid=bsid, complete=True, complete_at=complete_at,
                  external_idstring=external_idstring, reason=reason,
                  results=results, submitted_at=submitted_at,

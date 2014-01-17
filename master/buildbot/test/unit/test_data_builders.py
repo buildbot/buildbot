@@ -42,7 +42,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('builder', 2))
+        d = self.callGet(('builders', 2))
 
         @d.addCallback
         def check(builder):
@@ -51,7 +51,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('builder', 99))
+        d = self.callGet(('builders', 99))
 
         @d.addCallback
         def check(builder):
@@ -59,7 +59,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_with_master(self):
-        d = self.callGet(('master', 13, 'builder', 2))
+        d = self.callGet(('masters', 13, 'builders', 2))
 
         @d.addCallback
         def check(builder):
@@ -68,7 +68,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_with_different_master(self):
-        d = self.callGet(('master', 14, 'builder', 2))
+        d = self.callGet(('masters', 14, 'builders', 2))
 
         @d.addCallback
         def check(builder):
@@ -76,7 +76,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing_with_master(self):
-        d = self.callGet(('master', 13, 'builder', 99))
+        d = self.callGet(('masters', 13, 'builders', 99))
 
         @d.addCallback
         def check(builder):
@@ -102,7 +102,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('builder',))
+        d = self.callGet(('builders',))
 
         @d.addCallback
         def check(builders):
@@ -112,7 +112,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(('master', 13, 'builder'))
+        d = self.callGet(('masters', 13, 'builders'))
 
         @d.addCallback
         def check(builders):
@@ -122,7 +122,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_missing(self):
-        d = self.callGet(('master', 14, 'builder'))
+        d = self.callGet(('masters', 14, 'builders'))
 
         @d.addCallback
         def check(builders):
@@ -132,7 +132,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('builder', None, None))
+                                expected_filter=('builders', None, None))
 
 
 class Builder(interfaces.InterfaceTests, unittest.TestCase):
@@ -174,7 +174,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                          sorted([
                              dict(id=1, masterids=[13], name='somebuilder'),
                          ]))
-        self.master.mq.assertProductions([(('builder', '1', 'started'),
+        self.master.mq.assertProductions([(('builders', '1', 'started'),
                                            {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'})])
 
         # add another
@@ -184,7 +184,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=1, masterids=[13], name='somebuilder'),
                              dict(id=2, masterids=[13], name='another'),
                          ]))
-        self.master.mq.assertProductions([(('builder', '2', 'started'),
+        self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 13, 'name': u'another'})])
 
         # add one for another master
@@ -194,7 +194,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=1, masterids=[13], name='somebuilder'),
                              dict(id=2, masterids=[13, 14], name='another'),
                          ]))
-        self.master.mq.assertProductions([(('builder', '2', 'started'),
+        self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 14, 'name': u'another'})])
 
         # remove both for the first master
@@ -205,9 +205,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=2, masterids=[14], name='another'),
                          ]))
         self.master.mq.assertProductions([
-            (('builder', '1', 'stopped'),
+            (('builders', '1', 'stopped'),
              {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'}),
-            (('builder', '2', 'stopped'),
+            (('builders', '2', 'stopped'),
              {'builderid': 2, 'masterid': 13, 'name': u'another'}),
         ])
 

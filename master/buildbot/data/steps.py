@@ -26,14 +26,14 @@ class Db2DataMixin(object):
             'number': dbdict['number'],
             'name': dbdict['name'],
             'buildid': dbdict['buildid'],
-            'build_link': base.Link(('build', str(dbdict['buildid']))),
+            'build_link': base.Link(('builds', str(dbdict['buildid']))),
             'started_at': dbdict['started_at'],
             'complete': dbdict['complete_at'] is not None,
             'complete_at': dbdict['complete_at'],
             'state_strings': dbdict['state_strings'],
             'results': dbdict['results'],
             'urls': dbdict['urls'],
-            'link': base.Link(('build', str(dbdict['id']))),
+            'link': base.Link(('builds', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -42,11 +42,11 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /step/n:stepid
-        /build/n:buildid/step/i:step_name
-        /build/n:buildid/step/n:step_number
-        /builder/n:builderid/build/n:build_number/step/i:step_name
-        /builder/n:builderid/build/n:build_number/step/n:step_number
+        /steps/n:stepid
+        /builds/n:buildid/steps/i:step_name
+        /builds/n:buildid/steps/n:step_number
+        /builders/n:builderid/builds/n:build_number/steps/i:step_name
+        /builders/n:builderid/builds/n:build_number/steps/n:step_number
     """
 
     @defer.inlineCallbacks
@@ -71,8 +71,8 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /build/n:buildid/step
-        /builder/n:builderid/build/n:build_number/step
+        /builds/n:buildid/steps
+        /builders/n:builderid/builds/n:build_number/steps
     """
 
     @defer.inlineCallbacks
@@ -90,11 +90,11 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         if 'stepid' in kwargs:
             return self.master.mq.startConsuming(
                 callback,
-                ('step', str(kwargs['stepid']), None))
+                ('steps', str(kwargs['stepid']), None))
         elif 'buildid' in kwargs:
             return self.master.mq.startConsuming(
                 callback,
-                ('build', str('buildid'), 'step', None, None))
+                ('builds', str(kwargs['buildid']), 'steps', None, None))
         else:
             raise NotImplementedError("cannot consume from this path")
 
@@ -106,8 +106,8 @@ class Step(base.ResourceType):
     endpoints = [StepEndpoint, StepsEndpoint]
     keyFields = ['builderid', 'stepid']
     eventPathPatterns = """
-        /build/:buildid/step/:stepid
-        /step/:stepid
+        /builds/:buildid/steps/:stepid
+        /steps/:stepid
     """
 
     class EntityType(types.Entity):
@@ -127,7 +127,7 @@ class Step(base.ResourceType):
 
     @defer.inlineCallbacks
     def generateEvent(self, stepid, event):
-        step = yield self.master.data.get(('step', stepid))
+        step = yield self.master.data.get(('steps', stepid))
         self.produceEvent(step, event)
 
     @base.updateMethod

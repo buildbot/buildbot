@@ -30,13 +30,13 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.sse = sse.EventResource(master)
 
     def test_simpleapi(self):
-        self.render_resource(self.sse, '/change/*/*')
+        self.render_resource(self.sse, '/changes/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
 
     def test_listen(self):
-        self.render_resource(self.sse, '/listen/change/*/*')
+        self.render_resource(self.sse, '/listen/changes/*/*')
         self.readUUID(self.request)
         self.assertReceivesChangeNewMessage(self.request)
         self.assertEqual(self.request.finished, False)
@@ -46,7 +46,7 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         request = self.request
         self.request = None
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + "/change/*/*")
+        self.render_resource(self.sse, '/add/' + uuid + "/changes/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
@@ -57,10 +57,10 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.render_resource(self.sse, '/listen')
         request = self.request
         uuid = self.readUUID(request)
-        self.render_resource(self.sse, '/add/' + uuid + "/change/*/*")
+        self.render_resource(self.sse, '/add/' + uuid + "/changes/*/*")
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(request.finished, False)
-        self.render_resource(self.sse, '/remove/' + uuid + "/change/*/*")
+        self.render_resource(self.sse, '/remove/' + uuid + "/changes/*/*")
         self.assertRaises(AssertionError, self.assertReceivesChangeNewMessage, request)
 
     def test_listen_add_nouuid(self):
@@ -102,11 +102,11 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         return kw["data"]
 
     def assertReceivesChangeNewMessage(self, request):
-        self.master.mq.callConsumer(("change", "500", "new"), test_data_changes.Change.changeEvent)
+        self.master.mq.callConsumer(("changes", "500", "new"), test_data_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw["event"], "event")
         msg = json.loads(kw["data"])
-        self.assertEqual(msg["key"], [u'change', u'500', u'new'])
+        self.assertEqual(msg["key"], [u'changes', u'500', u'new'])
         self.assertEqual(msg["message"], json.loads(json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
 
     def _toJson(self, obj):

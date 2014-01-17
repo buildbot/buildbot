@@ -122,51 +122,51 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             None)
 
     def test_get_logid_60(self):
-        return self.do_test_chunks(('log', 60, 'content'), 60,
+        return self.do_test_chunks(('logs', 60, 'contents'), 60,
                                    self.log60Lines)
 
     def test_get_logid_61(self):
-        return self.do_test_chunks(('log', 61, 'content'), 61,
+        return self.do_test_chunks(('logs', 61, 'contents'), 61,
                                    self.log61Lines)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        logchunk = yield self.callGet(('log', 99, 'content'))
+        logchunk = yield self.callGet(('logs', 99, 'contents'))
         self.assertEqual(logchunk, None)
 
     @defer.inlineCallbacks
     def test_get_empty(self):
-        logchunk = yield self.callGet(('log', 62, 'content'))
+        logchunk = yield self.callGet(('logs', 62, 'contents'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
         logchunk = yield self.callGet(
-            ('step', 50, 'log', 'errors', 'content'))
+            ('steps', 50, 'logs', 'errors', 'contents'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
         logchunk = yield self.callGet(
-            ('build', 13, 'step', 9, 'log', 'stdio', 'content'))
+            ('builds', 13, 'steps', 9, 'logs', 'stdio', 'contents'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 60)
 
     @defer.inlineCallbacks
     def test_get_by_builder(self):
         logchunk = yield self.callGet(
-            ('builder', 77, 'build', 3, 'step', 9,
-             'log', 'errors', 'content'))
+            ('builders', 77, 'builds', 3, 'steps', 9,
+             'logs', 'errors', 'contents'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
         logchunk = yield self.callGet(
-            ('builder', 77, 'build', 3, 'step', 'make',
-             'log', 'errors', 'content'))
+            ('builders', 77, 'builds', 3, 'steps', 'make',
+             'logs', 'errors', 'contents'))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 

@@ -45,7 +45,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('change', '13'))
+        d = self.callGet(('changes', '13'))
 
         @d.addCallback
         def check(change):
@@ -54,7 +54,7 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('change', '99'))
+        d = self.callGet(('changes', '99'))
 
         @d.addCallback
         def check(change):
@@ -84,7 +84,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('change',))
+        d = self.callGet(('changes',))
 
         @d.addCallback
         def check(changes):
@@ -96,7 +96,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     def test_startConsuming(self):
         self.callStartConsuming({}, {},
-                                expected_filter=('change', None, 'new'))
+                                expected_filter=('changes', None, 'new'))
 
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):
@@ -170,7 +170,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
                       properties={u'foo': 20})
-        expectedRoutingKey = ('change', '500', 'new')
+        expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
         expectedRow = fakedb.Change(
             changeid=500,
@@ -200,7 +200,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
                       properties={u'foo': 20}, src=u'git', codebase=u'cb')
-        expectedRoutingKey = ('change', '500', 'new')
+        expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': u'warner',
             'branch': u'warnerdb',
@@ -262,7 +262,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
                       properties={u'foo': 20})
-        expectedRoutingKey = ('change', '500', 'new')
+        expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': u'warner',
             'branch': u'warnerdb',

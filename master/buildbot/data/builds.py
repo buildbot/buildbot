@@ -25,20 +25,20 @@ class Db2DataMixin(object):
             'buildid': dbdict['id'],
             'number': dbdict['number'],
             'builderid': dbdict['builderid'],
-            'builder_link': base.Link(('builder', str(dbdict['builderid']))),
+            'builder_link': base.Link(('builders', str(dbdict['builderid']))),
             'buildrequestid': dbdict['buildrequestid'],
-            'buildrequest_link': base.Link(('buildrequest',
+            'buildrequest_link': base.Link(('buildrequests',
                                            str(dbdict['buildrequestid']))),
             'buildslaveid': dbdict['buildslaveid'],
-            'slave_link': base.Link(('slave', str(dbdict['buildslaveid']))),
+            'slave_link': base.Link(('slaves', str(dbdict['buildslaveid']))),
             'masterid': dbdict['masterid'],
-            'master_link': base.Link(('master', str(dbdict['masterid']))),
+            'master_link': base.Link(('masters', str(dbdict['masterid']))),
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],
             'complete': dbdict['complete_at'] is not None,
             'state_strings': dbdict['state_strings'],
             'results': dbdict['results'],
-            'link': base.Link(('build', str(dbdict['id']))),
+            'link': base.Link(('builds', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -47,8 +47,8 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /build/n:buildid
-        /builder/n:builderid/build/n:number
+        /builds/n:buildid
+        /builders/n:builderid/builds/n:number
     """
 
     @defer.inlineCallbacks
@@ -68,19 +68,19 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         buildid = kwargs.get('buildid')
         if builderid is not None:
             return self.master.mq.startConsuming(callback,
-                                                 ('builder', str(builderid), 'build', str(number), None))
+                                                 ('builders', str(builderid), 'builds', str(number), None))
         else:
             return self.master.mq.startConsuming(callback,
-                                                 ('build', str(buildid), None))
+                                                 ('builds', str(buildid), None))
 
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /build
-        /builder/n:builderid/build
-        /buildrequest/n:buildrequestid/build
+        /builds
+        /builders/n:builderid/builds
+        /buildrequests/n:buildrequestid/builds
     """
     rootLinkName = 'builds'
 
@@ -98,14 +98,14 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         if builderid is not None:
             return self.master.mq.startConsuming(
                 callback,
-                ('builder', str(builderid), 'build', None, None))
+                ('builders', str(builderid), 'builds', None, None))
         elif buildrequestid is not None:
             # XXX these messages are never produced
             return self.master.mq.startConsuming(callback,
-                                                 ('buildrequest', buildrequestid, 'build', None))
+                                                 ('buildrequests', str(buildrequestid), 'builds', None))
         else:
             return self.master.mq.startConsuming(callback,
-                                                 ('build', None, None, None))
+                                                 ('builds', None, None, None))
 
 
 class Build(base.ResourceType):
@@ -115,8 +115,8 @@ class Build(base.ResourceType):
     endpoints = [BuildEndpoint, BuildsEndpoint]
     keyFields = ['builderid', 'buildid']
     eventPathPatterns = """
-        /builder/:builderid/build/:number
-        /build/:buildid
+        /builders/:builderid/builds/:number
+        /builds/:buildid
     """
 
     class EntityType(types.Entity):
@@ -141,7 +141,7 @@ class Build(base.ResourceType):
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('build', str(_id)))
+        build = yield self.master.data.get(('builds', str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod

@@ -52,48 +52,48 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_existing(self):
-        log = yield self.callGet(('log', 60))
+        log = yield self.callGet(('logs', 60))
         self.validateData(log)
         self.assertEqual(log, {
             'logid': 60,
             'name': u'stdio',
             'slug': u'stdio',
-            'step_link': base.Link(('step', '50')),
+            'step_link': base.Link(('steps', '50')),
             'stepid': 50,
             'complete': False,
             'num_lines': 0,
             'type': u's',
-            'link': base.Link(('log', '60'))})
+            'link': base.Link(('logs', '60'))})
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        log = yield self.callGet(('log', 62))
+        log = yield self.callGet(('logs', 62))
         self.assertEqual(log, None)
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
-        log = yield self.callGet(('step', 50, 'log', 'errors'))
+        log = yield self.callGet(('steps', 50, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
-        log = yield self.callGet(('build', 13, 'step', 5, 'log', 'errors'))
+        log = yield self.callGet(('builds', 13, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder(self):
         log = yield self.callGet(
-            ('builder', '77', 'build', 3, 'step', 5, 'log', 'errors'))
+            ('builders', '77', 'builds', 3, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
         log = yield self.callGet(
-            ('builder', '77', 'build', 3, 'step', 'make',
-             'log', 'errors'))
+            ('builders', '77', 'builds', 3, 'steps', 'make',
+             'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
 
@@ -127,7 +127,8 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_stepid(self):
-        logs = yield self.callGet(('step', 50, 'log'))
+        logs = yield self.callGet(('steps', 50, 'logs'))
+
         [self.validateData(log)
          for log in logs]
         self.assertEqual(sorted([b['name'] for b in logs]),
@@ -135,18 +136,18 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_stepid_empty(self):
-        logs = yield self.callGet(('step', 52, 'log'))
+        logs = yield self.callGet(('steps', 52, 'logs'))
         self.assertEqual(logs, [])
 
     @defer.inlineCallbacks
     def test_get_stepid_missing(self):
-        logs = yield self.callGet(('step', 99, 'log'))
+        logs = yield self.callGet(('steps', 99, 'logs'))
         self.assertEqual(logs, [])
 
     @defer.inlineCallbacks
     def test_get_buildid_step_name(self):
         logs = yield self.callGet(
-            ('build', 13, 'step', 'make_install', 'log'))
+            ('builds', 13, 'steps', 'make_install', 'logs'))
         [self.validateData(log)
          for log in logs]
         self.assertEqual(sorted([b['name'] for b in logs]),
@@ -154,7 +155,7 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildid_step_number(self):
-        logs = yield self.callGet(('build', 13, 'step', 10, 'log'))
+        logs = yield self.callGet(('builds', 13, 'steps', 10, 'logs'))
         [self.validateData(log)
          for log in logs]
         self.assertEqual(sorted([b['name'] for b in logs]),
@@ -163,7 +164,7 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_name(self):
         logs = yield self.callGet(
-            ('builder', 77, 'build', 3, 'step', 'make', 'log'))
+            ('builders', 77, 'builds', 3, 'steps', 'make', 'logs'))
         [self.validateData(log)
          for log in logs]
         self.assertEqual(sorted([b['name'] for b in logs]),
@@ -172,7 +173,7 @@ class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_builder_build_number_step_number(self):
         logs = yield self.callGet(
-            ('builder', 77, 'build', 3, 'step', 10, 'log'))
+            ('builders', 77, 'builds', 3, 'steps', 10, 'logs'))
         [self.validateData(log)
          for log in logs]
         self.assertEqual(sorted([b['name'] for b in logs]),

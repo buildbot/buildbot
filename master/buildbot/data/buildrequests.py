@@ -28,7 +28,7 @@ class Db2DataMixin(object):
         data = {
             'buildrequestid': dbdict['buildrequestid'],
             'buildsetid': dbdict['buildsetid'],
-            'buildset_link': base.Link(('buildset', str(dbdict['buildsetid']))),
+            'buildset_link': base.Link(('buildsets', str(dbdict['buildsetid']))),
             'builderid': dbdict['builderid'],
             'buildername': dbdict['buildername'],
             'priority': dbdict['priority'],
@@ -40,7 +40,7 @@ class Db2DataMixin(object):
             'submitted_at': dbdict['submitted_at'],
             'complete_at': dbdict['complete_at'],
             'waited_for': dbdict['waited_for'],
-            'link': base.Link(('buildrequest', str(dbdict['buildrequestid']))),
+            'link': base.Link(('buildrequests', str(dbdict['buildrequestid']))),
         }
         return defer.succeed(data)
 
@@ -49,7 +49,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /buildrequest/n:buildrequestid
+        /buildrequests/n:buildrequestid
     """
 
     @defer.inlineCallbacks
@@ -69,9 +69,9 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /buildrequest
-        /builder/i:buildername/buildrequest
-        /builder/n:builderid/buildrequest
+        /buildrequests
+        /builders/i:buildername/buildrequests
+        /builders/n:builderid/buildrequests
     """
     rootLinkName = 'buildrequests'
 
@@ -124,7 +124,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('buildrequest', None, None, None, None))
+                                             ('buildrequests', None, None, None, None))
 
 
 class BuildRequest(base.ResourceType):

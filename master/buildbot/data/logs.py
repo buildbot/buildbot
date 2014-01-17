@@ -27,11 +27,11 @@ class EndpointMixin(object):
             'name': dbdict['name'],
             'slug': dbdict['slug'],
             'stepid': dbdict['stepid'],
-            'step_link': base.Link(('step', str(dbdict['stepid']))),
+            'step_link': base.Link(('steps', str(dbdict['stepid']))),
             'complete': dbdict['complete'],
             'num_lines': dbdict['num_lines'],
             'type': dbdict['type'],
-            'link': base.Link(('log', str(dbdict['id']))),
+            'link': base.Link(('logs', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -40,12 +40,12 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /log/n:logid
-        /step/n:stepid/log/i:log_slug
-        /build/n:buildid/step/i:step_name/log/i:log_slug
-        /build/n:buildid/step/n:step_number/log/i:log_slug
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log/i:log_slug
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log/i:log_slug
+        /logs/n:logid
+        /steps/n:stepid/logs/i:log_slug
+        /builds/n:buildid/steps/i:step_name/logs/i:log_slug
+        /builds/n:buildid/steps/n:step_number/logs/i:log_slug
+        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug
+        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug
     """
 
     @defer.inlineCallbacks
@@ -70,11 +70,11 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /step/n:stepid/log
-        /build/n:buildid/step/i:step_name/log
-        /build/n:buildid/step/n:step_number/log
-        /builder/n:builderid/build/n:build_number/step/i:step_name/log
-        /builder/n:builderid/build/n:build_number/step/n:step_number/log
+        /steps/n:stepid/logs
+        /builds/n:buildid/steps/i:step_name/logs
+        /builds/n:buildid/steps/n:step_number/logs
+        /builders/n:builderid/builds/n:build_number/steps/i:step_name/logs
+        /builders/n:builderid/builds/n:build_number/steps/n:step_number/logs
     """
 
     @defer.inlineCallbacks
@@ -94,8 +94,8 @@ class Log(base.ResourceType):
     endpoints = [LogEndpoint, LogsEndpoint]
     keyFields = ['stepid', 'logid']
     eventPathPatterns = """
-        /log/:logid
-        /step/:stepid/log/:slug
+        /logs/:logid
+        /steps/:stepid/logs/:slug
     """
 
     class EntityType(types.Entity):
@@ -113,7 +113,7 @@ class Log(base.ResourceType):
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('log', str(_id)))
+        build = yield self.master.data.get(('logs', str(_id)))
         self.produceEvent(build, event)
 
     @base.updateMethod

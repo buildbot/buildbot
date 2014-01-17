@@ -29,15 +29,15 @@ def _db2data(master):
                 name=master['name'],
                 active=master['active'],
                 last_active=master['last_active'],
-                link=base.Link(('master', str(master['id']))))
+                link=base.Link(('masters', str(master['id']))))
 
 
 class MasterEndpoint(base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /master/n:masterid
-        /builder/n:builderid/master/n:masterid
+        /masters/n:masterid
+        /builders/n:builderid/masters/n:masterid
     """
 
     @defer.inlineCallbacks
@@ -58,8 +58,8 @@ class MastersEndpoint(base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /master
-        /builder/n:builderid/master
+        /masters
+        /builders/n:builderid/masters
     """
     rootLinkName = 'masters'
 
@@ -78,7 +78,7 @@ class MastersEndpoint(base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('master', None, None))
+                                             ('masters', None, None))
 
 
 class Master(base.ResourceType):
@@ -87,7 +87,7 @@ class Master(base.ResourceType):
     plural = "masters"
     endpoints = [MasterEndpoint, MastersEndpoint]
     eventPathPatterns = """
-        /master/:masterid
+        /masters/:masterid
     """
 
     class EntityType(types.Entity):

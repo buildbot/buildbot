@@ -60,13 +60,13 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def startService(self):
         # subscribe to the things we need to know about
         self._buildset_new_consumer = self.master.mq.startConsuming(
-            self.bs_new_consumer_cb, ('buildset', None, 'new'))
+            self.bs_new_consumer_cb, ('buildsets', None, 'new'))
         self._buildset_complete_consumer = self.master.mq.startConsuming(
-            self.bs_complete_consumer_cb, ('buildset', None, 'complete'))
+            self.bs_complete_consumer_cb, ('buildsets', None, 'complete'))
         self._br_consumer = self.master.mq.startConsuming(
-            self.br_consumer_cb, ('buildrequest', None, None, None, 'new'))
+            self.br_consumer_cb, ('buildrequests', None, None, None, 'new'))
         self._change_consumer = self.master.mq.startConsuming(
-            self.change_consumer_cb, ('change', None, 'new'))
+            self.change_consumer_cb, ('changes', None, 'new'))
 
         return service.AsyncMultiService.startService(self)
 

@@ -27,12 +27,12 @@ class Db2DataMixin(object):
         master = None
         if dbdict['masterid'] is not None:
             master = yield self.master.data.get(
-                ('master', dbdict['masterid']))
+                ('masters', dbdict['masterid']))
         data = {
             'schedulerid': dbdict['id'],
             'name': dbdict['name'],
             'master': master,
-            'link': base.Link(('scheduler', str(dbdict['id']))),
+            'link': base.Link(('schedulers', str(dbdict['id']))),
         }
         defer.returnValue(data)
 
@@ -41,8 +41,8 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /scheduler/n:schedulerid
-        /master/n:masterid/scheduler/n:schedulerid
+        /schedulers/n:schedulerid
+        /masters/n:masterid/schedulers/n:schedulerid
     """
 
     @defer.inlineCallbacks
@@ -60,8 +60,8 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
-        /scheduler
-        /master/n:masterid/scheduler
+        /schedulers
+        /masters/n:masterid/schedulers
     """
     rootLinkName = 'schedulers'
 
@@ -76,7 +76,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
-                                             ('scheduler', None, None))
+                                             ('schedulers', None, None))
 
 
 class Scheduler(base.ResourceType):

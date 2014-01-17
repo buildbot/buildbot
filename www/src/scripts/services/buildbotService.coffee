@@ -47,7 +47,7 @@ angular.module('app').factory 'buildbotService',
                          expected one of #{JSON.stringify(singulars)}")
 
         onElemRestangularized = (elem, isCollection, route, Restangular) ->
-            idkey = elem.route + "id"
+            idkey = singulars[elem.route] + "id"
 
             # list the callers that reference this elem
             references = {}
@@ -81,7 +81,6 @@ angular.module('app').factory 'buildbotService',
                                 debugger
                             value["id"] = value[idkey]
                             value["_raw_data"] = angular.copy(value)
-
                             # restangularize the object before putting it in
                             # this allows controllers to get more data within onchild()
                             newobj = self.restangularizeElement(elem.parentResource, value, route)
@@ -113,7 +112,7 @@ angular.module('app').factory 'buildbotService',
                 # manage default options
                 opts ?= {}
                 _.defaults opts,
-                    dest_key: if isCollection then plurals[route] else route
+                    dest_key: if isCollection then route else singulars[route]
                     dest: $scope
                     ismutable: (v) ->
                         if v.complete?
@@ -177,7 +176,7 @@ angular.module('app').factory 'buildbotService',
             r = self
             l = []
             for path in paths
-                r = r.one(path, $stateParams[path])
+                r = r.one(path, $stateParams[singulars[path]])
                 l.push(r.bind($scope))
             return $q.all(l)
         addSomeAndMemoize(self)
