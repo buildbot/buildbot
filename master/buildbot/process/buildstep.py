@@ -729,7 +729,7 @@ class LoggingBuildStep(BuildStep):
 
         if any([x is not None for x in [logfiles, lazylogfiles, log_eval_func]]):
             config.error(
-                "'logfiles', 'lazylogfiles', 'log_eval_func' paramaters are no longer available")
+                "The LoggingBuildStep parameters 'logfiles', 'lazylogfiles' and 'log_eval_func' are no longer available")
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
@@ -743,7 +743,7 @@ class LoggingBuildStep(BuildStep):
             logfiles = {}
         if logfiles:
             cmd.setLogFiles(logfiles)
-        log.msg("%s.startCommandWithoutEnding(cmd=%s)" % (self.__class__.__name__, cmd))
+        log.msg("%s.setupLogsRunCommandAndProcessResults(cmd=%s)" % (self.__class__.__name__, cmd))
         log.msg("  cmd.args = %r" % (cmd.args,))
         self.cmd = cmd  # so we can interrupt it
         # TODO: when the status.LogFile object no longer exists, then this

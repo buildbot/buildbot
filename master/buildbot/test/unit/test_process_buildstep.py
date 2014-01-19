@@ -326,8 +326,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
 
 class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
-    deprecatedMsg = ("'logfiles', 'lazylogfiles', 'log_eval_func' paramaters "
-                     "are no longer available")
+    deprecatedMsg = ("The LoggingBuildStep parameters 'logfiles', "
+                     "'lazylogfiles' and 'log_eval_func' are no longer "
+                     "available")
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
         cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
