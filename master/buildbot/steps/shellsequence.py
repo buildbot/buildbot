@@ -26,7 +26,7 @@ class ShellArg(object):
     implements(interfaces.IResComputingConfig)
     iResComputingParams = ["haltOnFailure", "flunkOnWarnings", "flunkOnFailure",
                            "warnOnWarnings", "warnOnFailure"]
-    publicAttributes = iResComputingParams + ["cmd", "logfile"]
+    publicAttributes = iResComputingParams + ["command", "logfile"]
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -34,12 +34,12 @@ class ShellArg(object):
     warnOnWarnings = False
     warnOnFailure = False
 
-    def __init__(self, cmd=None, logfile=None, **kwargs):
+    def __init__(self, command=None, logfile=None, **kwargs):
         name = self.__class__.__name__
-        if cmd is None:
-            config.error("the 'cmd' parameter of %s "
+        if command is None:
+            config.error("the 'command' parameter of %s "
                          "must not be None" % (name,))
-        self.cmd = cmd
+        self.command = command
         self.logfile = logfile
         for k, v in kwargs.iteritems():
             if k not in self.iResComputingParams:
@@ -52,12 +52,12 @@ class ShellArg(object):
         """
         Only make the check if we have a list
         """
-        if not isinstance(self.cmd, (str, list)):
+        if not isinstance(self.command, (str, list)):
             config.error("%s is an invalid command, "
-                         "it must be a string or a list" % (self.cmd,))
-        if isinstance(self.cmd, list):
-            if not all([isinstance(x, str) for x in self.cmd]):
-                config.error("%s must only have strings in it" % (self.cmd,))
+                         "it must be a string or a list" % (self.command,))
+        if isinstance(self.command, list):
+            if not all([isinstance(x, str) for x in self.command]):
+                config.error("%s must only have strings in it" % (self.command,))
         runConfParams = [(p_attr, getattr(self, p_attr)) for p_attr in self.iResComputingParams]
         not_bool = [(p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val,
                                                                                            bool)]
@@ -116,11 +116,11 @@ class ShellSequence(buildstep.ShellBaseStep):
             try:
                 arg.validateAttributes()
             except config.ConfigErrors:
-                yield self.setStateStrings([arg.cmd, "invalid", "params"])
+                yield self.setStateStrings([arg.command, "invalid", "params"])
                 defer.returnValue(results.EXCEPTION)
 
             # handle cmd
-            self.currCmd = arg.cmd
+            self.currCmd = arg.command
             result = results.SKIPPED
             if self.shouldRunTheCommand(self.currCmd):
                 # handle the log

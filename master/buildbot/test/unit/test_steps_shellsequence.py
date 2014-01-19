@@ -22,23 +22,23 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
 
     def testShellArgInput(self):
         self.assertRaisesConfigError(
-            "the 'cmd' parameter of ShellArg must not be None",
-            lambda: shellsequence.ShellArg(cmd=None))
-        arg1 = shellsequence.ShellArg(cmd=1)
+            "the 'command' parameter of ShellArg must not be None",
+            lambda: shellsequence.ShellArg(command=None))
+        arg1 = shellsequence.ShellArg(command=1)
         self.assertRaisesConfigError(
             "1 is an invalid command, it must be a string or a list",
             lambda: arg1.validateAttributes())
-        arg2 = shellsequence.ShellArg(cmd=["make", 1])
+        arg2 = shellsequence.ShellArg(command=["make", 1])
         self.assertRaisesConfigError(
             "['make', 1] must only have strings in it",
             lambda: arg2.validateAttributes())
 
         for goodcmd in ["make p1", ["make", "p1"]]:
-            arg = shellsequence.ShellArg(cmd=goodcmd)
+            arg = shellsequence.ShellArg(command=goodcmd)
             arg.validateAttributes()
 
     def testShellArgsAreRendered(self):
-        arg1 = shellsequence.ShellArg(cmd=WithProperties('make %s', 'project'),
+        arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
                                       logfile=WithProperties('make %s', 'project'))
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1],
@@ -73,15 +73,15 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
-        c1 = self.createBuggyClass([shellsequence.ShellArg(cmd=1)])
+        c1 = self.createBuggyClass([shellsequence.ShellArg(command=1)])
         self.setupStep(c1())
         self.expectOutcome(result=EXCEPTION,
                            status_text=[1, 'invalid', 'params'])
         return self.runStep()
 
     def testMultipleCommandsAreRun(self):
-        arg1 = shellsequence.ShellArg(cmd='make p1')
-        arg2 = shellsequence.ShellArg(cmd='deploy p1', logfile='deploy')
+        arg1 = shellsequence.ShellArg(command='make p1')
+        arg2 = shellsequence.ShellArg(command='deploy p1', logfile='deploy')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
@@ -94,9 +94,9 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.runStep()
 
     def testSkipWorks(self):
-        arg1 = shellsequence.ShellArg(cmd='make p1')
-        arg2 = shellsequence.ShellArg(cmd='')
-        arg3 = shellsequence.ShellArg(cmd='deploy p1')
+        arg1 = shellsequence.ShellArg(command='make p1')
+        arg2 = shellsequence.ShellArg(command='')
+        arg3 = shellsequence.ShellArg(command='deploy p1')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
                                         workdir='build'))
@@ -108,10 +108,10 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.runStep()
 
     def testWarningWins(self):
-        arg1 = shellsequence.ShellArg(cmd='make p1',
+        arg1 = shellsequence.ShellArg(command='make p1',
                                       warnOnFailure=True,
                                       flunkOnFailure=False)
-        arg2 = shellsequence.ShellArg(cmd='deploy p1')
+        arg2 = shellsequence.ShellArg(command='deploy p1')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
@@ -123,8 +123,8 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.runStep()
 
     def testSequenceStopsOnHaltOnFailure(self):
-        arg1 = shellsequence.ShellArg(cmd='make p1', haltOnFailure=True)
-        arg2 = shellsequence.ShellArg(cmd='deploy p1')
+        arg1 = shellsequence.ShellArg(command='make p1', haltOnFailure=True)
+        arg2 = shellsequence.ShellArg(command='deploy p1')
 
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
