@@ -310,7 +310,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def describeWithoutSuffix(self, done=False):
+    def _describe(self, done=False):
         if self.descriptionDone and done:
             return self.descriptionDone
         elif self.description:
@@ -318,7 +318,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return [self.name]
 
     def describe(self, done=False):
-        desc = self.describeWithoutSuffix(done)
+        desc = self._describe(done)
         if self.descriptionSuffix:
             desc = desc + self.descriptionSuffix
         return desc
@@ -986,23 +986,7 @@ class ShellBaseStep(LoggingBuildStep):
     def getCurrCommand(self):
         raise NotImplementedError()
 
-    def describeWithoutSuffix(self, done=False):
-        """Return a list of short strings to describe this step, for the
-        status display. This uses the first few words of the shell command.
-        You can replace this by setting .description in your subclass, or by
-        overriding this method to describe the step better.
-
-        @type  done: boolean
-        @param done: whether the command is complete or not, to improve the
-                     way the command is described. C{done=False} is used
-                     while the command is still running, so a single
-                     imperfect-tense verb is appropriate ('compiling',
-                     'testing', ...) C{done=True} is used when the command
-                     has finished, and the default getText() method adds some
-                     text, so a simple noun is appropriate ('compile',
-                     'tests' ...)
-        """
-
+    def _describe(self, done=False):
         try:
             if done and self.descriptionDone is not None:
                 return self.descriptionDone
