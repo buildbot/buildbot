@@ -278,9 +278,6 @@ class Model(base.DBConnectorComponent):
                        # commit comment
                        sa.Column('comments', sa.Text, nullable=False),
 
-                       # old, CVS-related boolean
-                       sa.Column('is_dir', sa.SmallInteger, nullable=False),  # old, for CVS
-
                        # The branch where this change occurred.  When branch is NULL, that
                        # means the main branch (trunk, master, etc.)
                        sa.Column('branch', sa.String(256)),

@@ -49,13 +49,8 @@ class ChangePerspective(NewCredPerspective):
         # rename arguments to new names.  Note that the client still uses the
         # "old" names (who, when, and isdir), as they are not deprecated yet,
         # although the master will accept the new names (author,
-        # when_timestamp, and is_dir).  After a few revisions have passed, we
-        # can switch the client to use the new names.  isdir/is_dir are no
-        # longer used and thus deleted here
-        if 'isdir' in changedict:
-            del changedict['isdir']
-        if 'is_dir' in changedict:
-            del changedict['is_dir']
+        # when_timestamp).  After a few revisions have passed, we
+        # can switch the client to use the new names.
         if 'who' in changedict:
             changedict['author'] = changedict['who']
             del changedict['who']
