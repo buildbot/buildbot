@@ -464,6 +464,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
+        result['url'] = self.builder.status.getURLForThing(self)
 
         # Transient
         result['properties'] = self.getProperties().asList()

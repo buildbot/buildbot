@@ -580,8 +580,9 @@ class BuilderStatus(styles.Versioned):
         current_builds = [b.getNumber() for b in self.currentBuilds]
         cached_builds = list(set(self.buildCache.keys() + current_builds))
         cached_builds.sort()
+        current_builds_dict = [b.asDict() for b in self.currentBuilds]
         result['cachedBuilds'] = cached_builds
-        result['currentBuilds'] = current_builds
+        result['currentBuilds'] = current_builds_dict
         result['state'] = self.getState()[0]
         # lies, but we don't have synchronous access to this info; use
         # asDict_async instead
