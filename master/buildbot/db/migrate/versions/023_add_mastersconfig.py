@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 def upgrade(migrate_engine):
 
@@ -37,8 +38,11 @@ def upgrade(migrate_engine):
     mastersconfig_table = sa.Table('mastersconfig', metadata,
                              sa.Column('id', sa.Integer, primary_key=True),
                              sa.Column('buildbotURL', sa.Text, nullable=False),
-                             sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'), index=True,  unique=True, nullable=False),
+                             sa.Column('objectid', sa.Integer, index=True,  unique=True, nullable=False),
                              )
 
     # create the initial schema
     mastersconfig_table.create()
+
+    cons = constraint.ForeignKeyConstraint([mastersconfig_table.c.objectid], [objects.c.id])
+    cons.create()
