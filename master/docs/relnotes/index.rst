@@ -395,9 +395,9 @@ Features
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
-* The `startCommand` method has been moved from :bb:step:`LoggingBuildStep` to :bb:step:`ShellCommand`. Children class-es of :bb:step:`LoggingBuildStep` should now use either `setupLogsRunCommandAndProcessResults` or `startCommandAndSetStatus`, to launch a command. The `logfiles` and `lazylogfiles` attributes are now parameters of these methods.
+* The `startCommand` method has been moved from :py:class:`~buildbot.process.buildstep.LoggingBuildStep` to :bb:step:`ShellCommand`. Children class-es of :py:class:`~buildbot.process.buildstep.LoggingBuildStep` should now use either `setupLogsRunCommandAndProcessResults` or `startCommandAndSetStatus`, to launch a command. The `logfiles` and `lazylogfiles` attributes are now parameters of these methods.
 
-* :bb:step:`ShellBaseStep` has been created to help developing the steps that execute one or multiple shell commands.
+* :py:class:`~buildbot.process.buildstep.ShellBaseStep` has been created to help developing the steps that execute one or multiple shell commands.
 
 
 
