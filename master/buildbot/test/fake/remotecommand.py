@@ -73,12 +73,6 @@ class FakeRemoteCommand(object):
         self.logs[log] = l = logfile.FakeLogFile(log, step)
         l.fakeData(header=header, stdout=stdout, stderr=stderr)
 
-    def setLogFiles(self, logfiles=None):
-        if logfiles is None:
-            logfiles = {}
-        if logfiles:
-            self.args['logfiles'] = logfiles
-
     def __repr__(self):
         return "FakeRemoteCommand(" + repr(self.remote_command) + "," + repr(self.args) + ")"
 

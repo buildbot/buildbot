@@ -55,12 +55,6 @@ class RemoteCommand(pb.Referenceable):
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
-    def setLogFiles(self, logfiles=None):
-        if logfiles is None:
-            logfiles = {}
-        if logfiles:
-            self.args['logfiles'] = logfiles
-
     def run(self, step, conn, builder_name):
         self.active = True
         self.step = step

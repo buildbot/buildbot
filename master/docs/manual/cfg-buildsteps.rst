@@ -1924,6 +1924,11 @@ The :bb:step:`ShellCommand` arguments are:
     default this is "KILL" (9). Specify "TERM" (15) to give the process a
     chance to cleanup.  This functionality requires a 0.8.6 slave or newer.
 
+``sigtermTime``
+
+    If set, when interrupting, try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interuptSignal``.
+    If None, ``interruptSignal`` will be fired immediately on interrupt.
+
 ``initialStdin``
     If the command expects input on stdin, that can be supplied a a string with
     this parameter.  This value should not be excessively large, as it is
