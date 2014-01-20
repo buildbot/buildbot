@@ -504,7 +504,6 @@ dbdict['chdict'] = DictValidator(
     repository=StringValidator(),
     project=StringValidator(),
     codebase=StringValidator(),
-    is_dir=IntValidator(),
     sourcestampid=IntValidator(),
 )
 

@@ -90,12 +90,6 @@ class OldTriggeringMethods(unittest.TestCase):
             kwargs=dict(who='me'),
             exp_data_kwargs=dict(author='me'))
 
-    def test_addChange_args_isdir(self):
-        # isdir should come through as is_dir
-        return self.do_test_addChange_args(
-            kwargs=dict(isdir=1),
-            exp_data_kwargs=dict())
-
     def test_addChange_args_when(self):
         # when should come through as when_timestamp, as a datetime
         return self.do_test_addChange_args(

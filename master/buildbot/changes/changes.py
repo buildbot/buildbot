@@ -61,7 +61,6 @@ class Change:
         change = cls(None, None, None, _fromChdict=True)
         change.who = chdict['author']
         change.comments = chdict['comments']
-        change.isdir = chdict['is_dir']
         change.revision = chdict['revision']
         change.branch = chdict['branch']
         change.category = chdict['category']
@@ -85,17 +84,15 @@ class Change:
 
         return defer.succeed(change)
 
-    def __init__(self, who, files, comments, isdir=0,
-                 revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}, repository='', codebase='',
-                 project='', _fromChdict=False):
+    def __init__(self, who, files, comments, revision=None, when=None,
+                 branch=None, category=None, revlink='', properties={},
+                 repository='', codebase='', project='', _fromChdict=False):
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return
 
         self.who = who
         self.comments = comments
-        self.isdir = isdir
 
         def none_or_unicode(x):
             if x is None:

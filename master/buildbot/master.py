@@ -402,13 +402,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         kwargs['author'] = handle_deprec("who", "author")
         kwargs['when_timestamp'] = handle_deprec("when", "when_timestamp")
 
-        # is_dir and isdir are gone
-        for oldname in 'is_dir', 'isdir':
-            if oldname in kwargs:
-                log.msg("WARNING: change source is providing deprecated "
-                        "value %s (ignored)" % (oldname,))
-                kwargs.pop(oldname)
-
         # timestamp must be an epoch timestamp now
         if isinstance(kwargs.get('when_timestamp'), datetime.datetime):
             kwargs['when_timestamp'] = datetime2epoch(kwargs['when_timestamp'])

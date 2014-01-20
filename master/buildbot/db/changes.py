@@ -25,6 +25,7 @@ from buildbot.util import epoch2datetime
 from buildbot.util import json
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import log
 
 
 class ChDict(dict):
@@ -35,13 +36,15 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=0,
+    def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties={}, repository='', codebase='',
                   project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
-
+        if is_dir is not None:
+            log.msg("WARNING: change source is providing deprecated "
+                    "value is_dir (ignored)")
         if when_timestamp is None:
             when_timestamp = epoch2datetime(_reactor.seconds())
 
@@ -77,7 +80,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(ch_tbl.insert(), dict(
                 author=author,
                 comments=comments,
-                is_dir=is_dir,
                 branch=branch,
                 revision=revision,
                 revlink=revlink,
@@ -258,7 +260,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             author=ch_row.author,
             files=[],  # see below
             comments=ch_row.comments,
-            is_dir=ch_row.is_dir,
             revision=ch_row.revision,
             when_timestamp=epoch2datetime(ch_row.when_timestamp),
             branch=ch_row.branch,

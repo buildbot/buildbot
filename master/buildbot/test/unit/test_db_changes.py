@@ -38,7 +38,7 @@ class Tests(interfaces.InterfaceTests):
     change13_rows = [
         fakedb.SourceStamp(id=92, branch="thirteen"),
         fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
-                      is_dir=0, branch="master", revision="deadbeef",
+                      branch="master", revision="deadbeef",
                       when_timestamp=266738400, revlink=None, category=None,
                       repository='', codebase='', project='', sourcestampid=92),
 
@@ -52,7 +52,7 @@ class Tests(interfaces.InterfaceTests):
     change14_rows = [
         fakedb.SourceStamp(id=233, branch="fourteen"),
         fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
-                      is_dir=0, branch="warnerdb", revision="0e92a098b",
+                      branch="warnerdb", revision="0e92a098b",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
                       project='Buildbot', sourcestampid=233),
@@ -67,7 +67,6 @@ class Tests(interfaces.InterfaceTests):
         'category': u'devel',
         'comments': u'fix whitespace',
         'files': [u'master/buildbot/__init__.py'],
-        'is_dir': 0,
         'project': u'Buildbot',
         'properties': {},
         'repository': u'git://warner',
@@ -82,7 +81,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addChange(self):
         @self.assertArgSpecMatches(self.db.changes.addChange)
-        def addChange(self, author=None, files=None, comments=None, is_dir=0,
+        def addChange(self, author=None, files=None, comments=None, is_dir=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties={}, repository='', codebase='',
                       project='', uid=None):
@@ -101,7 +100,6 @@ class Tests(interfaces.InterfaceTests):
             author=u'dustin',
             files=[],
             comments=u'fix spelling',
-            is_dir=0,
             revision=u'2d6caa52',
             when_timestamp=epoch2datetime(OTHERTIME),
             branch=u'master',
@@ -125,7 +123,6 @@ class Tests(interfaces.InterfaceTests):
             'codebase': u'cb',
             'comments': u'fix spelling',
             'files': [],
-            'is_dir': 0,
             'project': u'proj',
             'properties': {},
             'repository': u'repo://',
@@ -347,7 +344,6 @@ class RealTests(Tests):
             author=u'dustin',
             files=[u'master/LICENSING.txt', u'slave/LICENSING.txt'],
             comments=u'fix spelling',
-            is_dir=0,
             revision=u'2d6caa52',
             when_timestamp=epoch2datetime(266738400),
             branch=u'master',
@@ -369,7 +365,6 @@ class RealTests(Tests):
                 self.assertEqual(r[0].changeid, changeid)
                 self.assertEqual(r[0].author, 'dustin')
                 self.assertEqual(r[0].comments, 'fix spelling')
-                self.assertFalse(r[0].is_dir)
                 self.assertEqual(r[0].branch, 'master')
                 self.assertEqual(r[0].revision, '2d6caa52')
                 self.assertEqual(r[0].when_timestamp, 266738400)
@@ -442,7 +437,6 @@ class RealTests(Tests):
             author=u'dustin',
             files=[],
             comments=u'fix spelling',
-            is_dir=0,
             revision=u'2d6caa52',
             when_timestamp=None,
             branch=u'master',
@@ -502,7 +496,6 @@ class RealTests(Tests):
                           author=u'dustin',
                           files=[],
                           comments=u'fix spelling',
-                          is_dir=0,
                           revision=u'2d6caa52',
                           when_timestamp=epoch2datetime(OTHERTIME),
                           branch=u'master',

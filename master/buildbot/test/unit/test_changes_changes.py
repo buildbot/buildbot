@@ -28,7 +28,7 @@ class Change(unittest.TestCase):
 
     change23_rows = [
         fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
-                      is_dir=0, branch="warnerdb", revision="deadbeef",
+                      branch="warnerdb", revision="deadbeef",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
                       project='Buildbot'),
@@ -46,7 +46,6 @@ class Change(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
-            isdir=0,
             repository=u'git://warner',
             codebase=u'mainapp',
             who=u'dustin',
@@ -75,7 +74,6 @@ class Change(unittest.TestCase):
         ok = ok and got.who == exp.who
         ok = ok and sorted(got.files) == sorted(exp.files)
         ok = ok and got.comments == exp.comments
-        ok = ok and bool(got.isdir) == bool(exp.isdir)
         ok = ok and got.revision == exp.revision
         ok = ok and got.when == exp.when
         ok = ok and got.branch == exp.branch

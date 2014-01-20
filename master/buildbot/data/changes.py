@@ -34,7 +34,6 @@ class FixerMixin(object):
         # TODO: make these mods in the DB API
         if change:
             change = change.copy()
-            del change['is_dir']
             change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
             change['link'] = base.Link(('changes', str(change['changeid'])))
 

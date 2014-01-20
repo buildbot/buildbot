@@ -179,7 +179,6 @@ class Change(Row):
         changeid=None,
         author=u'frank',
         comments=u'test change',
-        is_dir=0,
         branch=u'master',
         revision=u'abcd',
         revlink=u'http://vc/abcd',
@@ -665,7 +664,7 @@ class FakeChangesComponent(FakeDBComponent):
     # component methods
 
     @defer.inlineCallbacks
-    def addChange(self, author=None, files=None, comments=None, is_dir=0,
+    def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties={}, repository='',
                   codebase='', project='', uid=None, _reactor=reactor):
@@ -682,7 +681,6 @@ class FakeChangesComponent(FakeDBComponent):
             changeid=changeid,
             author=author,
             comments=comments,
-            is_dir=is_dir,
             revision=revision,
             when_timestamp=datetime2epoch(when_timestamp),
             branch=branch,
@@ -768,7 +766,6 @@ class FakeChangesComponent(FakeDBComponent):
             author=change.who,
             files=change.files,
             comments=change.comments,
-            is_dir=change.isdir,
             revision=change.revision,
             when_timestamp=change.when,
             branch=change.branch,
