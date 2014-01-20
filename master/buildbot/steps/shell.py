@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 
+import inspect
 import re
 
 from buildbot import config
@@ -23,6 +24,9 @@ from buildbot.process import remotecommand
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import flatten
+from twisted.python import failure
+from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 from twisted.spread import pb
@@ -34,7 +38,7 @@ _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
 
-class ShellCommand(buildstep.ShellBaseStep):
+class ShellCommand(buildstep.LoggingBuildStep):
 
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
@@ -72,58 +76,194 @@ class ShellCommand(buildstep.ShellBaseStep):
     """
 
     name = "shell"
-    renderables = ['command', 'logfiles', 'lazylogfiles']
+    renderables = [
+        'slaveEnvironment', 'remote_kwargs', 'command',
+        'description', 'descriptionDone', 'descriptionSuffix',
+        'haltOnFailure', 'flunkOnFailure']
 
     command = None  # set this to a command, or set in kwargs
-    logfiles = {}   # you can also set 'logfiles' to a dictionary, and it
-                    #  will be merged with any logfiles= argument passed in
-                    #  to __init__
+    # logfiles={} # you can also set 'logfiles' to a dictionary, and it
+    #               will be merged with any logfiles= argument passed in
+    #               to __init__
 
     # override this on a specific ShellCommand if you want to let it fail
     # without dooming the entire build to a status of FAILURE
     flunkOnFailure = True
 
-    def __init__(self, command=None, logfiles=None, lazylogfiles=False, **kwargs):
+    def __init__(self, workdir=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 command=None,
+                 usePTY="slave-config",
+                 **kwargs):
+        # most of our arguments get passed through to the RemoteShellCommand
+        # that we create, but first strip out the ones that we pass to
+        # BuildStep (like haltOnFailure and friends), and a couple that we
+        # consume ourselves.
+
+        if description:
+            self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
         if command:
             self.setCommand(command)
-        if logfiles is None:
-            logfiles = {}
-        if logfiles and not isinstance(logfiles, dict):
-            config.error(
-                "the %s 'logfiles' parameter must be a dictionary" % (self.__class__.__name__,))
 
-        # merge a class-level 'logfiles' attribute with one passed in as an
-        # argument
-        self.logfiles = self.logfiles.copy()
-        self.logfiles.update(logfiles)
-        self.lazylogfiles = lazylogfiles
+        # pull out the ones that LoggingBuildStep wants, then upcall
+        buildstep_kwargs = {}
+        for k in kwargs.keys()[:]:
+            if k in self.__class__.parms:
+                buildstep_kwargs[k] = kwargs[k]
+                del kwargs[k]
+        buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
 
-        super(ShellCommand, self).__init__(**kwargs)
+        # check validity of arguments being passed to RemoteShellCommand
+        invalid_args = []
+        valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
+        for arg in kwargs.keys():
+            if arg not in valid_rsc_args:
+                invalid_args.append(arg)
+        # Raise Configuration error in case invalid arguments are present
+        if invalid_args:
+            config.error("Invalid argument(s) passed to RemoteShellCommand: "
+                         + ', '.join(invalid_args))
+
+        # everything left over goes to the RemoteShellCommand
+        kwargs['workdir'] = workdir  # including a copy of 'workdir'
+        kwargs['usePTY'] = usePTY
+        self.remote_kwargs = kwargs
+
+    def setBuild(self, build):
+        buildstep.LoggingBuildStep.setBuild(self, build)
+        # Set this here, so it gets rendered when we start the step
+        self.slaveEnvironment = self.build.slaveEnvironment
+
+    def setStepStatus(self, step_status):
+        buildstep.LoggingBuildStep.setStepStatus(self, step_status)
+
+    def setDefaultWorkdir(self, workdir):
+        rkw = self.remote_kwargs
+        rkw['workdir'] = rkw['workdir'] or workdir
+
+    def getWorkdir(self):
+        """
+        Get the current notion of the workdir.  Note that this may change
+        between instantiation of the step and C{start}, as it is based on the
+        build's default workdir, and may even be C{None} before that point.
+        """
+        return self.remote_kwargs['workdir']
 
     def setCommand(self, command):
         self.command = command
 
-    def getCurrCommand(self):
-        return self.command
+    def _describe(self, done=False):
+        """Return a list of short strings to describe this step, for the
+        status display. This uses the first few words of the shell command.
+        You can replace this by setting .description in your subclass, or by
+        overriding this method to describe the step better.
+
+        @type  done: boolean
+        @param done: whether the command is complete or not, to improve the
+                     way the command is described. C{done=False} is used
+                     while the command is still running, so a single
+                     imperfect-tense verb is appropriate ('compiling',
+                     'testing', ...) C{done=True} is used when the command
+                     has finished, and the default getText() method adds some
+                     text, so a simple noun is appropriate ('compile',
+                     'tests' ...)
+        """
+
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # we may have no command if this is a step that sets its command
+            # name late in the game (e.g., in start())
+            if not self.command:
+                return ["???"]
+
+            words = self.command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return ["???"]
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return ["???"]
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except:
+            log.err(failure.Failure(), "Error describing step")
+            return ["???"]
+
+    def setupEnvironment(self, cmd):
+        # merge in anything from Build.slaveEnvironment
+        # This can be set from a Builder-level environment, or from earlier
+        # BuildSteps. The latter method is deprecated and superseded by
+        # BuildProperties.
+        # Environment variables passed in by a BuildStep override
+        # those passed in at the Builder level.
+        slaveEnv = self.slaveEnvironment
+        if slaveEnv:
+            if cmd.args['env'] is None:
+                cmd.args['env'] = {}
+            fullSlaveEnv = slaveEnv.copy()
+            fullSlaveEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullSlaveEnv
+            # note that each RemoteShellCommand gets its own copy of the
+            # dictionary, so we shouldn't be affecting anyone but ourselves.
 
     def buildCommandKwargs(self, warnings):
-        return super(ShellCommand, self).buildCommandKwargs(self.command, warnings)
+        kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
+        kwargs.update(self.remote_kwargs)
 
-    def startCommand(self, cmd, errorMessages=None):
-        if errorMessages is None:
-            errorMessages = []
+        kwargs['command'] = flatten(self.command, (list, tuple))
 
-        # stdio is the first log
-        self.stdio_log = self.addLog("stdio")
+        # check for the usePTY flag
+        if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
 
-        d = self.startCommandAndSetStatus(cmd, self.stdio_log,
-                                          logfiles=self.logfiles,
-                                          lazylogfiles=self.lazylogfiles,
-                                          errorMessages=errorMessages)
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
+        # check for the interruptSignal flag
+        if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
+            warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        return kwargs
 
     def start(self):
+        # this block is specific to ShellCommands. subclasses that don't need
+        # to set up an argv array, an environment, or extra logfiles= (like
+        # the Source subclasses) can just skip straight to startCommand()
+
         warnings = []
 
         # create the actual RemoteShellCommand instance now

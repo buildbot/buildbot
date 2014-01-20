@@ -136,12 +136,12 @@ class VisualStudio(ShellCommand):
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
 
-    def setupLogfiles(self, cmd, logfiles, lazylogfiles=False):
+    def setupLogfiles(self, cmd, logfiles):
         logwarnings = self.addLog("warnings")
         logerrors = self.addLog("errors")
         self.logobserver = MSLogLineObserver(logwarnings, logerrors)
         self.addLogObserver('stdio', self.logobserver)
-        ShellCommand.setupLogfiles(self, cmd, logfiles, lazylogfiles=lazylogfiles)
+        ShellCommand.setupLogfiles(self, cmd, logfiles)
 
     def setupInstalldir(self):
         if not self.installdir:
