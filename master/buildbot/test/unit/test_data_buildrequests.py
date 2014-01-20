@@ -155,6 +155,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.callGet(('buildrequest',))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
+            bsid=None,
             complete=None,
             claimed=None,
             branch=None,
@@ -174,6 +175,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
+            bsid=55,
             complete=False,
             claimed=True,
             branch='mybranch',
@@ -191,6 +193,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
+            bsid=None,
             complete=None,
             claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
             branch=None,

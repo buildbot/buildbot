@@ -100,11 +100,11 @@ buildrequests
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
     * ``submitted_at`` (datetime object, time this request was completed)
-    * ``results``
-    * ``branch``
-    * ``repository``
-    * ``codebase``
-    * ``waited_for``
+    * ``results`` (integer result code)
+    * ``branch`` (string, the branch associated with the request)
+    * ``repository`` (string, the repository associated with the request)
+    * ``codebase`` (string, the codebase associated with the request)
+    * ``waited_for`` (boolean)
 
     .. py:method:: getBuildRequest(brid)
 
@@ -600,7 +600,7 @@ buildsets
                            complete=None):
 
         :param count: maximum number of buildsets to retrieve (required).
-        :type branch: integer
+        :type count: integer
         :param branch: optional branch name. If specified, only buildsets
             affecting such branch will be returned.
         :type branch: string

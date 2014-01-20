@@ -104,12 +104,16 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         else:
             claimed = resultSpec.popBooleanFilter('claimed')
 
+        bsid = resultSpec.popFilter('buildsetid', 'eq')
+        if bsid:
+            bsid = bsid[0]
         branch = resultSpec.popStringFilter('branch')
         repository = resultSpec.popStringFilter('repository')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             buildername=buildername,
             complete=complete,
             claimed=claimed,
+            bsid=bsid,
             branch=branch,
             repository=repository)
         if buildrequests:
