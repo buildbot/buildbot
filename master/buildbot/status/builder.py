@@ -564,6 +564,7 @@ class BuilderStatus(styles.Versioned):
         result = {}
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
+        result['name'] = self.name
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
         result['project'] = self.project
