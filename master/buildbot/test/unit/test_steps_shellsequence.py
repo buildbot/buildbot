@@ -12,6 +12,12 @@ from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 
 
+class DynamicRun(shellsequence.ShellSequence):
+
+    def run(self):
+        return self.runShellSequence(self.dynamicCommands)
+
+
 class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
 
     def setUp(self):
@@ -50,31 +56,24 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.expectOutcome(result=SUCCESS, status_text=["'make", "BUILDBOT-TEST'"])
         return self.runStep()
 
-    def createBuggyClass(self, commandsToSet):
-        class DynamicRun(shellsequence.ShellSequence):
-
-            def run(self):
-                self.setCommands(commandsToSet)
-                return self.runShellSequence()
-        return DynamicRun
+    def createDynamicRun(self, commands):
+        DynamicRun.dynamicCommands = commands
+        return DynamicRun()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
-        c1 = self.createBuggyClass(None)
-        self.setupStep(c1())
+        self.setupStep(self.createDynamicRun(None))
         self.expectOutcome(result=EXCEPTION,
                            status_text=['commands == None'])
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
-        c1 = self.createBuggyClass(["one command"])
-        self.setupStep(c1())
+        self.setupStep(self.createDynamicRun(["one command"]))
         self.expectOutcome(result=EXCEPTION,
                            status_text=['one command', 'not', 'ShellArg'])
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
-        c1 = self.createBuggyClass([shellsequence.ShellArg(command=1)])
-        self.setupStep(c1())
+        self.setupStep(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
                            status_text=[1, 'invalid', 'params'])
         return self.runStep()

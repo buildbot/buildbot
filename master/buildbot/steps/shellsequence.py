@@ -16,7 +16,6 @@
 from buildbot import config
 from buildbot import interfaces
 from buildbot.process import buildstep
-from buildbot.process import remotecommand
 from buildbot.status import results
 from twisted.internet import defer
 from zope.interface import implements
@@ -49,9 +48,7 @@ class ShellArg(object):
         # we don't validate anything yet as we can have renderables.
 
     def validateAttributes(self):
-        """
-        Only make the check if we have a list
-        """
+        # only make the check if we have a list
         if not isinstance(self.command, (str, list)):
             config.error("%s is an invalid command, "
                          "it must be a string or a list" % (self.command,))
@@ -72,25 +69,13 @@ class ShellArg(object):
         defer.returnValue(self)
 
 
-class ShellSequence(buildstep.ShellBaseStep):
+class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     renderables = ['commands']
 
     def __init__(self, commands=None, **kwargs):
         self.commands = commands
-        self.currCmd = None
-        self.alreadyUsedLog = []
-        self.result = results.SUCCESS
-        super(ShellSequence, self).__init__(**kwargs)
-
-    def getCurrCommand(self):
-        return self.currCmd
-
-    def setCommands(self, commands):
-        """
-        can be used by a step that dynamically creates
-        the commands list.
-        """
-        self.commands = commands
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+        buildstep.BuildStep.__init__(self, **kwargs)
 
     def shouldRunTheCommand(self, cmd):
         return bool(cmd)
@@ -99,17 +84,13 @@ class ShellSequence(buildstep.ShellBaseStep):
         return self.describe(True)
 
     @defer.inlineCallbacks
-    def runShellSequence(self):
-        """
-        runs all shell commands according to the configuration
-        defined by the steps above.
-        """
-        warnings = []
+    def runShellSequence(self, commands):
         terminate = False
-        if self.commands is None:
+        if commands is None:
             yield self.setStateStrings(["commands == None"])
             defer.returnValue(results.EXCEPTION)
-        for arg in self.commands:
+        overall_result = results.SUCCESS
+        for arg in commands:
             if not isinstance(arg, ShellArg):
                 yield self.setStateStrings([str(arg), "not", "ShellArg"])
                 defer.returnValue(results.EXCEPTION)
@@ -119,33 +100,25 @@ class ShellSequence(buildstep.ShellBaseStep):
                 yield self.setStateStrings([arg.command, "invalid", "params"])
                 defer.returnValue(results.EXCEPTION)
 
-            # handle cmd
-            self.currCmd = arg.command
-            result = results.SKIPPED
-            if self.shouldRunTheCommand(self.currCmd):
-                # handle the log
-                logObj = None
-                if arg.logfile is not None:
-                    if not arg.logfile.startswith("stdio"):
-                        arg.logfile = "stdio " + arg.logfile
-                    logObj = yield self.addLog(arg.logfile)
+            # handle the command from the arg
+            command = arg.command
+            if not self.shouldRunTheCommand(command):
+                continue
 
-                # create the actual RemoteShellCommand instance
-                kwargs = self.buildCommandKwargs(self.currCmd, warnings)
-                cmd = remotecommand.RemoteShellCommand(**kwargs)
-                self.setupEnvironment(cmd)
+            # stick the command in self.command so that describe can use it
+            self.command = command
 
-                # run it
-                result = yield self.startCommandAndSetStatus(cmd, stdioLog=logObj)
-            self.result, terminate = results.computeResultAndContinuation(arg, result,
-                                                                          self.result)
+            # TODO/XXX: logfile arg is ignored, because RemoteCommand will
+            # always log standard streams to the log named 'stdio'
+
+            cmd = yield self.makeRemoteShellCommand(command=command)
+            yield self.runCommand(cmd)
+            overall_result, terminate = results.computeResultAndContinuation(
+                arg, cmd.results(), overall_result)
             if terminate:
                 break
         yield self.setStateStrings(self.getFinalState())
-        defer.returnValue(self.result)
+        defer.returnValue(overall_result)
 
-    # If one ones to make some computation before and/or after the sequence of commands are run
-    # the method below must be overriden. There, one can call self.runShellSequence according to its
-    # needs, provided commands are set. One can use self.setCommands to set it dynamically.
     def run(self):
-        return self.runShellSequence()
+        return self.runShellSequence(self.commands)

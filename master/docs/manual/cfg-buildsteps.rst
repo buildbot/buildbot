@@ -2008,6 +2008,12 @@ Two :bb:step:`ShellSequence` methods tune the behavior of how the list of shell 
         Return the status text of the step in the end.
         The default value is to set the text describing the execution of the last shell command.
 
+    ..py:method:: runShellSequence(commands):
+
+        :param commands: list of shell args
+
+        This method actually runs the shell sequence.
+        The default ``run`` method calls ``runShellSequence``, but subclasses can override ``run`` to perform other operations, if desired.
 
 .. bb:step:: Configure
 
