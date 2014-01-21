@@ -25,7 +25,7 @@ def worst_status(a, b):
             return s
 
 
-def computeResultAndContinuation(obj, result, previousResult):
+def computeResultAndTermination(obj, result, previousResult):
     possible_overall_result = result
     terminate = False
     if result == FAILURE:

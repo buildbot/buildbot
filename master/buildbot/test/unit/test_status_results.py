@@ -53,7 +53,7 @@ class TestResults(unittest.TestCase):
                             self.flunkOnFailure = fof
                             self.warnOnWarnings = wow
                             self.warnOnFailure = wof
-                            nr, term = results.computeResultAndContinuation(
+                            nr, term = results.computeResultAndTermination(
                                 self, result, previousResult)
                             log.msg("res=%r prevRes=%r hof=%r fow=%r fof=%r "
                                     "wow=%r wof=%r => %r %r" %

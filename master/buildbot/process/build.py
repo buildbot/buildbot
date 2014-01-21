@@ -34,7 +34,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.status.results import computeResultAndContinuation
+from buildbot.status.results import computeResultAndTermination
 from buildbot.util.eventual import eventually
 
 
@@ -452,8 +452,8 @@ class Build(properties.PropertiesMixin):
         self.results.append(result)
         if text:
             self.text.extend(text)
-        self.result, terminate = computeResultAndContinuation(step, result,
-                                                              self.result)
+        self.result, terminate = computeResultAndTermination(step, result,
+                                                             self.result)
         if not self.conn:
             terminate = True
         return terminate

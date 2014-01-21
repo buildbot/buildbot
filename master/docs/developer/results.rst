@@ -51,7 +51,7 @@ external tools, so the values are fixed.
     This function takes two status values, and returns the "worst" status of the two.
     This is used to aggregate step statuses into build statuses, and build statuses into buildset statuses.
 
-.. py:function:: computeResultAndContinuation(obj, result, previousResult):
+.. py:function:: computeResultAndTermination(obj, result, previousResult):
 
     :param obj: an object with the attributes of :py:class:`ResultComputingConfigMixin`
     :param result: the new result
@@ -61,7 +61,7 @@ external tools, so the values are fixed.
 
 .. py:class:: ResultComputingConfigMixin
 
-    This simple mixin is intended to help implement classes that will use :py:meth:`computeResultAndContinuation`.
+    This simple mixin is intended to help implement classes that will use :py:meth:`computeResultAndTermination`.
     The class has, as class attributes, the result computing configuration parameters with default values:
 
     ..py:attribute:: haltOnFailure

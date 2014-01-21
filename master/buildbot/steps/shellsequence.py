@@ -104,7 +104,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
 
             cmd = yield self.makeRemoteShellCommand(command=command)
             yield self.runCommand(cmd)
-            overall_result, terminate = results.computeResultAndContinuation(
+            overall_result, terminate = results.computeResultAndTermination(
                 arg, cmd.results(), overall_result)
             if terminate:
                 break
