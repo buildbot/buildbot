@@ -109,6 +109,7 @@ class Build(properties.PropertiesMixin):
 
     def setSlaveEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
+        # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
         self.slaveEnvironment = env
 
     def getSourceStamp(self, codebase=''):
