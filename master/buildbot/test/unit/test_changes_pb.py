@@ -436,7 +436,7 @@ class TestChangePerspective(unittest.TestCase):
 
     def test_addChange_old_param_names(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(isdir=1, who='me', when=1234,
+        d = cp.perspective_addChange(dict(who='me', when=1234,
                                           files=[]))
 
         def check(_):

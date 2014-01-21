@@ -224,7 +224,7 @@ def import_changes(migrate_engine):
                 changeid=c.number,
                 author=c.who,
                 comments=c.comments,
-                is_dir=c.isdir,
+                is_dir=0,
                 branch=c.branch,
                 revision=c.revision,
                 revlink=c.revlink,
