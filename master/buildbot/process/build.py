@@ -32,10 +32,9 @@ from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
-from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.status.results import worst_status
+from buildbot.status.results import computeResultAndTermination
 from buildbot.util.eventual import eventually
 
 
@@ -109,6 +108,8 @@ class Build(properties.PropertiesMixin):
                       for access in lockList]
 
     def setSlaveEnvironment(self, env):
+        # TODO: remove once we don't have anything depending on this method or attribute
+        # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
         self.slaveEnvironment = env
 
     def getSourceStamp(self, codebase=''):
@@ -338,6 +339,7 @@ class Build(properties.PropertiesMixin):
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
+            # TODO: remove once we don't have anything depending on setDefaultWorkdir
             if callable(self.workdir):
                 step.setDefaultWorkdir(self.workdir(self.sources))
             else:
@@ -451,33 +453,10 @@ class Build(properties.PropertiesMixin):
         self.results.append(result)
         if text:
             self.text.extend(text)
+        self.result, terminate = computeResultAndTermination(step, result,
+                                                             self.result)
         if not self.conn:
             terminate = True
-
-        possible_overall_result = result
-        if result == FAILURE:
-            if not step.flunkOnFailure:
-                possible_overall_result = SUCCESS
-            if step.warnOnFailure:
-                possible_overall_result = WARNINGS
-            if step.flunkOnFailure:
-                possible_overall_result = FAILURE
-            if step.haltOnFailure:
-                terminate = True
-        elif result == WARNINGS:
-            if not step.warnOnWarnings:
-                possible_overall_result = SUCCESS
-            else:
-                possible_overall_result = WARNINGS
-            if step.flunkOnWarnings:
-                possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY, CANCELLED):
-            terminate = True
-
-        # if we skipped this step, then don't adjust the build status
-        if result != SKIPPED:
-            self.result = worst_status(self.result, possible_overall_result)
-
         return terminate
 
     def lostRemote(self, conn=None):
