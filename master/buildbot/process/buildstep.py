@@ -998,7 +998,7 @@ class ShellMixin(object):
             else:
                 kwargs['workdir'] = self.build.workdir
 
-        # the rest go to RemoteShellCommand
+        # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(**kwargs)
 
         # set up logging

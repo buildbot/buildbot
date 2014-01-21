@@ -1991,7 +1991,7 @@ All these commands share the same configuration of ``environment``, ``workdir`` 
     Note that if ``logfile`` name does not start with the prefix ``stdio``, that prefix will be set like ``stdio <logfile>``.
 
 
-Two :bb:step:`ShellSequence` methods tune the behavior of how the list of shell commands are executed, and can be overridden in subclasses:
+The two :bb:step:`ShellSequence` methods below tune the behavior of how the list of shell commands are executed, and can be overridden in subclasses.
 
 .. py:class:: buildbot.steps.shellsequence.ShellSequence
 
