@@ -1,6 +1,14 @@
 Buildbot Coding Style
 =====================
 
+Documentation
+-------------
+
+Buildbot strongly encourages developers to document the methods, behavior, and usage of classes that users might interact with.
+However, this documentation should be in ``.rst`` files under ``master/docs/developer``, rather than in docstrings within the code.
+For private methods or where code deserves some kind of explanatory preface, use comments instead of a docstring.
+While some docstrings remain within the code, these should be migrated to documentation files and removed as the code is modified.
+
 Symbol Names
 ------------
 

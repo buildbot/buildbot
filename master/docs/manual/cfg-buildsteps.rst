@@ -1924,6 +1924,11 @@ The :bb:step:`ShellCommand` arguments are:
     default this is "KILL" (9). Specify "TERM" (15) to give the process a
     chance to cleanup.  This functionality requires a 0.8.6 slave or newer.
 
+``sigtermTime``
+
+    If set, when interrupting, try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interuptSignal``.
+    If None, ``interruptSignal`` will be fired immediately on interrupt.
+
 ``initialStdin``
     If the command expects input on stdin, that can be supplied a a string with
     this parameter.  This value should not be excessively large, as it is
@@ -1936,6 +1941,79 @@ The :bb:step:`ShellCommand` arguments are:
     WARNINGS.
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
+
+.. bb:step:: ShellSequence
+
+Shell Sequence
+++++++++++++++
+
+Some steps have a specific purpose, but require multiple shell commands to implement them.
+For example, a build is often ``configure; make; make install``.
+We have two ways to handle that:
+
+* Create one shell command with all these.
+  To put the logs of each commands in separate logfiles, we need to re-write the script as ``configure 1> configure_log; ...`` and to add these ``configure_log`` files as ``logfiles`` argument of the buildstep.
+  This has the drawback of complicating the shell script, and making it harder to maintain as the logfile name is put in different places.
+
+* Create three :bb:step:`ShellCommand` instances, but this loads the build UI unnecessarily.
+
+:bb:step:`ShellSequence` is a class to execute not one but a sequence of shell commands during a build.
+It takes as argument a renderable, or list of commands which are :class:`~buildbot.steps.shellsequence.ShellArg` objects.
+Each such object represents a shell invocation.
+
+The single :bb:step:`ShellSequence` argument aside from the common parameters is:
+
+``commands``
+
+A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable the returns
+a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects. ::
+
+        from buildbot.steps.shellsequence import ShellArg
+        from buildbot.steps.shellsequence import ShellSequence
+        f.addStep(ShellSequence(commands=[ShellArg(cmd='configure'),
+                                          ShellArg(cmd='make', log='make'),
+                                          ShellArg(cmd='make check_warning', log='warning',
+                                                   warnOnFailure=True),
+                                          ShellArg(cmd='make install', log='make install')]))
+
+All these commands share the same configuration of ``environment``, ``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
+
+.. py:class:: buildbot.steps.shellsequence.ShellArg(self, command=None, logfile=None, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=False, warnOnWarnings=False, warnOnFailure=False)
+
+    :param command: (see the :bb:step:`ShellCommand` ``command`` argument),
+    :param logfile: optional log file name, used as the stdio log of the command
+
+    The ``haltOnFailure``, ``flunkOnWarnings``, ``flunkOnFailure``, ``warnOnWarnings``, ``warnOnFailure`` parameters drive the execution of the sequence, the same way steps are scheduled in the build.
+    They have the same default values as for buildsteps - see :ref:`Buildstep-Common-Parameters`.
+
+    Any of the arguments to this class can be renderable.
+
+    Note that if ``logfile`` name does not start with the prefix ``stdio``, that prefix will be set like ``stdio <logfile>``.
+
+
+The two :bb:step:`ShellSequence` methods below tune the behavior of how the list of shell commands are executed, and can be overridden in subclasses.
+
+.. py:class:: buildbot.steps.shellsequence.ShellSequence
+
+    ..py:method:: shouldRunTheCommand(oneCmd)
+
+        :param oneCommand: a string or lis of strings, as rendered from a :py:class:`~buildbot.steps.shellsequence.ShellArg` instance's ``command`` argument.
+
+        Determine whether the command ``oneCmd`` should be executed.
+        If ``shouldRunTheCommand`` returns False, the result of the command will be recorded as SKIPPED.
+        The default methods skips all empty strings and empty lists.
+
+    ..py:method:: getFinalState()
+
+        Return the status text of the step in the end.
+        The default value is to set the text describing the execution of the last shell command.
+
+    ..py:method:: runShellSequence(commands):
+
+        :param commands: list of shell args
+
+        This method actually runs the shell sequence.
+        The default ``run`` method calls ``runShellSequence``, but subclasses can override ``run`` to perform other operations, if desired.
 
 .. bb:step:: Configure
 

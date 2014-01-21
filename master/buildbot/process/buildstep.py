@@ -38,6 +38,7 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
+from buildbot.status import results
 from buildbot.status.logfile import HEADER
 from buildbot.status.logfile import STDERR
 from buildbot.status.logfile import STDOUT
@@ -48,6 +49,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import flatten
 
 
 class BuildStepFailed(Exception):
@@ -218,13 +220,9 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         self._maybeFinished()
 
 
-class BuildStep(object, properties.PropertiesMixin):
+class BuildStep(results.ResultComputingConfigMixin,
+                properties.PropertiesMixin):
 
-    haltOnFailure = False
-    flunkOnWarnings = False
-    flunkOnFailure = False
-    warnOnWarnings = False
-    warnOnFailure = False
     alwaysRun = False
     doStepIf = True
     hideStepIf = False
@@ -232,12 +230,7 @@ class BuildStep(object, properties.PropertiesMixin):
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
-    renderables = [
-        'haltOnFailure',
-        'flunkOnWarnings',
-        'flunkOnFailure',
-        'warnOnWarnings',
-        'warnOnFailure',
+    renderables = results.ResultComputingConfigMixin.resultConfig + [
         'alwaysRun',
         'doStepIf',
         'hideStepIf',
@@ -279,6 +272,7 @@ class BuildStep(object, properties.PropertiesMixin):
     step_status = None
     progress = None
     logEncoding = None
+    cmd = None
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -436,7 +430,8 @@ class BuildStep(object, properties.PropertiesMixin):
             # fall through to the end
 
         except error.ConnectionLost:
-            self.setStateStrings(self.describe(True) + ["exception", "slave", "lost"])
+            self.setStateStrings(
+                self.describe(True) + ["exception", "slave", "lost"])
             results = RETRY
 
         except Exception:
@@ -684,11 +679,15 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.addURL(name, url)
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
         command.buildslave = self.buildslave
-        d = command.run(self, self.remote, self.build.builder.name)
-        return d
+        try:
+            res = yield command.run(self, self.remote, self.build.builder.name)
+        finally:
+            self.cmd = None
+        defer.returnValue(res)
 
     def hasStatistic(self, name):
         return name in self.statistics
@@ -739,6 +738,10 @@ class LoggingBuildStep(BuildStep):
                 "the 'log_eval_func' paramater is no longer available")
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
+    def isNewStyle(self):
+        # LoggingBuildStep subclasses are never new-style
+        return False
+
     def addLogFile(self, logname, filename):
         self.logfiles[logname] = filename
 
@@ -748,10 +751,6 @@ class LoggingBuildStep(BuildStep):
         return kwargs
 
     def startCommand(self, cmd, errorMessages=[]):
-        """
-        @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into our self.stdio_log LogFile
-        """
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
@@ -874,6 +873,195 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText2(self.maybeGetText2(cmd, results))
         return defer.succeed(None)
 
+
+class CommandMixin(object):
+
+    @defer.inlineCallbacks
+    def _runRemoteCommand(self, cmd, abandonOnFailure, args):
+        cmd = remotecommand.RemoteCommand(cmd, args)
+        try:
+            log = self.getLog('stdio')
+        except:
+            log = yield self.addLog('stdio')
+        cmd.useLog(log, False)
+        yield self.runCommand(cmd)
+        if abandonOnFailure and cmd.didFail():
+            raise BuildStepFailed()
+        defer.returnValue(not cmd.didFail())
+
+    def runRmdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('rmdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+    def pathExists(self, path, log=None):
+        return self._runRemoteCommand('stat', False,
+                                      {'file': path, 'logEnviron': False})
+
+    def runMkdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('mkdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+
+class ShellMixin(object):
+
+    command = None
+    workdir = None
+    env = {}
+    want_stdout = True
+    want_stderr = True
+    usePTY = 'slave-config'
+    logfiles = {}
+    lazylogfiles = {}
+    timeout = 1200
+    maxTime = None
+    logEnviron = True
+    interruptSignal = 'KILL'
+    sigtermTime = None
+    initialStdin = None
+    decodeRC = {0: SUCCESS}
+
+    _shellMixinArgs = [
+        'command',
+        'workdir',
+        'env',
+        'want_stdout',
+        'want_stderr',
+        'usePTY',
+        'logfiles',
+        'lazylogfiles',
+        'timeout',
+        'maxTime',
+        'logEnviron',
+        'interruptSignal',
+        'sigtermTime',
+        'initialStdin',
+        'decodeRC',
+    ]
+    renderables = _shellMixinArgs
+
+    def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+        constructorArgs = constructorArgs.copy()
+
+        def bad(arg):
+            config.error("invalid %s argument %s" %
+                         (self.__class__.__name__, arg))
+        for arg in self._shellMixinArgs:
+            if arg not in constructorArgs:
+                continue
+            if arg in prohibitArgs:
+                bad(arg)
+            else:
+                setattr(self, arg, constructorArgs[arg])
+            del constructorArgs[arg]
+        for arg in constructorArgs:
+            if arg not in BuildStep.parms:
+                bad(arg)
+                del constructorArgs[arg]
+        return constructorArgs
+
+    @defer.inlineCallbacks
+    def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
+                               **overrides):
+        kwargs = dict([(arg, getattr(self, arg))
+                       for arg in self._shellMixinArgs])
+        kwargs.update(overrides)
+
+        stdio = yield self.addLog('stdio')
+
+        kwargs['command'] = flatten(kwargs['command'], (list, tuple))
+
+        # check for the usePTY flag
+        if kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("shell", "2.7"):
+                yield stdio.addHeader(
+                    "NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        # check for the interruptSignal flag
+        if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
+            yield stdio.addHeader(
+                "NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        # lazylogfiles are handled below
+        del kwargs['lazylogfiles']
+
+        # merge the builder's environment with that supplied here
+        builderEnv = self.build.builder.config.env
+        kwargs['env'] = yield self.build.render(builderEnv)
+        kwargs['env'].update(self.env)
+
+        # default the workdir appropriately
+        if not self.workdir:
+            if callable(self.build.workdir):
+                kwargs['workdir'] = self.build.workdir(self.build.sources)
+            else:
+                kwargs['workdir'] = self.build.workdir
+
+        # the rest of the args go to RemoteShellCommand
+        cmd = remotecommand.RemoteShellCommand(**kwargs)
+
+        # set up logging
+        cmd.useLog(stdio, False)
+        for logname, remotefilename in self.logfiles.items():
+            if self.lazylogfiles:
+                # TODO/XXX: addLog's async.. refactor this whole thing
+                callback = lambda cmd_arg, logname=logname: self.addLog(logname)
+                cmd.useLogDelayed(logname, callback, True)
+            else:
+                # tell the BuildStepStatus to add a LogFile
+                newlog = yield self.addLog(logname)
+                # and tell the RemoteCommand to feed it
+                cmd.useLog(newlog, False)
+
+        defer.returnValue(cmd)
+
+    def _describe(self, done=False):
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # if self.cmd is set, then use the RemoteCommand's info
+            if self.cmd:
+                command = self.command.command
+            # otherwise, if we were configured with a command, use that
+            elif self.command:
+                command = self.command
+            else:
+                return super(ShellMixin, self)._describe(done)
+
+            words = command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return super(ShellMixin, self)._describe(done)
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return super(ShellMixin, self)._describe(done)
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except:
+            log.err(failure.Failure(), "Error describing step")
+            return super(ShellMixin, self)._describe(done)
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties

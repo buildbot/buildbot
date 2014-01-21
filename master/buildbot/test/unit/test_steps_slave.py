@@ -288,10 +288,10 @@ class CompositeUser(buildstep.LoggingBuildStep, slave.CompositeStepMixin):
     def start(self):
         self.addLogForRemoteCommands('stdio')
         d = self.payload(self)
-        d.addCallback(self.commandComplete)
+        d.addCallback(self.payloadComplete)
         d.addErrback(self.failed)
 
-    def commandComplete(self, res):
+    def payloadComplete(self, res):
         self.finished(FAILURE if res else SUCCESS)
 
 

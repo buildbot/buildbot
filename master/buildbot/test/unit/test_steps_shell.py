@@ -75,7 +75,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         # this checks that an exception is raised for invalid arguments
         self.assertRaisesConfigError(
             "Invalid argument(s) passed to RemoteShellCommand: ",
-            lambda: shell.ShellCommand('build', "echo Hello World",
+            lambda: shell.ShellCommand(workdir='build', command="echo Hello World",
                                        wrongArg1=1, wrongArg2='two'))
 
     def test_describe_no_command(self):
