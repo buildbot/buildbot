@@ -1,18 +1,19 @@
 from twisted.trial import unittest
 
-from buildbot.steps import shellsequence
+from buildbot.process.properties import WithProperties
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.status.results import FAILURE
-from buildbot.status.results import EXCEPTION
+from buildbot.steps import shellsequence
+from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
-from buildbot.process.properties import WithProperties
-from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.fake.remotecommand import Expect
 
 
 class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
+
     def setUp(self):
         return self.setUpBuildStep()
 
@@ -51,6 +52,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
 
     def createBuggyClass(self, commandsToSet):
         class DynamicRun(shellsequence.ShellSequence):
+
             def run(self):
                 self.setCommands(commandsToSet)
                 return self.runShellSequence()

@@ -420,7 +420,7 @@ LoggingBuildStep
 
         :param command: the :class:`~buildbot.process.remotecommand.RemoteCommand`
             instance to start
-	:param stdioLog: an optional :class:`~buildbot.process.log.Log` object where the
+        :param stdioLog: an optional :class:`~buildbot.process.log.Log` object where the
             stdout of the command will be stored.
         :param closeLogWhenFinished: a boolean
         :param logfiles: optional dictionary see :bb:step:`ShellCommand`

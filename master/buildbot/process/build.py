@@ -39,6 +39,7 @@ from buildbot.util.eventual import eventually
 
 
 class Build(properties.PropertiesMixin):
+
     """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
