@@ -73,13 +73,14 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             ins = br_tbl.insert()
             for buildername in builderNames:
                 self.check_length(br_tbl.c.buildername, buildername)
-                r = conn.execute(ins,
+                res = conn.execute(ins,
                     dict(buildsetid=bsid, buildername=buildername, priority=0,
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
                         submitted_at=submitted_at, complete_at=None))
 
-                brids[buildername] = r.inserted_primary_key[0]
+                brids[buildername] = res.inserted_primary_key[0]
+                res.close()
 
             transaction.commit()
 

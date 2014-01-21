@@ -297,6 +297,7 @@ class DownloadArtifact(ShellCommand):
 
         #find artifact dependency
         triggeredbybrid = self.build.requests[0].id
+        self.name = self.name + "brid# %s" % triggeredbybrid
         br = yield self.master.db.buildrequests.getBuildRequestTriggered(triggeredbybrid, self.artifactBuilderName)
 
         artifactPath  = "%s_%s_%s" % (safeTranslate(self.artifactBuilderName),
