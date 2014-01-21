@@ -14,24 +14,15 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.status import results
 from twisted.internet import defer
-from zope.interface import implements
 
 
-class ShellArg(object):
-    implements(interfaces.IResComputingConfig)
-    iResComputingParams = ["haltOnFailure", "flunkOnWarnings", "flunkOnFailure",
-                           "warnOnWarnings", "warnOnFailure"]
-    publicAttributes = iResComputingParams + ["command", "logfile"]
-
-    haltOnFailure = False
-    flunkOnWarnings = False
-    flunkOnFailure = True
-    warnOnWarnings = False
-    warnOnFailure = False
+class ShellArg(results.ResultComputingConfigMixin):
+    publicAttributes = (
+        results.ResultComputingConfigMixin.resultConfig +
+        ["command", "logfile"])
 
     def __init__(self, command=None, logfile=None, **kwargs):
         name = self.__class__.__name__
@@ -41,7 +32,7 @@ class ShellArg(object):
         self.command = command
         self.logfile = logfile
         for k, v in kwargs.iteritems():
-            if k not in self.iResComputingParams:
+            if k not in self.resultConfig:
                 config.error("the parameter '%s' is not "
                              "handled by ShellArg" % (k,))
             setattr(self, k, v)
@@ -55,7 +46,7 @@ class ShellArg(object):
         if isinstance(self.command, list):
             if not all([isinstance(x, str) for x in self.command]):
                 config.error("%s must only have strings in it" % (self.command,))
-        runConfParams = [(p_attr, getattr(self, p_attr)) for p_attr in self.iResComputingParams]
+        runConfParams = [(p_attr, getattr(self, p_attr)) for p_attr in self.resultConfig]
         not_bool = [(p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val,
                                                                                            bool)]
         if not_bool:

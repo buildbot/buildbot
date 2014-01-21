@@ -38,6 +38,7 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
+from buildbot.status import results
 from buildbot.status.logfile import HEADER
 from buildbot.status.logfile import STDERR
 from buildbot.status.logfile import STDOUT
@@ -219,14 +220,9 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         self._maybeFinished()
 
 
-class BuildStep(object, properties.PropertiesMixin):
-    implements(interfaces.IResComputingConfig)
+class BuildStep(results.ResultComputingConfigMixin,
+                properties.PropertiesMixin):
 
-    haltOnFailure = False
-    flunkOnWarnings = False
-    flunkOnFailure = False
-    warnOnWarnings = False
-    warnOnFailure = False
     alwaysRun = False
     doStepIf = True
     hideStepIf = False
@@ -234,12 +230,7 @@ class BuildStep(object, properties.PropertiesMixin):
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
-    renderables = [
-        'haltOnFailure',
-        'flunkOnWarnings',
-        'flunkOnFailure',
-        'warnOnWarnings',
-        'warnOnFailure',
+    renderables = results.ResultComputingConfigMixin.resultConfig + [
         'alwaysRun',
         'doStepIf',
         'hideStepIf',

@@ -18,16 +18,11 @@ Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "c
 
 
 def worst_status(a, b):
-    # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
+    # SKIPPED > SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
     # CANCELLED needs to be considered the worst.
-    for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, SUCCESS):
+    for s in (CANCELLED, RETRY, EXCEPTION, FAILURE, WARNINGS, SUCCESS, SKIPPED):
         if s in (a, b):
             return s
-
-# The first try consisted at creating a mixin with that. That attempt failed
-# on method resolution issues for buildstep.
-# This solution works, even if obj, is actually self, and therefore that function
-# looks quite similar to a method.
 
 
 def computeResultAndContinuation(obj, result, previousResult):
@@ -52,11 +47,22 @@ def computeResultAndContinuation(obj, result, previousResult):
     elif result in (EXCEPTION, RETRY, CANCELLED):
         terminate = True
 
-    # if we skipped this step, then don't adjust the build status
-    # XXX What about putting SUCCESS < SKIPPED in the relational order
-    #     in worst_status ? that would permit us to remove the if below.
-    if result != SKIPPED:
-        result = worst_status(previousResult, possible_overall_result)
-    else:
-        result = previousResult
+    result = worst_status(previousResult, possible_overall_result)
     return result, terminate
+
+
+class ResultComputingConfigMixin(object):
+
+    haltOnFailure = False
+    flunkOnWarnings = False
+    flunkOnFailure = True
+    warnOnWarnings = False
+    warnOnFailure = False
+
+    resultConfig = [
+        "haltOnFailure",
+        "flunkOnWarnings",
+        "flunkOnFailure",
+        "warnOnWarnings",
+        "warnOnFailure",
+    ]
