@@ -568,26 +568,6 @@ The ``ShellMixin`` mixin provides the tools to make running shell commands easy 
 
         All that remains is to run the command with :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand`.
 
-A simple example of a step using the shell mixin is::
-
-    class RunCleanup(buildstep.ShellMixin, buildstep.BuildStep):
-        def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
-            self.cleanupScript = cleanupScript
-            kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-            buildstep.BuildStep.__init__(self, **kwargs)
-
-        @defer.inlineCallbacks
-        def run(self):
-            cmd = yield self.makeRemoteShellCommand(
-                    command=[self.cleanupScript])
-            yield self.runCommand(cmd)
-            if cmd.didFail():
-                cmd = yield self.makeRemoteShellCommand(
-                        command=[self.cleanupScript, '--force'],
-                        logEnviron=False)
-                yield self.runCommand(cmd)
-            return cmd.results()
-
 Exceptions
 ----------
 
