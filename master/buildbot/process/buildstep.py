@@ -19,6 +19,8 @@ try:
 except ImportError:
     import StringIO
 
+import inspect
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
@@ -48,6 +50,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import flatten
 
 
 class BuildStepFailed(Exception):
@@ -219,6 +222,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
 
 class BuildStep(object, properties.PropertiesMixin):
+    implements(interfaces.IResComputingConfig)
 
     haltOnFailure = False
     flunkOnWarnings = False
@@ -306,7 +310,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def _describe(self, done=False):
+    def describeWithoutSuffix(self, done=False):
         if self.descriptionDone and done:
             return self.descriptionDone
         elif self.description:
@@ -314,7 +318,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return [self.name]
 
     def describe(self, done=False):
-        desc = self._describe(done)
+        desc = self.describeWithoutSuffix(done)
         if self.descriptionSuffix:
             desc = desc + self.descriptionSuffix
         return desc
@@ -716,83 +720,82 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms
     cmd = None
 
-    renderables = ['logfiles', 'lazylogfiles']
-
-    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+    def __init__(self, logfiles=None, lazylogfiles=None, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
-        if logfiles and not isinstance(logfiles, dict):
+        if any([x is not None for x in [logfiles, lazylogfiles, log_eval_func]]):
             config.error(
-                "the ShellCommand 'logfiles' parameter must be a dictionary")
-
-        # merge a class-level 'logfiles' attribute with one passed in as an
-        # argument
-        self.logfiles = self.logfiles.copy()
-        self.logfiles.update(logfiles)
-        self.lazylogfiles = lazylogfiles
-        if log_eval_func is not None:
-            config.error(
-                "the 'log_eval_func' paramater is no longer available")
+                "'logfiles', 'lazylogfiles', 'log_eval_func' paramaters are no longer available")
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
         self.logfiles[logname] = filename
 
-    def buildCommandKwargs(self):
-        kwargs = dict()
-        kwargs['logfiles'] = self.logfiles
-        return kwargs
-
-    def startCommand(self, cmd, errorMessages=[]):
-        """
-        @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into our self.stdio_log LogFile
-        """
-        log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
-        log.msg("  cmd.args = %r" % (cmd.args))
+    def setupLogsRunCommandAndProcessResults(self, cmd, stdioLog=None, closeLogWhenFinished=True,
+                                             errorMessages=None, logfiles=None, lazylogfiles=False):
+        if errorMessages is None:
+            errorMessages = []
+        if logfiles is None:
+            logfiles = {}
+        if logfiles:
+            cmd.setLogFiles(logfiles)
+        log.msg("%s.startCommandWithoutEnding(cmd=%s)" % (self.__class__.__name__, cmd))
+        log.msg("  cmd.args = %r" % (cmd.args,))
         self.cmd = cmd  # so we can interrupt it
-        self.step_status.setText(self.describe(False))
-
-        # stdio is the first log
-        self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, True)
-        for em in errorMessages:
-            stdio_log.addHeader(em)
-            # TODO: consider setting up self.stdio_log earlier, and have the
-            # code that passes in errorMessages instead call
-            # self.stdio_log.addHeader() directly.
-
-        # there might be other logs
-        self.setupLogfiles(cmd, self.logfiles)
-
-        d = self.runCommand(cmd)  # might raise ConnectionLost
-        d.addCallback(lambda res: self.commandComplete(cmd))
-
         # TODO: when the status.LogFile object no longer exists, then this
         # method will a synthetic logfile for old-style steps, and to be called
         # without the `logs` parameter for new-style steps.  Unfortunately,
         # lots of createSummary methods exist, but don't look at the log, so
         # it's difficult to optimize when the synthetic logfile is needed.
-        d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
+        if stdioLog is not None:
+            cmd.useLog(stdioLog, closeLogWhenFinished)
+            for em in errorMessages:
+                stdioLog.addHeader(em)
+                # TODO: consider setting up self.stdioLog earlier, and have the
+                # code that passes in errorMessages instead call
+                # self.stdioLog.addHeader() directly.
+        self.setupLogfiles(cmd, logfiles, lazylogfiles=lazylogfiles)
+        d = self.runCommand(cmd)  # might raise ConnectionLost
+        d.addCallback(lambda _: self.commandComplete(cmd))
 
-        d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
+        if stdioLog is not None:
+            def _createSummary(res):
+                self.createSummary(cmd.logs[stdioLog.getName()])
+                return res
+            d.addCallback(lambda res: _createSummary(res))
+
+        d.addCallback(lambda _: self.evaluateCommand(cmd))  # returns results
+
+        def _gotResults(results):
+            if stdioLog is not None:
+                # finish off the stdio logfile
+                stdioLog.finish()
+            return results
+        d.addCallback(_gotResults)  # returns results
+        d.addErrback(self.checkDisconnect)  # handle slave lost
+        return d
+
+    def startCommandAndSetStatus(self, cmd, stdioLog=None, closeLogWhenFinished=True,
+                                 errorMessages=None, logfiles=None, lazylogfiles=False):
+        self.step_status.setText(self.describe(False))
+        d = self.setupLogsRunCommandAndProcessResults(cmd, stdioLog=stdioLog,
+                                                      closeLogWhenFinished=closeLogWhenFinished,
+                                                      errorMessages=errorMessages,
+                                                      logfiles=logfiles, lazylogfiles=lazylogfiles)
 
         def _gotResults(results):
             self.setStatus(cmd, results)
-            # finish off the stdio logfile
-            stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
-        d.addCallback(self.finished)
-        d.addErrback(self.failed)
+        return d
 
-    def setupLogfiles(self, cmd, logfiles):
+    def setupLogfiles(self, cmd, logfiles, lazylogfiles=False):
         for logname, remotefilename in logfiles.items():
-            if self.lazylogfiles:
+            if lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
                 #
@@ -873,6 +876,175 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
         return defer.succeed(None)
+
+
+class ShellBaseStep(LoggingBuildStep):
+    renderables = [
+        'slaveEnvironment', 'remote_kwargs', 'description',
+        'descriptionDone', 'descriptionSuffix', 'haltOnFailure', 'flunkOnFailure']
+
+    def __init__(self, workdir=None,
+                 description=None, descriptionDone=None, descriptionSuffix=None,
+                 usePTY="slave-config", **kwargs):
+        # most of our arguments get passed through to the RemoteShellCommand
+        # that we create, but first strip out the ones that we pass to
+        # BuildStep (like haltOnFailure and friends), and a couple that we
+        # consume ourselves.
+        if description:
+            self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+
+        if descriptionSuffix:
+            self.descriptionSuffix = descriptionSuffix
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
+        # pull out the ones that LoggingBuildStep wants, then upcall
+        buildstep_kwargs = {}
+        for k in kwargs.keys()[:]:
+            if k in self.__class__.parms:
+                buildstep_kwargs[k] = kwargs[k]
+                del kwargs[k]
+        LoggingBuildStep.__init__(self, **buildstep_kwargs)
+
+        # check validity of arguments being passed to RemoteShellCommand
+        invalid_args = []
+        valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
+        for arg in kwargs.keys():
+            if arg not in valid_rsc_args:
+                invalid_args.append(arg)
+        # Raise Configuration error in case invalid arguments are present
+        if invalid_args:
+            config.error("Invalid argument(s) passed to RemoteShellCommand: "
+                         + ', '.join(invalid_args))
+
+        # everything left over goes to the RemoteShellCommand
+        kwargs['workdir'] = workdir  # including a copy of 'workdir'
+        kwargs['usePTY'] = usePTY
+        self.remote_kwargs = kwargs
+
+    def setBuild(self, build):
+        LoggingBuildStep.setBuild(self, build)
+        # Set this here, so it gets rendered when we start the step
+        self.slaveEnvironment = self.build.slaveEnvironment
+
+    def setStepStatus(self, step_status):
+        LoggingBuildStep.setStepStatus(self, step_status)
+
+    def setDefaultWorkdir(self, workdir):
+        rkw = self.remote_kwargs
+        rkw['workdir'] = rkw['workdir'] or workdir
+
+    def getWorkdir(self):
+        """
+        Get the current notion of the workdir.  Note that this may change
+        between instantiation of the step and C{start}, as it is based on the
+        build's default workdir, and may even be C{None} before that point.
+        """
+        return self.remote_kwargs['workdir']
+
+    def setupEnvironment(self, cmd):
+        # merge in anything from Build.slaveEnvironment
+        # This can be set from a Builder-level environment, or from earlier
+        # BuildSteps. The latter method is deprecated and superseded by
+        # BuildProperties.
+        # Environment variables passed in by a BuildStep override
+        # those passed in at the Builder level.
+        slaveEnv = self.slaveEnvironment
+        if slaveEnv:
+            if cmd.args['env'] is None:
+                cmd.args['env'] = {}
+            fullSlaveEnv = slaveEnv.copy()
+            fullSlaveEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullSlaveEnv
+            # note that each RemoteShellCommand gets its own copy of the
+            # dictionary, so we shouldn't be affecting anyone but ourselves.
+
+    def buildCommandKwargs(self, command, warnings, logfiles=None):
+        kwargs = self.remote_kwargs.copy()
+
+        kwargs['command'] = flatten(command, (list, tuple))
+
+        # check for the usePTY flag
+        if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        # check for the interruptSignal flag
+        if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
+            warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        return kwargs
+
+    def getCurrCommand(self):
+        raise NotImplementedError()
+
+    def describeWithoutSuffix(self, done=False):
+        """Return a list of short strings to describe this step, for the
+        status display. This uses the first few words of the shell command.
+        You can replace this by setting .description in your subclass, or by
+        overriding this method to describe the step better.
+
+        @type  done: boolean
+        @param done: whether the command is complete or not, to improve the
+                     way the command is described. C{done=False} is used
+                     while the command is still running, so a single
+                     imperfect-tense verb is appropriate ('compiling',
+                     'testing', ...) C{done=True} is used when the command
+                     has finished, and the default getText() method adds some
+                     text, so a simple noun is appropriate ('compile',
+                     'tests' ...)
+        """
+
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # we may have no command if this is a step that sets its command
+            # name late in the game (e.g., in start())
+            command = self.getCurrCommand()
+            if not command:
+                return ["???"]
+
+            words = command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return ["???"]
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return ["???"]
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except:
+            log.err(failure.Failure(), "Error describing step")
+            return ["???"]
 
 
 # (WithProperties used to be available in this module)

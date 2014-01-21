@@ -326,6 +326,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
 
 class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
+    deprecatedMsg = ("'logfiles', 'lazylogfiles', 'log_eval_func' paramaters "
+                     "are no longer available")
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
         cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})
@@ -350,8 +352,16 @@ class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
             (status, FAILURE))
 
     def test_evaluateCommand_log_eval_func(self):
-        self.assertRaisesConfigError("is no longer available", lambda:
+        self.assertRaisesConfigError(self.deprecatedMsg, lambda:
                                      buildstep.LoggingBuildStep(log_eval_func=mock.Mock()))
+
+    def test_evaluateCommand_logfiles(self):
+        self.assertRaisesConfigError(self.deprecatedMsg, lambda:
+                                     buildstep.LoggingBuildStep(logfiles=mock.Mock()))
+
+    def test_evaluateCommand_lazylogfiles(self):
+        self.assertRaisesConfigError(self.deprecatedMsg, lambda:
+                                     buildstep.LoggingBuildStep(lazylogfiles=mock.Mock()))
 
 
 class InterfaceTests(interfaces.InterfaceTests):

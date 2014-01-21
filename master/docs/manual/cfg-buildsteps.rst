@@ -1937,6 +1937,71 @@ The :bb:step:`ShellCommand` arguments are:
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
 
+.. bb:step:: ShellSequence
+
+
+Shell Sequence
+++++++++++++++
+.. py:class:: buildbot.steps.shellsequence.ShellSequence
+
+Some steps have a specific purpose, but require multiple shell commands
+to implement them. For example, a build is often ``configure; make; make install``.
+We have two ways to handle that:
+
+* create one shell command with all these. To put the logs of each commands
+  in separate logfiles, we need to re-write the script as ``configure 1> configure_log; ...``
+  and to add these ``configure_log`` files as ``logfiles`` argument of the buildstep.
+  This has the drawback of complicating the shell script, and making it harder to maintain
+  as the logfile name is put in different places.
+
+* creating three :bb:step:`ShellCommand` for that which loads the build UI unnecessarily.
+
+
+This is a class to execute not one but a sequence of shell commands during
+a build. It takes as argument a renderable, or list of commands which are
+:class:`~buildbot.steps.listofshellcommands.ShellArg` objects. This objects
+take as parameter:
+
+* a ``command`` (see :bb:step:`ShellCommand` ``command`` argument),
+
+* an optional ``logfile`` name, that will be used as the stdio log of a :bb:step:`ShellCommand`,
+
+* ``haltOnFailure``, ``flunkOnWarnings``, ``flunkOnFailure``, ``warnOnWarnings``, ``warnOnFailure``
+  parameters to drive the execution of the sequence, the same way steps are scheduled in the build.
+  They have the same default values as the one in :bb:step:`ShellCommand`.
+
+Note that if ``logfile`` name does not start with the prefix ``stdio``, that prefix will be
+set like ``stdio <logfile>``. All these commands share the same configuration of ``environment``,
+``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
+
+Two methods tune the behavior of how the list of shell commands are executed:
+
+``shouldRunTheCommand(oneCmd)``
+  Whether the string or list of strins ``oneCmd`` should be executed. If ``shouldRunTheCommand``
+  returns False, the result of the command will be recorded as SKIPPED.
+  That methods skips all empty strings and empty lists.
+
+``getFinalState``
+  Method to set the status text of the step in the end. The default value is to set the text
+  describing the execution of the last shell command.
+
+The single :bb:step:`ShellSequence` argument is:
+
+``commands``
+
+  A list of :class:`~buildbot.steps.listofshellcommands.ShellArg` objects or a renderable the returns
+  a list of :class:`~buildbot.steps.listofshellcommands.ShellArg` objects. ::
+
+        from buildbot.steps.listofshellcommands import ShellArg
+        from buildbot.steps.listofshellcommands import ShellSequence
+        f.addStep(ShellSequence(commands=[ShellArg(cmd='configure'),
+                                          ShellArg(cmd='make', log='make'),
+                                          ShellArg(cmd='make check_warning', log='warning',
+                                                   warnOnFailure=True),
+                                          ShellArg(cmd='make install', log='make install')]))
+
+
+
 .. bb:step:: Configure
 
 Configure
