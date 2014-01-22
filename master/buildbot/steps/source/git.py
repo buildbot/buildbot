@@ -237,10 +237,12 @@ class Git(Source):
         d.addCallback(self._cleanSubmodule)
         return d
 
+    @defer.inlineCallbacks
     def clobber(self):
-        d = self._doClobber()
-        d.addCallback(lambda _: self._fullClone(shallowClone=self.shallow))
-        return d
+        yield self._doClobber()
+        res = yield self._fullClone(shallowClone=self.shallow)
+        if res != 0:
+            raise buildstep.BuildStepFailed
 
     def fresh(self):
         command = ['clean', '-f', '-f', '-d', '-x']
@@ -444,23 +446,29 @@ class Git(Source):
             d.addCallback(_retry)
         return d
 
+    @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
         """Perform full clone and checkout to the revision if specified
            In the case of shallow clones if any of the step fail abort whole build step.
         """
-        d = self._clone(shallowClone)
+        res = yield self._clone(shallowClone)
+        if res != 0:
+            defer.returnValue(res)
+            return
+
         # If revision specified checkout that revision
         if self.revision:
-            d.addCallback(lambda _: self._dovccmd(['reset', '--hard',
-                                                   self.revision, '--'],
-                                                  shallowClone))
+            res = yield self._dovccmd(['reset', '--hard',
+                                 self.revision, '--'],
+                                 shallowClone)
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.
         if self.submodules:
-            d.addCallback(lambda _: self._dovccmd(['submodule', 'update',
-                                                   '--init', '--recursive'],
-                                                  shallowClone))
-        return d
+            res = yield self._dovccmd(['submodule', 'update',
+                                 '--init', '--recursive'],
+                                 shallowClone)
+
+        defer.returnValue(res)
 
     def _fullCloneOrFallback(self):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
