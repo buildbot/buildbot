@@ -655,6 +655,7 @@ command line, like this
     around. The default is 10.
 
 .. option:: --allow-shutdown
+
     Can also be passed directly to the BuildSlave constructor in buildbot.tac.  If
     set, it allows the buildslave to initiate a graceful shutdown, meaning that it
     will ask the master to shut down the slave when the current build, if any, is
