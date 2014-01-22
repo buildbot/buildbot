@@ -225,7 +225,7 @@ class Git(Source):
                 yield self._dovccmd(['branch', '-M', self.branch],
                                     abandonOnFailure=False)
         else:
-            yield self._fetchOrFallback(None)
+            yield self._fetchOrFallback()
 
         yield self._updateSubmodule(None)
 
@@ -244,13 +244,17 @@ class Git(Source):
         if res != 0:
             raise buildstep.BuildStepFailed
 
+    @defer.inlineCallbacks
     def fresh(self):
-        command = ['clean', '-f', '-f', '-d', '-x']
-        d = self._dovccmd(command)
-        d.addCallback(self._fetchOrFallback)
-        d.addCallback(self._updateSubmodule)
-        d.addCallback(self._cleanSubmodule)
-        return d
+        res = yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'],
+                                  abandonOnFailure=False)
+        if res == 0:
+            yield self._fetchOrFallback()
+        else:
+            yield self._doClobber()
+            yield self._fullCloneOrFallback()
+        yield self._updateSubmodule()
+        yield self._cleanSubmodule()
 
     def copy(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
@@ -390,7 +394,7 @@ class Git(Source):
         return d
 
     @defer.inlineCallbacks
-    def _fetchOrFallback(self, _):
+    def _fetchOrFallback(self, _=None):
         """
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
@@ -459,14 +463,14 @@ class Git(Source):
         # If revision specified checkout that revision
         if self.revision:
             res = yield self._dovccmd(['reset', '--hard',
-                                 self.revision, '--'],
-                                 shallowClone)
+                                       self.revision, '--'],
+                                      shallowClone)
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.
         if self.submodules:
             res = yield self._dovccmd(['submodule', 'update',
-                                 '--init', '--recursive'],
-                                 shallowClone)
+                                       '--init', '--recursive'],
+                                      shallowClone)
 
         defer.returnValue(res)
 
@@ -508,14 +512,14 @@ class Git(Source):
             return None
         return changes[-1].revision
 
-    def _updateSubmodule(self, _):
+    def _updateSubmodule(self, _=None):
         if self.submodules:
             return self._dovccmd(['submodule', 'update',
                                   '--init', '--recursive'])
         else:
             return defer.succeed(0)
 
-    def _cleanSubmodule(self, _):
+    def _cleanSubmodule(self, _=None):
         if self.submodules:
             command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
