@@ -413,13 +413,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             row = res.fetchone()
 
             stmt = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.buildsetid == bsid) \
+                .where(buildrequests_tbl.c.buildsetid == bsid)\
+                .where(buildrequests_tbl.c.triggeredbybrid == None)\
                 .values(triggeredbybrid=triggeredbybrid)\
                 .values(startbrid=triggeredbybrid)
 
-            if row and (row.triggeredbybrid is not None):
+            if row and (row.startbrid is not None):
                 stmt = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.buildsetid == bsid) \
+                    .where(buildrequests_tbl.c.buildsetid == bsid)\
+                    .where(buildrequests_tbl.c.triggeredbybrid == None)\
                     .values(triggeredbybrid=triggeredbybrid) \
                     .values(startbrid=row.startbrid)
 

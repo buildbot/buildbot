@@ -80,7 +80,6 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                         submitted_at=submitted_at, complete_at=None))
 
                 brids[buildername] = res.inserted_primary_key[0]
-                res.close()
 
             transaction.commit()
 
