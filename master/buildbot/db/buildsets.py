@@ -29,8 +29,8 @@ class BsDict(dict):
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+    def addBuildset(self, sourcestampsetid, reason, properties, triggeredbybrid=None,
+                    builderNames=None, external_idstring=None,  _reactor=reactor):
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
@@ -70,6 +70,16 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # a time.
             brids = {}
             br_tbl = self.db.model.buildrequests
+            startbrid = triggeredbybrid
+            if triggeredbybrid is not None:
+                q = sa.select([br_tbl.c.triggeredbybrid, br_tbl.c.startbrid]) \
+                    .where(br_tbl.c.id == triggeredbybrid)
+
+                res = conn.execute(q)
+                row = res.fetchone()
+                if row and (row.startbrid is not None):
+                    startbrid = row.startbrid
+
             ins = br_tbl.insert()
             for buildername in builderNames:
                 self.check_length(br_tbl.c.buildername, buildername)
@@ -77,7 +87,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     dict(buildsetid=bsid, buildername=buildername, priority=0,
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
-                        submitted_at=submitted_at, complete_at=None))
+                        submitted_at=submitted_at, complete_at=None,
+                        triggeredbybrid=triggeredbybrid, startbrid=startbrid))
 
                 brids[buildername] = res.inserted_primary_key[0]
 

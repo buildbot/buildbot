@@ -402,34 +402,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def updateTriggeredBy(self, triggeredbybrid, bsid):
-        def thd(conn):
-            buildrequests_tbl = self.db.model.buildrequests
-
-            q = sa.select([buildrequests_tbl.c.triggeredbybrid, buildrequests_tbl.c.startbrid])\
-                .where(buildrequests_tbl.c.id == triggeredbybrid)
-
-            res = conn.execute(q)
-            row = res.fetchone()
-
-            stmt = buildrequests_tbl.update() \
-                .where(buildrequests_tbl.c.buildsetid == bsid)\
-                .where(buildrequests_tbl.c.triggeredbybrid == None)\
-                .values(triggeredbybrid=triggeredbybrid)\
-                .values(startbrid=triggeredbybrid)
-
-            if row and (row.startbrid is not None):
-                stmt = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.buildsetid == bsid)\
-                    .where(buildrequests_tbl.c.triggeredbybrid == None)\
-                    .values(triggeredbybrid=triggeredbybrid) \
-                    .values(startbrid=row.startbrid)
-
-            res = conn.execute(stmt)
-            return
-
-        return  self.db.pool.do(thd)
-
     def insertBuildRequestClaimsTable(self, conn, _master_objectid, brids, claimed_at=None):
         tbl = self.db.model.buildrequest_claims
         q = tbl.insert()
