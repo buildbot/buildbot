@@ -490,7 +490,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'clone',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.', '--progress'])
-            + 1,
+            + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
@@ -499,6 +499,34 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
+        return self.runStep()
+
+    def test_mode_full_clone_fails(self):
+        self.setupStep(
+            git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                    mode='full', method='clobber', progress=True))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True,
+                                 timeout=1200))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.', '--progress'])
+            + 1,  # clone fails
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectNoProperty('got_revision')
         return self.runStep()
 
     def test_mode_full_clobber_branch(self):
