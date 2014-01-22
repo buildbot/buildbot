@@ -406,9 +406,8 @@ The Git step takes the following arguments:
    lack of output, but requires Git 1.7.2 or later.
 
 ``retryFetch``
-   (optional): this value defaults to ``False``. In any case if
-   fetch fails buildbot retries to fetch again instead of failing the
-   entire source checkout.
+   (optional): defaults to ``False``.
+   If true, if the ``git fetch`` fails then buildbot retries to fetch again instead of failing the entire source checkout.
 
 ``clobberOnFailure``
    (optional): defaults to ``False``. If a fetch or full clone
