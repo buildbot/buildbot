@@ -99,10 +99,8 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             # stick the command in self.command so that describe can use it
             self.command = command
 
-            # TODO/XXX: logfile arg is ignored, because RemoteCommand will
-            # always log standard streams to the log named 'stdio'
-
-            cmd = yield self.makeRemoteShellCommand(command=command)
+            cmd = yield self.makeRemoteShellCommand(command=command,
+                                                    stdioLogName=arg.logfile)
             yield self.runCommand(cmd)
             overall_result, terminate = results.computeResultAndTermination(
                 arg, cmd.results(), overall_result)
