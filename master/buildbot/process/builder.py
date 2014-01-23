@@ -499,9 +499,9 @@ class Builder(config.ReconfigurableServiceMixin,
         return
 
     # Build Creation
-    def getAvailableSlaveBuilders(self, checkCanStartBuild=True):
+    def getAvailableSlaveBuilders(self):
         return [sb for sb in self.slaves
-                if sb.isAvailable(checkCanStartBuild)]
+                if sb.isAvailable()]
 
     def getSelectedSlaveFromBuildRequest(self, brdict):
         """

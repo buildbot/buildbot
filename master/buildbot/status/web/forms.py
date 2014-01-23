@@ -50,7 +50,7 @@ class ForceBuildDialogPage(HtmlResource):
 
             if builder:
                 slaves = []
-                for b in builder.getAvailableSlaveBuilders(checkCanStartBuild=False):
+                for b in builder.slaves:
                     slaves.append(b.slave.slave_status)
                 cxt['slaves'] = slaves
             else:
