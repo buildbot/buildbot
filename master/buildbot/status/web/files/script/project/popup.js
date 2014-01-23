@@ -14,13 +14,13 @@ define(['helpers'], function (helpers) {
 
 
 			//For builders pending box
-			$('.popup-btn-js').each(function(i){
-				$(this).attr('data-in', i).on('click', function(e){
+			$('.popup-btn-jssdf').each(function(i){
+				$(this).attr('data-in', i).on('click', function(e){					
 					e.preventDefault();
 					popup.pendingJobs($(this));				
-				});;				
+				});				
 			});
-
+				
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
 				e.preventDefault();
@@ -77,9 +77,10 @@ define(['helpers'], function (helpers) {
 			});
 
 		}, pendingJobs: function(thisEl) {
-
+			
+			
 			var thisi = thisEl.attr('data-in');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 			var rtUpdate = thisEl.attr('data-rt_update');
 
 			$('body').append(preloader).show();
@@ -92,25 +93,28 @@ define(['helpers'], function (helpers) {
 					rt_update:'pending'
 				},
 				success: function(data) {
-					$('#bowlG').remove();
+					preloader.remove();
 					var doc = document.createElement('html');
  					doc.innerHTML = data;
 					
 					var pendListRes = $('.more-info-box-js', doc);
 					
 					var mib;
-					$(pendListRes).each(function(i){
+					pendListRes.each(function(i){
 						if (i == thisi) {
 							mib = $(this);
 						}
 					});
+					
 					mib.appendTo('body');
+					
 					helpers.jCenter(mib).fadeIn('fast');
 					$(window).resize(function() {						
 						helpers.jCenter(mib);
 					});
 
 					helpers.closePopup(mib);
+					
 				}
 			});
 

@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="buildslaves_page"' %}
+{% set dataRealtimerServer = realTimeServer %}
+
 {% block submenu %}
   {{submenu.buildsubmenu_slaves(active_page="buildslaves", pathNum=1, buildSlaveName='')}}
 {% endblock %}

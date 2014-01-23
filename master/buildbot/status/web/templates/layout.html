@@ -33,11 +33,17 @@
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% endblock %} 
   </head>
+  
+  {% if bodyId %}
+    {% set bodyId = bodyId %}
+  {% else %}
+    {% set bodyId = '' %}
+  {% endif %}
 
-  <body class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
-   
+    <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
+  
     {% block header -%}
- 
+
     <header class="header">
           
         <nav class="top-menu-container">

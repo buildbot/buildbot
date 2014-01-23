@@ -17,13 +17,15 @@ require.config({
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
-		'rtfrontpage': 'project/rtFrontpage',
+		'rtbuildslaves': 'project/rtBuildSlaves',
 		'jqache': 'plugins/jqache-0-1-1-min',
-		'overscroll': 'plugins/jquery-overscroll'
+		'overscroll': 'plugins/jquery-overscroll',
+		'livestamp': 'plugins/livestamp',
+		'moment': 'plugins/moment-with-langs'
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown'], 
+define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
 	function(helpers, dataTables,popup, screenSize, projectDropDown) {
 		
 	'use strict';
@@ -60,9 +62,9 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		    });
 		}
 
-		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {						
+		if (helpers.isRealTimePage() === true) {						
 			require(['realtimerouting', 'jqache'],
-	        function(realtimeRouting) {
+	        function(realtimeRouting) {	        		        	
 	        	realtimeRouting.init();
 	        });
 		}

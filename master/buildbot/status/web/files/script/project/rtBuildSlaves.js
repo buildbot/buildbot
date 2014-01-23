@@ -1,8 +1,8 @@
 define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePages, helpers) {
          "use strict";
-    var rtFrontpage;
+    var rtBuildSlaves;
     
-    rtFrontpage = {
+    rtBuildSlaves = {
         init: function () {
         	// Creating a new websocket
 	                
@@ -55,13 +55,30 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	            	 //log("Sent: " + msg);
 	             }		         
 	         };	        
+/*
+	         var oTable = $('.tablesorter-js').dataTable();
+	         /*
+			 $('.tablesorter-js').bind('sort', function () { 
+			 	//eventFired('Sort'); 	 	
 
+			 }).dataTable();
+			
+			function returnTr () {
+				 
+			}
+			
+			 $('.tablesorter-js tbody tr').click( function () {
+			  		var pos = oTable.fnGetPosition(this) 					
+ 					return pos
+			  });
+				*/
 	        // send messages from the server to be parsed
-	        
-	        function log(m) {							
-				realtimePages.frontPage(m);
+	        var tableRowList = $('.tablesorter-js tbody > tr');	        
+			
+	        function log(m) {											
+				realtimePages.rtBuildSlaves(m, tableRowList);	
 	        };
         }
     }
-    return rtFrontpage;
+    return rtBuildSlaves;
 });

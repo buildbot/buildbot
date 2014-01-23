@@ -22,11 +22,11 @@ define(['jquery', 'helpers'], function ($, helpers) {
 		        });
 		       break;
 
-		    case 'frontpage':							
+		    case 'buildslaves':							
 				// For the frontpage
-				require(['rtfrontpage'],
-		        function(rtFrontpage) {
-		        	rtFrontpage.init();
+				require(['rtbuildslaves'],
+		        function(rtBuildSlaves) {
+		        	rtBuildSlaves.init();
 		        });
 		       break;
 			}
