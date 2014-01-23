@@ -69,6 +69,10 @@ class ResultSpec(object):
                 self.filters.remove(f)
                 return f.values
 
+    def popOneFilter(self, field, op):
+        v = self.popFilter(field, op)
+        return v[0] if v is not None else None
+
     def popBooleanFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:

@@ -157,9 +157,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             bsid=None,
             complete=None,
-            claimed=None,
-            branch=None,
-            repository=None)
+            claimed=None)
 
     @defer.inlineCallbacks
     def testGetFilters(self):
@@ -177,9 +175,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             bsid=55,
             complete=False,
-            claimed=True,
-            branch='mybranch',
-            repository='myrepo')
+            claimed=True)
 
     @defer.inlineCallbacks
     def testGetClaimedByMasterIdFilters(self):
@@ -195,9 +191,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             buildername=None,
             bsid=None,
             complete=None,
-            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
-            branch=None,
-            repository=None)
+            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID)
 
 
 class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
