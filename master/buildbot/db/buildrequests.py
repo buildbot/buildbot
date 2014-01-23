@@ -263,8 +263,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             q = sa.select([buildrequests_tbl]) \
                 .where(buildrequests_tbl.c.startbrid == startbrid) \
                 .where(buildrequests_tbl.c.buildername == buildername) \
-                .where(buildrequests_tbl.c.complete == 1)\
-                .where(buildrequests_tbl.c.results == 0)
+                .where(buildrequests_tbl.c.complete == 1)
 
             res = conn.execute(q)
             row = res.fetchone()
