@@ -556,7 +556,10 @@ class Builder(config.ReconfigurableServiceMixin,
         # match them up until we're out of options
         while (available_slavebuilders or self.building) and unclaimed_requests:
             # then choose a request (using nextBuild)
-            brdict = yield self._chooseBuild(unclaimed_requests)
+            if self.config.nextBuild:
+                brdict =  yield self._chooseNextBuild(unclaimed_requests)
+            else:
+                brdict = yield self._chooseBuild(unclaimed_requests)
 
             if not brdict:
                 break
@@ -699,30 +702,30 @@ class Builder(config.ReconfigurableServiceMixin,
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        if self.config.nextBuild:
-            # nextBuild expects BuildRequest objects, so instantiate them here
-            # and cache them in the dictionaries
-            d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                      for brdict in buildrequests ])
-            d.addCallback(lambda requestobjects :
-                    self.config.nextBuild(self, requestobjects))
-            def to_brdict(brobj):
-                # get the brdict for this object back
-                return brobj.brdict
-            d.addCallback(to_brdict)
-            defer.returnValue(d)
-        else:
-            for b in buildrequests:
-                d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
-                brdict = d[0].brdict
-                if self.buildRequestHasSelectedSlave(brdict):
-                    selected_slave = self.getSelectedSlaveFromBuildRequest(brdict)
-                    if selected_slave is not None and selected_slave.isAvailable():
-                        defer.returnValue(brdict)
-                else:
+        for b in buildrequests:
+            d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
+            brdict = d[0].brdict
+            if self.buildRequestHasSelectedSlave(brdict):
+                selected_slave = self.getSelectedSlaveFromBuildRequest(brdict)
+                if selected_slave is not None and selected_slave.isAvailable():
                     defer.returnValue(brdict)
+            else:
+                defer.returnValue(brdict)
 
-            defer.returnValue(None)
+        defer.returnValue(None)
+
+    def _chooseNextBuild(self, buildrequests):
+        # nextBuild expects BuildRequest objects, so instantiate them here
+        # and cache them in the dictionaries
+        d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
+                                  for brdict in buildrequests ])
+        d.addCallback(lambda requestobjects :
+        self.config.nextBuild(self, requestobjects))
+        def to_brdict(brobj):
+            # get the brdict for this object back
+            return brobj.brdict
+        d.addCallback(to_brdict)
+        return d
 
     def _getMergeRequestsFn(self):
         """Helper function to determine which mergeRequests function to use
