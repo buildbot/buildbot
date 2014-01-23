@@ -226,7 +226,7 @@ class Git(Source):
                 yield self._dovccmd(['branch', '-M', self.branch],
                                     abandonOnFailure=False)
         else:
-            yield self._fetchOrFallback(None)
+            yield self._fetchOrFallback()
 
         yield self._updateSubmodule(None)
 
@@ -238,18 +238,24 @@ class Git(Source):
         d.addCallback(self._cleanSubmodule)
         return d
 
+    @defer.inlineCallbacks
     def clobber(self):
-        d = self._doClobber()
-        d.addCallback(lambda _: self._fullClone(shallowClone=self.shallow))
-        return d
+        yield self._doClobber()
+        res = yield self._fullClone(shallowClone=self.shallow)
+        if res != 0:
+            raise buildstep.BuildStepFailed
 
+    @defer.inlineCallbacks
     def fresh(self):
-        command = ['clean', '-f', '-f', '-d', '-x']
-        d = self._dovccmd(command)
-        d.addCallback(self._fetchOrFallback)
-        d.addCallback(self._updateSubmodule)
-        d.addCallback(self._cleanSubmodule)
-        return d
+        res = yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'],
+                                  abandonOnFailure=False)
+        if res == 0:
+            yield self._fetchOrFallback()
+        else:
+            yield self._doClobber()
+            yield self._fullCloneOrFallback()
+        yield self._updateSubmodule()
+        yield self._cleanSubmodule()
 
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
@@ -389,7 +395,7 @@ class Git(Source):
         return d
 
     @defer.inlineCallbacks
-    def _fetchOrFallback(self, _):
+    def _fetchOrFallback(self, _=None):
         """
         Handles fallbacks for failure of fetch,
         wrapper for self._fetch
@@ -445,23 +451,29 @@ class Git(Source):
             d.addCallback(_retry)
         return d
 
+    @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
         """Perform full clone and checkout to the revision if specified
            In the case of shallow clones if any of the step fail abort whole build step.
         """
-        d = self._clone(shallowClone)
+        res = yield self._clone(shallowClone)
+        if res != 0:
+            defer.returnValue(res)
+            return
+
         # If revision specified checkout that revision
         if self.revision:
-            d.addCallback(lambda _: self._dovccmd(['reset', '--hard',
-                                                   self.revision, '--'],
-                                                  shallowClone))
+            res = yield self._dovccmd(['reset', '--hard',
+                                       self.revision, '--'],
+                                      shallowClone)
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.
         if self.submodules:
-            d.addCallback(lambda _: self._dovccmd(['submodule', 'update',
-                                                   '--init', '--recursive'],
-                                                  shallowClone))
-        return d
+            res = yield self._dovccmd(['submodule', 'update',
+                                       '--init', '--recursive'],
+                                      shallowClone)
+
+        defer.returnValue(res)
 
     def _fullCloneOrFallback(self):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
@@ -501,14 +513,14 @@ class Git(Source):
             return None
         return changes[-1].revision
 
-    def _updateSubmodule(self, _):
+    def _updateSubmodule(self, _=None):
         if self.submodules:
             return self._dovccmd(['submodule', 'update',
                                   '--init', '--recursive'])
         else:
             return defer.succeed(0)
 
-    def _cleanSubmodule(self, _):
+    def _cleanSubmodule(self, _=None):
         if self.submodules:
             command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':

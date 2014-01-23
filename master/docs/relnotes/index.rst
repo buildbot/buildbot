@@ -395,6 +395,8 @@ Features
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
+* Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+
 Fixes
 ~~~~~
 
