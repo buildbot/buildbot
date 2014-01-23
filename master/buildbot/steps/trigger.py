@@ -209,7 +209,7 @@ class Trigger(LoggingBuildStep):
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
                             url = yield master.status.getURLForBuildRequest(build['brid'], bn, num)
-                            self.step_status.addURL(url['text'] + "#brid: %d" % build['brid'], url['path'], *getBuildResults(build))
+                            self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
             
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
@@ -220,7 +220,7 @@ class Trigger(LoggingBuildStep):
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d #brid: %d" % (bn, num, build['brid']), url, *getBuildResults(build))
+                            self.step_status.addURL("%s #%d" % (bn, num), url, *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
