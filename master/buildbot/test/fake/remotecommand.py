@@ -29,7 +29,8 @@ class FakeRemoteCommand(object):
 
     def __init__(self, remote_command, args,
                  ignore_updates=False, collectStdout=False, collectStderr=False,
-                 decodeRC={0: SUCCESS}):
+                 decodeRC={0: SUCCESS},
+                 stdioLogName='stdio'):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -40,6 +41,7 @@ class FakeRemoteCommand(object):
         self.collectStderr = collectStderr
         self.updates = {}
         self.decodeRC = decodeRC
+        self.stdioLogName = stdioLogName
         if collectStdout:
             self.stdout = ''
         if collectStderr:
@@ -84,7 +86,8 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                  timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
                  collectStderr=False,
-                 interruptSignal=None, initialStdin=None, decodeRC={0: SUCCESS}):
+                 interruptSignal=None, initialStdin=None, decodeRC={0: SUCCESS},
+                 stdioLogName='stdio'):
         args = dict(workdir=workdir, command=command, env=env or {},
                     want_stdout=want_stdout, want_stderr=want_stderr,
                     initial_stdin=initialStdin,
@@ -93,7 +96,8 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
         FakeRemoteCommand.__init__(self, "shell", args,
                                    collectStdout=collectStdout,
                                    collectStderr=collectStderr,
-                                   decodeRC=decodeRC)
+                                   decodeRC=decodeRC,
+                                   stdioLogName=stdioLogName)
 
 
 class ExpectRemoteRef(object):

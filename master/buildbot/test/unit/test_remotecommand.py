@@ -16,6 +16,7 @@
 from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import remotecommand as fakeremotecommand
+from buildbot.test.fake import logfile
 from buildbot.test.util import interfaces
 from twisted.trial import unittest
 
@@ -29,14 +30,16 @@ class Tests(interfaces.InterfaceTests):
 
     remoteCommandClass = None
 
-    def makeRemoteCommand(self):
-        return self.remoteCommandClass('ping', {'arg': 'val'})
+    def makeRemoteCommand(self, stdioLogName='stdio'):
+        return self.remoteCommandClass('ping', {'arg': 'val'},
+                                       stdioLogName=stdioLogName)
 
     def test_signature_RemoteCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
                      collectStdout=False, collectStderr=False,
-                     decodeRC={0: SUCCESS}):
+                     decodeRC={0: SUCCESS},
+                     stdioLogName='stdio'):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
@@ -45,7 +48,8 @@ class Tests(interfaces.InterfaceTests):
                      want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
                      usePTY="slave-config", logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
-                     decodeRC={0: SUCCESS}):
+                     decodeRC={0: SUCCESS},
+                     stdioLogName='stdio'):
             pass
 
     def test_signature_run(self):
@@ -100,6 +104,18 @@ class TestRunCommand(unittest.TestCase, Tests):
 
     remoteCommandClass = remotecommand.RemoteCommand
     remoteShellCommandClass = remotecommand.RemoteShellCommand
+
+    def test_notStdioLog(self):
+        logname = 'notstdio'
+        cmd = self.makeRemoteCommand(stdioLogName=logname)
+        log = logfile.FakeLogFile(logname, 'dummy')
+        cmd.useLog(log)
+        cmd.addStdout('some stdout')
+        self.failUnlessEqual(log.stdout, 'some stdout')
+        cmd.addStderr('some stderr')
+        self.failUnlessEqual(log.stderr, 'some stderr')
+        cmd.addHeader('some header')
+        self.failUnlessEqual(log.header, 'some header')
 
 
 class TestFakeRunCommand(unittest.TestCase, Tests):

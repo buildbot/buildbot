@@ -961,26 +961,29 @@ class ShellMixin(object):
 
     @defer.inlineCallbacks
     def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
+                               stdioLogName='stdio',
                                **overrides):
         kwargs = dict([(arg, getattr(self, arg))
                        for arg in self._shellMixinArgs])
         kwargs.update(overrides)
-
-        stdio = yield self.addLog('stdio')
-
+        stdio = None
+        if stdioLogName is not None:
+            stdio = yield self.addLog(stdioLogName)
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
 
         # check for the usePTY flag
         if kwargs['usePTY'] != 'slave-config':
             if self.slaveVersionIsOlderThan("shell", "2.7"):
-                yield stdio.addHeader(
-                    "NOTE: slave does not allow master to override usePTY\n")
+                if stdio is not None:
+                    yield stdio.addHeader(
+                        "NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
         if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
-            yield stdio.addHeader(
-                "NOTE: slave does not allow master to specify interruptSignal\n")
+            if stdio is not None:
+                yield stdio.addHeader(
+                    "NOTE: slave does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 
         # lazylogfiles are handled below
@@ -990,7 +993,7 @@ class ShellMixin(object):
         builderEnv = self.build.builder.config.env
         kwargs['env'] = yield self.build.render(builderEnv)
         kwargs['env'].update(self.env)
-
+        kwargs['stdioLogName'] = stdioLogName
         # default the workdir appropriately
         if not self.workdir:
             if callable(self.build.workdir):
@@ -1002,7 +1005,8 @@ class ShellMixin(object):
         cmd = remotecommand.RemoteShellCommand(**kwargs)
 
         # set up logging
-        cmd.useLog(stdio, False)
+        if stdio is not None:
+            cmd.useLog(stdio, False)
         for logname, remotefilename in self.logfiles.items():
             if self.lazylogfiles:
                 # TODO/XXX: addLog's async.. refactor this whole thing
