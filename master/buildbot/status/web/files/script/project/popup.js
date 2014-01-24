@@ -79,7 +79,7 @@ define(['helpers'], function (helpers) {
 		}, pendingJobs: function(thisEl) {
 
 			var thisi = thisEl.attr('data-in');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 			var rtUpdate = thisEl.attr('data-rt_update');
 
 			$('body').append(preloader).show();
@@ -92,7 +92,7 @@ define(['helpers'], function (helpers) {
 					rt_update:'pending'
 				},
 				success: function(data) {
-					$('#bowlG').remove();
+					preloader.remove();
 					var doc = document.createElement('html');
  					doc.innerHTML = data;
 					
@@ -117,9 +117,9 @@ define(['helpers'], function (helpers) {
 		}, codebasesBranches: function() {
 			
 			var path = $('#pathToCodeBases').attr('href');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 			$('body').append(preloader).show();
-			var mib = popup.htmlModule ('Run custom build');
+			var mib = popup.htmlModule ('Select branches');
 			
 			$(mib).appendTo('body');
 
@@ -127,7 +127,7 @@ define(['helpers'], function (helpers) {
 			$.get(path)
 			.done(function(data) {
 				var formContainer = $('#content1');	
-				$('#bowlG').remove();
+				preloader.remove();
 				
 				var fw = $(data).find('#formWrapper')
 				
@@ -213,7 +213,7 @@ define(['helpers'], function (helpers) {
 				var mib = 
 				$('<div class="more-info-box remove-js">' +
 				'<span class="close-btn"></span>' +
-				'<h3>'+ headLine +'</h3>' +
+				'<h3 class="codebases-head">'+ headLine +'</h3>' +
 				'<div id="content1"></div></div>');
 
 			return mib;

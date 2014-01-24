@@ -1783,7 +1783,7 @@ the specific language governing permissions and limitations under the Apache Lic
                 "   <div class='select2-search'>",
                 "       <input type='text' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='select2-input'/>",
                 "   </div>",
-                "   <a href='#' class='sort-name'>Sort by name</a>",
+                "   <a href='#' class='sort-name'>Sort</a>",
                 "   <ul class='select2-results'>",
                 "   </ul>",
                 "</div>"].join(""));
