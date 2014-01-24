@@ -3,8 +3,7 @@ define('jquery', [], function() {
 });
 
 require.config({
-	paths: {
-		//'jquery':'libs/jQuery-2-0-3',
+	paths: {		
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
 		'datatables-plugin': 'plugins/jquery-datatables',
@@ -21,12 +20,15 @@ require.config({
 		'jqache': 'plugins/jqache-0-1-1-min',
 		'overscroll': 'plugins/jquery-overscroll',
 		'livestamp': 'plugins/livestamp',
-		'moment': 'plugins/moment-with-langs'
+		'moment': 'plugins/moment-with-langs',		
+		'mustache': "libs/mustache-wrap",
+		'stache': 'libs/stache',
+		'templates': 'templates'
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
-	function(helpers, dataTables,popup, screenSize, projectDropDown) {
+define(['helpers','dataTables','popup','screensize','projectdropdown','moment','mustache'], 
+	function(helpers, dataTables,popup, screenSize, projectDropDown, Mustache) {
 		
 	'use strict';
 

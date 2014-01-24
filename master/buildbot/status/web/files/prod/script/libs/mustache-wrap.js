@@ -1,0 +1,1 @@
+define(["libs/mustache"],function(e){return e});

@@ -1,11 +1,11 @@
-define(['helpers'], function (helpers) {
+define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,popups,Mustache) {
 
     "use strict";
     var popup;
 
 	popup = {
-		init: function () {
-
+		init: function () {			
+			
 			//For non ajax boxes
 			$('.popup-btn-js-2').click(function(e){
 				e.preventDefault();
@@ -61,7 +61,9 @@ define(['helpers'], function (helpers) {
 	    			$('.form-message', formEl).hide();
 
 	    			if (!$('.error-input', formEl).length) {
-	    				$(formEl).prepend('<div class="error-input">Fill out the empty revision fields or clear all before submitting</div>');
+	    				var mustacheTmplErrorinput = Mustache.render(popups, {'errorinput':'true', 'text':'Fill out the empty revision fields or clear all before submitting'});
+						var errorinput = $(mustacheTmplErrorinput);
+	    				$(formEl).prepend(errorinput);
 	    			} 
 					e.preventDefault();
 				}
@@ -76,13 +78,11 @@ define(['helpers'], function (helpers) {
 				helpers.jCenter(clonedInfoBox);				
 			});
 
-		}, pendingJobs: function(thisEl) {
-			
-			
-			var thisi = thisEl.attr('data-in');
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+		}, pendingJobs: function(thisEl) {			
+			var thisi = thisEl.attr('data-in');			
 			var rtUpdate = thisEl.attr('data-rt_update');
-
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
 			$('body').append(preloader).show();
 			// get currentpage with url parameters
 			$.ajax({
@@ -121,17 +121,20 @@ define(['helpers'], function (helpers) {
 		}, codebasesBranches: function() {
 			
 			var path = $('#pathToCodeBases').attr('href');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
 			$('body').append(preloader).show();
-			var mib = popup.htmlModule ('Select branches');
+			
+			var mustacheTmplOutBox = Mustache.render(popups, {'popupOuter':'true','headline':'Select branches'});
+			var mib = $(mustacheTmplOutBox);
 			
 			$(mib).appendTo('body');
 
 
 			$.get(path)
 			.done(function(data) {
-				var formContainer = $('#content1');	
-				$('#bowlG').remove();
+				var formContainer = $('#content1');				
+				$(preloader).remove();
 				
 				var fw = $(data).find('#formWrapper')
 				
@@ -186,9 +189,12 @@ define(['helpers'], function (helpers) {
 			var dataindexb = thisEl.attr('data-indexb');
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var contentType = thisEl.attr('data-contenttype'); 
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
 			$('body').append(preloader);
-			var mib = popup.htmlModule (popupTitle);
+			var mustacheTmplOutBox = Mustache.render(popups, {'popupOuter':'true','headline':popupTitle});
+			var mib = $(mustacheTmplOutBox);			
 			mib.appendTo($('body'));
 			
 			// get currentpage with url parameters
@@ -213,14 +219,6 @@ define(['helpers'], function (helpers) {
 				
 
 			});
-		}, htmlModule: function (headLine) { // html chunks
-				var mib = 
-				$('<div class="more-info-box remove-js">' +
-				'<span class="close-btn"></span>' +
-				'<h3 class="codebases-head">'+ headLine +'</h3>' +
-				'<div id="content1"></div></div>');
-
-			return mib;
 		}
 	};
 	 return popup;
