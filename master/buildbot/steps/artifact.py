@@ -345,34 +345,29 @@ class AcquireBuildLocks(LoggingBuildStep):
                 return False
         return True
 
-    @defer.inlineCallbacks
-    def checkSlavePing(self, slavebuilder):
-        ping_success = yield slavebuilder.ping()
-        defer.returnValue(ping_success)
-        return
-
-    def resumeStartStep(self, ping_success, remote=None, slavebuilder=None):
+    def setupSlaveBuilder(self, ping_success, slavebuilder):
+        # if not available builder we probably need to wait until we can get another builder
         if ping_success:
             self.build.setupSlaveBuilder(slavebuilder)
-        return super(LoggingBuildStep, self).startStep(remote)
+
+    def findAvailableSlaveBuilder(self):
+        d = defer.succeed(None)
+        slavebuilder = None
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
+            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
+            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
+
+        if slavebuilder is not None:
+            d = slavebuilder.ping()
+            d.addCallback(self.setupSlaveBuilder, slavebuilder)
+        return d
 
     def startStep(self, remote):
         currentLocks =  self.setStepLocks(self.initialLocks)
         self.locksAvailable = self.checkLocksAvailable(currentLocks)
-        self.locksAvailable = False
-        slavebuilder =  self.build.slavebuilder
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
-            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
-            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
-            #ping_success = self.checkSlavePing(slavebuilder)
 
-            #if ping_success:
-            self.build.setupSlaveBuilder(slavebuilder)
-            # if not available builder we probably could change/attach to d = lock.waitUntilMaybeAvailable(self, access)
-            # to wait for other slaves ?
-            # process / buildstep.py
-
-        d = super(LoggingBuildStep, self).startStep(remote)
+        d = self.findAvailableSlaveBuilder()
+        d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
 
         return d
 
