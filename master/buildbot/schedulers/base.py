@@ -326,7 +326,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
-                                            properties, builderNames=None):
+                                            properties, triggeredbybrid=None, builderNames=None):
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -358,6 +358,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         rv = yield self.addBuildsetForSourceStamp(
                                 setid=new_setid, reason=reason,
                                 properties=properties,
+                                triggeredbybrid=triggeredbybrid,
                                 builderNames=builderNames)
 
         defer.returnValue(rv)
@@ -408,7 +409,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
-            properties=None, builderNames=None):
+            properties=None, triggeredbybrid=None, builderNames=None):
         """
         Add a buildset for the given, already-existing sourcestamp.
 
@@ -455,6 +456,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         rv = yield self.master.addBuildset(sourcestampsetid=setid,
                             reason=reason, properties=properties_dict,
+                            triggeredbybrid=triggeredbybrid,
                             builderNames=builderNames,
                             external_idstring=external_idstring)
         defer.returnValue(rv)

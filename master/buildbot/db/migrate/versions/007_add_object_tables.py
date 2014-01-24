@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -28,10 +29,13 @@ def upgrade(migrate_engine):
     objects.create()
 
     object_state = sa.Table("object_state", metadata,
-        sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+        sa.Column("objectid", sa.Integer,
                               nullable=False),
-        sa.Column("name", sa.String(length=256), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("value_json", sa.Text, nullable=False),
         sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
     )
     object_state.create()
+
+    cons = constraint.ForeignKeyConstraint([object_state.c.objectid], [objects.c.id])
+    cons.create()
