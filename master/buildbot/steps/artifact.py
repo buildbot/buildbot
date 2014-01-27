@@ -312,9 +312,9 @@ class DownloadArtifact(ShellCommand):
 from buildbot import locks
 
 class AcquireBuildLocks(LoggingBuildStep):
-    name = "Acquire Builder Locks"
-    description="Acquiring builder locks..."
-    descriptionDone="Builder locks acquired."
+    name = "Acquire Build Slave"
+    description="Acquiring build slave..."
+    descriptionDone="Build slave acquired."
 
     def __init__(self, hideStepIf = True, locks=None, **kwargs):
         self.initialLocks = locks

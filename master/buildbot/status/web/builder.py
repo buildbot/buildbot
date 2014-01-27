@@ -224,10 +224,10 @@ def builder_info(build, req, codebases_arg={}):
     step = build.getCurrentStep()
     # TODO: is this necessarily the case?
     if not step:
-        b['current_step'] = "[waiting for Lock]"
+        b['current_step'] = "[waiting for build slave]"
     else:
         if step.isWaitingForLocks():
-            b['current_step'] = "%s [waiting for Lock]" % step.getName()
+            b['current_step'] = "%s [waiting for build slave]" % step.getName()
         else:
             b['current_step'] = step.getName()
 
