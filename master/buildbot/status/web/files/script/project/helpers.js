@@ -407,6 +407,19 @@ define(['screensize'], function (screenSize) {
         		
     		var results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled"];
     		return results[resultIndex]
+        
+        }, getSlavesResult: function (connected, runningBuilds) {
+        	
+        	var slavesResult = connected === false? 'Not connected' : runningBuilds.length > 0? 'Running' : 'idle' ;        	
+        	return slavesResult;
+
+        }, getClassName: function(connected, runningBuilds) {
+        	
+			var slavesResult = helpers.getSlavesResult(connected, runningBuilds);			
+			var classNameSlaveresult = slavesResult === 'Not connected'? 'status-td offline' : slavesResult === 'Running'? 'status-td building' : 'status-td idle';        	
+			
+			return classNameSlaveresult;
+
         }, getJsonUrl: function () {
 
     		var currentUrl = document.URL;
@@ -426,7 +439,6 @@ define(['screensize'], function (screenSize) {
 		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
 		    var projectsPath = parser.pathname.match(/\/projects\/([^\/]+)/);
 		    var buildslavesPath = parser.pathname.match(/\/projects\/([^\/]+)/);
-
 		    
 			if (helpers.getCurrentPage() === 'builders') {
 				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1];				
@@ -438,13 +450,18 @@ define(['screensize'], function (screenSize) {
 		    }
 
 		    if (helpers.getCurrentPage() === 'buildslaves') {		    	
+		    	//var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves';
+		    	var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
+		    }
+
+		    if (helpers.getCurrentPage() === 'buildqueue') {		    	
 		    	var fullUrl = 'still need json for this page'
 		    }
 		    
 		    return fullUrl;
         }, getCurrentPage: function (isRealTime) {
         	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
-        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page')];        	
+        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];        	
         	
         	var currentPageNoHash;
 

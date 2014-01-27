@@ -78,8 +78,10 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				helpers.jCenter(clonedInfoBox);				
 			});
 
-		}, pendingJobs: function(thisEl) {			
-			var thisi = thisEl.attr('data-in');			
+		}, pendingJobs: function(thisEl) {
+
+			var thisi = thisEl.attr('data-in');
+			
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
 			var preloader = $(mustacheTmpl);
@@ -121,20 +123,23 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 		}, codebasesBranches: function() {
 			
 			var path = $('#pathToCodeBases').attr('href');
+
 			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
 			var preloader = $(mustacheTmpl);
+
 			$('body').append(preloader).show();
 			
 			var mustacheTmplOutBox = Mustache.render(popups, {'popupOuter':'true','headline':'Select branches'});
 			var mib = $(mustacheTmplOutBox);
 			
-			$(mib).appendTo('body');
+			mib.appendTo('body');
 
 
 			$.get(path)
 			.done(function(data) {
-				var formContainer = $('#content1');				
-				$(preloader).remove();
+
+				var formContainer = $('#content1');	
+				preloader.remove();
 				
 				var fw = $(data).find('#formWrapper')
 				

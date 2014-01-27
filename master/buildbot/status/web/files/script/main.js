@@ -17,6 +17,7 @@ require.config({
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
 		'rtbuildslaves': 'project/rtBuildSlaves',
+		'rtbuildqueue': 'project/rtBuildqueue',
 		'jqache': 'plugins/jqache-0-1-1-min',
 		'overscroll': 'plugins/jquery-overscroll',
 		'livestamp': 'plugins/livestamp',
@@ -58,8 +59,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown','moment','
 		// codebases combobox selector
 		if ($('#commonBranch_select').length || $('.select-tools-js').length) {
 			require(['selectors'],
-		        function(selectors) {
-			        selectors.comboBox('.select-tools-js');	
+		        function(selectors) {			        
 			        selectors.init();
 		    });
 		}

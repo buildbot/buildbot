@@ -1,14 +1,14 @@
-define(['helpers','popup','livestamp'], function (helpers,popup) {
+define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'], function (helpers,popup,Mustache) {
 	 "use strict";
     var realtimePages;
     
     realtimePages = {
-        buildDetail: function (m, stepList, oTable) {
+        buildDetail: function (m, stepList) {
         	
             try {
         	
                   var obj = JSON.parse(m);
-                  
+            		      
                  $.each(obj, function (key, value) {
                   	
                   	// update timing table
@@ -156,11 +156,10 @@ define(['helpers','popup','livestamp'], function (helpers,popup) {
 	             			
 	             			var smHead = $('<h2 class="small-head">Current job</h2>');
 
-	             			htmlLi += '<h2 class="small-head">Current job</h2><ul class="list current-job-js">'
+	             			htmlLi += '<h2 class="small-head">Current job</h2><ul class="list current-job-js">';
 
 	             			var ul = $('<ul class="list current-job-js">');
-
-							//smhead.appendTo(innerDiv);
+							
 							var nameVal = '';
 	             			$.each(value.currentBuilds, function (key, value) {	 								
 								$.each(value.currentStep, function (key, value) {
@@ -190,8 +189,8 @@ define(['helpers','popup','livestamp'], function (helpers,popup) {
 			             			lastRun.find('.small-txt').html('('+ time +')');
 			             			lastRun.find('.hidden-date-js').html(value[1]);			             			
 			             		} 		        
-			             		if (key === 'text') {		             			
-			             			status.find('.hide-status-js, .status-text-js').text(value[0]);		             			
+			             		if (key === 'text') {		             					             		
+			             			status.find('.hide-status-js, .status-text-js').text(value[0]);	
 			             		}     		
 
 			             		if (key === 'number') {
@@ -209,11 +208,27 @@ define(['helpers','popup','livestamp'], function (helpers,popup) {
 	           catch(err) {
 	        	//console.log(err);
 	        }
-        },
-        rtBuildSlaves: function(m){
+        }, rtBuildSlaves: function(m){
         	
         	try {            		        
+          		var obj = JSON.parse(m);  	          	
+
+	          	var i = 0;          		
           		
+          		$.each(obj, function (key, value) {          			
+          			var item = $('[id="' + value.friendly_name + '"]');		
+          			var statusTd = item.find('.status-td');          		          		
+          			
+					statusTd.html(helpers.getSlavesResult(value.connected, value.runningBuilds));
+					statusTd.removeClass().addClass(helpers.getClassName(value.connected, value.runningBuilds));				
+          		});
+            }
+            catch(err) {
+            }
+        }, rtBuildqueue: function(m){
+        	
+        	try {            		        
+
             }
             catch(err) {
             }
