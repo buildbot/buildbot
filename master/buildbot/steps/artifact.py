@@ -323,7 +323,7 @@ class AcquireBuildLocks(LoggingBuildStep):
 
 
     def start(self):
-        self.step_status.setText(["Acquiring lock to complete build."])
+        self.step_status.setText(["Acquiring build slave to complete build."])
         self.build.locks = self.locks
 
         if self.build.slavebuilder.state == IDLE:
