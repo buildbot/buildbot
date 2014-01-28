@@ -232,7 +232,7 @@ class StatusResourceBuild(HtmlResource):
 
             step['link'] = req.childLink("steps/%s" %
                                          urllib.quote(s.getName(), safe=''))
-            step['text'] = " ".join(s.getText())
+            step['text'] = " ".join([str(txt) for txt in s.getText()])
             step['urls'] = map(lambda x: dict(url=x[1], logname=x[0]), s.getURLs().items())
 
             step['logs'] = []
