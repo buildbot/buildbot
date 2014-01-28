@@ -4,8 +4,8 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
     var popup;
 
 	popup = {
-		init: function () {			
-			
+		init: function () {
+
 			//For non ajax boxes
 			$('.popup-btn-js-2').click(function(e){
 				e.preventDefault();
@@ -14,13 +14,13 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 
 
 			//For builders pending box
-			$('.popup-btn-jssdf').each(function(i){
-				$(this).attr('data-in', i).on('click', function(e){					
+			$('.popup-btn-js').each(function(i){
+				$(this).attr('data-in', i).on('click', function(e){
 					e.preventDefault();
 					popup.pendingJobs($(this));				
 				});				
 			});
-				
+
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
 				e.preventDefault();

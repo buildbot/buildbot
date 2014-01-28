@@ -3225,7 +3225,7 @@ disabled look for disabled choices in the results dropdown
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_lists\.scss}line{font-family:\0000349}}
 .step-list .waiting:before {
-  content: "Waiting for locks";
+  content: "Waiting for build slave";
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_lists\.scss}line{font-family:\0000354}}
 .step-list .failure:before {
