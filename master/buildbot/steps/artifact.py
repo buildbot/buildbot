@@ -389,4 +389,6 @@ class ReleaseBuildLocks(LoggingBuildStep):
         self.build.slavebuilder.state = IDLE
         self.build.builder.builder_status.setBigState("idle")
         self.finished(SUCCESS)
+        # notify that the slave may now be available to start a build.
+        self.build.builder.botmaster.maybeStartBuildsForSlave(self.buildslave.slavename)
         return
