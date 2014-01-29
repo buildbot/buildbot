@@ -1,10 +1,10 @@
-define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'], function (helpers,popup,Mustache) {
+define(['jquery','helpers','popup','text!templates/builders.html','mustache','livestamp'], function ($,helpers,popup,builders,Mustache) {
 	 "use strict";
     var realtimePages;
     
     realtimePages = {
         buildDetail: function (m, stepList) {
-        	
+        	var currentstepJS = $('.current-step-js');
             try {
         	
                   var obj = JSON.parse(m);
@@ -53,7 +53,6 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 		                  			i = ++i;
 		                  			 
 			                  		// update step list if it's not finished
-		                  		
 
 		                  				if (isRunning) {
 		                  					
@@ -65,13 +64,13 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 		                  					if (hasLogs) {
 		                  						
 		                  						var logList = '';  
-		                  						$('.logs-txt',stepList).eq(i-1).text('Logs');
+		                  						stepList.children('.logs-txt').eq(i-1).text('Logs');
 					                  			$.each(value.logs, function (key, value) {
 					                  				var logText = value[0];
 					                  				var logUrl = value[1];
 					                  				logList += '<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>';	
 					                  			});
-					                  			$('.log-list-js',stepList).eq(i-1).html(logList);
+					                  			stepList.children('.log-list-js').eq(i-1).html(logList);
 				                  			}
 											// loop through urls
 											if (hasUrls) {
@@ -79,27 +78,30 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 												$.each(value.urls, function (key, value) {
 													 urlList += '<li class="urls-mod log-list-'+ helpers.getResult(value.results) +'"><a href="'+ value.url +'">'+ key +'</a></li>'; 
 												});				                  			
-					                  			$('.log-list-js',stepList).eq(i-1).append(urlList);
+					                  			stepList.children('.log-list-js').eq(i-1).append(urlList);
 				                  			}
 
 				                  			//Running text
 			                  				
-			                  				$('.update-time-js',stepList).eq(i-1).html('Running');
+			                  				stepList.children('.update-time-js').eq(i-1).html('Running');
 			                  				
 
 			                  				// update build text
-		          							$('.s-text-js',stepList).eq(i-1).html(value.text.join(' '));
+		          							stepList.children('.s-text-js').eq(i-1).html(value.text.join(' '));
 		          							// update result class
-			          						$('.s-result-js',stepList).eq(i-1).removeClass().addClass('running result s-result-js');	
-			          						$(stepList).eq(i-1).removeClass().addClass('status-running');
+			          						stepList.children('.s-result-js').eq(i-1).removeClass().addClass('running result s-result-js');	
+			          						stepList.eq(i-1).removeClass().addClass('status-running');
+			          						
+			          						currentstepJS.text(value.name);
+			          						
 			          						
 			              				} else if (isFinished) {
 			              					
 			              					// Apply the updates from the finished state before applying finished class
 			              					
-			              					$('.update-time-js',stepList).eq(i-1).html(helpers.getTime(startTime, endTime));
-			              					$('.s-result-js',stepList).eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              							              					
-			              					$(stepList).eq(i-1).removeClass().addClass('finished status-'+resultsClass);
+			              					stepList.children('.update-time-js').eq(i-1).html(helpers.getTime(startTime, endTime));
+			              					stepList.children('.s-result-js').eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              							              					
+			              					stepList.eq(i-1).removeClass().addClass('finished status-'+resultsClass);
 			              					
 			              				}
 		              			}
@@ -123,7 +125,7 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 	          	
 		          	var i = 0;
 	          		var objBuilder = obj.builders;
-	          		
+	          			          		
 	          		$.each(objBuilder, function (key, value) {
 	          			
 	          			var item = $('[id="' + value.name + '"]');
@@ -136,9 +138,9 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 	          			 	          					
 	          			if (value.pendingBuilds > 0) {	          				
 	          				
-	          				i = ++i;
-	          				var popupBtn = $('<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in="">Pending jobs </a>');
-	          				popupBtn.attr('data-in',i -1)	          				
+	          				i = ++i;	          				
+	          				var popupBtn = $(Mustache.render(builders, {'popupbtn':'true','number':i -1}));
+								          				
 	          				pendingCont
 	          					.html(popupBtn)		             			
 		    					.children(popupBtn).click(function(e){
@@ -149,31 +151,31 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 	          			} else {
 	          				pendingCont.html('');
 	          			}	          			
-
+	          			
 	             		if (value.currentBuilds.length > 0 ) {
 	             				             		
 	             			var htmlLi ='';
 	             			
 	             			var smHead = $('<h2 class="small-head">Current job</h2>');
 
-	             			htmlLi += '<h2 class="small-head">Current job</h2><ul class="list current-job-js">';
-
-	             			var ul = $('<ul class="list current-job-js">');
+	             			htmlLi = '<h2 class="small-head">Current job</h2><ul class="list current-job-js">';	             			
 							
 							var nameVal = '';
-	             			$.each(value.currentBuilds, function (key, value) {	 								
+							var LiEl = '';
+
+	             			$.each(value.currentBuilds, function (key, value) {	 
+	             				
 								$.each(value.currentStep, function (key, value) {
 									if (key === 'name') {										
 										nameVal = value; 		
 									}									
 								});	 
+								htmlLi += Mustache.render(builders, {'li':{'name':nameVal, 'number':value.number,'url':value.url}});								
 								
-	             				htmlLi += '<li><a href="'+ value.url +'">'+ value.number +'</a> '+ nameVal +'</li>';
 	             			});		             			
-
+	             			
 	             			htmlLi += '</ul>'
-
-	             			currentCont.html(htmlLi);	
+	             			currentCont.html(htmlLi);
 	             			
 	             		}
 	             		if (value.pendingBuilds === 0 && value.currentBuilds.length === 0) {
@@ -190,7 +192,7 @@ define(['helpers','popup','livestamp','text!templates/popups.html', 'mustache'],
 			             			lastRun.find('.hidden-date-js').html(value[1]);			             			
 			             		} 		        
 			             		if (key === 'text') {		             					             		
-			             			status.find('.hide-status-js, .status-text-js').text(value[0]);	
+			             			status.find('.hide-status-js, .status-text-js').text(value[0]);				             			
 			             		}     		
 
 			             		if (key === 'number') {

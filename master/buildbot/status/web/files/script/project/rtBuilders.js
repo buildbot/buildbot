@@ -4,6 +4,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
     
     rtBuilders = {
         init: function () {
+			
+			
         	// Creating a new websocket
 	                
 	        // Global websocketvariabel        

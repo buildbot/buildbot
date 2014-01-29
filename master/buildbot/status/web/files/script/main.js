@@ -28,8 +28,8 @@ require.config({
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown','moment','mustache'], 
-	function(helpers, dataTables,popup, screenSize, projectDropDown, Mustache) {
+define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
+	function(helpers, dataTables,popup, screenSize, projectDropDown) {
 		
 	'use strict';
 
@@ -65,7 +65,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown','moment','
 		}
 
 		if (helpers.isRealTimePage() === true) {						
-			require(['realtimerouting', 'jqache'],
+			require(['realtimerouting'],
 	        function(realtimeRouting) {	        		        	
 	        	realtimeRouting.init();
 	        });
