@@ -222,7 +222,7 @@ class FeedResource(XmlResource):
                             logdata = '** log file not available **'
                         unilist = list()
                         for line in logdata.split('\n')[-30:]:
-                            unilist.append(unicode(line, 'utf-8'))
+                            unilist.append(unicode(line, 'utf-8', 'replace'))
                         log_lines.extend(unilist)
 
             bc = {}
