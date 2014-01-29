@@ -7,40 +7,36 @@ define(['select2'], function () {
 
 		//Set the highest with on both selectors
 		init: function () {
-			
+			var sortname = 
 			$("select.select-tools-js").select2({
 				width: selectors.getMaxChildWidth(".select-tools-js"),
 				minimumResultsForSearch : 10
-			});
-			
-			// display common container
-			$('.show-common').click(function(){			
-				var commonContainer = $(this).next('.select2-container');
-				
-				$(commonContainer).show(0,function(){
-					$(this).select2('open');	
-				});
-				selectors.clickSort();
-			});
-
-			//Invoke select2 for the common selector
-			$("#commonBranch_select").select2({
-				placeholder: "Common branches"
-
-			});
+			});									
 
 			// invoke the sortingfunctionality when the selector
-			$("select.select-tools-js").on("select2-open", function() { 	
+			$("select.select-tools-js, #commonBranch_select").on("select2-open", function() { 	
 				selectors.clickSort();
 			})
 			
 			// fill the options in the combobox with common options
-			selectors.comboBox($('.select-tools-js'));	
+			selectors.comboBox($('.select-tools-js'));
+
+			//Invoke select2 for the common selector
+			$("#commonBranch_select").select2({
+				width: selectors.getMaxChildWidth("#commonBranch_select"),
+				placeholder: "Select a common branch"
+			});
+
+			// unbind the click event on close for the sorting functionality	
+			$('#commonBranch_select,.select-tools-js').on("select2-close", function() {
+				$('.sort-name').unbind('click');
+			});	
 
 		}, getMaxChildWidth: function(sel) {
 			    var max = 80;
 			    $(sel).each(function(){
 			        var c_width = $(this).width();
+			        console.log(c_width)
 			        if (c_width > max) {
 			            max = c_width + 30;
 			        }
@@ -88,21 +84,18 @@ define(['select2'], function () {
 				selector.trigger("change");
 				
 			});	
-
-			// closing the common selector
-			$('#commonBranch_select').on("select2-close", function() {
-				$('.common-branch-select').hide();
-			});			
+			
 		},
 		// sort selector list by name
 		clickSort: function () {
 			var selector = $('#select2-drop');
-			var sortLink = selector.children('.sort-name')
+			var selectResults = selector.children(".select2-results");
+			var sortLink = selector.children('.sort-name');
 
 			sortLink.bind('click', function(e){
 				e.preventDefault();							
 				sortLink.toggleClass('direction-up');
-			    $(".select2-results li",selector).sort(function(a, b) {
+			    selectResults.children('li').sort(function(a, b) {
 			        var upA = $(a).text().toUpperCase();
 			        var upB = $(b).text().toUpperCase();
 			        if (!sortLink.hasClass('direction-up')) {
@@ -110,7 +103,8 @@ define(['select2'], function () {
 			        } else {
 			        	return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
 			        }
-			    }).appendTo($(".select2-results",selector));
+			    }).appendTo(selectResults);
+			    selectResults.prop({ scrollTop: 0 });
 			});
 		}
 	}	
