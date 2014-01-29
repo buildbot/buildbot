@@ -119,10 +119,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     'priority': 0,
                     'results': -1,
                     'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
-                    'waited_for': waited_for,
-                    'branch': sourcestamps[0]['branch'] if len(sourcestamps) == 1 else None,
-                    'repository': sourcestamps[0]['repository'] if len(sourcestamps) == 1 else None,
-                    'codebase': sourcestamps[0]['codebase'] if len(sourcestamps) == 1 else None
+                    'waited_for': waited_for
                 }
             )
 

@@ -277,6 +277,4 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                       claimed_by_masterid=claimed_by_masterid,
                       complete=bool(row.complete), results=row.results,
                       submitted_at=submitted_at, complete_at=complete_at,
-                      branch=row.branch, repository=row.repository,
-                      codebase=row.codebase,
                       waited_for=bool(row.waited_for))
