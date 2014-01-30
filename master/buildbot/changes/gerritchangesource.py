@@ -16,7 +16,6 @@
 from buildbot import util
 from buildbot.changes import base
 from buildbot.util import json
-from collections import MutableMapping
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
@@ -112,7 +111,7 @@ class GerritChangeSource(base.ChangeSource):
             log.msg(msg % line)
             return defer.succeed(None)
 
-        if not(isinstance(event, MutableMapping) and "type" in event):
+        if not(isinstance(event, dict) and "type" in event):
             msg = "no type in event %s"
             log.msg(msg % line)
             return defer.succeed(None)
@@ -126,7 +125,7 @@ class GerritChangeSource(base.ChangeSource):
         def flatten(properties, base, event):
             for k, v in event.items():
                 name = "%s.%s" % (base, k)
-                if isinstance(v, MutableMapping):
+                if isinstance(v, dict):
                     flatten(properties, name, v)
                 else:  # already there
                     properties[name] = v
