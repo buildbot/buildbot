@@ -471,6 +471,11 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
+
+        #Lazy importing here to avoid python import errors
+        from buildbot.status.web.base import css_classes
+        result['results_text'] = css_classes.get(result['results'], "")
+
         result['slave'] = self.getSlavename()
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
