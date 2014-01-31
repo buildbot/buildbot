@@ -49,8 +49,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		// codebases combobox selector
 		if ($('#commonBranch_select').length || $('.select-tools-js').length) {
 			require(['selectors'],
-		        function(selectors) {
-			        selectors.comboBox('.select-tools-js');	
+		        function(selectors) {			        
 			        selectors.init();
 		    });
 		}

@@ -641,8 +641,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
             bsid += 1
         return bsid
 
-    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+    def addBuildset(self, sourcestampsetid, reason, properties, triggeredbybrid=None,
+                    builderNames=None, external_idstring=None, _reactor=reactor):
         bsid = self._newBsid()
         br_rows = []
         for buildername in builderNames:

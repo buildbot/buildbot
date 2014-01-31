@@ -55,28 +55,20 @@ class Triggerable(base.BaseScheduler):
         if set_props:
             props.updateFromProperties(set_props)
 
-        self.triggeredbybrid = triggeredbybrid
-
         self.updateReason(reason)
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
         d = self.addBuildsetForSourceStampSetDetails(self.reason,
-                                                sourcestamps, props)
+                                                sourcestamps, props, triggeredbybrid)
         def setup_waiter((bsid,brids)):
             d = defer.Deferred()
             self._waiters[bsid] = (d, brids)
-            self.updateTriggeredBy(bsid)
             self._updateWaiters()
             return d
         d.addCallback(setup_waiter)
         return d
-
-    @defer.inlineCallbacks
-    def updateTriggeredBy(self, bsid):
-        if self.triggeredbybrid:
-            yield self.master.db.buildrequests.updateTriggeredBy(self.triggeredbybrid, bsid)
 
     def stopService(self):
         # cancel any outstanding subscription

@@ -5,7 +5,7 @@ import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
 from buildbot.process.slavebuilder import IDLE, BUILDING
-
+import random
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
 
@@ -312,27 +312,65 @@ class DownloadArtifact(ShellCommand):
 from buildbot import locks
 
 class AcquireBuildLocks(LoggingBuildStep):
-    name = "Acquire Builder Locks"
-    description="Acquiring builder locks..."
-    descriptionDone="Builder locks acquired."
+    name = "Acquire Build Slave"
+    description="Acquiring build slave..."
+    descriptionDone="Build slave acquired."
 
-    def __init__(self, hideStepIf = True, **kwargs):
-        LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, **kwargs)
+    def __init__(self, hideStepIf = True, locks=None, **kwargs):
+        self.initialLocks = locks
+        self.locksAvailable = False
+        LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
+
 
     def start(self):
-        self.step_status.setText(["Acquiring lock to complete build."])
+        self.step_status.setText(["Acquiring build slave to complete build."])
         self.build.locks = self.locks
-        # Acquire lock
+
         if self.build.slavebuilder.state == IDLE:
             self.build.slavebuilder.state = BUILDING
+
         if self.build.builder.builder_status.currentBigState == "idle":
             self.build.builder.builder_status.setBigState("building")
+
         self.build.releaseLockInstanse = self
         self.finished(SUCCESS)
         return
 
     def releaseLocks(self):
         return
+
+    def checkLocksAvailable(self, currentLocks):
+        for lock, access in currentLocks:
+            if not lock.isAvailable(self, access):
+                return False
+        return True
+
+    def setupSlaveBuilder(self, ping_success, slavebuilder):
+        # if not available builder we probably need to wait until we can get another builder
+        if ping_success:
+            self.build.setupSlaveBuilder(slavebuilder)
+
+    def findAvailableSlaveBuilder(self):
+        d = defer.succeed(None)
+        slavebuilder = None
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
+            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
+            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
+
+        if slavebuilder is not None:
+            d = slavebuilder.ping()
+            d.addCallback(self.setupSlaveBuilder, slavebuilder)
+        return d
+
+    def startStep(self, remote):
+        currentLocks =  self.setStepLocks(self.initialLocks)
+        self.locksAvailable = self.checkLocksAvailable(currentLocks)
+
+        d = self.findAvailableSlaveBuilder()
+        d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
+
+        return d
+
 
 class ReleaseBuildLocks(LoggingBuildStep):
     name = "Release Builder Locks"
@@ -351,4 +389,6 @@ class ReleaseBuildLocks(LoggingBuildStep):
         self.build.slavebuilder.state = IDLE
         self.build.builder.builder_status.setBigState("idle")
         self.finished(SUCCESS)
+        # notify that the slave may now be available to start a build.
+        self.build.builder.botmaster.maybeStartBuildsForSlave(self.buildslave.slavename)
         return

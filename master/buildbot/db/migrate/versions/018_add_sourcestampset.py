@@ -39,6 +39,10 @@ def upgrade(migrate_engine):
     migrate_engine.execute(str(sautils.InsertFromSelect(sourcestampsets_table, sourcestampsetids)))
 
     # rename the buildsets table column
+    if migrate_engine.dialect.name != 'sqlite':
+        cons = constraint.ForeignKeyConstraint([buildsets_table.c.sourcestampid], [sourcestamps_table.c.id])
+        cons.drop()
+
     buildsets_table.c.sourcestampid.alter(name='sourcestampsetid')
 
     metadata.remove(buildsets_table)

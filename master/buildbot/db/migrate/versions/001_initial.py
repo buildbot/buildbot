@@ -20,6 +20,7 @@ import cPickle
 from twisted.persisted import styles
 from buildbot.util import json
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 metadata = sa.MetaData()
 
@@ -35,28 +36,28 @@ changes_nextid = sa.Table('changes_nextid', metadata,
 
 changes = sa.Table('changes', metadata,
     sa.Column('changeid', sa.Integer, autoincrement=False, primary_key=True),
-    sa.Column('author', sa.String(256), nullable=False),
+    sa.Column('author', sa.String(255), nullable=False),
     sa.Column('comments', sa.String(1024), nullable=False),
     sa.Column('is_dir', sa.SmallInteger, nullable=False),
-    sa.Column('branch', sa.String(256)),
-    sa.Column('revision', sa.String(256)),
+    sa.Column('branch', sa.String(255)),
+    sa.Column('revision', sa.String(255)),
     sa.Column('revlink', sa.String(256)),
     sa.Column('when_timestamp', sa.Integer, nullable=False),
-    sa.Column('category', sa.String(256)),
+    sa.Column('category', sa.String(255)),
 )
 
 change_links = sa.Table('change_links', metadata,
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+    sa.Column('changeid', sa.Integer, nullable=False),
     sa.Column('link', sa.String(1024), nullable=False),
 )
 
 change_files = sa.Table('change_files', metadata,
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+    sa.Column('changeid', sa.Integer, nullable=False),
     sa.Column('filename', sa.String(1024), nullable=False),
 )
 
 change_properties = sa.Table('change_properties', metadata,
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+    sa.Column('changeid', sa.Integer, nullable=False),
     sa.Column('property_name', sa.String(256), nullable=False),
     sa.Column('property_value', sa.String(1024), nullable=False),
 )
@@ -68,14 +69,14 @@ schedulers = sa.Table("schedulers", metadata,
 )
 
 scheduler_changes = sa.Table('scheduler_changes', metadata,
-    sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+    sa.Column('schedulerid', sa.Integer),
+    sa.Column('changeid', sa.Integer),
     sa.Column('important', sa.SmallInteger),
 )
 
 scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
-    sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
-    sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
+    sa.Column('buildsetid', sa.Integer),
+    sa.Column('schedulerid', sa.Integer),
     sa.Column('active', sa.SmallInteger),
 )
 
@@ -83,7 +84,7 @@ sourcestamps = sa.Table('sourcestamps', metadata,
     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
     sa.Column('branch', sa.String(256)),
     sa.Column('revision', sa.String(256)),
-    sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+    sa.Column('patchid', sa.Integer),
 )
 
 patches = sa.Table('patches', metadata,
@@ -94,15 +95,15 @@ patches = sa.Table('patches', metadata,
 )
 
 sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
-    sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
-    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
+    sa.Column('sourcestampid', sa.Integer, nullable=False),
+    sa.Column('changeid', sa.Integer, nullable=False),
 )
 
 buildsets = sa.Table('buildsets', metadata,
     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
     sa.Column('external_idstring', sa.String(256)),
     sa.Column('reason', sa.String(256)),
-    sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
+    sa.Column('sourcestampid', sa.Integer, nullable=False),
     sa.Column('submitted_at', sa.Integer, nullable=False),
     sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")),
     sa.Column('complete_at', sa.Integer),
@@ -110,18 +111,18 @@ buildsets = sa.Table('buildsets', metadata,
 )
 
 buildset_properties = sa.Table('buildset_properties', metadata,
-    sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=False),
+    sa.Column('buildsetid', sa.Integer, nullable=False),
     sa.Column('property_name', sa.String(256), nullable=False),
     sa.Column('property_value', sa.String(1024), nullable=False),
 )
 
 buildrequests = sa.Table('buildrequests', metadata,
     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-    sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"), nullable=False),
-    sa.Column('buildername', sa.String(length=256), nullable=False),
+    sa.Column('buildsetid', sa.Integer, nullable=False),
+    sa.Column('buildername', sa.String(length=255), nullable=False),
     sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")),
     sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
-    sa.Column('claimed_by_name', sa.String(length=256)),
+    sa.Column('claimed_by_name', sa.String(length=255)),
     sa.Column('claimed_by_incarnation', sa.String(length=256)),
     sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")),
     sa.Column('results', sa.SmallInteger),
@@ -132,7 +133,7 @@ buildrequests = sa.Table('buildrequests', metadata,
 builds = sa.Table('builds', metadata,
     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
     sa.Column('number', sa.Integer, nullable=False),
-    sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=False),
+    sa.Column('brid', sa.Integer, nullable=False),
     sa.Column('start_time', sa.Integer, nullable=False),
     sa.Column('finish_time', sa.Integer),
 )
@@ -270,6 +271,50 @@ def import_changes(migrate_engine):
     #    print "moving changes.pck to changes.pck.old; delete it or keep it as a backup"
     os.rename(changes_pickle, changes_pickle+".old")
 
+def add_constraints(migrate_engine):
+    metadata = sa.MetaData()
+    metadata.bind = migrate_engine
+
+    schedulers_tbl = sa.Table('schedulers', metadata, autoload=True)
+    changes_tbl = sa.Table('changes', metadata, autoload=True)
+    buildrequests_tbl = sa.Table('buildrequests', metadata, autoload=True)
+    buildsets_tbl = sa.Table('buildsets', metadata, autoload=True)
+    scheduler_changes_tbl = sa.Table('scheduler_changes', metadata, autoload=True)
+    scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets', metadata, autoload=True)
+    change_files_tbl = sa.Table('change_files', metadata, autoload=True)
+    change_links_tbl = sa.Table('change_links', metadata, autoload=True)
+    change_properties_tbl = sa.Table('change_properties', metadata, autoload=True)
+    sourcestamp_changes_tbl = sa.Table('sourcestamp_changes', metadata, autoload=True)
+    builds_tbl = sa.Table('builds', metadata, autoload=True)
+    buildset_properties_tbl = sa.Table('buildset_properties', metadata, autoload=True)
+    sourcestamps_tbl = sa.Table('sourcestamps', metadata, autoload=True)
+    patches_tbl = sa.Table('patches', metadata, autoload=True)
+
+    cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([scheduler_upstream_buildsets_tbl.c.schedulerid], [schedulers_tbl.c.schedulerid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([change_files_tbl.c.changeid], [changes_tbl.c.changeid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([change_links_tbl.c.changeid], [changes_tbl.c.changeid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([change_properties_tbl.c.changeid], [changes_tbl.c.changeid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.changeid], [changes_tbl.c.changeid])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([builds_tbl.c.brid], [buildrequests_tbl.c.id])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([buildset_properties_tbl.c.buildsetid], [buildsets_tbl.c.id])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([buildrequests_tbl.c.buildsetid], [buildsets_tbl.c.id])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([sourcestamps_tbl.c.patchid], [patches_tbl.c.id])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([sourcestamp_changes_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
+    cons.create()
+    cons = constraint.ForeignKeyConstraint([buildsets_tbl.c.sourcestampid], [sourcestamps_tbl.c.id])
+    cons.create()
+
 def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
@@ -281,3 +326,5 @@ def upgrade(migrate_engine):
 
     # and import some changes
     import_changes(migrate_engine)
+
+    add_constraints(migrate_engine)
