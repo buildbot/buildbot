@@ -61,10 +61,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         cmd = [ sys.executable, '-c', 'print "hello"' ]
         self.setupStep(
                 master.MasterShellCommand(command=cmd))
-        if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello\r\n")
-        else:
-            self.expectLogfile('stdio', "hello\n")
+        self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
@@ -121,10 +118,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
                 master.MasterShellCommand(command=cmd,
                                 env={'HELLO': '${WORLD}'}))
-        if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "hello\r\n")
-        else:
-            self.expectLogfile('stdio', "hello\n")
+        self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         def _restore_env(res):
             del os.environ['WORLD']
@@ -141,10 +135,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(command=cmd,
                         env={'BUILD': WithProperties('%s', "project")}))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
-        if runtime.platformType == 'win32':
-            self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
-        else:
-            self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
+        self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 

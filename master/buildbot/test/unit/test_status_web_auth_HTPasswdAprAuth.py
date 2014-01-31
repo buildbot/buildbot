@@ -24,7 +24,7 @@ shabuildmaster:{SHA}vpAKSO3uPt6z8KL6cqf5W5Sredk=
 shabuildslave:{SHA}sNA10GbdONwGJ+a8VGRNtEyWd9I=
 shabuildbot:{SHA}TwEDa5Q31ZhI4GLmIbE1VrrAkpk=
 """
-
+import imp
 
 from twisted.trial import unittest
 
@@ -35,7 +35,11 @@ class TestHTPasswdAprAuth(unittest.TestCase):
     htpasswd = HTPasswdAprAuth(__file__)
 
     def test_authenticate_des(self):
-        for key in ('buildmaster','buildslave','buildbot'):                
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            raise unittest.SkipTest("crypt not found")
+        for key in ('buildmaster','buildslave','buildbot'):
             if self.htpasswd.authenticate('des'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('des'+key))
 
@@ -58,13 +62,33 @@ class TestHTPasswdAprAuth(unittest.TestCase):
             self.fail("authenticate succeed for 'foo:bar'")
 
     def test_authenticate_wopassword(self):
-        for algo in ('des','md5','sha'):
+        algorithms = ['des','md5','sha']
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            algorithms.remove('des')
+
+        if not self.htpasswd.apr:
+            algorithms.remove('md5')
+            algorithms.remove('sha')
+
+        for algo in algorithms:
             if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
                 self.fail("authenticate succeed for %s w/o password"
                                         % (algo+'buildmaster'))
 
     def test_authenticate_wrongpassword(self):
-        for algo in ('des','md5','sha'):
+        algorithms = ['des','md5','sha']
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            algorithms.remove('des')
+
+        if not self.htpasswd.apr:
+            algorithms.remove('md5')
+            algorithms.remove('sha')
+
+        for algo in algorithms:
             if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
                 self.fail("authenticate succeed for %s w/ wrong password"
                                         % (algo+'buildmaster'))
