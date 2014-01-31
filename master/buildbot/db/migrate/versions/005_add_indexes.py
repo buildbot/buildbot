@@ -32,7 +32,7 @@ def upgrade(migrate_engine):
     sa.Table('buildrequests', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('buildsetid', sa.Integer, nullable=False),
-        sa.Column('buildername', sa.String(length=None), nullable=False),
+        sa.Column('buildername', sa.String(length=255), nullable=False),
         sa.Column('priority', sa.Integer, nullable=False),
         sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
         sa.Column('claimed_by_name', sa.String(length=None)),

@@ -59,7 +59,7 @@
 #bowlG{
 height: 100%;
 left: 0;
-position: absolute;
+position: fixed;
 top: 0;
 width: 100%;
 }
@@ -141,7 +141,6 @@ background: #BBBBBB;
 		display: block;
 	    float: none;
 	    padding: 44px 12px 23px 33px;
-
 	    width: 200px;
 		h3 {
 			display: block;	
@@ -292,8 +291,6 @@ body.log.interface {
     text-align: center;
     margin-top: 45px;
 }
-  
-
 
 .auth-user {
 	float: right;

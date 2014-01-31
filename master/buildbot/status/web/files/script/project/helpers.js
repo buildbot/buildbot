@@ -407,6 +407,19 @@ define(['screensize'], function (screenSize) {
         		
     		var results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled"];
     		return results[resultIndex]
+        
+        }, getSlavesResult: function (connected, runningBuilds) {
+        	
+        	var slavesResult = connected === false? 'Not connected' : runningBuilds.length > 0? 'Running' : 'idle' ;        	
+        	return slavesResult;
+
+        }, getClassName: function(connected, runningBuilds) {
+        	
+			var slavesResult = helpers.getSlavesResult(connected, runningBuilds);			
+			var classNameSlaveresult = slavesResult === 'Not connected'? 'status-td offline' : slavesResult === 'Running'? 'status-td building' : 'status-td idle';        	
+			
+			return classNameSlaveresult;
+
         }, getJsonUrl: function () {
 
     		var currentUrl = document.URL;
@@ -424,45 +437,54 @@ define(['screensize'], function (screenSize) {
 
 		    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
 		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
-
+		    var projectsPath = parser.pathname.match(/\/projects\/([^\/]+)/);
+		    var buildslavesPath = parser.pathname.match(/\/projects\/([^\/]+)/);
 		    
 			if (helpers.getCurrentPage() === 'builders') {
-				var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/';
+				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1];				
+				//var fullUrl = 'http://10.45.7.102:8001/json/projects/All%20Branches?as_text=0&filter=1'
 			}
 
 		    if (helpers.getCurrentPage() === 'builddetail') {
-
 		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
+		    }
+
+		    if (helpers.getCurrentPage() === 'buildslaves') {		    	
+		    	//var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves';
+		    	var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
+		    }
+
+		    if (helpers.getCurrentPage() === 'buildqueue') {		    	
+		    	var fullUrl = 'still need json for this page'
 		    }
 		    
 		    return fullUrl;
         }, getCurrentPage: function (isRealTime) {
         	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
-        	var currentPage = [$('#builddetail_page'), $('#builders_page')];
+        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];        	
         	
-        	var isRealTimePage = false;
         	var currentPageNoHash;
 
-        	var isFinishedAttr = $('#isFinished').attr('data-isfinished');
-        	
         	$.each(currentPage, function(key, value) {
-        		if (value.length === 1) {
-
+        		if (value.length === 1) {        			
         			currentPage = value;        			
-        			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];
-        			if (isFinishedAttr != 'false') {        				
-        				isRealTimePage = true;
-        			}
+        			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];        		
         		}
-
-
 			});	
 
-        	if (isRealTime) {
-				return isRealTimePage;
-			} else {
-				return currentPageNoHash;
-			} 
+        	// return the name of the page 
+			return currentPageNoHash;
+			 
+		}, isRealTimePage: function () {
+			var isRealTimePage = false;
+			var isFinishedAttr = $('#isFinished').attr('data-isfinished');
+			var rtServer = $('body').attr('data-realTimeServer') != '';
+			
+			if (isFinishedAttr === undefined && rtServer === true) {        								
+				isRealTimePage = true;
+        	}
+        	return isRealTimePage
+
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 

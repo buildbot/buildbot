@@ -14,14 +14,15 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate.changeset import constraint
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     # autoload the tables that are only referenced here
-    sa.Table('changes', metadata, autoload=True)
-    sa.Table('buildsets', metadata, autoload=True)
+    changes = sa.Table('changes', metadata, autoload=True)
+    objects = sa.Table('buildsets', metadata, autoload=True)
     sa.Table("objects", metadata, autoload=True)
 
     # drop all tables.  Schedulers will re-populate on startup
@@ -59,6 +60,12 @@ def upgrade(migrate_engine):
         sa.Column('important', sa.Integer),
     )
     scheduler_changes_tbl.create()
+
+    cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.objectid], [objects.c.id])
+    cons.create()
+
+    cons = constraint.ForeignKeyConstraint([scheduler_changes_tbl.c.changeid], [changes.c.changeid])
+    cons.create()
 
     idx = sa.Index('scheduler_changes_objectid',
             scheduler_changes_tbl.c.objectid)

@@ -1,9 +1,13 @@
 {% if not rt_update.rt_update  %}
+
   {% extends 'layout.html' %}
   {% import 'forms.html' as forms %}
   {% import 'submenu.html' as submenu %}
   {% from 'build_line.html' import build_table %}
   {% from "box_macros.html" import box %}
+  
+  {% set bodyId = 'id="builders_page"' %}
+  {% set dataRealtimerServer = realTimeServer %}
 
   {% block submenu %}
     {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}
@@ -15,9 +19,9 @@
   <thead>
     <tr>
       <th class="txt-align-left">Builder</th>
-      <th class="txt-align-left no-tablesorter-js">Current jobs</th>
-      <th class="txt-align-left no-tablesorter-js">Last run</th>
-      <th class="no-tablesorter-js">
+      <th class="txt-align-left">Current jobs</th>
+      <th class="txt-align-left">Last run</th>
+      <th>
         Status
       </th>
 
@@ -29,14 +33,13 @@
   <tbody>
   {% for b in builders %}
 
-
-    <tr>
+    <tr id="{{ b.name|e }}">
       <td class="box txt-align-left">
         <a class="bname-js" href="{{ b.link }}">
           {{ b.name|e }}
         </a>
       </td>
-      <td class="txt-align-left">
+      <td class="txt-align-left jobs-js">
           <div class="current-cont">
                   {% if b.current %}
 
@@ -60,6 +63,10 @@
                       {% endfor %}
                   </ul>
                   {% endif %}
+           </div>
+           <div class="pending-cont">
+
+               
                   {% if not b.pending and not b.current %}
                     <span class="small-txt">
                       No jobs
@@ -78,24 +85,28 @@
       <td class="txt-align-left last-build-js">
           {% if b.last_run %}
           {# hidden timestamp for datatable to sort by #}
-          <span class="hide">
+          <span class="hide hidden-date-js">
             {{b.last_run_date}}
           </span>
-
-             {{ b.last_run }} 
-
-             ago <span class="small-txt">({{b.elapsed}})</span>
+          <span class="last-run">
+             {{ b.last_run }} ago
+          </span>
+              <span class="small-txt">({{b.elapsed}})</span>
           {% endif %}
       </td>
       {% if b.build_url %}
-        <td class="status-build-js {{ b.build_css_class }} ">
-          <span class="hide">
+        <td class="status-build-js {{ b.build_css_class }}">
+          <span class="hide hide-status-js">
             {{ b.build_text }}
           </span>
-            <a href="{{ b.build_url }}">{{ b.build_label }}</a>
-            
+
+          <a class="build-url-js" href="{{ b.build_url }}">
+            {{ b.build_label }}
+          </a>
+
+          <span class="status-text-js">
             {{ b.build_text }}
-          
+          </span>          
         </td>
       {% else %}
         <td class="LastBuild small-txt">

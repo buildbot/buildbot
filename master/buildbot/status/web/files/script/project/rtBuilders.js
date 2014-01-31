@@ -4,6 +4,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
     
     rtBuilders = {
         init: function () {
+			
+			
         	// Creating a new websocket
 	                
 	        // Global websocketvariabel        
@@ -55,9 +57,28 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	            	 //log("Sent: " + msg);
 	             }		         
 	         };	        
+/*
+	         var oTable = $('.tablesorter-js').dataTable();
+	         /*
+			 $('.tablesorter-js').bind('sort', function () { 
+			 	//eventFired('Sort'); 	 	
 
+			 }).dataTable();
+			
+			function returnTr () {
+				 
+			}
+			
+			 $('.tablesorter-js tbody tr').click( function () {
+			  		var pos = oTable.fnGetPosition(this) 					
+ 					return pos
+			  });
+				*/
 	        // send messages from the server to be parsed
-	        var tableRowList = $('.tablesorter-js tbody > tr');
+
+	        var tableRowList = $('.tablesorter-js tbody > tr');	        
+			//var diffTime = moment(moment(1390310146.791877).diff(1390309386.271075)).utc().format('mm hh SS');
+			//console.log(diffTime)
 	        function log(m) {											
 				realtimePages.buildersPage(m, tableRowList);	
 	        };

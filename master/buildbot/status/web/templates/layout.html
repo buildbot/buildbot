@@ -22,7 +22,7 @@
     <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
     <script type="text/javascript">
       var require = {
-          baseUrl: "/prod/script/",
+          baseUrl: "/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
@@ -33,11 +33,23 @@
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% endblock %} 
   </head>
+  
+  {% if bodyId %}
+    {% set bodyId = bodyId %}
+  {% else %}
+    {% set bodyId = '' %}
+  {% endif %}
 
-  <body class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
-   
+  {% if dataRealtimerServer %}
+    {% set realTimeServer = dataRealtimerServer %}
+  {% else %}
+    {% set realTimeServer = '' %}
+  {% endif %}
+
+    <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
+  
     {% block header -%}
- 
+
     <header class="header">
           
         <nav class="top-menu-container">

@@ -58,7 +58,7 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 
 	        // send messages from the server to be parsed
 	        var stepList = $('#stepList > li');
-	        function log(m) {							
+	        function log(m) {								
 				realtimePages.buildDetail(m, stepList);
 	        };
         }

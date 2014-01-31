@@ -1,12 +1,14 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="buildslaves_page"' %}
+{% set dataRealtimerServer = realTimeServer %}
+
 {% block submenu %}
   {{submenu.buildsubmenu_slaves(active_page="buildslaves", pathNum=1, buildSlaveName='')}}
 {% endblock %}
 
 {% block content %}
-
 
 <table class="table-1 tablesorter tablesorter-js tools-js">
 <thead>
@@ -20,7 +22,7 @@
 <tbody>
 {% for s in slaves %}
 
-<tr>
+<tr id="{{ s.friendly_name|e }}">
   <td>
       <a href="{{ s.link }}">
         {{ s.friendly_name }}
@@ -70,13 +72,13 @@
 {% if s.connected %}
     {% if s.running_builds %}
       
-      <td class="building">Running {{ s.running_builds }} build(s)</td>
+      <td class="status-td building">Running {{ s.running_builds }} build(s)</td>
     {% else %}
-      <td class="idle">Idle</td>
+      <td class="status-td idle">Idle</td>
     {% endif %}
         
   {% else %}
-    <td class="offline">Not connected</td>
+    <td class="status-td offline">Not connected</td>
   {% endif %}
 
   <td>

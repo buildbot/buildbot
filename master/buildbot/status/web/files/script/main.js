@@ -3,8 +3,7 @@ define('jquery', [], function() {
 });
 
 require.config({
-	paths: {
-		//'jquery':'libs/jQuery-2-0-3',
+	paths: {		
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
 		'datatables-plugin': 'plugins/jquery-datatables',
@@ -17,13 +16,19 @@ require.config({
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
-		'rtfrontpage': 'project/rtFrontpage',
+		'rtbuildslaves': 'project/rtBuildSlaves',
+		'rtbuildqueue': 'project/rtBuildqueue',
 		'jqache': 'plugins/jqache-0-1-1-min',
-		'overscroll': 'plugins/jquery-overscroll'
+		'overscroll': 'plugins/jquery-overscroll',
+		'livestamp': 'plugins/livestamp',
+		'moment': 'plugins/moment-with-langs',		
+		'mustache': "libs/mustache-wrap",
+		'stache': 'libs/stache',
+		'templates': 'templates'
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown'], 
+define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
 	function(helpers, dataTables,popup, screenSize, projectDropDown) {
 		
 	'use strict';
@@ -54,15 +59,14 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		// codebases combobox selector
 		if ($('#commonBranch_select').length || $('.select-tools-js').length) {
 			require(['selectors'],
-		        function(selectors) {
-			        selectors.comboBox('.select-tools-js');	
+		        function(selectors) {			        
 			        selectors.init();
 		    });
 		}
 
-		if (helpers.getCurrentPage('isrealtime') && $('body').attr('data-realTimeServer') != '') {						
-			require(['realtimerouting', 'jqache'],
-	        function(realtimeRouting) {
+		if (helpers.isRealTimePage() === true) {						
+			require(['realtimerouting'],
+	        function(realtimeRouting) {	        		        	
 	        	realtimeRouting.init();
 	        });
 		}

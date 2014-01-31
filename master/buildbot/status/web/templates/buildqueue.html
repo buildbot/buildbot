@@ -4,6 +4,9 @@
 {% from "box_macros.html" import box %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="buildqueue_page"' %}
+{% set dataRealtimerServer = realTimeServer %}
+
 {% block submenu %}
   {{submenu.buildsubmenu_buildqueue(active_page='buildqueue', pathNum=1)}}
 {% endblock %}
@@ -17,7 +20,7 @@
     
         <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
     -->
-        
+ 
 <table id="tablesorter" class="table-1 first-child tablesorter tablesorter-js tools-js">
     <thead>
     <tr>

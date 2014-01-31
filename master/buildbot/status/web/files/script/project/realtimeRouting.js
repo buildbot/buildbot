@@ -4,48 +4,43 @@ define(['jquery', 'helpers'], function ($, helpers) {
     
     realtimeRouting = {
         init: function () {
-        	switch(helpers.getCurrentPage())
-			{ 
-			case 'builddetail':        	
-				// For the builddetailpage
-				require(['rtbuilddetail'],
-		        function(rtBuildDetail) {
-		        	rtBuildDetail.init();
-		        });
-		      	break;
-			
-			case 'builders':							
-				// For the builderspage
-				require(['rtbuilders'],
-		        function(rtBuilders) {
-		        	rtBuilders.init();
-		        });
-		       break;
 
-		    case 'frontpage':							
-				// For the frontpage
-				require(['rtfrontpage'],
-		        function(rtFrontpage) {
-		        	rtFrontpage.init();
-		        });
-		       break;
+        	switch(helpers.getCurrentPage()) { 
+				case 'builddetail':        	
+					// For the builddetailpage
+					require(['rtbuilddetail'],
+			        function(rtBuildDetail) {
+			        	rtBuildDetail.init();
+			        });
+			      	break;
+				
+				case 'builders':							
+					// For the builderspage
+					require(['rtbuilders'],
+			        function(rtBuilders) {
+			        	rtBuilders.init();
+			        });
+			       break;
+
+			    case 'buildslaves':							
+					// For the frontpage
+					require(['rtbuildslaves'],
+			        function(rtBuildSlaves) {
+			        	rtBuildSlaves.init();
+			        });
+			       break;
+				
+				case 'buildqueue':
+					// For the frontpage
+					require(['rtbuildqueue'],
+			        function(rtBuildqueue) {
+			        	rtBuildqueue.init();
+			        });
+			       break;
+
 			}
-			/*
-			case 'buildslaves':							
-				// For the frontpage
-				require(['rtbuildslaves'],
-		        function(rtFrontpage) {
-		        	rtFrontpage.init();
-		        });
-		       break;
-			}
-			*/
-			
+		
 		}
-
 	};
    return realtimeRouting
 });
-
-
-

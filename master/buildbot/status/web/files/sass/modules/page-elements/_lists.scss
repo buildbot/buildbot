@@ -47,7 +47,7 @@
 	}
 	.waiting {
 		&:before {
-			content:"Waiting for locks";		
+			content:"Waiting for build slave";		
 		}
 	}
 	.failure {

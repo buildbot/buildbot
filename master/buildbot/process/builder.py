@@ -475,8 +475,14 @@ class Builder(config.ReconfigurableServiceMixin,
         brobj = yield self._brdictToBuildRequest(brdicts[0])
         for b in self.building:
             if self._defaultMergeRequestFn(b.requests[0], brobj):
-                yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
+                building = b.requests
                 b.requests = b.requests + breqs
+                try:
+                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
+                except:
+                    b.requests = building
+                    raise
+
                 log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
                 defer.returnValue(True)
                 return
