@@ -151,7 +151,7 @@ class DBThreadPool(threadpool.ThreadPool):
         """Manually stop the pool.  This is only necessary from tests, as the
         pool will stop itself when the reactor stops under normal
         circumstances."""
-        if not self._stop_evt:
+        if not hasattr(self, "_stop_evt") or not self._stop_evt:
             return # pool is already stopped
         reactor.removeSystemEventTrigger(self._stop_evt)
         self._stop()
