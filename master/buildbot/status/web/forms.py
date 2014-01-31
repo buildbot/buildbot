@@ -56,7 +56,6 @@ class ForceBuildDialogPage(HtmlResource):
             else:
                 cxt['slaves'] = builder_status.getSlaves()
 
-
             #Get branches
             encoding = getRequestCharset(request)
             branches = [ b.decode(encoding) for b in request.args.get("branch", []) if b ]
@@ -66,6 +65,20 @@ class ForceBuildDialogPage(HtmlResource):
             codebases = {}
             codebases_arg = getCodebasesArg(request=request, codebases=codebases)
             cxt['codebases_arg'] = codebases_arg
+
+            return_page = ""
+            if request.args.has_key("returnpage"):
+                return_page = request.args['returnpage']
+                if not isinstance(return_page, basestring):
+                    return_page = request.args['returnpage'][0]
+
+                if len(codebases_arg) > 0:
+                    return_page = "&returnpage={0}".format(return_page)
+                else:
+                    return_page = "?returnpage={0}".format(return_page)
+
+            cxt['return_page'] = return_page
+
 
             #Add scheduler info
             buildForceContext(cxt, request, self.getBuildmaster(request), builder_status.getName())

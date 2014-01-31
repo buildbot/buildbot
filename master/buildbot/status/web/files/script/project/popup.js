@@ -180,6 +180,7 @@ define(['helpers'], function (helpers) {
 			var popupTitle = thisEl.attr('data-popuptitle');
 			var datab = thisEl.attr('data-b');
 			var dataindexb = thisEl.attr('data-indexb');
+            var dataReturnPage = thisEl.attr('data-returnpage');
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var contentType = thisEl.attr('data-contenttype');
             var builder_name = thisEl.attr('data-b_name');
@@ -190,7 +191,7 @@ define(['helpers'], function (helpers) {
 			mib.appendTo(body);
 
             //get all branches
-            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name};
+            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
             var sPageURL = window.location.search.substring(1);
             var sURLVariables = sPageURL.split('&');
             $.each(sURLVariables, function(index, val) {

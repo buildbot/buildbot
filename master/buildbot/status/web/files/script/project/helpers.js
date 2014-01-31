@@ -141,15 +141,18 @@ define(['screensize'], function (screenSize) {
 			
 		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
-
 				$('.remove-js').remove();
 				e.preventDefault();
-				var datab = $(this).prev().attr('data-b');
-				var dataindexb = $(this).prev().attr('data-indexb');
+                var prevElem = $(this).prev();
+				var datab = prevElem.attr('data-b');
+				var dataindexb = prevElem.attr('data-indexb');
+                var dataReturnPage = prevElem.attr('data-returnpage');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+                var builder_name = $(this).prev().attr('data-b_name');
 				$('body').append(preloader).show();
 				// get the current url with parameters append the form to the DOM and submit it
-				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
+                var url = location.protocol + "//" + location.host + "/forms/forceBuild";
+				$.get(url, {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage}).done(function(data) {
 					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
 					
