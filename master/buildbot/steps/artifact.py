@@ -364,12 +364,13 @@ class AcquireBuildLocks(LoggingBuildStep):
 
     def startStep(self, remote):
         currentLocks =  self.setStepLocks(self.initialLocks)
-        self.locksAvailable = self.checkLocksAvailable(currentLocks)
+        # TODO: there seems to be an issue when switching slaves 
+        #self.locksAvailable = self.checkLocksAvailable(currentLocks)
 
-        d = self.findAvailableSlaveBuilder()
-        d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
-
-        return d
+        #d = self.findAvailableSlaveBuilder()
+        #d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
+        #return d
+        return super(LoggingBuildStep, self).startStep(remote)
 
 
 class ReleaseBuildLocks(LoggingBuildStep):
