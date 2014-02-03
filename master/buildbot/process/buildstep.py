@@ -774,6 +774,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
+        self.cmd = c
         c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
