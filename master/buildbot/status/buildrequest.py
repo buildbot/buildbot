@@ -121,12 +121,24 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.submittedAt)
 
+    @defer.inlineCallbacks
+    def getReason(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.reason)
+
+    def getSlaves(self):
+        builder = self.status.getBuilder(self.getBuilderName())
+        return builder.slavenames
+
     def asDict(self):
         result = {}
         # Constant
+        result['brid'] = self.brid
         result['source'] = None # not available sync, sorry
         result['builderName'] = self.buildername
         result['submittedAt'] = None # not availably sync, sorry
+        result['slaves'] =  self.getSlaves()
+        result['reason'] = None # not availably sync, sorry
 
         # Transient
         result['builds'] = [] # not available async, sorry
@@ -137,8 +149,11 @@ class BuildRequestStatus:
         result = {}
 
         ss = yield self.getSourceStamp()
+        result['brid'] = self.brid
         result['source'] = ss.asDict()
         result['builderName'] = self.getBuilderName()
+        result['reason'] = yield self.getReason()
+        result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
 
         builds = yield self.getBuilds()
