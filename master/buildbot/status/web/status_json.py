@@ -19,6 +19,8 @@
 import datetime
 import os
 import re
+from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot import master
 
 from twisted.internet import defer
 from twisted.web import html, resource, server
@@ -686,6 +688,39 @@ class SingleProjectJsonResource(JsonResource):
         defer.returnValue(result)
 
 
+class QueueJsonResource(JsonResource):
+    help = """List the builds in the queue."""
+    pageTitle = 'Queue'
+
+
+    def __init__(self, status):
+        JsonResource.__init__(self, status)
+        self.status = status
+
+    """@defer.inlineCallbacks
+    def content(self, request):
+        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest()
+        brstatus = [ BuildRequestStatus(brdict['buildername'], brdict['brid'], self.status)
+                     for brdict in unclaimed_brq]
+        for build in brstatus:
+            yield build.getSourceStamps()
+            self.putChild(build, BuildJsonResource(self.status, build))"""
+
+    def asDict(self, request):
+        # buildbot.status.builder.BuilderStatus
+        builder_names = self.status.getBuilderNames()
+        builders = [self.status.getBuilder(builder_name) for builder_name in builder_names]
+        pending = defer.gatherResults([b.getPendingBuildRequestStatuses() for b in builders])
+
+        def to_dict(statuses):
+            all_statuses = [item for sublist in statuses for item in sublist]
+
+            return defer.gatherResults(
+                [c.asDict_async() for c in all_statuses])
+
+        pending.addCallback(to_dict)
+        return pending
+
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
@@ -792,6 +827,7 @@ For help on any sub directory, use url /child/help
         self.putChild('projects', ProjectsJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
         self.putChild('metrics', MetricsJsonResource(status))
+        self.putChild('buildqueue', QueueJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 
