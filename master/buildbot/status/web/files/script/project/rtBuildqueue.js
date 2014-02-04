@@ -55,7 +55,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	            	 //log("Sent: " + msg);
 	             }		         
 	         };	        
-/*
+	         
+			/*
 	         var oTable = $('.tablesorter-js').dataTable();
 	         /*
 			 $('.tablesorter-js').bind('sort', function () { 
@@ -71,7 +72,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 			  		var pos = oTable.fnGetPosition(this) 					
  					return pos
 			  });
-				*/
+			*/
+
 	        // send messages from the server to be parsed
 	        var tableRowList = $('.tablesorter-js tbody > tr');	        
 			

@@ -1,4 +1,4 @@
-define(['jquery','helpers','popup','text!templates/builders.html','mustache','livestamp'], function ($,helpers,popup,builders,Mustache) {
+define(['jquery','helpers','popup','text!templates/builders.html','text!templates/buildqueue.html','mustache','livestamp'], function ($,helpers,popup,builders,buildqueue,Mustache) {
 	 "use strict";
     var realtimePages;
     
@@ -228,9 +228,93 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
             catch(err) {
             }
         }, rtBuildqueue: function(m){
-        	
+        		var tbsorter = $('.tablesorter-js').dataTable();
+        		tbsorter.fnClearTable();
         	try {            		        
+				var obj = JSON.parse(m);
+				
+				var objBuilder = obj[0];				
+			
+				var objData = {};		    
 
+				$.each(obj, function (key, value) {					
+					var arObjData = [value]
+				//	console.log(arObjData);
+					tbsorter.fnAddData(arObjData);		
+					/*
+					tbsorter.fnAddData(arObjData);		
+					if (value.state === 'building' || value.state === 'idle') { 
+							
+
+						objData['results'] = value.results;
+						objData['builderName'] = value.builderName;
+						objData['reason'] = 'value.reason';
+						objData['codebases'] = '1';
+						objData['to'] = '2';
+						objData['slaves'] = value.slaves;
+						objData['tre'] = '5';
+						var arObjData = [objData]
+						tbsorter.fnAddData(arObjData);									
+
+					}
+					*/
+
+				});   	
+				
+				
+				//tbsorter.fnDraw();
+				//plusHtml = htmlTr
+				
+				
+				//var table = $.fn.dataTable.fnTables(true);
+				//console.log(plusHtml);
+
+				
+				
+				
+				
+				
+				
+				//tbsorter.children('tbody').html(plusHtml);
+				//console.log(tbsorter)
+				//$('.tablesorter-js').fnAddData(s);
+				//tbsorter.fnDraw();
+
+				/*
+				var tbsorter = $('.tablesorter-js').dataTable();
+				tbsorter.dataTable({
+					"aoColumnDefs":[
+						{
+						"sTitle":"Site name"
+						},
+						{
+						//"sTitle":"Site name1"
+						},
+						{
+						//"sTitle":"Site name2"
+						},
+						{
+						//"sTitle":"Site name3"
+						},
+						{
+						//"sTitle":"Site name4"
+						}
+					]
+				});
+				*/								
+		
+
+				//tbsorter.fnAddData(newJson);
+
+				
+				//console.log(table)
+					//var oTable = tbsorter.dataTable(); 	
+  				//	oTable1.dataTable().fnDraw();
+  					
+			//$(table).fnDraw();
+				//dataTables.init();	
+				//oTable.fnDraw();
+				
             }
             catch(err) {
             }

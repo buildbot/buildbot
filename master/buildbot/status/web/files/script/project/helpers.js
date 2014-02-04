@@ -455,7 +455,9 @@ define(['screensize'], function (screenSize) {
 		    }
 
 		    if (helpers.getCurrentPage() === 'buildqueue') {		    	
-		    	var fullUrl = 'still need json for this page'
+		    	//var fullUrl = parser.protocol + '//' + parser.host + '/json/builds/';
+		    	var fullUrl = 'http://katana-staging.hq.unity3d.com/json/builders/All%20Branches%20%3E%20ABuildVerification/builds/_all'
+
 		    }
 		    
 		    return fullUrl;

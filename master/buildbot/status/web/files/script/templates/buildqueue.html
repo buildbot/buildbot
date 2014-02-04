@@ -1,0 +1,79 @@
+{{#slaves}}
+	<a class="more-info popup-btn-js-2 mod-1" href="#">
+		 {{slavelength}} slaves
+	</a>
+	<div class="more-info-box more-info-box-js">
+		<span class="close-btn">
+		</span>
+		<h3>Compatible slaves</h3>
+		<ul class="codebases-list">
+		{{#slave}}	
+			{{#.}}
+			    <li> 
+			    	{{.}}
+			    </li>
+			{{/.}}
+		{{/slave}}	
+		</ul>
+	</div>
+{{/slaves}}
+
+{{#input}}
+	<input class="fi-js fi" type="checkbox" name="cancelselected" value=""/>
+	<br/>
+	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
+{{/input}}
+
+{{#codebases}}
+	<a class="more-info popup-btn-js-2 mod-1" href="#">
+		1 Codebase 
+	</a>
+	<div class="more-info-box more-info-box-js">
+              <span class="close-btn">
+              </span>
+              <h3>Codebases</h3>
+              <table class="table-1 first-child">
+                <thead>
+                    <th class="txt-align-left">
+                        Codebase
+                    </th>
+                    <th class="txt-align-left">
+                        Repository
+                    </th>
+                    <th class="txt-align-left">
+                        Branch
+                    </th>
+                    <th class="txt-align-left">
+                        Revision
+                    </th>
+                </thead>
+                    <tbody>
+                    	<tr>
+                    		<td>
+                    			gfx-tests-data
+                    		</td>
+                    		<td>
+                    			http://mercurial-mirror.hq.unity3d.com/all-gfx-tests 
+                    		</td>
+                    		<td>
+                    			trunk 
+                    		</td>
+                    		<td>
+                    			7f039f57a0031f81660badf729f21e014a5a2079 
+                    		</td>
+                    	</tr>
+                    </tbody>
+              </table>
+    </div>
+{{/codebases}}
+
+{{#reason}}
+	<ul class="codebases-list">	
+		<li>
+			{{reason}}
+		</li>
+		<li>
+			requested {{waitingTime}}
+		</li>		
+	</ul>
+{{/reason}}
