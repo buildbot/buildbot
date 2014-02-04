@@ -152,7 +152,20 @@ define(['screensize'], function (screenSize) {
 				$('body').append(preloader).show();
 				// get the current url with parameters append the form to the DOM and submit it
                 var url = location.protocol + "//" + location.host + "/forms/forceBuild";
-				$.get(url, {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage}).done(function(data) {
+
+                //get all branches
+                var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
+                var sPageURL = window.location.search.substring(1);
+                var sURLVariables = sPageURL.split('&');
+                $.each(sURLVariables, function(index, val) {
+                    var sParameterName = val.split('=');
+                    if (sParameterName[0].indexOf("_branch") >= 0) {
+                        urlParams[sParameterName[0]] = sParameterName[1];
+                        console.log(val)
+                    }
+                });
+
+				$.get(url, urlParams).done(function(data) {
 					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
 					
