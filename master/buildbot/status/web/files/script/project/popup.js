@@ -8,6 +8,13 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 
 			//For non ajax boxes
 			$('.popup-btn-js-2').click(function(e){
+				console.log('click');
+				e.preventDefault();
+				popup.nonAjaxPopup($(this));
+			});
+
+			// for dynamic added links in buildqueue
+			$('.tablesorter-js').delegate('.popup-btn-js-2', 'click', function(e){
 				e.preventDefault();
 				popup.nonAjaxPopup($(this));
 			});

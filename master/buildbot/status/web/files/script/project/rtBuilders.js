@@ -76,6 +76,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 				*/
 	        // send messages from the server to be parsed
 
+	        
+	        
 	        var tableRowList = $('.tablesorter-js tbody > tr');	        
 			//var diffTime = moment(moment(1390310146.791877).diff(1390309386.271075)).utc().format('mm hh SS');
 			//console.log(diffTime)
