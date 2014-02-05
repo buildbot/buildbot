@@ -149,8 +149,10 @@ class BuildRequestStatus:
         result = {}
 
         ss = yield self.getSourceStamp()
+        sources = yield self.getSourceStamps()
         result['brid'] = self.brid
         result['source'] = ss.asDict()
+        result['sources'] = [s.asDict() for s in sources.values()]
         result['builderName'] = self.getBuilderName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
