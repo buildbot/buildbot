@@ -55,6 +55,9 @@ class Hg(Mercurial):
                 ss.revision = sourcestamps_updated[self.codebase]
                 break
 
+        # update buildrequest revision
+        self.build.requests[0].sources[self.codebase].revision = sourcestamps_updated[self.codebase]
+
         if len(sourcestamps_updated) > 0:
             ss = [{'b_codebase': self.codebase, 'b_revision': sourcestamps_updated[self.codebase], 'b_sourcestampsetid': sourcestamps[0].sourcestampsetid}]
             result = yield self.master.db.sourcestamps.updateSourceStamps(ss)

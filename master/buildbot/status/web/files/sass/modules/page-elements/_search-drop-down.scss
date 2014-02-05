@@ -222,6 +222,13 @@ div.common-branch-select {
 		  }
 }
 
+.common-branch-select.select2-container .select2-choice .select2-arrow {
+     &:before {
+        content: "";
+     }
+}
+
+
 /*
 .select2-container .select2-choice .select2-arrow b {
     display: block;
