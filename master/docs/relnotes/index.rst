@@ -146,6 +146,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
+
 Fixes
 ~~~~~
 
@@ -157,6 +159,8 @@ Fixes
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
 
 * The source steps now correctly interpolate properties in ``env``.
+
+* ``GerritStatusPush`` now supports setting scores with Gerrit 2.6 and newer
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
