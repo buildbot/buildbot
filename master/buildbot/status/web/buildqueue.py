@@ -40,6 +40,14 @@ class BuildQueueResource(HtmlResource):
         brstatus = [ { 'brstatus' : BuildRequestStatus(brdict['buildername'], brdict['brid'], status), 'brdict' : brdict}
                 for brdict in unclaimed_brq]
 
+        for br in brstatus:
+            br['sortvalue'] = yield br['brstatus'].getSubmitTime()
+
+        def sortQueue(br, otherbr):
+            return br['sortvalue'] - otherbr['sortvalue']
+
+        brstatus = sorted(brstatus, cmp=sortQueue)
+
         buildqueue = []
         for pb in brstatus:
             bq = {}
