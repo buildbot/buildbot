@@ -1,9 +1,10 @@
-define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePages, helpers) {
+define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpers) {
          "use strict";
     var rtBuildqueue;
     
     rtBuildqueue = {
-        init: function () {
+        init: function () {        	
+
         	// Creating a new websocket
 	                
 	        // Global websocketvariabel        
@@ -15,8 +16,14 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	         
          	wsuri = realTimeServer;
 
-         	console.log($('body').attr('data-realTimeServer'));
+         	
 
+         	var tbsorter = $('.tablesorter-js').dataTable();
+        		
+        	//tbsorter.fnAddData();						
+
+         	console.log($('body').attr('data-realTimeServer'));
+         	
 	         if ("WebSocket" in window) {
 	         	sock = new WebSocket(wsuri);
 	         } else if ("MozWebSocket" in window) {
@@ -30,6 +37,7 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	         if (sock) {
 	             sock.onopen = function() {
 		             // get the json url to parse
+		             
 		             console.log(helpers.getJsonUrl())
 		             broadcast(helpers.getJsonUrl());
 	         	    log("Connected to " + wsuri);
@@ -43,7 +51,8 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	             }
 
 	             // when the client recieves a message
-	             sock.onmessage = function(e) {
+	             sock.onmessage = function(e) {	  
+	             $('#bowlG').remove();	                   	
 	         		log(e.data);
 	             }
 	         }
@@ -55,30 +64,11 @@ define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePage
 	            	 //log("Sent: " + msg);
 	             }		         
 	         };	        
-	         
-			/*
-	         var oTable = $('.tablesorter-js').dataTable();
-	         /*
-			 $('.tablesorter-js').bind('sort', function () { 
-			 	//eventFired('Sort'); 	 	
+	         		
 
-			 }).dataTable();
-			
-			function returnTr () {
-				 
-			}
-			
-			 $('.tablesorter-js tbody tr').click( function () {
-			  		var pos = oTable.fnGetPosition(this) 					
- 					return pos
-			  });
-			*/
-
-	        // send messages from the server to be parsed
-	        var tableRowList = $('.tablesorter-js tbody > tr');	        
-			
+	        // send messages from the server to be parsed		
 	        function log(m) {											
-				realtimePages.rtBuildqueue(m, tableRowList);	
+				realtimePages.rtBuildqueue(m);	
 	        };
         }
     }

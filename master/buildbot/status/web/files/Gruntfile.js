@@ -44,11 +44,15 @@ module.exports = function(grunt) {
           baseUrl: 'script/',
           dir: "prod/script",
           optimize: 'uglify',
+          
             //paths: {
              // requirejs: "require"
            // },
 
           mainConfigFile:'script/main.js',
+          paths: {
+                  'dataTables':'empty:'
+                  }
           //out: 'prod/script/main.js',
           /*
           modules: [

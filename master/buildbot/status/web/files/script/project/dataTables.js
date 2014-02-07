@@ -1,21 +1,22 @@
-define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache'], function (dataTable,helpers,buildqueue,Mustache) {
-
+define(['datatables-plugin','helpers','text!templates/popups.html','text!templates/buildqueue.html','mustache'], function (dataTable,helpers,popups,buildqueue,Mustache) {
+   
     "use strict";
     var dataTables;
-    
+      
     dataTables = {
         init: function () {
-			
+			 
 			// datatable element				
 			var tablesorterEl = $('.tablesorter-js');	
 
 			// initialize with empty array before updating from json			
 			var aa =[]
+
 			// Select which columns not to sort
 			tablesorterEl.each(function(i) {			    	
 				var colList = [];
 
-				var optionTable = {					
+				var optionTable = {				 			
 					"bPaginate": false,
 					"bLengthChange": false,
 					"bFilter": false,
@@ -27,7 +28,7 @@ define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache
 					"asSorting": true,
 					"bServerSide": false,
 					"bSearchable": true,
-					"aaSorting": [],
+					"aaSorting": [],					
 					"iDisplayLength": 50,
 					"bStateSave": true
 				}
@@ -42,6 +43,7 @@ define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache
 				}
 
 				// remove sorting from selected columns
+
 				$('> thead th', this).each(function(i){			        
 			        if (!$(this).hasClass('no-tablesorter-js')) {
 			            colList.push(null);
@@ -51,13 +53,18 @@ define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache
 			    });
 
 				// add specific for the buildqueue page
-				if ($(this).hasClass('buildqueue-table')) {						
+				if ($(this).hasClass('buildqueue-table')) {		
+					var preloader = Mustache.render(popups, {'preloader':'true'});
+										
+        			$('body').append(preloader)
+
+					optionTable.aaSorting = [[ 2, "asc" ]]			
 					optionTable.aoColumns = [
-						{ "mData": "builderName" },
-			            { "mData": "results" },
-			            { "mData": "reason" },
-			            { "mData": "slave" },
-			            { "mData": "steps",
+						{ "mData": "builderName" },	
+			            { "mData": "sources" },
+			            { "mData": "reason"},
+			            { "mData": "slaves" },
+			            { "mData": "brid",
 			            'bSortable': false }
 					]
 					optionTable.aaData = aa;
@@ -70,53 +77,47 @@ define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache
 						{
 						"aTargets": [ 1 ],
 						"sClass": "txt-align-left",
-						"mRender": function (data,full,type)  {
-							var htmlnew = Mustache.render(buildqueue, {codebases:true})								
-							return htmlnew;					
+						"mRender": function (data,full,type)  {							
+							var sourcesLength = type.sources.length
+							var htmlnew = Mustache.render(buildqueue, {showsources:true,sources:type.sources,codebase:type.codebase,sourcesLength:sourcesLength})								
+							return htmlnew;												
 						}
 						},
 						{
 						"aTargets": [ 2 ],
-						"sClass": "txt-align-left",
-						"mRender": function (data,full,type)  {															
-							var reason = type.reason
-							//var startTime = moment.unix(type.times[0]).format('MMMM Do YYYY, H:mm:ss')
-							/*
-							var today = moment().toDate()
-							var minusDay = moment.utc(type.times[0]).diff(today)
-							console.log(moment(minusDay).format('MMMM Do YYYY, H:mm:ss'))
-							*/
-							var waitingTime = moment.unix(type.times[0]).fromNow();						
-							var htmlnew = Mustache.render(buildqueue, {reason:reason,waitingTime:waitingTime})								
-							return htmlnew;							
-							}
+						"sClass": "txt-align-left",						
+						"mRender": function (data,full,type)  {		
+							var requested = moment.unix(type.submittedAt).format('MMMM Do YYYY, H:mm:ss');																				
+							var waiting = helpers.getTime(type.submittedAt, null);							
+							var htmlnew = Mustache.render(buildqueue, {reason:type.reason,requested:requested,submittedAt:type.submittedAt});								
+							return htmlnew;										
+						},
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {									
+							helpers.startCounter($(nTd).find('.waiting-time'),oData.submittedAt);													
+					    }
 						},
 						{
 						"aTargets": [ 3 ],
-						"sClass": "txt-align-right",
-						"mRender": function (data,full,type)  {		
-						/*							
-							var slaveLength = type.slaves.length	
-							console.log(data)						
-							var htmlnew = Mustache.render(buildqueue, {slaves:true,slave:data, slavelength:slaveLength})
-						    return  htmlnew; 						    
-						 */
-						var slavelength = type.slave.length	
-						var htmlnew = Mustache.render(buildqueue, {slaves:true,slave:data,slavelength:slavelength})
-						//console.log(type.slave.length)
-						return htmlnew; 						    
+						"sClass": "txt-align-right",						
+						"mRender": function (data,full,type)  {
+						var slavelength = type.slaves.length	
+						var htmlnew = Mustache.render(buildqueue, {showslaves:true,slaves:data,slavelength:slavelength})						
+						return htmlnew; 						    						
 					    }
+					    
 						},
 						{
 							"aTargets": [ 4 ],
 							"sClass": "select-input",
-							"mRender": function (data,full,type)  {	
 							
-							var inputHtml = Mustache.render(buildqueue, {input:'true'})
+							"mRender": function (data,full,type)  {								
+							var inputHtml = Mustache.render(buildqueue, {input:'true',brid:type.brid})
 							return inputHtml;							
 							}
+							
 						}
 					]
+					
 
 				} else {
 					// add no sorting 
@@ -129,7 +130,7 @@ define(['datatables-plugin','helpers','text!templates/buildqueue.html','mustache
 					optionTable.bLengthChange = true;
 					optionTable.bInfo = true;
 					optionTable.bFilter = true;
-					optionTable.oLanguage = {
+					optionTable.oLanguage = {						
 					 	"sSearch": "",
 					 	 "sLengthMenu": 'Entries per page<select>'+
 				            '<option value="10">10</option>'+

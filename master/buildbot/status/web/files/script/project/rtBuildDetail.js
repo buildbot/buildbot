@@ -1,4 +1,4 @@
-define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePages, helpers) {
+define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpers) {
          "use strict";
     var rtBuildDetail;
     

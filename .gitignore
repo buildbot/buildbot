@@ -53,3 +53,9 @@ master/buildbot/status/web/files/test3.xml
 master/buildbot/status/web/files/test.xml
 
 master/buildbot/status/web/files/json_projects.json
+
+master/buildbot/status/web/files/script/project/aadata.json
+
+master/buildbot/status/web/files/prod/script/project/aadata.json
+
+master/buildbot/status/web/files/aadata.json
