@@ -115,5 +115,6 @@ class SlaveStatus:
         result['version'] = self.getVersion()
         result['connected'] = self.isConnected()
         result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
+        result['lastMessage'] = self.lastMessageReceived()
         return result
 
