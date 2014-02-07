@@ -1,7 +1,7 @@
 define('jquery', [], function() {
     return jQuery;
 });
-
+ 
 require.config({
 	paths: {		
 		'selectors':'project/selectors',
@@ -13,6 +13,7 @@ require.config({
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup',
+		'realtimePages':'project/realtimePages',
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
@@ -28,7 +29,7 @@ require.config({
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
+require(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
 	function(helpers, dataTables,popup, screenSize, projectDropDown) {
 		
 	'use strict';

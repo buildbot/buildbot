@@ -7,8 +7,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 		init: function () {
 
 			//For non ajax boxes
-			$('.popup-btn-js-2').click(function(e){
-				console.log('click');
+			$('.popup-btn-js-2').click(function(e){				
 				e.preventDefault();
 				popup.nonAjaxPopup($(this));
 			});

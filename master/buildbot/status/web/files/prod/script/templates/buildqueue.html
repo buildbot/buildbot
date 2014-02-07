@@ -1,4 +1,4 @@
-{{#slaves}}
+{{#showslaves}}
 	<a class="more-info popup-btn-js-2 mod-1" href="#">
 		 {{slavelength}} slaves
 	</a>
@@ -7,26 +7,28 @@
 		</span>
 		<h3>Compatible slaves</h3>
 		<ul class="codebases-list">
-		{{#slave}}	
+		{{#slaves}}	
 			{{#.}}
 			    <li> 
-			    	{{.}}
+                    <a href="/buildslaves/{{.}}">
+			    	    {{.}}
+                    </a>
 			    </li>
 			{{/.}}
-		{{/slave}}	
+		{{/slaves}}	
 		</ul>
 	</div>
-{{/slaves}}
+{{/showslaves}}
 
 {{#input}}
-	<input class="fi-js fi" type="checkbox" name="cancelselected" value=""/>
+	<input class="fi-js fi" type="checkbox" name="cancelselected" value="{{brid}}"/>
 	<br/>
 	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
 {{/input}}
 
-{{#codebases}}
+{{#showsources}}
 	<a class="more-info popup-btn-js-2 mod-1" href="#">
-		Codebase 
+		{{sourcesLength}} Codebase 
 	</a>
 	<div class="more-info-box more-info-box-js">
               <span class="close-btn">
@@ -48,32 +50,38 @@
                     </th>
                 </thead>
                     <tbody>
+                        {{#sources}}
                     	<tr>
-                    		<td>
-                    			gfx-tests-data
+                    		<td class="txt-align-left">
+                    			{{codebase}}
                     		</td>
-                    		<td>
-                    			http://mercurial-mirror.hq.unity3d.com/all-gfx-tests 
+                    		<td class="txt-align-left">
+                                {{repository}}                    			
                     		</td>
-                    		<td>
-                    			trunk 
+                    		<td class="txt-align-left">
+                                {{branch}}                              
                     		</td>
-                    		<td>
-                    			7f039f57a0031f81660badf729f21e014a5a2079 
+                    		<td class="txt-align-left">
+                                {{revision}}                   			
                     		</td>
                     	</tr>
+                        {{/sources}}
                     </tbody>
               </table>
     </div>
-{{/codebases}}
+{{/showsources}}
 
 {{#reason}}
+    <span class="hide">{{submittedAt}}</span>
 	<ul class="codebases-list">	
 		<li>
 			{{reason}}
 		</li>
 		<li>
-			requested {{waitingTime}}
+			requested on {{requested}}
 		</li>		
+        <li>
+            Waiting <span class="waiting-time"></span>            
+        </li>
 	</ul>
 {{/reason}}

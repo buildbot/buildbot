@@ -185,7 +185,7 @@ define(['screensize'], function (screenSize) {
 				});
 
 			    // remove individual build
-				$('.force-individual-js').click(function(e){
+			    $('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){				
 					e.preventDefault();					
 					var iVal = $(this).prev().prev().val();
 					
@@ -222,7 +222,7 @@ define(['screensize'], function (screenSize) {
                 }
             });
 
-                $.ajax({
+            $.ajax({
 				url: "/json/slaves/?filter=0",
 				dataType: "json",
 				type: "GET",
@@ -362,8 +362,36 @@ define(['screensize'], function (screenSize) {
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
 
 			
-		}, startTimer: function(el, start) {		// specific for the builddetail page
-			
+		}, startCounter: function(el, myStartTimestamp) { 
+			var startTimestamp = parseInt(myStartTimestamp);			    
+		    var end = Math.round(+new Date()/1000);	
+		    var time = end - startTimestamp;	
+			var getTime = Math.round(time)				
+
+		    setInterval(function() {
+		    	getTime++;
+				var days = Math.floor(getTime / 86400),
+				hours = Math.floor(getTime / 3600) % 24,
+		        minutes = Math.floor(getTime / 60 % 60),
+		        seconds = Math.floor(getTime % 60),
+		        arr = [];
+		   		 if (days > 0) {
+				    arr.push(days == 1 ? '1 day ' : days + ' days');
+				 }
+		         if (hours > 0) {
+				    arr.push(hours == 1 ? '1 hr ' : hours + ' hrs');
+				 }
+				 if (minutes > 0 || hours > 0) {
+				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
+				 }
+				 if (seconds > 0 || minutes > 0 || hours > 0) {
+				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
+				 }
+				 el.html(arr.join(' '));
+			 }, 1000);		
+
+		}, startTimer: function(el, start) {		
+			// specific for the builddetail page
 			 var start = start,
 		     cDisplay = $(el);
 		
@@ -397,11 +425,12 @@ define(['screensize'], function (screenSize) {
 			var time = end - start;	
 
 			var getTime = Math.round(time)
-			var hours = Math.floor(time / 3600) == 0? '' : Math.floor(time / 3600) + ' hours ' ;
+			var days = Math.floor(time / 86400) == 0? '' : Math.floor(time / 86400) + ' days ' ;
+			var hours = Math.floor(time / 3600) == 0? '' : Math.floor(time / 3600) % 24 + ' hours ';
 			
-			var minutes = Math.floor(getTime / 60) == 0? '' : Math.floor(getTime / 60) + ' mins, ';
+			var minutes = Math.floor(getTime / 60) == 0? '' : Math.floor(getTime / 60) % 60+ ' mins, ';
 			var seconds = getTime - Math.floor(getTime / 60) * 60 + ' secs ';
-			return hours + minutes + seconds;
+			return days + hours + minutes + seconds;
 
 		}, getResult: function (resultIndex) {
         		
@@ -450,14 +479,13 @@ define(['screensize'], function (screenSize) {
 		    }
 
 		    if (helpers.getCurrentPage() === 'buildslaves') {		    	
-		    	//var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves';
-		    	var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
+		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves';
+		    	//var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
 		    }
 
-		    if (helpers.getCurrentPage() === 'buildqueue') {		    	
-		    	//var fullUrl = parser.protocol + '//' + parser.host + '/json/builds/';
-		    	var fullUrl = 'http://katana-staging.hq.unity3d.com/json/builders/All%20Branches%20%3E%20ABuildVerification/builds/_all'
-
+		    if (helpers.getCurrentPage() === 'buildqueue') {		    			    	
+		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/buildqueue/';		    	
+		    	
 		    }
 		    
 		    return fullUrl;
