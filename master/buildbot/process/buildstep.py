@@ -90,7 +90,7 @@ class _BuildStepFactory(util.ComparableMixin):
     def buildStep(self):
         try:
             return self.factory(*self.args, **self.kwargs)
-        except:
+        except Exception:
             log.msg("error while creating step, factory=%s, args=%s, kwargs=%s"
                     % (self.factory, self.args, self.kwargs))
             raise
@@ -881,7 +881,7 @@ class CommandMixin(object):
         cmd = remotecommand.RemoteCommand(cmd, args)
         try:
             log = self.getLog('stdio')
-        except:
+        except Exception:
             log = yield self.addLog('stdio')
         cmd.useLog(log, False)
         yield self.runCommand(cmd)
@@ -1063,7 +1063,7 @@ class ShellMixin(object):
                 return ["'%s" % words[0], "%s'" % words[1]]
             return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-        except:
+        except Exception:
             log.err(failure.Failure(), "Error describing step")
             return super(ShellMixin, self)._describe(done)
 
