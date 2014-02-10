@@ -215,14 +215,22 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
         	try {            		        
           		var obj = JSON.parse(m);  	          	
 
-	          	var i = 0;          		
+	          	var tbsorter = $('.tablesorter-js').dataTable();
+        		
+        		tbsorter.fnClearTable();        		
           		
-          		$.each(obj, function (key, value) {          			
+          		$.each(obj, function (key, value) { 
+          			var arObjData = [value];										
+					tbsorter.fnAddData(arObjData);	
+
+
+          			/*
           			var item = $('[id="' + value.friendly_name + '"]');		
           			var statusTd = item.find('.status-td');          		          		
-          			
+          				
 					statusTd.html(helpers.getSlavesResult(value.connected, value.runningBuilds));
 					statusTd.removeClass().addClass(helpers.getClassName(value.connected, value.runningBuilds));				
+					*/
           		});
             }
             catch(err) {

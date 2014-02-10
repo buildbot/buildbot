@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','text!templates/popups.html','text!templates/buildqueue.html','mustache'], function (dataTable,helpers,popups,buildqueue,Mustache) {
+define(['datatables-plugin','helpers','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','mustache'], function (dataTable,helpers,popups,buildqueue,buildslaves,Mustache) {
    
     "use strict";
     var dataTables;
@@ -53,7 +53,8 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 			    });
 
 				// add specific for the buildqueue page
-				if ($(this).hasClass('buildqueue-table')) {		
+				if ($(this).hasClass('buildqueue-table')) {	
+				
 					var preloader = Mustache.render(popups, {'preloader':'true'});
 										
         			$('body').append(preloader)
@@ -100,17 +101,16 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						"aTargets": [ 3 ],
 						"sClass": "txt-align-right",						
 						"mRender": function (data,full,type)  {
-						var slavelength = type.slaves.length	
-						var htmlnew = Mustache.render(buildqueue, {showslaves:true,slaves:data,slavelength:slavelength})						
-						return htmlnew; 						    						
+							var slavelength = type.slaves.length	
+							var htmlnew = Mustache.render(buildqueue, {showslaves:true,slaves:data,slavelength:slavelength})						
+							return htmlnew; 						    						
 					    }
 					    
 						},
 						{
-							"aTargets": [ 4 ],
-							"sClass": "select-input",
-							
-							"mRender": function (data,full,type)  {								
+						"aTargets": [ 4 ],
+						"sClass": "select-input",				
+						"mRender": function (data,full,type)  {								
 							var inputHtml = Mustache.render(buildqueue, {input:'true',brid:type.brid})
 							return inputHtml;							
 							}
@@ -118,8 +118,70 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						}
 					]
 					
+				} else if ($(this).hasClass('buildslaves-tables')) {	
+
+					var preloader = Mustache.render(popups, {'preloader':'true'});
+										
+        			$('body').append(preloader);
+
+					optionTable.aoColumns = [
+						{ "mData": "friendly_name" },	
+			            { "mData": "builders" },
+			            { "mData": "connected"},
+			            { "mData": "lastMessage" }
+					]
+					optionTable.aaData = aa;
+					optionTable.aoColumnDefs = [
+						{					
+						"aTargets": [ 0 ],
+						"mRender": function (data,full,type)  {												
+							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
+							return htmlnew;
+						}
+						},
+						{
+						"aTargets": [ 1 ],
+						"mRender": function (data,full,type)  {
+							var name;
+							if (type.name != undefined) {
+								name = type.name;
+							} else {
+								name = 'Not Available';
+							}
+							return name;
+						}
+						},
+						{
+						"aTargets": [ 2 ],
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+							if (oData.connected === false) {
+								$(nTd).addClass('offline').text('Not connected');
+							} 
+							else if (oData.connected === true && oData.runningBuilds.length === 0) {
+								$(nTd).addClass('idle').text('idle');
+							} else if (oData.connected === true && oData.runningBuilds.length >0){							
+								var runningTxt = 'Running ' + oData.runningBuilds.length + ' build(s)';
+								$(nTd).addClass('building').text(runningTxt);
+							}											
+					    }
+						},									
+						{
+						"aTargets": [ 3 ],
+						"mRender": function (data,full,type)  {														
+							var lastMessageDate = ' ('+ moment().utc(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')';
+							var lastMessageTimeAgo = moment().utc(type.lastMessage).fromNow();							
+							var timeAgo =  type.lastMessage != 0? lastMessageTimeAgo + lastMessageDate : '';							
+							var showTimeago = type.lastMessage != 0? true : null;							
+							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,timeAgo:timeAgo,lastMessageTimeAgo:lastMessageTimeAgo,lastMessageDate:lastMessageDate});
+							return htmlnew;
+						}
+							
+						}
+						
+					]
 
 				} else {
+
 					// add no sorting 
 					optionTable.aoColumns = colList;	
 				}

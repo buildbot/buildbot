@@ -10,7 +10,7 @@
 
 {% block content %}
 
-<table class="table-1 tablesorter tablesorter-js tools-js">
+<table class="table-1 tablesorter tablesorter-js tools-js buildslaves-tables">
 <thead>
 <tr>
   <th>Name</th>
@@ -20,75 +20,7 @@
 </tr>
 </thead>
 <tbody>
-{% for s in slaves %}
 
-<tr id="{{ s.friendly_name|e }}">
-  <td>
-      <a href="{{ s.link }}">
-        {{ s.friendly_name }}
-      </a>
-      <a class="more-info fl-right popup-btn-js-2" href="#">
-      </a>
-        <div class="more-info-box more-info-box-js">
-          <h3>Additional information</h3>
-          <br/>
-          <h4>Buildbot</h4>
-          <span>
-            {{ (s.version or '-')|e }}
-          </span>
-          <br/>
-            {%- if s.admin -%}
-              <h4>Admin</h4>
-              <span>{{ s.admin|email }}</span>
-            {%- else -%}
-              <span>-</span>
-            {%- endif -%}
-            <br/>
-            {%- if show_builder_column %}
-           
-            {%- if s.builders %}
-            <h4 class="last">Builders</h4>
-              <ul class="builders-list">
-                {%- for b in s.builders %}
-                  <li>
-                    <a href="{{ b.link }}">
-                      {{ b.name }}
-                    </a>
-                  </li>
-                {%- endfor %}
-              </ul>
-            {%- else %}
-              <span class="Warning">no builders</span>
-            {%- endif -%}
-            
-          {%- endif %}
-      </div>
-      
-  </td>
-  <td>
-      {{ s.name }}
-  </td>
-
-{% if s.connected %}
-    {% if s.running_builds %}
-      
-      <td class="status-td building">Running {{ s.running_builds }} build(s)</td>
-    {% else %}
-      <td class="status-td idle">Idle</td>
-    {% endif %}
-        
-  {% else %}
-    <td class="status-td offline">Not connected</td>
-  {% endif %}
-
-  <td>
-    {% if s.last_heard_from_age %}
-      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
-    {% endif %}
-  </td>
-
-  </tr>
-{% endfor %}
 </tbody>
 </table>
 

@@ -15,11 +15,7 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
 	        var realTimeServer =  $('body').attr('data-realTimeServer');
 	         
          	wsuri = realTimeServer;
-
-         	
-
-         	var tbsorter = $('.tablesorter-js').dataTable();
-        		
+         		
         	//tbsorter.fnAddData();						
 
          	console.log($('body').attr('data-realTimeServer'));
@@ -36,8 +32,8 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
 	         // if the socket connection is success
 	         if (sock) {
 	             sock.onopen = function() {
-		             // get the json url to parse
-		             
+	             	 $('#bowlG').remove();	  
+		             // get the json url to parse		             
 		             console.log(helpers.getJsonUrl())
 		             broadcast(helpers.getJsonUrl());
 	         	    log("Connected to " + wsuri);
@@ -52,7 +48,7 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
 
 	             // when the client recieves a message
 	             sock.onmessage = function(e) {	  
-	             $('#bowlG').remove();	                   	
+	                             	
 	         		log(e.data);
 	             }
 	         }

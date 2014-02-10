@@ -29,6 +29,7 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
 	         // if the socket connection is success
 	         if (sock) {
 	             sock.onopen = function() {
+	             	 $('#bowlG').remove();	  
 		             // get the json url to parse
 		             console.log(helpers.getJsonUrl())
 		             broadcast(helpers.getJsonUrl());

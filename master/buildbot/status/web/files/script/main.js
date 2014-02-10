@@ -23,13 +23,11 @@ require.config({
 		'overscroll': 'plugins/jquery-overscroll',
 		'livestamp': 'plugins/livestamp',
 		'moment': 'plugins/moment-with-langs',		
-		'mustache': "libs/mustache-wrap",
-		'stache': 'libs/stache',
-		'templates': 'templates'
+		'mustache': "libs/mustache-wrap"
 	}
 });
 
-require(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
+define(['helpers','dataTables','popup','screensize','projectdropdown','moment'], 
 	function(helpers, dataTables,popup, screenSize, projectDropDown) {
 		
 	'use strict';
