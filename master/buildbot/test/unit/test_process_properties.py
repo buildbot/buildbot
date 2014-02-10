@@ -87,7 +87,7 @@ class TestPropertyMap(unittest.TestCase):
             prop_true=True,
             prop_empty='',
         )
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
         d = self.build.render(WithProperties(fmtstring, **kwargs))
@@ -337,7 +337,7 @@ class TestInterpolatePositional(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_string(self):
         command = Interpolate("test %s", "one fish")
@@ -373,7 +373,7 @@ class TestInterpolateProperties(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_properties(self):
         self.props.setProperty("buildername", "winbld", "test")
@@ -519,7 +519,7 @@ class TestInterpolateSrc(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
         sa = FakeSource()
         sb = FakeSource()
         sc = FakeSource()
@@ -642,7 +642,7 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
         sa = FakeSource()
 
         sa.repository = 'cvs://A..'
@@ -775,7 +775,7 @@ class TestWithProperties(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def testInvalidParams(self):
         self.assertRaises(ValueError, lambda:
@@ -1111,7 +1111,7 @@ class TestProperty(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def testIntProperty(self):
         self.props.setProperty("do-tests", 1, "scheduler")
@@ -1245,7 +1245,7 @@ class TestRenderalbeAdapters(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_list_deferred(self):
         r1 = DeferredRenderable()
@@ -1286,7 +1286,7 @@ class Renderer(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_renderer(self):
         self.props.setProperty("x", "X", "test")

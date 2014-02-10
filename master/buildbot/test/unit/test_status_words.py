@@ -391,13 +391,12 @@ class TestIrcContactChannel(unittest.TestCase):
         build = mock.Mock()
         build.getNumber = lambda: 42
         build.getName = get_name
-        build.category = lambda: ""
 
         builder = mock.Mock()
         builder.getName = get_name
         build.getBuilder = lambda: builder
 
-        self.bot.categories = None
+        self.bot.tags = None
         self.contact.notify_for = lambda _: True
         self.contact.useRevisions = False
 
@@ -643,7 +642,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             pm_to_nicks=['pm', 'to', 'nicks'],
             port=1234,
             allowForce=True,
-            categories=['categories'],
+            tags=['tags'],
             password='pass',
             notify_events={'successToFailure': 1, },
             noticeOnChannel=True,
@@ -665,7 +664,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'],
-            factory.status, ['categories'], {'successToFailure': 1},
+            factory.status, ['tags'], {'successToFailure': 1},
             noticeOnChannel=True,
             useColors=False,
             useRevisions=True,

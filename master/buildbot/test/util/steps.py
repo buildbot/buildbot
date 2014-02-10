@@ -87,7 +87,7 @@ class BuildStepMixin(object):
 
         # step.build
 
-        b = self.build = fakebuild.FakeBuild()
+        b = self.build = fakebuild.FakeBuild(master=self.master)
         b.allFiles = lambda: buildFiles
         b.master = self.master
 
