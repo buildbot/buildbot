@@ -257,7 +257,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 author=author,
                 revision=node,
                 files=None,
-                comments=comments,
+                comments=self.truncateComments(comments),
                 when_timestamp=epoch2datetime(timestamp),
                 branch=branch,
                 category=self.category,

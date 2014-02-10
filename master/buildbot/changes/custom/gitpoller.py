@@ -298,7 +298,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 author=author,
                 revision=rev,
                 files=None,
-                comments=comments,
+                comments=self.truncateComments(comments),
                 when_timestamp=epoch2datetime(timestamp),
                 branch=branchname,
                 category=self.category,
