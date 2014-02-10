@@ -163,7 +163,8 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             pass
         if interfaces.IBuilderStatus.providedBy(thing):
             bldr = thing
-            return prefix + "builders/%s" % (
+            return prefix + "projects/%s/builders/%s" % (
+                urllib.quote(bldr.getProject(), safe=''),
                 urllib.quote(bldr.getName(), safe=''),
                 )
         if interfaces.IBuildStatus.providedBy(thing):
