@@ -64,15 +64,18 @@ class Trigger(LoggingBuildStep):
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
 
+    '''
     def interrupt(self, reason):
         if self.running and not self.ended:
-            self.step_status.setText(["interrupted"])
+            self.step_status.setText(["interrupted: %s" % reason])
+            print "\n interrupt reason : %s \n" % reason
             return self.end(EXCEPTION)
 
     def end(self, result):
         if not self.ended:
             self.ended = True
             return self.finished(result)
+    '''
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self):
@@ -136,7 +139,7 @@ class Trigger(LoggingBuildStep):
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
         if invalid_schedulers:
             self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
-            self.end(FAILURE)
+            self.finished(FAILURE)
             return
 
         self.running = True
@@ -166,7 +169,7 @@ class Trigger(LoggingBuildStep):
                 d.addErrback(log.err,
                     '(ignored) while invoking Triggerable schedulers:')
             rclist = None
-            self.end(SUCCESS)
+            self.finished(SUCCESS)
             return
 
         was_exception = was_failure = False
@@ -229,5 +232,5 @@ class Trigger(LoggingBuildStep):
             else:
                 add_links(res_builds)
 
-        self.end(result)
+        self.finished(result)
         return
