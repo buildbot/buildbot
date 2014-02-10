@@ -746,7 +746,7 @@ class SlaveJsonResource(JsonResource):
     def asDict(self, request):
         results = self.slave_status.asDict()
         # Enhance it by adding more informations.
-        results['builders'] = {}
+        results['builders'] = []
         for builderName in self.getBuilders():
             builds = []
             builder_status = self.status.getBuilder(builderName)
@@ -759,7 +759,8 @@ class SlaveJsonResource(JsonResource):
                     break
                 if build_status.getSlavename() == self.name:
                     builds.append(build_status.getNumber())
-            results['builders'][builderName] = builds
+            builderDict = {'builds': builds, 'name': builderName, 'url': self.status.getURLForThing(builder_status)}
+            results['builders'].append(builderDict)
         return results
 
 
