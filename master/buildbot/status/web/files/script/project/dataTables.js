@@ -206,13 +206,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 				}
 
 			   	//initialize datatable with options
-			  	var oTable = $(this).dataTable(optionTable);
-			  	
-			  	$('.dataTables_paginate a').keypress(function(e){			  		
-			  		if (e.which === 13) {
-			  			$(this).trigger('click');
-			  		}
-			  	});
+			  	var oTable = $(this).dataTable(optionTable);			  	
 
 			  	// special for the codebasespage
 			  	if ($('#codebases_page').length != 0) {
