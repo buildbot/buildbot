@@ -93,6 +93,3 @@ class PollingChangeSource(ChangeSource):
         self.stopLoop()
         return ChangeSource.stopService(self)
 
-    def truncateComments(self, comments):
-        return comments[:1021] + '...' if len(comments) > 1021 else comments
-

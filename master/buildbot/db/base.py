@@ -53,6 +53,10 @@ class DBConnectorComponent(object):
                 "value for column %s is greater than max of %d characters: %s"
                     % (col, col.type.length, value))
 
+    def truncateColumn(self, col, value):
+        col_length = col.type.length - 2
+        return value[:col_length] + '..' if len(value) > col_length else value
+
 
 class CachedMethod(object):
     def __init__(self, cache_name, method):

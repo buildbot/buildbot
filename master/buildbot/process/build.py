@@ -68,7 +68,7 @@ class Build(properties.PropertiesMixin):
         self.releaseLockInstanse = None
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
-        self.reason = requests[0].mergeReasons(requests[1:])
+        self.reason = requests[0].reason
 
         self.progress = None
         self.currentStep = None
