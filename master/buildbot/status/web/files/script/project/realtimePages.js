@@ -223,7 +223,6 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
           			var arObjData = [value];										
 					tbsorter.fnAddData(arObjData);	
 
-
           			/*
           			var item = $('[id="' + value.friendly_name + '"]');		
           			var statusTd = item.find('.status-td');          		          		
@@ -231,6 +230,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 					statusTd.html(helpers.getSlavesResult(value.connected, value.runningBuilds));
 					statusTd.removeClass().addClass(helpers.getClassName(value.connected, value.runningBuilds));				
 					*/
+
           		});
             }
             catch(err) {
@@ -248,7 +248,6 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 					var arObjData = [value];										
 					tbsorter.fnAddData(arObjData);						
 				});	
-
 				
             }
             catch(err) {
