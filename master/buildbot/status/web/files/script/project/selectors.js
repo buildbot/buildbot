@@ -30,6 +30,7 @@ define(['select2'], function () {
 			// unbind the click event on close for the sorting functionality	
 			$('#commonBranch_select,.select-tools-js').on("select2-close", function() {
 				$('.sort-name').unbind('click');
+				$('.select2-container').removeClass('select2-container-active');			
 			});	
 
 		}, getMaxChildWidth: function(sel) {

@@ -131,19 +131,19 @@ define(['helpers'], function (helpers) {
 				
 				var fw = $(data).find('#formWrapper')
 				
-				$(fw).appendTo(formContainer);
+				fw.children('#getForm').prepend('<div class="filter-table-input">'+
+	    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
+	  				'</div>');
 				
-				$('#content .blue-btn').val('update');
+				fw.appendTo(formContainer);												
 
-				// remove unwanted html for the popup box
-				$('#content1 .filter-table-input label, #content1 .filter-table-input .help-txt').remove();
-
-				helpers.jCenter(mib).fadeIn('fast');
+				helpers.jCenter(mib).fadeIn('fast',function(){					
+					$('#getForm .blue-btn').focus();
+				});
 				
 				$(window).resize(function() {					
 					helpers.jCenter(mib);
 				});
-
 
 				require(['selectors'],function(selectors) {
 		        	selectors.comboBox('#formWrapper .select-tools-js');
@@ -212,7 +212,7 @@ define(['helpers'], function (helpers) {
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 
 				$('<div class="more-info-box remove-js">' +
-				'<span class="close-btn"></span>' +
+				'<span tabindex="0" class="close-btn"></span>' +
 				'<h3 class="codebases-head">'+ headLine +'</h3>' +
 				'<div id="content1"></div></div>');
 

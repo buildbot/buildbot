@@ -41,6 +41,8 @@ define(['screensize'], function (screenSize) {
 				//helpers.updateBuilders();
 			}
 
+
+
        		// submenu overflow on small screens
 
 	        helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -365,10 +367,10 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart', function(e){
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length ) {
+			$(document, '.close-btn').bind('click touchstart keypress', function(e){
+				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length || e.which === 13) {
 					
-					if (clearEl === undefined) {
+					if (clearEl === undefined ) {
 						boxElement.remove();
 					} else {
 						boxElement.slideUp('fast', function(){
