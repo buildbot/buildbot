@@ -154,10 +154,10 @@ class StatusResourceBuild(HtmlResource):
         if not b.isFinished():
             step = b.getCurrentStep()
             if not step:
-                cxt['current_step'] = "[waiting for Lock]"
+                cxt['current_step'] = "[waiting for build slave]"
             else:
                 if step.isWaitingForLocks():
-                    cxt['current_step'] = "%s [waiting for Lock]" % step.getName()
+                    cxt['current_step'] = "%s [waiting for build slave]" % step.getName()
                 else:
                     cxt['current_step'] = step.getName()
             when = b.getETA()
