@@ -26,11 +26,9 @@ from buildbot.util import json
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):
-    """This source will poll a bitbucket repo slug for pull requests and submit
-    them to the change master."""
 
     compare_attrs = ["owner", "slug", "branch",
-                     "pollInterval", "usetimestamps",
+                     "pollInterval", "useTimestamps",
                      "category", "project", "pollAtLaunch"]
 
     db_class_name = 'BitbucketPullrequestPoller'
@@ -38,7 +36,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def __init__(self, owner, slug,
                  branch=None,
                  pollInterval=10 * 60,
-                 usetimestamps=True,
+                 useTimestamps=True,
                  category=None,
                  project='',
                  pullrequest_filter=True,
@@ -60,10 +58,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
         self.lastChange = time.time()
         self.lastPoll = time.time()
-        self.usetimestamps = usetimestamps
+        self.useTimestamps = useTimestamps
         self.category = category
         self.project = project
-        #self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
 
     def describe(self):
@@ -86,7 +83,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
+        log.msg(page)
         result = json.loads(page, encoding=self.encoding)
+        log.msg(result)
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
@@ -113,7 +112,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     author = pr['author']['display_name']
                     prlink = pr['links']['html']['href']
                     # Get time updated time. Note that the timezone offset is ignored.
-                    if self.usetimestamps:
+                    if self.useTimestamps:
                         updated = datetime.strptime(pr['updated_on'][:-6], '%Y-%m-%dT%H:%M:%S.%f')
                     else:
                         updated = datetime.now()
@@ -136,7 +135,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         author=author,
                         revision=revision,
                         revlink=revlink,
-                        #files=files,
                         comments='pull-request #%d: %s\n%s' % (nr, title, prlink),
                         when_timestamp=updated,
                         branch=self.branch,
@@ -153,8 +151,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         return None
 
     def _getCurrentRev(self, pr_id):
-        """Return a deferred datetime object for the given pull request number or None.
-        """
+        # Return a deferred datetime object for the given pull request number or None.
         d = self._getStateObjectId()
 
         def oid_callback(oid):
@@ -168,8 +165,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         return d
 
     def _setCurrentRev(self, pr_id, rev):
-        """Set the datetime entry for a specifed pull request.
-        """
+        # Set the datetime entry for a specifed pull request.
         d = self._getStateObjectId()
 
         def oid_callback(oid):
@@ -179,7 +175,6 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         return d
 
     def _getStateObjectId(self):
-        """Return a deferred for object id in state db.
-        """
+        # Return a deferred for object id in state db.
         return self.master.db.state.getObjectId(
             '%s/%s#%s' % (self.owner, self.slug, self.branch), self.db_class_name)

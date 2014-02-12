@@ -1075,7 +1075,7 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
     triggering particular builders.
 
 ``pullrequest_filter``
-    A callable which takes one parameter, the JSON notation of the pull request.
+    A callable which takes one parameter, the decoded Python object of the pull request JSON.
     If the it returns ``False`` the pull request is ignored.
     It can be used to define custom filters based on the content of the pull request.
     See the Bitbucket documentation for more information about the format of the response.
