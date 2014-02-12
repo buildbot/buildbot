@@ -1,4 +1,4 @@
-define(['screensize'], function (screenSize) {
+define(['screensize','text!templates/popups.html', 'mustache'], function (screenSize,popups,Mustache) {
 
     "use strict";
     var helpers;
@@ -177,24 +177,43 @@ define(['screensize'], function (screenSize) {
 				});
 			
 		}, selectBuildsAction: function() { // check all in tables and perform remove action
-			    $('#selectall').click(function () {			    	
-			        $('.fi-js').prop('checked', this.checked);
-			    });
-
-			    // Submit the all the checkfields
-				$('#submitBtn').click(function(){
-					$('#formWrapper form').submit();
-				});
-
-			    // remove individual build
-			    $('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){				
-					e.preventDefault();					
-					var iVal = $(this).prev().prev().val();
+			
 					
-					var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
-					$(hi).insertAfter($(this));
-					$('#formWrapper form').submit();
+				var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+				var preloader = $(mustacheTmpl);	
+				function ajaxPost(str) {
+					
+					$('body').append(preloader).show();
+					
+					
+					str = str+'&redirect=false';
+
+					$.ajax({
+						type: "POST",
+						url: 'buildqueue/_selected/cancelselected',
+						data: str,
+						success: function () {
+							preloader.remove();	               
+						}
+					});
+					return false;
+					
+				}				
+				$('#submitBtn').click(function(e){					
+					e.preventDefault();
+					var str = $("#formWrapper form").serialize();
+					console.log(str)
+					ajaxPost(str);				
 				});
+				$('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){	
+					e.preventDefault();
+					var iVal = $(this).prev().prev().val();
+					var str = 'cancelselected='+iVal;					
+					
+					ajaxPost(str);			
+			
+				});
+			
 
 		}, updateBuilders: function () {
 			$.ajax({
