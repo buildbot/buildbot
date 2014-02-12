@@ -479,7 +479,15 @@ class AllBuildsJsonResource(JsonResource):
             child = self.getChildWithDefault(-i, request)
             if not isinstance(child, BuildJsonResource):
                 continue
-            results[child.build_status.getNumber()] = child.asDict(request)
+
+            branch_filter = request.args.get("branch")
+            should_filter = False
+            if branch_filter is not None and len(child.build_status.sources) > 0:
+                #For now we assume that the first branch will be the one we want to check against
+                if child.build_status.sources[0].branch != branch_filter[0]:
+                    should_filter = True
+            if should_filter is False:
+                results[child.build_status.getNumber()] = child.asDict(request)
         return results
 
 
