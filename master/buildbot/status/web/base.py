@@ -132,6 +132,9 @@ def path_to_projects(request):
 def path_to_buildqueue(request):
     return path_to_root(request) + "buildqueue"
 
+def path_to_buildqueue_json(request):
+    return path_to_root(request) + "json/buildqueue"
+
 def getCodebasesArg(request=None, codebases={}):
     codebases_arg=''
     for key, val in request.args.iteritems():
