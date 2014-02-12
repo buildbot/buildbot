@@ -51,19 +51,8 @@ class ForceBuildDialogPage(HtmlResource):
         if args.has_key("builder_name") and len(args["builder_name"]) == 1:
             builder_status = status.getBuilder(args["builder_name"][0])
             bm = self.getBuildmaster(request)
-            builder = None
-            for b in bm.botmaster.getBuilders():
-                if b.name == builder_status.getName():
-                    builder = b
 
-            if builder:
-                slaves = []
-                for b in builder.slaves:
-                    if b.slave.slave_status.isConnected():
-                        slaves.append(b.slave.slave_status)
-                cxt['slaves'] = slaves
-            else:
-                cxt['slaves'] = builder_status.getSlaves()
+            cxt['slaves'] = [s for s in builder_status.getSlaves() if s.isConnected()]
 
             #Get branches
             encoding = getRequestCharset(request)
