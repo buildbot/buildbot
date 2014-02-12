@@ -653,6 +653,13 @@ class BuildStep(object, properties.PropertiesMixin):
             self.step_status.setText2(["interrupted"])
         self._finishFinished(results)
 
+    def addErrorResult(self, why):
+        self.addHTMLLog("err.html", formatFailure(why))
+        self.addCompleteLog("err.text", why.getTraceback())
+        results = EXCEPTION
+        hidden = False
+        return hidden, results
+
     def _finishFinished(self, results):
         # internal function to indicate that this step is done; this is separated
         # from finished() so that subclasses can override finished()
@@ -663,10 +670,7 @@ class BuildStep(object, properties.PropertiesMixin):
             hidden = self._maybeEvaluate(self.hideStepIf, results, self)
         except Exception:
             why = Failure()
-            self.addHTMLLog("err.html", formatFailure(why))
-            self.addCompleteLog("err.text", why.getTraceback())
-            results = EXCEPTION
-            hidden = False
+            hidden, results = self.addErrorResult(why)
 
         self.step_status.stepFinished(results)
         self.step_status.setHidden(hidden)
