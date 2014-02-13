@@ -15,6 +15,7 @@
 
 import time
 from twisted.internet import defer
+from twisted.python import log
 from buildbot.status.web.base import HtmlResource, StaticHTML, path_to_buildqueue_json
 from buildbot import util
 from buildbot.status.buildrequest import BuildRequestStatus
@@ -50,24 +51,27 @@ class BuildQueueResource(HtmlResource):
 
         buildqueue = []
         for pb in brstatus:
-            bq = {}
-            brdict = pb['brdict']
-            brs = pb['brstatus']
-            builder_status = status.getBuilder(brs.buildername)
-            bq['name'] = brs.buildername
-            bq['sourcestamps'] = yield brs.getSourceStamps()
-            bq['slaves'] = builder_status.slavenames
-            bq['reason'] = brdict['reason']
-            submitTime = yield brs.getSubmitTime()
-            bq['when'] = time.strftime("%b %d %H:%M:%S",
-                      time.localtime(submitTime))
-            bq['waiting'] = util.formatInterval(util.now() - submitTime)
-            bq['brid'] = brdict['brid']
-            builder = status.getBuilder(brs.buildername)
-            bq['builder_url'] = path_to_builder(req, builder, False)
-            bq['brdict'] = brdict
+            try:
+                bq = {}
+                brdict = pb['brdict']
+                brs = pb['brstatus']
+                builder_status = status.getBuilder(brs.buildername)
+                bq['name'] = brs.buildername
+                bq['sourcestamps'] = yield brs.getSourceStamps()
+                bq['slaves'] = builder_status.slavenames
+                bq['reason'] = brdict['reason']
+                submitTime = yield brs.getSubmitTime()
+                bq['when'] = time.strftime("%b %d %H:%M:%S",
+                          time.localtime(submitTime))
+                bq['waiting'] = util.formatInterval(util.now() - submitTime)
+                bq['brid'] = brdict['brid']
+                builder = status.getBuilder(brs.buildername)
+                bq['builder_url'] = path_to_builder(req, builder, False)
+                bq['brdict'] = brdict
 
-            buildqueue.append(bq)
+                buildqueue.append(bq)
+            except:
+                log.msg("Error: Something went wrong while loading {0}".format(pb))
 
         cxt['buildqueue'] =  buildqueue
 
