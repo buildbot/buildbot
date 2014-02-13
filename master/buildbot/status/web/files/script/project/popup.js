@@ -211,7 +211,7 @@ define(['helpers'], function (helpers) {
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 
 				$('<div class="more-info-box remove-js">' +
-				'<span tabindex="0" class="close-btn"></span>' +
+				'<span class="close-btn"></span>' +
 				'<h3 class="codebases-head">'+ headLine +'</h3>' +
 				'<div id="content1"></div></div>');
 

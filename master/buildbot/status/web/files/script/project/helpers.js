@@ -367,8 +367,8 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart keypress', function(e){
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length || e.which === 13) {
+			$(document, '.close-btn').bind('click touchstart', function(e){
+				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
 					
 					if (clearEl === undefined ) {
 						boxElement.remove();
