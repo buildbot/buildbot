@@ -83,9 +83,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
     @defer.inlineCallbacks
     def _processChanges(self, page):
-        log.msg(page)
         result = json.loads(page, encoding=self.encoding)
-        log.msg(result)
         for pr in result['values']:
             branch = pr['source']['branch']['name']
             nr = int(pr['id'])
