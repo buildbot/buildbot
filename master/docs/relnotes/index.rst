@@ -146,6 +146,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
+
 Fixes
 ~~~~~
 
