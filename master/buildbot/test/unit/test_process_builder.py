@@ -400,7 +400,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         requests = [ mkrq(i) for i in range(4) ]
 
         d = self.makeBuilder(nextBuild=nextBuild)
-        d.addCallback(lambda _ : self.bldr._chooseBuild(requests))
+        d.addCallback(lambda _ : self.bldr._chooseNextBuild(requests))
         def check(sb):
             self.assertIdentical(sb, requests[exp_choice])
         def failed(f):
@@ -410,7 +410,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     def test_chooseBuild_default(self):
         "default chooses the first in the list, which should be the earliest"
-        return self.do_test_chooseBuild(None, exp_choice=0)
+        def nextBuild(bldr, lst):
+            self.assertIdentical(bldr, self.bldr)
+            return lst[0]
+        return self.do_test_chooseBuild(nextBuild, exp_choice=0)
 
     def test_chooseBuild_nextBuild_simple(self):
         def nextBuild(bldr, lst):

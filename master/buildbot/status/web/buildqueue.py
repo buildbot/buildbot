@@ -48,7 +48,6 @@ class BuildQueueResource(HtmlResource):
             builder_status = status.getBuilder(brs.buildername)
             bq['name'] = brs.buildername
             bq['sourcestamps'] = yield brs.getSourceStamps()
-            bq['slaves'] = builder_status.slavenames
             bq['reason'] = brdict['reason']
             submitTime = yield brs.getSubmitTime()
             bq['when'] = time.strftime("%b %d %H:%M:%S",
@@ -58,6 +57,13 @@ class BuildQueueResource(HtmlResource):
             builder = status.getBuilder(brs.buildername)
             bq['builder_url'] = path_to_builder(req, builder, False)
             bq['brdict'] = brdict
+
+            #Get compatible slaves
+            build_request = yield brs._getBuildRequest()
+            if build_request.properties.hasProperty("selected_slave"):
+                bq['slaves'] = [build_request.properties.getProperty("selected_slave")]
+            else:
+                bq['slaves'] = builder_status.slavenames
 
             buildqueue.append(bq)
 

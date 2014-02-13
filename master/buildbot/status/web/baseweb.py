@@ -27,6 +27,7 @@ from buildbot.interfaces import IStatusReceiver
 from buildbot.status.web.base import StaticFile, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
+from buildbot.status.web.forms import FormsKatanaResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.olpb import OneLinePerBuild
@@ -48,6 +49,8 @@ from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
+
+
 
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
@@ -375,7 +378,7 @@ class WebStatus(service.MultiService):
         #self.putChild("login", LoginResource())
         self.putChild("logout", LogoutResource())
         self.putChild("login", LoginKatanaResource())
-
+        self.putChild("forms", FormsKatanaResource())
 
 
 

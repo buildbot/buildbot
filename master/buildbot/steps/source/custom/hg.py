@@ -75,8 +75,12 @@ class Hg(Mercurial):
 
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, comments = output.decode('utf-8', "replace").split(
-                os.linesep, 2)
+            try:
+                date, author, comments = output.decode('utf-8', "replace").split(
+                    os.linesep, 2)
+            except:
+                date, author, comments = output.decode('utf-8', "replace").split(
+                    "\n", 2)
 
             try:
                 stamp = float(date.split()[0])
