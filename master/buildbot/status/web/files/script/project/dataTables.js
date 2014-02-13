@@ -158,7 +158,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 								$(nTd).addClass('offline').text('Not connected');
 							} 
 							else if (oData.connected === true && oData.runningBuilds.length === 0) {
-								$(nTd).addClass('idle').text('idle');
+								$(nTd).addClass('idle').text('Idle');
 							} else if (oData.connected === true && oData.runningBuilds.length >0){							
 								var runningTxt = 'Running ' + oData.runningBuilds.length + ' build(s)';
 								$(nTd).addClass('building').text(runningTxt);
