@@ -18,13 +18,12 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
                   	var resultTxt = value.text;	
             		    	
                   			// timetable
-		                    var myInt = setInterval(function() {
-						    	helpers.startTimer($('#elapsedTimeJs'), startTime);
-						    },1000);
+                  			helpers.startCounter($('#elapsedTimeJs'), startTime)
+		                    
 
 							if (endTime) { 
 								// If the build is finished
-								clearInterval(myInt);        
+								  
 								// get the rest of the content
 								if(!window.location.hash) {
 							        window.location = window.location + '#finished';
@@ -200,6 +199,9 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 			             		}
 
 			             		if (key === 'url') {
+			             			
+			             			//var urlParse = value. 
+			             			console.log(value.hostname)
 			             			buildUrl.attr('href',value);	
 			             		}			             		
 			             	});
