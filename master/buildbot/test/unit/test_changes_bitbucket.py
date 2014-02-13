@@ -24,6 +24,7 @@ from twisted.trial import unittest
 from twisted.web import client
 from twisted.web.error import Error
 
+
 class SourceRest():
     template = """\
 {
@@ -54,6 +55,7 @@ class SourceRest():
     }
 }
 """
+
     def __init__(self, owner, slug, hash, date):
         self.owner = owner
         self.slug = slug
@@ -61,11 +63,19 @@ class SourceRest():
         self.date = date
 
     def request(self):
-        return self.template % {"owner" : self.owner, "slug" : self.slug,
-            "hash" : self.hash, "date": self.date }
+        return self.template % {
+            "owner": self.owner,
+            "slug": self.slug,
+            "hash": self.hash,
+            "date": self.date,
+        }
 
     def repo_request(self):
-        return self.repo_template % {"owner" : self.owner, "slug" : self.slug}
+        return self.repo_template % {
+            "owner": self.owner,
+            "slug": self.slug,
+        }
+
 
 class PullRequestRest():
     template = """\
@@ -96,7 +106,8 @@ class PullRequestRest():
 
 }
 """
-    def __init__(self, nr, title, description, display_name, source, created_on, updated_on = None):
+
+    def __init__(self, nr, title, description, display_name, source, created_on, updated_on=None):
         self.nr = nr
         self.title = title
         self.description = description
@@ -108,19 +119,19 @@ class PullRequestRest():
         else:
             self.updated_on = self.created_on
 
-
     def request(self):
         return self.template % {
-            "description" : self.description,
-            "title" : self.title,
-            "hash" : self.source.hash,
-            "owner" : self.source.owner,
-            "slug" : self.source.slug,
-            "display_name" : self.display_name,
-            "created_on" : self.created_on,
-            "updated_on" : self.updated_on,
+            "description": self.description,
+            "title": self.title,
+            "hash": self.source.hash,
+            "owner": self.source.owner,
+            "slug": self.source.slug,
+            "display_name": self.display_name,
+            "created_on": self.created_on,
+            "updated_on": self.updated_on,
             "id": self.nr,
-            }
+        }
+
 
 class PullRequestListRest():
     template = """\
@@ -165,6 +176,7 @@ class PullRequestListRest():
             "id": %(id)s
         }
 """
+
     def __init__(self, owner, slug, prs):
         self.owner = owner
         self.slug = slug
@@ -182,18 +194,18 @@ class PullRequestListRest():
         s = ""
         for pr in self.prs:
             s += self.template % {
-                "description" : pr.description,
-                "owner" : self.owner,
-                "slug" : self.slug,
-                "display_name" : pr.display_name,
-                "title" : pr.title,
-                "hash" : pr.source.hash,
-                "src_owner" : pr.source.owner,
-                "src_slug" : pr.source.slug,
+                "description": pr.description,
+                "owner": self.owner,
+                "slug": self.slug,
+                "display_name": pr.display_name,
+                "title": pr.title,
+                "hash": pr.source.hash,
+                "src_owner": pr.source.owner,
+                "src_slug": pr.source.slug,
                 "created_on": pr.created_on,
                 "updated_on": pr.updated_on,
                 "id": pr.nr,
-                }
+            }
         return """\
 {
 
@@ -204,6 +216,7 @@ class PullRequestListRest():
 
 }
 """ % s
+
     def getPage(self, url, timeout=None):
 
         list_url_re = re.compile(
@@ -237,17 +250,58 @@ class PullRequestListRest():
         raise Error(code=404)
 
 
-
 class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.TestCase):
 
     def setUp(self):
+        # create pull requests
+        self.date = "2013-10-15T20:38:20.001797+00:00"
+        src = SourceRest(
+            owner="contributor",
+            slug="slug",
+            hash="000000000000000000000000000001",
+            date=self.date,
+        )
+        pr = PullRequestRest(
+            nr=1,
+            title="title",
+            description="description",
+            display_name="contributor",
+            source=src,
+            created_on=self.date,
+        )
+        self.pr_list = PullRequestListRest(
+            owner="owner",
+            slug="slug",
+            prs=[pr],
+        )
+        # update
+        src = SourceRest(
+            owner="contributor",
+            slug="slug",
+            hash="000000000000000000000000000002",
+            date=self.date,
+        )
+        pr = PullRequestRest(
+            nr=1,
+            title="title",
+            description="description",
+            display_name="contributor",
+            source=src,
+            created_on=self.date,
+        )
+        self.pr_list2 = PullRequestListRest(
+            owner="owner",
+            slug="slug",
+            prs=[pr],
+        )
+
         d = self.setUpChangeSource()
 
         def create_poller(_):
             self.attachChangeSource(BitbucketPullrequestPoller(
                     owner='owner',
                     slug='slug',
-                ))
+            ))
 
         d.addCallback(create_poller)
         return d
@@ -264,7 +318,6 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.getPage_got_url = url
             return defer.succeed(result)
         self.patch(client, "getPage", fake)
-
 
     def _fakeGetPage404(self):
 
@@ -293,7 +346,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         return d
 
     def test_poll_no_pull_requests(self):
-        rest = PullRequestListRest(owner="owner",slug="slug",prs=[])
+        rest = PullRequestListRest(owner="owner", slug="slug", prs=[])
         self._fakeGetPage(rest.request())
         d = self.changesource.poll()
 
@@ -304,29 +357,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         return d
 
     def test_poll_new_pull_requests(self):
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -335,35 +368,15 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
         d.addCallback(check)
         return d
 
     def test_poll_no_updated_pull_request(self):
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -372,7 +385,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
             # repoll
             d = self.changesource.poll()
@@ -386,29 +399,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         return d
 
     def test_poll_updated_pull_request(self):
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -417,29 +410,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
-            # update
-            src = SourceRest(
-                owner="contributor",
-                slug="slug",
-                hash="000000000000000000000000000002",
-                date=date,
-                )
-            pr = PullRequestRest(
-                nr=1,
-                title="title",
-                description="description",
-                display_name="contributor",
-                source=src,
-                created_on=date,
-                )
-            pr_list = PullRequestListRest(
-                owner="owner",
-                slug="slug",
-                prs=[pr],
-                )
-            self.patch(client, "getPage", pr_list.getPage)
+            self.patch(client, "getPage", self.pr_list2.getPage)
             d = self.changesource.poll()
 
             def check2(_):
@@ -447,9 +420,10 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 self.assertEqual(self.changes_added[1]['author'], "contributor")
                 self.assertEqual(int(self.changes_added[1]['revision']), 2)
                 self.assertEqual(self.changes_added[1]['when_timestamp'],
-                    datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                    datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
             d.addCallback(check2)
+            return d
 
         d.addCallback(check)
         return d
@@ -458,32 +432,11 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         self.attachChangeSource(BitbucketPullrequestPoller(
                 owner='owner',
                 slug='slug',
-                pullrequest_filter=lambda x : False
-            ))
-
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
+                pullrequest_filter=lambda x: False
+        ))
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -493,37 +446,15 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d.addCallback(check)
         return d
 
-
     def test_poll_pull_request_filter_True(self):
         self.attachChangeSource(BitbucketPullrequestPoller(
                 owner='owner',
                 slug='slug',
-                pullrequest_filter=lambda x : True
-            ))
-
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
+                pullrequest_filter=lambda x: True
+        ))
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -532,7 +463,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
         d.addCallback(check)
         return d
@@ -542,31 +473,10 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 owner='owner',
                 slug='slug',
                 useTimestamps=False,
-            ))
-
-        date = "2013-10-15T20:38:20.001797+00:00"
-        src = SourceRest(
-            owner="contributor",
-            slug="slug",
-            hash="000000000000000000000000000001",
-            date=date,
-            )
-        pr = PullRequestRest(
-            nr=1,
-            title="title",
-            description="description",
-            display_name="contributor",
-            source=src,
-            created_on=date,
-            )
-        pr_list = PullRequestListRest(
-            owner="owner",
-            slug="slug",
-            prs=[pr],
-            )
+        ))
 
         # patch client.getPage()
-        self.patch(client, "getPage", pr_list.getPage)
+        self.patch(client, "getPage", self.pr_list.getPage)
 
         d = self.changesource.poll()
 
@@ -575,8 +485,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertNotEqual(self.changes_added[0]['when_timestamp'],
-                datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
 
         d.addCallback(check)
         return d
-
