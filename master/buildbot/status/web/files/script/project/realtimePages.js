@@ -211,44 +211,23 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 	        	//console.log(err);
 	        }
         }, rtBuildSlaves: function(m){
-        	
+        		var tbsorter = $('.tablesorter-js').dataTable();        		
+        		tbsorter.fnClearTable();        	
         	try {            		        
-          		var obj = JSON.parse(m);  	          	
-
-	          	var tbsorter = $('.tablesorter-js').dataTable();
-        		
-        		tbsorter.fnClearTable();        		
-          		
+          		var obj = JSON.parse(m);  	          		          		          		
           		$.each(obj, function (key, value) { 
           			var arObjData = [value];										
 					tbsorter.fnAddData(arObjData);	
-
-          			/*
-          			var item = $('[id="' + value.friendly_name + '"]');		
-          			var statusTd = item.find('.status-td');          		          		
-          				
-					statusTd.html(helpers.getSlavesResult(value.connected, value.runningBuilds));
-					statusTd.removeClass().addClass(helpers.getClassName(value.connected, value.runningBuilds));				
-					*/
-
           		});
             }
             catch(err) {
             }
         }, rtBuildqueue: function(m){
-        		var tbsorter = $('.tablesorter-js').dataTable();
-        		
+        		var tbsorter = $('.tablesorter-js').dataTable();        		
         		tbsorter.fnClearTable();
-
         	try {
-
 				var obj = JSON.parse(m);								
-
-				$.each(obj, function (key, value) {					
-					var arObjData = [value];										
-					tbsorter.fnAddData(arObjData);						
-				});	
-				
+				tbsorter.fnAddData(obj);														
             }
             catch(err) {
             }
