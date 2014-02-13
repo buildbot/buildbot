@@ -35,7 +35,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
 
-            self.check_length(buildsets_tbl.c.reason, reason)
+            reason_val = self.truncateColumn(buildsets_tbl.c.reason, reason)
+            self.check_length(buildsets_tbl.c.reason, reason_val)
             self.check_length(buildsets_tbl.c.external_idstring,
                     external_idstring)
 
@@ -44,7 +45,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # insert the buildset itself
             r = conn.execute(buildsets_tbl.insert(), dict(
                 sourcestampsetid=sourcestampsetid, submitted_at=submitted_at,
-                reason=reason, complete=0, complete_at=None, results=-1,
+                reason=reason_val, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 

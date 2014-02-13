@@ -491,7 +491,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_interrupt(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
-        self.expectOutcome(result=EXCEPTION, status_text=['interrupted'])
+        self.expectOutcome(result=EXCEPTION, status_text=['Trigger', 'interrupted'])
         self.expectTriggeredWith(a=({}, {}))
         d = self.runStep(expect_waitForFinish=True)
 
