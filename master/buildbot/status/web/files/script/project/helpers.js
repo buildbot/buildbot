@@ -406,31 +406,10 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 			
 		}, startCounter: function(el, myStartTimestamp) { 
-			var startTimestamp = parseInt(myStartTimestamp);			    
-		    var end = Math.round(+new Date()/1000);	
-		    var time = end - startTimestamp;	
-			var getTime = Math.round(time)				
-
-		    setInterval(function() {
-		    	getTime++;
-				var days = Math.floor(getTime / 86400),
-				hours = Math.floor(getTime / 3600) % 24,
-		        minutes = Math.floor(getTime / 60 % 60),
-		        seconds = Math.floor(getTime % 60),
-		        arr = [];
-		   		 if (days > 0) {
-				    arr.push(days == 1 ? '1 day ' : days + ' days');
-				 }
-		         if (hours > 0) {
-				    arr.push(hours == 1 ? '1 hr ' : hours + ' hrs');
-				 }
-				 if (minutes > 0 || hours > 0) {
-				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
-				 }
-				 if (seconds > 0 || minutes > 0 || hours > 0) {
-				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
-				 }
-				 el.html(arr.join(' '));
+			var startTimestamp = parseInt(myStartTimestamp);			    		    
+		    setInterval(function() {		    	
+				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
+				el.html(lastMessageTimeAgo);
 			 }, 1000);		
 
 		}, getTime: function  (start, end) {
