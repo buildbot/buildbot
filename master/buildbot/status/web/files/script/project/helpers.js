@@ -176,45 +176,55 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 					}
 				});
 			
-		}, selectBuildsAction: function() { // check all in tables and perform remove action
-			
+		}, selectBuildsAction: function() { // check all in tables and perform remove action		    
 					
-				var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
-				var preloader = $(mustacheTmpl);	
-				function ajaxPost(str) {
-					
-					$('body').append(preloader).show();
-					
-					
-					str = str+'&redirect=false';
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);	
 
-					$.ajax({
-						type: "POST",
-						url: 'buildqueue/_selected/cancelselected',
-						data: str,
-						success: function () {
-							preloader.remove();	               
-						}
-					});
-					return false;
-					
-				}				
-				$('#submitBtn').click(function(e){					
-					e.preventDefault();
-					var str = $("#formWrapper form").serialize();
-					console.log(str)
+			var selectAll = $('#selectall');
+
+			selectAll.click(function () {			    	
+		        $('.fi-js').prop('checked', this.checked);
+		    });
+
+			function ajaxPost(str) {					
+				$('body').append(preloader).show();					
+				var tableSorter = $('.tablesorter-js').dataTable();
+				str = str+'&ajax=true';
+
+				$.ajax({
+					type: "POST",
+					url: 'buildqueue/_selected/cancelselected',
+					data: str,
+					success: function (data) {
+						preloader.remove();						
+						tableSorter.fnClearTable();        			               												
+						$.each(data, function (key, value) { 
+		          			var arObjData = [value];										
+							tableSorter.fnAddData(arObjData);	
+						});					
+					}
+				});
+				return false;					
+			}				
+
+			$('#submitBtn').click(function(e){					
+				e.preventDefault();
+				var str = $("#formWrapper form").serialize();					
+				selectAll.prop('checked', false); 
+				if ($('.fi-js').prop('checked')) {
 					ajaxPost(str);				
-				});
-				$('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){	
-					e.preventDefault();
-					var iVal = $(this).prev().prev().val();
-					var str = 'cancelselected='+iVal;					
-					
-					ajaxPost(str);			
+				}
+				 
+				
+			});
+			$('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){					
+				e.preventDefault();
+				var iVal = $(this).prev().prev().val();
+				var str = 'cancelselected='+iVal;								
+				ajaxPost(str);						
+			});
 			
-				});
-			
-
 		}, updateBuilders: function () {
 			$.ajax({
 				url: "/json/builders/?filter=0",

@@ -135,7 +135,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						{					
 						"aTargets": [ 0 ],
 						"mRender": function (data,full,type)  {												
-							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
+							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,host_name:type.name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
 							return htmlnew;
 						}
 						},
@@ -215,7 +215,6 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
 	  				'</div>');
 				}
-
 
 			  	var filterTableInput = $('.dataTables_filter input');
 
