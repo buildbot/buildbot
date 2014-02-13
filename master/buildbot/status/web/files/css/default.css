@@ -1883,16 +1883,8 @@ a.grey-btn:hover,
 .close-btn:hover:after {
   color: #1f5184;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003191}}
-.close-btn:focus {
-  outline: none;
-}
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003193}}
-.close-btn:focus:after {
-  color: #1f5184;
-}
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003197}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003193}}
 .close-btn:after {
   color: #333333;
   content: "✖";
@@ -1901,7 +1893,7 @@ a.grey-btn:hover,
 }
 
 @media (min-width: 0) and (max-width: 570px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003208}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_buttons\.scss}line{font-family:\00003204}}
   .grey-btn + .dataTables_wrapper {
     margin-right: 0;
   }

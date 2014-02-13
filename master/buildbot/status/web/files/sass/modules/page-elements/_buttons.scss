@@ -187,11 +187,7 @@ a.grey-btn,
     cursor: pointer;    
     &:hover:after {
         color:#1f5184;
-    }
-    &:focus {
-        outline: none;           
-        &:after {color:#1f5184;}
-    }
+    }    
 }
 
 .close-btn:after {
