@@ -70,9 +70,12 @@ class BroadcastServerFactory(WebSocketServerFactory):
         if cachedJSON is None:
             return True
         else:
-            added, removed, modified, same = dict_compare(json, cachedJSON)
-            if len(added) > 0 or len(removed) > 0 or len(modified) > 0:
-                return True
+            if isinstance(cachedJSON, dict):
+                added, removed, modified, same = dict_compare(json, cachedJSON)
+                if len(added) > 0 or len(removed) > 0 or len(modified) > 0:
+                    return True
+            else:
+                return cachedJSON != json
 
         return False
 
@@ -109,7 +112,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     self.urlCacheDict[url].cachedJSON = jsonObj
                     clients = self.urlCacheDict[url].clients
                     jsonString = json.dumps(jsonObj)
-                    logging.info("JSON Changed, informing {0} client(s)".format(len(clients)))
+                    logging.info("JSON at {1} Changed, informing {0} client(s)".format(len(clients), url))
                     for client in clients:
                         client.sendMessage(jsonString)
             except Exception as e:
