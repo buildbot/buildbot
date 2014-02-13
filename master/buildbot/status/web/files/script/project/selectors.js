@@ -31,7 +31,7 @@ define(['select2'], function () {
 
 			// unbind the click event on close for the sorting functionality	
 			commonbranchSelect.add(selectBranches).on("select2-close", function() {
-				console.log('asf')
+				
 				$('.sort-name').unbind('click');
 				$('.select2-container').removeClass('select2-container-active');			
 			});	
@@ -44,7 +44,7 @@ define(['select2'], function () {
 			    var max = 80;
 			    sel.each(function(){
 			        var c_width = $(this).width();
-			        console.log(c_width)
+			        
 			        if (c_width > max) {
 			            max = c_width + 30;
 			        }
