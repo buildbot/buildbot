@@ -145,8 +145,7 @@ define(['helpers'], function (helpers) {
 					helpers.jCenter(mib);
 				});
 
-				require(['selectors'],function(selectors) {
-		        	selectors.comboBox('#formWrapper .select-tools-js');
+				require(['selectors'],function(selectors) {		        	
 		        	selectors.init();
 					$(window).resize(function() {
 						helpers.jCenter($('.more-info-box-js'));
