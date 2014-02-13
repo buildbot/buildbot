@@ -188,7 +188,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 
 			             			//var lastMessageTimeAgo = moment().utc(value[1]).fromNow();	
 			             			
-			             			helpers.startCounter(lastRun.find('.last-run'), value[1])
+			             			helpers.startCounterTimeago(lastRun.find('.last-run'), value[1])
 			             			
 
 

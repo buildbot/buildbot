@@ -403,15 +403,46 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
-
 			
 		}, startCounter: function(el, myStartTimestamp) { 
+			var startTimestamp = parseInt(myStartTimestamp);			    
+		    var end = Math.round(+new Date()/1000);	
+		    var time = end - startTimestamp;	
+			var getTime = Math.round(time)				
+
+		    setInterval(function() {
+		    	getTime++;
+				var
+				weeks = Math.floor(getTime / 604800) % 7,
+				days = Math.floor(getTime / 86400) % 24,
+				hours = Math.floor(getTime / 3600) % 24,
+		        minutes = Math.floor(getTime / 60 % 60),
+		        seconds = Math.floor(getTime % 60),
+		        arr = [];
+		         if (weeks > 0) {
+				    arr.push(weeks == 1 ? '1 week ' : weeks + ' weeks');
+				 }
+		   		 if (days > 0) {
+				    arr.push(days == 1 ? '1 day ' : days + ' days');
+				 }
+		         if (hours > 0) {
+				    arr.push(hours == 1 ? '1 hr ' : hours + ' hrs');
+				 }
+				 if (minutes > 0 || hours > 0) {
+				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
+				 }
+				 if (seconds > 0 || minutes > 0 || hours > 0) {
+				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
+				 }
+				 el.html(arr.join(' '));
+			 }, 1000);		
+
+		}, startCounterTimeago: function(el, myStartTimestamp) {
 			var startTimestamp = parseInt(myStartTimestamp);			    		    
 		    setInterval(function() {		    	
 				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
 				el.html(lastMessageTimeAgo);
-			 }, 1000);		
-
+			 }, 1000);	
 		}, getTime: function  (start, end) {
 	
 			if (end === null) {
