@@ -59,7 +59,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
-                 placement=None, price_multiplier=1.2):
+                 placement=None, price_multiplier=1.2, tags={}):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -200,6 +200,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if elastic_ip is not None:
             elastic_ip = self.conn.get_all_addresses([elastic_ip])[0]
         self.elastic_ip = elastic_ip
+        self.tags = tags
 
     def get_image(self):
         if self.image is not None:
@@ -271,6 +272,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(reservation)
         if None not in [instance_id, image_id, start_time]:
+            self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
