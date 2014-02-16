@@ -95,6 +95,8 @@ class Command:
     dict that is interpreted per-command.
 
     The setup(args) method is available for setup, and is run from __init__.
+    Mandatory args can be declared by listing them in the requiredArgs property.
+    They will be checked before calling the setup(args) method.
 
     The Command is started with start(). This method must be implemented in a
     subclass, and it should return a Deferred. When your step is done, you

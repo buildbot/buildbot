@@ -39,6 +39,7 @@ class CVS(SourceBaseCommand):
     """
 
     header = "cvs operation"
+    requiredArgs = ['cvsroot', 'cvsmodule']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

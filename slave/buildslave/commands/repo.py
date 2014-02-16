@@ -43,6 +43,7 @@ class Repo(SourceBaseCommand):
     """
 
     header = "repo operation"
+    requiredArgs = ['manifest_url']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
