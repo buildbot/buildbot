@@ -168,7 +168,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([{'rc': 1}], self.builder.show())
-        d.addErrback(check)
+        d.addCallback(check)
         return d
 
 
