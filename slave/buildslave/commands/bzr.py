@@ -32,6 +32,7 @@ class Bzr(SourceBaseCommand):
     """
 
     header = "bzr operation"
+    requiredArgs = ['repourl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

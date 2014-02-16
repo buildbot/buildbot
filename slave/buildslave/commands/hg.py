@@ -35,6 +35,7 @@ class Mercurial(SourceBaseCommand):
     """
 
     header = "mercurial operation"
+    requiredArgs = ['repourl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

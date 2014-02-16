@@ -62,6 +62,7 @@ class SlaveFileUploadCommand(TransferCommand):
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
     debug = False
+    requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -181,6 +182,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
 class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
     debug = False
+    requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -257,6 +259,7 @@ class SlaveFileDownloadCommand(TransferCommand):
         - ['mode']:      access mode for the new file
     """
     debug = False
+    requiredArgs = ['workdir', 'slavedest', 'reader', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
