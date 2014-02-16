@@ -167,7 +167,9 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertUpdates([{'rc': 1}], self.builder.show())
+            self.assertIn({'rc': os.errno.EEXIST},
+                          self.get_updates(),
+                          self.builder.show())
         d.addCallback(check)
         return d
 
@@ -187,9 +189,9 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertUpdates(
-                [{'rc': 1}],
-                self.builder.show())
+            self.assertIn({'rc': os.errno.ENOENT},
+                          self.get_updates(),
+                          self.builder.show())
         d.addCallback(check)
         return d
 
@@ -241,9 +243,9 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertUpdates(
-                [{'rc': 1}],
-                self.builder.show())
+            self.assertIn({'rc': os.errno.ENOENT},
+                          self.get_updates(),
+                          self.builder.show())
         d.addCallback(check)
         return d
 

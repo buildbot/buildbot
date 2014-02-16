@@ -43,7 +43,8 @@ class MakeDirectory(base.Command):
             self.sendStatus({'rc': 0})
         except OSError, e:
             log.msg("MakeDirectory %s failed" % dirname, e)
-            self.sendStatus({'rc': 1})
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus({'rc': e.errno})
 
 
 class RemoveDirectory(base.Command):
@@ -208,7 +209,8 @@ class StatFile(base.Command):
             self.sendStatus({'rc': 0})
         except OSError, e:
             log.msg("StatFile %s failed" % filename, e)
-            self.sendStatus({'rc': 1})
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
+            self.sendStatus({'rc': e.errno})
 
 
 class ListDir(base.Command):
@@ -219,12 +221,13 @@ class ListDir(base.Command):
     requireArgs = ['dir']
 
     def start(self):
-        directory = os.path.join(self.builder.basedir, self.args['dir'])
+        dirname = os.path.join(self.builder.basedir, self.args['dir'])
 
         try:
-            files = os.listdir(directory)
+            files = os.listdir(dirname)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
         except OSError, e:
-            log.msg("ListDir %s failed" % directory, e)
-            self.sendStatus({'rc': 1})
+            log.msg("ListDir %s failed" % dirname, e)
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus({'rc': e.errno})
