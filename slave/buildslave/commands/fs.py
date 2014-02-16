@@ -41,7 +41,7 @@ class MakeDirectory(base.Command):
             if not os.path.isdir(dirname):
                 os.makedirs(dirname)
             self.sendStatus({'rc': 0})
-        except OSError as e:
+        except OSError, e:
             log.msg("MakeDirectory %s failed" % dirname, e)
             self.sendStatus({'rc': 1})
 
@@ -206,7 +206,7 @@ class StatFile(base.Command):
             stat = os.stat(filename)
             self.sendStatus({'stat': tuple(stat)})
             self.sendStatus({'rc': 0})
-        except OSError as e:
+        except OSError, e:
             log.msg("StatFile %s failed" % filename, e)
             self.sendStatus({'rc': 1})
 
@@ -223,6 +223,6 @@ class ListDir(base.Command):
             files = os.listdir(directory)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
-        except OSError as e:
+        except OSError, e:
             log.msg("ListDir %s failed" % directory, e)
             self.sendStatus({'rc': 1})
