@@ -381,7 +381,6 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
 
-
 class TestBotFactory(unittest.TestCase):
 
     def setUp(self):
