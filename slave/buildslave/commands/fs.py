@@ -31,11 +31,11 @@ class MakeDirectory(base.Command):
 
     header = "mkdir"
 
+    # args['dir'] is relative to Builder directory, and is required.
+    requiredArgs = ['dir']
+
     def start(self):
-        args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['dir'] is not None
-        dirname = os.path.join(self.builder.basedir, args['dir'])
+        dirname = os.path.join(self.builder.basedir, self.args['dir'])
 
         try:
             if not os.path.isdir(dirname):
@@ -50,14 +50,15 @@ class RemoveDirectory(base.Command):
 
     header = "rmdir"
 
+    # args['dir'] is relative to Builder directory, and is required.
+    requiredArgs = ['dir']
+
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
 
     @defer.deferredGenerator
     def start(self):
         args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['dir'] is not None
         dirnames = args['dir']
 
         self.timeout = args.get('timeout', 120)
@@ -143,18 +144,17 @@ class CopyDirectory(base.Command):
 
     header = "cpdir"
 
+    # args['todir'] and args['fromdir'] are relative to Builder directory, and are required.
+    requiredArgs = ['todir', 'fromdir']
+
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
 
     def start(self):
         args = self.args
-        # args['todir'] is relative to Builder directory, and is required.
-        # args['fromdir'] is relative to Builder directory, and is required.
-        assert args['todir'] is not None
-        assert args['fromdir'] is not None
 
-        fromdir = os.path.join(self.builder.basedir, args['fromdir'])
-        todir = os.path.join(self.builder.basedir, args['todir'])
+        fromdir = os.path.join(self.builder.basedir, self.args['fromdir'])
+        todir = os.path.join(self.builder.basedir, self.args['todir'])
 
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
@@ -196,11 +196,11 @@ class StatFile(base.Command):
 
     header = "stat"
 
+    # args['file'] is relative to Builder directory, and is required.
+    requireArgs = ['file']
+
     def start(self):
-        args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['file'] is not None
-        filename = os.path.join(self.builder.basedir, args['file'])
+        filename = os.path.join(self.builder.basedir, self.args['file'])
 
         try:
             stat = os.stat(filename)
@@ -215,10 +215,12 @@ class ListDir(base.Command):
 
     header = "listdir"
 
+    # args['dir'] is relative to Builder directory, and is required.
+    requireArgs = ['dir']
+
     def start(self):
-        args = self.args
-        assert args['dir'] is not None
-        directory = os.path.join(self.builder.basedir, args['dir'])
+        directory = os.path.join(self.builder.basedir, self.args['dir'])
+
         try:
             files = os.listdir(directory)
             self.sendStatus({'files': files})

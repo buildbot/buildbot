@@ -51,6 +51,11 @@ class DummyCommand(Command):
         d.errback(RuntimeError("forced failure"))
 
 
+class DummyArgsCommand(DummyCommand):
+
+    requiredArgs = ['workdir']
+
+
 class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -129,3 +134,11 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
             self.assertState(True, False, True, True, "finishes with interrupted set")
         d.addCallback(check)
         return d
+
+    def test_required_args(self):
+        self.make_command(DummyArgsCommand, {'workdir': '.'})
+        try:
+            self.make_command(DummyArgsCommand, {'stdout': 'boo'})
+        except ValueError:
+            return
+        self.fail("Command was supposed to raise ValueError when missing args")

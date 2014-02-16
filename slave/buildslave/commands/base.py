@@ -130,6 +130,7 @@ class Command:
     #  sendStatus(dict) (zero or more)
     #  commandComplete() or commandInterrupted() (one, at end)
 
+    requiredArgs = []
     debug = False
     interrupted = False
     running = False  # set by Builder, cleared on shutdown or when the
@@ -142,6 +143,11 @@ class Command:
         self.stepId = stepId  # just for logging
         self.args = args
         self.startTime = None
+
+        missingArgs = filter(lambda arg: not arg in args, self.requiredArgs)
+        if missingArgs:
+            raise ValueError("%s is missing args: %s" %
+                             (self.__class__.__name__, ", ".join(missingArgs)))
         self.setup(args)
 
     def setup(self, args):
