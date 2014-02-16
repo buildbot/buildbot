@@ -21,7 +21,7 @@ from buildslave.commands import base
 
 class SlaveShellCommand(base.Command):
 
-    requiredArgs = ['workdir'] #, 'command']
+    requiredArgs = ['workdir', 'command']
 
     def start(self):
         args = self.args

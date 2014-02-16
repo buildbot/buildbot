@@ -338,12 +338,14 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_startCommand_failure(self):
-        # similar to test_startCommand, but leave out some args so the slave
-        # generates a failure
-
         # set up a fake step to receive updates
         st = FakeStep()
 
+        # patch runprocess to generate a failure
+        self.patch_runprocess(
+            Expect(['sleep', '10'], os.path.join(self.basedir, 'sb', 'workdir'))
+            + failure.Failure(Exception("Oops"))
+        )
         # patch the log.err, otherwise trial will think something *actually* failed
         self.patch(log, "err", lambda f: None)
 
@@ -352,6 +354,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         def do_start(_):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
+                                          command=['sleep', '10'],
                                           workdir='workdir',
                                       ))
         d.addCallback(do_start)
@@ -362,6 +365,21 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             self.assertTrue(isinstance(st.actions[1][1], failure.Failure))
         d.addCallback(check)
         return d
+
+    def test_startCommand_missing_args(self):
+        # set up a fake step to receive updates
+        st = FakeStep()
+
+        d = defer.succeed(None)
+
+        def do_start(_):
+            return self.sb.callRemote("startCommand", FakeRemote(st),
+                                      "13", "shell", dict())
+        d.addCallback(do_start)
+        d.addCallback(lambda _: self.assertTrue(False))
+        d.addErrback(lambda _: True)
+        return d
+
 
 
 class TestBotFactory(unittest.TestCase):
