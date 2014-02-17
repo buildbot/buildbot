@@ -41,6 +41,7 @@ class SVN(SourceBaseCommand):
     """
 
     header = "svn operation"
+    requiredArgs = ['svnurl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

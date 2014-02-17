@@ -42,6 +42,7 @@ class Monotone(SourceBaseCommand):
     """
 
     header = "monotone operation"
+    requiredArgs = ['repourl', 'branch']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

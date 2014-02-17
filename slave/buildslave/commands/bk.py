@@ -30,6 +30,7 @@ class BK(SourceBaseCommand):
     """
 
     header = "bk operation"
+    requiredArgs = ['bkurl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
