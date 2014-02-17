@@ -521,6 +521,11 @@ repos and workdir, this will work.
 Writing New BuildSteps
 ----------------------
 
+.. warning::
+
+    Buildbot is transitioning to a new, simpler style for writing custom steps.
+    See :doc:`new-style-steps` for details.
+
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
 Once written, this Step can be used in the :file:`master.cfg` file.
