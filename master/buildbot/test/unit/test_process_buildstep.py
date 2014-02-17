@@ -62,6 +62,12 @@ class NewStyleStep(buildstep.BuildStep):
         pass
 
 
+class NewStyleStep(buildstep.BuildStep):
+
+    def run(self):
+        pass
+
+
 class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
