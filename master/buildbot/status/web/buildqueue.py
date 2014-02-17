@@ -15,8 +15,7 @@
 
 import time
 from twisted.internet import defer
-from twisted.python import log
-from buildbot.status.web.base import HtmlResource, StaticHTML, path_to_buildqueue_json
+from buildbot.status.web.base import HtmlResource
 from buildbot import util
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import path_to_builder, BuildLineMixin, ActionResource, path_to_buildqueue, path_to_root
@@ -41,37 +40,32 @@ class BuildQueueResource(HtmlResource):
         brstatus = [ { 'brstatus' : BuildRequestStatus(brdict['buildername'], brdict['brid'], status), 'brdict' : brdict}
                 for brdict in unclaimed_brq]
 
-        for br in brstatus:
-            br['sortvalue'] = yield br['brstatus'].getSubmitTime()
-
-        def sortQueue(br, otherbr):
-            return br['sortvalue'] - otherbr['sortvalue']
-
-        brstatus = sorted(brstatus, cmp=sortQueue)
-
         buildqueue = []
         for pb in brstatus:
-            try:
-                bq = {}
-                brdict = pb['brdict']
-                brs = pb['brstatus']
-                builder_status = status.getBuilder(brs.buildername)
-                bq['name'] = brs.buildername
-                bq['sourcestamps'] = yield brs.getSourceStamps()
-                bq['slaves'] = builder_status.slavenames
-                bq['reason'] = brdict['reason']
-                submitTime = yield brs.getSubmitTime()
-                bq['when'] = time.strftime("%b %d %H:%M:%S",
-                          time.localtime(submitTime))
-                bq['waiting'] = util.formatInterval(util.now() - submitTime)
-                bq['brid'] = brdict['brid']
-                builder = status.getBuilder(brs.buildername)
-                bq['builder_url'] = path_to_builder(req, builder, False)
-                bq['brdict'] = brdict
+            bq = {}
+            brdict = pb['brdict']
+            brs = pb['brstatus']
+            builder_status = status.getBuilder(brs.buildername)
+            bq['name'] = brs.buildername
+            bq['sourcestamps'] = yield brs.getSourceStamps()
+            bq['reason'] = brdict['reason']
+            submitTime = yield brs.getSubmitTime()
+            bq['when'] = time.strftime("%b %d %H:%M:%S",
+                      time.localtime(submitTime))
+            bq['waiting'] = util.formatInterval(util.now() - submitTime)
+            bq['brid'] = brdict['brid']
+            builder = status.getBuilder(brs.buildername)
+            bq['builder_url'] = path_to_builder(req, builder, False)
+            bq['brdict'] = brdict
 
-                buildqueue.append(bq)
-            except:
-                log.msg("Error: Something went wrong while loading {0}".format(pb))
+            #Get compatible slaves
+            build_request = yield brs._getBuildRequest()
+            if build_request.properties.hasProperty("selected_slave"):
+                bq['slaves'] = [build_request.properties.getProperty("selected_slave")]
+            else:
+                bq['slaves'] = builder_status.slavenames
+
+            buildqueue.append(bq)
 
         cxt['buildqueue'] =  buildqueue
 
@@ -111,10 +105,6 @@ class CancelBuildQueueActionResource(ActionResource):
 
         buildrequest = [int(b) for b in req.args.get("cancelselected", []) if b]
 
-        ajax = req.args.get("ajax", "false")
-        if not isinstance(ajax, basestring):
-            ajax = ajax[0]
-
         ## get only the buildrequest from the list!
         brdicts = yield master.db.buildrequests.getBuildRequests(claimed=False, brids=buildrequest)
 
@@ -126,7 +116,4 @@ class CancelBuildQueueActionResource(ActionResource):
             yield brc.cancel()
 
         # go back to the buildqueue page
-        if "false" in ajax.lower():
-            defer.returnValue(path_to_buildqueue(req))
-        else:
-            defer.returnValue(path_to_buildqueue_json(req))
+        defer.returnValue(path_to_buildqueue(req))

@@ -38,6 +38,8 @@
 {{/latestBuild}}
 
 {{#customBuild}}
-	<a data-returnpage="builders" data-b="../../projects/PhysX%203/builders/PhysX%203%20%3E%20Metro" data-b_name="PhysX 3 &gt; Metro" data-rt_update="extforms" data-popuptitle="Run custom build" data-contenttype="form" href="#" title="Run custom build" class="ajaxbtn more-info">
+	<a class="ajaxbtn more-info" title="Run custom build" href="#" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" data-b_name="{{ b.name }}" data-b="{{b.builder_url}}" data-returnpage="builders">
 	</a>
+	<a class="run-build-js run-build" title="Run build with default values"  href="#">
+</a>
 {{/customBuild}}

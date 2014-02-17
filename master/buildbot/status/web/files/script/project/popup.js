@@ -44,7 +44,8 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			});
 			
 			// popbox for ajaxcontent
-			$('.ajaxbtn').click(function(e){
+			
+			$('#tablesorterRt').delegate('.ajaxbtn', 'click', function(e){
 				e.preventDefault();
 				popup.externalContentPopup($(this));
 			});
@@ -194,18 +195,31 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			var popupTitle = thisEl.attr('data-popuptitle');
 			var datab = thisEl.attr('data-b');
 			var dataindexb = thisEl.attr('data-indexb');
+            var dataReturnPage = thisEl.attr('data-returnpage');
 			var rtUpdate = thisEl.attr('data-rt_update');
-			var contentType = thisEl.attr('data-contenttype'); 
+			var contentType = thisEl.attr('data-contenttype');
+            var builder_name = thisEl.attr('data-b_name');
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+            var body = $('body');
+			body.append(preloader);
+			var mib = popup.htmlModule (popupTitle);
+			mib.appendTo(body);
 
-			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
-			var preloader = $(mustacheTmpl);
-			$('body').append(preloader);
-			var mustacheTmplOutBox = Mustache.render(popups, {'popupOuter':'true','headline':popupTitle});
-			var mib = $(mustacheTmplOutBox);			
-			mib.appendTo($('body'));
+            //get all branches
+            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            $.each(sURLVariables, function(index, val) {
+                var sParameterName = val.split('=');
+                if (sParameterName[0].indexOf("_branch") >= 0) {
+                    urlParams[sParameterName[0]] = sParameterName[1];
+                    console.log(val)
+                }
+            });
 			
 			// get currentpage with url parameters
-			$.get('', {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb}).done(function(data) {
+            var url = location.protocol + "//" + location.host + "/forms/forceBuild";
+			$.get(url, urlParams).done(function(data) {
 				var exContent = $('#content1');
 				preloader.remove();
 				$(data).appendTo(exContent);
@@ -219,13 +233,21 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				
 				helpers.jCenter(mib).fadeIn('fast');
 				$(window).resize(function() {
-					helpers.jCenter(mib)
+					helpers.jCenter(mib);
 				});
 				// popup.customTabs();
 				helpers.closePopup(mib);
 				
 
 			});
+		}, htmlModule: function (headLine) { // html chunks
+				var mib = 
+				$('<div class="more-info-box remove-js">' +
+				'<span class="close-btn"></span>' +
+				'<h3 class="codebases-head">'+ headLine +'</h3>' +
+				'<div id="content1"></div></div>');
+
+			return mib;
 		}
 	};
 	 return popup;

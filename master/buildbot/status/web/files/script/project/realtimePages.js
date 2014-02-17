@@ -234,7 +234,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
         		tbsorter.fnClearTable();
         	try {
 				var obj = JSON.parse(m);								
-				console.log([obj])
+				
 				tbsorter.fnAddData(obj);	
 				
 
