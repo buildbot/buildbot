@@ -170,6 +170,10 @@ The following methods now return a Deferred:
  * ``log.addStderr``
  * ``log.addHeader``
  * ``log.finish`` (see "Log Objects", below)
+ * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStdout`
+ * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStderr`
+ * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addHeader`
+ * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addToLog`
  * :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog`
  * :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`
  * :py:meth:`buildbot.process.buildstep.BuildStep.addURL`

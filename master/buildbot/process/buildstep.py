@@ -138,7 +138,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
             return f
 
     def _catchup(self):
-        if not self.delayedOperations:
+        if not self.asyncLogfile or not self.delayedOperations:
             return
         op = self.delayedOperations.pop(0)
 
@@ -1010,7 +1010,7 @@ class ShellMixin(object):
             cmd.useLog(stdio, False)
         for logname, remotefilename in self.logfiles.items():
             if self.lazylogfiles:
-                # TODO/XXX: addLog's async.. refactor this whole thing
+                # it's OK if this does, or does not, return a Deferred
                 callback = lambda cmd_arg, logname=logname: self.addLog(logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
