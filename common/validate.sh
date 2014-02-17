@@ -76,7 +76,9 @@ trap 'rm -f ${tempfile}' 1 2 3 15
 git diff --name-only $REVRANGE | grep '\.py$' | grep -v '\(^master/\(contrib\|docs\)\|/setup\.py\)' > ${tempfile}
 py_files=()
 while read line; do
-    py_files+=($line)
+    if test -f "${line}"; then
+        py_files+=($line)
+    fi
 done < ${tempfile}
 
 echo "${MAGENTA}Validating the following commits:${NORM}"

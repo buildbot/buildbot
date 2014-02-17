@@ -228,6 +228,7 @@ class RemoteBuild(pb.Referenceable):
         self.observers.append(observer)
         s = BuildSubscriber(observer)
         self.b.subscribe(s, updateInterval)
+        observer.notifyOnDisconnect(lambda _: self.b.unsubscribe(s))
 
     def remote_unsubscribe(self, observer):
         # TODO: is the observer automatically unsubscribed when the build

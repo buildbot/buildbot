@@ -33,6 +33,8 @@ class P4Base(SourceBaseCommand):
     ['p4client'] (optional): client spec to use
     """
 
+    requiredArgs = ['p4port']
+
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
         self.p4port = args['p4port']

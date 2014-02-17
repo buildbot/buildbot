@@ -16,8 +16,8 @@
 
 import time
 
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.utils import formatdate
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -410,6 +410,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave_status.setGraceful(False)
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
+        self.slave_status.addPauseWatcher(self._pauseChanged)
 
         d = defer.succeed(None)
 
@@ -517,6 +518,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave = None
         self._old_builder_list = []
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
+        self.slave_status.removePauseWatcher(self._pauseChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.master.status.slaveDisconnected(self.slavename)
@@ -763,6 +765,12 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down slave')
 
+    def _pauseChanged(self, paused):
+        if paused is True:
+            self.botmaster.master.status.slavePaused(self.slavename)
+        else:
+            self.botmaster.master.status.slaveUnpaused(self.slavename)
+
     def pause(self):
         """Stop running new builds on the slave."""
         self.slave_status.setPaused(True)
@@ -773,7 +781,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def isPaused(self):
-        return self.paused
+        return self.slave_status.isPaused()
 
 
 class BuildSlave(AbstractBuildSlave):

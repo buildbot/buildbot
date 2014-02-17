@@ -235,6 +235,14 @@ def in_reactor(f):
     wrap._orig = f  # for tests
     return wrap
 
+
+def asyncSleep(delay):
+    from twisted.internet import reactor, defer
+    d = defer.Deferred()
+    reactor.callLater(delay, d.callback, None)
+    return d
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',

@@ -406,9 +406,8 @@ The Git step takes the following arguments:
    lack of output, but requires Git 1.7.2 or later.
 
 ``retryFetch``
-   (optional): this value defaults to ``False``. In any case if
-   fetch fails buildbot retries to fetch again instead of failing the
-   entire source checkout.
+   (optional): defaults to ``False``.
+   If true, if the ``git fetch`` fails then buildbot retries to fetch again instead of failing the entire source checkout.
 
 ``clobberOnFailure``
    (optional): defaults to ``False``. If a fetch or full clone
@@ -2053,24 +2052,26 @@ source code filenames involved).
 .. bb:step:: VC9
 .. bb:step:: VC10
 .. bb:step:: VC11
+.. bb:step:: VC12
 .. bb:step:: VS2003
 .. bb:step:: VS2005
 .. bb:step:: VS2008
 .. bb:step:: VS2010
 .. bb:step:: VS2012
+.. bb:step:: VS2013
 .. bb:step:: VCExpress9
-.. bb:step:: MsBuild
+.. bb:step:: MsBuild4
+.. bb:step:: MsBuild12
 
 Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-11 (aka Visual Studio 2003-2012 and VCExpress9) are supported via calling
-``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
-``MsBuild`` step. These steps will take care of setting up a clean compilation
-environment, parsing the generated
-output in real time and delivering as detailed as possible information
-about the compilation executed.
+VC++ 6-12 (aka Visual Studio 2003-2013 and VCExpress9) are supported via calling
+``devenv``. Msbuild as well as Windows Driver Kit 8 are supported via the
+``MsBuild4`` and ``MsBuild12`` steps. These steps will take care of setting up a
+clean compilation environment, parsing the generated output in real time, and
+delivering as detailed as possible information about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes are:
 
@@ -2080,13 +2081,16 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC9``
  * ``VC10``
  * ``VC11``
+ * ``VC12``
  * ``VS2003``
  * ``VS2005``
  * ``VS2008``
  * ``VS2010``
  * ``VS2012``
+ * ``VS2013``
  * ``VCExpress9``
- * ``MsBuild``
+ * ``MsBuild4``
+ * ``MsBuild12``
 
 The available constructor arguments are
 
@@ -2131,7 +2135,7 @@ The available constructor arguments are
 ``arch``
     That one is only available with the class VS2005 (VC8). It gives the
     target architecture of the built artifact. It defaults to ``x86`` and
-    does not apply to ``MsBuild``. Please see ``platform`` below.
+    does not apply to ``MsBuild4`` or ``MsBuild12``. Please see ``platform`` below.
 
 ``project``
     This gives the specific project to build from within a
@@ -2139,33 +2143,34 @@ The available constructor arguments are
     for building cmake generate projects.
 
 ``platform``
-    This is a mandatory argument for MsBuild specifying the target platform
-    such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
-    driver targets that appear once Windows Driver Kit 8 is installed.
+    This is a mandatory argument for ``MsBuild4`` and ``MsBuild12`` specifying
+    the target platform such as 'Win32', 'x64' or 'Vista Debug'. The last one
+    is an example of driver targets that appear once Windows Driver Kit 8 is
+    installed.
 
-Here is an example on how to drive compilation with Visual Studio 2010::
+Here is an example on how to drive compilation with Visual Studio 2013::
 
-    from buildbot.steps.VisualStudio import VS2010
+    from buildbot.steps.vstudio import VS2013
 
     f.addStep(
-        VS2010(projectfile="project.sln", config="release",
+        VS2013(projectfile="project.sln", config="release",
             arch="x64", mode="build",
                INCLUDE=[r'C:\3rd-pary\libmagic\include'],
                LIB=[r'C:\3rd-party\libmagic\lib-x64']))
 
-Here is a similar example using "msbuild"::
+Here is a similar example using "MsBuild12"::
 
-    from buildbot.steps.VisualStudio import MsBuild
+    from buildbot.steps.vstudio import MsBuild12
 
     # Build one project in Release mode for Win32
     f.addStep(
-        MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
+        MsBuild12(projectfile="trunk.sln", config="Release", platform="Win32",
                 workdir="trunk",
                 project="tools\\protoc"))
 
     # Build the entire solution in Debug mode for x64
     f.addStep(
-        MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
+        MsBuild12(projectfile="trunk.sln", config='Debug', platform='x64',
                 workdir="trunk"))
 
 
@@ -2821,6 +2826,63 @@ The optional ``compress`` argument can be given as ``'gz'`` or
           master as originally on the slave, see :option:`buildslave
           create-slave --umask` to change the default one.
 
+.. bb:step:: MultipleFileUpload
+
+Transferring Multiple Files At Once
++++++++++++++++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.transfer.MultipleFileUpload
+
+In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps
+there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files
+(and directories) in a single :class:`BuildStep`.
+The step supports all arguments that are supported by :bb:step:`FileUpload` and
+:bb:step:`DirectoryUpload`, but instead of a the single ``slavesrc`` parameter
+it takes a (plural) ``slavesrcs`` parameter. This parameter should either be a
+list, or something that can be rendered as a list.::
+
+    from buildbot.steps.shell import ShellCommand, Test
+    from buildbot.steps.transfer import MultipleFileUpload
+
+    f.addStep(ShellCommand(command=["make", "test"]))
+    f.addStep(ShellCommand(command=["make", "docs"]))
+    f.addStep(MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+                                 masterdest="~/public_html",
+                                 url="~buildbot"))
+
+The ``url=`` parameter, can be used to specify a link to be displayed in the
+HTML status of the step.
+
+The way URLs are added to the step can be customized by extending the
+:bb:step:`MultipleFileUpload` class. the `allUploadsDone` method is called
+after all files have been uploaded and sets the URL. The `uploadDone` method
+is called once for each uploaded file and can be used to create file-specific
+links.::
+
+    from buildbot.steps.transfer import MultipleFileUpload
+    import os.path
+
+    class CustomFileUpload(MultipleFileUpload):
+        linkTypes = ('.html', '.txt')
+
+        def linkFile(self, basename):
+            name, ext = os.path.splitext(basename)
+            return ext in self.linkTypes
+
+        def uploadDone(self, result, source, masterdest):
+            if self.url:
+                basename = os.path.basename(source)
+                if self.linkFile(basename):
+                    self.addURL(self.url + '/' + basename, basename)
+
+        def allUploadsDone(self, result, sources, masterdest):
+            if self.url:
+                notLinked = filter(lambda src: not self.linkFile(src), sources)
+                numFiles = len(notLinked)
+                if numFiles:
+                    self.addURL(self.url, '... %d more' % numFiles)
+
+
 .. bb:step:: StringDownload
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
@@ -2992,6 +3054,8 @@ stderr is lost.  For example, given ::
 Then ``my_extract`` will see ``stdout="output1\noutput2\n"``
 and ``stderr="error\n"``.
 
+Avoid using the ``extract_fn`` form of this step with commands that produce a great deal of output, as the output is buffered in memory until complete.
+
 .. bb:step:: SetPropertiesFromEnv
 
 .. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
@@ -3056,10 +3120,10 @@ then the buildstep succeeds immediately after triggering the schedulers.
 The SourceStamps to use for the triggered build are controlled by the arguments
 ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamps``.  If
 ``updateSourceStamp`` is ``True`` (the default), then step updates the
-:class:`SourceStamp`s given to the :bb:sched:`Triggerable` schedulers to include
+source stamps given to the :bb:sched:`Triggerable` schedulers to include
 ``got_revision`` (the revision actually used in this build) as ``revision``
 (the revision to use in the triggered builds). This is useful to ensure that
-all of the builds use exactly the same :class:`SourceStamp`s, even if other
+all of the builds use exactly the same source stamps, even if other
 :class:`Change`\s have occurred while the build was running. If
 ``updateSourceStamp`` is False (and neither of the other arguments are
 specified), then the exact same SourceStamps are used. If ``alwaysUseLatest`` is

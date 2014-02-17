@@ -19,11 +19,11 @@ import types
 import urllib
 
 from StringIO import StringIO
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMENonMultipart import MIMENonMultipart
-from email.MIMEText import MIMEText
-from email.Message import Message
-from email.Utils import formatdate
+from email.message import Message
+from email.mime.multipart import MIMEMultipart
+from email.mime.nonmultipart import MIMENonMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -45,8 +45,8 @@ except ImportError:
 
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
-from email import Charset
-Charset.add_charset('utf-8', Charset.SHORTEST, None, 'utf-8')
+from email import charset
+charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 
 from buildbot import config
 from buildbot import interfaces
@@ -92,69 +92,86 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
-def defaultMessage(mode, name, build, results, master_status):
-    """Generate a buildbot mail message and return a tuple of message text
-        and type."""
-    ss_list = build.getSourceStamps()
-
+def _defaultMessageIntro(mode, results, build):
     prev = build.getPreviousBuild()
 
-    text = ""
     if results == FAILURE:
         if "change" in mode and prev and prev.getResults() != results or \
                 "problem" in mode and prev and prev.getResults() != FAILURE:
-            text += "The Buildbot has detected a new failure"
+            text = "The Buildbot has detected a new failure"
         else:
-            text += "The Buildbot has detected a failed build"
+            text = "The Buildbot has detected a failed build"
     elif results == WARNINGS:
-        text += "The Buildbot has detected a problem in the build"
+        text = "The Buildbot has detected a problem in the build"
     elif results == SUCCESS:
         if "change" in mode and prev and prev.getResults() != results:
-            text += "The Buildbot has detected a restored build"
+            text = "The Buildbot has detected a restored build"
         else:
-            text += "The Buildbot has detected a passing build"
+            text = "The Buildbot has detected a passing build"
     elif results == EXCEPTION:
-        text += "The Buildbot has detected a build exception"
+        text = "The Buildbot has detected a build exception"
 
+    return text
+
+
+def _defaultMessageProjects(source_stamps, master_status):
     projects = []
-    if ss_list:
-        for ss in ss_list:
-            if ss.project and ss.project not in projects:
-                projects.append(ss.project)
+
+    for ss in source_stamps:
+        if ss.project and ss.project not in projects:
+            projects.append(ss.project)
+
     if not projects:
         projects = [master_status.getTitle()]
-    text += " on builder %s while building %s.\n" % (name, ', '.join(projects))
 
-    if master_status.getURLForThing(build):
-        text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
+    return ', '.join(projects)
+
+
+def _defaultMessageURLs(master_status, build):
+    text = ""
+
+    # add build URL if available
+    url = master_status.getURLForThing(build)
+    if url:
+        text += " Full details are available at:\n    %s\n" % url
+
     text += "\n"
 
-    if master_status.getBuildbotURL():
-        text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
+    # add buildbot main URL if available
+    url = master_status.getBuildbotURL()
+    if url:
+        text += "Buildbot URL: %s\n\n" % urllib.quote(url, '/:')
 
-    text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
-    text += "Build Reason: %s\n" % build.getReason()
+    return text
 
-    for ss in ss_list:
+
+def _defaultMessageSourceStamps(source_stamps):
+    text = ""
+
+    for ss in source_stamps:
         source = ""
-        if ss and ss.branch:
+
+        if ss.branch:
             source += "[branch %s] " % ss.branch
-        if ss and ss.revision:
+
+        if ss.revision:
             source += str(ss.revision)
         else:
             source += "HEAD"
-        if ss and ss.patch:
+
+        if ss.patch:
             source += " (plus patch)"
 
         discriminator = ""
         if ss.codebase:
             discriminator = " '%s'" % ss.codebase
+
         text += "Build Source Stamp%s: %s\n" % (discriminator, source)
 
-    text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
+    return text
 
-    text += "\n"
 
+def _defaultMessageSummary(build, results):
     t = build.getText()
     if t:
         t = ": " + " ".join(t)
@@ -162,16 +179,38 @@ def defaultMessage(mode, name, build, results, master_status):
         t = ""
 
     if results == SUCCESS:
-        text += "Build succeeded!\n"
+        text = "Build succeeded!\n"
     elif results == WARNINGS:
-        text += "Build Had Warnings%s\n" % t
+        text = "Build Had Warnings%s\n" % t
     else:
-        text += "BUILD FAILED%s\n" % t
+        text = "BUILD FAILED%s\n" % t
 
+    return text
+
+
+def defaultMessage(mode, name, build, results, master_status):
+    """Generate a buildbot mail message and return a tuple of message text
+        and type."""
+    ss_list = build.getSourceStamps()
+
+    text = _defaultMessageIntro(mode, results, build)
+    text += " on builder %s while building %s." % \
+            (name, _defaultMessageProjects(ss_list, master_status))
+
+    text += _defaultMessageURLs(master_status, build)
+
+    text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
+    text += "Build Reason: %s\n" % build.getReason()
+    text += _defaultMessageSourceStamps(ss_list)
+    text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
     text += "\n"
-    text += "sincerely,\n"
+
+    text += _defaultMessageSummary(build, results)
+    text += "\n"
+    text += "Sincerely,\n"
     text += " -The Buildbot\n"
     text += "\n"
+
     return {'body': text, 'type': 'plain'}
 
 

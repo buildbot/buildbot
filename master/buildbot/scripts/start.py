@@ -47,7 +47,7 @@ class Follower:
             print """
 The buildmaster took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
-line that says 'configuration update complete' to verify correct startup.
+line that says 'BuildMaster is Running' to verify correct startup.
 """
         elif why.check(ReconfigError):
             print """

@@ -337,7 +337,7 @@ class WebStatus(service.MultiService):
         if change_hook_auth is not None:
             self.change_hook_auth = []
             for checker in change_hook_auth:
-                if isinstance(checker, str):
+                if isinstance(checker, basestring):
                     try:
                         checker = strcred.makeChecker(checker)
                     except Exception, error:
@@ -477,7 +477,8 @@ class WebStatus(service.MultiService):
         else:
             revlink = self.master.config.revlink
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects, self.jinja_loaders)
+                                        self.repositories, self.projects,
+                                        self.jinja_loaders, self.master.basedir)
 
         if not self.site:
 

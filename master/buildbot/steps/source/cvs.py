@@ -16,7 +16,7 @@
 import re
 import time
 
-from email.Utils import formatdate
+from email.utils import formatdate
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -243,7 +243,7 @@ class CVS(Source):
             self.setStatus(self.cmd, results)
             return results
         d.addCallback(_gotResults)
-        d.addCallbacks(self.finished, self.checkDisconnect)
+        d.addCallback(self.finished)
         return d
 
     def checkLogin(self, _):

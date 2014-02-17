@@ -15,6 +15,7 @@
 
 
 import os
+import platform
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -77,7 +78,11 @@ class LogWatcher(LineOnlyReceiver):
         # been seen within 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
-        self.p = reactor.spawnProcess(self.pp, "/usr/bin/tail",
+        if platform.system().lower() == 'sunos' and os.path.exists('/usr/xpg4/bin/tail'):
+            tailBin = "/usr/xpg4/bin/tail"
+        else:
+            tailBin = "/usr/bin/tail"
+        self.p = reactor.spawnProcess(self.pp, tailBin,
                                       ("tail", "-f", "-n", "0", self.logfile),
                                       env=os.environ,
                                       )

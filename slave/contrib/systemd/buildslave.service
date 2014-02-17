@@ -1,0 +1,17 @@
+[Unit]
+Description=Buildbot Slave
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/srv/buildslave/linux-slave/twistd.pid
+WorkingDirectory=/srv/buildslave
+ExecStart=/usr/bin/buildslave start linux-slave
+ExecReload=/usr/bin/buildslave restart linux-slave
+ExecStop=/usr/bin/buildslave stop linux-slave
+Restart=always
+User=buildslave
+
+[Install]
+WantedBy=multi-user.target

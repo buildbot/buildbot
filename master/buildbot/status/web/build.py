@@ -41,6 +41,11 @@ from buildbot.status.web.tests import TestsResource
 from twisted.python import log
 
 
+def _get_comments_from_request(req):
+    comments = req.args.get("comments", ["<no reason specified>"])[0]
+    return comments.decode(getRequestCharset(req))
+
+
 class ForceBuildActionResource(ActionResource):
 
     rebuildString = "The web-page 'rebuild' button was pressed by '%(rebuild_owner)s': %(rebuild_comments)s"
@@ -67,8 +72,7 @@ class ForceBuildActionResource(ActionResource):
             builder_name = self.builder.getName()
             log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
             name = authz.getUsernameFull(req)
-            comments = req.args.get("comments", ["<no reason specified>"])[0]
-            comments.decode(getRequestCharset(req))
+            comments = _get_comments_from_request(req)
 
             reason = self.rebuildString % {
                 'build_number': b.getNumber(),
@@ -133,8 +137,7 @@ class StopBuildActionResource(ActionResource):
         log.msg("web stopBuild of build %s:%s" %
                 (b.getBuilder().getName(), b.getNumber()))
         name = authz.getUsernameFull(req)
-        comments = req.args.get("comments", ["<no reason specified>"])[0]
-        comments.decode(getRequestCharset(req))
+        comments = _get_comments_from_request(req)
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
@@ -229,7 +232,7 @@ class StatusResourceBuild(HtmlResource):
 
             step['link'] = req.childLink("steps/%s" %
                                          urllib.quote(s.getName(), safe=''))
-            step['text'] = " ".join(s.getText())
+            step['text'] = " ".join([str(txt) for txt in s.getText()])
             step['urls'] = map(lambda x: dict(url=x[1], logname=x[0]), s.getURLs().items())
 
             step['logs'] = []
@@ -297,8 +300,7 @@ class StatusResourceBuild(HtmlResource):
                 (b.getBuilder().getName(), b.getNumber()))
 
         name = self.getAuthz(req).getUsernameFull(req)
-        comments = req.args.get("comments", ["<no reason specified>"])[0]
-        comments.decode(getRequestCharset(req))
+        comments = _get_comments_from_request(req)
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))

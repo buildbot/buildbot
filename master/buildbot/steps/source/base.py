@@ -15,7 +15,6 @@
 
 
 import StringIO
-import os
 
 from buildbot.process import buildstep
 from buildbot.process.buildstep import LoggingBuildStep
@@ -35,9 +34,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     starts a RemoteCommand with those arguments.
     """
 
-    renderables = LoggingBuildStep.renderables + [
-        'description', 'descriptionDone', 'descriptionSuffix',
-        'workdir']
+    renderables = ['description', 'descriptionDone', 'descriptionSuffix',
+                   'workdir', 'env']
 
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
@@ -214,9 +212,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             root = patch[2]
 
         if (root and
-            os.path.abspath(os.path.join(self.workdir, root)
-                            ).startswith(os.path.abspath(self.workdir))):
-            self.workdir = os.path.join(self.workdir, root)
+            self.build.path_module.abspath(self.build.path_module.join(self.workdir, root)
+                                           ).startswith(self.build.path_module.abspath(self.workdir))):
+            self.workdir = self.build.path_module.join(self.workdir, root)
 
         def _downloadFile(buf, filename):
             filereader = _FileReader(StringIO.StringIO(buf))
@@ -244,7 +242,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         d = _downloadFile(diff, ".buildbot-diff")
         d.addCallback(lambda _: _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': os.path.join(self.workdir, ".buildbot-diff"),
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
                                                 'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d.addCallback(lambda _: self.runCommand(cmd))

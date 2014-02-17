@@ -598,7 +598,8 @@ def map_branches(branches):
 # jinja utilities
 
 def createJinjaEnv(revlink=None, changecommentlink=None,
-                   repositories=None, projects=None, jinja_loaders=None):
+                   repositories=None, projects=None, jinja_loaders=None,
+                   basedir='.'):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
 

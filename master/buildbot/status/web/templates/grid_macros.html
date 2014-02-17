@@ -20,6 +20,7 @@
 {% macro stamp_td(sourcestamps) -%}
   <td valign="bottom" class="sourcestamp">    
     {% for ss in sourcestamps %}
+      {%- if ss.project %}{{ ss.project|e }}: {% endif %}
       {%- if ss.codebase %}{{ ss.codebase|e }}: {% endif %}
       {%- if ss.revision -%}
       {{ ss.revision|shortrev(ss.repository) }}

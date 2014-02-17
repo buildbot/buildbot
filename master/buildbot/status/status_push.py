@@ -217,6 +217,7 @@ class StatusPush(StatusReceiverMultiService):
         """Unsubscribe from watched builders"""
         for w in self.watched:
             w.unsubscribe(self)
+        self.status.unsubscribe(self)
         return StatusReceiverMultiService.disownServiceParent(self)
 
     @defer.inlineCallbacks
@@ -356,6 +357,14 @@ class StatusPush(StatusReceiverMultiService):
 
     def slaveDisconnected(self, slavename):
         d = self.push('slaveDisconnected', slavename=slavename)
+        d.addErrback(log.err, 'while pushing status message')
+
+    def slavePaused(self, slavename):
+        d = self.push('slavePaused', slavename=slavename)
+        d.addErrback(log.err, 'while pushing status message')
+
+    def slaveUnpaused(self, slavename):
+        d = self.push('slaveUnpaused', slavename=slavename)
         d.addErrback(log.err, 'while pushing status message')
 
 

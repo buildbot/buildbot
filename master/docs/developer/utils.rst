@@ -144,6 +144,11 @@ package.
     the result of the wrapped function.  If the wrapped function fails, its
     traceback will be printed, the reactor halted, and ``None`` returned.
 
+.. py:function:: asyncSleep(secs)
+
+    Yield a deferred that will fire with no result after ``secs`` seconds.
+    This is the asynchronous equivalent to ``time.sleep``, and can be useful in tests.
+
 buildbot.util.lru
 ~~~~~~~~~~~~~~~~~
 
