@@ -225,10 +225,17 @@ class RunSteps(unittest.TestCase):
     def test_OldStyleCustomBuildStep(self):
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
         yield self.do_test_step()
+
         self.assertLogs({
             u'compl.html': u'<blink>A very short logfile</blink>\n',
-            u'foo': u'ostdout\no\N{SNOWMAN}\nestderr\n',
-            u'obs': u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
+            # this is one of the things that differs independently of
+            # new/old style: encoding of logs and newlines
+            u'foo':
+            #'stdout\n\xe2\x98\x83\nstderr\n',
+            u'ostdout\no\N{SNOWMAN}\nestderr\n',
+            u'obs':
+            #'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
+            u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
         })
 
     @defer.inlineCallbacks
