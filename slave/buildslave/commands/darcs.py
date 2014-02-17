@@ -28,6 +28,7 @@ class Darcs(SourceBaseCommand):
     """
 
     header = "darcs operation"
+    requiredArgs = ['repourl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)

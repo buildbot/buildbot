@@ -31,23 +31,28 @@ class MakeDirectory(base.Command):
 
     header = "mkdir"
 
+    # args['dir'] is relative to Builder directory, and is required.
+    requiredArgs = ['dir']
+
     def start(self):
-        args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['dir'] is not None
-        dirname = os.path.join(self.builder.basedir, args['dir'])
+        dirname = os.path.join(self.builder.basedir, self.args['dir'])
 
         try:
             if not os.path.isdir(dirname):
                 os.makedirs(dirname)
             self.sendStatus({'rc': 0})
-        except:
-            self.sendStatus({'rc': 1})
+        except OSError, e:
+            log.msg("MakeDirectory %s failed" % dirname, e)
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus({'rc': e.errno})
 
 
 class RemoveDirectory(base.Command):
 
     header = "rmdir"
+
+    # args['dir'] is relative to Builder directory, and is required.
+    requiredArgs = ['dir']
 
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
@@ -55,8 +60,6 @@ class RemoveDirectory(base.Command):
     @defer.deferredGenerator
     def start(self):
         args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['dir'] is not None
         dirnames = args['dir']
 
         self.timeout = args.get('timeout', 120)
@@ -142,18 +145,17 @@ class CopyDirectory(base.Command):
 
     header = "cpdir"
 
+    # args['todir'] and args['fromdir'] are relative to Builder directory, and are required.
+    requiredArgs = ['todir', 'fromdir']
+
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
 
     def start(self):
         args = self.args
-        # args['todir'] is relative to Builder directory, and is required.
-        # args['fromdir'] is relative to Builder directory, and is required.
-        assert args['todir'] is not None
-        assert args['fromdir'] is not None
 
-        fromdir = os.path.join(self.builder.basedir, args['fromdir'])
-        todir = os.path.join(self.builder.basedir, args['todir'])
+        fromdir = os.path.join(self.builder.basedir, self.args['fromdir'])
+        todir = os.path.join(self.builder.basedir, self.args['todir'])
 
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
@@ -195,31 +197,37 @@ class StatFile(base.Command):
 
     header = "stat"
 
+    # args['file'] is relative to Builder directory, and is required.
+    requireArgs = ['file']
+
     def start(self):
-        args = self.args
-        # args['dir'] is relative to Builder directory, and is required.
-        assert args['file'] is not None
-        filename = os.path.join(self.builder.basedir, args['file'])
+        filename = os.path.join(self.builder.basedir, self.args['file'])
 
         try:
             stat = os.stat(filename)
             self.sendStatus({'stat': tuple(stat)})
             self.sendStatus({'rc': 0})
-        except:
-            self.sendStatus({'rc': 1})
+        except OSError, e:
+            log.msg("StatFile %s failed" % filename, e)
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
+            self.sendStatus({'rc': e.errno})
 
 
 class ListDir(base.Command):
 
     header = "listdir"
 
+    # args['dir'] is relative to Builder directory, and is required.
+    requireArgs = ['dir']
+
     def start(self):
-        args = self.args
-        assert args['dir'] is not None
-        directory = os.path.join(self.builder.basedir, args['dir'])
+        dirname = os.path.join(self.builder.basedir, self.args['dir'])
+
         try:
-            files = os.listdir(directory)
+            files = os.listdir(dirname)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
-        except:
-            self.sendStatus({'rc': 1})
+        except OSError, e:
+            log.msg("ListDir %s failed" % dirname, e)
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus({'rc': e.errno})

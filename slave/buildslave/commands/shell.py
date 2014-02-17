@@ -21,10 +21,10 @@ from buildslave.commands import base
 
 class SlaveShellCommand(base.Command):
 
+    requiredArgs = ['workdir', 'command']
+
     def start(self):
         args = self.args
-        # args['workdir'] is relative to Builder directory, and is required.
-        assert args['workdir'] is not None
         workdir = os.path.join(self.builder.basedir, args['workdir'])
 
         c = runprocess.RunProcess(

@@ -95,6 +95,8 @@ class Command:
     dict that is interpreted per-command.
 
     The setup(args) method is available for setup, and is run from __init__.
+    Mandatory args can be declared by listing them in the requiredArgs property.
+    They will be checked before calling the setup(args) method.
 
     The Command is started with start(). This method must be implemented in a
     subclass, and it should return a Deferred. When your step is done, you
@@ -130,6 +132,7 @@ class Command:
     #  sendStatus(dict) (zero or more)
     #  commandComplete() or commandInterrupted() (one, at end)
 
+    requiredArgs = []
     debug = False
     interrupted = False
     running = False  # set by Builder, cleared on shutdown or when the
@@ -142,6 +145,11 @@ class Command:
         self.stepId = stepId  # just for logging
         self.args = args
         self.startTime = None
+
+        missingArgs = filter(lambda arg: not arg in args, self.requiredArgs)
+        if missingArgs:
+            raise ValueError("%s is missing args: %s" %
+                             (self.__class__.__name__, ", ".join(missingArgs)))
         self.setup(args)
 
     def setup(self, args):

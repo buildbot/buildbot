@@ -45,6 +45,7 @@ class Git(SourceBaseCommand):
     """
 
     header = "git operation"
+    requiredArgs = ['repourl']
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
