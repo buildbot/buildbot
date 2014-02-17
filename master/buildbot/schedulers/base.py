@@ -58,9 +58,13 @@ class ScheduleOnMultipleSlavesMixin(object):
 
         #Get all the slaves
         slaves = []
+        if kwargs.has_key("builderNames"):
+            builder_name = kwargs["builderNames"][0]
+        else:
+            builder_name = self.builderNames[0]
         builder = None
         for b in self.master.botmaster.getBuilders():
-            if b.name == self.builderNames[0]:
+            if b.name == builder_name:
                 builder = b
 
         if builder is not None:
