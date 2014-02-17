@@ -68,6 +68,8 @@ EXAMPLES = """\
     - All *cached* builds.
   - /json/builders/<A_BUILDER>/builds/_all
     - All builds. Warning, reads all previous build data.
+  - /json/builders/<A_BUILDER>/builds/?branch=trunk
+    - All builds that contain the branch trunk
   - /json/builders/<A_BUILDER>/builds/<A_BUILD>
     - Where <A_BUILD> is either positive, a build number, or negative, a past
       build.
@@ -89,6 +91,10 @@ EXAMPLES = """\
     - All projects
   - /json/projects/<A_PROJECT>
     - A specific project.
+  - /json/buildqueue/
+    - The current build queue
+  - /json/buildqueue/?builder=<A_BUILDER>
+    - The current build queue
 """
 
 
@@ -479,7 +485,15 @@ class AllBuildsJsonResource(JsonResource):
             child = self.getChildWithDefault(-i, request)
             if not isinstance(child, BuildJsonResource):
                 continue
-            results[child.build_status.getNumber()] = child.asDict(request)
+
+            branch_filter = request.args.get("branch")
+            should_filter = False
+            if branch_filter is not None and len(child.build_status.sources) > 0:
+                #For now we assume that the first branch will be the one we want to check against
+                if child.build_status.sources[0].branch != branch_filter[0]:
+                    should_filter = True
+            if should_filter is False:
+                results[child.build_status.getNumber()] = child.asDict(request)
         return results
 
 
@@ -700,7 +714,14 @@ class QueueJsonResource(JsonResource):
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
         builder_names = self.status.getBuilderNames()
-        builders = [self.status.getBuilder(builder_name) for builder_name in builder_names]
+
+        if request.args.has_key("builder"):
+            builder_filter = request.args.get("builder")
+            builders = [self.status.getBuilder(builder_name)
+                        for builder_name in builder_names if builder_name in builder_filter]
+        else:
+            builders = [self.status.getBuilder(builder_name) for builder_name in builder_names]
+
         pending = []
         for b in builders:
             builds = yield b.getPendingBuildRequestStatuses()
