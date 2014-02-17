@@ -68,7 +68,7 @@ class Build(properties.PropertiesMixin):
         self.releaseLockInstanse = None
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
-        self.reason = requests[0].mergeReasons(requests[1:])
+        self.reason = requests[0].reason
 
         self.progress = None
         self.currentStep = None
@@ -454,13 +454,15 @@ class Build(properties.PropertiesMixin):
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
         self.remote = None
+        self.result = RETRY
+        self.text = ["lost", "remote"]
         if self.currentStep:
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
+            self.text += ["slave"]
+            self.currentStep.addErrorResult(Failure(error.ConnectionLost()))
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
         else:
-            self.result = RETRY
-            self.text = ["lost", "remote"]
             self.stopped = True
             if self._acquiringLock:
                 lock, access, d = self._acquiringLock

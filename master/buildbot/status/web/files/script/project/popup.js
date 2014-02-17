@@ -131,22 +131,21 @@ define(['helpers'], function (helpers) {
 				
 				var fw = $(data).find('#formWrapper')
 				
-				$(fw).appendTo(formContainer);
+				fw.children('#getForm').prepend('<div class="filter-table-input">'+
+	    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
+	  				'</div>');
 				
-				$('#content .blue-btn').val('update');
+				fw.appendTo(formContainer);												
 
-				// remove unwanted html for the popup box
-				$('#content1 .filter-table-input label, #content1 .filter-table-input .help-txt').remove();
-
-				helpers.jCenter(mib).fadeIn('fast');
+				helpers.jCenter(mib).fadeIn('fast',function(){					
+					$('#getForm .blue-btn').focus();
+				});
 				
 				$(window).resize(function() {					
 					helpers.jCenter(mib);
 				});
 
-
-				require(['selectors'],function(selectors) {
-		        	selectors.comboBox('#formWrapper .select-tools-js');
+				require(['selectors'],function(selectors) {		        	
 		        	selectors.init();
 					$(window).resize(function() {
 						helpers.jCenter($('.more-info-box-js'));
@@ -180,6 +179,7 @@ define(['helpers'], function (helpers) {
 			var popupTitle = thisEl.attr('data-popuptitle');
 			var datab = thisEl.attr('data-b');
 			var dataindexb = thisEl.attr('data-indexb');
+            var dataReturnPage = thisEl.attr('data-returnpage');
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var contentType = thisEl.attr('data-contenttype');
             var builder_name = thisEl.attr('data-b_name');
@@ -190,7 +190,7 @@ define(['helpers'], function (helpers) {
 			mib.appendTo(body);
 
             //get all branches
-            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name};
+            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
             var sPageURL = window.location.search.substring(1);
             var sURLVariables = sPageURL.split('&');
             $.each(sURLVariables, function(index, val) {

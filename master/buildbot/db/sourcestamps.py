@@ -159,12 +159,13 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return ssdict
         return self.db.pool.do(thd)
 
-    def findLastBuildRev(self, buildername, codebase, repository, branch):
+    def findLastBuildRev(self, buildername, buildnumber, codebase, repository, branch):
         def thd(conn):
             sourcestamps_tbl = self.db.model.sourcestamps
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
             buildsets_prop_tbl = self.db.model.buildset_properties
+            builds_tbl = self.db.model.builds
 
             # we need to filter buildrequests_tbl.c.lastest
             q = sa.select([sa.func.max(buildrequests_tbl.c.id)], from_obj= buildrequests_tbl.join(buildsets_tbl,
@@ -179,7 +180,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                                                                   (buildsets_tbl.c.sourcestampsetid  == sourcestamps_tbl.c.sourcestampsetid)
                                                                 & (sourcestamps_tbl.c.codebase == codebase)
                                                                 & (sourcestamps_tbl.c.repository == repository)
-                                                                & (sourcestamps_tbl.c.branch == branch)))
+                                                                & (sourcestamps_tbl.c.branch == branch))
+            .join(builds_tbl, (buildrequests_tbl.c.id == builds_tbl.c.brid) & (builds_tbl.c.number < buildnumber)))
 
             stmt = sa.select([sourcestamps_tbl.c.revision, buildrequests_tbl.c.id])\
                 .where(sourcestamps_tbl.c.sourcestampsetid == buildsets_tbl.c.sourcestampsetid)\

@@ -153,8 +153,7 @@
       {% if slaves %}
         <tr>
           <th class="txt-align-left">Name</th>
-          <th>Status</th>
-          <th>Admin</th>
+          <th>Status</th>          
         </tr>
       {% endif %}
       </thead>
@@ -170,10 +169,8 @@
         </td>
         {% if s.connected %}
           <td class="idle">connected</td>
-          <td>{{ s.admin|email if s.admin else ""}}</td>
         {% else %}
-          <td class="offline">offline</td>
-          <td>&nbsp;</td>
+          <td class="offline">offline</td>        
         {% endif %}
         
       {% else %}

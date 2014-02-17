@@ -79,7 +79,16 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			    optionTable.aoColumns = colList;
 			    
 			   	//initialize datatable with options
-			  	var oTable = $(this).dataTable(optionTable);
+			  	var oTable = $(this).dataTable(optionTable);			  	
+
+			  	// special for the codebasespage
+			  	if ($('#codebases_page').length != 0) {
+					$('.dataTables_wrapper .top').append('<div class="filter-table-input">'+
+	    			'<input value="Show builders" class="blue-btn var-2" type="submit" />'+
+	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
+	  				'</div>');
+				}
+
 
 			  	var filterTableInput = $('.dataTables_filter input');
 

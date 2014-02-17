@@ -712,7 +712,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj' ],
                         env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 9.0'))
+                            r'C:\Program Files (x86)\Microsoft Visual Studio 9.0'))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -736,7 +736,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj' ],
                         env=self.getExpectedEnv(
-                            r'C:\Program Files\Microsoft Visual Studio 10.0'))
+                            r'C:\Program Files (x86)\Microsoft Visual Studio 10.0'))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
