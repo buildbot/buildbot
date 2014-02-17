@@ -940,6 +940,7 @@ class ShellMixin(object):
     renderables = _shellMixinArgs
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+        assert self.isNewStyle(), "ShellMixin is only compatible with new-style steps"
         constructorArgs = constructorArgs.copy()
 
         def bad(arg):

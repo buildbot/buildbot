@@ -106,6 +106,9 @@ All custom steps, particularly those for which the backward compatibility hacks 
 Buildbot distinguishes new-style from old-style steps by the presence of a :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
 If this method is present, then the step is a new-style step.
 
+All :py:class:`~buildbot.process.buildstep.LoggingBuildStep` and :py:class:`~buildbot.steps.shell.ShellCommand` subclasses are old-style.
+New-style steps that run shell commands instead subclass :py:class:`~buildbot.process.buildstep.BuildStep` and mix in :py:class:`~buildbot.process.buildstep.ShellMixin`.
+
 Summary of Changes
 ++++++++++++++++++
 
@@ -118,11 +121,11 @@ Summary of Changes
    New-style steps should, instead, use a LogObserver or fetch log lines bit by bit using :bb:rtype:`logchunk`.
 
 Backward Compatibility
-~~~~~~~~~~~~~~~~~~~~~~
+++++++++++++++++++++++
 
 Some hacks are in place to support old-style tests.
-This list will grow as the pickle-based backend is replaced with the Data API.
 These hacks are only activated when an old-style step is detected.
+Support for old-style steps will be dropped soon after Buildbot-0.9.0 is released.
 
 * The Deferreds from all asynchronous methods invoked during step execution are gathered internally.
   The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
@@ -130,6 +133,8 @@ These hacks are only activated when an old-style step is detected.
 
 * Logfile data is available while the step is still in memory.
   This means that logs returned from ``step.getLog`` have the expected methods ``getText``, ``readlines`` and so on.
+
+* :py:class:`~buildbot.steps.shell.ShellCommand` subclasses implicitly gather all stdio output in memory and provide it to the ``createSummary`` method.
 
 Rewriting ``start``
 +++++++++++++++++++

@@ -671,17 +671,21 @@ class TestShellMixin(steps.BuildStepMixin,
         return self.tearDownBuildStep()
 
     def test_setupShellMixin_bad_arg(self):
-        mixin = buildstep.ShellMixin()
+        mixin = ShellMixinExample()
         self.assertRaisesConfigError(
-            "invalid ShellMixin argument invarg",
+            "invalid ShellMixinExample argument invarg",
             lambda: mixin.setupShellMixin({'invarg': 13}))
 
     def test_setupShellMixin_prohibited_arg(self):
-        mixin = buildstep.ShellMixin()
+        mixin = ShellMixinExample()
         self.assertRaisesConfigError(
-            "invalid ShellMixin argument logfiles",
+            "invalid ShellMixinExample argument logfiles",
             lambda: mixin.setupShellMixin({'logfiles': None},
                                           prohibitArgs=['logfiles']))
+
+    def test_setupShellMixin_not_new_style(self):
+        self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
+        self.assertRaises(AssertionError, lambda: ShellMixinExample())
 
     def test_constructor_defaults(self):
         class MySubclass(ShellMixinExample):
