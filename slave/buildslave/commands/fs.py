@@ -218,18 +218,20 @@ class GlobPath(base.Command):
 
     header = "glob"
 
+    # args['path'] is relative to Builder directory, and is required.
+    requiredArgs = ['path']
+
     def start(self):
-        args = self.args
-        # args['path'] is relative to Builder directory, and is required.
-        assert args['path'] is not None
-        globpath = os.path.join(self.builder.basedir, args['path'])
+        pathname = os.path.join(self.builder.basedir, self.args['path'])
 
         try:
-            files = glob.glob(globpath)
-            self.sendStatus({'glob': files})
+            files = glob.glob(pathname)
+            self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
-        except:
-            self.sendStatus({'rc': 1})
+        except OSError, e:
+            log.msg("GlobPath %s failed" % pathname, e)
+            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
+            self.sendStatus({'rc': e.errno})
 
 
 class ListDir(base.Command):

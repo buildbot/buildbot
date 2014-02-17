@@ -243,7 +243,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertTrue(self.get_updates()[0]['glob'] == [])
+            self.assertEqual(self.get_updates()[0]['files'], [])
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -257,7 +257,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertTrue(self.get_updates()[0]['glob'] == [os.path.join(self.basedir, 'workdir')])
+            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'workdir')])
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -273,7 +273,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertTrue(self.get_updates()[0]['glob'] == [os.path.join(self.basedir, 'test-file')])
+            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
