@@ -222,7 +222,10 @@ class Periodic(Timed):
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
     def startBuild(self):
-        return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
+        if self.shouldBuildOnAllSlaves():
+            self.addBuildForEachSlave(self.addBuildsetForLatest, reason=self.reason, branch=self.branch)
+        else:
+            return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
 
 class NightlyBase(Timed):
     compare_attrs = (Timed.compare_attrs
@@ -346,8 +349,11 @@ class Nightly(NightlyBase):
                                                       less_than=max_changeid+1)
         else:
             # start a build of the latest revision, whatever that is
-            yield self.addBuildsetForLatest(reason=self.reason,
-                                            branch=self.branch)
+            if self.shouldBuildOnAllSlaves():
+                self.addBuildForEachSlave(self.addBuildsetForLatest, reason=self.reason, branch=self.branch)
+            else:
+                yield self.addBuildsetForLatest(reason=self.reason,
+                                                branch=self.branch)
 
 class NightlyTriggerable(NightlyBase):
     implements(ITriggerableScheduler)
