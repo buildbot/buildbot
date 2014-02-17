@@ -18,13 +18,12 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
                   	var resultTxt = value.text;	
             		    	
                   			// timetable
-		                    var myInt = setInterval(function() {
-						    	helpers.startTimer($('#elapsedTimeJs'), startTime);
-						    },1000);
+                  			helpers.startCounter($('#elapsedTimeJs'), startTime)
+		                    
 
 							if (endTime) { 
 								// If the build is finished
-								clearInterval(myInt);        
+								  
 								// get the rest of the content
 								if(!window.location.hash) {
 							        window.location = window.location + '#finished';
@@ -186,10 +185,19 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 			             	$.each(value.latestBuild, function (key, value) {		             			             		
 			             		var buildUrl = status.find('.build-url-js')
 			             		if (key === 'times') {
+
+			             			//var lastMessageTimeAgo = moment().utc(value[1]).fromNow();	
+			             			
+			             			helpers.startCounterTimeago(lastRun.find('.last-run'), value[1])
+			             			
+
+
+			             			/*
 			             			var time = helpers.getTime(value[0],value[1]).trim();		             					             			
 			             			lastRun.find('.last-run').attr('data-livestamp',value[1]);		             						             			
 			             			lastRun.find('.small-txt').html('('+ time +')');
 			             			lastRun.find('.hidden-date-js').html(value[1]);			             			
+			             			*/
 			             		} 		        
 			             		if (key === 'text') {		             					             		
 			             			status.find('.hide-status-js, .status-text-js').text(value[0]);				             			
@@ -199,7 +207,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 			             			buildUrl.text('#'+value)
 			             		}
 
-			             		if (key === 'url') {
+			             		if (key === 'url') {			             			
 			             			buildUrl.attr('href',value);	
 			             		}			             		
 			             	});

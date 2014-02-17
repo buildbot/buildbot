@@ -183,8 +183,10 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 			var selectAll = $('#selectall');
 
-			selectAll.click(function () {			    	
-		        $('.fi-js').prop('checked', this.checked);
+			selectAll.click(function () {
+				var tableSorter = $('.tablesorter-js').dataTable();							   				
+				var tableNodes = tableSorter.fnGetNodes();	
+		        $('.fi-js',tableNodes).prop('checked', this.checked);
 		    });
 
 			function ajaxPost(str) {					
@@ -202,7 +204,8 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 						$.each(data, function (key, value) { 
 		          			var arObjData = [value];										
 							tableSorter.fnAddData(arObjData);	
-						});					
+						});				
+						selectAll.prop('checked',false);
 					}
 				});
 				return false;					
@@ -210,13 +213,22 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 			$('#submitBtn').click(function(e){					
 				e.preventDefault();
-				var str = $("#formWrapper form").serialize();					
-				selectAll.prop('checked', false); 
-				if ($('.fi-js').prop('checked')) {
-					ajaxPost(str);				
-				}
-				 
 				
+				var tableSorter = $('.tablesorter-js').dataTable();
+				var tableNodes = tableSorter.fnGetNodes();	
+		        var checkedNodes = $('.fi-js',tableNodes);
+		        
+		        var formStr = "";
+		        checkedNodes.each(function(){
+		        	if ($(this).is(':checked')) {
+		        		formStr += 'cancelselected='+$(this).val()+'&';
+		        	}		        	
+		        });
+		        var formStringSliced = formStr.slice(0,-1);		        
+		        
+				if (formStringSliced != '') {
+					ajaxPost(formStringSliced);				
+				}				
 			});
 			$('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){					
 				e.preventDefault();
@@ -391,7 +403,6 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
-
 			
 		}, startCounter: function(el, myStartTimestamp) { 
 			var startTimestamp = parseInt(myStartTimestamp);			    
@@ -401,11 +412,16 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 		    setInterval(function() {
 		    	getTime++;
-				var days = Math.floor(getTime / 86400),
+				var
+				weeks = Math.floor(getTime / 604800) % 7,
+				days = Math.floor(getTime / 86400) % 24,
 				hours = Math.floor(getTime / 3600) % 24,
 		        minutes = Math.floor(getTime / 60 % 60),
 		        seconds = Math.floor(getTime % 60),
 		        arr = [];
+		         if (weeks > 0) {
+				    arr.push(weeks == 1 ? '1 week ' : weeks + ' weeks');
+				 }
 		   		 if (days > 0) {
 				    arr.push(days == 1 ? '1 day ' : days + ' days');
 				 }
@@ -421,32 +437,12 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 				 el.html(arr.join(' '));
 			 }, 1000);		
 
-		}, startTimer: function(el, start) {		
-			// specific for the builddetail page
-			 var start = start,
-		     cDisplay = $(el);
-		
-		     var format = function(t) {
-			 var hours = Math.floor(t / 3600),
-		        minutes = Math.floor(t / 60 % 60),
-		        seconds = Math.floor(t % 60),
-		        arr = [];
-		   
-		         if (hours > 0) {
-				    arr.push(hours == 1 ? '1 hr' : hours + 'hrs');
-				 }
-				 if (minutes > 0 || hours > 0) {
-				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
-				 }
-				 if (seconds > 0 || minutes > 0 || hours > 0) {
-				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
-				 }
-				cDisplay.html(arr.join(' '));
-		     };
-		    
-		   format(new Date().getTime() / 1000 - start); 	
-
-		// display time between two timestamps	
+		}, startCounterTimeago: function(el, myStartTimestamp) {
+			var startTimestamp = parseInt(myStartTimestamp);			    		    
+		    setInterval(function() {		    	
+				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
+				el.html(lastMessageTimeAgo);
+			 }, 1000);	
 		}, getTime: function  (start, end) {
 	
 			if (end === null) {
