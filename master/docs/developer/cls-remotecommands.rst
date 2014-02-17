@@ -161,10 +161,9 @@ RemoteCommand
             :meth:`~buildbot.status.logfile.LogFile.finish` when the command is
             finished.
 
-        Similar to :meth:`useLog`, but the logfile is only actually added when
-        an update arrives for it.  The callback, ``activateCallback``, will be
-        called with the :class:`~buildbot.process.remotecommand.RemoteCommand`
-        instance when the first update for the log is delivered.
+        Similar to :meth:`useLog`, but the logfile is only actually added when an update arrives for it.
+        The callback, ``activateCallback``, will be called with the :class:`~buildbot.process.remotecommand.RemoteCommand` instance when the first update for the log is delivered.
+        It should return the desired log instance, optionally via a Deferred.
 
     With that finished, run the command using the inherited
     :meth:`~buildbot.process.remotecommand.RemoteCommand.run` method.  During the
@@ -173,27 +172,31 @@ RemoteCommand
     .. py:method:: addStdout(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add stdout data to the ``stdio`` log.
+        Add stdout data to the ``stdio`` log.
 
     .. py:method:: addStderr(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add stderr data to the ``stdio`` log.
+        Add stderr data to the ``stdio`` log.
 
     .. py:method:: addHeader(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add header data to the ``stdio`` log.
+        Add header data to the ``stdio`` log.
 
     .. py:method:: addToLog(logname, data)
 
         :param logname: the logfile to receive the data
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add data to a logfile other than ``stdio``.
+        Add data to a logfile other than ``stdio``.
 
 .. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
 
