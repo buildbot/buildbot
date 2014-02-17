@@ -139,6 +139,7 @@ class BuildRequestStatus:
         result['submittedAt'] = None # not availably sync, sorry
         result['slaves'] =  self.getSlaves()
         result['reason'] = None # not availably sync, sorry
+        result['builderURL'] = self.status.getURLForThing(self.status.getBuilder(self.getBuilderName()))
 
         # Transient
         result['builds'] = [] # not available async, sorry
@@ -157,6 +158,7 @@ class BuildRequestStatus:
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
+        result['builderURL'] = self.status.getURLForThing(self.status.getBuilder(self.getBuilderName()))
 
         builds = yield self.getBuilds()
         result['builds'] = [ build.asDict() for build in builds ]
