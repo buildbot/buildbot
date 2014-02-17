@@ -13,12 +13,21 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			});
 
 			// for dynamic added links in buildqueue
-			$('.tablesorter-js').delegate('.popup-btn-js-2', 'click', function(e){
+			$('#tablesorterRt').delegate('.popup-btn-js-2', 'click', function(e){
 				e.preventDefault();
 				popup.nonAjaxPopup($(this));
 			});
 
+			$('#tablesorterRt').delegate('.popup-btn-js', 'click', function(e){
+				e.preventDefault();				
+				var currentUrl = document.URL;			              	
+			    var parser = document.createElement('a');
+			    parser.href = currentUrl;
+				var url = parser.protocol + '//' + parser.host +'/json/buildqueue?builder='+$(this).attr('data-builderName');							
+				popup.pendingJobs(url);					
+			});
 
+			/*
 			//For builders pending box
 			$('.popup-btn-js').each(function(i){
 				$(this).attr('data-in', i).on('click', function(e){
@@ -26,6 +35,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 					popup.pendingJobs($(this));				
 				});				
 			});
+			*/
 
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
@@ -84,45 +94,31 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				helpers.jCenter(clonedInfoBox);				
 			});
 
-		}, pendingJobs: function(thisEl) {
-
-			var thisi = thisEl.attr('data-in');
-			
-			var rtUpdate = thisEl.attr('data-rt_update');
+		}, pendingJobs: function(url) {
 			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
 			var preloader = $(mustacheTmpl);
+			
 			$('body').append(preloader).show();
-			// get currentpage with url parameters
-			$.ajax({
-				url:'',
-				cache: false,
-				dataType: "html",
-				data: {
-					rt_update:'pending'
-				},
-				success: function(data) {
-					preloader.remove();
-					var doc = document.createElement('html');
- 					doc.innerHTML = data;
-					
-					var pendListRes = $('.more-info-box-js', doc);
-					
-					var mib;
-					pendListRes.each(function(i){
-						if (i == thisi) {
-							mib = $(this);
-						}
-					});
-					
-					mib.appendTo('body');
-					
-					helpers.jCenter(mib).fadeIn('fast');
-					$(window).resize(function() {						
-						helpers.jCenter(mib);
-					});
+			
+				var currentUrl = document.URL;			              	
+			    var parser = document.createElement('a');
+			    parser.href = currentUrl;
+				var actionUrl = parser.protocol + '//' + parser.host + parser.pathname;							
 
-					helpers.closePopup(mib);
-					
+				console.log(actionUrl);	
+				//cancelbuild?
+			$.ajax({
+				url:url,
+				cache: false,
+				dataType: "json",
+				
+				success: function(data) {
+					preloader.remove();					
+					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,actionUrl:actionUrl}));
+					//console.log(mustacheTmpl.find('.cancelbuild').serialize());
+					mustacheTmpl.appendTo('body');					
+					helpers.jCenter(mustacheTmpl).fadeIn('fast');
+					helpers.closePopup(mustacheTmpl);					
 				}
 			});
 

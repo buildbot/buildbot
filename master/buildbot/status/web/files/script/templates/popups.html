@@ -24,3 +24,24 @@
 		{{text}}		
 	</div>
 {{/errorinput}}
+
+{{#pendingJobs}}
+<div class="more-info-box more-info-box-js" style="position: absolute; top: 175px; left: 744.5px; display: block;">
+	<span class="close-btn">
+	</span>
+	<h3>Pending Build Requests</h3>
+	<ul class="pending-job-list">
+		{{#.}}
+			<li>
+				<p class="txt-cont">{{submittedAt}}<br>
+					{{reason}}                                                                                   	
+				</p>
+				<form class="command cancelbuild" action="{{builderURL}}/cancelbuild?returnpage=builders" name="cancel" method="post">
+			        <input type="hidden" value="{{brid}}" name="id" />
+			    	<input type="submit" value="Cancel" class="grey-btn" />
+			  	</form>
+			</li>
+		{{/.}}
+	</ul>
+</div>
+{{/pendingJobs}}

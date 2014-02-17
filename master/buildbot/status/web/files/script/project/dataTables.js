@@ -1,13 +1,13 @@
-define(['datatables-plugin','helpers','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','mustache'], function (dataTable,helpers,popups,buildqueue,buildslaves,Mustache) {
+define(['datatables-plugin','helpers','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','livestamp'], function (dataTable,helpers,popups,buildqueue,buildslaves,builders,Mustache,livestamp) {
    
     "use strict";
     var dataTables;
       
     dataTables = {
-        init: function () {
+        init: function (tablesorterEl) {
 			 
 			// datatable element				
-			var tablesorterEl = $('.tablesorter-js');	
+			//var tablesorterEl = $('.tablesorter-js');	
 
 			// initialize with empty array before updating from json			
 			var aa =[]
@@ -57,7 +57,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 				
 					var preloader = Mustache.render(popups, {'preloader':'true'});
 										
-        			$('body').append(preloader)
+        			$('body').append(preloader);
 
 					optionTable.aaSorting = [[ 2, "asc" ]]			
 					optionTable.aoColumns = [
@@ -105,7 +105,6 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 							var htmlnew = Mustache.render(buildqueue, {showslaves:true,slaves:data,slavelength:slavelength})						
 							return htmlnew; 						    						
 					    }
-					    
 						},
 						{
 						"aTargets": [ 4 ],
@@ -118,7 +117,69 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						}
 					]
 					
-				} else if ($(this).hasClass('buildslaves-tables')) {	
+				} // add specific for the builders page
+				else if ($(this).hasClass('builders-table')) {	
+					var preloader = Mustache.render(popups, {'preloader':'true'});									
+        			$('body').append(preloader);
+					optionTable.aoColumns = [
+						{ "mData": null },	
+			            { "mData": null },
+			            { "mData": null },
+			            { "mData": null },
+			            { "mData": null }
+					]
+					optionTable.aaData = aa;        
+					optionTable.aoColumnDefs = [
+						{					
+						"aTargets": [ 0 ],
+						"sClass": "txt-align-left",	
+						"mRender": function (data,full,type)  {												
+							var htmlnew = Mustache.render(builders, {name:type.name});
+							return htmlnew;
+						}
+						},
+						{
+						"aTargets": [ 1 ],
+						"sClass": "txt-align-left",
+							"mRender": function (data,full,type)  {		
+							var noJobs = type.pendingBuilds === 0 && type.currentBuilds.length === 0;
+							var eta = type.eta != undefined? moment().utc(type.eta).format('MMM Do YYYY, H:mm:ss') : '';							
+							var htmlnew = Mustache.render(builders, {etaTime:eta,showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
+							return htmlnew;
+						}
+						},
+						{
+						"aTargets": [ 2 ],
+						"sClass": "txt-align-left last-build-js",
+						"mRender": function (data,full,type) {
+							var htmlnew = Mustache.render(builders, {latestBuild:type.latestBuild});
+							return htmlnew;
+						},
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
+							if (oData.latestBuild != undefined) {																
+								$(nTd).find('.last-run').attr('data-livestamp',oData.latestBuild.times[1]);
+								var time = helpers.getTime(oData.latestBuild.times[0],oData.latestBuild.times[1]).trim();		             					             			
+		             			$(nTd).find('.small-txt').html('('+ time +')');
+		             			$(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);			             			
+							}							
+						}
+						},									
+						{
+						"aTargets": [ 3 ]
+							
+						},
+						{
+						"aTargets": [ 4 ],
+						"mRender": function (data,full,type) {
+							var htmlnew = Mustache.render(builders, {customBuild:true});
+							return htmlnew;
+						}
+							
+						}
+						
+					]			
+				}
+				else if ($(this).hasClass('buildslaves-tables')) {	
 
 					var preloader = Mustache.render(popups, {'preloader':'true'});
 										
@@ -168,12 +229,13 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						{
 						"aTargets": [ 3 ],
 						"mRender": function (data,full,type)  {														
-							var lastMessageDate = ' ('+ moment().utc(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')';
-							var lastMessageTimeAgo = moment().utc(type.lastMessage).fromNow();							
-							var timeAgo =  type.lastMessage != 0? lastMessageTimeAgo + lastMessageDate : '';							
+							var lastMessageDate = ' ('+ moment().utc(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')';							
 							var showTimeago = type.lastMessage != 0? true : null;							
-							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,timeAgo:timeAgo,lastMessageTimeAgo:lastMessageTimeAgo,lastMessageDate:lastMessageDate});
+							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,lastMessageDate:lastMessageDate});
 							return htmlnew;
+						},
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+							$(nTd).find('.last-lessage-timemago').attr('data-livestamp',oData.lastMessage);
 						}
 							
 						}

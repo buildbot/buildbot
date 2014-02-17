@@ -1,4 +1,4 @@
-define(['jquery','helpers','popup','text!templates/builders.html','mustache','livestamp'], function ($,helpers,popup,builders,Mustache) {
+define(['jquery','helpers','popup','text!templates/builders.html','mustache'], function ($,helpers,popup,builders,Mustache) {
 	 "use strict";
     var realtimePages;
     
@@ -117,16 +117,16 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 		           
         },
         buildersPage: function(m, tableRowList) {
-			
-		  	try {   
 		  	    	
-	          	var obj = JSON.parse(m);  
-	          	
-		          	var i = 0;
-	          		var objBuilder = obj.builders;
-	          			          		
-	          		$.each(objBuilder, function (key, value) {
-	          			
+  			var tbsorter = $('#tablesorterRt').dataTable();        		
+    		tbsorter.fnClearTable();        
+
+        	try {            		        
+          		var obj = JSON.parse(m);  	          		          		          		
+
+          		tbsorter.fnAddData(obj.builders);	
+
+	          			/*   
 	          			var item = $('[id="' + value.name + '"]');
 	          			var currentCont = item.find('.current-cont');
 	          			var pendingCont = item.find('.pending-cont');
@@ -134,7 +134,8 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 	          			
 	          			var lastRun = item.find('.last-build-js');
 	          			var status = item.find('.status-build-js');
-	          			 	          					
+	          		
+	          								
 	          			if (value.pendingBuilds > 0) {	          				
 	          				
 	          				i = ++i;	          				
@@ -184,42 +185,40 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
 		             	if (value.latestBuild) {
 			             	$.each(value.latestBuild, function (key, value) {		             			             		
 			             		var buildUrl = status.find('.build-url-js')
-			             		if (key === 'times') {
-
-			             			//var lastMessageTimeAgo = moment().utc(value[1]).fromNow();	
-			             			
-			             			helpers.startCounterTimeago(lastRun.find('.last-run'), value[1])
-			             			
-
-
-			             			/*
+			             		if (key === 'times') {			             			
+			             			helpers.startCounterTimeago(lastRun.find('.last-run'), value[1]);
 			             			var time = helpers.getTime(value[0],value[1]).trim();		             					             			
-			             			lastRun.find('.last-run').attr('data-livestamp',value[1]);		             						             			
 			             			lastRun.find('.small-txt').html('('+ time +')');
 			             			lastRun.find('.hidden-date-js').html(value[1]);			             			
-			             			*/
 			             		} 		        
 			             		if (key === 'text') {		             					             		
-			             			status.find('.hide-status-js, .status-text-js').text(value[0]);				             			
-			             		}     		
+			             			status.find('.hide-status-js').text(value[0]);				             		
+			             			
+			             			var statusTxt = value[1] === undefined? '' : value[1];	
+			             			status.find('.status-text-js').text(value[0] +' '+ statusTxt);				             			
+			             			
+			             		}   
+			             		if (key === 'results_text') {
+			             			status.removeClass().addClass('status-build-js status-build ' + value);
+			             		}
 
 			             		if (key === 'number') {
 			             			buildUrl.text('#'+value)
 			             		}
-
 			             		if (key === 'url') {			             			
 			             			buildUrl.attr('href',value);	
 			             		}			             		
 			             	});
 		             	}
 		             	
-	          		});									
+	          		});		
+	          		*/							
 	        }
 	           catch(err) {
 	        	//console.log(err);
 	        }
         }, rtBuildSlaves: function(m){
-        		var tbsorter = $('.tablesorter-js').dataTable();        		
+        		var tbsorter = $('#tablesorterRt').dataTable();        		
         		tbsorter.fnClearTable();        	
         	try {            		        
           		var obj = JSON.parse(m);  	          		          		          		
@@ -231,11 +230,14 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache','li
             catch(err) {
             }
         }, rtBuildqueue: function(m){
-        		var tbsorter = $('.tablesorter-js').dataTable();        		
+        		var tbsorter = $('#tablesorterRt').dataTable();        		
         		tbsorter.fnClearTable();
         	try {
 				var obj = JSON.parse(m);								
-				tbsorter.fnAddData(obj);														
+				console.log([obj])
+				tbsorter.fnAddData(obj);	
+				
+
             }
             catch(err) {
             }

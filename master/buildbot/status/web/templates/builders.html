@@ -15,7 +15,7 @@
 
   {% block content %}
 
-<table class="table-1 first-child tablesorter tablesorter-js input-js realtime">
+<table id="tablesorterRt" class="builders-table table-1 first-child tablesorter input-js realtime">
   <thead>
     <tr>
       <th class="txt-align-left">Builder</th>
@@ -104,7 +104,7 @@
             {{ b.build_label }}
           </a>
 
-          <span class="status-text-js">
+          <span class="status-text-js status-text">
             {{ b.build_text }}
           </span>          
         </td>
@@ -113,7 +113,7 @@
           no build
         </td>
       {% endif %}  
-      
+        
       <td>
         {% if b.force_schedulers != {} %}
 

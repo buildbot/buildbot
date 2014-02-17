@@ -1,13 +1,43 @@
-{{#popupbtn}}
-<a class="more-info popup-btn-js mod-1" data-rt_update="pending" href="#" data-in="{{number}}">
-	Pending jobs
-</a>
-{{/popupbtn}}
+{{#name}}
+	<a href="builders/{{name}}">{{name}}</a> 
+{{/name}}
 
-{{#li}}
-<li>
-	<a href="{{url}}">{{number}}</a> 
-	{{name}}
-</li>
-{{/li}}
+	{{#currentBuilds}}
+		<h2 class="small-head">
+			Current job
+	    </h2>    
+	    <ul class="list current-job-js">
+	    	{{#.}}    		
+				<li>
+					<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}">{{number}}</a>  
+					{{#etaTime}}
+						ETA: {{etaTime}}
+					{{/etaTime}}                        			
+					{{#currentStep}}
+						{{name}}
+					{{/currentStep}}
+				</li>			
+			{{/.}}
+		</ul>
+	{{/currentBuilds}}
 
+	{{#pendingBuilds}}	
+		<a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
+	{{/pendingBuilds}}
+
+{{#showNoJobs}}
+	<span class="small-txt">
+		No jobs
+    </span>
+{{/showNoJobs}}
+
+{{#latestBuild}}
+	<span class="hide hidden-date-js"></span>
+	<span class="last-run"></span>
+	<span class="small-txt"></span>
+{{/latestBuild}}
+
+{{#customBuild}}
+	<a data-returnpage="builders" data-b="../../projects/PhysX%203/builders/PhysX%203%20%3E%20Metro" data-b_name="PhysX 3 &gt; Metro" data-rt_update="extforms" data-popuptitle="Run custom build" data-contenttype="form" href="#" title="Run custom build" class="ajaxbtn more-info">
+	</a>
+{{/customBuild}}

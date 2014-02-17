@@ -4,7 +4,7 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
     
     rtBuildqueue = {
         init: function () {        	
-
+        	
         	// Creating a new websocket
 	                
 	        // Global websocketvariabel        

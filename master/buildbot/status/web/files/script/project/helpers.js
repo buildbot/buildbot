@@ -182,16 +182,16 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			var preloader = $(mustacheTmpl);	
 
 			var selectAll = $('#selectall');
-
+			
 			selectAll.click(function () {
-				var tableSorter = $('.tablesorter-js').dataTable();							   				
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
 				var tableNodes = tableSorter.fnGetNodes();	
 		        $('.fi-js',tableNodes).prop('checked', this.checked);
 		    });
 
 			function ajaxPost(str) {					
 				$('body').append(preloader).show();					
-				var tableSorter = $('.tablesorter-js').dataTable();
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
 				str = str+'&ajax=true';
 
 				$.ajax({
@@ -214,7 +214,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			$('#submitBtn').click(function(e){					
 				e.preventDefault();
 				
-				var tableSorter = $('.tablesorter-js').dataTable();
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
 				var tableNodes = tableSorter.fnGetNodes();	
 		        var checkedNodes = $('.fi-js',tableNodes);
 		        
@@ -230,7 +230,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 					ajaxPost(formStringSliced);				
 				}				
 			});
-			$('.tablesorter-js').delegate('.force-individual-js', 'click', function(e){					
+			$('#tablesorterRt').delegate('.force-individual-js', 'click', function(e){					
 				e.preventDefault();
 				var iVal = $(this).prev().prev().val();
 				var str = 'cancelselected='+iVal;								
@@ -412,16 +412,12 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 		    setInterval(function() {
 		    	getTime++;
-				var
-				weeks = Math.floor(getTime / 604800) % 7,
-				days = Math.floor(getTime / 86400) % 24,
+				var 
+				days = Math.floor(getTime / 86400),
 				hours = Math.floor(getTime / 3600) % 24,
 		        minutes = Math.floor(getTime / 60 % 60),
 		        seconds = Math.floor(getTime % 60),
 		        arr = [];
-		         if (weeks > 0) {
-				    arr.push(weeks == 1 ? '1 week ' : weeks + ' weeks');
-				 }
 		   		 if (days > 0) {
 				    arr.push(days == 1 ? '1 day ' : days + ' days');
 				 }
@@ -498,7 +494,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    
 			if (helpers.getCurrentPage() === 'builders') {
 				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1];				
-				//var fullUrl = 'http://10.45.7.102:8001/json/projects/All%20Branches?as_text=0&filter=1'
+				//var fullUrl = 'http://10.45.6.93:8001/currentBuilds.json';
 			}
 
 		    if (helpers.getCurrentPage() === 'builddetail') {

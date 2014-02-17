@@ -12,6 +12,13 @@
 	display:inline-block;
 }
 
+.status-text {
+	display: inline-block;
+	&:first-letter {
+		text-transform: capitalize;
+	}
+}
+
 // used for hidden html in the forcebuild dialogue. See forms.html
  
  

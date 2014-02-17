@@ -20,10 +20,10 @@ require.config({
 		'rtbuildslaves': 'project/rtBuildSlaves',
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'jqache': 'plugins/jqache-0-1-1-min',
-		'overscroll': 'plugins/jquery-overscroll',
-		'livestamp': 'plugins/livestamp',
+		'overscroll': 'plugins/jquery-overscroll',		
 		'moment': 'plugins/moment-with-langs',		
-		'mustache': "libs/mustache-wrap"
+		'mustache': "libs/mustache-wrap",
+		'livestamp': "plugins/livestamp"
 	}
 });
 
@@ -80,6 +80,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown','moment'],
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-		dataTables.init();	
+		dataTables.init($('.tablesorter-js'));	
+		dataTables.init($('#tablesorterRt'));
 	});	
 });
