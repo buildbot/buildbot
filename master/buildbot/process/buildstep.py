@@ -318,7 +318,6 @@ class BuildStep(object, properties.PropertiesMixin):
         # **temporary** method until new-style steps are the only supported style
         return self.run.__func__ is not BuildStep.run.__func__
 
-
     def run(self):
         # new-style tests override this, by definition.
         # old-style tests don't call it.
@@ -589,7 +588,8 @@ class LoggingBuildStep(BuildStep):
                 # The dummy default argument local_logname is a work-around for
                 # Python name binding; default values are bound by value, but
                 # captured variables in the body are bound by name.
-                callback = lambda cmd_arg, local_logname=logname: self.addLog(local_logname)
+                callback = lambda cmd_arg, local_logname=logname: self.addLog(
+                    local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # tell the BuildStepStatus to add a LogFile
@@ -603,7 +603,8 @@ class LoggingBuildStep(BuildStep):
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
         if self.step_status.isWaitingForLocks():
-            self.addCompleteLog('interrupt while waiting for locks', str(reason))
+            self.addCompleteLog(
+                'interrupt while waiting for locks', str(reason))
         else:
             self.addCompleteLog('interrupt', str(reason))
 

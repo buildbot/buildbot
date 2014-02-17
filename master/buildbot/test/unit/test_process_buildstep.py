@@ -21,7 +21,6 @@ from buildbot.process import properties
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakebuild
@@ -33,7 +32,6 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
-from twisted.internet import error
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -60,6 +58,7 @@ class OldStyleStep(buildstep.BuildStep):
 class FailingCustomStep(buildstep.LoggingBuildStep):
 
     flunkOnFailure = True
+
     def __init__(self, exception=buildstep.BuildStepFailed, *args, **kwargs):
         buildstep.LoggingBuildStep.__init__(self, *args, **kwargs)
         self.exception = exception
@@ -158,8 +157,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         When BuildStep is passed an unknown keyword argument, it reports
         a config error.
         """
-        self.assertRaisesConfigError("__init__ got unexpected keyword argument(s) ['oogaBooga']",
-                                     lambda: buildstep.BuildStep(oogaBooga=5))
+        self.assertRaisesConfigError(
+            "__init__ got unexpected keyword argument(s) ['oogaBooga']",
+            lambda: buildstep.BuildStep(oogaBooga=5))
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
@@ -228,7 +228,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
-        self._setupWaterfallTest(lambda: 0 / 0, False, expectedResult=EXCEPTION)
+        self._setupWaterfallTest(
+            lambda: 0 / 0, False, expectedResult=EXCEPTION)
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
@@ -288,7 +289,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     @defer.inlineCallbacks
     def test_step_renders_flunkOnFailure(self):
-        self.setupStep(TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
+        self.setupStep(
+            TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
         self.properties.setProperty('fOF', 'yes', 'test')
         self.expectOutcome(result=SUCCESS, status_text=["generic"])
         yield self.runStep()
@@ -296,7 +298,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_step_raising_exception_in_start(self):
         self.setupStep(FailingCustomStep(exception=ValueError))
-        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=["generic", "exception"])
         d = self.runStep()
 
         @d.addCallback
@@ -321,13 +324,17 @@ class TestLoggingBuildStep(unittest.TestCase):
         cmd = self.makeRemoteCommand(0, "Log text", "Log text")
         lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
-        self.assertEqual(status, SUCCESS, "evaluateCommand returned %d, should've returned %d" % (status, SUCCESS))
+        self.assertEqual(
+            status, SUCCESS, "evaluateCommand returned %d, should've returned %d" %
+            (status, SUCCESS))
 
     def test_evaluateCommand_failed(self):
         cmd = self.makeRemoteCommand(23, "Log text", "")
         lbs = buildstep.LoggingBuildStep()
         status = lbs.evaluateCommand(cmd)
-        self.assertEqual(status, FAILURE, "evaluateCommand returned %d, should've returned %d" % (status, FAILURE))
+        self.assertEqual(
+            status, FAILURE, "evaluateCommand returned %d, should've returned %d" %
+            (status, FAILURE))
 
     def test_evaluateCommand_log_eval_func(self):
         cmd = self.makeRemoteCommand(0, "Log text")
@@ -336,7 +343,8 @@ class TestLoggingBuildStep(unittest.TestCase):
             return WARNINGS
         lbs = buildstep.LoggingBuildStep(log_eval_func=eval)
         status = lbs.evaluateCommand(cmd)
-        self.assertEqual(status, WARNINGS, "evaluateCommand didn't call log_eval_func or overrode its results")
+        self.assertEqual(status, WARNINGS,
+                         "evaluateCommand didn't call log_eval_func or overrode its results")
 
 
 class TestRemoteShellCommand(unittest.TestCase):
@@ -359,8 +367,10 @@ class TestRemoteShellCommand(unittest.TestCase):
                                             "fake2",
                                             ("not obfuscated", "a", "b"),
                                             ("obfuscated"),  # not obfuscated
-                                            ("obfuscated", "test"),  # not obfuscated
-                                            ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                                            # not obfuscated
+                                            ("obfuscated", "test"),
+                                            # not obfuscated)
+                                            ("obfuscated", "1", "2", "3"),
                                             ])
 
         command = "echo test"
@@ -516,14 +526,14 @@ class InterfaceTests(interfaces.InterfaceTests):
 
 
 class TestFakeInterface(unittest.TestCase,
-        steps.BuildStepMixin, InterfaceTests):
+                        steps.BuildStepMixin, InterfaceTests):
 
     def setUp(self):
         self.setupStep(buildstep.BuildStep())
 
 
 class TestRealInterface(unittest.TestCase,
-                 InterfaceTests):
+                        InterfaceTests):
 
     def setUp(self):
         self.step = buildstep.BuildStep()
