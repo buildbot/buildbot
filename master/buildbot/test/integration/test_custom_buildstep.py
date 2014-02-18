@@ -25,6 +25,7 @@ from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
 from buildbot.process import slavebuilder
+from buildbot.process import remotecommand
 from buildbot.status import results
 from buildbot.steps import shell
 from buildbot.test.fake import fakemaster
@@ -105,12 +106,22 @@ class NewStyleCustomBuildStep(buildstep.BuildStep):
 
         log = yield dCheck(self.addLog('testlog'))
         yield dCheck(log.addStdout(u'stdout\n'))
-        yield dCheck(log.finish())
 
         yield dCheck(self.addCompleteLog('obs',
                 'Observer saw %r' % (map(unicode, lo.observed),)))
         yield dCheck(self.addHTMLLog('foo.html', '<head>\n'))
         yield dCheck(self.addURL('linkie', 'http://foo'))
+
+        cmd = remotecommand.RemoteCommand('fake', {})
+        cmd.useLog(log)
+        stdio = yield dCheck(self.addLog('stdio'))
+        cmd.useLog(stdio)
+        yield dCheck(cmd.addStdout(u'stdio\n'))
+        yield dCheck(cmd.addStderr(u'stderr\n'))
+        yield dCheck(cmd.addHeader(u'hdr\n'))
+        yield dCheck(cmd.addToLog('testlog', 'fromcmd\n'))
+
+        yield dCheck(log.finish())
 
         defer.returnValue(results.SUCCESS)
 
@@ -309,8 +320,9 @@ class RunSteps(unittest.TestCase):
         yield self.do_test_step()
         self.assertLogs({
             'foo.html': '<head>\n',
-            'testlog': 'stdout\n',
+            'testlog': 'stdout\nfromcmd\n',
             'obs': "Observer saw [u'stdout\\n']",
+            'stdio': "stdio\nstderr\n",
         })
 
     @defer.inlineCallbacks

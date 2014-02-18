@@ -197,16 +197,19 @@ class RemoteCommand(pb.Referenceable):
             self.logs['stdio'].addStdout(data)
         if self.collectStdout:
             self.stdout += data
+        return defer.succeed(None)
 
     def addStderr(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStderr(data)
         if self.collectStderr:
             self.stderr += data
+        return defer.succeed(None)
 
     def addHeader(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addHeader(data)
+        return defer.succeed(None)
 
     def addToLog(self, logname, data):
         # Activate delayed logs on first data.
@@ -221,6 +224,7 @@ class RemoteCommand(pb.Referenceable):
             self.logs[logname].addStdout(data)
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
+        return defer.succeed(None)
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
