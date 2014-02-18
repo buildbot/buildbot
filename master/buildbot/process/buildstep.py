@@ -469,6 +469,7 @@ class BuildStep(object, properties.PropertiesMixin):
         log.msg("addHTMLLog(%s)" % name)
         self.step_status.addHTMLLog(name, html)
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
     def addLogObserver(self, logname, observer):
         assert interfaces.ILogObserver.providedBy(observer)
@@ -491,6 +492,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     def addURL(self, name, url):
         self.step_status.addURL(name, url)
+        return defer.succeed(None)
 
     def runCommand(self, command):
         self.cmd = command

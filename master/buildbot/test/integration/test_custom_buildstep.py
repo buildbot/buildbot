@@ -109,6 +109,8 @@ class NewStyleCustomBuildStep(buildstep.BuildStep):
 
         yield dCheck(self.addCompleteLog('obs',
                 'Observer saw %r' % (map(unicode, lo.observed),)))
+        yield dCheck(self.addHTMLLog('foo.html', '<head>\n'))
+        yield dCheck(self.addURL('linkie', 'http://foo'))
 
         defer.returnValue(results.SUCCESS)
 
@@ -306,6 +308,7 @@ class RunSteps(unittest.TestCase):
         self.factory.addStep(NewStyleCustomBuildStep())
         yield self.do_test_step()
         self.assertLogs({
+            'foo.html': '<head>\n',
             'testlog': 'stdout\n',
             'obs': "Observer saw [u'stdout\\n']",
         })
