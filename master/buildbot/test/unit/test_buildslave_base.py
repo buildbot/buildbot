@@ -119,7 +119,7 @@ class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class RealBuildSlaveInterface(unittest.TestCase, BuildSlaveInterfaceTests):
+class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def setUp(self):
         self.sl = ConcreteBuildSlave('sl', 'pa')
@@ -137,7 +137,7 @@ class RealBuildSlaveInterface(unittest.TestCase, BuildSlaveInterfaceTests):
         return self.sl.attached(self.remote)
 
 
-class FakeBuildSlaveInterface(unittest.TestCase, BuildSlaveInterfaceTests):
+class FakeBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)

@@ -525,14 +525,14 @@ class InterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class TestFakeInterface(unittest.TestCase,
+class TestFakeItfc(unittest.TestCase,
                         steps.BuildStepMixin, InterfaceTests):
 
     def setUp(self):
         self.setupStep(buildstep.BuildStep())
 
 
-class TestRealInterface(unittest.TestCase,
+class TestRealItfc(unittest.TestCase,
                         InterfaceTests):
 
     def setUp(self):
