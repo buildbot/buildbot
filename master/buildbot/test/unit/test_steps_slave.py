@@ -368,6 +368,32 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
                            status_text=["generic"])
         return self.runStep()
 
+    def test_glob(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.runGlob("*.pyc")
+            self.assertEqual(res, ["one.pyc", "two.pyc"])
+
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + Expect.update('files', ["one.pyc", "two.pyc"])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_glob_fail(self):
+        self.setupStep(CompositeUser(lambda x: x.runGlob("*.pyc")))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=["generic"])
+        return self.runStep()
+
     def test_abandonOnFailure(self):
         @defer.inlineCallbacks
         def testFunc(x):
