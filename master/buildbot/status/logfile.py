@@ -526,6 +526,7 @@ class LogFile:
         @param text: text to add to the logfile
         """
         self.addEntry(STDOUT, text)
+        return defer.succeed(None)
 
     def addStderr(self, text):
         """
@@ -534,6 +535,7 @@ class LogFile:
         @param text: text to add to the logfile
         """
         self.addEntry(STDERR, text)
+        return defer.succeed(None)
 
     def addHeader(self, text):
         """
@@ -542,6 +544,7 @@ class LogFile:
         @param text: text to add to the logfile
         """
         self.addEntry(HEADER, text)
+        return defer.succeed(None)
 
     def finish(self):
         """
@@ -572,6 +575,7 @@ class LogFile:
         for w in watchers:
             w.callback(self)
         self.watchers = []
+        return defer.succeed(None)
 
     def compressLog(self):
         logCompressionMethod = self.master.config.logCompressionMethod

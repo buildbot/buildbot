@@ -444,7 +444,10 @@ class BuildStep(object, properties.PropertiesMixin):
     def addLog(self, name):
         loog = self.step_status.addLog(name)
         self._connectPendingLogObservers()
-        return loog
+        if self.isNewStyle():
+            return defer.succeed(loog)
+        else:
+            return loog
 
     def getLog(self, name):
         for l in self.step_status.getLogs():
@@ -460,6 +463,7 @@ class BuildStep(object, properties.PropertiesMixin):
             loog.addStdout(text[start:start + size])
         loog.finish()
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
