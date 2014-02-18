@@ -192,6 +192,7 @@ Features
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug: `751`)
 * Added spot instance support to EC2LatentBuildSlave.
+* Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the slave.
 
 Fixes
 ~~~~~
