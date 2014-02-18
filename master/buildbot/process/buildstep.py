@@ -940,7 +940,8 @@ class ShellMixin(object):
     renderables = _shellMixinArgs
 
     def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
-        assert self.isNewStyle(), "ShellMixin is only compatible with new-style steps"
+        assert self.isNewStyle(
+        ), "ShellMixin is only compatible with new-style steps"
         constructorArgs = constructorArgs.copy()
 
         def bad(arg):
@@ -1011,7 +1012,8 @@ class ShellMixin(object):
         for logname, remotefilename in self.logfiles.items():
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
-                callback = lambda cmd_arg, logname=logname: self.addLog(logname)
+                callback = lambda cmd_arg, logname=logname: self.addLog(
+                    logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # tell the BuildStepStatus to add a LogFile
