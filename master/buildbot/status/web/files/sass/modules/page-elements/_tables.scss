@@ -116,8 +116,21 @@
 		}
 	}
 }
- 
+  
 .tablesorter {
+	#bowlG {
+		position:relative;
+		margin: auto;
+		left: auto;
+		right: auto;
+		#bowl_ringG,
+		.ball_holderG  {
+			left: auto;
+			right: auto;
+			position:relative;
+			margin: auto;
+		}
+	}
 	
 	th {
 		@include text-shadow (0 1px 0 #fff);

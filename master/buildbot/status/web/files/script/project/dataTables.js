@@ -5,7 +5,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
       
     dataTables = {
         init: function (tablesorterEl) {
-			
+			var preloader = Mustache.render(popups, {'preloader':'true'});
 			// Select which columns not to sort
 			tablesorterEl.each(function(i) {			    	
 				
@@ -24,7 +24,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 					"bSearchable": true,
 					"aaSorting": [],					
 					"iDisplayLength": 50,
-					"bStateSave": true
+					"bStateSave": true					
 				}
 				
 				// add only filter input nor pagination
@@ -49,9 +49,9 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 				// add specific for the buildqueue page
 				if ($(this).hasClass('buildqueue-table')) {	
 				
-					var preloader = Mustache.render(popups, {'preloader':'true'});
+					//var preloader = Mustache.render(popups, {'preloader':'true'});
 										
-        			$('body').append(preloader);
+        			//$('body').append(preloader);
 
 					optionTable.aaSorting = [[ 2, "asc" ]]			
 					optionTable.aoColumns = [
@@ -112,10 +112,14 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 					
 				} // add specific for the builders page
 				else if ($(this).hasClass('builders-table')) {	
-					var preloader = Mustache.render(popups, {'preloader':'true'});	
+					//var preloader = Mustache.render(popups, {'preloader':'true'});	
 					
-        			$('body').append(preloader);
+        			//$('body').append(preloader);
         			
+
+        			
+        			
+
 					optionTable.aoColumns = [
 						{ "mData": null },	
 			            { "mData": null },
@@ -181,12 +185,13 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						}							
 						}						
 					]			
+
 				}
 				else if ($(this).hasClass('buildslaves-tables')) {	
 
-					var preloader = Mustache.render(popups, {'preloader':'true'});
+					//var preloader = Mustache.render(popups, {'preloader':'true'});
 										
-        			$('body').append(preloader);
+        			//$('body').append(preloader);
 
 					optionTable.aoColumns = [
 						{ "mData": "friendly_name" },	
@@ -231,14 +236,14 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						},									
 						{
 						"aTargets": [ 3 ],
-						"mRender": function (data,full,type)  {														
-							var lastMessageDate = ' ('+ moment().utc(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')';							
-							var showTimeago = type.lastMessage != 0? true : null;							
-							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,lastMessageDate:lastMessageDate});
+						"mRender": function (data,full,type)  {																					
+							var showTimeago = type.lastMessage != 0? true : null;														
+							var lastMessageDate = showTimeago? ' ('+ moment().utc(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')' : '';							
+							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,showLastMessageDate:lastMessageDate});
 							return htmlnew;
 						},
 						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
-							$(nTd).find('.last-lessage-timemago').attr('data-livestamp',oData.lastMessage);
+							$(nTd).find('.last-message-timemago').attr('data-livestamp',oData.lastMessage);
 						}
 							
 						}
@@ -257,7 +262,8 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 					optionTable.bLengthChange = true;
 					optionTable.bInfo = true;
 					optionTable.bFilter = true;
-					optionTable.oLanguage = {						
+					optionTable.oLanguage = {
+          			 	"sEmptyTable": preloader,
 					 	"sSearch": "",
 					 	 "sLengthMenu": 'Entries per page<select>'+
 				            '<option value="10">10</option>'+
@@ -290,7 +296,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 				}
 
 				// Set the marquee in the input field on load and listen for key event	
-				filterTableInput.attr('placeholder','Filter results').focus();
+				filterTableInput.attr('placeholder','Filter results').focus();				
 
 			});
 		}
