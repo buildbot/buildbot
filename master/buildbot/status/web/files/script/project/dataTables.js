@@ -5,17 +5,11 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
       
     dataTables = {
         init: function (tablesorterEl) {
-			 
-			// datatable element				
-			//var tablesorterEl = $('.tablesorter-js');	
-
-			// initialize with empty array before updating from json			
-			var aa =[]
-
+			
 			// Select which columns not to sort
 			tablesorterEl.each(function(i) {			    	
-				var colList = [];
-
+				
+				var colList = [];								
 				var optionTable = {				 			
 					"bPaginate": false,
 					"bLengthChange": false,
@@ -46,7 +40,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 
 				$('> thead th', this).each(function(i){			        
 			        if (!$(this).hasClass('no-tablesorter-js')) {
-			            colList.push(null);
+			            colList.push(null);			            
 			        } else {
 			            colList.push({'bSortable': false });
 			        }
@@ -67,8 +61,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 			            { "mData": "slaves" },
 			            { "mData": "brid",
 			            'bSortable': false }
-					]
-					optionTable.aaData = aa;
+					]					
 
 					optionTable.aoColumnDefs = [
 						{
@@ -119,16 +112,19 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 					
 				} // add specific for the builders page
 				else if ($(this).hasClass('builders-table')) {	
-					var preloader = Mustache.render(popups, {'preloader':'true'});									
+					var preloader = Mustache.render(popups, {'preloader':'true'});	
+					
         			$('body').append(preloader);
+        			
 					optionTable.aoColumns = [
 						{ "mData": null },	
 			            { "mData": null },
 			            { "mData": null },
 			            { "mData": null },
-			            { "mData": null }
+			            { "mData": null,
+			            'bSortable': false }
 					]
-					optionTable.aaData = aa;        
+					    
 					optionTable.aoColumnDefs = [
 						{					
 						"aTargets": [ 0 ],
@@ -141,9 +137,10 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						{
 						"aTargets": [ 1 ],
 						"sClass": "txt-align-left",
-							"mRender": function (data,full,type)  {		
-							var noJobs = type.pendingBuilds === 0 && type.currentBuilds.length === 0;
+						"mRender": function (data,full,type)  {		
+							var noJobs = type.pendingBuilds === 0 && type.currentBuilds.length === 0;							
 							var eta = type.eta != undefined? moment().utc(type.eta).format('MMM Do YYYY, H:mm:ss') : '';							
+
 							var htmlnew = Mustache.render(builders, {etaTime:eta,showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
 							return htmlnew;
 						}
@@ -152,7 +149,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 						"aTargets": [ 2 ],
 						"sClass": "txt-align-left last-build-js",
 						"mRender": function (data,full,type) {
-							var htmlnew = Mustache.render(builders, {latestBuild:type.latestBuild});
+							var htmlnew = Mustache.render(builders, {showLatestBuild:true,latestBuild:type.latestBuild});
 							return htmlnew;
 						},
 						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
@@ -161,22 +158,28 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 								var time = helpers.getTime(oData.latestBuild.times[0],oData.latestBuild.times[1]).trim();		             					             			
 		             			$(nTd).find('.small-txt').html('('+ time +')');
 		             			$(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);			             			
-							}							
+							}
 						}
-						},									
+						},
 						{
-						"aTargets": [ 3 ]
-							
+						"aTargets": [ 3 ],
+						"mRender": function (data,full,type) {							
+							var lf = type.latestBuild							
+							var htmlnew = Mustache.render(builders, {showStatus:true,latestBuild:type.latestBuild});
+							return htmlnew;
+						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {														
+							var lb = oData.latestBuild === undefined? '' : oData.latestBuild;													
+							$(nTd).removeClass().addClass(lb.results_text);
+						}
 						},
 						{
 						"aTargets": [ 4 ],
 						"mRender": function (data,full,type) {
-							var htmlnew = Mustache.render(builders, {customBuild:true});
+							var builderUrl = location.protocol + "//" + location.host							
+							var htmlnew = Mustache.render(builders, {customBuild:true,builderUrlShow:builderUrl,project:type.project,builderName:type.name});
 							return htmlnew;
-						}
-							
-						}
-						
+						}							
+						}						
 					]			
 				}
 				else if ($(this).hasClass('buildslaves-tables')) {	
@@ -191,7 +194,7 @@ define(['datatables-plugin','helpers','text!templates/popups.html','text!templat
 			            { "mData": "connected"},
 			            { "mData": "lastMessage" }
 					]
-					optionTable.aaData = aa;
+					
 					optionTable.aoColumnDefs = [
 						{					
 						"aTargets": [ 0 ],

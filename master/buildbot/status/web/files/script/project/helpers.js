@@ -40,13 +40,6 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 				helpers.summaryArtifactTests();
 			}
 
-			if ($('#tb-root').length != 0) {
-                //Disabled until we decided that we need an updating front page
-				//helpers.updateBuilders();
-			}
-
-
-
        		// submenu overflow on small screens
 
 	        helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -75,8 +68,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 
 			// trigger individual builds on the builders page
-			helpers.runIndividualBuild();
-			
+			helpers.runIndividualBuild();			
 			
 			// Set the full name from a cookie. Used on buildersform and username in the header
 			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
@@ -147,7 +139,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			});
 
 		}, runIndividualBuild: function() { // trigger individual builds
-			$('.run-build-js').click(function(e){
+			$('#tablesorterRt').delegate('.run-build-js', 'click', function(e){			
 				$('.remove-js').remove();
 				e.preventDefault();
                 var prevElem = $(this).prev();
@@ -167,8 +159,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
                 $.each(sURLVariables, function(index, val) {
                     var sParameterName = val.split('=');
                     if (sParameterName[0].indexOf("_branch") >= 0) {
-                        urlParams[sParameterName[0]] = sParameterName[1];
-                        console.log(val)
+                        urlParams[sParameterName[0]] = sParameterName[1];                        
                     }
                 });
 
@@ -510,7 +501,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    
 			if (helpers.getCurrentPage() === 'builders') {
 				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1];				
-				//var fullUrl = 'http://10.45.6.93:8001/currentBuilds.json';
+				//var fullUrl = 'http://10.45.6.93:8001/builders.json';
 			}
 
 		    if (helpers.getCurrentPage() === 'builddetail') {

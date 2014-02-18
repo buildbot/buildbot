@@ -27,16 +27,6 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				popup.pendingJobs(url);					
 			});
 
-			/*
-			//For builders pending box
-			$('.popup-btn-js').each(function(i){
-				$(this).attr('data-in', i).on('click', function(e){
-					e.preventDefault();
-					popup.pendingJobs($(this));				
-				});				
-			});
-			*/
-
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
 				e.preventDefault();
@@ -106,17 +96,19 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			    parser.href = currentUrl;
 				var actionUrl = parser.protocol + '//' + parser.host + parser.pathname;							
 
-				console.log(actionUrl);	
-				//cancelbuild?
 			$.ajax({
 				url:url,
 				cache: false,
 				dataType: "json",
 				
 				success: function(data) {
-					preloader.remove();					
-					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,actionUrl:actionUrl}));
-					//console.log(mustacheTmpl.find('.cancelbuild').serialize());
+					
+					preloader.remove();													
+					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL}));					
+					var waitingtime = mustacheTmpl.find('.waiting-time-js');
+					waitingtime.each(function(i){						
+						helpers.startCounter($(this),data[i].submittedAt);
+					});					
 					mustacheTmpl.appendTo('body');					
 					helpers.jCenter(mustacheTmpl).fadeIn('fast');
 					helpers.closePopup(mustacheTmpl);					
@@ -136,7 +128,6 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			var mib = $(mustacheTmplOutBox);
 			
 			mib.appendTo('body');
-
 
 			$.get(path)
 			.done(function(data) {
@@ -212,8 +203,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
             $.each(sURLVariables, function(index, val) {
                 var sParameterName = val.split('=');
                 if (sParameterName[0].indexOf("_branch") >= 0) {
-                    urlParams[sParameterName[0]] = sParameterName[1];
-                    console.log(val)
+                    urlParams[sParameterName[0]] = sParameterName[1];                    
                 }
             });
 			
@@ -223,7 +213,6 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				var exContent = $('#content1');
 				preloader.remove();
 				$(data).appendTo(exContent);
-
 				
 				// Insert full name from cookie
 				if (contentType === 'form') {
@@ -236,9 +225,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 					helpers.jCenter(mib);
 				});
 				// popup.customTabs();
-				helpers.closePopup(mib);
-				
-
+				helpers.closePopup(mib);				
 			});
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 

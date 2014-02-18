@@ -59,3 +59,5 @@ master/buildbot/status/web/files/script/project/aadata.json
 master/buildbot/status/web/files/prod/script/project/aadata.json
 
 master/buildbot/status/web/files/aadata.json
+
+master/buildbot/status/web/files/builders.json
