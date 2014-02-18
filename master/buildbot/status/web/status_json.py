@@ -695,7 +695,7 @@ class SingleProjectJsonResource(JsonResource):
                                                    num_builds=1))
 
             if len(builds) > 0:
-                builder['latestBuild'] = builds[0].asDict()
+                builder['latestBuild'] = builds[0].asBaseDict()
 
             result['builders'].append(builder)
 

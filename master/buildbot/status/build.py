@@ -456,32 +456,43 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                                                      self.number))
             log.err()
 
-    def asDict(self):
+    def asBaseDict(self):
         result = {}
+
         # Constant
         result['builderName'] = self.builder.name
         result['number'] = self.getNumber()
-        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
         result['url'] = self.builder.status.getURLForThing(self)
 
         # Transient
-        result['properties'] = self.getProperties().asList()
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
+        result['slave'] = self.getSlavename()
+        result['eta'] = self.getETA()
 
         #Lazy importing here to avoid python import errors
         from buildbot.status.web.base import css_classes
         result['results_text'] = css_classes.get(result['results'], "")
 
-        result['slave'] = self.getSlavename()
+        return result
+
+    def asDict(self):
+        result = self.asBaseDict()
+
+        # Constant
+        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
+
+        # Transient
+        result['properties'] = self.getProperties().asList()
+
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),
             self.builder.status.getURLForThing(l)] for l in self.getLogs()]
-        result['eta'] = self.getETA()
+
         result['steps'] = [bss.asDict() for bss in self.steps]
         if self.getCurrentStep():
             result['currentStep'] = self.getCurrentStep().asDict()

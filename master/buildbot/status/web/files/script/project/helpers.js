@@ -500,7 +500,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    var buildslavesPath = parser.pathname.match(/\/projects\/([^\/]+)/);
 		    
 			if (helpers.getCurrentPage() === 'builders') {
-				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1];				
+				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?filter=1';
 				//var fullUrl = 'http://10.45.6.93:8001/builders.json';
 			}
 
