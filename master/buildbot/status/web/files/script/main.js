@@ -24,11 +24,7 @@ require.config({
 		'moment': 'plugins/moment-with-langs',		
 		'mustache': "libs/mustache-wrap",
 		'livestamp': "plugins/livestamp"
-	},shim: {
-        'livestamp' : {
-            deps: ['moment']
-        }
-    }
+	}
 });
 
 define(['helpers','dataTables','popup','screensize','projectdropdown'], 

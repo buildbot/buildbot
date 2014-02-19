@@ -442,10 +442,12 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 		}, startCounterTimeago: function(el, myStartTimestamp) {
 			var startTimestamp = parseInt(myStartTimestamp);			    		    
+			var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
+				el.html(lastMessageTimeAgo);
 		    setInterval(function() {		    	
 				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
 				el.html(lastMessageTimeAgo);
-			 }, 1000);	
+			 }, 10000);	
 		}, getTime: function  (start, end) {
 	
 			if (end === null) {
