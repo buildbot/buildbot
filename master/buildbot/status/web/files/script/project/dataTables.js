@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','popup','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','moment','livestamp'], function (dataTable,helpers,popup,popups,buildqueue,buildslaves,builders,Mustache,moment,livestamp) {
+define(['datatables-plugin','helpers','popup','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','moment'], function (dataTable,helpers,popup,popups,buildqueue,buildslaves,builders,Mustache,moment) {
    
     "use strict";
     var dataTables;
@@ -146,8 +146,8 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							return htmlnew;
 						},
 						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
-							if (oData.latestBuild != undefined) {																
-								$(nTd).find('.last-run').attr('data-livestamp',oData.latestBuild.times[1]);
+							if (oData.latestBuild != undefined) {																								
+								helpers.startCounterTimeago($(nTd).find('.last-run'),oData.latestBuild.times[1]);
 								var time = helpers.getTime(oData.latestBuild.times[0],oData.latestBuild.times[1]).trim();		             					             			
 		             			$(nTd).find('.small-txt').html('('+ time +')');
 		             			$(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);			             			
@@ -192,7 +192,7 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,host_name:type.name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
 							return htmlnew;
 						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
-							$(nTd).find('a.popup-btn-js-2').data(oData);
+							$(nTd).find('a.popup-btn-json-js').data(oData);
 						}
 						},
 						{
@@ -225,7 +225,7 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							return htmlnew;
 						},
 						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
-							$(nTd).find('.last-message-timemago').attr('data-livestamp',oData.lastMessage);
+							helpers.startCounterTimeago($(nTd).find('.last-message-timemago'),oData.lastMessage);							
 						}
 							
 						}
