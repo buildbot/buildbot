@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import json
 
 import time
 from twisted.internet import defer
@@ -23,6 +24,9 @@ from buildbot import interfaces
 from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
 
 # /buildqueue
+from buildbot.status.web.status_json import QueueJsonResource
+
+
 class BuildQueueResource(HtmlResource):
     pageTitle = "Katana - Build Queue"
     addSlash = True
@@ -33,43 +37,10 @@ class BuildQueueResource(HtmlResource):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
-        master = req.site.buildbot_service.master
 
-        unclaimed_brq = yield master.db.buildrequests.getUnclaimedBuildRequest()
-
-        brstatus = [ { 'brstatus' : BuildRequestStatus(brdict['buildername'], brdict['brid'], status), 'brdict' : brdict}
-                for brdict in unclaimed_brq]
-
-        buildqueue = []
-        for pb in brstatus:
-            bq = {}
-            brdict = pb['brdict']
-            brs = pb['brstatus']
-            builder_status = status.getBuilder(brs.buildername)
-            bq['name'] = brs.buildername
-            bq['sourcestamps'] = yield brs.getSourceStamps()
-            bq['reason'] = brdict['reason']
-            submitTime = yield brs.getSubmitTime()
-            bq['when'] = time.strftime("%b %d %H:%M:%S",
-                      time.localtime(submitTime))
-            bq['waiting'] = util.formatInterval(util.now() - submitTime)
-            bq['brid'] = brdict['brid']
-            builder = status.getBuilder(brs.buildername)
-            bq['builder_url'] = path_to_builder(req, builder, False)
-            bq['brdict'] = brdict
-
-            #Get compatible slaves
-            build_request = yield brs._getBuildRequest()
-            if build_request.properties.hasProperty("selected_slave"):
-                bq['slaves'] = [build_request.properties.getProperty("selected_slave")]
-            else:
-                bq['slaves'] = builder_status.slavenames
-
-            buildqueue.append(bq)
-
-        cxt['buildqueue'] =  buildqueue
-
-        
+        queue = QueueJsonResource(status)
+        queue_json = yield queue.asDict(req)
+        cxt['instant_json'] = json.dumps(queue_json)
         
         template = req.site.buildbot_service.templates.get_template("buildqueue.html")
         defer.returnValue(template.render(**cxt))
