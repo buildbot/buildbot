@@ -496,10 +496,10 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
 		    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
 		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
-		    var projectsPath = parser.pathname.match(/\/projects\/([^\/]+)/);
-		    var buildslavesPath = parser.pathname.match(/\/projects\/([^\/]+)/);
+		    var projectsPath = parser.pathname.match(/\projects\/([^\/]+)/);
+		    var buildslavesPath = parser.pathname.match(/\projects\/([^\/]+)/);
 		    
-			if (helpers.getCurrentPage() === 'builders') {
+			if (helpers.getCurrentPage() === 'builders') {				
 				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?filter=1';
 				//var fullUrl = 'http://10.45.6.93:8001/builders.json';
 			}
@@ -509,7 +509,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    }
 
 		    if (helpers.getCurrentPage() === 'buildslaves') {		    	
-		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves';
+		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves/?filter=1';
 		    	//var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
 		    }
 

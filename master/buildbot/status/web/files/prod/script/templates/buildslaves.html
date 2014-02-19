@@ -2,47 +2,12 @@
 
 {{#friendly_name}}
 	<a href="buildslaves/{{host_name}}">{{friendly_name}}</a>	
-	<a class="more-info fl-right popup-btn-js-2" href="#"> </a>
+	<a class="more-info fl-right popup-btn-js-2" href="#" data-hostname="{{host_name}}"> </a>
 {{/friendly_name}}
 {{^friendly_name}}
   Not Available 
 {{/friendly_name}}
 
-
-<div class="more-info-box more-info-box-js">
-	<h3>Additional information</h3>
-	
-	{{#buildbotversion}}
-		<br>
-		<h4>Buildbot</h4>
-		<span>{{buildbotversion}}</span>
-		<br>
-	{{/buildbotversion}}
-	{{#admin}}
-		<h4>Admin</h4>
-	    <span>{{admin}}</span>
-	    <br>
-    {{/admin}}
-	
-	<h4 class="last">Builders</h4>
-	
-	<ul class="builders-list">
-		{{#builders}}	
-			{{#.}}
-				<li>
-					<a href="{{url}}">
-						{{name}}
-					</a>
-				</li>
-			{{/.}}
-			{{^.}}
-				<li>
-				 	<span class="Warning">no builders</span>
-				</li>
-			{{/.}}			
-		{{/builders}}		
-	</ul>
-</div>
 {{/buildersPopup}}
 
 {{#showTimeago}}

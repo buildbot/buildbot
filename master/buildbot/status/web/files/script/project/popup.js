@@ -7,15 +7,16 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 		init: function () {
 
 			//For non ajax boxes
+			/*
 			$('.popup-btn-js-2').click(function(e){				
 				e.preventDefault();
-				popup.nonAjaxPopup($(this));
+				//popup.nonAjaxPopup($(this));
 			});
+			*/
 
-			// for dynamic added links in buildqueue
 			$('#tablesorterRt').delegate('.popup-btn-js-2', 'click', function(e){
-				e.preventDefault();
-				popup.nonAjaxPopup($(this));
+				e.preventDefault();				
+				popup.showBuildersInfo($(this).data());										
 			});
 
 			$('#tablesorterRt').delegate('.popup-btn-js', 'click', function(e){
@@ -39,6 +40,14 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				e.preventDefault();
 				popup.externalContentPopup($(this));
 			});
+
+		}, showBuildersInfo: function(jsonObj) {
+			var mustacheTmpl = $(Mustache.render(popups, {jData:jsonObj}));					
+			
+			$('body').append(mustacheTmpl);			
+			helpers.jCenter(mustacheTmpl).fadeIn('fast', function() {
+				helpers.closePopup(mustacheTmpl);
+			});			
 
 		}, validateForm: function(formContainer) { // validate the forcebuildform
 				var formEl = $('.command_forcebuild', formContainer);
@@ -79,7 +88,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			var clonedInfoBox = thisEl.next($('.more-info-box-js')).clone();				
 			clonedInfoBox.appendTo($('body'));
 			helpers.jCenter(clonedInfoBox).fadeIn('fast', function() {
-				helpers.closePopup(clonedInfoBox);
+			helpers.closePopup(clonedInfoBox);
 			});
 			$(window).resize(function() {
 				helpers.jCenter(clonedInfoBox);				
@@ -110,8 +119,10 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 						helpers.startCounter($(this),data[i].submittedAt);
 					});					
 					mustacheTmpl.appendTo('body');					
-					helpers.jCenter(mustacheTmpl).fadeIn('fast');
-					helpers.closePopup(mustacheTmpl);					
+					helpers.jCenter(mustacheTmpl).fadeIn('fast', function(){
+						helpers.closePopup(mustacheTmpl);	
+					});
+					
 				}
 			});
 

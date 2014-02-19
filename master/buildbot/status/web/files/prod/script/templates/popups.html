@@ -54,3 +54,41 @@
 	</ul>
 </div>
 {{/showPendingJobs}}
+
+{{#jData}}
+<div class="more-info-box more-info-box-js">
+	<span class="close-btn"></span>
+	<h3>Additional information</h3>
+	
+	{{#version}}
+		<br>
+		<h4>Buildbot</h4>
+		<span>{{version}}</span>
+		<br>
+	{{/version}}
+	{{#admin}}
+		<h4>Admin</h4>
+	    <span>{{admin}}</span>
+	    <br>
+    {{/admin}}
+	
+	<h4 class="last">Builders</h4>
+	
+	<ul class="builders-list">
+		{{#builders}}	
+			{{#.}}
+				<li>
+					<a href="{{url}}">
+						{{name}}
+					</a>
+				</li>
+			{{/.}}
+			{{^.}}
+				<li>
+				 	<span class="Warning">no builders</span>
+				</li>
+			{{/.}}			
+		{{/builders}}		
+	</ul>
+</div>
+{{/jData}}

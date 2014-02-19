@@ -134,7 +134,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
         	try {            		        
           		var obj = JSON.parse(m);  	          		          		          		
           		$.each(obj, function (key, value) { 
-          			var arObjData = [value];										
+          			var arObjData = [value];		          			
 					tbsorter.fnAddData(arObjData);	
           		});
             }
