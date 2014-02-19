@@ -3,13 +3,78 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
     var realtimePages;
     
     realtimePages = {
-        buildDetail: function (m, stepList) {
+        initRealtime: function (realTimeFunc) {
+            //Attempt to load our table immediately
+            var json = getInstantJSON();
+            if (json !== undefined)
+            {
+                console.log("Loaded from instant JSON");
+                loadTable(json);
+            }
+
+        	// Creating a new websocket
+	        window.sock = null; // Global
+         	var wsURI = $('body').attr('data-realTimeServer');
+            var sock;
+         	console.log(wsURI);
+
+	         if ("WebSocket" in window) {
+	         	sock = new WebSocket(wsURI);
+	         } else if ("MozWebSocket" in window) {
+	         	sock = new MozWebSocket(wsURI);
+	         } else {
+	             log("Browser does not support WebSocket!");
+	             window.location = "http://autobahn.ws/unsupportedbrowser";
+	         }
+
+	         // if the socket connection is success
+	         if (sock) {
+	             sock.onopen = function () {
+                     $('#bowlG').remove();
+                     // get the json url to parse
+                     broadcast(helpers.getJsonUrl());
+                 };
+
+	             // when the connection closes
+	             sock.onclose = function(e) {
+	                 sock = null;
+	             };
+
+	             // when the client recieves a message
+	             sock.onmessage = function(e) {
+                     loadTable(e.data);
+	             }
+	         }
+
+	        // send a message to the server
+	         function broadcast(msg) {
+	             if (sock) {
+	             	sock.send(msg);
+	             }
+	         }
+
+            function getInstantJSON () {
+                var script = $('#instant-json');
+                if (script.length) {
+                    script.remove();
+                    return instantJSON;
+                }
+                return undefined;
+            }
+
+            function loadTable(data) {
+                if (typeof data === "string") {
+                    data = JSON.parse(data);
+                }
+                realTimeFunc(data);
+                console.log("Reloading data...")
+            }
+        },
+        rtBuildDetail: function (data) {
+            var stepList = $('#stepList > li');
         	var currentstepJS = $('.current-step-js');
             try {
-        	
-                  var obj = JSON.parse(m);
-            		      
-                 $.each(obj, function (key, value) {
+                 $.each(data, function (key, value) {
                   	
                   	// update timing table
                   	var startTime = value.times[0];
@@ -110,49 +175,45 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
 	                });
 				
           		}
-             
 	            catch(err) {
 	            	//console.log(err);
 	            }
 		           
         },
-        buildersPage: function(m, tableRowList) {
+        buildersPage: function(data) {
 		  	    	
   			var tbsorter = $('#tablesorterRt').dataTable();        		
     		tbsorter.fnClearTable();        
 
-        	try {            		        
-          		var obj = JSON.parse(m);  	          		          		          		          		
-          		tbsorter.fnAddData(obj.builders);							
+        	try {
+          		tbsorter.fnAddData(data.builders);
 	        }
 	           catch(err) {
 	        	//console.log(err);
 	        }
-        }, rtBuildSlaves: function(m){
+        }, rtBuildSlaves: function(data){
         		var tbsorter = $('#tablesorterRt').dataTable();        		
         		tbsorter.fnClearTable();        	
-        	try {            		        
-          		var obj = JSON.parse(m);  	          		          		          		
-          		$.each(obj, function (key, value) { 
-          			var arObjData = [value];		          			
-					tbsorter.fnAddData(arObjData);	
+        	try {
+          		$.each(data, function (key, value) {
+          			var arObjData = [value];
+					tbsorter.fnAddData(arObjData);
           		});
             }
             catch(err) {
             }
-        }, rtBuildqueue: function(m){
+        }, rtBuildqueue: function(data){
         		var tbsorter = $('#tablesorterRt').dataTable();        		
         		tbsorter.fnClearTable();
         	try {
-				var obj = JSON.parse(m);								
-				
-				tbsorter.fnAddData(obj);	
+				tbsorter.fnAddData(data);
 				
 
             }
             catch(err) {
             }
         }
-    }
+    };
+
     return realtimePages
 });
