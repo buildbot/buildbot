@@ -19,7 +19,6 @@ from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
-from twisted.internet import defer
 
 
 class SlaveBuildStep(buildstep.BuildStep):
