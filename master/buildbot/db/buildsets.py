@@ -219,4 +219,6 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                       reason=row.reason, submitted_at=mkdt(row.submitted_at),
                       complete=bool(row.complete),
                       complete_at=mkdt(row.complete_at), results=row.results,
-                      bsid=row.id, sourcestamps=sourcestamps)
+                      bsid=row.id, sourcestamps=sourcestamps,
+                      parent_buildid=row.parent_buildid,
+                      parent_relationship=row.parent_relationship)

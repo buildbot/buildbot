@@ -311,6 +311,8 @@ class Buildset(Row):
         complete=0,
         complete_at=None,
         results=-1,
+        parent_buildid=None,
+        parent_relationship=None,
     )
 
     id_column = 'id'
@@ -1180,14 +1182,14 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildset(self, bsid=None, expected_buildset=None):
         """Assert that the given buildset looks as expected; the ssid parameter
         of the buildset is omitted.  Properties are converted with asList and
-        sorted.  Attributes complete, complete_at, submitted_at, and results
+        sorted.  Attributes complete, complete_at, submitted_at, results, and parent_*
         are ignored if not specified."""
         self.t.assertIn(bsid, self.buildsets)
         buildset = self.buildsets[bsid].copy()
         del buildset['id']
 
         # clear out some columns if the caller doesn't care
-        for col in 'complete complete_at submitted_at results'.split():
+        for col in 'complete complete_at submitted_at results parent_buildid parent_relationship'.split():
             if col not in expected_buildset:
                 del buildset[col]
 

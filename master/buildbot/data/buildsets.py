@@ -120,6 +120,8 @@ class Buildset(base.ResourceType):
         sourcestamps = types.List(
             of=sourcestampsapi.SourceStamp.entityType)
         link = types.Link()
+        parent_buildid = types.NoneOk(types.Integer())
+        parent_relationship = types.NoneOk(types.String())
     entityType = EntityType(name)
 
     @base.updateMethod

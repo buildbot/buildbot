@@ -414,6 +414,8 @@ _buildset = dict(
     complete=BooleanValidator(),
     complete_at=NoneOk(IntValidator()),
     results=NoneOk(IntValidator()),
+    parent_buildid=NoneOk(IntValidator()),
+    parent_relationship=NoneOk(StringValidator()),
 )
 _buildsetEvents = ['new', 'complete']
 
@@ -449,6 +451,8 @@ dbdict['bsdict'] = DictValidator(
     complete=BooleanValidator(),
     complete_at=NoneOk(DateTimeValidator()),
     results=NoneOk(IntValidator()),
+    parent_buildid=NoneOk(IntValidator()),
+    parent_relationship=NoneOk(StringValidator()),
 )
 
 # buildrequest

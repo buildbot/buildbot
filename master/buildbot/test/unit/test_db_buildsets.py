@@ -87,6 +87,7 @@ class Tests(interfaces.InterfaceTests):
                                       submitted_at=datetime.datetime(1970, 4, 18, 7, 39, 19,
                                                                      tzinfo=UTC),
                                       complete=False, complete_at=None, results=-1,
+                                      parent_buildid=None, parent_relationship=None,
                                       bsid=bsid))
 
     def test_addBuildset_getBuildset_explicit_submitted_at(self):
@@ -106,6 +107,7 @@ class Tests(interfaces.InterfaceTests):
                                           submitted_at=datetime.datetime(1970, 4, 13, 21, 8, 8,
                                                                          tzinfo=UTC),
                                           complete=False, complete_at=None, results=-1,
+                                          parent_buildid=None, parent_relationship=None,
                                           bsid=bsdict['bsid']))
         return d
 
@@ -154,7 +156,8 @@ class Tests(interfaces.InterfaceTests):
                                           submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
                                                                          tzinfo=UTC),
                                           complete=False, complete_at=None, results=-1,
-                                          bsid=91))
+                                          bsid=91,
+                                          parent_buildid=None, parent_relationship=None))
         d.addCallback(check)
         return d
 
@@ -175,7 +178,8 @@ class Tests(interfaces.InterfaceTests):
                                           submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
                                                                          tzinfo=UTC),
                                           complete=False, complete_at=None, results=-1,
-                                          bsid=91))
+                                          bsid=91,
+                                          parent_buildid=None, parent_relationship=None))
         d.addCallback(check)
         return d
 
@@ -199,7 +203,8 @@ class Tests(interfaces.InterfaceTests):
                                           complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
                                                                         tzinfo=UTC),
                                           results=-1,
-                                          bsid=91))
+                                          bsid=91,
+                                          parent_buildid=None, parent_relationship=None))
         d.addCallback(check)
         return d
 
@@ -245,13 +250,15 @@ class Tests(interfaces.InterfaceTests):
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
                                                    tzinfo=UTC),
-                     complete=False, results=-1, bsid=91),
+                     complete=False, results=-1, bsid=91,
+                     parent_buildid=None, parent_relationship=None),
                 dict(external_idstring='extid', reason='rsn2', sourcestamps=[234],
                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
                                                    tzinfo=UTC),
-                     complete=True, results=7, bsid=92),
+                     complete=True, results=7, bsid=92,
+                     parent_buildid=None, parent_relationship=None),
             ]))
         d.addCallback(check)
         return d
@@ -270,7 +277,8 @@ class Tests(interfaces.InterfaceTests):
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
                                                    tzinfo=UTC),
-                     complete=True, results=7, bsid=92),
+                     complete=True, results=7, bsid=92,
+                     parent_buildid=None, parent_relationship=None),
             ])
         d.addCallback(check)
         return d
@@ -289,7 +297,8 @@ class Tests(interfaces.InterfaceTests):
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
                                                    tzinfo=UTC),
-                     complete=False, results=-1, bsid=91),
+                     complete=False, results=-1, bsid=91,
+                     parent_buildid=None, parent_relationship=None),
             ])
         d.addCallback(check)
         return d
@@ -378,13 +387,15 @@ class Tests(interfaces.InterfaceTests):
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
                                                    tzinfo=UTC),
-                     complete=False, results=-1, bsid=91),
+                     complete=False, results=-1, bsid=91,
+                     parent_buildid=None, parent_relationship=None),
                 dict(external_idstring='extid', reason='rsn2', sourcestamps=[91],
                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 16,
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
                                                    tzinfo=UTC),
-                     complete=True, results=7, bsid=92),
+                     complete=True, results=7, bsid=92,
+                     parent_buildid=None, parent_relationship=None)
             ])
         d.addCallback(check)
         return d
@@ -402,7 +413,8 @@ class Tests(interfaces.InterfaceTests):
                                                     tzinfo=UTC),
                      complete_at=datetime.datetime(1979, 6, 15, 12, 31, 16,
                                                    tzinfo=UTC),
-                     complete=True, results=7, bsid=92),
+                     complete=True, results=7, bsid=92,
+                     parent_buildid=None, parent_relationship=None),
             ])
         d.addCallback(check)
         return d

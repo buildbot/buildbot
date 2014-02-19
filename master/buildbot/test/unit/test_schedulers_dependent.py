@@ -95,6 +95,8 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             external_idstring=None,
             reason=u'Because',
             results=results if complete else -1,
+            parent_buildid=None,
+            parent_relationship=None,
         )
         if not complete:
             msg['scheduler'] = scheduler_name

@@ -84,6 +84,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'results': -1,
                 #'sourcestamps': [100],
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
+                'parent_buildid': None,
+                'parent_relationship': None,
             }
         )
 
@@ -134,6 +136,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         reason=u'triggering',
                                         results=results,
                                         sourcestamps=[],
+                                        parent_buildid=None,
+                                        parent_relationship=None,
                                     ))
 
     # tests
