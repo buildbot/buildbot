@@ -200,22 +200,22 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 				$('body').append(preloader).show();					
 				var tableSorter = $('#tablesorterRt').dataTable();							   				
 				str = str+'&ajax=true';
-
+				
 				$.ajax({
 					type: "POST",
 					url: 'buildqueue/_selected/cancelselected',
 					data: str,
 					success: function (data) {
-						preloader.remove();						
-						tableSorter.fnClearTable();        			               												
-						$.each(data, function (key, value) { 
-		          			var arObjData = [value];										
-							tableSorter.fnAddData(arObjData);	
-						});				
+						preloader.remove();
+						tableSorter.fnClearTable();
+						$.each(data, function (key, value) {
+		          			var arObjData = [value];
+							tableSorter.fnAddData(arObjData);							
+						});
 						selectAll.prop('checked',false);
 					}
 				});
-				return false;					
+				return false;									
 			}				
 
 			$('#submitBtn').click(function(e){					
