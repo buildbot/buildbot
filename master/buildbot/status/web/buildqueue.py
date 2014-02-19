@@ -16,7 +16,7 @@ import json
 
 import time
 from twisted.internet import defer
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, path_to_buildqueue_json
 from buildbot import util
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import path_to_builder, BuildLineMixin, ActionResource, path_to_buildqueue, path_to_root
@@ -87,4 +87,7 @@ class CancelBuildQueueActionResource(ActionResource):
             yield brc.cancel()
 
         # go back to the buildqueue page
-        defer.returnValue(path_to_buildqueue(req))
+        if req.args.has_key("ajax"):
+            defer.returnValue(path_to_buildqueue_json(req))
+        else:
+            defer.returnValue(path_to_buildqueue(req))
