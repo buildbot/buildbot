@@ -45,7 +45,8 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_addBuildset(self):
         @self.assertArgSpecMatches(self.db.buildsets.addBuildset)
         def addBuildset(self, sourcestamps, reason, properties,
-                        builderNames, waited_for, external_idstring=None, submitted_at=None):
+                        builderNames, waited_for, external_idstring=None, submitted_at=None,
+                        parent_buildid=None, parent_relationship=None):
             pass
 
     def test_signature_completeBuildset(self):

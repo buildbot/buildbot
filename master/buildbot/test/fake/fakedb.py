@@ -1050,6 +1050,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderNames, waited_for,
                     external_idstring=None, submitted_at=None,
+                    parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
         # We've gotten this wrong a couple times.
         assert isinstance(waited_for, bool), 'waited_for should be boolean: %r' % waited_for
@@ -1071,7 +1072,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
         # make up a row and keep its dictionary, with the properties tacked on
         bsrow = Buildset(id=bsid, reason=reason,
                          external_idstring=external_idstring,
-                         submitted_at=submitted_at)
+                         submitted_at=submitted_at,
+                         parent_buildid=parent_buildid, parent_relationship=parent_relationship)
         self.buildsets[bsid] = bsrow.values.copy()
         self.buildsets[bsid]['properties'] = properties
 

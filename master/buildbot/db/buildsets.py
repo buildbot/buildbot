@@ -37,6 +37,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def addBuildset(self, sourcestamps, reason, properties, builderNames,
                     waited_for, external_idstring=None, submitted_at=None,
+                    parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
         if submitted_at:
             submitted_at = datetime2epoch(submitted_at)
@@ -68,7 +69,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(buildsets_tbl.insert(), dict(
                 submitted_at=submitted_at, reason=reason, complete=0,
                 complete_at=None, results=-1,
-                external_idstring=external_idstring))
+                external_idstring=external_idstring,
+                parent_buildid=parent_buildid, parent_relationship=parent_relationship))
             bsid = r.inserted_primary_key[0]
 
             # add any properties

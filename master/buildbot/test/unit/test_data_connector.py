@@ -75,7 +75,8 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=[],
                         reason='', properties={}, builderNames=[],
-                        external_idstring=None):
+                        external_idstring=None,
+                        parent_buildid=None, parent_relationship=None):
             pass
 
     def test_signature_updates_maybeBuildsetComplete(self):

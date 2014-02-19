@@ -533,7 +533,7 @@ buildsets
     * ``complete_at`` (datetime object; time this buildset was completed)
     * ``results`` (aggregate result of this buildset; see :ref:`Build-Result-Codes`)
 
-    .. py:method:: addBuildset(sourcestamps, reason, properties, builderNames, external_idstring=None)
+    .. py:method:: addBuildset(sourcestamps, reason, properties, builderNames, external_idstring=None, parent_buildid=None, parent_relationship=None)
 
         :param sourcestamps: sourcestamps for the new buildset; see below
         :type sourcestamps: list
@@ -546,6 +546,8 @@ buildsets
         :param external_idstring: external key to identify this buildset; defaults to None
         :type external_idstring: unicode string
         :param datetime submitted_at: time this buildset was created; defaults to the current time
+        :param int parent_buildid: optional build id that is the parent for this buildset
+        :param unicode parent_relationship: relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
         :returns: buildset ID and buildrequest IDs, via a Deferred
 
         Add a new Buildset to the database, along with BuildRequests for each named builder, returning the resulting bsid via a Deferred.
