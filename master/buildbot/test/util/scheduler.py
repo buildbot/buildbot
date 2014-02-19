@@ -176,25 +176,31 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return defer.succeed((bsid, brids))
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-                                                    waited_for=False, properties=None, builderNames=None):
+                                                    waited_for=False, properties=None,
+                                                    builderNames=None, **kw):
         properties = properties.asDict()
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
-                                      locals()))
-        self.addBuildsetCalls[-1][1].pop('self')
+                                      dict(reason=reason, sourcestamps=sourcestamps,
+                                           waited_for=waited_for, properties=properties,
+                                           builderNames=builderNames)))
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
-                                   changeids=[], builderNames=None, properties=None):
+                                   changeids=[], builderNames=None, properties=None, **kw):
         properties = properties.asDict() if properties is not None else None
-        self.addBuildsetCalls.append(('addBuildsetForChanges', locals()))
-        self.addBuildsetCalls[-1][1].pop('self')
+        self.addBuildsetCalls.append(('addBuildsetForChanges',
+                                      dict(waited_for=waited_for, reason=reason,
+                                           external_idstring=external_idstring,
+                                           changeids=changeids,
+                                           properties=properties, builderNames=builderNames,
+                                           )))
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
                                         reason='', external_idstring=None, properties=None,
-                                        builderNames=None):
+                                        builderNames=None, **kw):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
