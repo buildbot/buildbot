@@ -12,7 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+import json
+from buildbot.status.web.status_json import ProjectJsonResource, SingleProjectJsonResource
 
 from twisted.web import html
 import urllib, time
@@ -531,6 +532,7 @@ def foundCodebasesInPendingBuild(pendingbuild, codebases):
     found = len(foundcodebases) == len(sources)
     defer.returnValue(found)
 
+
 # /builders
 class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
@@ -543,146 +545,14 @@ class BuildersResource(HtmlResource):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         status = self.getStatus(req)
-        encoding = getRequestCharset(req)
 
-        builders = req.args.get("builder", status.getBuilderNamesByProject(self.project.name))
-        branches = [ b.decode(encoding)
-                for b in req.args.get("branch", [])
-                if b ]
-
-        codebases = {}
-        codebases_arg = getCodebasesArg(request=req, codebases=codebases)
-        codebases_in_args = len(codebases_arg) > 0
-
-        if codebases_in_args:
-            builder_arg = codebases_arg + "&returnpage=builders"
-        else:
-            builder_arg = "?returnpage=builders"
-
-        # get counts of pending builds for each builder
-        brstatus_ds = []
-        brcounts = {}
-        def keep_count(statuses, builderName):
-            brcounts[builderName] = len(statuses)
-        for builderName in builders:
-            builder_status = status.getBuilder(builderName)
-            #get pending build status x branch
-            d = builder_status.getPendingBuildRequestStatuses()
-            d.addCallback(keep_count, builderName)
-            brstatus_ds.append(d)
-        yield defer.gatherResults(brstatus_ds)
-
-        cxt['selectedproject'] = self.project.name
-        cxt['builder_arg'] = builder_arg
         cxt['path_to_codebases'] = path_to_codebases(req, self.project.name)
-        cxt['branches'] = branches
-        bs = cxt['builders'] = []
-
-        schedulers = status.master.allSchedulers()
-        builder_schedulers = {}
-        for sch in schedulers:
-            if isinstance(sch, ForceScheduler):
-                force_schedulers = {}
-                force_schedulers[sch.name] = sch
-                for bn in sch.builderNames:
-                    builder_schedulers[bn] = force_schedulers
-
-        building = 0
-        online = 0
-
-        for bn in builders:
-            builder = status.getBuilder(bn)
-
-            bld = { 'link': path_to_builder(req, builder),
-                    'name': bn, 'builder_url': path_to_builder(req, builder, False) }
-
-            bs.append(bld)
-
-            builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
-                                                         codebases=codebases,
-                                                         num_builds=1))
-            bld['force_schedulers'] = {}
-            if bn in builder_schedulers:
-                bld['force_schedulers'] = builder_schedulers[bn]
-
-            bld['current'] = [builder_info(x, req, codebases_arg=codebases_arg) for x in builder.getCurrentBuilds(codebases=codebases)]
-            bld['pending'] = []
-            statuses = yield builder.getPendingBuildRequestStatuses()
-            for pb in statuses:
-                changes = []
-
-                source = yield pb.getSourceStamp()
-
-                if codebases_in_args:
-                    found = yield foundCodebasesInPendingBuild(pb, codebases)
-                    if not found:
-                        continue
-
-                submitTime = yield pb.getSubmitTime()
-                bsid = yield pb.getBsid()
-
-                properties = yield \
-                    pb.master.db.buildsets.getBuildsetProperties(bsid)
-
-                ## this should use sources instead
-                if source.changes:
-                    for c in source.changes:
-                        changes.append({ 'url' : path_to_change(req, c),
-                                         'who' : c.who,
-                                         'revision' : c.revision,
-                                         'repo' : c.repository })
-
-                bld['pending'].append({
-                    'when': time.strftime("%b %d %H:%M:%S",
-                                          time.localtime(submitTime)),
-                    'delay': util.formatInterval(util.now() - submitTime),
-                    'id': pb.brid,
-                    'changes' : changes,
-                    'num_changes' : len(changes),
-                    'properties' : properties,
-                    })
-
-            if builds:
-                b = builds[0]
-
-                bld['build_url'] = path_to_build(req, b)
-                
-                label = None
-                all_got_revisions = b.getAllGotRevisions()
-                # If len = 1 then try if revision can be used as label.
-                if len(all_got_revisions) == 1:
-                    label = all_got_revisions[all_got_revisions.keys()[0]]
-                if not label or len(str(label)) > 20:
-                    label = "#%d" % b.getNumber()
-
-                bld['build_label'] = label
-                bld['build_text'] = " ".join(b.getText())
-                (start, end) = b.getTimes()
-                bld['start'] = time.ctime(start)
-                if end:
-                    bld['end'] = time.ctime(end)
-                    bld['elapsed'] = util.formatInterval(end - start)
-                    bld['last_run'] = util.formatIntervalDays(util.now() - end)
-                    bld['last_run_date'] = start
-                bld['build_css_class'] = build_get_class(b)
-
-            current_box = ICurrentBox(builder).getBox(status, brcounts)
-            bld['current_box'] = current_box.td()
-
-            builder_status = builder.getState()[0]
-            if builder_status == "building":
-                building += 1
-                online += 1
-            elif builder_status != "offline":
-                online += 1
-
+        cxt['selectedproject'] = self.project.name
         cxt['authz'] = self.getAuthz(req)
-        cxt['num_building'] = building
-        cxt['num_online'] = online
-        buildForceContext(cxt, req, self.getBuildmaster(req))
 
-        cxt['fbuildsch'] = req.args
-        cxt['rt_update'] = req.args
+        project_json = SingleProjectJsonResource(status, self.project)
+        project_dict = yield project_json.asDict(req)
+        cxt['instant_json'] = json.dumps(project_dict)
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))
