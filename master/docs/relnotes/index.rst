@@ -125,7 +125,7 @@ Features
 
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
-  
+
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
 * The IRC bot of :bb:status:`IRC` will, unless useRevisions is set, shorten
@@ -195,6 +195,8 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the slave that match a given shell-style pattern.
+
 Slave
 -----
 
@@ -205,6 +207,7 @@ Features
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug: `751`)
 * Added spot instance support to EC2LatentBuildSlave.
+* Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the slave.
 
 Fixes
 ~~~~~
