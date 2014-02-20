@@ -135,6 +135,21 @@ div.welcome-txt {
 	margin: 0 0 2px;
 }
 
+.spin-icon:after {
+	color:rgba(0, 0, 0, 0.5);
+	margin-bottom: -1px;
+	font-family: "katana_icons";
+    content: "";
+    display: inline-block;
+    padding: 0;
+    font-weight:bold;
+    position: relative;
+}
+
+.building .spin-icon {
+	margin-left:10px;
+}
+
 .more-info {
 	font-weight:bold;
 }

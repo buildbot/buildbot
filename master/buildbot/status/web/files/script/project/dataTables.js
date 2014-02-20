@@ -204,17 +204,31 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 						},
 						{
 						"aTargets": [ 2 ],
-						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {														
+						"mRender": function (data,full,type)  {
+							var statusTxt;
+							
+							if (type.connected === undefined) {
+								statusTxt = 'Offline';							
+							} 
+							else if (type.connected === true && type.runningBuilds === undefined) {
+								statusTxt = 'Idle';								
+							} else if (type.connected === true && type.runningBuilds.length > 0){															
+								statusTxt = 'Running ' + type.runningBuilds.length + ' build(s)';								
+								var spinIcon = true;
+							}
+							var htmlnew = Mustache.render(buildslaves, {showStatusTxt:statusTxt,showSpinIcon:spinIcon});
+							return htmlnew;							
+						}, "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {														
 							if (oData.connected === undefined) {
-								$(nTd).addClass('offline').text('Not connected');
+								$(nTd).addClass('offline');
 							} 
 							else if (oData.connected === true && oData.runningBuilds === undefined) {
-								$(nTd).addClass('idle').text('Idle');
-							} else if (oData.connected === true && oData.runningBuilds.length > 0){							
-								var runningTxt = 'Running ' + oData.runningBuilds.length + ' build(s)';
-								$(nTd).addClass('building').text(runningTxt);
+								$(nTd).addClass('idle');
+							} else if (oData.connected === true && oData.runningBuilds.length > 0){															
+								$(nTd).addClass('building');
 							}											
 					    }
+					    
 						},									
 						{
 						"aTargets": [ 3 ],
