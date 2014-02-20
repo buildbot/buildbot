@@ -34,7 +34,8 @@ class Triggerable(base.BaseScheduler):
         self._buildset_complete_consumer = None
         self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
 
-    def trigger(self, waited_for, sourcestamps=None, set_props=None):
+    def trigger(self, waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         """Trigger this scheduler with the optional given list of sourcestamps
         Returns two deferreds:
             idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are available.
@@ -49,8 +50,13 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        idsDeferred = self.addBuildsetForSourceStampsWithDefaults(self.reason,
-                                                                  sourcestamps, waited_for, properties=props)
+        idsDeferred = self.addBuildsetForSourceStampsWithDefaults(
+            self.reason,
+            sourcestamps, waited_for,
+            properties=props,
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship)
+
         resultsDeferred = defer.Deferred()
 
         def setup_waiter(ids):

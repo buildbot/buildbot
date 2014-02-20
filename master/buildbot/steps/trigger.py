@@ -15,9 +15,10 @@
 
 from buildbot import config
 from buildbot.interfaces import ITriggerableScheduler
+from buildbot.status.results import worst_status, statusToString
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import CANCELLED
 from buildbot.process.buildstep import EXCEPTION
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
@@ -25,18 +26,18 @@ from twisted.internet import defer
 from twisted.python import log
 
 
-class Trigger(LoggingBuildStep):
+class Trigger(BuildStep):
     name = "trigger"
 
     renderables = ['set_properties', 'schedulerNames', 'sourceStamps',
-                   'updateSourceStamp', 'alwaysUseLatest']
+                   'updateSourceStamp', 'alwaysUseLatest', 'parent_relationship']
 
     flunkOnFailure = True
 
     def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={},
-                 copy_properties=[], **kwargs):
+                 copy_properties=[], parent_relationship="triggered from", **kwargs):
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
@@ -65,19 +66,21 @@ class Trigger(LoggingBuildStep):
         for i in copy_properties:
             properties[i] = Property(i)
         self.set_properties = properties
+        self.parent_relationship = parent_relationship
         self.running = False
         self.ended = False
-        LoggingBuildStep.__init__(self, **kwargs)
+        self.brids = []
+        BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
+        # FIXME: new style step cannot be interrupted anymore by just calling finished()
+        #        (which was a bad idea in the first place)
+        # we should claim the self.brids, and CANCELLED them
+        # if they were already claimed, stop the associated builds via data api
+        # then the big deferredlist will automatically be called
         if self.running and not self.ended:
-            self.step_status.setText(["interrupted"])
-            return self.end(EXCEPTION)
-
-    def end(self, result):
-        if not self.ended:
+            self.setStateStrings(["interrupted"])
             self.ended = True
-            return self.finished(result)
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self):
@@ -136,13 +139,39 @@ class Trigger(LoggingBuildStep):
         return ss_for_trigger.values()
 
     @defer.inlineCallbacks
-    def start(self):
+    def worstStatus(self, overall_results, rclist):
+        for was_cb, results in rclist:
+            if isinstance(results, tuple):
+                results, _ = results
+
+            if not was_cb:
+                yield self.addLogWithFailure(results)
+                results = EXCEPTION
+            overall_results = worst_status(overall_results, results)
+        defer.returnValue(overall_results)
+
+    @defer.inlineCallbacks
+    def addBuildUrls(self, rclist):
+        for was_cb, results in rclist:
+            if isinstance(results, tuple):
+                results, brids = results
+
+            if was_cb:  # errors were already logged in worstStatus
+                for buildername, br in brids.iteritems():
+                    builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
+                    for build in builds:
+                        num = build['number']
+                        url = self.master.status.getURLForBuild(buildername, num)
+                        yield self.step_status.addURL("%s: %s #%d" % (statusToString(results),
+                                                                      buildername, num), url)
+
+    @defer.inlineCallbacks
+    def run(self):
         # Get all triggerable schedulers and check if there are invalid schedules
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
         if invalid_schedulers:
-            self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
-            self.end(FAILURE)
-            return
+            yield self.setStateStrings(['not valid scheduler:'] + invalid_schedulers)
+            defer.returnValue(EXCEPTION)
 
         self.running = True
 
@@ -152,68 +181,44 @@ class Trigger(LoggingBuildStep):
 
         dl = []
         triggered_names = []
+        results = SUCCESS
         for sch in triggered_schedulers:
             idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
-                set_props=props_to_set
+                set_props=props_to_set,
+                parent_buildid=self.build.buildid,
+                parent_relationship=self.parent_relationship
             )
+            # we are not in a hurry of starting all in parallel and managing
+            # the deferred lists, just let the db writes be serial.
+            try:
+                bsid, brids = yield idsDeferred
+            except Exception, e:
+                yield self.addLogWithException(e)
+                results = EXCEPTION
+
+            self.brids.extend(brids.values())
+            for brid in brids.values():
+                # put the url to the brids, so that we can have the status from the beginning
+                url = self.master.status.getURLForBuildrequest(brid)
+                yield self.addURL("%s #%d" % (sch.name, brid), url)
             dl.append(resultsDeferred)
             triggered_names.append(sch.name)
-        self.step_status.setText(['triggered'] + triggered_names)
+            if self.ended:
+                defer.returnValue(CANCELLED)
+        yield self.setStateStrings(['triggered'] + triggered_names)
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            # we were interrupted, don't bother update status
             if self.ended:
-                return
+                defer.returnValue(CANCELLED)
+            yield self.addBuildUrls(rclist)
+            results = yield self.worstStatus(results, rclist)
         else:
-            rclist = ()
             # do something to handle errors
             for d in dl:
                 d.addErrback(log.err,
                              '(ignored) while invoking Triggerable schedulers:')
 
-        was_exception = was_failure = False
-        brids = {}
-        for was_cb, results in rclist:
-            if isinstance(results, tuple):
-                results, some_brids = results
-                brids.update(some_brids)
-
-            if not was_cb:
-                was_exception = True
-                log.err(results)
-                continue
-
-            if results == FAILURE:
-                was_failure = True
-
-        if was_exception:
-            result = EXCEPTION
-        elif was_failure:
-            result = FAILURE
-        else:
-            result = SUCCESS
-
-        if brids:
-            master = self.build.builder.botmaster.parent
-
-            def add_links(res):
-                # reverse the dictionary lookup for brid to builder name
-                brid_to_bn = dict((_brid, _bn) for _bn, _brid in brids.iteritems())
-
-                for was_cb, builddicts in res:
-                    if was_cb:
-                        for build in builddicts:
-                            bn = brid_to_bn[build['buildrequestid']]
-                            num = build['number']
-
-                            url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn, num), url)
-
-                return self.end(result)
-
-            builddicts = [master.db.builds.getBuilds(buildrequestid=br) for br in brids.values()]
-            dl = defer.DeferredList(builddicts, consumeErrors=1)
-            dl.addCallback(add_links)
-
-        self.end(result)
+        defer.returnValue(results)

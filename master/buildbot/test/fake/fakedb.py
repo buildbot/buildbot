@@ -1638,7 +1638,6 @@ class FakeBuildsComponent(FakeDBComponent):
 
     def getBuilds(self, builderid=None, buildrequestid=None):
         ret = []
-
         for (id, row) in self.builds.items():
             if builderid and row['builderid'] != builderid:
                 continue

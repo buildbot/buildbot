@@ -17,6 +17,13 @@ SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = range(7)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
 
 
+def statusToString(status):
+    if status < 0 or status >= len(Results):
+        return "Invalid status"
+    else:
+        return Results[status]
+
+
 def worst_status(a, b):
     # SKIPPED > SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY > CANCELLED
     # CANCELLED needs to be considered the worst.
