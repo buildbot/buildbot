@@ -1,9 +1,14 @@
 define(['jquery','helpers','popup','text!templates/builders.html','mustache'], function ($,helpers,popup,builders,Mustache) {
 	 "use strict";
-    var realtimePages;
-    
+    var realtimePages;    
+    var tbsorter = $('#tablesorterRt').dataTable();
+    var stepList = $('#stepList > li');
+    var currentstepJS = $('.current-step-js');
+
     realtimePages = {
         initRealtime: function (realTimeFunc) {
+        	       		
+
             //Attempt to load our table immediately
             var json = getInstantJSON();
             if (json !== undefined)
@@ -70,9 +75,8 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
                 console.log("Reloading data...")
             }
         },
-        rtBuildDetail: function (data) {
-            var stepList = $('#stepList > li');
-        	var currentstepJS = $('.current-step-js');
+        rtBuildDetail: function (data,el) {
+            
             try {
                  $.each(data, function (key, value) {
                   	
@@ -180,9 +184,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
 	            }
 		           
         },
-        buildersPage: function(data) {
-		  	    	
-  			var tbsorter = $('#tablesorterRt').dataTable();        		
+        buildersPage: function(data) {		  	
     		tbsorter.fnClearTable();        
 
         	try {
@@ -191,8 +193,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
 	           catch(err) {
 	        	//console.log(err);
 	        }
-        }, rtBuildSlaves: function(data){
-        		var tbsorter = $('#tablesorterRt').dataTable();        		
+        }, rtBuildSlaves: function(data){        		
         		tbsorter.fnClearTable();        	
         	try {
           		$.each(data, function (key, value) {
@@ -202,8 +203,7 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
             }
             catch(err) {
             }
-        }, rtBuildqueue: function(data){
-        		var tbsorter = $('#tablesorterRt').dataTable();        		
+        }, rtBuildqueue: function(data){        		
         		tbsorter.fnClearTable();
         	try {
 				tbsorter.fnAddData(data);

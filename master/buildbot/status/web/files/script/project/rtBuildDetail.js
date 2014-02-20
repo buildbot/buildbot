@@ -3,7 +3,7 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
     var rtBuildDetail;
     
     rtBuildDetail = {
-        init: function () {
+        init: function () {        	
             realtimePages.initRealtime(realtimePages.rtBuildDetail)
         }
     };

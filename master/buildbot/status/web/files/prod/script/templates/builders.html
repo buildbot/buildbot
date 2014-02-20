@@ -3,6 +3,7 @@
 {{/name}}
 
 	{{#currentBuilds}}
+	
 		<h2 class="small-head">
 			Current job
 	    </h2>    
@@ -14,11 +15,12 @@
 						ETA: {{etaTime}}
 					{{/etaTime}}                        			
 					{{#currentStep}}
-						{{name}}
+						{{name}} <span class="spin-icon animate-spin"></span>
 					{{/currentStep}}
 				</li>			
 			{{/.}}
 		</ul>
+	
 	{{/currentBuilds}}
 
 	{{#pendingBuilds}}	
