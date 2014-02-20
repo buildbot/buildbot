@@ -24,7 +24,7 @@ from buildbot import interfaces
 from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
 
 # /buildqueue
-from buildbot.status.web.status_json import QueueJsonResource
+from buildbot.status.web.status_json import QueueJsonResource, FilterOut
 
 
 class BuildQueueResource(HtmlResource):
@@ -40,6 +40,7 @@ class BuildQueueResource(HtmlResource):
 
         queue = QueueJsonResource(status)
         queue_json = yield queue.asDict(req)
+        queue_json = FilterOut(queue_json)
         cxt['instant_json'] = json.dumps(queue_json)
         
         template = req.site.buildbot_service.templates.get_template("buildqueue.html")
