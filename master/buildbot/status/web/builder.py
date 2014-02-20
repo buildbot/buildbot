@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import json
-from buildbot.status.web.status_json import ProjectJsonResource, SingleProjectJsonResource
+from buildbot.status.web.status_json import ProjectJsonResource, SingleProjectJsonResource, FilterOut
 
 from twisted.web import html
 import urllib, time
@@ -552,6 +552,7 @@ class BuildersResource(HtmlResource):
 
         project_json = SingleProjectJsonResource(status, self.project)
         project_dict = yield project_json.asDict(req)
+        project_dict = FilterOut(project_dict)
         cxt['instant_json'] = json.dumps(project_dict)
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
