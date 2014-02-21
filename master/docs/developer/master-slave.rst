@@ -455,6 +455,23 @@ It produces two status updates:
 
     0 if the file is found, otherwise 1.
 
+glob
+....
+
+This command finds all pathnames matching a specified pattern that uses shell-style wildcards.
+It takes a single parameter, ``pathname``, specifying the pattern to pass to Python's
+``glob.glob`` function.
+
+It produces two status updates:
+
+``files``
+
+    The list of matching files returned from ``glob.glob``
+
+``rc``
+
+    0 if the ``glob.glob`` does not raise exception, otherwise 1.
+
 listdir
 .......
 
