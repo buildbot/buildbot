@@ -186,28 +186,39 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 						{ "mData": null },	
 			            { "mData": null },
 			            { "mData": null },
+			            { "mData": null },
 			            { "mData": null }
 					]
 					
 					optionTable.aoColumnDefs = [
 						{					
 						"aTargets": [ 0 ],
+						"sClass": "txt-align-left",	
 						"mRender": function (data,full,type)  {												
-							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,host_name:type.name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
+							var htmlnew = Mustache.render(buildslaves, {showFriendlyName:true,friendly_name:type.friendly_name,host_name:type.name});
+							return htmlnew;
+						}
+						},
+						{
+						"aTargets": [ 1 ],
+						"sClass": "txt-align-left",	
+						"mRender": function (data,full,type)  {												
+							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true});
 							return htmlnew;
 						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
 							$(nTd).find('a.popup-btn-json-js').data({showBuilders:oData});
 						}
 						},
 						{
-						"aTargets": [ 1 ],
+						"aTargets": [ 2 ],
+						"sClass": "txt-align-left",	
 						"mRender": function (data,full,type)  {
 							var name = type.name != undefined? type.name : 'Not Available';							
 							return name;
 						}
 						},
 						{
-						"aTargets": [ 2 ],
+						"aTargets": [ 3 ],
 						"mRender": function (data,full,type)  {
 							var statusTxt;
 							
@@ -235,7 +246,7 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 					    
 						},									
 						{
-						"aTargets": [ 3 ],
+						"aTargets": [ 4 ],
 						"mRender": function (data,full,type)  {																					
 							var showTimeago = type.lastMessage != undefined? true : null;																					
 							var lastMessageDate = showTimeago? ' ('+ moment.unix(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')' : '';							

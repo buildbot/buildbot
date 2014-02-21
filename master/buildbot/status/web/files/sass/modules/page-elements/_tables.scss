@@ -117,7 +117,20 @@
 		}
 	}
 }
-  
+ 
+.th1 {width:25%;}
+.th2 {width:15%;}
+.th3 {width:35%;}
+.th4 {width:15%;}
+.th5 {width:10%;}
+
+.buildslaves-tables {
+	.th1 {width:20%;}
+	.th2 {width:20%;}
+	.th3 {width:20%;}
+	.th4 {width:40%;}
+}
+
 .tablesorter {
 	#bowlG {
 		position:relative;
