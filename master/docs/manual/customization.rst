@@ -936,7 +936,9 @@ The slave provides the following file-discovery related commands:
 For example, we could use stat to check if a given path exists and contains
 ``*.pyc`` files. If the path does not exist (or anything fails) we mark the step
 as failed; if the path exists but is not a directory, we mark the step as having
-"warnings". ::
+"warnings".
+
+.. code-block:: python
 
     from buildbot.process import buildstep
     from buildbot.interfaces import BuildSlaveToOldError
