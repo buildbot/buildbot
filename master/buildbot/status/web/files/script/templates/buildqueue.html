@@ -1,23 +1,7 @@
 {{#showslaves}}
-	<a class="more-info popup-btn-js-2 mod-1" href="#">
+	<a class="more-info popup-btn-json-js mod-1" href="#">
 		 {{slavelength}} slaves
 	</a>
-	<div class="more-info-box more-info-box-js">
-		<span class="close-btn">
-		</span>
-		<h3>Compatible slaves</h3>
-		<ul class="codebases-list">
-		{{#slaves}}	
-			{{#.}}
-			    <li> 
-                    <a href="/buildslaves/{{.}}">
-			    	    {{.}}
-                    </a>
-			    </li>
-			{{/.}}
-		{{/slaves}}	
-		</ul>
-	</div>
 {{/showslaves}}
 
 {{#input}}
@@ -27,48 +11,9 @@
 {{/input}}
 
 {{#showsources}}
-	<a class="more-info popup-btn-js-2 mod-1" href="#">
+	<a class="more-info popup-btn-json-js mod-1" href="#">
 		{{sourcesLength}} Codebase 
 	</a>
-	<div class="more-info-box more-info-box-js">
-              <span class="close-btn">
-              </span>
-              <h3>Codebases</h3>
-              <table class="table-1 first-child">
-                <thead>
-                    <th class="txt-align-left">
-                        Codebase
-                    </th>
-                    <th class="txt-align-left">
-                        Repository
-                    </th>
-                    <th class="txt-align-left">
-                        Branch
-                    </th>
-                    <th class="txt-align-left">
-                        Revision
-                    </th>
-                </thead>
-                    <tbody>
-                        {{#sources}}
-                    	<tr>
-                    		<td class="txt-align-left">
-                    			{{codebase}}
-                    		</td>
-                    		<td class="txt-align-left">
-                                {{repository}}                    			
-                    		</td>
-                    		<td class="txt-align-left">
-                                {{branch}}                              
-                    		</td>
-                    		<td class="txt-align-left">
-                                {{revision}}                   			
-                    		</td>
-                    	</tr>
-                        {{/sources}}
-                    </tbody>
-              </table>
-    </div>
 {{/showsources}}
 
 {{#reason}}

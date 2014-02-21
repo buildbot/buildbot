@@ -27,7 +27,8 @@
 	}
 	th {
 		padding:15px 10px;
-		background-color:#EEF0F5;
+		//background-color:#EEF0F5;
+		background-color:#DDE3EA;
 		@include text-shadow(0 1px 0 #fff);
 		border-top:1px solid #FFF;
 	}
@@ -146,7 +147,7 @@
 		&.sorting:hover,
 		&.sorting_asc:hover,
 		&.sorting_desc:hover {
-			background-color: #E5E7EB;
+			background-color: #CDD2D9;
 			cursor: pointer;
 		}
 	}
