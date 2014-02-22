@@ -877,7 +877,7 @@ class LoggingBuildStep(BuildStep):
 class CommandMixin(object):
 
     @defer.inlineCallbacks
-    def _runRemoteCommand(self, cmd, abandonOnFailure, args):
+    def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
         cmd = remotecommand.RemoteCommand(cmd, args)
         try:
             log = self.getLog('stdio')
@@ -887,7 +887,10 @@ class CommandMixin(object):
         yield self.runCommand(cmd)
         if abandonOnFailure and cmd.didFail():
             raise BuildStepFailed()
-        defer.returnValue(not cmd.didFail())
+        if makeResult:
+            defer.returnValue(makeResult(cmd))
+        else:
+            defer.returnValue(not cmd.didFail())
 
     def runRmdir(self, dir, log=None, abandonOnFailure=True):
         return self._runRemoteCommand('rmdir', abandonOnFailure,
@@ -900,6 +903,11 @@ class CommandMixin(object):
     def runMkdir(self, dir, log=None, abandonOnFailure=True):
         return self._runRemoteCommand('mkdir', abandonOnFailure,
                                       {'dir': dir, 'logEnviron': False})
+
+    def glob(self, glob):
+        return self._runRemoteCommand(
+            'glob', True, {'glob': glob, 'logEnviron': False},
+            makeResult=lambda cmd: cmd.updates['files'][0])
 
 
 class ShellMixin(object):

@@ -512,6 +512,16 @@ This mixin class adds some useful methods for running commands.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
+    .. py:method:: glob(path)
+
+        :param path path to test
+        :returns: list of filenames
+
+        Get the list of files matching the given path pattern on the slave.
+        This uses Python's ``glob`` module.
+        If the ``glob`` method fails, it aborts the step.
+
+
 ShellMixin
 ----------
 

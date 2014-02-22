@@ -624,6 +624,42 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(self.step.getLog('stdio').header,
                          'NOTE: never mind\n')
 
+    def test_glob(self):
+        @defer.inlineCallbacks
+        def testFunc():
+            res = yield self.step.glob("*.pyc")
+            self.assertEqual(res, ["one.pyc", "two.pyc"])
+        self.step.testMethod = testFunc
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + Expect.update('files', ["one.pyc", "two.pyc"])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_glob_empty(self):
+        self.step.testMethod = lambda: self.step.glob("*.pyc")
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + Expect.update('files', [])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_glob_fail(self):
+        self.step.testMethod = lambda: self.step.glob("*.pyc")
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=["generic"])
+        return self.runStep()
+
 
 class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
     # note that this is straight out of cls-buildsteps.rst
