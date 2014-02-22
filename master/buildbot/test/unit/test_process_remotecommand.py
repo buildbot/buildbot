@@ -37,8 +37,10 @@ class TestRemoteShellCommand(unittest.TestCase):
                                             "fake2",
                                             ("not obfuscated", "a", "b"),
                                             ("obfuscated"),  # not obfuscated
-                                            ("obfuscated", "test"),  # not obfuscated
-                                            ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                                            # not obfuscated
+                                            ("obfuscated", "test"),
+                                            # not obfuscated)
+                                            ("obfuscated", "1", "2", "3"),
                                             ])
 
         command = "echo test"
