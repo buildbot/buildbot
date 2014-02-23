@@ -59,7 +59,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
-                 placement=None, price_multiplier=1.2):
+                 placement=None, price_multiplier=1.2, retry=1,
+                 retry_price_adjustment=1):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -97,6 +98,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.max_spot_price = max_spot_price
         self.volumes = volumes
         self.price_multiplier = price_multiplier
+        self.retry_price_adjustment = retry_price_adjustment
+        self.retry = retry
+        self.attempt = 1
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -325,11 +329,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 (self.__class__.__name__, self.slavename,
                  instance.id, goal, duration // 60, duration % 60))
 
-    def _request_spot_instance(self):
+    def _submit_request(self):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
         spot_prices = self.conn.get_spot_price_history(start_time=spot_history_starttime,
-                                                       product_description='Linux/UNIX (Amazon VPC)',
+                                                       product_description='Linux/UNIX',
                                                        availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
@@ -342,24 +346,51 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             target_price = (price_sum / price_count) * self.price_multiplier
         if target_price > self.max_spot_price:
-            log.msg('%s %s calculated spot price %0.2f exceeds '
-                    'configured maximum of %0.2f' %
+            log.msg('%s %s calculated spot price %0.3f exceeds '
+                    'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.slavename,
                      target_price, self.max_spot_price))
             raise interfaces.LatentBuildSlaveFailedToSubstantiate()
         else:
-            log.msg('%s %s requesting spot instance with price %0.2f.' %
-                    (self.__class__.__name__, self.slavename, target_price))
+            if self.retry > 1:
+                log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
+                        (self.__class__.__name__, self.slavename, target_price, self.attempt,
+                         self.retry))
+            else:
+                log.msg('%s %s requesting spot instance with price %0.4f' %
+                        (self.__class__.__name__, self.slavename, target_price))
         reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name,
                                                         security_groups=[self.security_name],
                                                         instance_type=self.instance_type,
                                                         user_data=self.user_data,
                                                         placement=self.placement)
-        request = self._wait_for_request(reservations[0])
-        instance_id = request.instance_id
-        reservations = self.conn.get_all_instances(instance_ids=[instance_id])
-        self.instance = reservations[0].instances[0]
-        return self._wait_for_instance(self.get_image())
+        request, success = self._wait_for_request(reservations[0])
+        if not success:
+            return request, None, None, False
+        else:
+            instance_id = request.instance_id
+            reservations = self.conn.get_all_instances(instance_ids=[instance_id])
+            self.instance = reservations[0].instances[0]
+            instance_id, image_id, start_time = self._wait_for_instance(self.get_image())
+            return instance_id, image_id, start_time, True
+
+    def _request_spot_instance(self):
+        if self.retry > 1:
+            for attempt in range(1, self.retry + 1):
+                self.attempt = attempt
+                instance_id, image_id, start_time, success = self._submit_request()
+                if success:
+                    break
+                if attempt >= self.retry:
+                    self.attempt = 0
+                    log.msg('%s %s failed to substantiate after %d requests' %
+                            (self.__class__.__name__, self.slavename, self.retry))
+                    raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+        else:
+            instance_id, image_id, start_time, success = self._submit_request() 
+            if not success:
+                raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+        return instance_id, image_id, start_time
 
     def _wait_for_instance(self, image):
         log.msg('%s %s waiting for instance %s to start' %
@@ -390,11 +421,13 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self._attach_volumes()
             return self.instance.id, image.id, start_time
         else:
-            return None, None, None
+            log.msg('%s %s failed to start instance %s (%s)' %
+                    (self.__class__.__name__, self.slavename,
+                     self.instance.id, self.instance.state))
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                self.instance.id, self.instance.state)
 
     def _wait_for_request(self, reservation):
-        log.msg('%s %s requesting spot instance' %
-                (self.__class__.__name__, self.slavename))
         duration = 0
         interval = self._poll_resolution
         requests = self.conn.get_all_spot_instance_requests(request_ids=[reservation.id])
@@ -417,12 +450,13 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     'in about %d minutes %d seconds' %
                     (self.__class__.__name__, self.slavename,
                      request.id, minutes, seconds))
-            return request
+            return request, True
         elif request_status == PRICE_TOO_LOW:
+            request.cancel()
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.slavename))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                request.id, request.status)
+            self.price_multiplier *= self.retry_price_adjustment
+            return request, False
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.slavename,
