@@ -15,7 +15,6 @@
 
 import migrate
 import migrate.versioning.repository
-import migrate.versioning.schema
 import sqlalchemy as sa
 
 from migrate import exceptions
@@ -24,6 +23,12 @@ from buildbot.db import base
 from buildbot.db.types.json import JsonObject
 from twisted.python import log
 from twisted.python import util
+
+try:
+    from migrate.versioning.schema import ControlledSchema
+    assert ControlledSchema  # hush pyflakes
+except ImportError:
+    ControlledSchema = None
 
 
 class Model(base.DBConnectorComponent):
@@ -632,6 +637,11 @@ class Model(base.DBConnectorComponent):
     repo_path = util.sibpath(__file__, "migrate")
 
     def is_current(self):
+        if ControlledSchema is None:
+            # this should have been caught earlier by enginestrategy.py with a
+            # nicer error message
+            raise ImportError("SQLAlchemy/SQLAlchemy-Migrate version conflict")
+
         def thd(engine):
             # we don't even have to look at the old version table - if there's
             # no migrate_version, then we're not up to date.
@@ -639,8 +649,7 @@ class Model(base.DBConnectorComponent):
             repo_version = repo.latest
             try:
                 # migrate.api doesn't let us hand in an engine
-                schema = migrate.versioning.schema.ControlledSchema(engine,
-                                                                    self.repo_path)
+                schema = ControlledSchema(engine, self.repo_path)
                 db_version = schema.version
             except exceptions.DatabaseNotControlledError:
                 return False
@@ -675,8 +684,7 @@ class Model(base.DBConnectorComponent):
         # methods perform similar wrapping functions to what is done by the API
         # functions, but without disposing of the engine.
         def upgrade(engine):
-            schema = migrate.versioning.schema.ControlledSchema(engine,
-                                                                self.repo_path)
+            schema = ControlledSchema(engine, self.repo_path)
             changeset = schema.changeset(None)
             for version, change in changeset:
                 log.msg('migrating schema version %s -> %d'
@@ -704,8 +712,7 @@ class Model(base.DBConnectorComponent):
                                    "The minimum version is 0.6.1." % (version,))
 
         def version_control(engine, version=None):
-            migrate.versioning.schema.ControlledSchema.create(engine,
-                                                              self.repo_path, version)
+            ControlledSchema.create(engine, self.repo_path, version)
 
         # the upgrade process must run in a db thread
         def thd(engine):
