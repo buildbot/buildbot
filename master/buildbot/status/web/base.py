@@ -160,6 +160,13 @@ def path_to_builders(request, projectName, codebases=True):
         codebases_arg = getCodebasesArg(request=request)
     return (path_to_codebases(request, projectName, codebases=False) + "/builders" + codebases_arg)
 
+
+def path_to_json_builders(request, projectName, codebases=True):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request=request)
+    return "/json/projects/{1}/{2}".format(urllib.quote(projectName, safe=''), codebases_arg)
+
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
 

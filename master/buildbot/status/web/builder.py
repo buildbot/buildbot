@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset
+    getRequestCharset, path_to_json_builders
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
@@ -172,6 +172,8 @@ class ForceBuildActionResource(ActionResource):
             defer.returnValue((path_to_builder(req, self.builder_status), msg))
         elif "builders" in returnpage:
             defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
+        elif "builders_json" in returnpage:
+            defer.returnValue((path_to_json_builders(req, self.builder_status.getProject()), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
