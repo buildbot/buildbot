@@ -150,11 +150,6 @@ class BroadcastServerFactory(WebSocketServerFactory):
             else:
                 self.urlCacheDict[msg].clients.append(client)
 
-            if self.urlCacheDict[msg].cachedJSON is not None:
-                jsonString = json.dumps(self.urlCacheDict[msg].cachedJSON)
-                logging.info("Sending cached JSON to client {0}".format(client.peerstr))
-                client.sendMessage(jsonString)
-
 
 def createDeamon():
     import os, sys
