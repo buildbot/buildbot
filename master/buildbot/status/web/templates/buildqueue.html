@@ -118,7 +118,13 @@
         </td>
         <td class="txt-align-right">
             <a class="more-info popup-btn-js-2 mod-1" href="#">
-              {{ bq.slaves|length }} slaves
+              {% if bq.slaves|length == 0 %}
+                No compatible slaves
+              {% elif bq.slaves|length > 1 %}
+                {{ bq.slaves|length }} slaves
+              {% else %}
+                1 slave
+              {% endif %}
             </a>
              <div class="more-info-box more-info-box-js">
               <span class="close-btn">

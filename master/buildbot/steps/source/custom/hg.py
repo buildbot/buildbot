@@ -22,8 +22,13 @@ class Hg(Mercurial):
         self.master = self.build.builder.botmaster.parent
 
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
+
         # calculate rev ranges
-        lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name, self.codebase, self.repourl, self.update_branch)
+        lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name,
+                                                                     self.build.requests[0].id,
+                                                                     self.codebase,
+                                                                     self.repourl,
+                                                                     self.update_branch)
 
         currentRev  = sourcestamps_updated[self.codebase]
 
@@ -75,8 +80,12 @@ class Hg(Mercurial):
 
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
-            date, author, comments = output.decode('utf-8', "replace").split(
-                os.linesep, 2)
+            try:
+                date, author, comments = output.decode('utf-8', "replace").split(
+                    os.linesep, 2)
+            except:
+                date, author, comments = output.decode('utf-8', "replace").split(
+                    "\n", 2)
 
             try:
                 stamp = float(date.split()[0])

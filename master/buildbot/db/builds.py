@@ -38,9 +38,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             builds_tbl = self.db.model.builds
             buildrequest_tbl = self.db.model.buildrequests
-            q = sa.select([builds_tbl.c.id, builds_tbl.c.number, builds_tbl.c.brid, builds_tbl.c.start_time,
+            q = sa.select([builds_tbl.c.id, builds_tbl.c.number, buildrequest_tbl.c.id.label("brid"), builds_tbl.c.start_time,
                                    builds_tbl.c.finish_time, buildrequest_tbl.c.results],
-                                  from_obj= buildrequest_tbl.join(builds_tbl,
+                                  from_obj= buildrequest_tbl.outerjoin(builds_tbl,
                                                         (buildrequest_tbl.c.id == builds_tbl.c.brid)),
                                   whereclause=(buildrequest_tbl.c.id == brid))
             res = conn.execute(q)

@@ -125,7 +125,7 @@
   {% endif %}      
 {% endmacro %}
 
-{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props) %}
+{% macro force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props, slaves=[]) %}
  <form method="post" name="force_build" action="{{ force_url }}" class="command_forcebuild">
 
   <!--
@@ -159,6 +159,19 @@
 <div class="content-blocks">
   <div class="general">
     <p class="form-message">Fill out revision information for all codebases or leave all revision information blank and click the 'Run' button.</p>
+
+    <div class="row force-text" id="force-{{ sch.name }}-slave">
+    {% if slaves %}
+        <span class="label">Specify slave</span>
+        <select id="selected_slave" name="selected_slave">
+            <option value="default">Any Compatible</option>
+            {% for slave in slaves %}
+            <option value="{{ slave.name }}">{{ slave.name }}</option>
+            {% endfor %}
+        </select>
+        </div>
+  {% endif %}
+
     {% for f in sch.all_fields %}
       {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
     {% endfor %}
@@ -259,9 +272,9 @@
 
  </form>
 {% endmacro %}
-{% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
+{% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}, slaves=[]) %}
   {% for name, sch in force_schedulers.items() %}
-    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props) }}
+    {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props, slaves=slaves) }}
   {% endfor %}
 
 {% endmacro %}
