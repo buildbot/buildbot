@@ -272,7 +272,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(reservation)
         if None not in [instance_id, image_id, start_time]:
-            self.conn.create_tags(instance_id, self.tags)
+            if len(self.tags) > 0:
+                self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
