@@ -34,8 +34,7 @@
   </span>
   
   <div class="divider"></div>
-  <!-- TODO: temporary disable stop button while we fix the function  -->
-  {% if authz.advertiseAction('stopBuild', request) and False %}
+  {% if authz.advertiseAction('stopBuild', request) %}
     <h2 class="head-2">
       Stop Build
     </h2>

@@ -149,7 +149,7 @@ class ForceBuildActionResource(ActionResource):
         # decode all of the args
         encoding = getRequestCharset(req)
         for name, argl in args.iteritems():
-            args[name] = [ arg.decode(encoding) for arg in argl ]
+            args[name] = [ urllib.unquote(arg).decode(encoding) for arg in argl ]
 
         # damn html's ungeneric checkbox implementation...
         for cb in args.get("checkbox", []):

@@ -30,7 +30,7 @@ class GitCommand(Git):
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
         # calculate rev ranges
         lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name,
-                                                                     self.build.build_status.number,
+                                                                     self.build.requests[0].id,
                                                                      self.codebase,
                                                                      self.repourl,
                                                                      self.branch)
